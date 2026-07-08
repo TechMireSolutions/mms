@@ -24,6 +24,7 @@ import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/comp
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
 
 interface QuickActionType {
   id: string;
@@ -64,7 +65,6 @@ interface JournalEntriesProps {
   settings: AccountingSettings;
   fiscalYears: FiscalYear[];
   onChange: (entries: JournalEntry[]) => void;
-  formatCurrency: (amount: number) => string;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
   columnCustomizer?: ModuleColumnCustomizerProps;
@@ -86,12 +86,12 @@ export function JournalEntries({
   settings: _settings,
   fiscalYears,
   onChange,
-  formatCurrency,
   onFilteredCountChange,
   isColumnVisible,
   columnCustomizer,
 }: JournalEntriesProps) {
   const { t } = useTranslation();
+  const { formatCurrency } = useAccountingCurrency();
   const journalStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(
     () => ({
       posted: { label: t("accounting.journal.status.posted"), cls: SEMANTIC_BADGE.successStrong },
@@ -263,7 +263,7 @@ export function JournalEntries({
         />
 
         {tab === "cashbook" ? (
-          <CashbookView entries={entries} accounts={accounts} formatCurrency={formatCurrency} />
+          <CashbookView entries={entries} accounts={accounts} />
         ) : (
           <>
             {/* Natural language entry */}
@@ -675,7 +675,6 @@ export function JournalEntries({
           <JournalEntryDetail
             entry={selected}
             accounts={accounts}
-            formatCurrency={formatCurrency}
             onClose={() => { setModal(null); setSelected(null); }}
             onEdit={() => setModal("edit")}
             onReverse={() => { handleReverse(selected); setModal(null); setSelected(null); }}

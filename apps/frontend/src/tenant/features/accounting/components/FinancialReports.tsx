@@ -1,12 +1,11 @@
 import React, { useMemo, useState } from "react";
-import { TrendingUp, TrendingDown, Scale, DollarSign, Download } from "lucide-react";
+import { TrendingUp, TrendingDown, Scale, DollarSign } from "lucide-react";
 import { computeFinancials, Account, JournalEntry, FiscalYear, AccountingSettings } from '@/lib/data/accountingData';
-import { formatMoney } from "@mms/shared";
-import { DatePicker } from "@/components/ui/DatePicker";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Button } from "@/components/ui/button";
+import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
+import { AccountingDateFilterBar } from "./AccountingDateFilterBar";
 
 import { StatCard } from "@/components/ui/StatCard";
 
@@ -27,11 +26,11 @@ interface ReportSectionProps {
   total: number;
   debitNormal: boolean;
   color?: string;
-  formatCurrency?: (amount: number) => string;
 }
 
-function ReportSection({ title, rows, totalLabel, total, debitNormal, color, formatCurrency }: ReportSectionProps) {
-  const formatNumber = (amount: number) => formatCurrency ? formatCurrency(amount) : formatMoney(amount);
+function ReportSection({ title, rows, totalLabel, total, debitNormal, color }: ReportSectionProps) {
+  const { formatCurrency } = useAccountingCurrency();
+  const formatNumber = (amount: number) => formatCurrency(amount);
   const maxAmount = Math.max(...rows.map((reportRow) => {
     const rowAmount = debitNormal ? reportRow.totalDebit - reportRow.totalCredit : reportRow.totalCredit - reportRow.totalDebit;
     return Math.abs(rowAmount);
@@ -84,7 +83,6 @@ interface FinancialReportsProps {
   entries: JournalEntry[];
   fiscalYears: FiscalYear[];
   settings: AccountingSettings;
-  formatCurrency: (amount: number) => string;
 }
 
 /**
@@ -95,8 +93,9 @@ interface FinancialReportsProps {
  * @param {FinancialReportsProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export function FinancialReports({ accounts, entries, fiscalYears, settings: _settings, formatCurrency }: FinancialReportsProps) {
+export function FinancialReports({ accounts, entries, fiscalYears, settings: _settings }: FinancialReportsProps) {
   const { t } = useTranslation();
+  const { formatCurrency } = useAccountingCurrency();
   const reportViews = useMemo(
     () => [
       { key: "income" as const, label: t("accounting.reports.views.income") },
@@ -184,55 +183,16 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
 
   return (
     <section aria-label="Financial Reports" className="space-y-5">
-      {/* Date range + FY selector */}
-      <nav aria-label="Report Date Range" className="flex flex-wrap items-center gap-3 p-4 rounded-xl border border-border bg-muted/20">
-        <div className="flex items-center gap-2">
-          <label htmlFor="report-from" className="text-xs font-semibold text-muted-foreground uppercase">From</label>
-          <DatePicker
-            id="report-from"
-            value={dateFrom}
-            onChange={setDateFrom}
-            className="px-3 py-1.5 w-40"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <label htmlFor="report-to" className="text-xs font-semibold text-muted-foreground uppercase">To</label>
-          <DatePicker
-            id="report-to"
-            value={dateTo}
-            onChange={setDateTo}
-            className="px-3 py-1.5 w-40"
-          />
-        </div>
-        {activeFiscalYear && (
-          <Button 
-            type="button" 
-            variant="link" 
-            size="sm" 
-            onClick={() => { setDateFrom(activeFiscalYear.startDate); setDateTo(activeFiscalYear.endDate); }}
-            className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors p-0 h-auto"
-          >
-            Active FY: {activeFiscalYear.label}
-          </Button>
-        )}
-        <Button 
-          type="button" 
-          variant="link" 
-          size="sm" 
-          onClick={() => { setDateFrom(""); setDateTo(""); }}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors p-0 h-auto"
-        >
-          All time
-        </Button>
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={exportCSV} 
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors ml-auto h-auto"
-        >
-          <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export CSV
-        </Button>
-      </nav>
+      <AccountingDateFilterBar
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onDateFromChange={setDateFrom}
+        onDateToChange={setDateTo}
+        activeFiscalYear={activeFiscalYear}
+        onExportCSV={exportCSV}
+        idPrefix="report"
+        variant="bordered"
+      />
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -253,8 +213,8 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
       {/* Income Statement */}
       {view === "income" && (
         <section aria-label="Income Statement" className="space-y-4">
-          <ReportSection title="Revenue" rows={getRowsByAccountType("Revenue")} totalLabel="Total Revenue" total={revenue} debitNormal={false} color="bg-success/10/60" formatCurrency={formatCurrency} />
-          <ReportSection title="Expenses" rows={getRowsByAccountType("Expense")} totalLabel="Total Expenses" total={expenses} debitNormal={true} color="bg-destructive/10/60" formatCurrency={formatCurrency} />
+          <ReportSection title="Revenue" rows={getRowsByAccountType("Revenue")} totalLabel="Total Revenue" total={revenue} debitNormal={false} color="bg-success/10/60" />
+          <ReportSection title="Expenses" rows={getRowsByAccountType("Expense")} totalLabel="Total Expenses" total={expenses} debitNormal={true} color="bg-destructive/10/60" />
           <div className={`flex items-center justify-between px-5 py-4 rounded-xl border-2 font-bold text-lg ${netSurplus >= 0 ? "border-success/40 bg-success/10 text-success" : "border-destructive/40 bg-destructive/10 text-destructive"}`}>
             <span>{netSurplus >= 0 ? "📈 Net Surplus" : "📉 Net Deficit"}</span>
             <span className="font-mono">{formatCurrency(Math.abs(netSurplus))}</span>
@@ -265,10 +225,10 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
       {/* Balance Sheet */}
       {view === "balance" && (
         <section aria-label="Balance Sheet" className="space-y-4">
-          <ReportSection title="Assets" rows={getRowsByAccountType("Asset")} totalLabel="Total Assets" total={assets} debitNormal={true} color="bg-info/10/60" formatCurrency={formatCurrency} />
-          <ReportSection title="Liabilities" rows={getRowsByAccountType("Liability")} totalLabel="Total Liabilities" total={liabilities} debitNormal={false} color="bg-destructive/10/60" formatCurrency={formatCurrency} />
+          <ReportSection title="Assets" rows={getRowsByAccountType("Asset")} totalLabel="Total Assets" total={assets} debitNormal={true} color="bg-info/10/60" />
+          <ReportSection title="Liabilities" rows={getRowsByAccountType("Liability")} totalLabel="Total Liabilities" total={liabilities} debitNormal={false} color="bg-destructive/10/60" />
           <ReportSection title="Equity" rows={equityRows} totalLabel="Total Equity (incl. Net Surplus)"
-            total={equityTotal} debitNormal={false} color="bg-primary/10" formatCurrency={formatCurrency} />
+            total={equityTotal} debitNormal={false} color="bg-primary/10" />
           <div className="grid grid-cols-2 gap-3">
             <article className="px-5 py-3 rounded-xl border border-border bg-info/10 text-right">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">Total Assets</h4>

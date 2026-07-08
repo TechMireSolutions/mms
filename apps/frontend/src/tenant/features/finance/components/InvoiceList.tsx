@@ -12,9 +12,10 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { INVOICE_STATUSES, Invoice } from '@/lib/data/financeData';
 import { Button } from "@/components/ui/button";
-import { formatMoney, formatDate, type AppTranslationKey } from "@mms/shared";
+import { formatDate, type AppTranslationKey } from "@mms/shared";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { useFinanceCurrency } from "../hooks/useFinanceCurrency";
 
 
 
@@ -34,6 +35,7 @@ export function InvoiceList({
   columnCustomizer,
 }: InvoiceListProps) {
   const { t } = useTranslation();
+  const { formatCurrency } = useFinanceCurrency();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
 
@@ -214,14 +216,14 @@ export function InvoiceList({
                       )}
                       {showBaseFee && (
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="text-[12px] text-foreground">{formatMoney(invoice.baseFee)}</span>
+                          <span className="text-[12px] text-foreground">{formatCurrency(invoice.baseFee)}</span>
                         </td>
                       )}
                       {showDiscount && (
                         <td className="px-4 py-3">
                           {invoice.discountAmt > 0 ? (
                             <div>
-                              <span className="text-[12px] text-warning font-medium">-{formatMoney(invoice.discountAmt)}</span>
+                              <span className="text-[12px] text-warning font-medium">-{formatCurrency(invoice.discountAmt)}</span>
                               <p className="text-[10px] text-muted-foreground m-0">{invoice.discountType}</p>
                             </div>
                           ) : <span className="text-[12px] text-muted-foreground">—</span>}
@@ -229,9 +231,9 @@ export function InvoiceList({
                       )}
                       {showFinal && (
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="text-[13px] font-bold text-foreground">{formatMoney(invoice.finalAmt)}</span>
+                          <span className="text-[13px] font-bold text-foreground">{formatCurrency(invoice.finalAmt)}</span>
                           {invoice.paidAmt && invoice.status === "partial" && (
-                            <p className="text-[10px] text-info m-0">{t("finance.paidAmount", { amount: formatMoney(invoice.paidAmt) })}</p>
+                            <p className="text-[10px] text-info m-0">{t("finance.paidAmount", { amount: formatCurrency(invoice.paidAmt) })}</p>
                           )}
                         </td>
                       )}

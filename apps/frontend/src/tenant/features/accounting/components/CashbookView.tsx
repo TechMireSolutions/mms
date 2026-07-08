@@ -63,10 +63,11 @@ function getEntryLabel(entry: JournalEntry & { transaction_type?: string }): str
   return "Transaction";
 }
 
+import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
+
 interface CashbookViewProps {
   entries: JournalEntry[];
   accounts: Account[];
-  formatCurrency: (amount: number) => string;
 }
 
 /**
@@ -77,7 +78,8 @@ interface CashbookViewProps {
  * @param {CashbookViewProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export function CashbookView({ entries, accounts: _accounts, formatCurrency }: CashbookViewProps) {
+export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps) {
+  const { formatCurrency } = useAccountingCurrency();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<EntryType | "all">("all");
 

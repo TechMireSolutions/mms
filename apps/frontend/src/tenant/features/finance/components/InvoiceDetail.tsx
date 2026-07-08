@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatMoney, formatDate } from "@mms/shared";
+import { formatDate } from "@mms/shared";
+import { useFinanceCurrency } from "../hooks/useFinanceCurrency";
 
 interface InvoiceDetailProps {
   invoice: Invoice;
@@ -24,6 +25,7 @@ interface InvoiceDetailProps {
  */
 export function InvoiceDetail({ invoice, onClose, onRecord }: InvoiceDetailProps) {
   const { t } = useTranslation();
+  const { formatCurrency } = useFinanceCurrency();
 
   const statusConfig = React.useMemo(() => {
     const config: Record<string, { label: string, className: string, icon: React.ElementType }> = {
@@ -39,11 +41,11 @@ export function InvoiceDetail({ invoice, onClose, onRecord }: InvoiceDetailProps
   const StatusIcon = statusConfig.icon;
 
   const rows = [
-    { label: "Base Fee", value: formatMoney(invoice.baseFee), highlight: false, neg: false },
-    ...(invoice.discountAmt > 0 ? [{ label: `Discount (${invoice.discountType} – ${invoice.discountValue}%)`, value: `– ${formatMoney(invoice.discountAmt)}`, highlight: false, neg: true }] : []),
-    { label: "Final Amount", value: formatMoney(invoice.finalAmt), highlight: true, neg: false },
-    ...(invoice.paidAmt ? [{ label: "Amount Paid", value: formatMoney(invoice.paidAmt), highlight: false, neg: false }] : []),
-    ...(invoice.paidAmt && invoice.paidAmt < invoice.finalAmt ? [{ label: "Balance Due", value: formatMoney(invoice.finalAmt - invoice.paidAmt), highlight: false, neg: true }] : []),
+    { label: "Base Fee", value: formatCurrency(invoice.baseFee), highlight: false, neg: false },
+    ...(invoice.discountAmt > 0 ? [{ label: `Discount (${invoice.discountType} – ${invoice.discountValue}%)`, value: `– ${formatCurrency(invoice.discountAmt)}`, highlight: false, neg: true }] : []),
+    { label: "Final Amount", value: formatCurrency(invoice.finalAmt), highlight: true, neg: false },
+    ...(invoice.paidAmt ? [{ label: "Amount Paid", value: formatCurrency(invoice.paidAmt), highlight: false, neg: false }] : []),
+    ...(invoice.paidAmt && invoice.paidAmt < invoice.finalAmt ? [{ label: "Balance Due", value: formatCurrency(invoice.finalAmt - invoice.paidAmt), highlight: false, neg: true }] : []),
   ];
 
   return (

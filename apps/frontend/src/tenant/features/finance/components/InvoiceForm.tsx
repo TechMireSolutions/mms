@@ -7,7 +7,7 @@ import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/Modal";
-import { formatMoney } from "@mms/shared";
+import { useFinanceCurrency } from "../hooks/useFinanceCurrency";
 
 interface InvoiceFormProps {
   open: boolean;
@@ -53,6 +53,7 @@ export function InvoiceForm({
   onClose,
   onSave,
 }: InvoiceFormProps): React.ReactElement {
+  const { formatCurrency } = useFinanceCurrency();
   const [draft, setDraft] = useState<InvoiceDraft>(INITIAL_DRAFT);
 
   const baseFee = Number(draft.baseFee || 0);
@@ -259,15 +260,15 @@ export function InvoiceForm({
           <div className="grid grid-cols-3 gap-3 text-sm">
             <div>
               <p className="m-0 text-[10px] font-bold uppercase text-muted-foreground">Base Fee</p>
-              <p className="m-0 mt-0.5 font-bold text-foreground text-sm">{formatMoney(baseFee)}</p>
+              <p className="m-0 mt-0.5 font-bold text-foreground text-sm">{formatCurrency(baseFee)}</p>
             </div>
             <div>
               <p className="m-0 text-[10px] font-bold uppercase text-muted-foreground">Discount</p>
-              <p className="m-0 mt-0.5 font-bold text-warning text-sm">-{formatMoney(discountAmt)}</p>
+              <p className="m-0 mt-0.5 font-bold text-warning text-sm">-{formatCurrency(discountAmt)}</p>
             </div>
             <div>
               <p className="m-0 text-[10px] font-bold uppercase text-muted-foreground">Final Amount</p>
-              <p className="m-0 mt-0.5 font-extrabold text-primary text-sm">{formatMoney(finalAmt)}</p>
+              <p className="m-0 mt-0.5 font-extrabold text-primary text-sm">{formatCurrency(finalAmt)}</p>
             </div>
           </div>
         </section>

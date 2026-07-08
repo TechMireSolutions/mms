@@ -9,7 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cel
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { computeFinancials, Account, JournalEntry, AccountingSettings, FiscalYear } from '@/lib/data/accountingData';
 import { useTranslation } from "@/hooks/useTranslation";
-
+import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
 
 import { StatCard } from "@/components/ui/StatCard";
 
@@ -18,7 +18,6 @@ interface AccountingDashboardProps {
   entries: JournalEntry[];
   settings: AccountingSettings;
   fiscalYears: FiscalYear[];
-  formatCurrency: (amount: number) => string;
 }
 
 /**
@@ -27,8 +26,9 @@ interface AccountingDashboardProps {
  * @param {AccountingDashboardProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export function AccountingDashboard({ accounts, entries, settings: _settings, fiscalYears: _fiscalYears, formatCurrency }: AccountingDashboardProps) {
+export function AccountingDashboard({ accounts, entries, settings: _settings, fiscalYears: _fiscalYears }: AccountingDashboardProps) {
   const { t } = useTranslation();
+  const { formatCurrency } = useAccountingCurrency();
   const { primary, secondary, charts } = useBrandPalette();
   const pieColors = useMemo(() => [...charts], [charts]);
 

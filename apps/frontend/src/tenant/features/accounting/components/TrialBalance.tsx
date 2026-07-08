@@ -1,16 +1,14 @@
 import React, { useMemo, useState } from "react";
-import { CheckCircle2, AlertCircle, Download } from "lucide-react";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 import { ACCOUNT_TYPE_META, ACCOUNT_TYPES, computeTrialBalance, Account, JournalEntry, FiscalYear } from '@/lib/data/accountingData';
-import { formatMoney } from "@mms/shared";
-import { DatePicker } from "@/components/ui/DatePicker";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
-import { Button } from "@/components/ui/button";
+import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
+import { AccountingDateFilterBar } from "./AccountingDateFilterBar";
 
 interface TrialBalanceProps {
   accounts: Account[];
   entries: JournalEntry[];
   fiscalYears?: FiscalYear[];
-  formatCurrency?: (amount: number) => string;
 }
 
 /**
@@ -21,7 +19,8 @@ interface TrialBalanceProps {
  * @param {TrialBalanceProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export function TrialBalance({ accounts, entries, fiscalYears, formatCurrency }: TrialBalanceProps) {
+export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalanceProps) {
+  const { formatCurrency } = useAccountingCurrency();
   const activeFiscalYear   = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active");
   const [dateFrom, setDateFrom] = useState(activeFiscalYear?.startDate || "");
   const [dateTo,   setDateTo]   = useState(activeFiscalYear?.endDate   || "");
@@ -35,7 +34,7 @@ export function TrialBalance({ accounts, entries, fiscalYears, formatCurrency }:
   const grandCredit = rows.reduce((sum, trialBalanceRow) => sum + trialBalanceRow.totalCredit, 0);
   const isBalanced  = Math.abs(grandDebit - grandCredit) < 0.01;
 
-  const formatPositiveNumber = (amount: number) => amount > 0 ? (formatCurrency ? formatCurrency(amount) : formatMoney(amount)) : "—";
+  const formatPositiveNumber = (amount: number) => amount > 0 ? formatCurrency(amount) : "—";
 
   const exportCSV = () => {
     const exportRows = rows.map((row) => ({
@@ -70,52 +69,22 @@ export function TrialBalance({ accounts, entries, fiscalYears, formatCurrency }:
   return (
     <div className="space-y-4">
       {/* Controls */}
-      <section aria-label="Trial Balance Controls" className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2 text-sm">
-          <label htmlFor="tb-from" className="text-xs font-semibold text-muted-foreground uppercase">From</label>
-          <DatePicker
-            id="tb-from"
-            value={dateFrom}
-            onChange={setDateFrom}
-            className="px-3 py-1.5 w-40"
-          />
-        </div>
-        <div className="flex items-center gap-2 text-sm">
-          <label htmlFor="tb-to" className="text-xs font-semibold text-muted-foreground uppercase">To</label>
-          <DatePicker
-            id="tb-to"
-            value={dateTo}
-            onChange={setDateTo}
-            className="px-3 py-1.5 w-40"
-          />
-        </div>
-        {activeFiscalYear && (
-          <Button 
-            type="button" 
-            variant="link" 
-            size="sm" 
-            onClick={() => { setDateFrom(activeFiscalYear.startDate); setDateTo(activeFiscalYear.endDate); }}
-            className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors p-0 h-auto"
-          >
-            Use Active FY ({activeFiscalYear.label})
-          </Button>
-        )}
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={exportCSV} 
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors ml-auto h-auto"
-        >
-          <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export CSV
-        </Button>
-      </section>
+      <AccountingDateFilterBar
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onDateFromChange={setDateFrom}
+        onDateToChange={setDateTo}
+        activeFiscalYear={activeFiscalYear}
+        onExportCSV={exportCSV}
+        idPrefix="tb"
+      />
 
       {/* Balance status banner */}
       <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border ${isBalanced ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"}`} role="status">
         {isBalanced ? <CheckCircle2 className="w-5 h-5" aria-hidden="true" /> : <AlertCircle className="w-5 h-5" aria-hidden="true" />}
         {isBalanced
-          ? `Trial Balance is balanced — Total: ${formatCurrency ? formatCurrency(grandDebit) : formatMoney(grandDebit)}`
-          : `OUT OF BALANCE — Difference: ${formatCurrency ? formatCurrency(Math.abs(grandDebit - grandCredit)) : formatMoney(Math.abs(grandDebit - grandCredit))}`}
+          ? `Trial Balance is balanced — Total: ${formatCurrency(grandDebit)}`
+          : `OUT OF BALANCE — Difference: ${formatCurrency(Math.abs(grandDebit - grandCredit))}`}
       </div>
 
       {rows.length === 0 ? (
@@ -178,10 +147,10 @@ export function TrialBalance({ accounts, entries, fiscalYears, formatCurrency }:
                 <tr>
                   <td colSpan={3} className="px-4 py-3 text-sm font-bold text-foreground uppercase tracking-wide">Grand Total</td>
                   <td className="px-4 py-3 text-right font-mono font-bold text-info text-base">
-                    {formatCurrency ? formatCurrency(grandDebit) : formatMoney(grandDebit)}
+                    {formatCurrency(grandDebit)}
                   </td>
                   <td className="px-4 py-3 text-right font-mono font-bold text-success text-base">
-                    {formatCurrency ? formatCurrency(grandCredit) : formatMoney(grandCredit)}
+                    {formatCurrency(grandCredit)}
                   </td>
                 </tr>
               </tfoot>

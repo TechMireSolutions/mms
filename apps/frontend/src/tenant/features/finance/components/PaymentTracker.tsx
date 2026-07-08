@@ -7,7 +7,8 @@ import { PAYMENT_METHOD_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { formatMoney, formatDate } from "@mms/shared";
+import { formatDate } from "@mms/shared";
+import { useFinanceCurrency } from "../hooks/useFinanceCurrency";
 
 
 
@@ -23,6 +24,7 @@ export function PaymentTracker({
   columnCustomizer,
 }: PaymentTrackerProps) {
   const { t } = useTranslation();
+  const { formatCurrency } = useFinanceCurrency();
   const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
 
   const paymentsByMethod = payments.reduce((amountByMethod, payment) => {
@@ -53,7 +55,7 @@ export function PaymentTracker({
         {Object.entries(paymentsByMethod).map(([method, amount]) => (
           <Card key={method} className="rounded-xl border border-border/80 bg-card/45 backdrop-blur-sm p-3 shadow-sm hover:shadow-md transition-all">
             <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full border", PAYMENT_METHOD_BADGE[method] || PAYMENT_METHOD_BADGE.Other)}>{method}</span>
-            <p className="text-[15px] font-bold text-foreground mt-2 m-0">{formatMoney(amount)}</p>
+            <p className="text-[15px] font-bold text-foreground mt-2 m-0">{formatCurrency(amount)}</p>
             <p className="text-[10px] text-muted-foreground m-0">
               {t("finance.paymentCount", { count: payments.filter((payment) => payment.method === method).length })}
             </p>
@@ -68,7 +70,7 @@ export function PaymentTracker({
             <h3 className="text-sm font-bold text-foreground m-0">{t("finance.paymentLog")}</h3>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[11px] font-semibold text-success">{t("finance.paymentTotal", { amount: formatMoney(totalPaid) })}</span>
+            <span className="text-[11px] font-semibold text-success">{t("finance.paymentTotal", { amount: formatCurrency(totalPaid) })}</span>
             {columnCustomizer && (
               <ModuleColumnCustomizer
                 columnRegistry={columnCustomizer.columnRegistry}
@@ -142,7 +144,7 @@ export function PaymentTracker({
                       <td className="px-4 py-3 text-[11px] font-mono text-muted-foreground">{payment.invoiceId}</td>
                     )}
                     {showAmount && (
-                      <td className="px-4 py-3 text-[13px] font-bold text-success whitespace-nowrap">{formatMoney(payment.amount)}</td>
+                      <td className="px-4 py-3 text-[13px] font-bold text-success whitespace-nowrap">{formatCurrency(payment.amount)}</td>
                     )}
                     {showMethod && (
                       <td className="px-4 py-3">

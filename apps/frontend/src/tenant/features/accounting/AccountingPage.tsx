@@ -22,7 +22,7 @@ import { AccountingCommandMetrics } from "@/tenant/features/accounting/component
 import { useAccountingJournalColumnLayout } from "@/tenant/features/accounting/hooks/useAccountingJournalColumnLayout";
 import { useAccountingAccountColumnLayout } from "@/tenant/features/accounting/hooks/useAccountingAccountColumnLayout";
 import { useAccountingConfig } from "@/tenant/features/accounting/hooks/useAccountingConfig";
-import { DEFAULT_CURRENCIES } from "@mms/shared";
+import { useAccountingCurrency } from "@/tenant/features/accounting/hooks/useAccountingCurrency";
 import {
   useAccountingAccountsCollection,
   useAccountingEntriesCollection,
@@ -70,8 +70,8 @@ export default function Accounting() {
   const accounts = useAccountingAccountsCollection();
   const journalEntries = useAccountingEntriesCollection();
   const fiscalYears = useAccountingFiscalYearsCollection();
-  const currencies = DEFAULT_CURRENCIES;
   const { settings } = useAccountingConfig();
+  const { activeCurrency } = useAccountingCurrency();
   const [filteredCount, setFilteredCount] = useState(0);
   const journalColumnLayout = useAccountingJournalColumnLayout();
   const accountColumnLayout = useAccountingAccountColumnLayout();
@@ -99,8 +99,7 @@ export default function Accounting() {
   }, [activeSubTab, journalEntries.length]);
 
   const activeFiscalYear = fiscalYears.find((fiscalYear) => fiscalYear.status === "active");
-  const activeCurrency = currencies.find((currency) => currency.code === settings.currency) || currencies[0] || { symbol: "$", code: "USD", name: "US Dollar" };
-  const formatCurrency = (amount: number) => `${activeCurrency.symbol} ${amount.toLocaleString(undefined, { minimumFractionDigits: settings.decimalPlaces })}`;
+
 
   return (
     <ModulePageShell
@@ -151,13 +150,12 @@ export default function Accounting() {
                 entries={journalEntries}
                 fiscalYears={fiscalYears}
                 settings={settings}
-                formatCurrency={formatCurrency}
               />
             </div>
           )}
           
           {activeTab === "work" && activeSubTab === "overview" && (
-            <AccountingDashboard accounts={accounts} entries={journalEntries} settings={settings} fiscalYears={fiscalYears} formatCurrency={formatCurrency} />
+            <AccountingDashboard accounts={accounts} entries={journalEntries} settings={settings} fiscalYears={fiscalYears} />
           )}
 
           {activeTab === "work" && activeSubTab === "journal" && (
@@ -167,7 +165,6 @@ export default function Accounting() {
               settings={settings}
               fiscalYears={fiscalYears}
               onChange={setEntries}
-              formatCurrency={formatCurrency}
               onFilteredCountChange={setFilteredCount}
               isColumnVisible={journalColumnLayout.isColumnVisible}
               columnCustomizer={{
@@ -178,10 +175,10 @@ export default function Accounting() {
             />
           )}
           {activeTab === "work" && activeSubTab === "ledger" && (
-            <GeneralLedger accounts={accounts} entries={journalEntries} formatCurrency={formatCurrency} />
+            <GeneralLedger accounts={accounts} entries={journalEntries} />
           )}
           {activeTab === "work" && activeSubTab === "trial" && (
-            <TrialBalance accounts={accounts} entries={journalEntries} fiscalYears={fiscalYears} formatCurrency={formatCurrency} />
+            <TrialBalance accounts={accounts} entries={journalEntries} fiscalYears={fiscalYears} />
           )}
           {activeTab === "work" && activeSubTab === "coa" && (
             <ChartOfAccounts

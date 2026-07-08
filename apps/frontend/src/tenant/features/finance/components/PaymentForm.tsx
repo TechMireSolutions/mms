@@ -11,7 +11,7 @@ import { notify } from "@/lib/notify";
 import { PAYMENT_METHODS, Invoice, Payment } from '@/lib/data/financeData';
 import { FORM_INPUT } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { formatMoney } from "@mms/shared";
+import { useFinanceCurrency } from "../hooks/useFinanceCurrency";
 
 interface PaymentFormProps {
   open: boolean;
@@ -22,6 +22,7 @@ interface PaymentFormProps {
 
 export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps): React.JSX.Element {
   const { user: authUser } = useAuth();
+  const { formatCurrency, activeCurrency } = useFinanceCurrency();
   const balance = invoice ? invoice.finalAmt - (invoice.paidAmt || 0) : 0;
 
   const [saving, setSaving] = useState(false);
@@ -91,7 +92,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
       </span>
       <div className="flex items-center gap-1.5">
         <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-success/10 text-success font-semibold border border-success/20 text-[10px]">
-          Balance: {formatMoney(balance - Number(paymentDraft.amount || 0))}
+          Balance: {formatCurrency(balance - Number(paymentDraft.amount || 0))}
         </span>
       </div>
     </div>
@@ -121,7 +122,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
               </div>
               <div className="text-right">
                 <p className="text-[10px] uppercase font-bold text-muted-foreground">Balance Due</p>
-                <p className="text-[14px] font-bold text-primary m-0 mt-0.5">{formatMoney(balance)}</p>
+                <p className="text-[14px] font-bold text-primary m-0 mt-0.5">{formatCurrency(balance)}</p>
               </div>
             </div>
           </article>
@@ -136,7 +137,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <Field label="Amount (PKR) *" error={errors.amount}>
+              <Field label={`Amount (${activeCurrency.code}) *`} error={errors.amount}>
                 <div className="relative flex items-center group/input">
                   <DollarSign className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                   <input
@@ -151,7 +152,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
                 </div>
                 {Number(paymentDraft.amount) < balance && Number(paymentDraft.amount) > 0 && (
                   <p className="m-0 mt-1 text-[10px] text-warning">
-                    Partial payment — balance remaining: {formatMoney(balance - Number(paymentDraft.amount))}
+                    Partial payment — balance remaining: {formatCurrency(balance - Number(paymentDraft.amount))}
                   </p>
                 )}
               </Field>

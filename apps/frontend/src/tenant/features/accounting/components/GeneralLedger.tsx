@@ -7,10 +7,11 @@ import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
 
+import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
+
 interface GeneralLedgerProps {
   accounts: Account[];
   entries: JournalEntry[];
-  formatCurrency: (amount: number) => string;
 }
 
 /**
@@ -21,7 +22,8 @@ interface GeneralLedgerProps {
  * @param {GeneralLedgerProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export function GeneralLedger({ accounts, entries, formatCurrency }: GeneralLedgerProps) {
+export function GeneralLedger({ accounts, entries }: GeneralLedgerProps) {
+  const { formatCurrency } = useAccountingCurrency();
   const [selectedAccount, setSelectedAccount] = useState("");
   const [typeFilter,      setTypeFilter]      = useState<AccountType | "all">("all");
   const [dateFrom,        setDateFrom]        = useState("");

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { hasFieldValue } from "@/lib/formCompleteness";
+import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
 
 interface DraftLine extends Omit<JournalLine, "debit" | "credit"> {
   debit: string | number;
@@ -38,6 +39,7 @@ interface JournalEntryFormProps {
  * @returns {React.ReactElement}
  */
 export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, fiscalYears }: JournalEntryFormProps) {
+  const { formatCurrency } = useAccountingCurrency();
   const isEdit = !!initial?.id;
   const activeFiscalYear = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active")?.label || "";
 
@@ -337,8 +339,8 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
                 <tfoot className="border-t-2 border-border bg-muted/30">
                   <tr>
                     <td colSpan={2} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">Totals</td>
-                    <td className="px-3 py-2 text-end font-mono font-bold text-info">{totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                    <td className="px-3 py-2 text-end font-mono font-bold text-success">{totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    <td className="px-3 py-2 text-end font-mono font-bold text-info">{formatCurrency(totalDebit)}</td>
+                    <td className="px-3 py-2 text-end font-mono font-bold text-success">{formatCurrency(totalCredit)}</td>
                     <td></td>
                   </tr>
                 </tfoot>
@@ -347,7 +349,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
 
             <div className={`mt-2 flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold border transition-all duration-300 ${isBalanced ? "bg-success/10 text-success border-success/20 shadow-sm" : "bg-destructive/10 text-destructive border-destructive/20 shadow-sm"}`} role="status">
               {isBalanced ? <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> : <AlertCircle className="w-4 h-4" aria-hidden="true" />}
-              {isBalanced ? "Entry is balanced — Debits equal Credits" : `Out of balance — Difference: ${Math.abs(totalDebit - totalCredit).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+              {isBalanced ? "Entry is balanced — Debits equal Credits" : `Out of balance — Difference: ${formatCurrency(Math.abs(totalDebit - totalCredit))}`}
             </div>
             {errors.lines   && <p className="text-xs text-destructive mt-1" role="alert">{errors.lines}</p>}
             {errors.balance && <p className="text-xs text-destructive mt-1" role="alert">{errors.balance}</p>}
