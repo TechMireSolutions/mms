@@ -93,14 +93,14 @@ export const METADATA_FIELDS = {
       { value: "type", label: "Course Type (Hifz/Tajweed/Qaidah...)" },
       { value: "room", label: "Classroom / Location" },
       { value: "teacherName", label: "Instructor" },
-      { value: "baseFee", label: "Base Fee (PKR)", isNumeric: true },
+      { value: "baseFee", label: "Base Fee", isNumeric: true },
       { value: "enrolled", label: "Enrolled Count", isNumeric: true },
       { value: "capacity", label: "Capacity Limit", isNumeric: true },
       { value: "startDate", label: "Start Date" },
       { value: "endDate", label: "End Date" }
     ],
     numericFields: [
-      { value: "baseFee", label: "Base Fee (PKR)" },
+      { value: "baseFee", label: "Base Fee" },
       { value: "enrolled", label: "Enrolled Count" },
       { value: "capacity", label: "Capacity Limit" }
     ]
@@ -112,18 +112,18 @@ export const METADATA_FIELDS = {
     fields: [
       { value: "status", label: "Status (paid/unpaid/partial/cancelled)" },
       { value: "paymentMethod", label: "Payment Channel" },
-      { value: "finalAmt", label: "Final Amount (PKR)", isNumeric: true },
-      { value: "paidAmt", label: "Paid Amount (PKR)", isNumeric: true },
-      { value: "discountAmt", label: "Discount Offset (PKR)", isNumeric: true },
-      { value: "baseAmt", label: "Base Fee Amount (PKR)", isNumeric: true },
+      { value: "finalAmt", label: "Final Amount", isNumeric: true },
+      { value: "paidAmt", label: "Paid Amount", isNumeric: true },
+      { value: "discountAmt", label: "Discount Offset", isNumeric: true },
+      { value: "baseAmt", label: "Base Fee Amount", isNumeric: true },
       { value: "dueDate", label: "Due Date" },
       { value: "paidDate", label: "Paid Date" }
     ],
     numericFields: [
-      { value: "finalAmt", label: "Final Amount (PKR)" },
-      { value: "paidAmt", label: "Paid Amount (PKR)" },
-      { value: "discountAmt", label: "Discount Offset (PKR)" },
-      { value: "baseAmt", label: "Base Fee Amount (PKR)" }
+      { value: "finalAmt", label: "Final Amount" },
+      { value: "paidAmt", label: "Paid Amount" },
+      { value: "discountAmt", label: "Discount Offset" },
+      { value: "baseAmt", label: "Base Fee Amount" }
     ]
   },
   attendance_records: {
@@ -585,4 +585,38 @@ export function getReportVisual(id: string): VisualizerConfig {
     operation: "count",
     activePalette: "accessibleColorblind"
   };
+}
+
+/**
+ * Safely translates a field value to its user-friendly label, falling back to a default label.
+ *
+ * @param fieldValue The field identifier string.
+ * @param defaultLabel The default label if translation is missing.
+ * @param t The active translation function.
+ */
+export function getFieldLabel(
+  fieldValue: string,
+  defaultLabel: string,
+  t: (key: any, params?: any) => string
+): string {
+  const transKey = `reports.fields.${fieldValue}`;
+  const translated = t(transKey as any);
+  return translated === transKey ? defaultLabel : translated;
+}
+
+/**
+ * Safely translates a collection key to its user-friendly name, falling back to a default label.
+ *
+ * @param collectionValue The collection identifier string.
+ * @param defaultLabel The default name if translation is missing.
+ * @param t The active translation function.
+ */
+export function getCollectionLabel(
+  collectionValue: string,
+  defaultLabel: string,
+  t: (key: any, params?: any) => string
+): string {
+  const transKey = `reports.collections.${collectionValue}`;
+  const translated = t(transKey as any);
+  return translated === transKey ? defaultLabel : translated;
 }

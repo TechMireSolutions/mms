@@ -11,7 +11,7 @@ import { getCollection, saveCollection, getObject, saveObject } from "@/lib/db";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { resolveThresholdChartHex, resolveWidgetChartHex } from "@/lib/brandingChartPalette";
 import { Session, Class } from '@/lib/data/sessionsData';
-import { METADATA_FIELDS, COLLECTION_OPTIONS, computeCustomCard, CustomCard } from "@/tenant/features/reports/components/reportMetadata";
+import { METADATA_FIELDS, COLLECTION_OPTIONS, computeCustomCard, CustomCard, getFieldLabel, getCollectionLabel } from "@/tenant/features/reports/components/reportMetadata";
 const SessionsTable = React.lazy(() => import("@/tenant/features/dashboard/components/widgets/SessionsTable"));
 const OutstandingFeesTable = React.lazy(() => import("@/tenant/features/dashboard/components/widgets/OutstandingFeesTable"));
 const FeeCollectionSummary = React.lazy(() => import("@/tenant/features/dashboard/components/widgets/FeeCollectionSummary"));
@@ -236,7 +236,7 @@ function WidgetDrilldownModal({
                       name = String(displayRecord.name || "");
                       detailText = t("reports.widgets.ageText", {
                         age: String(displayRecord.age || "N/A"),
-                        gender: displayRecord.gender ? t(`reports.fields.${displayRecord.gender}` as AppTranslationKey) || displayRecord.gender : t("reports.widgets.any")
+                        gender: displayRecord.gender ? getFieldLabel(displayRecord.gender, displayRecord.gender, t) : t("reports.widgets.any")
                       });
                     } else if (widget.collection === "finance_invoices") {
                       name = t("reports.widgets.invoiceText", { invoiceNo: displayRecord.invoiceNo || String(displayRecord.id || "") });
@@ -502,7 +502,7 @@ function CustomWidgetRenderer({
             {computed.value}
           </span>
           <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
-            {t(`reports.collections.${widget.collection}` as AppTranslationKey)}
+            {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
           </span>
         </button>
       );
@@ -571,7 +571,7 @@ function CustomWidgetRenderer({
               <ProgressRing percentage={value} colorHex={colorHex} isCompact />
             </div>
             <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
-              {t(`reports.collections.${widget.collection}` as AppTranslationKey)}
+              {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
             </span>
           </button>
         );
@@ -593,7 +593,7 @@ function CustomWidgetRenderer({
               {formattedValue}
             </span>
             <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
-              {t(`reports.collections.${widget.collection}` as AppTranslationKey)}
+              {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
             </span>
           </button>
         );
@@ -618,7 +618,7 @@ function CustomWidgetRenderer({
             {formattedValue}
           </span>
           <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
-            {t(`reports.collections.${widget.collection}` as AppTranslationKey)}
+            {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
           </span>
         </button>
       );
@@ -642,7 +642,7 @@ function CustomWidgetRenderer({
             <ProgressRing percentage={value} colorHex={colorHex} isCompact />
           </div>
           <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
-            {t(`reports.collections.${widget.collection}` as AppTranslationKey)}
+            {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
           </span>
         </button>
       );
@@ -758,7 +758,7 @@ function CustomWidgetRenderer({
             {widget.title}
           </span>
           <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">
-            {t(`reports.collections.${widget.collection}` as AppTranslationKey)} {resolvedWidgetType !== "switch" ? `• ${t(`reports.widgets.builder.formula${widget.operation.charAt(0).toUpperCase() + widget.operation.slice(1)}` as AppTranslationKey) || widget.operation}` : ""}
+            {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)} {resolvedWidgetType !== "switch" ? `• ${t(`reports.widgets.builder.formula${widget.operation.charAt(0).toUpperCase() + widget.operation.slice(1)}` as AppTranslationKey) || widget.operation}` : ""}
           </p>
         </div>
         
@@ -1493,7 +1493,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   <div className="space-y-0.5">
                     <span className="text-[10px] font-black text-foreground uppercase tracking-widest leading-none block">{widget.title}</span>
                     <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">
-                      {widget.widgetType || "kpi"} • {t(`reports.collections.${widget.collection}` as AppTranslationKey) || widget.collection.replace("_", " ")}
+                      {widget.widgetType || "kpi"} • {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection.replace("_", " "), t)}
                     </p>
                   </div>
                   
@@ -1875,7 +1875,7 @@ export function WidgetBuilder({
                   >
                     {COLLECTION_OPTIONS.map((collectionOption) => (
                       <option key={collectionOption.value} value={collectionOption.value} className="bg-background text-foreground">
-                        {t(`reports.collections.${collectionOption.value}` as AppTranslationKey) || collectionOption.label}
+                        {getCollectionLabel(collectionOption.value, collectionOption.label, t)}
                       </option>
                     ))}
                   </select>
@@ -1912,7 +1912,7 @@ export function WidgetBuilder({
                     ) : (
                       METADATA_FIELDS[builderCollection].numericFields.map((numericField) => (
                         <option key={numericField.value} value={numericField.value} className="bg-background text-foreground">
-                          {t(`reports.fields.${numericField.value}` as AppTranslationKey) || numericField.label}
+                          {getFieldLabel(numericField.value, numericField.label, t)}
                         </option>
                       ))
                     )}
@@ -1930,7 +1930,7 @@ export function WidgetBuilder({
                     <option value="" className="bg-background text-foreground">{t("reports.widgets.builder.noFilter")}</option>
                     {METADATA_FIELDS[builderCollection].fields.map((metadataField) => (
                       <option key={metadataField.value} value={metadataField.value} className="bg-background text-foreground">
-                        {t(`reports.fields.${metadataField.value}` as AppTranslationKey) || metadataField.label}
+                        {getFieldLabel(metadataField.value, metadataField.label, t)}
                       </option>
                     ))}
                   </select>
@@ -2106,7 +2106,7 @@ export function WidgetBuilder({
                         className={FORM_INPUT_BUILDER}
                       >
                         {COLLECTION_OPTIONS.map((collectionOption) => (
-                          <option key={collectionOption.value} value={collectionOption.value} className="bg-background text-foreground">{t(`reports.collections.${collectionOption.value}` as AppTranslationKey) || collectionOption.label}</option>
+                          <option key={collectionOption.value} value={collectionOption.value} className="bg-background text-foreground">{getCollectionLabel(collectionOption.value, collectionOption.label, t)}</option>
                         ))}
                       </select>
                     </div>

@@ -22,7 +22,7 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { getBrandingChartPalette } from "@/lib/brandingChartPalette";
 import { getCollection, getObject, saveObject } from "@/lib/db";
-import { METADATA_FIELDS, VisualizerConfig, type ReportCollection } from "@/tenant/features/reports/components/reportMetadata";
+import { METADATA_FIELDS, VisualizerConfig, type ReportCollection, getFieldLabel, getCollectionLabel } from "@/tenant/features/reports/components/reportMetadata";
 
 interface CollectionMeta {
   name: string;
@@ -711,15 +711,11 @@ export default function DynamicChartVisualizer({
                   onChange={(event) => setXAxisField(event.target.value)}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
                 >
-                  {activeMeta.fields.map((metadataField) => {
-                    const transKey = `reports.fields.${metadataField.value}`;
-                    const translated = t(transKey as any);
-                    return (
-                      <option key={metadataField.value} value={metadataField.value}>
-                        {translated === transKey ? metadataField.label : translated}
-                      </option>
-                    );
-                  })}
+                  {activeMeta.fields.map((metadataField) => (
+                    <option key={metadataField.value} value={metadataField.value}>
+                      {getFieldLabel(metadataField.value, metadataField.label, t)}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -756,15 +752,11 @@ export default function DynamicChartVisualizer({
                   {activeMeta.numericFields.length === 0 ? (
                     <option value="">{t("reports.widgets.builder.noNumericFields")}</option>
                   ) : (
-                    activeMeta.numericFields.map((numericField) => {
-                      const transKey = `reports.fields.${numericField.value}`;
-                      const translated = t(transKey as any);
-                      return (
-                        <option key={numericField.value} value={numericField.value}>
-                          {translated === transKey ? numericField.label : translated}
-                        </option>
-                      );
-                    })
+                    activeMeta.numericFields.map((numericField) => (
+                      <option key={numericField.value} value={numericField.value}>
+                        {getFieldLabel(numericField.value, numericField.label, t)}
+                      </option>
+                    ))
                   )}
                 </select>
               </div>
@@ -876,15 +868,11 @@ export default function DynamicChartVisualizer({
                     onChange={(event) => handleUpdateFilter(rule.id, { field: event.target.value })}
                     className="flex-1 min-w-0 px-2 py-1 text-[11px] rounded-lg border border-border bg-card/60 text-foreground focus:outline-none"
                   >
-                    {activeMeta.fields.map((metadataField) => {
-                      const transKey = `reports.fields.${metadataField.value}`;
-                      const translated = t(transKey as any);
-                      return (
-                        <option key={metadataField.value} value={metadataField.value}>
-                          {translated === transKey ? metadataField.label : translated}
-                        </option>
-                      );
-                    })}
+                    {activeMeta.fields.map((metadataField) => (
+                      <option key={metadataField.value} value={metadataField.value}>
+                        {getFieldLabel(metadataField.value, metadataField.label, t)}
+                      </option>
+                    ))}
                   </select>
 
                   {/* Operator */}
@@ -938,13 +926,9 @@ export default function DynamicChartVisualizer({
               <h3 className="text-base font-black text-foreground tracking-tight leading-none">{title}</h3>
               <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">
                 {(() => {
-                  const collTransKey = `reports.collections.${collectionKey}`;
-                  const collTranslated = t(collTransKey as any);
-                  const collName = collTranslated === collTransKey ? activeMeta.name : collTranslated;
-
-                  const axisTransKey = `reports.fields.${xAxisField}`;
-                  const axisTranslated = t(axisTransKey as any);
-                  const axisName = axisTranslated === axisTransKey ? xAxisField : axisTranslated;
+                  const collName = getCollectionLabel(collectionKey, activeMeta.name, t);
+                  const activeField = activeMeta.fields.find((f) => f.value === xAxisField);
+                  const axisName = getFieldLabel(xAxisField, activeField?.label || xAxisField, t);
 
                   return t("reports.visualizer.sourceSubtitle", {
                     source: collName,
