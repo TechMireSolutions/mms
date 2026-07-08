@@ -15,6 +15,7 @@ import { useExaminationsResultsCollection } from "@/tenant/features/examinations
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
+import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
 import type { AppTranslationKey } from "@mms/shared";
 import {
   buildContactsReportFieldCatalog,
@@ -204,6 +205,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
   const { t } = useTranslation();
   const { role: viewerRole } = usePermissions();
   const { fieldConfig } = useContactConfig();
+  const { activeCurrency } = useFinanceCurrency();
 
   const [source, setSource] = useState<DataSource>(() => {
     if (initialSource === "financial") return "financial";
@@ -367,9 +369,9 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
         else if (selectedField === "Days") row[label] = Array.isArray(sourceRow.days) ? sourceRow.days.join(", ") : String(sourceRow.days || "—");
         else if (selectedField === "Discount Type") row[label] = String(sourceRow.discountType || "None");
         else if (selectedField === "Discount %" || selectedField === "Discount") {
-          row[label] = sourceRow.discountPct !== undefined ? `${sourceRow.discountPct}%` : (sourceRow.discountAmt ? `PKR ${sourceRow.discountAmt}` : "0");
+          row[label] = sourceRow.discountPct !== undefined ? `${sourceRow.discountPct}%` : (sourceRow.discountAmt ? `${activeCurrency.code} ${sourceRow.discountAmt}` : "0");
         }
-        else if (selectedField === "Final Amount") row[label] = sourceRow.finalAmt ? `PKR ${sourceRow.finalAmt}` : "0";
+        else if (selectedField === "Final Amount") row[label] = sourceRow.finalAmt ? `${activeCurrency.code} ${sourceRow.finalAmt}` : "0";
         else if (selectedField === "Utilisation %" || selectedField === "Rate %") {
           row[label] = (Number(sourceRow.capacity || 0) > 0 ? `${Math.round((Number(sourceRow.enrolled || 0) / Number(sourceRow.capacity || 1)) * 100)}%` : (sourceRow.rate ? `${sourceRow.rate}%` : "100%"));
         }

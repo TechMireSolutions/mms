@@ -146,7 +146,7 @@ export function DiscountsTab({ session, onUpdate }: DiscountsTabProps) {
                   </span>
                 </div>
                 <p className="text-[13px] font-semibold text-primary m-0">
-                  {discountItem.type === "percentage" ? `${discountItem.value}% off` : `PKR ${discountItem.value} off`}
+                  {discountItem.type === "percentage" ? `${discountItem.value}% off` : `${session.currency || "PKR"} ${discountItem.value} off`}
                 </p>
                 {discountItem.conditions && <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{discountItem.conditions}</p>}
               </div>

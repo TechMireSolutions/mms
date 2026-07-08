@@ -6,8 +6,9 @@ import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatMoney, getInitials } from "@mms/shared";
+import { getInitials } from "@mms/shared";
 import MessageComposer from "@/components/ui/MessageComposer";
+import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
 /**
@@ -21,6 +22,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 export default function OutstandingFeesTable({ title }: { title?: string }) {
   const { t } = useTranslation();
   const invoices = useFinanceInvoicesCollection();
+  const { formatCurrency } = useFinanceCurrency();
   const unpaidInvoices = useMemo(
     () => invoices.filter((invoice) => invoice.status !== "paid" && invoice.status !== "cancelled"),
     [invoices],
@@ -137,7 +139,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                 </td>
                 <td className="px-3 py-3 text-[12px] text-muted-foreground hidden sm:table-cell">{outstandingFee.class}</td>
                 <td className="px-3 py-3">
-                  <span className="text-[13px] font-bold text-destructive">{formatMoney(outstandingFee.amount)}</span>
+                  <span className="text-[13px] font-bold text-destructive">{formatCurrency(outstandingFee.amount)}</span>
                 </td>
                 <td className="px-3 py-3 hidden md:table-cell">
                   <StatusBadge

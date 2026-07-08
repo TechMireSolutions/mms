@@ -17,7 +17,8 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 
 
-import { formatMoney, formatMonthYear, getInitials } from "@mms/shared";
+import { formatMonthYear, getInitials } from "@mms/shared";
+import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
 
 import { StatCard } from "@/components/ui/StatCard";
 
@@ -61,6 +62,12 @@ export interface ObligationsSummaryProps {
 export function ObligationsSummary({
   collections, obligationTypes, reps, mujtahids, wakalaTypes, distributions
 }: ObligationsSummaryProps) {
+  const { formatCurrency, activeCurrency } = useFinanceCurrency();
+  
+  const formatValueOnly = (amount: number | string | null | undefined): string => {
+    if (amount === null || amount === undefined || isNaN(Number(amount))) return "—";
+    return Number(amount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  };
   const users = useMergedObligationUsers();
   const { primary, secondary, charts } = useBrandPalette();
   const COLORS = useMemo(() => [primary, charts[3], secondary, charts[4], charts[0], charts[2]], [primary, secondary, charts]);
@@ -294,7 +301,7 @@ export function ObligationsSummary({
       {/* ── KPI Cards ── */}
       <section aria-label="Key Performance Indicators" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard icon={Receipt}  label="Total Collections"     value={totalRecords}               accent="primary" />
-        <StatCard icon={TrendingUp} label="Total Amount Received" value={formatMoney(totalAmount)}          accent="emerald" />
+        <StatCard icon={TrendingUp} label="Total Amount Received" value={formatCurrency(totalAmount)}          accent="emerald" />
         <StatCard icon={Users}    label="Active Reps"            value={uniqueReps}                 accent="blue" />
         <StatCard icon={Layers}   label="Obligation Types"       value={typeBreakdown.length}        accent="amber" />
       </section>
@@ -309,7 +316,7 @@ export function ObligationsSummary({
               <BarChart data={typeBreakdown} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
-                <Tooltip formatter={(v) => v !== undefined ? formatMoney(Number(v)) : ""} />
+                <Tooltip formatter={(v) => v !== undefined ? formatCurrency(Number(v)) : ""} />
                 <Bar dataKey="total" radius={[6,6,0,0]}>
                   {typeBreakdown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Bar>
@@ -325,7 +332,7 @@ export function ObligationsSummary({
                 <BarChart data={monthlyTrend} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                   <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
-                  <Tooltip formatter={(v) => v !== undefined ? formatMoney(Number(v)) : ""} />
+                  <Tooltip formatter={(v) => v !== undefined ? formatCurrency(Number(v)) : ""} />
                   <Bar dataKey="total" fill={primary} radius={[6,6,0,0]} />
                 </BarChart>
               </SafeResponsiveContainer>
@@ -339,7 +346,7 @@ export function ObligationsSummary({
                   <Pie data={typeBreakdown} dataKey="total" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${((percent ?? 0)*100).toFixed(0)}%`} labelLine={false}>
                     {typeBreakdown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(v) => v !== undefined ? formatMoney(Number(v)) : ""} />
+                  <Tooltip formatter={(v) => v !== undefined ? formatCurrency(Number(v)) : ""} />
                 </PieChart>
               </SafeResponsiveContainer>
             </Card>
@@ -361,12 +368,12 @@ export function ObligationsSummary({
               { header: "Mujtahid", key: "mujtahidName" },
               { header: "Obligation Type", key: "obligationType" },
               { header: "Collections", key: "count" },
-              { header: "Total Amount (PKR)", key: "totalFmt" },
+              { header: `Total Amount (${activeCurrency.code})`, key: "totalFmt" },
               { header: "Distributions", key: "distFmt" },
             ]}
             rows={wakalaSummary.map((w) => ({
               ...w,
-              totalFmt: formatMoney(w.total),
+              totalFmt: formatCurrency(w.total),
               distFmt: w.distributions.map((d: ObligationDistribution) => `${d.name} ${d.percentage}%`).join("; ") || "—",
             }))}
           />
@@ -403,7 +410,7 @@ export function ObligationsSummary({
                       <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full">{w.obligationType}</span>
                     </td>
                     <td className="px-3 py-3 text-right text-sm font-semibold text-foreground">{w.count}</td>
-                    <td className="px-3 py-3 text-right font-mono font-bold text-success text-sm">{formatMoney(w.total)}</td>
+                    <td className="px-3 py-3 text-right font-mono font-bold text-success text-sm">{formatCurrency(w.total)}</td>
                     <td className="px-3 py-3">
                       {w.distributions.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
@@ -421,7 +428,7 @@ export function ObligationsSummary({
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
                   <td colSpan={4} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{wakalaSummary.length} wakala config{wakalaSummary.length !== 1 ? "s" : ""}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-success text-xs">{formatMoney(totalAmount)}</td>
+                  <td className="px-3 py-2 text-right font-mono font-bold text-success text-xs">{formatCurrency(totalAmount)}</td>
                   <td />
                 </tr>
               </tfoot>
@@ -444,14 +451,14 @@ export function ObligationsSummary({
               { header: "Mujtahid", key: "mujtahidName" },
               { header: "By Obligation Type", key: "byTypeFmt" },
               { header: "Collections", key: "count" },
-              { header: "Total Collected (PKR)", key: "totalFmt" },
-              { header: "Due to Rep (PKR)", key: "dueFmt" },
+              { header: `Total Collected (${activeCurrency.code})`, key: "totalFmt" },
+              { header: `Due to Rep (${activeCurrency.code})`, key: "dueFmt" },
             ]}
             rows={repSummary.map((r) => ({
               ...r,
-              byTypeFmt: Object.entries(r.byType).map(([n, v]) => `${n}: ${formatMoney(v as number)}`).join("; "),
-              totalFmt: formatMoney(r.total),
-              dueFmt: formatMoney(r.due),
+              byTypeFmt: Object.entries(r.byType).map(([n, v]) => `${n}: ${formatCurrency(v as number)}`).join("; "),
+              totalFmt: formatCurrency(r.total),
+              dueFmt: formatCurrency(r.due),
             }))}
           />
         </header>
@@ -487,15 +494,15 @@ export function ObligationsSummary({
                       <div className="flex flex-wrap gap-1">
                         {Object.entries(r.byType).map(([name, amount]) => (
                           <span key={name} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted border border-border text-foreground whitespace-nowrap">
-                            {name}: {formatMoney(amount as number).replace("PKR ", "")}
+                            {name}: {formatValueOnly(amount as number)}
                           </span>
                         ))}
                       </div>
                     </td>
                     <td className="px-3 py-3 text-right text-sm font-semibold text-foreground">{r.count}</td>
-                    <td className="px-3 py-3 text-right font-mono font-bold text-foreground text-sm">{formatMoney(r.total)}</td>
+                    <td className="px-3 py-3 text-right font-mono font-bold text-foreground text-sm">{formatCurrency(r.total)}</td>
                     <td className="px-3 py-3 text-right">
-                      <span className="font-mono font-bold text-destructive text-sm">{formatMoney(r.due)}</span>
+                      <span className="font-mono font-bold text-destructive text-sm">{formatCurrency(r.due)}</span>
                     </td>
                   </tr>
                 ))}
@@ -503,8 +510,8 @@ export function ObligationsSummary({
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
                   <td colSpan={4} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{repSummary.length} rep{repSummary.length !== 1 ? "s" : ""}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-foreground text-xs">{formatMoney(totalAmount)}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-destructive text-xs">{formatMoney(repSummary.reduce((sum, representativeSummary) => sum + representativeSummary.due, 0))}</td>
+                  <td className="px-3 py-2 text-right font-mono font-bold text-foreground text-xs">{formatCurrency(totalAmount)}</td>
+                  <td className="px-3 py-2 text-right font-mono font-bold text-destructive text-xs">{formatCurrency(repSummary.reduce((sum, representativeSummary) => sum + representativeSummary.due, 0))}</td>
                 </tr>
               </tfoot>
             </table>
@@ -524,12 +531,12 @@ export function ObligationsSummary({
             columns={[
               { header: "Obligation Type", key: "name" },
               { header: "Collections", key: "count" },
-              { header: "Total Amount (PKR)", key: "totalFmt" },
+              { header: `Total Amount (${activeCurrency.code})`, key: "totalFmt" },
               { header: "Share (%)", key: "shareFmt" },
             ]}
             rows={typeBreakdown.map((t) => ({
               ...t,
-              totalFmt: formatMoney(t.total),
+              totalFmt: formatCurrency(t.total),
               shareFmt: totalAmount ? ((t.total / totalAmount) * 100).toFixed(1) + "%" : "0%",
             }))}
           />
@@ -543,8 +550,8 @@ export function ObligationsSummary({
                   {t.count}
                 </span>
               </header>
-              <p className="text-lg font-bold text-foreground font-mono m-0">{formatMoney(t.total).replace("PKR ", "")}</p>
-              <p className="text-[10px] text-muted-foreground m-0">PKR · {t.count} collection{t.count !== 1 ? "s" : ""}</p>
+              <p className="text-lg font-bold text-foreground font-mono m-0">{formatValueOnly(t.total)}</p>
+              <p className="text-[10px] text-muted-foreground m-0">{activeCurrency.code} · {t.count} collection{t.count !== 1 ? "s" : ""}</p>
               <div className="w-full bg-muted rounded-full h-1.5 mt-1" role="progressbar" aria-valuenow={totalAmount ? (t.total / totalAmount) * 100 : 0} aria-valuemin={0} aria-valuemax={100}>
                 <div className="h-1.5 rounded-full transition-all"
                   style={{ width: `${totalAmount ? (t.total / totalAmount) * 100 : 0}%`, background: COLORS[i % COLORS.length] }} />

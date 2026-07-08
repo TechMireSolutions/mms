@@ -21,11 +21,12 @@ interface TransactionEntry {
 interface TransactionModalProps {
   open: boolean;
   type: "income" | "expense";
+  currency: string;
   onClose: () => void;
   onSave: (tx: TransactionEntry) => void;
 }
 
-function TransactionModal({ open, type, onClose, onSave }: TransactionModalProps) {
+function TransactionModal({ open, type, currency, onClose, onSave }: TransactionModalProps) {
   const categories = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
   const [transactionDraft, setTransactionDraft] = useState({ category: categories[0], amount: "", date: new Date().toISOString().split("T")[0], note: "" });
   const updateTransactionDraft = (field: keyof typeof transactionDraft, value: string) => setTransactionDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
@@ -61,7 +62,7 @@ function TransactionModal({ open, type, onClose, onSave }: TransactionModalProps
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={FORM_LABEL} htmlFor="tx-amount">Amount (PKR) *</label>
+            <label className={FORM_LABEL} htmlFor="tx-amount">Amount ({currency}) *</label>
             <Input id="tx-amount" type="number" value={transactionDraft.amount} onChange={(event) => updateTransactionDraft("amount", event.target.value)} placeholder="0" min={0} required />
           </div>
           <div>
@@ -130,7 +131,7 @@ export function BudgetTab({ session, onUpdate }: BudgetTabProps) {
             <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center mb-2`} aria-hidden="true">
               <stat.icon className={`w-4 h-4 ${stat.color}`} style={{ color: stat.color.includes("success") ? "hsl(var(--success))" : "hsl(var(--destructive))" }} />
             </div>
-            <p className={`text-[16px] font-bold ${stat.color} m-0`}>{formatMoney(stat.value)}</p>
+            <p className={`text-[16px] font-bold ${stat.color} m-0`}>{formatMoney(stat.value, session.currency)}</p>
             <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{stat.label}</p>
           </article>
         ))}
@@ -160,8 +161,8 @@ export function BudgetTab({ session, onUpdate }: BudgetTabProps) {
                   <p className="text-[13px] font-medium text-foreground m-0">{incomeEntry.category}</p>
                   {incomeEntry.note && <p className="text-[11px] text-muted-foreground truncate m-0">{incomeEntry.note}</p>}
                 </div>
-                <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{formatDate(incomeEntry.date)}</p>
-                <p className="text-[13px] font-bold text-success flex-shrink-0 m-0">{formatMoney(incomeEntry.amount)}</p>
+                 <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{formatDate(incomeEntry.date)}</p>
+                 <p className="text-[13px] font-bold text-success flex-shrink-0 m-0">{formatMoney(incomeEntry.amount, session.currency)}</p>
                 <Button aria-label={`Delete income ${incomeEntry.category}`} onClick={() => handleDelete("income", incomeEntry.id)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 w-7 h-7" variant="ghost" size="icon">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>
@@ -195,8 +196,8 @@ export function BudgetTab({ session, onUpdate }: BudgetTabProps) {
                   <p className="text-[13px] font-medium text-foreground m-0">{expenseEntry.category}</p>
                   {expenseEntry.note && <p className="text-[11px] text-muted-foreground truncate m-0">{expenseEntry.note}</p>}
                 </div>
-                <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{formatDate(expenseEntry.date)}</p>
-                <p className="text-[13px] font-bold text-destructive flex-shrink-0 m-0">{formatMoney(expenseEntry.amount)}</p>
+                 <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{formatDate(expenseEntry.date)}</p>
+                 <p className="text-[13px] font-bold text-destructive flex-shrink-0 m-0">{formatMoney(expenseEntry.amount, session.currency)}</p>
                 <Button aria-label={`Delete expense ${expenseEntry.category}`} onClick={() => handleDelete("expense", expenseEntry.id)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 w-7 h-7" variant="ghost" size="icon">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>
@@ -209,6 +210,7 @@ export function BudgetTab({ session, onUpdate }: BudgetTabProps) {
       <TransactionModal
         open={addType !== null}
         type={addType ?? "income"}
+        currency={session.currency || "PKR"}
         onClose={() => setAddType(null)}
         onSave={(transaction) => handleAdd(addType!, transaction)}
       />

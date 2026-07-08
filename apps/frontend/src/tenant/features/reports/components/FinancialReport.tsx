@@ -35,7 +35,8 @@ interface FinancialReportProps {
   onEditVisual?: (config: unknown) => void;
 }
 
-import { formatMoney as PKR, formatMonthYear, formatDate } from "@mms/shared";
+import { formatMonthYear, formatDate } from "@mms/shared";
+import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
 
 const STATUS_COLOR: Record<InvoiceStatus, string> = {
   paid:      "bg-success/10 text-success",
@@ -54,6 +55,7 @@ const STATUS_COLOR: Record<InvoiceStatus, string> = {
  */
 export default function FinancialReport({ filters }: FinancialReportProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { formatCurrency } = useFinanceCurrency();
   const palette = useBrandPalette();
   const PIE_COLORS = useMemo(
     () => [palette.primary, palette.secondary, palette.charts[2], palette.charts[3], palette.charts[0]],
@@ -135,10 +137,10 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard icon={DollarSign}  label={t("finance.report.totalCollected")}  value={PKR(totalCollected)}                   color="green"   />
-        <StatCard icon={AlertCircle} label={t("finance.report.outstanding")}     value={PKR(totalOutstanding)}                 color="red"     />
-        <StatCard icon={TrendingUp}  label={t("finance.report.netRevenue")}      value={PKR(totalCollected - totalOutstanding)} color="primary" />
-        <StatCard icon={Tag}         label={t("finance.report.totalDiscounted")} value={PKR(totalDiscounted)}                  color="amber"   />
+        <StatCard icon={DollarSign}  label={t("finance.report.totalCollected")}  value={formatCurrency(totalCollected)}                   color="green"   />
+        <StatCard icon={AlertCircle} label={t("finance.report.outstanding")}     value={formatCurrency(totalOutstanding)}                 color="red"     />
+        <StatCard icon={TrendingUp}  label={t("finance.report.netRevenue")}      value={formatCurrency(totalCollected - totalOutstanding)} color="primary" />
+        <StatCard icon={Tag}         label={t("finance.report.totalDiscounted")} value={formatCurrency(totalDiscounted)}                  color="amber"   />
       </div>
 
       {/* Revenue trend */}
@@ -155,7 +157,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis dataKey="month" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 11 }} tickFormatter={(value: number) => `${value / 1000}k`} />
-            <Tooltip formatter={(value) => value !== undefined ? PKR(Number(value)) : ""} />
+            <Tooltip formatter={(value) => value !== undefined ? formatCurrency(Number(value)) : ""} />
             <Area type="monotone" dataKey="collected"   stroke="hsl(var(--primary))" fill="url(#colorCollected)" strokeWidth={2} name={t("finance.report.collected")}   />
             <Area type="monotone" dataKey="outstanding" stroke={palette.charts[0]} fill="transparent" strokeWidth={2} strokeDasharray="4 2" name={t("finance.report.outstandingLabel")} />
           </AreaChart>
@@ -197,7 +199,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
                   <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(v) => v !== undefined ? PKR(Number(v)) : ""} />
+              <Tooltip formatter={(v) => v !== undefined ? formatCurrency(Number(v)) : ""} />
               <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
             </PieChart>
           </SafeResponsiveContainer>
@@ -245,9 +247,9 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
                   <td className="px-3 py-2.5 font-mono text-xs text-muted-foreground">{inv.id}</td>
                   <td className="px-3 py-2.5 font-medium">{inv.studentName}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{inv.class}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{PKR(inv.baseFee)}</td>
-                  <td className="px-3 py-2.5 text-warning">{inv.discountAmt > 0 ? `-${PKR(inv.discountAmt)}` : "—"}</td>
-                  <td className="px-3 py-2.5 font-semibold text-foreground">{PKR(inv.finalAmt)}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{formatCurrency(inv.baseFee)}</td>
+                  <td className="px-3 py-2.5 text-warning">{inv.discountAmt > 0 ? `-${formatCurrency(inv.discountAmt)}` : "—"}</td>
+                  <td className="px-3 py-2.5 font-semibold text-foreground">{formatCurrency(inv.finalAmt)}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{formatDate(inv.dueDate)}</td>
                   <td className="px-3 py-2.5">
                     <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${STATUS_COLOR[inv.status as InvoiceStatus] ?? "bg-muted text-muted-foreground"}`}>

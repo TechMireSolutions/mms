@@ -32,6 +32,7 @@ import { computeCustomCard as computeCustomCardShared, CustomCard } from "@/tena
 import DynamicCardBuilder from "@/tenant/features/reports/components/DynamicCardBuilder";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
 
 interface KPIItem {
   icon: LucideIcon;
@@ -289,6 +290,7 @@ function getDefaultCardConfig(category: string, label: string): CustomCard {
 export default function KPISummary({ category, role }: KPISummaryProps): React.JSX.Element {
   const { can } = usePermissions();
   const { t } = useTranslation();
+  const { activeCurrency } = useFinanceCurrency();
   const isContactsCategory = category === "contacts";
   const isStudentsCategory = category === "students";
   const isTeachersCategory = category === "teachers" || category === "faculty";
@@ -351,12 +353,12 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
 
     // 3. Fee Collected
     const collected = invoices.filter((invoice) => invoice.status === "paid").reduce((sum, invoice) => sum + invoice.finalAmt, 0);
-    const feeCollectedVal = `PKR ${(collected/1000).toFixed(1)}k`;
+    const feeCollectedVal = `${activeCurrency.code} ${(collected/1000).toFixed(1)}k`;
 
     // 4. Outstanding
     const outstanding = invoices.filter((invoice) => invoice.status !== "paid" && invoice.status !== "cancelled").reduce((sum, invoice) => sum + (invoice.finalAmt - (invoice.paidAmt || 0)), 0);
     const outstandingCount = invoices.filter((invoice) => invoice.status !== "paid" && invoice.status !== "cancelled").length;
-    const outstandingVal = `PKR ${(outstanding/1000).toFixed(1)}k`;
+    const outstandingVal = `${activeCurrency.code} ${(outstanding/1000).toFixed(1)}k`;
     const outstandingSub = `${outstandingCount} invoices`;
 
     // 5. Hasanat Awarded

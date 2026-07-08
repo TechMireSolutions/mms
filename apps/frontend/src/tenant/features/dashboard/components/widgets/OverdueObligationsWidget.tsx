@@ -106,7 +106,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
               {title || t("dashboard.widgets.overdueObligations")}
             </h3>
             <p className="text-xs text-destructive m-0">
-              {t("dashboard.widgets.studentsCount", { count: overdueStudents.length })} · {formatMoney(totalOverdue)} {t("finance.report.outstanding")}
+              {t("dashboard.widgets.studentsCount", { count: overdueStudents.length })} · {formatMoney(totalOverdue, overdueStudents[0]?.currency)} {t("finance.report.outstanding")}
             </p>
           </div>
         </div>
@@ -189,7 +189,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                     </td>
                     <td className="px-3 py-2.5 text-right">
                       <span className="text-xs font-bold text-foreground">
-                        {formatMoney(overdueStudent.amount)}
+                        {formatMoney(overdueStudent.amount, overdueStudent.currency)}
                       </span>
                     </td>
                     <td className="px-3 py-2.5 text-center">

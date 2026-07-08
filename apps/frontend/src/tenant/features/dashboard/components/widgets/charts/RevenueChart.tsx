@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatMoney } from "@mms/shared";
+import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
 
 interface RevenuePoint {
   month: string;
@@ -30,6 +30,7 @@ interface RevenuePoint {
  */
 const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<TooltipContentProps>) => {
   const { t } = useTranslation();
+  const { formatCurrency } = useFinanceCurrency();
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-card border border-border rounded-xl px-4 py-3 shadow-lg text-sm space-y-1.5">
@@ -43,7 +44,7 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
               : t("accounting.dashboard.expenses")}
           </span>
           <span className="font-semibold text-foreground ml-auto">
-            {formatMoney(Number(payloadEntry.value))}
+            {formatCurrency(Number(payloadEntry.value))}
           </span>
         </div>
       ))}
@@ -58,6 +59,7 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
  */
 export default function RevenueChart({ isEditMode = false }: { isEditMode?: boolean }) {
   const { t } = useTranslation();
+  const { formatCurrency } = useFinanceCurrency();
   const { revenue: COLOR_THEMES } = useBrandedDashboardChartColors();
   const [period, setPeriod] = useState<"6m" | "10m">("10m");
   const invoices = getCollection<Invoice>("finance_invoices");
@@ -109,8 +111,8 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
   const activeColors = COLOR_THEMES[colorTheme] || COLOR_THEMES.mixed;
 
   const formatYAxisTick = (value: number) => {
-    if (value === 0) return formatMoney(0);
-    return `${formatMoney(Math.round(value / 1000))}k`;
+    if (value === 0) return formatCurrency(0);
+    return `${formatCurrency(Math.round(value / 1000))}k`;
   };
 
   return (
