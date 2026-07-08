@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Pencil, Trash2, Plus } from 'lucide-react';
 import type { Permission } from '@mms/shared';
 
-import StatsGrid from '@/tenant/features/dashboard/components/StatsGrid';
+import StatsGrid from '@/tenant/features/dashboard/components/StatisticsGrid';
 import QuickActionsPanel from '@/tenant/features/dashboard/components/QuickActionsPanel';
 import NotificationsPanel from '@/tenant/features/dashboard/components/NotificationsPanel';
 import WelcomeBanner from '@/tenant/features/dashboard/components/WelcomeBanner';

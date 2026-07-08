@@ -5,7 +5,7 @@ import { useBackgroundJobs } from "@/tenant/hooks/useBackgroundJobs";
 import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
 import { FormModal } from "@/components/ui/FormModal";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn, formatDateTime } from "@/lib/utils";
 import type { AppTranslationKey } from "@mms/shared";
 
 interface BackgroundJobsTrayProps {
@@ -121,7 +121,7 @@ export function BackgroundJobsTray({
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {moduleLabel(job.moduleId, t)}
                           {" · "}
-                          {new Date(job.createdAt).toLocaleString()}
+                          {formatDateTime(job.createdAt)}
                           {pct != null ? ` · ${pct}%` : ""}
                         </p>
                       </div>

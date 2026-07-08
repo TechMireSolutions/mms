@@ -8,6 +8,7 @@ import {
   mergeContactForSync,
   resolveSyncConflictContactId,
   type SyncFieldPick,
+  formatDateTime,
 } from '@mms/shared';
 import type { ContactsSyncConflict } from '@/lib/contacts/contactsSyncOutbox';
 import {
@@ -139,7 +140,7 @@ function ConflictRow({ entry, title, onRequestDismiss, onResolved }: ConflictRow
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-foreground truncate">{title}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {kindLabel(entry.kind, t)} · {new Date(entry.failedAt).toLocaleString()}
+            {kindLabel(entry.kind, t)} · {formatDateTime(entry.failedAt)}
           </p>
         </div>
         <div className="flex items-center gap-1 shrink-0">

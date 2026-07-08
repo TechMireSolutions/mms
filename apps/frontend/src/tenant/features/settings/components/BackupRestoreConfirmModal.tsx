@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
-import { formatBackupSize, type WorkspaceBackupSummary } from '@mms/shared';
+import { formatBackupSize, formatDateTime, type WorkspaceBackupSummary } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
@@ -20,11 +20,8 @@ export interface BackupRestoreConfirmModalProps {
 
 function formatExportedAt(iso: string | null): string | null {
   if (!iso) return null;
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
+  const formatted = formatDateTime(iso);
+  return formatted === "—" ? iso : formatted;
 }
 
 export default function BackupRestoreConfirmModal({

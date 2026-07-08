@@ -6,7 +6,7 @@ import { Modal } from "@/components/ui/Modal";
 import { STATUS_MAP, Enrollment } from '@/lib/data/enrollmentData';
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { Button } from "@/components/ui/button";
-import { formatMoney } from "@mms/shared";
+import { formatMoney, formatDateTime } from "@mms/shared";
 
 interface SectionProps {
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
@@ -157,7 +157,7 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
                   <div className="pb-2">
                     <p className="text-xs font-semibold text-foreground">{timelineItem.event}</p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {new Date(timelineItem.ts).toLocaleString()} · {timelineItem.by}
+                      {formatDateTime(timelineItem.ts)} · {timelineItem.by}
                     </p>
                   </div>
                 </div>
