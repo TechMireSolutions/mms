@@ -10,6 +10,7 @@ import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import MessageComposer from "@/components/ui/MessageComposer";
 import { getInitials } from "@/lib/utils";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 export interface OverdueStudent {
   id: number;
@@ -32,10 +33,7 @@ const DEFAULT_OVERDUE_STUDENTS: OverdueStudent[] = [
   { id: 8, name: "Sara Jaffery",     obligationType: "Fidya",   dueDate: "2026-05-10", amount: 1800,  currency: "PKR", daysOverdue: 9  },
 ];
 
-interface UrgencyBadge {
-  label: string;
-  cls: string;
-}
+
 
 /**
  * OverdueObligationsWidget Component
@@ -94,25 +92,6 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
     });
     setRemindedIds(new Set(overdueStudents.map((overdueStudent) => overdueStudent.id)));
   };
-
-  function getUrgencyBadge(days: number): UrgencyBadge {
-    if (days >= 30) {
-      return {
-        label: t("dashboard.widgets.urgency.critical"),
-        cls: "bg-destructive/15 text-destructive border-destructive/30",
-      };
-    }
-    if (days >= 14) {
-      return {
-        label: t("dashboard.widgets.urgency.high"),
-        cls: "bg-warning/15 text-warning border-warning/30",
-      };
-    }
-    return {
-      label: t("dashboard.widgets.urgency.moderate"),
-      cls: "bg-warning/15 text-warning border-warning/30",
-    };
-  }
 
   return (
     <section aria-labelledby="overdue-obligations-heading" className="relative overflow-hidden group/overdue rounded-2xl border border-destructive/30 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
@@ -181,8 +160,8 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
             </thead>
             <tbody className="divide-y divide-border">
               {overdueStudents.map((overdueStudent) => {
-                const badge = getUrgencyBadge(overdueStudent.daysOverdue);
                 const reminded = remindedIds.has(overdueStudent.id);
+                const urgencyStatus = overdueStudent.daysOverdue >= 30 ? "critical" : overdueStudent.daysOverdue >= 14 ? "high" : "moderate";
                 return (
                   <tr key={overdueStudent.id} className="hover:bg-muted/20 transition-colors">
                     <td className="px-4 py-2.5">
@@ -215,9 +194,24 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                       </span>
                     </td>
                     <td className="px-3 py-2.5 text-center">
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold border ${badge.cls}`}>
-                        {badge.label}
-                      </span>
+                      <StatusBadge
+                        status={urgencyStatus}
+                        config={{
+                          critical: {
+                            label: t("dashboard.widgets.urgency.critical"),
+                            cls: "bg-destructive/15 text-destructive border-destructive/30",
+                          },
+                          high: {
+                            label: t("dashboard.widgets.urgency.high"),
+                            cls: "bg-warning/15 text-warning border-warning/30",
+                          },
+                          moderate: {
+                            label: t("dashboard.widgets.urgency.moderate"),
+                            cls: "bg-warning/15 text-warning border-warning/30",
+                          },
+                        }}
+                        size="sm"
+                      />
                     </td>
                     <td className="px-3 py-2.5 text-center">
                       <Button

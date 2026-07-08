@@ -16,7 +16,7 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | WebSockets | Not implemented | Replace polling for server push — `mms-core.md` |
 | Work/Reports sub-tabs | Residual inline bars in deep components | `SubTabBar` per `mms-ui-ux-design.md` |
 | `category="academic"` in reports/KPI | Removed from module pages | Module-specific categories only (`mms-module-architecture.md`) |
-| Legacy entity forms | ObligationModal, some detail drawers | `FormModal` — `mms-ui-ux-design.md` |
+| Legacy entity forms | Some deep module sheets | `FormModal` / `Modal` / `DetailDrawerShell` — `mms-ui-ux-design.md` |
 | Status colours inline | Residual in chart color maps | `StatusBadge` + semantic tokens — `mms-ui-ux-design.md` |
 | Automated tests | Shared + backend (auth, rbac, health, security); frontend apiClient + hooks; Playwright API + Contacts UI in CI `e2e/` | Expand Playwright for login/onboard — `mms-testing-observability.md` |
 | Server-first data | Students + contacts Query-first; most modules localStorage primary | Query + API authoritative for new modules — `mms-data-layer.md` |
@@ -32,6 +32,9 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 
 ## Recently Resolved (Do not reintroduce)
 
+- **Slide-Over Drawer Shell Layouts**: Unified student detail drawer and contact detail drawer to use the central `<DetailDrawerShell>` primitive component, resolving layout, backdrop trigger, and spring animation duplication.
+- **Generic Saved Reports Overlay**: Integrated a generic `<SavedReports>` panel overlay tab in `ModuleReports.tsx` to dynamically run saved filter presets and redirect back to dashboards.
+- **Removed custom ObligationModal wrapper**: Deleted redundant `ObligationModal.tsx` and replaced it with direct `<Modal>` usage inside `ObligationCollectionDetail.tsx`.
 - **Contacts REST & RBAC**: Standardized `/api/contacts` CRUD with soft-delete, deduplication/merging, sync conflict review, and server-side column preferences.
 - **REST APIs (Students, Sessions, Attendance)**: Migrated major collections from client-side localStorage to server authoritative REST endpoints with TanStack Query.
 - **Authentication & Security**: Migrated auth to httpOnly session cookies (`mms_access` and `mms_refresh`), opaque refresh tokens, server-side 2FA challenges (`auth_artifacts`), and tenant JWT binding. Removed local storage JWT.

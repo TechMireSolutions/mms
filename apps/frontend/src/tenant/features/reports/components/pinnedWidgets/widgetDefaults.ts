@@ -549,27 +549,20 @@ export function getOrInitializeCustomWidgets(): CustomWidget[] {
       ...getDefaultCustomWidgets("sessions"),
     ].map(withDefaultTitleKey);
     if (!saved) {
-      saveObject(DASHBOARD_WIDGETS_KEY, defaults);
       return defaults;
     }
     const parsed = saved.map(withDefaultTitleKey);
-    let modified = false;
     const existingIds = new Set(parsed.map((widget) => widget.id));
     const merged = [...parsed];
     for (const defaultWidget of defaults) {
       if (!existingIds.has(defaultWidget.id)) {
         merged.push(defaultWidget);
-        modified = true;
       } else {
         const widgetIndex = merged.findIndex((widget) => widget.id === defaultWidget.id);
         if (widgetIndex >= 0 && defaultWidget.titleKey && !merged[widgetIndex].titleKey) {
           merged[widgetIndex] = { ...merged[widgetIndex], titleKey: defaultWidget.titleKey };
-          modified = true;
         }
       }
-    }
-    if (modified) {
-      saveObject(DASHBOARD_WIDGETS_KEY, merged);
     }
     return merged;
   } catch (error) {

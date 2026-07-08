@@ -18,6 +18,7 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
   - `Checkbox` (`@/components/ui/checkbox`)
   - `Switch` (`@/components/ui/switch`)
   - `FormModal` / `Modal` (`@/components/ui/FormModal`)
+  - `DetailDrawerShell` (`@/components/ui/DetailDrawerShell`)
   - `DataTable` (`@/components/ui/DataTable`)
   - `StatCard` (`@/components/ui/StatCard`)
   - `ExportToolbar` (`@/components/ui/ExportToolbar`)

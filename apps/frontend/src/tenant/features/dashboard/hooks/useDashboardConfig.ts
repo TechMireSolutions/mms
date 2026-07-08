@@ -15,6 +15,14 @@ export function useDashboardConfig() {
     getOrInitializeCustomWidgets()
   );
 
+  useEffect(() => {
+    const saved = getObject<CustomWidget[] | null>(DASHBOARD_WIDGETS_KEY, null);
+    const current = getOrInitializeCustomWidgets();
+    if (!saved || JSON.stringify(saved) !== JSON.stringify(current)) {
+      saveObject(DASHBOARD_WIDGETS_KEY, current);
+    }
+  }, []);
+
   const reloadConfig = useCallback(() => {
     setDisabledCardIds(getObject<string[]>(DASHBOARD_DISABLED_CARDS_KEY, []));
     setCustomWidgets(getOrInitializeCustomWidgets());

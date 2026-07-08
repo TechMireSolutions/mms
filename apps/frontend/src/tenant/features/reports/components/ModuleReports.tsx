@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  BarChart2, GitCompare, Wrench, LayoutDashboard, Sparkles, CreditCard 
+  BarChart2, GitCompare, Wrench, LayoutDashboard, Sparkles, CreditCard, Bookmark 
 } from "lucide-react";
 
 import { useTranslation } from "@/hooks/useTranslation";
@@ -48,10 +48,10 @@ const DEFAULT_FILTERS = {
 export default function ModuleReports({ category }: ModuleReportsProps) {
   const { t } = useTranslation();
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "compare" | "builder" | "widgets" | "visualizer" | "cardBuilder">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "compare" | "builder" | "widgets" | "visualizer" | "cardBuilder" | "saved">("dashboard");
   const [visualizerEditConfig, setVisualizerEditConfig] = useState<VisualizerConfig | undefined>(undefined);
 
-  const REPORT_TABS = useMemo<readonly SubTab<"dashboard" | "compare" | "builder" | "widgets" | "visualizer" | "cardBuilder">[]>(
+  const REPORT_TABS = useMemo<readonly SubTab<"dashboard" | "compare" | "builder" | "widgets" | "visualizer" | "cardBuilder" | "saved">[]>(
     () => [
       { key: "dashboard", label: t("dashboard.title") || "Dashboard", icon: BarChart2 },
       { key: "compare", label: t("reports.moduleTools.compare") || "Compare", icon: GitCompare },
@@ -59,6 +59,7 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
       { key: "widgets", label: t("reports.moduleTools.widgetBuilder") || "Widget Builder", icon: LayoutDashboard },
       { key: "visualizer", label: t("reports.moduleTools.visualizerBuilder") || "Visualizer Builder", icon: Sparkles },
       { key: "cardBuilder", label: t("reports.moduleTools.cardBuilder") || "Card Builder", icon: CreditCard },
+      { key: "saved", label: t("reports.saved.title") || "Saved Reports", icon: Bookmark },
     ],
     [t]
   );
@@ -98,7 +99,7 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
         return <QuestionBankReport />;
       case "hasanat":    return <HasanatReport     filters={filters} onEditVisual={handleEditVisual} />;
       case "sessions":   return <SessionReport     filters={filters} onEditVisual={handleEditVisual} />;
-      case "saved":      return <SavedReports category={category} />;
+      case "saved":      return null;
       default:           return null;
     }
   };
@@ -171,6 +172,20 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
         {activeTab === "cardBuilder" && (
           <motion.div key="cardBuilder" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
              <div className="pb-4"><DynamicCardBuilder initialCollection={getInitialCollection()} /></div>
+          </motion.div>
+        )}
+        {activeTab === "saved" && (
+          <motion.div key="saved" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+             <div className="pb-4">
+                <SavedReports
+                  category={category}
+                  filters={filters}
+                  onApplyFilters={(appliedFilters) => {
+                    setFilters(appliedFilters as typeof DEFAULT_FILTERS);
+                    setActiveTab("dashboard");
+                  }}
+                />
+             </div>
           </motion.div>
         )}
       </AnimatePresence>

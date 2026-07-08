@@ -7,6 +7,7 @@ import { useAttendanceConfig } from "@/tenant/features/attendance/hooks/useAtten
 import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { useTranslation } from "@/hooks/useTranslation";
+import { rateToneClass } from "@/lib/semanticTone";
 
 // Type definitions
 
@@ -90,8 +91,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
     })) as ClassBreakdown[];
   }, [displayRecords, allClasses]);
 
-  const rateColor = rate >= 90 ? "text-success" : rate >= 75 ? "text-warning" : "text-destructive";
-  const rateBarColor = rate >= 90 ? "bg-success" : rate >= 75 ? "bg-warning" : "bg-destructive";
+  const { text: rateColor, bar: rateBarColor } = rateToneClass(rate);
 
   return (
     <section aria-labelledby="todays-attendance-heading" className="relative overflow-hidden group/attendance rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
@@ -171,10 +171,10 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
                 <div key={classStats.classId} className="flex items-center gap-3">
                   <span className="text-xs font-semibold text-foreground w-28 truncate">{classStats.name}</span>
                   <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                    <div className={`h-full rounded-full ${classStats.rate >= 90 ? "bg-success" : classStats.rate >= 75 ? "bg-warning" : "bg-destructive"}`}
+                    <div className={`h-full rounded-full ${rateToneClass(classStats.rate).bar}`}
                       style={{ width: `${classStats.rate}%` }} />
                   </div>
-                  <span className={`text-xs font-bold w-10 text-right ${classStats.rate >= 90 ? "text-success" : classStats.rate >= 75 ? "text-warning" : "text-destructive"}`}>{classStats.rate}%</span>
+                  <span className={`text-xs font-bold w-10 text-right ${rateToneClass(classStats.rate).text}`}>{classStats.rate}%</span>
                 </div>
               ))}
             </div>

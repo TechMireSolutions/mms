@@ -9,6 +9,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { formatMoney } from "@mms/shared";
 import MessageComposer from "@/components/ui/MessageComposer";
 import { getInitials } from "@/lib/utils";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 /**
  * OutstandingFeesTable Component
@@ -140,13 +141,20 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                   <span className="text-[13px] font-bold text-destructive">{formatMoney(outstandingFee.amount)}</span>
                 </td>
                 <td className="px-3 py-3 hidden md:table-cell">
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                    outstandingFee.months >= 3
-                      ? "bg-destructive/10 text-destructive"
-                      : "bg-warning/10 text-warning"
-                  }`}>
-                    {t("dashboard.widgets.overdueStatus", { count: outstandingFee.months })}
-                  </span>
+                  <StatusBadge
+                    status={outstandingFee.months >= 3 ? "overdue" : "warning"}
+                    config={{
+                      overdue: {
+                        label: t("dashboard.widgets.overdueStatus", { count: outstandingFee.months }),
+                        cls: "bg-destructive/10 text-destructive border-destructive/20",
+                      },
+                      warning: {
+                        label: t("dashboard.widgets.overdueStatus", { count: outstandingFee.months }),
+                        cls: "bg-warning/10 text-warning border-warning/20",
+                      },
+                    }}
+                    size="sm"
+                  />
                 </td>
                 <td className="px-3 py-3 text-right">
                   <div className="flex items-center justify-end gap-1.5">

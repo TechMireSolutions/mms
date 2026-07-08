@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Edit2, MessageCircle, MessageSquare, Phone, Mail,
+  Edit2, MessageCircle, MessageSquare, Phone, Mail,
   ExternalLink, Calendar, User, Clock, Tag,
   Send, LucideIcon,
   LayoutDashboard, History, Users as UsersIcon, FileText, BrainCircuit, ShieldCheck, Search, Zap
 } from "lucide-react";
+import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Contact, ContactActivity, canViewContactField, CONTACTS_MODULE_CONTRACT } from "@mms/shared";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, calcAge } from "@mms/shared";
@@ -261,53 +262,46 @@ export default function ContactDetailDrawer({
 
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-end">
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
-      <motion.aside
-        initial={{ x: "100%", opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: "100%", opacity: 0 }}
-        transition={{ type: "spring", damping: 28, stiffness: 260 }}
-        className="relative w-full max-w-sm h-full bg-card/90 border-l border-border/80 shadow-2xl flex flex-col z-10 backdrop-blur-xl"
-        aria-label={t('contacts.detail.title')}
-      >
-        
-        <div className="sticky top-0 bg-card/75 backdrop-blur-md z-10 px-5 pt-4 border-b border-border/40 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[13px] font-bold text-foreground leading-tight">{t('contacts.detail.title')}</h2>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => onEdit(c)}
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shadow-none"
-                title={t('contacts.detail.editProfile')}
-              >
-                <Edit2 className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={onClose}
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors shadow-none"
-                aria-label={t('contacts.detail.close')}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-
-          
-          <div className="flex border-b border-border py-1 overflow-x-auto w-full max-w-sm">
-            <SubTabBar
-              tabs={detailTabs}
-              value={activeTab}
-              onChange={setActiveTab}
-              panelIdPrefix="contact-detail-drawer"
-              className="w-full max-w-sm"
-            />
-          </div>
+    <DetailDrawerShell
+      onClose={onClose}
+      title={t('contacts.detail.title')}
+      ariaLabel={t('contacts.detail.title')}
+      headerActions={
+        <Button
+          variant="outline"
+          onClick={() => onEdit(c)}
+          className="h-8 w-8 p-1.5 rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shadow-none"
+          title={t('contacts.detail.editProfile')}
+        >
+          <Edit2 className="w-4 h-4" />
+        </Button>
+      }
+      headerExtra={
+        <div className="flex border-b border-border py-1 overflow-x-auto w-full max-w-sm">
+          <SubTabBar
+            tabs={detailTabs}
+            value={activeTab}
+            onChange={setActiveTab}
+            panelIdPrefix="contact-detail-drawer"
+            className="w-full max-w-sm"
+          />
         </div>
-
-        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5">
+      }
+      footer={
+        <>
+          <div className="flex items-center gap-2 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+            <Clock className="w-3 h-3" />
+            {(c.updatedAt || c.createdAt) && (
+              <span>{t('contacts.detail.updatedLabel')} {formatDate((c.updatedAt || c.createdAt) as string)}</span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${DETAIL_STYLES.liveIntelIndicator}`} />
+            <span className={`text-[9px] font-bold uppercase ${DETAIL_STYLES.liveIntelText}`}>{t('contacts.detail.liveIntel')}</span>
+          </div>
+        </>
+      }
+    >
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -799,22 +793,6 @@ export default function ContactDetailDrawer({
               )}
             </motion.div>
           </AnimatePresence>
-        </div>
-
-        
-        <div className="px-5 py-4 border-t border-border bg-muted/10 flex items-center justify-between">
-           <div className="flex items-center gap-2 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-              <Clock className="w-3 h-3" />
-              {(c.updatedAt || c.createdAt) && (
-                <span>{t('contacts.detail.updatedLabel')} {formatDate((c.updatedAt || c.createdAt) as string)}</span>
-              )}
-           </div>
-           <div className="flex items-center gap-1.5">
-              <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${DETAIL_STYLES.liveIntelIndicator}`} />
-              <span className={`text-[9px] font-bold uppercase ${DETAIL_STYLES.liveIntelText}`}>{t('contacts.detail.liveIntel')}</span>
-           </div>
-         </div>
-      </motion.aside>
-    </div>
+    </DetailDrawerShell>
   );
 }
