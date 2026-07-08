@@ -12,6 +12,7 @@ import { getGrade } from "@/tenant/features/examinations/components/gradeUtils";
 import { FORM_INPUT_COMPACT } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getInitials } from "@/lib/utils";
 
 interface EnterMarksProps {
   exams: Exam[];
@@ -154,7 +155,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
                     role="listitem"
                   >
                     <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-primary" aria-hidden="true">
-                      {(student.name ?? "?").split(" ").map((namePart) => namePart[0]).join("").slice(0, 2)}
+                      {getInitials(student.name)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[13px] font-semibold text-foreground">{student.name ?? "—"}</p>

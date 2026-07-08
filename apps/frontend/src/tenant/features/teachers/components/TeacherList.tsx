@@ -9,7 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { formatDate } from '@/lib/db';
-import { DEFAULT_TEACHERS_SETTINGS, type AppTranslationKey } from '@mms/shared';
+import { DEFAULT_TEACHERS_SETTINGS, type AppTranslationKey, getInitials } from '@mms/shared';
 import { useTeacherConfig } from '@/tenant/features/teachers/hooks/useTeacherConfig';
 import type { Teacher } from '@/lib/data/teachersData';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ const AVATAR_COLORS = [
 
 function TeacherAvatar({ teacher, fallback }: { teacher: Teacher; fallback: string }): React.JSX.Element {
   const displayName = teacher.name || fallback;
-  const initials = displayName.split(' ').map((namePart) => namePart[0]).join('').slice(0, 2).toUpperCase();
+  const initials = getInitials(displayName);
   const colorIndex = Math.abs(displayName.split('').reduce((hashTotal, character) => hashTotal + character.charCodeAt(0), 0)) % AVATAR_COLORS.length;
   const colorClass = AVATAR_COLORS[colorIndex];
 

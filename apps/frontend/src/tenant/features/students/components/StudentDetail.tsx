@@ -5,7 +5,7 @@ import {
   X, Edit2, MessageCircle, Phone, MessageSquare,
   Calendar, User, Clock, BookOpen, GraduationCap, Sparkles
 } from "lucide-react";
-import { formatDate, formatDateTime } from "@/lib/utils";
+import { formatDate, formatDateTime, getInitials } from "@/lib/utils";
 import {
   DEFAULT_STUDENT_ENABLED_TABS,
   type FieldDefinition,
@@ -96,7 +96,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
   const enrolledSessionDetails = sessions.filter((session) => student.enrolledSessions?.includes(session.id));
 
   // Determine avatar initials and color
-  const initials = student.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "?";
+  const initials = getInitials(student.name);
   const colorIdx = student.id.charCodeAt(student.id.length - 1) % AVATAR_GRADIENT_ROTATION.length;
   const avatarGradient = AVATAR_GRADIENT_ROTATION[colorIdx];
 

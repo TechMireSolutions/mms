@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { CheckCircle2, Loader2, Lock, Mail, User, Camera, ShieldCheck } from "lucide-react";
 import type { TenantUserProfile } from "@mms/shared";
-import { calculateProfileCompleteness } from "@mms/shared";
+import { calculateProfileCompleteness, getInitials } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -304,7 +304,7 @@ export default function AccountProfile(): React.JSX.Element {
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                       />
                     ) : (
-                      <span>{profile.contact?.name ? profile.contact.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() : (profile.name ?? "U").slice(0, 2).toUpperCase()}</span>
+                      <span>{profile.contact?.name ? getInitials(profile.contact.name) : getInitials(profile.name || "U")}</span>
                     )}
 
                     {profile.contact && (

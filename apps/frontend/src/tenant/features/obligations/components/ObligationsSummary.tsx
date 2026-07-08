@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 
 
-import { formatMoney, formatMonthYear } from "@mms/shared";
+import { formatMoney, formatMonthYear, getInitials } from "@mms/shared";
 
 import { StatCard } from "@/components/ui/StatCard";
 
@@ -477,7 +477,7 @@ export function ObligationsSummary({
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0" aria-hidden="true">
-                          <span className="text-[10px] font-bold text-primary">{r.repName.split(" ").map((w: string) => w[0]).join("").slice(0,2).toUpperCase()}</span>
+                          <span className="text-[10px] font-bold text-primary">{getInitials(r.repName)}</span>
                         </div>
                         <p className="font-semibold text-foreground text-sm m-0">{r.repName}</p>
                       </div>

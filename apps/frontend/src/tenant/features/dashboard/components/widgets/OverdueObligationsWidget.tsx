@@ -9,6 +9,7 @@ import { formatMoney } from "@mms/shared";
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import MessageComposer from "@/components/ui/MessageComposer";
+import { getInitials } from "@/lib/utils";
 
 export interface OverdueStudent {
   id: number;
@@ -188,7 +189,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0" aria-hidden="true">
                           <span className="text-[10px] font-bold text-primary">
-                            {overdueStudent.name.split(" ").map((namePart) => namePart[0]).join("").slice(0, 2)}
+                            {getInitials(overdueStudent.name)}
                           </span>
                         </div>
                         <span className="font-medium text-foreground text-xs">{overdueStudent.name}</span>

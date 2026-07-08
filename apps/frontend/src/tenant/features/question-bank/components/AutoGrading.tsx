@@ -7,6 +7,7 @@ import {
   type QuestionBankQuestion as Question,
   type QuestionBankResult,
   type QuestionBankTest,
+  getInitials,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
@@ -74,7 +75,7 @@ function ResultRow({ result, test, questions }: ResultRowProps): React.ReactElem
       >
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-foreground">
-            {result.studentName.split(" ").map((namePart) => namePart[0]).join("").slice(0, 2)}
+            {getInitials(result.studentName)}
           </div>
           <p className="text-[13px] font-semibold text-foreground m-0">{result.studentName}</p>
         </div>

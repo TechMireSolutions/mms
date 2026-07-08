@@ -27,6 +27,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { AppTranslationKey, FieldDefinition } from "@mms/shared";
 import StudentDetail from "@/tenant/features/students/components/StudentDetail";
 import { useStudentConfig } from "@/tenant/features/students/hooks/useStudentConfig";
+import { getInitials } from "@/lib/utils";
 
 const AVATAR_COLORS = [
   "bg-primary/15 text-primary",
@@ -37,7 +38,7 @@ const AVATAR_COLORS = [
 ] as const;
 
 function StudentAvatar({ student }: { student: Student }): JSX.Element {
-  const initials = student.name.split(" ").map((namePart) => namePart[0]).join("").slice(0, 2).toUpperCase();
+  const initials = getInitials(student.name);
   const colorIndex = student.id.charCodeAt(student.id.length - 1) % AVATAR_COLORS.length;
   return (
     <div className={`w-8 h-8 rounded-full ${AVATAR_COLORS[colorIndex]} flex items-center justify-center text-[11px] font-bold flex-shrink-0`}>

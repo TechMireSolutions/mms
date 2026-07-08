@@ -58,7 +58,7 @@ export function useLiveCollection<T = any>(
     return () => {
       window.removeEventListener("local-database-update", handleUpdate);
     };
-  }, [dbKey, enabled]);
+  }, [dbKey, enabled, serverSync]);
 
   if (!enabled) return [] as T[];
   return data;

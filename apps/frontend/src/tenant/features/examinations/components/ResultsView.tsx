@@ -13,6 +13,7 @@ import { CertificatePreview } from "@/tenant/features/examinations/components/Ce
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { Button } from "@/components/ui/button";
+import { getInitials } from "@/lib/utils";
 
 
 
@@ -206,7 +207,7 @@ export function ResultsView({
                           style={{ background: rankedResult.grade.color }}
                           aria-hidden="true"
                         >
-                          {rankedResult.student?.name.split(" ").map((namePart) => namePart[0]).join("").slice(0, 2) || "S"}
+                          {rankedResult.student?.name ? getInitials(rankedResult.student.name) : "S"}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-[13px] font-semibold text-foreground m-0">{rankedResult.student?.name}</p>

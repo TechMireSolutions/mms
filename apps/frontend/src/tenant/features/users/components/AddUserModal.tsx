@@ -30,6 +30,7 @@ import {
   toTitleCase,
   translateApp,
   validatePasswordPolicy,
+  getInitials,
 } from "@mms/shared";
 import ContactPicker from '@/tenant/features/contacts/components/contactLink/ContactPicker';
 import { getGlobalSettings } from "@/lib/db";
@@ -254,7 +255,7 @@ function Step1({ form, setForm, errors }: Step1Props): JSX.Element {
           className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-2">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-bold text-primary">{form.name.split(" ").map((w) => w[0]).join("").slice(0,2).toUpperCase()}</span>
+              <span className="text-sm font-bold text-primary">{getInitials(form.name)}</span>
             </div>
             <div>
               <p className="text-sm font-bold text-foreground">{form.name}</p>
@@ -600,7 +601,7 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
       createdDate: new Date().toISOString().split("T")[0],
       failedLoginAttempts: 0,
       activeSessions: 0,
-      avatarInitials: form.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase(),
+      avatarInitials: getInitials(form.name),
       ...Object.fromEntries(
         customFields.map((cf) => [cf.id, (form as unknown as Record<string, unknown>)[cf.id] ?? cf.defaultValue ?? ""])
       ),

@@ -50,5 +50,6 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 - **Consolidated Stats Cards, Export Toolbars & SafeResponsiveContainer**: Merged duplicate local metrics cards and data export toolbars across all feature modules and reports into unified, central primitives (`StatCard` and `ExportToolbar`). Relocated Recharts chart wrappers to the shared design system folder (`SafeResponsiveContainer`) and standardized imports to eliminate zero-width layout rendering warnings.
 - **Sentry Client-Side Error Reporting**: Configured and integrated Sentry and `ErrorState` with global React ErrorBoundary fallback rendering and error type verification in `main.tsx`.
 - **RBAC Read Hardening**: Hardened `rbacService.ts` mapping and logic by explicitly checking permissions for `user_activity_logs` and `backups` collection reads/writes.
+- **Unused Component Cleanup & Initials DRY Refactoring**: Deleted leftover duplicate components (`ExportToolbar.tsx`, `SafeResponsiveContainer.tsx`, `ReportExportBar.tsx`, `ReportSummaryCard.tsx`) and refactored manual avatar initials formatting across 14 components to use the shared `getInitials` helper.
 
 Do not reintroduce resolved violations.

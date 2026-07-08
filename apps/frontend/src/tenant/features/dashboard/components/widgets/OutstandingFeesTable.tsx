@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatMoney } from "@mms/shared";
 import MessageComposer from "@/components/ui/MessageComposer";
+import { getInitials } from "@/lib/utils";
 
 /**
  * OutstandingFeesTable Component
@@ -128,7 +129,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                   <div className="flex items-center gap-2.5">
                     <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0" aria-hidden="true">
                       <span className="text-[10px] font-bold text-primary">
-                        {outstandingFee.student.split(" ").map((namePart) => namePart[0]).join("").slice(0, 2)}
+                        {getInitials(outstandingFee.student)}
                       </span>
                     </div>
                     <span className="text-[13px] font-medium text-foreground">{outstandingFee.student}</span>

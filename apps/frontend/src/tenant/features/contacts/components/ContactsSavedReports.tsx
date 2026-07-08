@@ -70,7 +70,7 @@ export default function ContactsSavedReports({
     const scopes = [...SHARE_SCOPES];
     if (!isAdmin) return scopes.filter((scope) => scope !== "global");
     return scopes;
-  }, [role]);
+  }, [isAdmin]);
 
   const openSaveDialog = useCallback(() => {
     setName("");

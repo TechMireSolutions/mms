@@ -21,9 +21,11 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
   };
 });
 
+import type { FastifyInstance } from 'fastify';
+
 describe('custom tabs REST API routes', () => {
   let isDbAvailable = false;
-  let app: any;
+  let app: FastifyInstance;
 
   beforeAll(async () => {
     process.env.JWT_SECRET = 'test-secret';
@@ -85,7 +87,7 @@ describe('custom tabs REST API routes', () => {
     });
     expect(getRes.statusCode).toBe(200);
     const getBody = JSON.parse(getRes.body);
-    const found = getBody.tabs.find((t: any) => t.key === 'route_test_tab');
+    const found = getBody.tabs.find((t: { key: string; color?: string }) => t.key === 'route_test_tab');
     expect(found).toBeDefined();
     expect(found.color).toBe('red');
 

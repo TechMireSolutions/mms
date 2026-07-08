@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search, Plus, User, Mail, Phone, Camera } from 'lucide-react';
 import type { Contact } from '@mms/shared';
-import { cn } from '@/lib/utils';
+import { cn, getInitials } from '@/lib/utils';
 import { uploadUserImage } from '@/lib/imageUpload';
 import { genderAvatarGradient, genderBadgeClass } from '@/lib/semanticTone';
 import ContactCreateModal, {
@@ -112,7 +112,7 @@ export default function ContactPicker({
 
   if (selected) {
     const genderBadgeColor = genderBadgeClass(selected.gender ?? '');
-    const initials = selected.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+    const initials = getInitials(selected.name);
     const avatarGradient = genderAvatarGradient(selected.gender ?? '');
     const selectedPhone = (selected.phone as string | undefined) || selected.phones?.[0]?.number;
     const selectedEmail = (selected.email as string | undefined) || selected.emails?.[0]?.address;
@@ -225,7 +225,7 @@ export default function ContactPicker({
                 </div>
               )}
               {matches.map((contact) => {
-                const contactInitials = contact.name.split(' ').map((namePart) => namePart[0]).join('').slice(0, 2).toUpperCase();
+                const contactInitials = getInitials(contact.name);
                 const contactGradient = genderAvatarGradient(contact.gender ?? '');
                 const contactPhone = (contact.phone as string | undefined) || contact.phones?.[0]?.number;
                 const contactCity = contact.city as string | undefined;
