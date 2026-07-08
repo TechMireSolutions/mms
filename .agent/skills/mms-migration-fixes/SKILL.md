@@ -30,6 +30,8 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 | Form modal progress tracking | Built progress scanning inside FormModal.tsx for forms |
 | Linter warnings cleanup | Fixed all react-hooks dependency array and unused variable lint errors |
 | Unified Phone & Zero-Click Form | Unified phone inputs & zero-click form sublist auto-population in ContactForm and Branding |
+| Wrapper files removal | Removed redundant wrapper/alias files for StatCard, ExportToolbar, and SafeResponsiveContainer |
+| Column Customizer Props DRY | Consolidated duplicate local ColumnCustomizerProps interfaces into ModuleColumnCustomizerProps |
 
 ## Open priorities
 
