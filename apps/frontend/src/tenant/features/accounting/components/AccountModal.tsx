@@ -5,6 +5,7 @@ import { useAccountingConfig } from "@/tenant/features/accounting/hooks/useAccou
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormModal } from "@/components/ui/FormModal";
 import { useTranslation } from "@/hooks/useTranslation";
+import { type AppTranslationKey } from "@mms/shared";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,10 +32,10 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!form.code?.trim()) e.code = "Code is required";
-    else if (!isEdit && existingCodes.includes(form.code.trim())) e.code = "Code already exists";
-    if (!form.name?.trim()) e.name = "Name is required";
-    if (!form.type) e.type = "Type is required";
+    if (!form.code?.trim()) e.code = t("accounting.coa.validation.codeRequired");
+    else if (!isEdit && existingCodes.includes(form.code.trim())) e.code = t("accounting.coa.validation.codeExists");
+    if (!form.name?.trim()) e.name = t("accounting.coa.validation.nameRequired");
+    if (!form.type) e.type = t("accounting.coa.validation.typeRequired");
     return e;
   };
 
@@ -61,7 +62,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
     <FormModal
       open
       onClose={onClose}
-      title={isEdit ? "Edit Account" : "Add Account"}
+      title={isEdit ? t("accounting.coa.editAccount") : t("accounting.coa.addAccount")}
       icon={BookOpen}
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.save")}
@@ -76,8 +77,8 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
           if (field.id === "code") {
             return (
               <div key="code">
-                <label htmlFor="account-code" className={FORM_LABEL}>Account Code *</label>
-                <Input id="account-code" name="code" value={form.code || ""} onChange={(event) => setForm({ ...form, code: event.target.value })} placeholder="e.g. 1000" required />
+                <label htmlFor="account-code" className={FORM_LABEL}>{t("accounting.coa.fields.code")}</label>
+                <Input id="account-code" name="code" value={form.code || ""} onChange={(event) => setForm({ ...form, code: event.target.value })} placeholder={t("accounting.coa.fields.codePlaceholder")} required />
               </div>
             );
           }
@@ -85,13 +86,13 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
           if (field.id === "type") {
             return (
               <div key="type">
-                <label htmlFor="account-type" className={FORM_LABEL}>Type *</label>
+                <label htmlFor="account-type" className={FORM_LABEL}>{t("accounting.coa.fields.type")}</label>
                 <FormSelect
                   id="account-type"
                   name="type"
                   value={form.type || "Asset"}
                   onChange={(val) => setForm({ ...form, type: val as AccountType, subtype: "" })}
-                  options={ACCOUNT_TYPES}
+                  options={ACCOUNT_TYPES.map((accType) => ({ value: accType, label: t(`accounting.type.${accType}` as AppTranslationKey) }))}
                 />
               </div>
             );
@@ -100,8 +101,8 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
           if (field.id === "name") {
             return (
               <div key="name" className="sm:col-span-2">
-                <label htmlFor="account-name" className={FORM_LABEL}>Account Name *</label>
-                <Input id="account-name" name="name" value={form.name || ""} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="e.g. Cash in Hand" required />
+                <label htmlFor="account-name" className={FORM_LABEL}>{t("accounting.coa.fields.name")}</label>
+                <Input id="account-name" name="name" value={form.name || ""} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder={t("accounting.coa.fields.namePlaceholder")} required />
               </div>
             );
           }
@@ -110,14 +111,14 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
             const isRequired = !!fields[field.id]?.required;
             return (
               <div key="subtype" className="sm:col-span-2">
-                <label htmlFor="account-subtype" className={FORM_LABEL}>Sub-type {isRequired ? "*" : ""}</label>
+                <label htmlFor="account-subtype" className={FORM_LABEL}>{t("accounting.coa.fields.subtype")} {isRequired ? "*" : ""}</label>
                 <FormSelect
                   id="account-subtype"
                   name="subtype"
                   value={form.subtype || ""}
                   onChange={(val) => setForm({ ...form, subtype: val })}
                   options={subtypes}
-                  placeholder="— None —"
+                  placeholder={t("accounting.journal.form.none")}
                 />
               </div>
             );
@@ -127,8 +128,8 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
             const isRequired = !!fields[field.id]?.required;
             return (
               <div key="description" className="sm:col-span-2">
-                <label htmlFor="account-description" className={FORM_LABEL}>Description {isRequired ? "*" : ""}</label>
-                <Input id="account-description" name="description" value={form.description || ""} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="Optional description…" required={isRequired} />
+                <label htmlFor="account-description" className={FORM_LABEL}>{t("accounting.coa.fields.description")} {isRequired ? "*" : ""}</label>
+                <Input id="account-description" name="description" value={form.description || ""} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder={t("accounting.coa.fields.descriptionPlaceholder")} required={isRequired} />
               </div>
             );
           }
@@ -146,7 +147,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                     name={field.id}
                     value={value as string}
                     onChange={(event) => setForm((previousForm) => ({ ...previousForm, [field.id]: event.target.value }))}
-                    placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
+                    placeholder={field.placeholder || t("accounting.coa.fields.enterPlaceholder", { label: field.label })}
                     required={field.required}
                   />
                 ) : field.type === "select" ? (
@@ -156,7 +157,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                     value={value as string}
                     onChange={(val) => setForm((previousForm) => ({ ...previousForm, [field.id]: val }))}
                     options={field.options || []}
-                    placeholder="— None —"
+                    placeholder={t("accounting.journal.form.none")}
                   />
                 ) : field.type === "boolean" ? (
                   <label className="flex items-center gap-2.5 py-2 cursor-pointer select-none">
@@ -175,7 +176,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                     type="number"
                     value={value as number}
                     onChange={(event) => setForm((previousForm) => ({ ...previousForm, [field.id]: event.target.value }))}
-                    placeholder={field.placeholder || "Enter number…"}
+                    placeholder={field.placeholder || t("accounting.coa.fields.enterNumber")}
                     required={field.required}
                   />
                 ) : field.type === "date" ? (
@@ -193,7 +194,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                     type="text"
                     value={value as string}
                     onChange={(event) => setForm((previousForm) => ({ ...previousForm, [field.id]: event.target.value }))}
-                    placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
+                    placeholder={field.placeholder || t("accounting.coa.fields.enterPlaceholder", { label: field.label })}
                     required={field.required}
                   />
                 )}
@@ -208,7 +209,9 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
       {type && ACCOUNT_TYPE_META[type] && (
         <div className={`mt-4 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border ${ACCOUNT_TYPE_META[type].color}`} aria-live="polite">
           <span aria-hidden="true">{ACCOUNT_TYPE_META[type].icon}</span>
-          <span>{type} · Normal Balance: <strong>{ACCOUNT_TYPE_META[type].normalBalance.toUpperCase()}</strong> · {ACCOUNT_TYPE_META[type].group}</span>
+          <span>
+            {t(`accounting.type.${type}` as AppTranslationKey)} · {t("accounting.columns.account.normalBalance") || "Normal Balance"}: <strong>{ACCOUNT_TYPE_META[type].normalBalance === "debit" ? t("accounting.ledger.dr") : t("accounting.ledger.cr")}</strong> · {ACCOUNT_TYPE_META[type].group === "Balance Sheet" ? t("accounting.reports.views.balance") : ACCOUNT_TYPE_META[type].group === "Income Statement" ? t("accounting.reports.views.income") : ACCOUNT_TYPE_META[type].group}
+          </span>
         </div>
       )}
     </FormModal>

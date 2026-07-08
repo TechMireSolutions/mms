@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { formatMoney } from "@mms/shared";
+import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, ChevronUp,
   DollarSign, TrendingDown, RefreshCw, BookOpen,
@@ -12,23 +12,25 @@ import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { useTranslation } from "@/hooks/useTranslation";
+import { type AppTranslationKey } from "@mms/shared";
 
 // ── Transaction Type Definitions ──────────────────────────────────────────────
 
 interface QuickActionType {
   id: string;
-  label: string;
+  labelKey: AppTranslationKey;
   icon: React.ElementType;
   debitAcc: string;
   creditAcc: string;
   tag: string;
-  description: string;
-  group?: string;
-  color?: string;
+  descriptionKey: AppTranslationKey;
+  groupKey: AppTranslationKey;
+  color: string;
 }
 
 interface TransactionGroup {
-  group: string;
+  groupKey: AppTranslationKey;
   color: "emerald" | "red" | "blue";
   icon: React.ElementType;
   items: QuickActionType[];
@@ -36,35 +38,35 @@ interface TransactionGroup {
 
 const TRANSACTION_TYPES: TransactionGroup[] = [
   {
-    group: "Money In",
+    groupKey: "accounting.journal.dashboard.group.moneyIn",
     color: "emerald",
     icon: DollarSign,
     items: [
-      { id: "fee_collection",  label: "Student Fee Collection", icon: BookOpen,    debitAcc: "a1000", creditAcc: "a4000", tag: "Fees",     description: "Fee received from student" },
-      { id: "donation",        label: "Donation Received",       icon: Heart,       debitAcc: "a1000", creditAcc: "a4100", tag: "Donation", description: "Donation received" },
-      { id: "rent_income",     label: "Rent Income",             icon: Home,        debitAcc: "a1000", creditAcc: "a4300", tag: "Capital",  description: "Rent income received" },
-      { id: "other_income",    label: "Other Income",            icon: Plus,        debitAcc: "a1000", creditAcc: "a4400", tag: "Capital",  description: "Other income received" },
+      { id: "fee_collection",  labelKey: "accounting.journal.dashboard.label.feeCollection", icon: BookOpen,    debitAcc: "a1000", creditAcc: "a4000", tag: "Fees",     descriptionKey: "accounting.journal.dashboard.desc.feeCollection", groupKey: "accounting.journal.dashboard.group.moneyIn", color: "emerald" },
+      { id: "donation",        labelKey: "accounting.journal.dashboard.label.donationReceived",       icon: Heart,       debitAcc: "a1000", creditAcc: "a4100", tag: "Donation", descriptionKey: "accounting.journal.dashboard.desc.donationReceived", groupKey: "accounting.journal.dashboard.group.moneyIn", color: "emerald" },
+      { id: "rent_income",     labelKey: "accounting.journal.dashboard.label.rentIncome",             icon: Home,        debitAcc: "a1000", creditAcc: "a4300", tag: "Capital",  descriptionKey: "accounting.journal.dashboard.desc.rentIncome", groupKey: "accounting.journal.dashboard.group.moneyIn", color: "emerald" },
+      { id: "other_income",    labelKey: "accounting.journal.dashboard.label.otherIncome",            icon: Plus,        debitAcc: "a1000", creditAcc: "a4400", tag: "Capital",  descriptionKey: "accounting.journal.dashboard.desc.otherIncome", groupKey: "accounting.journal.dashboard.group.moneyIn", color: "emerald" },
     ],
   },
   {
-    group: "Money Out",
+    groupKey: "accounting.journal.dashboard.group.moneyOut",
     color: "red",
     icon: TrendingDown,
     items: [
-      { id: "salary",          label: "Salary Payment",          icon: UserCheck,   debitAcc: "a5000", creditAcc: "a1010", tag: "Payroll",   description: "Staff salary paid" },
-      { id: "utilities",       label: "Utilities",               icon: Zap,         debitAcc: "a5200", creditAcc: "a1000", tag: "Utilities", description: "Utility bill paid" },
-      { id: "supplies",        label: "Supplies / Expense",      icon: Package,     debitAcc: "a5300", creditAcc: "a1000", tag: "Capital",   description: "Supplies purchased" },
-      { id: "rent_payment",    label: "Rent Payment",            icon: Building2,   debitAcc: "a5100", creditAcc: "a1010", tag: "Rent",      description: "Rent paid" },
-      { id: "other_expense",   label: "Other Expense",           icon: TrendingDown,debitAcc: "a5700", creditAcc: "a1000", tag: "Capital",   description: "Other expense paid" },
+      { id: "salary",          labelKey: "accounting.journal.dashboard.label.salaryPayment",          icon: UserCheck,   debitAcc: "a5000", creditAcc: "a1010", tag: "Payroll",   descriptionKey: "accounting.journal.dashboard.desc.salaryPayment", groupKey: "accounting.journal.dashboard.group.moneyOut", color: "red" },
+      { id: "utilities",       labelKey: "accounting.journal.dashboard.label.utilities",               icon: Zap,         debitAcc: "a5200", creditAcc: "a1000", tag: "Utilities", descriptionKey: "accounting.journal.dashboard.desc.utilities", groupKey: "accounting.journal.dashboard.group.moneyOut", color: "red" },
+      { id: "supplies",        labelKey: "accounting.journal.dashboard.label.supplies",                icon: Package,     debitAcc: "a5300", creditAcc: "a1000", tag: "Capital",   descriptionKey: "accounting.journal.dashboard.desc.supplies", groupKey: "accounting.journal.dashboard.group.moneyOut", color: "red" },
+      { id: "rent_payment",    labelKey: "accounting.journal.dashboard.label.rentPayment",            icon: Building2,   debitAcc: "a5100", creditAcc: "a1010", tag: "Rent",      descriptionKey: "accounting.journal.dashboard.desc.rentPayment", groupKey: "accounting.journal.dashboard.group.moneyOut", color: "red" },
+      { id: "other_expense",   labelKey: "accounting.journal.dashboard.label.otherExpense",           icon: TrendingDown,debitAcc: "a5700", creditAcc: "a1000", tag: "Capital",   descriptionKey: "accounting.journal.dashboard.desc.otherExpense", groupKey: "accounting.journal.dashboard.group.moneyOut", color: "red" },
     ],
   },
   {
-    group: "Transfers",
+    groupKey: "accounting.journal.dashboard.group.transfers",
     color: "blue",
     icon: RefreshCw,
     items: [
-      { id: "transfer",        label: "Move Funds Between Accounts", icon: RefreshCw, debitAcc: "a1020", creditAcc: "a1010", tag: "Adjustment", description: "Internal funds transfer" },
-      { id: "adjustment",      label: "Adjustment / Correction",     icon: Plus,      debitAcc: "a1000", creditAcc: "a1000", tag: "Adjustment", description: "Adjustment entry" },
+      { id: "transfer",        labelKey: "accounting.journal.dashboard.label.transfer",               icon: RefreshCw,   debitAcc: "a1020", creditAcc: "a1010", tag: "Adjustment", descriptionKey: "accounting.journal.dashboard.desc.transfer", groupKey: "accounting.journal.dashboard.group.transfers", color: "blue" },
+      { id: "adjustment",      labelKey: "accounting.journal.dashboard.label.adjustment",             icon: Plus,        debitAcc: "a1000", creditAcc: "a1000", tag: "Adjustment", descriptionKey: "accounting.journal.dashboard.desc.adjustment", groupKey: "accounting.journal.dashboard.group.transfers", color: "blue" },
     ],
   },
 ];
@@ -110,32 +112,34 @@ interface WizardFormState {
 
 // ── Step 1: Type Selection ──────────────────────────────────────────────────
 function StepTypeSelection({ selected, onSelect }: { selected: QuickActionType | null, onSelect: (type: QuickActionType) => void }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-5">
       <header className="text-center space-y-1 pb-2">
-        <h3 className="text-lg font-bold text-foreground m-0">What happened?</h3>
-        <p className="text-sm text-muted-foreground m-0">Choose the type of transaction</p>
+        <h3 className="text-lg font-bold text-foreground m-0">{t("accounting.journal.dashboard.whatHappened")}</h3>
+        <p className="text-sm text-muted-foreground m-0">{t("accounting.journal.dashboard.subtitleSimple")}</p>
       </header>
       {TRANSACTION_TYPES.map((group) => {
         const colors = GROUP_COLORS[group.color];
         const GroupIcon = group.icon;
+        const translatedGroupName = t(group.groupKey);
         return (
-          <article key={group.group} className={`rounded-2xl border p-4 ${colors.card}`}>
+          <article key={group.groupKey} className={`rounded-2xl border p-4 ${colors.card}`}>
             <header className={`flex items-center gap-2 mb-3 px-2 py-1.5 rounded-lg border w-fit ${colors.header}`}>
               <GroupIcon className="w-3.5 h-3.5" aria-hidden="true" />
-              <h4 className="text-xs font-bold uppercase tracking-wide m-0">{group.group}</h4>
+              <h4 className="text-xs font-bold uppercase tracking-wide m-0">{translatedGroupName}</h4>
             </header>
-            <nav aria-label={`Select ${group.group} transaction type`} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <nav aria-label={`Select ${translatedGroupName} transaction type`} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const isSelected = selected?.id === item.id;
                 return (
-                  <Button key={item.id} type="button" variant="ghost" aria-pressed={isSelected} onClick={() => onSelect({ ...item, group: group.group, color: group.color })}
+                  <Button key={item.id} type="button" variant="ghost" aria-pressed={isSelected} onClick={() => onSelect({ ...item, groupKey: group.groupKey, color: group.color })}
                     className={`h-auto flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all text-center ${isSelected ? colors.selected : `border-border bg-card hover:bg-muted/50 ${colors.item}`}`}>
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isSelected ? colors.icon : "bg-muted text-muted-foreground"}`} aria-hidden="true">
                       <Icon className="w-4.5 h-4.5 w-[18px] h-[18px]" />
                     </div>
-                    <span className={`text-[11px] font-semibold leading-tight ${isSelected ? "text-foreground" : "text-muted-foreground"}`}>{item.label}</span>
+                    <span className={`text-[11px] font-semibold leading-tight ${isSelected ? "text-foreground" : "text-muted-foreground"}`}>{t(item.labelKey)}</span>
                   </Button>
                 );
               })}
@@ -148,29 +152,30 @@ function StepTypeSelection({ selected, onSelect }: { selected: QuickActionType |
 }
 
 // ── Step 2: Transaction Form ────────────────────────────────────────────────
-function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickActionType, form: WizardFormState, setForm: React.Dispatch<React.SetStateAction<WizardFormState>>, accounts: Account[] }) {
-  const isMoneyIn = type.group === "Money In";
-  const isTransfer = type.group === "Transfers";
+function StepTransactionForm({ type, form, setForm, accounts, currencySymbol }: { type: QuickActionType, form: WizardFormState, setForm: React.Dispatch<React.SetStateAction<WizardFormState>>, accounts: Account[], currencySymbol: string }) {
+  const { t } = useTranslation();
+  const isMoneyIn = type.groupKey === "accounting.journal.dashboard.group.moneyIn";
+  const isTransfer = type.groupKey === "accounting.journal.dashboard.group.transfers";
   const cashAccounts = accounts.filter((account) => ["a1000","a1010","a1020"].includes(account.id));
   const cashAccountOptions = cashAccounts.map((account) => ({ value: account.id, label: account.name }));
 
   return (
     <fieldset className="space-y-4 border-0 p-0 m-0">
-      <legend className="sr-only">Transaction Details</legend>
+      <legend className="sr-only">{t("accounting.journal.dashboard.wizard.reviewTitle")}</legend>
       <header className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 border border-border">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${GROUP_COLORS[type.color || "blue"].icon}`} aria-hidden="true">
           {React.createElement(type.icon, { className: "w-5 h-5" })}
         </div>
         <div>
-          <h3 className="text-sm font-bold text-foreground m-0">{type.label}</h3>
-          <p className="text-xs text-muted-foreground m-0">{type.group}</p>
+          <h3 className="text-sm font-bold text-foreground m-0">{t(type.labelKey)}</h3>
+          <p className="text-xs text-muted-foreground m-0">{t(type.groupKey)}</p>
         </div>
       </header>
 
       <div className="grid grid-cols-2 gap-3">
         {/* Date */}
         <div className="col-span-2 sm:col-span-1">
-          <label htmlFor="wizard-date" className={FORM_LABEL}>Date</label>
+          <label htmlFor="wizard-date" className={FORM_LABEL}>{t("accounting.columns.journal.date")}</label>
           <DatePicker
             id="wizard-date"
             value={form.date}
@@ -180,20 +185,20 @@ function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickAct
 
         {/* Amount */}
         <div className="col-span-2 sm:col-span-1">
-          <label htmlFor="wizard-amount" className={FORM_LABEL}>Amount *</label>
+          <label htmlFor="wizard-amount" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.amount")}</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground" aria-hidden="true">₨</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground" aria-hidden="true">{currencySymbol}</span>
             <Input id="wizard-amount" type="number" min="0" step="0.01" value={form.amount} placeholder="0.00"
               onChange={(event) => setForm({ ...form, amount: event.target.value })}
               className="pl-8 text-lg font-bold" aria-invalid={!form.amount} />
           </div>
-          {!form.amount && <p className="text-[11px] text-warning mt-1" role="alert">Please enter an amount</p>}
+          {!form.amount && <p className="text-[11px] text-warning mt-1" role="alert">{t("accounting.journal.dashboard.wizard.errorAmount")}</p>}
         </div>
 
         {/* Source / Destination account */}
         {isMoneyIn ? (
           <div className="col-span-2">
-            <label htmlFor="wizard-acc-in" className={FORM_LABEL}>Received Into *</label>
+            <label htmlFor="wizard-acc-in" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.receivedInto")}</label>
             <FormSelect
               id="wizard-acc-in"
               value={form.debitAcc}
@@ -204,7 +209,7 @@ function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickAct
         ) : isTransfer ? (
           <>
             <div className="col-span-2 sm:col-span-1">
-              <label htmlFor="wizard-acc-to" className={FORM_LABEL}>Transfer To *</label>
+              <label htmlFor="wizard-acc-to" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.transferTo")}</label>
               <FormSelect
                 id="wizard-acc-to"
                 value={form.debitAcc}
@@ -213,7 +218,7 @@ function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickAct
               />
             </div>
             <div className="col-span-2 sm:col-span-1">
-              <label htmlFor="wizard-acc-from" className={FORM_LABEL}>Transfer From *</label>
+              <label htmlFor="wizard-acc-from" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.transferFrom")}</label>
               <FormSelect
                 id="wizard-acc-from"
                 value={form.creditAcc}
@@ -224,7 +229,7 @@ function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickAct
           </>
         ) : (
           <div className="col-span-2">
-            <label htmlFor="wizard-acc-out" className={FORM_LABEL}>Paid From *</label>
+            <label htmlFor="wizard-acc-out" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.paidFrom")}</label>
             <FormSelect
               id="wizard-acc-out"
               value={form.creditAcc}
@@ -236,24 +241,24 @@ function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickAct
 
         {/* Description */}
         <div className="col-span-2">
-          <label htmlFor="wizard-description" className={FORM_LABEL}>Description</label>
+          <label htmlFor="wizard-description" className={FORM_LABEL}>{t("accounting.columns.journal.description")}</label>
           <Input id="wizard-description" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })}
-            placeholder={type.description} />
+            placeholder={t(type.descriptionKey)} />
         </div>
 
         {/* Reference */}
         <div className="col-span-2 sm:col-span-1">
-          <label htmlFor="wizard-ref" className={FORM_LABEL}>Reference No. <span className="normal-case font-normal text-muted-foreground">(optional)</span></label>
+          <label htmlFor="wizard-ref" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.refNo")} <span className="normal-case font-normal text-muted-foreground">{t("accounting.journal.dashboard.wizard.optional")}</span></label>
           <Input id="wizard-ref" value={form.ref} onChange={(event) => setForm({ ...form, ref: event.target.value })}
-            placeholder="e.g. RCP-001" />
+            placeholder={t("accounting.journal.dashboard.wizard.refPlaceholder")} />
         </div>
 
         {/* Receipt upload */}
         <div className="col-span-2 sm:col-span-1">
-          <label className={FORM_LABEL}>Receipt <span className="normal-case font-normal text-muted-foreground">(optional)</span></label>
+          <label className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.receipt")} <span className="normal-case font-normal text-muted-foreground">{t("accounting.journal.dashboard.wizard.optional")}</span></label>
           <label className={`${FORM_INPUT} flex items-center gap-2 cursor-pointer text-muted-foreground hover:text-foreground`}>
             <Upload className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-            <span className="text-xs">{form.receipt ? form.receipt : "Upload receipt…"}</span>
+            <span className="text-xs">{form.receipt ? form.receipt : t("accounting.journal.dashboard.wizard.uploadReceipt")}</span>
             <Input type="file" accept="image/*,application/pdf" className="hidden"
               onChange={(event) => setForm({ ...form, receipt: event.target.files?.[0]?.name || "" })} />
           </label>
@@ -264,29 +269,44 @@ function StepTransactionForm({ type, form, setForm, accounts }: { type: QuickAct
 }
 
 // ── Step 3: Review ──────────────────────────────────────────────────────────
-function StepReview({ type, form, accounts, showAdvanced, setShowAdvanced }: { type: QuickActionType, form: WizardFormState, accounts: Account[], showAdvanced: boolean, setShowAdvanced: React.Dispatch<React.SetStateAction<boolean>> }) {
+function StepReview({
+  type,
+  form,
+  accounts,
+  showAdvanced,
+  setShowAdvanced,
+  formatCurrency,
+}: {
+  type: QuickActionType;
+  form: WizardFormState;
+  accounts: Account[];
+  showAdvanced: boolean;
+  setShowAdvanced: React.Dispatch<React.SetStateAction<boolean>>;
+  formatCurrency: (amount: number | string | null | undefined) => string;
+}) {
+  const { t } = useTranslation();
   const amount = parseFloat(form.amount) || 0;
   const debitAccount  = accounts.find((account) => account.id === form.debitAcc);
   const creditAccount = accounts.find((account) => account.id === form.creditAcc);
 
   const rows = [
-    { label: "Transaction Type", value: type.label },
-    { label: "Date",             value: form.date },
-    { label: "Amount",           value: formatMoney(amount) },
-    type.group === "Money In"
-      ? { label: "Received Into", value: debitAccount?.name || "—" }
-      : type.group === "Transfers"
-      ? { label: "Transfer",      value: `${creditAccount?.name || "—"} → ${debitAccount?.name || "—"}` }
-      : { label: "Paid From",     value: creditAccount?.name || "—" },
-    { label: "Description",      value: form.description || "—" },
-    form.ref ? { label: "Reference", value: form.ref } : null,
+    { label: t("accounting.journal.dashboard.wizard.transactionType"), value: t(type.labelKey) },
+    { label: t("accounting.columns.journal.date"),             value: form.date },
+    { label: t("accounting.journal.dashboard.wizard.amountLabel"),           value: formatCurrency(amount) },
+    type.groupKey === "accounting.journal.dashboard.group.moneyIn"
+      ? { label: t("accounting.journal.dashboard.wizard.receivedIntoLabel"), value: debitAccount?.name || "—" }
+      : type.groupKey === "accounting.journal.dashboard.group.transfers"
+      ? { label: t("accounting.journal.dashboard.wizard.transferLabel"),      value: `${creditAccount?.name || "—"} → ${debitAccount?.name || "—"}` }
+      : { label: t("accounting.journal.dashboard.wizard.paidFromLabel"),     value: creditAccount?.name || "—" },
+    { label: t("accounting.columns.journal.description"),      value: form.description || "—" },
+    form.ref ? { label: t("accounting.journal.dashboard.wizard.referenceLabel"), value: form.ref } : null,
   ].filter(Boolean) as { label: string, value: string }[];
 
   return (
     <section aria-label="Review Transaction details" className="space-y-4">
       <header className="text-center space-y-1 pb-1">
-        <h3 className="text-lg font-bold text-foreground m-0">Review Transaction</h3>
-        <p className="text-sm text-muted-foreground m-0">Confirm details before posting</p>
+        <h3 className="text-lg font-bold text-foreground m-0">{t("accounting.journal.dashboard.wizard.reviewTitle")}</h3>
+        <p className="text-sm text-muted-foreground m-0">{t("accounting.journal.dashboard.wizard.reviewSubtitle")}</p>
       </header>
 
       <div className="rounded-2xl border border-border overflow-hidden">
@@ -298,7 +318,7 @@ function StepReview({ type, form, accounts, showAdvanced, setShowAdvanced }: { t
         ))}
         <div className="px-4 py-3 bg-success/10 border-t border-success/20 flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" aria-hidden="true" />
-          <span className="text-sm font-semibold text-success">Will be posted automatically to your records</span>
+          <span className="text-sm font-semibold text-success">{t("accounting.journal.dashboard.wizard.postMessage")}</span>
         </div>
       </div>
 
@@ -307,35 +327,36 @@ function StepReview({ type, form, accounts, showAdvanced, setShowAdvanced }: { t
         <Button type="button" variant="ghost" onClick={() => setShowAdvanced((previousValue) => !previousValue)}
           aria-expanded={showAdvanced}
           className="w-full h-auto flex items-center justify-between px-4 py-3 bg-muted/30 hover:bg-muted/50 transition-colors">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Show Accounting Details (Advanced)</span>
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">{t("accounting.journal.dashboard.wizard.showAdvanced")}</span>
           {showAdvanced ? <ChevronUp className="w-4 h-4 text-muted-foreground" aria-hidden="true" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" aria-hidden="true" />}
         </Button>
         {showAdvanced && (
           <div className="p-4 space-y-2">
             <div className="rounded-lg overflow-hidden border border-border text-xs">
               <div className="grid grid-cols-3 gap-0 bg-muted/60 border-b border-border">
-                <div className="px-3 py-2 font-bold text-muted-foreground uppercase">Account</div>
-                <div className="px-3 py-2 font-bold text-muted-foreground uppercase text-right">Debit</div>
-                <div className="px-3 py-2 font-bold text-muted-foreground uppercase text-right">Credit</div>
+                <div className="px-3 py-2 font-bold text-muted-foreground uppercase">{t("accounting.journal.detail.account")}</div>
+                <div className="px-3 py-2 font-bold text-muted-foreground uppercase text-right">{t("accounting.columns.journal.debit")}</div>
+                <div className="px-3 py-2 font-bold text-muted-foreground uppercase text-right">{t("accounting.columns.journal.credit")}</div>
               </div>
               <div className="grid grid-cols-3 bg-info/10/50 border-b border-border">
                 <div className="px-3 py-2 font-semibold text-foreground">{debitAccount?.name || "—"}</div>
-                <div className="px-3 py-2 text-right font-mono text-info font-bold">{formatMoney(amount, "")}</div>
+                <div className="px-3 py-2 text-right font-mono text-info font-bold">{formatCurrency(amount)}</div>
                 <div className="px-3 py-2 text-right text-muted-foreground">—</div>
               </div>
               <div className="grid grid-cols-3 bg-success/10/50">
                 <div className="px-3 py-2 font-semibold text-foreground">{creditAccount?.name || "—"}</div>
                 <div className="px-3 py-2 text-right text-muted-foreground">—</div>
-                <div className="px-3 py-2 text-right font-mono text-success font-bold">{formatMoney(amount, "")}</div>
+                <div className="px-3 py-2 text-right font-mono text-success font-bold">{formatCurrency(amount)}</div>
               </div>
             </div>
-            <p className="text-[11px] text-muted-foreground m-0">These journal lines are auto-generated. No manual entry needed.</p>
+            <p className="text-[11px] text-muted-foreground m-0">{t("accounting.journal.dashboard.wizard.linesAutoGenerated")}</p>
           </div>
         )}
       </div>
     </section>
   );
 }
+
 
 interface SimpleTransactionWizardProps {
   open: boolean;
@@ -359,6 +380,8 @@ interface SimpleTransactionWizardProps {
  * @returns React element representing the transaction wizard modal.
  */
 export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, onSave, onClose, prefillType }: SimpleTransactionWizardProps) {
+  const { t } = useTranslation();
+  const { formatCurrency, activeCurrency } = useAccountingCurrency();
   const [step, setStep] = useState(prefillType ? 2 : 1);
   const [selectedType, setSelectedType] = useState<QuickActionType | null>(prefillType || null);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -369,7 +392,7 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
     amount: "",
     debitAcc: prefillType?.debitAcc || "a1000",
     creditAcc: prefillType?.creditAcc || "a1010",
-    description: prefillType?.description || "",
+    description: prefillType?.descriptionKey ? t(prefillType.descriptionKey) : "",
     ref: "",
     receipt: "",
     fiscal_year: activeFiscalYearLabel,
@@ -381,7 +404,7 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
       ...previousForm,
       debitAcc: type.debitAcc,
       creditAcc: type.creditAcc,
-      description: type.description,
+      description: t(type.descriptionKey),
     }));
     setStep(2);
   };
@@ -392,9 +415,9 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
   };
 
   const validate = () => {
-    if (!form.amount || parseFloat(form.amount) <= 0) return "Please enter an amount.";
-    if (!form.debitAcc || !form.creditAcc) return "Please select a payment source.";
-    if (!form.date) return "Please select a date.";
+    if (!form.amount || parseFloat(form.amount) <= 0) return t("accounting.journal.dashboard.wizard.errorAmount");
+    if (!form.debitAcc || !form.creditAcc) return t("accounting.journal.dashboard.wizard.errorSource");
+    if (!form.date) return t("accounting.journal.dashboard.wizard.errorDate");
     return null;
   };
 
@@ -403,7 +426,7 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
     if (validationError) { alert(validationError); return; }
     const amount = parseFloat(form.amount);
     const generatedReference = generateJERef(entries);
-    const description = form.description || selectedType!.label;
+    const description = form.description || t(selectedType!.labelKey);
     onSave({
       id: `je${Date.now()}`,
       ref: form.ref ? `${form.ref}` : generatedReference,
@@ -424,17 +447,17 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
   };
 
   const steps = [
-    { stepNumber: 1, label: "Select Type" },
-    { stepNumber: 2, label: "Enter Details" },
-    { stepNumber: 3, label: "Review" },
+    { stepNumber: 1, label: t("accounting.journal.dashboard.wizard.stepSelect") },
+    { stepNumber: 2, label: t("accounting.journal.dashboard.wizard.stepDetails") },
+    { stepNumber: 3, label: t("accounting.journal.dashboard.wizard.stepReview") },
   ];
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title="Record Transaction"
-      subtitle="Money In / Money Out"
+      title={t("accounting.journal.dashboard.recordTransaction")}
+      subtitle={t("accounting.journal.dashboard.subtitleSimple")}
       size="lg"
       panelClassName="max-h-[92vh]"
       headerExtra={
@@ -458,21 +481,21 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
         <div className="flex w-full items-center justify-between gap-3">
           <Button type="button" variant="outline" onClick={() => step > 1 ? setStep(step - 1) : onClose()}>
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            {step === 1 ? "Cancel" : "Back"}
+            {step === 1 ? t("accounting.journal.dashboard.wizard.cancel") : t("accounting.journal.dashboard.wizard.back")}
           </Button>
           <div className="flex items-center gap-2">
             {step < 3 && (
               <Button type="button" onClick={() => setStep(step + 1)} disabled={!canProceed() || !selectedType}>
-                Next <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                {t("accounting.journal.dashboard.wizard.next")} <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Button>
             )}
             {step === 3 && (
               <>
                 <Button type="button" variant="outline" onClick={() => handleSave("draft")}>
-                  Save Draft
+                  {t("accounting.journal.dashboard.wizard.saveDraft")}
                 </Button>
                 <Button type="button" onClick={() => handleSave("posted")}>
-                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> Post Transaction
+                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> {t("accounting.journal.dashboard.wizard.postTransaction")}
                 </Button>
               </>
             )}
@@ -483,8 +506,8 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
       <AnimatePresence mode="wait">
         <motion.div key={step} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.15 }}>
           {step === 1 && <StepTypeSelection selected={selectedType} onSelect={handleTypeSelect} />}
-          {step === 2 && selectedType && <StepTransactionForm type={selectedType} form={form} setForm={setForm} accounts={accounts} />}
-          {step === 3 && selectedType && <StepReview type={selectedType} form={form} accounts={accounts} showAdvanced={showAdvanced} setShowAdvanced={setShowAdvanced} />}
+          {step === 2 && selectedType && <StepTransactionForm type={selectedType} form={form} setForm={setForm} accounts={accounts} currencySymbol={activeCurrency.symbol} />}
+          {step === 3 && selectedType && <StepReview type={selectedType} form={form} accounts={accounts} showAdvanced={showAdvanced} setShowAdvanced={setShowAdvanced} formatCurrency={formatCurrency} />}
         </motion.div>
       </AnimatePresence>
     </Modal>

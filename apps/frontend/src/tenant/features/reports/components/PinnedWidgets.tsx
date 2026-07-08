@@ -5,7 +5,7 @@ import {
   SlidersHorizontal, Info, Pencil, ArrowUpRight, ShieldAlert, ArrowRight, Search, EyeOff, Users
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { formatMoney } from "@mms/shared";
+import { formatMoney, type AppTranslationKey } from "@mms/shared";
 const CustomWidgetChartFallback = React.lazy(() => import("@/tenant/features/reports/components/pinnedWidgets/CustomWidgetChartFallback"));
 import { getCollection, saveCollection, getObject, saveObject } from "@/lib/db";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
@@ -61,6 +61,28 @@ export {
 export { getOrInitializeCustomWidgets } from "@/tenant/features/reports/components/pinnedWidgets/widgetDefaults";
 
 
+
+interface WidgetRecordFields {
+  id?: string;
+  name?: string;
+  studentName?: string;
+  invoiceNo?: string;
+  age?: number | string;
+  gender?: string;
+  studentId?: string;
+  finalAmt?: number;
+  date?: string;
+  className?: string;
+  quantity?: number;
+  denominationName?: string;
+  points?: number;
+  isActive?: boolean;
+  email?: string;
+  room?: string;
+  type?: string;
+  status?: string;
+  lifecycleStage?: string;
+}
 
 /**
  * Focused overlay drilldown modal for micro-interactions.
@@ -201,7 +223,7 @@ function WidgetDrilldownModal({
                 </thead>
                 <tbody className="divide-y divide-border/60">
                   {filteredRecords.map((recordSource, index) => {
-                    const displayRecord = recordSource as any;
+                    const displayRecord = recordSource as unknown as WidgetRecordFields;
                     const recordId = String(displayRecord.id || index);
                     
                     // Format columns based on collection
@@ -213,18 +235,18 @@ function WidgetDrilldownModal({
                     if (widget.collection === "students") {
                       name = String(displayRecord.name || "");
                       detailText = t("reports.widgets.ageText", {
-                        age: displayRecord.age || "N/A",
-                        gender: displayRecord.gender ? t(`reports.fields.${displayRecord.gender}` as any) || displayRecord.gender : t("reports.widgets.any")
+                        age: String(displayRecord.age || "N/A"),
+                        gender: displayRecord.gender ? t(`reports.fields.${displayRecord.gender}` as AppTranslationKey) || displayRecord.gender : t("reports.widgets.any")
                       });
                     } else if (widget.collection === "finance_invoices") {
-                      name = t("reports.widgets.invoiceText", { invoiceNo: displayRecord.invoiceNo || displayRecord.id });
+                      name = t("reports.widgets.invoiceText", { invoiceNo: displayRecord.invoiceNo || String(displayRecord.id || "") });
                       const studentId = String(displayRecord.studentId || "");
                       const studentName = studentNameMap.get(studentId) || t("reports.widgets.studentHash", { id: studentId });
                       detailText = `${studentName} • ${formatMoney(displayRecord.finalAmt || 0)}`;
                     } else if (widget.collection === "attendance_records") {
                       const studentId = String(displayRecord.studentId || "");
                       name = studentNameMap.get(studentId) || t("reports.widgets.studentHash", { id: studentId });
-                      detailText = t("reports.widgets.classText", { date: displayRecord.date, className: displayRecord.className || t("reports.widgets.class") });
+                      detailText = t("reports.widgets.classText", { date: displayRecord.date || "", className: displayRecord.className || t("reports.widgets.class") });
                     } else if (widget.collection === "hasanat_distributions") {
                       const studentId = String(displayRecord.studentId || "");
                       name = studentNameMap.get(studentId) || t("reports.widgets.studentHash", { id: studentId });
@@ -251,7 +273,7 @@ function WidgetDrilldownModal({
                               ? "bg-destructive/10 text-destructive border-destructive/20"
                               : "bg-warning/10 text-warning border-warning/20"
                           }`}>
-                            {t(`reports.status.${status.toLowerCase()}` as any) || status}
+                            {t(`reports.status.${status.toLowerCase()}` as AppTranslationKey) || status}
                           </span>
                         </td>
                         <td className="py-3.5 text-right">
@@ -480,7 +502,7 @@ function CustomWidgetRenderer({
             {computed.value}
           </span>
           <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
-            {t(`reports.collections.${widget.collection}` as any)}
+            {t(`reports.collections.${widget.collection}` as AppTranslationKey)}
           </span>
         </button>
       );
@@ -549,7 +571,7 @@ function CustomWidgetRenderer({
               <ProgressRing percentage={value} colorHex={colorHex} isCompact />
             </div>
             <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
-              {t(`reports.collections.${widget.collection}` as any)}
+              {t(`reports.collections.${widget.collection}` as AppTranslationKey)}
             </span>
           </button>
         );
@@ -571,7 +593,7 @@ function CustomWidgetRenderer({
               {formattedValue}
             </span>
             <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
-              {t(`reports.collections.${widget.collection}` as any)}
+              {t(`reports.collections.${widget.collection}` as AppTranslationKey)}
             </span>
           </button>
         );
@@ -596,7 +618,7 @@ function CustomWidgetRenderer({
             {formattedValue}
           </span>
           <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
-            {t(`reports.collections.${widget.collection}` as any)}
+            {t(`reports.collections.${widget.collection}` as AppTranslationKey)}
           </span>
         </button>
       );
@@ -620,7 +642,7 @@ function CustomWidgetRenderer({
             <ProgressRing percentage={value} colorHex={colorHex} isCompact />
           </div>
           <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
-            {t(`reports.collections.${widget.collection}` as any)}
+            {t(`reports.collections.${widget.collection}` as AppTranslationKey)}
           </span>
         </button>
       );
@@ -736,7 +758,7 @@ function CustomWidgetRenderer({
             {widget.title}
           </span>
           <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">
-            {t(`reports.collections.${widget.collection}` as any)} {resolvedWidgetType !== "switch" ? `• ${t(`reports.widgets.builder.formula${widget.operation.charAt(0).toUpperCase() + widget.operation.slice(1)}` as any) || widget.operation}` : ""}
+            {t(`reports.collections.${widget.collection}` as AppTranslationKey)} {resolvedWidgetType !== "switch" ? `• ${t(`reports.widgets.builder.formula${widget.operation.charAt(0).toUpperCase() + widget.operation.slice(1)}` as AppTranslationKey) || widget.operation}` : ""}
           </p>
         </div>
         
@@ -1471,7 +1493,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   <div className="space-y-0.5">
                     <span className="text-[10px] font-black text-foreground uppercase tracking-widest leading-none block">{widget.title}</span>
                     <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">
-                      {widget.widgetType || "kpi"} • {t(`reports.collections.${widget.collection}` as any) || widget.collection.replace("_", " ")}
+                      {widget.widgetType || "kpi"} • {t(`reports.collections.${widget.collection}` as AppTranslationKey) || widget.collection.replace("_", " ")}
                     </p>
                   </div>
                   
@@ -1853,7 +1875,7 @@ export function WidgetBuilder({
                   >
                     {COLLECTION_OPTIONS.map((collectionOption) => (
                       <option key={collectionOption.value} value={collectionOption.value} className="bg-background text-foreground">
-                        {t(`reports.collections.${collectionOption.value}` as any) || collectionOption.label}
+                        {t(`reports.collections.${collectionOption.value}` as AppTranslationKey) || collectionOption.label}
                       </option>
                     ))}
                   </select>
@@ -1890,7 +1912,7 @@ export function WidgetBuilder({
                     ) : (
                       METADATA_FIELDS[builderCollection].numericFields.map((numericField) => (
                         <option key={numericField.value} value={numericField.value} className="bg-background text-foreground">
-                          {t(`reports.fields.${numericField.value}` as any) || numericField.label}
+                          {t(`reports.fields.${numericField.value}` as AppTranslationKey) || numericField.label}
                         </option>
                       ))
                     )}
@@ -1908,7 +1930,7 @@ export function WidgetBuilder({
                     <option value="" className="bg-background text-foreground">{t("reports.widgets.builder.noFilter")}</option>
                     {METADATA_FIELDS[builderCollection].fields.map((metadataField) => (
                       <option key={metadataField.value} value={metadataField.value} className="bg-background text-foreground">
-                        {t(`reports.fields.${metadataField.value}` as any) || metadataField.label}
+                        {t(`reports.fields.${metadataField.value}` as AppTranslationKey) || metadataField.label}
                       </option>
                     ))}
                   </select>
@@ -2084,7 +2106,7 @@ export function WidgetBuilder({
                         className={FORM_INPUT_BUILDER}
                       >
                         {COLLECTION_OPTIONS.map((collectionOption) => (
-                          <option key={collectionOption.value} value={collectionOption.value} className="bg-background text-foreground">{t(`reports.collections.${collectionOption.value}` as any) || collectionOption.label}</option>
+                          <option key={collectionOption.value} value={collectionOption.value} className="bg-background text-foreground">{t(`reports.collections.${collectionOption.value}` as AppTranslationKey) || collectionOption.label}</option>
                         ))}
                       </select>
                     </div>
@@ -2245,7 +2267,7 @@ export function WidgetBuilder({
                         : "bg-card/30 border-border/50 text-muted-foreground hover:text-foreground hover:bg-card/50"
                     }`}
                   >
-                    {t(`reports.widgets.builder.cat${tab.charAt(0).toUpperCase() + tab.slice(1)}` as any) || tab}
+                    {t(`reports.widgets.builder.cat${tab.charAt(0).toUpperCase() + tab.slice(1)}` as AppTranslationKey) || tab}
                   </button>
                 ))}
               </div>

@@ -9,6 +9,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { type AppTranslationKey } from "@mms/shared";
 
 
 
@@ -65,7 +66,7 @@ export function ChartOfAccounts({
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Deactivate this account? It will be hidden but not erased.")) {
+    if (confirm(t("accounting.coa.deactivateConfirm"))) {
       onChange(accounts.map((account) => account.id === id ? { ...account, isActive: false } : account));
     }
   };
@@ -77,25 +78,25 @@ export function ChartOfAccounts({
   const exportCSV = () => {
     runGridCsvExportJob({
       moduleId: "accounting",
-      label: "Chart of accounts export",
+      label: t("accounting.coa.exportLabel"),
       filename: "chart_of_accounts.csv",
       columns: [
-        { header: "Code", key: "code" },
-        { header: "Name", key: "name" },
-        { header: "Type", key: "type" },
-        { header: "Subtype", key: "subtype" },
-        { header: "Normal Balance", key: "normalBalance" },
-        { header: "Description", key: "description" },
-        { header: "Active", key: "active" },
+        { header: t("accounting.columns.account.code"), key: "code" },
+        { header: t("accounting.columns.account.name"), key: "name" },
+        { header: t("accounting.columns.account.type"), key: "type" },
+        { header: t("accounting.columns.account.subtype"), key: "subtype" },
+        { header: t("accounting.columns.account.normalBalance"), key: "normalBalance" },
+        { header: t("accounting.columns.account.description"), key: "description" },
+        { header: t("accounting.columns.account.active"), key: "active" },
       ],
       rows: filtered.map((account) => ({
         code: account.code,
         name: account.name,
-        type: account.type,
+        type: t(`accounting.type.${account.type}` as AppTranslationKey),
         subtype: account.subtype || "",
-        normalBalance: ACCOUNT_TYPE_META[account.type]?.normalBalance || "",
+        normalBalance: ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? t("accounting.ledger.dr") : t("accounting.ledger.cr"),
         description: account.description || "",
-        active: account.isActive !== false ? "Yes" : "No",
+        active: account.isActive !== false ? t("common.yes") : t("common.no"),
       })),
     });
   };
@@ -107,14 +108,14 @@ export function ChartOfAccounts({
         <SearchBar
           value={search}
           onChange={setSearch}
-          placeholder="Search accounts…"
+          placeholder={t("accounting.coa.searchAccounts")}
           className="flex-1 min-w-[180px]"
         />
         <FormSelect 
           aria-label="Filter by account type"
           value={typeFilter} 
           onChange={(accountTypeValue) => setTypeFilter(accountTypeValue as AccountType | "all")}
-          options={[{ value: "all", label: "All Types" }, ...ACCOUNT_TYPES]}
+          options={[{ value: "all", label: t("accounting.ledger.allTypes") }, ...ACCOUNT_TYPES.map((type) => ({ value: type, label: t(`accounting.type.${type}` as AppTranslationKey) }))]}
         />
         <Button 
           type="button"
@@ -124,7 +125,7 @@ export function ChartOfAccounts({
           className="flex items-center gap-1.5 rounded-xl text-sm font-semibold"
         >
           {showInactive ? <Eye className="w-3.5 h-3.5" aria-hidden="true" /> : <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />}
-          {showInactive ? "Showing All" : "Show Inactive"}
+          {showInactive ? t("accounting.coa.showingAll") : t("accounting.coa.showInactive")}
         </Button>
         <Button 
           type="button"
@@ -132,7 +133,7 @@ export function ChartOfAccounts({
           onClick={exportCSV}
           className="flex items-center gap-1.5 rounded-xl text-sm font-semibold text-muted-foreground"
         >
-          <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export
+          <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.export")}
         </Button>
         {columnCustomizer && (
           <ModuleColumnCustomizer
@@ -147,7 +148,7 @@ export function ChartOfAccounts({
           onClick={() => setModal({ id: "", code: "", name: "", type: "Asset", subtype: "", description: "", isActive: true })}
           className="flex items-center gap-1.5 rounded-xl text-sm font-semibold ml-auto"
         >
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Account
+          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.coa.addAccount")}
         </Button>
       </nav>
 
@@ -158,7 +159,7 @@ export function ChartOfAccounts({
           if (count === 0) return null;
           return (
             <span key={type} className={`px-2.5 py-1 rounded-full text-xs font-bold border ${ACCOUNT_TYPE_META[type]?.color}`}>
-              <span aria-hidden="true">{ACCOUNT_TYPE_META[type]?.icon}</span> {type}: {count}
+              <span aria-hidden="true">{ACCOUNT_TYPE_META[type]?.icon}</span> {t(`accounting.type.${type}` as AppTranslationKey)}: {count}
             </span>
           );
         })}
@@ -172,10 +173,13 @@ export function ChartOfAccounts({
           <article key={type} className="rounded-xl border border-border overflow-hidden">
             <header className={`px-4 py-2.5 border-b border-border ${ACCOUNT_TYPE_META[type]?.color} flex items-center justify-between`}>
               <h3 className="text-xs font-bold uppercase tracking-wide m-0">
-                <span aria-hidden="true">{ACCOUNT_TYPE_META[type]?.icon}</span> {type} Accounts — {ACCOUNT_TYPE_META[type]?.group}
+                <span aria-hidden="true">{ACCOUNT_TYPE_META[type]?.icon}</span> {t("accounting.coa.groupHeader", { type: t(`accounting.type.${type}` as AppTranslationKey), group: ACCOUNT_TYPE_META[type]?.group })}
               </h3>
               <span className="text-[10px] font-semibold text-muted-foreground">
-                Normal: {ACCOUNT_TYPE_META[type]?.normalBalance?.toUpperCase()} · {accountTypeRows.length} accounts
+                {t("accounting.coa.groupMeta", {
+                  normal: ACCOUNT_TYPE_META[type]?.normalBalance === "debit" ? t("accounting.ledger.dr") : t("accounting.ledger.cr"),
+                  count: accountTypeRows.length
+                })}
               </span>
             </header>
             <div className="overflow-x-auto">
@@ -222,7 +226,7 @@ export function ChartOfAccounts({
                       {showName && (
                         <td className="px-4 py-2.5">
                           <span className="font-semibold text-foreground">{account.name}</span>
-                          {account.isActive === false && <span className="ml-2 text-[10px] text-muted-foreground font-semibold bg-muted px-1.5 py-0.5 rounded-full">Inactive</span>}
+                          {account.isActive === false && <span className="ml-2 text-[10px] text-muted-foreground font-semibold bg-muted px-1.5 py-0.5 rounded-full">{t("accounting.coa.inactive")}</span>}
                         </td>
                       )}
                       {showSubtype && (
@@ -234,7 +238,7 @@ export function ChartOfAccounts({
                       {showNormalBalance && (
                         <td className="px-4 py-2.5">
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? "bg-info/15 text-info" : "bg-success/15 text-success"}`}>
-                            {ACCOUNT_TYPE_META[account.type]?.normalBalance?.toUpperCase()}
+                            {ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? t("accounting.ledger.dr") : t("accounting.ledger.cr")}
                           </span>
                         </td>
                       )}
@@ -284,7 +288,7 @@ export function ChartOfAccounts({
         );
       })}
 
-      <p className="text-xs text-muted-foreground" aria-live="polite">{filtered.length} accounts shown</p>
+      <p className="text-xs text-muted-foreground" aria-live="polite">{t("accounting.coa.accountsShown", { count: filtered.length })}</p>
 
       <AnimatePresence>
         {modal !== null && (

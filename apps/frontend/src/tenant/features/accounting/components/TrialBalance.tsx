@@ -4,6 +4,8 @@ import { ACCOUNT_TYPE_META, ACCOUNT_TYPES, computeTrialBalance, Account, Journal
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
 import { AccountingDateFilterBar } from "./AccountingDateFilterBar";
+import { useTranslation } from "@/hooks/useTranslation";
+import { type AppTranslationKey } from "@mms/shared";
 
 interface TrialBalanceProps {
   accounts: Account[];
@@ -20,6 +22,7 @@ interface TrialBalanceProps {
  * @returns {React.ReactElement}
  */
 export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalanceProps) {
+  const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
   const activeFiscalYear   = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active");
   const [dateFrom, setDateFrom] = useState(activeFiscalYear?.startDate || "");
@@ -40,27 +43,27 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
     const exportRows = rows.map((row) => ({
       code: row.code,
       name: row.name,
-      type: row.type,
+      type: t(`accounting.type.${row.type}` as AppTranslationKey),
       debit: row.totalDebit.toString(),
       credit: row.totalCredit.toString(),
     }));
     exportRows.push({
       code: "",
-      name: "Grand Total",
+      name: t("accounting.tb.grandTotal"),
       type: "",
       debit: grandDebit.toString(),
       credit: grandCredit.toString(),
     });
     runGridCsvExportJob({
       moduleId: "accounting",
-      label: "Trial balance export",
+      label: t("accounting.tb.exportLabel"),
       filename: "trial_balance.csv",
       columns: [
-        { header: "Code", key: "code" },
-        { header: "Account Name", key: "name" },
-        { header: "Type", key: "type" },
-        { header: "Debit", key: "debit" },
-        { header: "Credit", key: "credit" },
+        { header: t("accounting.columns.account.code"), key: "code" },
+        { header: t("accounting.columns.account.name"), key: "name" },
+        { header: t("accounting.columns.account.type"), key: "type" },
+        { header: t("accounting.columns.journal.debit"), key: "debit" },
+        { header: t("accounting.columns.journal.credit"), key: "credit" },
       ],
       rows: exportRows,
     });
@@ -83,12 +86,12 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
       <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border ${isBalanced ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"}`} role="status">
         {isBalanced ? <CheckCircle2 className="w-5 h-5" aria-hidden="true" /> : <AlertCircle className="w-5 h-5" aria-hidden="true" />}
         {isBalanced
-          ? `Trial Balance is balanced — Total: ${formatCurrency(grandDebit)}`
-          : `OUT OF BALANCE — Difference: ${formatCurrency(Math.abs(grandDebit - grandCredit))}`}
+          ? t("accounting.tb.balancedMessage", { total: formatCurrency(grandDebit) })
+          : t("accounting.tb.unbalancedMessage", { diff: formatCurrency(Math.abs(grandDebit - grandCredit)) })}
       </div>
 
       {rows.length === 0 ? (
-        <div className="py-16 text-center rounded-xl border border-border text-sm text-muted-foreground">No posted transactions in selected period.</div>
+        <div className="py-16 text-center rounded-xl border border-border text-sm text-muted-foreground">{t("accounting.ledger.noPostedTransactionsPeriod")}</div>
       ) : (
         <>
           {/* Grouped by type */}
@@ -101,19 +104,19 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
               <section key={type} aria-label={`${type} Accounts`} className="rounded-xl border border-border overflow-hidden">
                 <header className={`px-4 py-2 border-b border-border ${ACCOUNT_TYPE_META[type]?.color} flex items-center justify-between`}>
                   <h3 className="text-xs font-bold uppercase tracking-wide m-0">
-                    {ACCOUNT_TYPE_META[type]?.icon} {type} — {ACCOUNT_TYPE_META[type]?.group}
+                    {ACCOUNT_TYPE_META[type]?.icon} {t(`accounting.type.${type}` as AppTranslationKey)} — {ACCOUNT_TYPE_META[type]?.group}
                   </h3>
-                  <span className="text-[10px] font-semibold text-muted-foreground">{accountTypeRows.length} accounts</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground">{t("accounting.tb.accountsCount", { count: accountTypeRows.length })}</span>
                 </header>
                 <table className="w-full text-sm">
                   <caption className="sr-only">{type} Accounts Details</caption>
                   <thead className="bg-muted/40 border-b border-border">
                     <tr>
-                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase w-20">Code</th>
-                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">Account Name</th>
-                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden md:table-cell">Subtype</th>
-                      <th scope="col" className="px-4 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">Debit</th>
-                      <th scope="col" className="px-4 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">Credit</th>
+                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase w-20">{t("accounting.columns.account.code")}</th>
+                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.columns.account.name")}</th>
+                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden md:table-cell">{t("accounting.columns.account.subtype")}</th>
+                      <th scope="col" className="px-4 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.debit")}</th>
+                      <th scope="col" className="px-4 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.credit")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -129,7 +132,7 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
                   </tbody>
                   <tfoot className="border-t border-border bg-muted/20">
                     <tr>
-                      <td colSpan={3} className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase">Sub-total</td>
+                      <td colSpan={3} className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase">{t("accounting.tb.subTotal")}</td>
                       <td className="px-4 py-2 text-right font-mono font-bold text-info">{formatPositiveNumber(groupDebit)}</td>
                       <td className="px-4 py-2 text-right font-mono font-bold text-success">{formatPositiveNumber(groupCredit)}</td>
                     </tr>
@@ -145,7 +148,7 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
               <caption className="sr-only">Grand Total</caption>
               <tfoot>
                 <tr>
-                  <td colSpan={3} className="px-4 py-3 text-sm font-bold text-foreground uppercase tracking-wide">Grand Total</td>
+                  <td colSpan={3} className="px-4 py-3 text-sm font-bold text-foreground uppercase tracking-wide">{t("accounting.tb.grandTotal")}</td>
                   <td className="px-4 py-3 text-right font-mono font-bold text-info text-base">
                     {formatCurrency(grandDebit)}
                   </td>

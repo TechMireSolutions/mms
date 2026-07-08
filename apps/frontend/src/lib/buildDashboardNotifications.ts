@@ -58,6 +58,7 @@ export function buildDashboardNotifications(
     inactiveStudents: number;
   },
   t: Translate,
+  formatCurrency?: (amount: number | string | null | undefined) => string,
 ): DashboardNotificationItem[] {
   const dashboardNotifications: DashboardNotificationItem[] = [];
   const unpaidCount = countOpenInvoices(dashboardNotificationInput.invoices);
@@ -70,7 +71,7 @@ export function buildDashboardNotifications(
         id: 'unpaid-invoices',
         type: 'fee',
         title: t('notifications.unpaidInvoicesTitle', { count: unpaidCount }),
-        desc: t('notifications.unpaidInvoicesDesc', { amount: formatMoney(outstandingTotal) }),
+        desc: t('notifications.unpaidInvoicesDesc', { amount: formatCurrency ? formatCurrency(outstandingTotal) : formatMoney(outstandingTotal) }),
         time: t('notifications.timeNow'),
         urgent: outstandingTotal > 0,
       });

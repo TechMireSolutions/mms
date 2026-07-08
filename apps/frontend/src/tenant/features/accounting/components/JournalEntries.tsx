@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { formatDate, formatMoney } from "@mms/shared";
+import { formatDate, formatMoney, type AppTranslationKey } from "@mms/shared";
 import {
   Plus, Eye, Pencil, Trash2, CheckCircle2,
   RotateCcw, Filter, Download, BookOpen,
@@ -28,23 +28,23 @@ import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
 
 interface QuickActionType {
   id: string;
-  label: string;
+  labelKey: AppTranslationKey;
   icon: React.ElementType;
   debitAcc: string;
   creditAcc: string;
   tag: string;
-  description: string;
-  group: string;
+  descriptionKey: AppTranslationKey;
+  groupKey: AppTranslationKey;
   color: string;
 }
 
 // ── Quick Action buttons ─────────────────────────────────────────────────────
-const QUICK_ACTIONS: { label: string; icon: React.ElementType; type: QuickActionType }[] = [
-  { label: "Collect Fee",      icon: BookOpen,   type: { id: "fee_collection", label: "Student Fee Collection", icon: BookOpen,  debitAcc: "a1000", creditAcc: "a4000", tag: "Fees",     description: "Fee received from student", group: "Money In",  color: "emerald" } },
-  { label: "Pay Salary",       icon: UserCheck,  type: { id: "salary",         label: "Salary Payment",          icon: UserCheck, debitAcc: "a5000", creditAcc: "a1010", tag: "Payroll",   description: "Staff salary paid",         group: "Money Out", color: "red"     } },
-  { label: "Record Donation",  icon: Heart,      type: { id: "donation",        label: "Donation Received",       icon: Heart,     debitAcc: "a1000", creditAcc: "a4100", tag: "Donation", description: "Donation received",          group: "Money In",  color: "emerald" } },
-  { label: "Pay Utility Bill", icon: Zap,        type: { id: "utilities",       label: "Utilities",               icon: Zap,       debitAcc: "a5200", creditAcc: "a1000", tag: "Utilities", description: "Utility bill paid",         group: "Money Out", color: "red"     } },
-  { label: "Add Expense",      icon: TrendingUp, type: { id: "other_expense",   label: "Other Expense",           icon: TrendingUp,debitAcc: "a5700", creditAcc: "a1000", tag: "Capital",  description: "Other expense paid",         group: "Money Out", color: "red"     } },
+const QUICK_ACTIONS: { labelKey: AppTranslationKey; icon: React.ElementType; type: QuickActionType }[] = [
+  { labelKey: "accounting.journal.dashboard.action.collectFee",      icon: BookOpen,   type: { id: "fee_collection", labelKey: "accounting.journal.dashboard.label.feeCollection", icon: BookOpen,  debitAcc: "a1000", creditAcc: "a4000", tag: "Fees",     descriptionKey: "accounting.journal.dashboard.desc.feeCollection", groupKey: "accounting.journal.dashboard.group.moneyIn",  color: "emerald" } },
+  { labelKey: "accounting.journal.dashboard.action.paySalary",       icon: UserCheck,  type: { id: "salary",         labelKey: "accounting.journal.dashboard.label.salaryPayment",          icon: UserCheck, debitAcc: "a5000", creditAcc: "a1010", tag: "Payroll",   descriptionKey: "accounting.journal.dashboard.desc.salaryPayment",         groupKey: "accounting.journal.dashboard.group.moneyOut", color: "red"     } },
+  { labelKey: "accounting.journal.dashboard.action.recordDonation",  icon: Heart,      type: { id: "donation",        labelKey: "accounting.journal.dashboard.label.donationReceived",       icon: Heart,     debitAcc: "a1000", creditAcc: "a4100", tag: "Donation", descriptionKey: "accounting.journal.dashboard.desc.donationReceived",          groupKey: "accounting.journal.dashboard.group.moneyIn",  color: "emerald" } },
+  { labelKey: "accounting.journal.dashboard.action.payUtility", icon: Zap,        type: { id: "utilities",       labelKey: "accounting.journal.dashboard.label.utilities",               icon: Zap,       debitAcc: "a5200", creditAcc: "a1000", tag: "Utilities", descriptionKey: "accounting.journal.dashboard.desc.utilities",         groupKey: "accounting.journal.dashboard.group.moneyOut", color: "red"     } },
+  { labelKey: "accounting.journal.dashboard.action.addExpense",      icon: TrendingUp, type: { id: "other_expense",   labelKey: "accounting.journal.dashboard.label.otherExpense",           icon: TrendingUp,debitAcc: "a5700", creditAcc: "a1000", tag: "Capital",  descriptionKey: "accounting.journal.dashboard.desc.otherExpense",         groupKey: "accounting.journal.dashboard.group.moneyOut", color: "red"     } },
 ];
 
 // NL parsing: very simple keyword → transaction type mapper
@@ -155,13 +155,13 @@ export function JournalEntries({
 
   const handleDelete = (id: string) => {
     const entry = entries.find((journalEntry) => journalEntry.id === id);
-    if (entry?.status === "posted") { alert("Cannot delete a posted entry. Use Reverse instead."); return; }
-    if (confirm("Delete this draft entry?")) onChange(entries.filter((journalEntry) => journalEntry.id !== id));
+    if (entry?.status === "posted") { alert(t("accounting.journal.alerts.cannotDeletePosted")); return; }
+    if (confirm(t("accounting.journal.alerts.deleteDraftConfirm"))) onChange(entries.filter((journalEntry) => journalEntry.id !== id));
   };
 
   const handlePost    = (entry: JournalEntry) => onChange(entries.map((journalEntry) => journalEntry.id === entry.id ? { ...journalEntry, status: "posted" } : journalEntry));
   const handleReverse = (entry: JournalEntry) => {
-    if (!confirm(`Create a reversal entry for ${entry.ref}?`)) return;
+    if (!confirm(t("accounting.journal.alerts.reverseConfirm", { ref: entry.ref }))) return;
     onChange([...entries, createReversalEntry(entry, entries)]);
   };
 
@@ -181,16 +181,16 @@ export function JournalEntries({
     });
     runGridCsvExportJob({
       moduleId: "accounting",
-      label: "Journal entries export",
+      label: t("accounting.journal.exportLabel"),
       filename: "journal_entries.csv",
       columns: [
-        { header: "Ref", key: "ref" },
-        { header: "Date", key: "date" },
-        { header: "Description", key: "description" },
-        { header: "Tags", key: "tags" },
-        { header: "Status", key: "status" },
-        { header: "Debit", key: "debit" },
-        { header: "Credit", key: "credit" },
+        { header: t("accounting.columns.journal.ref"), key: "ref" },
+        { header: t("accounting.columns.journal.date"), key: "date" },
+        { header: t("accounting.columns.journal.description"), key: "description" },
+        { header: t("accounting.columns.journal.tags"), key: "tags" },
+        { header: t("accounting.columns.journal.status"), key: "status" },
+        { header: t("accounting.columns.journal.debit"), key: "debit" },
+        { header: t("accounting.columns.journal.credit"), key: "credit" },
       ],
       rows,
     });
@@ -227,7 +227,7 @@ export function JournalEntries({
         onClick={() => setMode("simple")}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold"
       >
-        <Sparkles className="w-3.5 h-3.5" aria-hidden="true" /> Simple
+        <Sparkles className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.simple")}
       </Button>
       <Button 
         type="button"
@@ -237,7 +237,7 @@ export function JournalEntries({
         onClick={() => setMode("advanced")}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold"
       >
-        <Layers className="w-3.5 h-3.5" aria-hidden="true" /> Advanced
+        <Layers className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.advanced")}
       </Button>
     </nav>
   );
@@ -249,8 +249,8 @@ export function JournalEntries({
         {/* Header row */}
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-bold text-foreground m-0">Record Transaction</h2>
-            <p className="text-xs text-muted-foreground m-0">Money In / Money Out — easy guided entry</p>
+            <h2 className="text-base font-bold text-foreground m-0">{t("accounting.journal.dashboard.recordTransaction")}</h2>
+            <p className="text-xs text-muted-foreground m-0">{t("accounting.journal.dashboard.subtitleSimple")}</p>
           </div>
           <ModeToggle />
         </header>
@@ -270,43 +270,43 @@ export function JournalEntries({
             <article className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
               <header className="flex items-center gap-2 mb-3">
                 <Sparkles className="w-4 h-4 text-primary" aria-hidden="true" />
-                <h3 className="text-sm font-bold text-foreground m-0">What happened?</h3>
-                <span className="text-xs text-muted-foreground">Type in plain language</span>
+                <h3 className="text-sm font-bold text-foreground m-0">{t("accounting.journal.dashboard.whatHappened")}</h3>
+                <span className="text-xs text-muted-foreground">{t("accounting.journal.dashboard.typePlainLanguage")}</span>
               </header>
               <form onSubmit={handleNlSubmit} className="flex gap-2">
                 <div className="relative flex-1">
                   <label htmlFor="nl-input" className="sr-only">Natural Language Transaction Entry</label>
                   <Input id="nl-input" value={nlInput} onChange={(event) => handleNlChange(event.target.value)}
-                    placeholder="e.g. Paid electricity bill 12000 · Received donation 50000 · Collected Ahmad fee"
+                    placeholder={t("accounting.journal.dashboard.placeholderNl")}
                     className="w-full px-4 py-3" />
                   {nlSuggestion && (
                     <div className="absolute top-full left-0 mt-1 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold shadow-lg z-10 flex items-center gap-1.5" role="status">
-                      <CheckCircle2 className="w-3 h-3" aria-hidden="true" /> Auto-detected: {nlSuggestion.label} — press Enter
+                      <CheckCircle2 className="w-3 h-3" aria-hidden="true" /> {t("accounting.journal.dashboard.autoDetected", { label: t(nlSuggestion.labelKey) })}
                     </div>
                   )}
                 </div>
                 <Button type="submit" className="px-4 py-3 rounded-xl text-sm font-semibold whitespace-nowrap h-auto">
-                  Record
+                  {t("accounting.journal.dashboard.record")}
                 </Button>
               </form>
             </article>
 
             {/* Quick action buttons */}
             <section aria-label="Quick Actions">
-              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2.5 m-0">Quick Actions</h3>
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2.5 m-0">{t("accounting.journal.dashboard.quickActions")}</h3>
               <nav className="flex flex-wrap gap-2">
                 {QUICK_ACTIONS.map((qa) => {
                   const Icon = qa.icon;
                   return (
-                    <Button key={qa.label} type="button" variant="outline" onClick={() => setSimpleModal({ prefillType: qa.type })}
+                    <Button key={qa.labelKey} type="button" variant="outline" onClick={() => setSimpleModal({ prefillType: qa.type })}
                       className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted hover:border-primary/30 transition-all shadow-sm h-auto">
-                      <Icon className="w-4 h-4 text-primary" aria-hidden="true" /> {qa.label}
+                      <Icon className="w-4 h-4 text-primary" aria-hidden="true" /> {t(qa.labelKey)}
                     </Button>
                   );
                 })}
                 <Button type="button" variant="ghost" onClick={() => setSimpleModal({ prefillType: null })}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-primary/40 bg-primary/5 text-sm font-semibold text-primary hover:bg-primary/10 transition-all h-auto">
-                  <Plus className="w-4 h-4" aria-hidden="true" /> Other Transaction
+                  <Plus className="w-4 h-4" aria-hidden="true" /> {t("accounting.journal.dashboard.otherTransaction")}
                 </Button>
               </nav>
             </section>
@@ -314,17 +314,17 @@ export function JournalEntries({
             {/* Recent transactions list */}
             <section aria-label="Recent Transactions">
               <header className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide m-0">Recent Transactions</h3>
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide m-0">{t("accounting.journal.dashboard.recentTransactions")}</h3>
                 <Button type="button" variant="link" size="sm" onClick={exportCSV} className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors p-0 h-auto">
-                  <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export
+                  <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.export")}
                 </Button>
               </header>
 
               {entries.length === 0 ? (
                 <div className="py-16 text-center rounded-2xl border-2 border-dashed border-border" role="status">
                   <DollarSign className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" aria-hidden="true" />
-                  <p className="text-sm font-semibold text-muted-foreground m-0">No transactions yet</p>
-                  <p className="text-xs text-muted-foreground mt-1 m-0">Use Quick Actions above to record your first transaction</p>
+                  <p className="text-sm font-semibold text-muted-foreground m-0">{t("accounting.journal.dashboard.noTransactionsYet")}</p>
+                  <p className="text-xs text-muted-foreground mt-1 m-0">{t("accounting.journal.dashboard.useQuickActions")}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -387,7 +387,7 @@ export function JournalEntries({
         <SearchBar
           value={search}
           onChange={setSearch}
-          placeholder="Search by ref or description…"
+          placeholder={t("accounting.journal.dashboard.searchPlaceholder")}
           className="min-w-[180px]"
         />
         <FormSelect 
@@ -395,9 +395,9 @@ export function JournalEntries({
           value={statusFilter} 
           onChange={setStatusFilter}
           options={[
-            { value: "all", label: "All Status" },
-            { value: "posted", label: "Posted" },
-            { value: "draft", label: "Draft" }
+            { value: "all", label: t("accounting.journal.dashboard.allStatus") },
+            { value: "posted", label: t("accounting.journal.status.posted") },
+            { value: "draft", label: t("accounting.journal.status.draft") }
           ]}
         />
         <Button 
@@ -407,7 +407,7 @@ export function JournalEntries({
           onClick={() => setShowFilters(!showFilters)}
           className="flex items-center gap-1.5 rounded-xl text-sm font-semibold"
         >
-          <Filter className="w-3.5 h-3.5" aria-hidden="true" /> Filters
+          <Filter className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.filters")}
         </Button>
         <Button 
           type="button"
@@ -415,7 +415,7 @@ export function JournalEntries({
           onClick={exportCSV}
           className="flex items-center gap-1.5 rounded-xl text-sm font-semibold text-muted-foreground"
         >
-          <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export
+          <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.export")}
         </Button>
         {columnCustomizer && (
           <ModuleColumnCustomizer
@@ -430,14 +430,14 @@ export function JournalEntries({
           onClick={() => { setSelected(null); setModal("new"); }}
           className="flex items-center gap-1.5 rounded-xl text-sm font-semibold"
         >
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> New Entry
+          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.newEntry")}
         </Button>
       </nav>
 
       {showFilters && (
         <div className="flex flex-wrap gap-3 p-4 rounded-xl border border-border bg-muted/30">
           <div>
-            <label htmlFor="filter-from" className="text-[10px] font-semibold text-muted-foreground uppercase">From Date</label>
+            <label htmlFor="filter-from" className="text-[10px] font-semibold text-muted-foreground uppercase">{t("accounting.journal.dashboard.fromDate")}</label>
             <DatePicker
               id="filter-from"
               value={dateFrom}
@@ -445,7 +445,7 @@ export function JournalEntries({
             />
           </div>
           <div>
-            <label htmlFor="filter-to" className="text-[10px] font-semibold text-muted-foreground uppercase">To Date</label>
+            <label htmlFor="filter-to" className="text-[10px] font-semibold text-muted-foreground uppercase">{t("accounting.journal.dashboard.toDate")}</label>
             <DatePicker
               id="filter-to"
               value={dateTo}
@@ -453,12 +453,12 @@ export function JournalEntries({
             />
           </div>
           <div>
-            <label htmlFor="filter-tag" className="text-[10px] font-semibold text-muted-foreground uppercase">Tag</label>
+            <label htmlFor="filter-tag" className="text-[10px] font-semibold text-muted-foreground uppercase">{t("accounting.journal.dashboard.tag")}</label>
             <FormSelect 
               id="filter-tag" 
               value={tagFilter} 
               onChange={setTagFilter}
-              options={[{ value: "all", label: "All Tags" }, ...JOURNAL_TAGS]}
+              options={[{ value: "all", label: t("accounting.journal.dashboard.allTags") }, ...JOURNAL_TAGS]}
             />
           </div>
           <Button 
@@ -468,14 +468,14 @@ export function JournalEntries({
             onClick={() => { setDateFrom(""); setDateTo(""); setTagFilter("all"); }}
             className="self-end text-xs font-semibold text-muted-foreground hover:text-foreground px-2 py-1.5 h-auto"
           >
-            Clear
+            {t("accounting.journal.dashboard.clear")}
           </Button>
         </div>
       )}
 
       {filtered.length === 0 ? (
         <div className="py-16 text-center text-sm text-muted-foreground rounded-xl border border-border" role="status">
-          No journal entries match your filters.
+          {t("accounting.journal.dashboard.noEntriesMatch")}
         </div>
       ) : (
         <div className="rounded-xl border border-border overflow-hidden">
@@ -533,8 +533,8 @@ export function JournalEntries({
                       {showRef && (
                         <td className="px-3 py-2.5">
                           <span className="font-mono text-xs font-bold text-primary">{entry.ref}</span>
-                          {entry.reversed_ref && <p className="text-[10px] text-warning font-semibold m-0">↩ Rev. of {entry.reversed_ref}</p>}
-                          {entry.simple_mode && <span className="text-[10px] text-primary/60 font-semibold m-0">Simple</span>}
+                          {entry.reversed_ref && <p className="text-[10px] text-warning font-semibold m-0">{t("accounting.journal.dashboard.reversalOf", { ref: entry.reversed_ref })}</p>}
+                          {entry.simple_mode && <span className="text-[10px] text-primary/60 font-semibold m-0">{t("accounting.journal.dashboard.simpleMode")}</span>}
                         </td>
                       )}
                       {showDate && (
@@ -635,7 +635,7 @@ export function JournalEntries({
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
                   <td colSpan={(showRef ? 1 : 0) + (showDate ? 1 : 0) + (showDescription ? 1 : 0) + (showTags ? 1 : 0) || 1} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">
-                    {filtered.length} {filtered.length !== 1 ? "entries" : "entry"}
+                    {filtered.length !== 1 ? t("accounting.journal.dashboard.entriesCount", { count: filtered.length }) : t("accounting.journal.dashboard.entryCount", { count: filtered.length })}
                   </td>
                   {showDebit && (
                     <td className="px-3 py-2 text-right font-mono font-bold text-info text-xs">
@@ -649,8 +649,8 @@ export function JournalEntries({
                   )}
                   <td colSpan={(showStatus ? 1 : 0) + 1} className="px-3 py-2 text-right text-[11px] font-semibold text-muted-foreground">
                     {Math.abs(grandDebit - grandCredit) < 0.01
-                      ? <span className="text-success">✓ Balanced</span>
-                      : <span className="text-destructive">Diff: {formatCurrency(Math.abs(grandDebit - grandCredit))}</span>
+                      ? <span className="text-success">{t("accounting.journal.dashboard.balanced")}</span>
+                      : <span className="text-destructive">{t("accounting.journal.dashboard.difference", { diff: formatCurrency(Math.abs(grandDebit - grandCredit)) })}</span>
                     }
                   </td>
                 </tr>

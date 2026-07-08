@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { formatDate as sharedFormatDate } from "@/lib/utils";
 import {
   DollarSign, Calendar, Plus, Pencil, Trash2,
@@ -9,6 +9,7 @@ import {
   DEFAULT_CURRENCIES,
   ACCOUNTING_TAB_REGISTRY,
   INITIAL_ACCOUNTING_FIELD_SEED,
+  type AppTranslationKey
 } from "@mms/shared";
 import { useAccountingConfig } from "@/tenant/features/accounting/hooks/useAccountingConfig";
 import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
@@ -20,12 +21,9 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Switch } from "@/components/ui/switch";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const DATE_FORMATS = ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD-MM-YYYY"];
-const DECIMAL_SEPARATORS = [
-  { label: "Period  1,000.00", value: "period" },
-  { label: "Comma   1.000,00", value: "comma" },
-];
 const FY_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 interface SectionCardProps {
@@ -88,6 +86,7 @@ interface FYModalProps {
 }
 
 function FYModal({ open, initial, onSave, onClose }: FYModalProps) {
+  const { t } = useTranslation();
   const isEdit = !!initial?.id;
   const [form, setForm] = useState<Partial<FiscalYear>>(initial || { label: "", startDate: "", endDate: "", status: "upcoming" });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -101,10 +100,10 @@ function FYModal({ open, initial, onSave, onClose }: FYModalProps) {
 
   const validate = () => {
     const validationErrors: Record<string, string> = {};
-    if (!form.label?.trim()) validationErrors.label = "Label is required";
-    if (!form.startDate) validationErrors.startDate = "Start date is required";
-    if (!form.endDate) validationErrors.endDate = "End date is required";
-    if (form.startDate && form.endDate && form.startDate >= form.endDate) validationErrors.endDate = "End must be after start";
+    if (!form.label?.trim()) validationErrors.label = t("accounting.settings.fy.validation.label");
+    if (!form.startDate) validationErrors.startDate = t("accounting.settings.fy.validation.startDate");
+    if (!form.endDate) validationErrors.endDate = t("accounting.settings.fy.validation.endDate");
+    if (form.startDate && form.endDate && form.startDate >= form.endDate) validationErrors.endDate = t("accounting.settings.fy.validation.endAfterStart");
     return validationErrors;
   };
 
@@ -124,27 +123,27 @@ function FYModal({ open, initial, onSave, onClose }: FYModalProps) {
     <FormModal
       open={open}
       onClose={onClose}
-      title={isEdit ? "Edit Financial Year" : "Add Financial Year"}
+      title={isEdit ? t("accounting.settings.fy.editTitle") : t("accounting.settings.fy.newTitle")}
       icon={Calendar}
       error={Object.values(errors)}
-      cancelLabel="Cancel"
-      saveLabel="Save"
+      cancelLabel={t("common.cancel")}
+      saveLabel={t("common.save")}
       onSave={handleSave}
     >
       <div className="space-y-4">
         <div>
-          <label htmlFor="financial-year-label" className={FORM_LABEL}>Label *</label>
+          <label htmlFor="financial-year-label" className={FORM_LABEL}>{t("accounting.settings.fy.labelField")}</label>
           <Input
             id="financial-year-label"
             value={form.label || ""}
             onChange={(event) => setForm({ ...form, label: event.target.value })}
-            placeholder="e.g. FY 2026–27"
+            placeholder={t("accounting.settings.fy.labelPlaceholder")}
             required
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="financial-year-start" className={FORM_LABEL}>Start Date *</label>
+            <label htmlFor="financial-year-start" className={FORM_LABEL}>{t("accounting.settings.fy.startDateField")}</label>
             <DatePicker
               id="financial-year-start"
               value={form.startDate || ""}
@@ -153,7 +152,7 @@ function FYModal({ open, initial, onSave, onClose }: FYModalProps) {
             />
           </div>
           <div>
-            <label htmlFor="financial-year-end" className={FORM_LABEL}>End Date *</label>
+            <label htmlFor="financial-year-end" className={FORM_LABEL}>{t("accounting.settings.fy.endDateField")}</label>
             <DatePicker
               id="financial-year-end"
               value={form.endDate || ""}
@@ -163,15 +162,15 @@ function FYModal({ open, initial, onSave, onClose }: FYModalProps) {
           </div>
         </div>
         <div>
-          <label htmlFor="financial-year-status" className={FORM_LABEL}>Status</label>
+          <label htmlFor="financial-year-status" className={FORM_LABEL}>{t("accounting.settings.fy.status")}</label>
           <FormSelect
             id="financial-year-status"
             value={form.status || "upcoming"}
             onChange={(statusValue) => setForm({ ...form, status: statusValue as FiscalYear["status"] | "upcoming" })}
             options={[
-              { value: "upcoming", label: "Upcoming" },
-              { value: "active", label: "Active" },
-              { value: "closed", label: "Closed" }
+              { value: "upcoming", label: t("accounting.settings.fy.status.upcoming") },
+              { value: "active", label: t("accounting.settings.fy.status.active") },
+              { value: "closed", label: t("accounting.settings.fy.status.closed") }
             ]}
           />
         </div>
@@ -180,10 +179,10 @@ function FYModal({ open, initial, onSave, onClose }: FYModalProps) {
   );
 }
 
-const FY_STATUS: Record<string, { color: string; icon: React.ElementType; label: string }> = {
-  active:   { color: "bg-success/15 text-success border-success/30", icon: CheckCircle2, label: "Active" },
-  closed:   { color: "bg-muted text-muted-foreground border-border",       icon: Lock,         label: "Closed" },
-  upcoming: { color: "bg-info/15 text-info border-info/30",          icon: Clock,        label: "Upcoming" },
+const FY_STATUS: Record<string, { color: string; icon: React.ElementType }> = {
+  active:   { color: "bg-success/15 text-success border-success/30", icon: CheckCircle2 },
+  closed:   { color: "bg-muted text-muted-foreground border-border",       icon: Lock },
+  upcoming: { color: "bg-info/15 text-info border-info/30",          icon: Clock },
 };
 
 interface AccountingSettingsProps {
@@ -194,6 +193,11 @@ interface AccountingSettingsProps {
 }
 
 export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, mode }: AccountingSettingsProps) {
+  const { t } = useTranslation();
+  const decimalSeparators = useMemo(() => [
+    { label: t("accounting.settings.decimal.period"), value: "period" },
+    { label: t("accounting.settings.decimal.comma"), value: "comma" },
+  ], [t]);
   const currencies = DEFAULT_CURRENCIES;
   const { settings, updateSettings } = useAccountingConfig();
   const [saved, setSaved] = useState(false);
@@ -294,8 +298,8 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
 
   const handleDeleteFY = (fiscalYearId: string) => {
     const fiscalYear = fiscalYears.find((existingFiscalYear) => existingFiscalYear.id === fiscalYearId);
-    if (fiscalYear?.status === "active") { alert("Cannot delete the active financial year."); return; }
-    if (confirm("Delete this financial year?")) onSaveFiscalYears(fiscalYears.filter((existingFiscalYear) => existingFiscalYear.id !== fiscalYearId));
+    if (fiscalYear?.status === "active") { alert(t("accounting.settings.fy.deleteActiveAlert")); return; }
+    if (confirm(t("accounting.settings.fy.deleteConfirm"))) onSaveFiscalYears(fiscalYears.filter((existingFiscalYear) => existingFiscalYear.id !== fiscalYearId));
   };
 
   const activeCurrency = currencies.find((currencyOption) => currencyOption.code === currency);
@@ -304,6 +308,11 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
   const showPrefs = mode === "preferences";
   const showFields = mode === "fields";
 
+  const localizedMonths = FY_MONTHS.map((monthName) => ({
+    value: monthName,
+    label: t(`accounting.settings.months.${monthName.toLowerCase()}` as AppTranslationKey) || monthName
+  }));
+
   return (
     <section className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 space-y-5 shadow-sm" aria-labelledby="accounting-settings-title">
       <div className="flex items-center gap-2.5 pb-1 border-b border-border/60">
@@ -311,24 +320,24 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
           <BookOpen className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         </div>
         <h3 id="accounting-settings-title" className="text-[13px] font-bold text-foreground">
-          {showFields ? "Field Configuration" : "General Preferences"}
+          {showFields ? t("accounting.settings.titleFields") : t("accounting.settings.titlePreferences")}
         </h3>
       </div>
 
       {showPrefs && (
         <div className="space-y-6">
           {/* Organisation */}
-          <SectionCard title="Organisation" icon={null}>
-            <Field label="Organisation Name" hint="Displayed on reports and printed documents">
-              <Input value={organizationName || ""} aria-label="Organisation Name" onChange={(event) => { setOrganizationName(event.target.value); setSaved(false); }} />
+          <SectionCard title={t("accounting.settings.secOrganisation")} icon={null}>
+            <Field label={t("accounting.settings.fields.organisationName")} hint={t("accounting.settings.fields.organisationNameHint")}>
+              <Input value={organizationName || ""} aria-label={t("accounting.settings.fields.organisationName")} onChange={(event) => { setOrganizationName(event.target.value); setSaved(false); }} />
             </Field>
           </SectionCard>
 
           {/* Currency & Display */}
-          <SectionCard title="Currency & Display" icon={DollarSign}>
-            <Field label="Base Currency" hint="All transactions recorded in this currency">
+          <SectionCard title={t("accounting.settings.secCurrency")} icon={DollarSign}>
+            <Field label={t("accounting.settings.fields.baseCurrency")} hint={t("accounting.settings.fields.baseCurrencyHint")}>
               <FormSelect
-                aria-label="Base Currency"
+                aria-label={t("accounting.settings.fields.baseCurrency")}
                 value={currency}
                 onChange={(currencyValue) => {
                   const selectedCurrency = currencies.find((currencyOption) => currencyOption.code === currencyValue);
@@ -343,29 +352,29 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
               />
               {activeCurrency && (
                 <p className="text-xs text-muted-foreground mt-1 m-0">
-                  Symbol: <span className="font-bold">{activeCurrency.symbol}</span> · Code: <span className="font-mono font-bold">{activeCurrency.code}</span>
+                  {t("accounting.settings.fields.symbol")}: <span className="font-bold">{activeCurrency.symbol}</span> · {t("accounting.settings.fields.code")}: <span className="font-mono font-bold">{activeCurrency.code}</span>
                 </p>
               )}
             </Field>
-            <Field label="Date Format">
+            <Field label={t("accounting.settings.fields.dateFormat")}>
               <FormSelect
-                aria-label="Date Format"
+                aria-label={t("accounting.settings.fields.dateFormat")}
                 value={dateFormat}
                 onChange={(dateFormatValue) => { setDateFormat(dateFormatValue); setSaved(false); }}
                 options={DATE_FORMATS}
               />
             </Field>
-            <Field label="Number Format">
+            <Field label={t("accounting.settings.fields.numberFormat")}>
               <FormSelect
-                aria-label="Number Format"
+                aria-label={t("accounting.settings.fields.numberFormat")}
                 value={decimalSeparator}
                 onChange={(separatorValue) => { setDecimalSeparator(separatorValue as "period" | "comma"); setSaved(false); }}
-                options={DECIMAL_SEPARATORS}
+                options={decimalSeparators}
               />
             </Field>
-            <Field label="Decimal Places">
+            <Field label={t("accounting.settings.fields.decimalPlaces")}>
               <FormSelect
-                aria-label="Decimal Places"
+                aria-label={t("accounting.settings.fields.decimalPlaces")}
                 value={String(decimalPlaces)}
                 onChange={(decimalPlacesValue) => { setDecimalPlaces(parseInt(decimalPlacesValue)); setSaved(false); }}
                 options={[0, 1, 2, 3].map((placeCount) => String(placeCount))}
@@ -375,20 +384,20 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
           </SectionCard>
 
           {/* Financial Years */}
-          <SectionCard title="Financial Years" icon={Calendar}>
-            <Field label="FY Start Month" hint="Month when each financial year begins">
+          <SectionCard title={t("accounting.settings.secFiscalYears")} icon={Calendar}>
+            <Field label={t("accounting.settings.fields.fyStartMonth")} hint={t("accounting.settings.fields.fyStartMonthHint")}>
               <FormSelect
-                aria-label="FY Start Month"
+                aria-label={t("accounting.settings.fields.fyStartMonth")}
                 value={fyStartMonth}
                 onChange={(startMonthValue) => { setFyStartMonth(startMonthValue); setSaved(false); }}
-                options={FY_MONTHS}
+                options={localizedMonths}
                 className="w-48"
               />
             </Field>
 
             <div className="mt-4">
               <header className="flex items-center justify-between mb-3">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">Configured Financial Years</h4>
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.settings.configuredFiscalYears")}</h4>
                 <Button
                   type="button"
                   variant="link"
@@ -396,7 +405,7 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
                   onClick={() => setFyModal({ label: "", startDate: "", endDate: "", status: "upcoming" })}
                   className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors p-0 h-auto"
                 >
-                  <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Year
+                  <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.settings.addYear")}
                 </Button>
               </header>
               <div className="rounded-xl border border-border overflow-hidden">
@@ -404,10 +413,10 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
                   <caption className="sr-only">Financial Years Configuration</caption>
                   <thead className="bg-muted/50 border-b border-border">
                     <tr>
-                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">Label</th>
-                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">Period</th>
-                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">Status</th>
-                      <th scope="col" className="px-4 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">Actions</th>
+                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.label")}</th>
+                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.period")}</th>
+                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.status")}</th>
+                      <th scope="col" className="px-4 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.actions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -422,7 +431,7 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
                           </td>
                           <td className="px-4 py-2.5">
                             <span className={`flex items-center gap-1 w-fit px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusMeta.color}`}>
-                              <StatusIcon className="w-2.5 h-2.5" aria-hidden="true" /> {statusMeta.label}
+                              <StatusIcon className="w-2.5 h-2.5" aria-hidden="true" /> {t(`accounting.settings.fy.status.${fiscalYear.status}` as AppTranslationKey)}
                             </span>
                           </td>
                           <td className="px-4 py-2.5 text-right">
@@ -460,38 +469,38 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
           </SectionCard>
 
           {/* Journal Entry Rules */}
-          <SectionCard title="Journal Entry Rules" icon={null}>
-            <Field label="Require Narration" hint="Enforce description on every entry">
-              <Toggle ariaLabel="Require Narration" checked={requireNarration} onChange={(checked) => { setRequireNarration(checked); setSaved(false); }} />
+          <SectionCard title={t("accounting.settings.secRules")} icon={null}>
+            <Field label={t("accounting.settings.fields.requireNarration")} hint={t("accounting.settings.fields.requireNarrationHint")}>
+              <Toggle ariaLabel={t("accounting.settings.fields.requireNarration")} checked={requireNarration} onChange={(checked) => { setRequireNarration(checked); setSaved(false); }} />
             </Field>
-            <Field label="Allow Editing Posted Entries" hint="If off, posted entries are locked (recommended)">
-              <Toggle ariaLabel="Allow Editing Posted Entries" checked={allowEditPosted} onChange={(checked) => { setAllowEditPosted(checked); setSaved(false); }} />
+            <Field label={t("accounting.settings.fields.allowEditPosted")} hint={t("accounting.settings.fields.allowEditPostedHint")}>
+              <Toggle ariaLabel={t("accounting.settings.fields.allowEditPosted")} checked={allowEditPosted} onChange={(checked) => { setAllowEditPosted(checked); setSaved(false); }} />
               {allowEditPosted && (
-                <p className="text-xs text-warning mt-1 font-semibold m-0" role="alert">⚠ Enabling this breaks audit integrity. Use reversals instead.</p>
+                <p className="text-xs text-warning mt-1 font-semibold m-0" role="alert">{t("accounting.settings.fields.allowEditPostedWarning")}</p>
               )}
             </Field>
-            <Field label="Auto-post Draft Entries" hint="Automatically post entries saved as draft">
-              <Toggle ariaLabel="Auto-post Draft Entries" checked={autoPostDrafts} onChange={(checked) => { setAutoPostDrafts(checked); setSaved(false); }} />
+            <Field label={t("accounting.settings.fields.autoPostDrafts")} hint={t("accounting.settings.fields.autoPostDraftsHint")}>
+              <Toggle ariaLabel={t("accounting.settings.fields.autoPostDrafts")} checked={autoPostDrafts} onChange={(checked) => { setAutoPostDrafts(checked); setSaved(false); }} />
             </Field>
           </SectionCard>
 
           {/* Account Numbering */}
-          <SectionCard title="Account Numbering" icon={null}>
-            <Field label="Default Code Length" hint="Number of digits for new account codes">
+          <SectionCard title={t("accounting.settings.secNumbering")} icon={null}>
+            <Field label={t("accounting.settings.fields.defaultCodeLength")} hint={t("accounting.settings.fields.defaultCodeLengthHint")}>
               <FormSelect
-                aria-label="Default Code Length"
+                aria-label={t("accounting.settings.fields.defaultCodeLength")}
                 value={String(accountCodeLength)}
                 onChange={(codeLengthValue) => { setAccountCodeLength(parseInt(codeLengthValue)); setSaved(false); }}
                 options={[3, 4, 5, 6].map((digitCount) => String(digitCount))}
                 className="w-32"
               />
             </Field>
-            <Field label="Retained Earnings Account" hint="Used for closing net surplus at year-end">
+            <Field label={t("accounting.settings.fields.retainedEarningsAccount")} hint={t("accounting.settings.fields.retainedEarningsAccountHint")}>
               <FormSelect
-                aria-label="Retained Earnings Account"
+                aria-label={t("accounting.settings.fields.retainedEarningsAccount")}
                 value={retainedEarningsAccount || ""}
                 onChange={(accountId) => { setRetainedEarningsAccount(accountId); setSaved(false); }}
-                placeholder="— None —"
+                placeholder={t("accounting.journal.form.none")}
                 options={accounts
                   .filter((account) => account.type === "Equity" && account.isActive !== false)
                   .sort((firstAccount, secondAccount) => firstAccount.code.localeCompare(secondAccount.code))
@@ -516,7 +525,7 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
           onClick={handleSave}
           className={saved ? "bg-success hover:bg-success/90 text-success-foreground ml-auto" : "ml-auto"}
         >
-          {saved ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Saved!</> : <><Save className="w-3.5 h-3.5" aria-hidden="true" /> Save Settings</>}
+          {saved ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.settings.btnSaved")}</> : <><Save className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.settings.btnSave")}</>}
         </Button>
       </footer>
 

@@ -23,6 +23,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useDashboardConfig } from '@/tenant/features/dashboard/hooks/useDashboardConfig';
 import { resolveWidgetTitle } from '@/lib/dashboardWidgets';
 import { buildDashboardNotifications } from '@/lib/buildDashboardNotifications';
+import { useFinanceCurrency } from '@/tenant/features/finance/hooks/useFinanceCurrency';
 
 function Section({ children }: { children: React.ReactNode }) {
   return (
@@ -73,6 +74,7 @@ function defaultWidgetCategory(can: (permission: Permission) => boolean): string
 
 export default function Dashboard() {
   const { t } = useTranslation();
+  const { formatCurrency } = useFinanceCurrency();
   const { can } = usePermissions();
   const dashboardRole = useMemo(() => resolveDashboardRole(can), [can]);
   const globalSettings = useGlobalSettings();
@@ -458,8 +460,9 @@ export default function Dashboard() {
         dashboardRole,
         { invoices, attendanceRecords, inactiveStudents: studentMetricsInactive },
         t,
+        formatCurrency,
       ),
-    [dashboardRole, invoices, attendanceRecords, studentMetricsInactive, t],
+    [dashboardRole, invoices, attendanceRecords, studentMetricsInactive, t, formatCurrency],
   );
 
   return (

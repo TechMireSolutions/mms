@@ -111,7 +111,7 @@ export default function Accounting() {
       headerActions={
         activeFiscalYear && (
           <span className="px-3 py-1 rounded-full text-xs font-bold bg-success/15 text-success border border-success/30">
-            {activeFiscalYear.label} — Active
+            {t("page.accounting.activeBadge", { label: activeFiscalYear.label })}
           </span>
         )
       }

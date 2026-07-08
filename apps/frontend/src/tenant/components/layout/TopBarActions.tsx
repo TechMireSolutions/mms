@@ -34,6 +34,7 @@ import { useDashboardData } from "@/tenant/features/dashboard/hooks/useDashboard
 import { resolveDashboardRole } from "@/lib/dashboardRole";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { buildDashboardNotifications } from "@/lib/buildDashboardNotifications";
+import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
 
 export interface TopBarActionsProps {
   /** Tighter spacing for mobile header. */
@@ -53,6 +54,7 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
     : "AK";
 
   const { can } = usePermissions();
+  const { formatCurrency } = useFinanceCurrency();
   const dashboardRole = resolveDashboardRole(can);
   const { invoices, attendanceRecords, studentMetricsInactive } = useDashboardData([], dashboardRole);
 
@@ -61,8 +63,9 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
       dashboardRole,
       { invoices, attendanceRecords, inactiveStudents: studentMetricsInactive },
       t,
+      formatCurrency,
     );
-  }, [dashboardRole, invoices, attendanceRecords, studentMetricsInactive, t]);
+  }, [dashboardRole, invoices, attendanceRecords, studentMetricsInactive, t, formatCurrency]);
 
   const unreadCount = notifications.length;
 

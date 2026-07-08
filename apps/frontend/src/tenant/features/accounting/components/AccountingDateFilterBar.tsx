@@ -3,6 +3,7 @@ import { Download } from "lucide-react";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Button } from "@/components/ui/button";
 import type { FiscalYear } from "@/lib/data/accountingData";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface AccountingDateFilterBarProps {
   dateFrom: string;
@@ -29,6 +30,7 @@ export function AccountingDateFilterBar({
   idPrefix,
   variant = "simple",
 }: AccountingDateFilterBarProps) {
+  const { t } = useTranslation();
   const containerClass =
     variant === "bordered"
       ? "flex flex-wrap items-center gap-3 p-4 rounded-xl border border-border bg-muted/20"
@@ -38,7 +40,7 @@ export function AccountingDateFilterBar({
     <nav aria-label={`${idPrefix} Date Filters`} className={containerClass}>
       <div className="flex items-center gap-2 text-sm">
         <label htmlFor={`${idPrefix}-from`} className="text-xs font-semibold text-muted-foreground uppercase">
-          From
+          {t("accounting.ledger.from")}
         </label>
         <DatePicker
           id={`${idPrefix}-from`}
@@ -49,7 +51,7 @@ export function AccountingDateFilterBar({
       </div>
       <div className="flex items-center gap-2 text-sm">
         <label htmlFor={`${idPrefix}-to`} className="text-xs font-semibold text-muted-foreground uppercase">
-          To
+          {t("accounting.ledger.to")}
         </label>
         <DatePicker
           id={`${idPrefix}-to`}
@@ -70,7 +72,7 @@ export function AccountingDateFilterBar({
           }}
           className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors p-0 h-auto"
         >
-          Active FY: {activeFiscalYear.label}
+          {t("accounting.ledger.activeFy", { label: activeFiscalYear.label })}
         </Button>
       )}
 
@@ -84,7 +86,7 @@ export function AccountingDateFilterBar({
         }}
         className="text-xs text-muted-foreground hover:text-foreground transition-colors p-0 h-auto"
       >
-        All time
+        {t("accounting.ledger.allTime")}
       </Button>
 
       {onExportCSV && (
@@ -94,7 +96,7 @@ export function AccountingDateFilterBar({
           onClick={onExportCSV}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors ml-auto h-auto"
         >
-          <Download className="w-3.5 h-3.5" aria-hidden="true" /> Export CSV
+          <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.ledger.exportCsv")}
         </Button>
       )}
     </nav>

@@ -47,7 +47,7 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
           <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />
           {entry.reversed_ref && (
             <span className="text-[10px] font-semibold text-warning bg-warning/10 px-2 py-0.5 rounded-full border border-warning/30">
-              ↩ Reversal of {entry.reversed_ref}
+              ↩ {t("accounting.journal.detail.reversalOf", { ref: entry.reversed_ref })}
             </span>
           )}
         </div>
@@ -56,12 +56,12 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
         <div className="flex items-center gap-2">
           {entry.status === "draft" && (
             <Button type="button" variant="outline" size="sm" onClick={onEdit} className="flex items-center gap-1 text-xs font-semibold">
-              <Pencil className="w-3 h-3" aria-hidden="true" /> Edit
+              <Pencil className="w-3 h-3" aria-hidden="true" /> {t("accounting.journal.detail.edit")}
             </Button>
           )}
           {entry.status === "posted" && onReverse && (
             <Button type="button" variant="outline" size="sm" onClick={onReverse} className="flex items-center gap-1 text-xs font-semibold border-warning/30 text-warning hover:bg-warning/10 hover:text-warning">
-              <RotateCcw className="w-3 h-3" aria-hidden="true" /> Reverse
+              <RotateCcw className="w-3 h-3" aria-hidden="true" /> {t("accounting.journal.detail.reverse")}
             </Button>
           )}
         </div>
@@ -71,21 +71,21 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
           {/* Meta grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
             <div>
-              <h3 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">Date</h3>
+              <h3 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">{t("accounting.journal.detail.date")}</h3>
               <p className="font-semibold text-foreground m-0">
                 {formatDate(entry.date)}
               </p>
             </div>
             <div>
-              <h3 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">Created By</h3>
+              <h3 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">{t("accounting.journal.detail.createdBy")}</h3>
               <p className="font-semibold text-foreground m-0">{entry.created_by || "—"}</p>
             </div>
             <div>
-              <h3 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">Financial Year</h3>
+              <h3 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">{t("accounting.journal.detail.fiscalYear")}</h3>
               <p className="font-semibold text-foreground m-0">{entry.fiscal_year || "—"}</p>
             </div>
             <div className="col-span-2 sm:col-span-3">
-              <h3 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">Narration</h3>
+              <h3 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">{t("accounting.journal.detail.narration")}</h3>
               <p className="font-medium text-foreground m-0">{entry.description}</p>
             </div>
           </div>
@@ -107,10 +107,10 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
               <caption className="sr-only">Line items for journal entry {entry.ref}</caption>
               <thead className="bg-muted/60 border-b border-border/40">
                 <tr>
-                  <th scope="col" className="px-5 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">Account</th>
-                  <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden sm:table-cell">Note</th>
-                  <th scope="col" className="px-4 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">Debit</th>
-                  <th scope="col" className="px-5 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">Credit</th>
+                  <th scope="col" className="px-5 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.journal.detail.account")}</th>
+                  <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden sm:table-cell">{t("accounting.journal.detail.note")}</th>
+                  <th scope="col" className="px-4 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.journal.detail.debit")}</th>
+                  <th scope="col" className="px-5 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.journal.detail.credit")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -119,7 +119,7 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
                   return (
                     <tr key={line.id} className="hover:bg-muted/10">
                       <td className="px-4 py-2.5">
-                        <p className="font-semibold text-foreground m-0">{account?.name || "Unknown Account"}</p>
+                        <p className="font-semibold text-foreground m-0">{account?.name || t("accounting.journal.detail.unknownAccount")}</p>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="font-mono text-[10px] text-muted-foreground">{account?.code}</span>
                           {account && <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${ACCOUNT_TYPE_META[account.type]?.color}`}>{account.type}</span>}
@@ -138,7 +138,7 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
               </tbody>
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
-                  <td colSpan={2} className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase">Totals</td>
+                  <td colSpan={2} className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase">{t("accounting.journal.detail.totals")}</td>
                   <td className="px-4 py-2 text-right font-mono font-bold text-info">{formatCurrency(totalDebit)}</td>
                   <td className="px-4 py-2 text-right font-mono font-bold text-success">{formatCurrency(totalCredit)}</td>
                 </tr>
@@ -149,10 +149,10 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
           {/* Balance check */}
           <div className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border ${Math.abs(totalDebit - totalCredit) < 0.01 ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"}`} role="status">
             {Math.abs(totalDebit - totalCredit) < 0.01
-              ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Balanced entry — Debits equal Credits</>
-              : <>Unbalanced — Difference: {formatCurrency(Math.abs(totalDebit - totalCredit))}</>
+              ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.detail.balanced")}</>
+              : <>{t("accounting.journal.detail.unbalanced", { diff: formatCurrency(Math.abs(totalDebit - totalCredit)) })}</>
             }
-        </div>
+          </div>
       </div>
     </Modal>
   );

@@ -1,29 +1,17 @@
 import React, { useMemo, useState } from "react";
-import { formatDate } from "@mms/shared";
+import { formatDate, type AppTranslationKey } from "@mms/shared";
 import { TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { JournalEntry, Account } from '@/lib/data/accountingData';
 import { FLOW_TONE, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { StatCard } from "@/components/ui/StatCard";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Money-in account IDs (asset accounts that receive income)
 const MONEY_IN_CREDITS = ["a4000","a4100","a4200","a4300","a4400"]; // Revenue accounts
 const MONEY_OUT_DEBITS = ["a5000","a5100","a5200","a5300","a5400","a5500","a5600","a5700","a5800"]; // Expense accounts
-
-const TYPE_LABELS: Record<string, string> = {
-  fee_collection: "Fee Collection",
-  donation: "Donation",
-  rent_income: "Rent Income",
-  other_income: "Other Income",
-  salary: "Salary Payment",
-  utilities: "Utilities",
-  supplies: "Supplies",
-  rent_payment: "Rent Payment",
-  other_expense: "Expense",
-  transfer: "Transfer",
-  adjustment: "Adjustment",
-};
 
 type EntryType = "in" | "out" | "transfer";
 
@@ -56,11 +44,15 @@ function getEntryAmount(entry: JournalEntry, type: EntryType): number {
   return entry.lines.reduce((largestDebit, journalLine) => Math.max(largestDebit, journalLine.debit), 0);
 }
 
-function getEntryLabel(entry: JournalEntry & { transaction_type?: string }): string {
-  if (entry.transaction_type) return TYPE_LABELS[entry.transaction_type] || entry.transaction_type;
+function getEntryLabel(entry: JournalEntry & { transaction_type?: string }, t: (key: AppTranslationKey) => string): string {
+  if (entry.transaction_type) {
+    const translationKey = `accounting.transaction.type.${entry.transaction_type}` as AppTranslationKey;
+    const translatedValue = t(translationKey);
+    return translatedValue && translatedValue !== translationKey ? translatedValue : entry.transaction_type;
+  }
   const tags = entry.tags || [];
   if (tags.length > 0) return tags[0];
-  return "Transaction";
+  return t("accounting.transaction.type.transaction");
 }
 
 import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
@@ -79,6 +71,7 @@ interface CashbookViewProps {
  * @returns {React.ReactElement}
  */
 export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps) {
+  const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<EntryType | "all">("all");
@@ -91,13 +84,13 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
         ...journalEntry,
         flowType,
         flowAmount: getEntryAmount(journalEntry, flowType),
-        flowLabel: getEntryLabel(journalEntry),
+        flowLabel: getEntryLabel(journalEntry, t),
       };
     })
     .filter((cashbookRow) => filterType === "all" || cashbookRow.flowType === filterType)
     .filter((cashbookRow) => !search || cashbookRow.description.toLowerCase().includes(search.toLowerCase()) || cashbookRow.ref.toLowerCase().includes(search.toLowerCase()))
     .sort((firstRow, secondRow) => secondRow.date.localeCompare(firstRow.date)),
-  [entries, search, filterType]);
+  [entries, search, filterType, t]);
 
   const totalIn  = rows.filter((cashbookRow) => cashbookRow.flowType === "in").reduce((sum, cashbookRow) => sum + cashbookRow.flowAmount, 0);
   const totalOut = rows.filter((cashbookRow) => cashbookRow.flowType === "out").reduce((sum, cashbookRow) => sum + cashbookRow.flowAmount, 0);
@@ -106,22 +99,25 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
   return (
     <div className="space-y-4">
       {/* Summary cards */}
-      <section aria-label="Cashbook Summary" className="grid grid-cols-3 gap-3">
-        <article className="rounded-xl border border-success/30 bg-success/10 p-4 text-center">
-          <TrendingUp className="w-5 h-5 text-success mx-auto mb-1" aria-hidden="true" />
-          <h4 className="text-[10px] font-bold text-success uppercase tracking-wide m-0">Money In</h4>
-          <p className="text-lg font-bold text-success mt-1 m-0">{formatCurrency(totalIn)}</p>
-        </article>
-        <article className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-center">
-          <TrendingDown className="w-5 h-5 text-destructive mx-auto mb-1" aria-hidden="true" />
-          <h4 className="text-[10px] font-bold text-destructive uppercase tracking-wide m-0">Money Out</h4>
-          <p className="text-lg font-bold text-destructive mt-1 m-0">{formatCurrency(totalOut)}</p>
-        </article>
-        <article className={`rounded-xl border p-4 text-center ${balance >= 0 ? "border-primary/30 bg-primary/5" : "border-destructive/30 bg-destructive/10"}`}>
-          <ArrowUpDown className={`w-5 h-5 mx-auto mb-1 ${balance >= 0 ? "text-primary" : "text-destructive"}`} aria-hidden="true" />
-          <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide m-0">Net Balance</h4>
-          <p className={`text-lg font-bold mt-1 m-0 ${balance >= 0 ? "text-primary" : "text-destructive"}`}>{formatCurrency(Math.abs(balance))}</p>
-        </article>
+      <section aria-label="Cashbook Summary" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <StatCard
+          icon={TrendingUp}
+          label={t("accounting.cashbook.moneyIn")}
+          value={formatCurrency(totalIn)}
+          accent="success"
+        />
+        <StatCard
+          icon={TrendingDown}
+          label={t("accounting.cashbook.moneyOut")}
+          value={formatCurrency(totalOut)}
+          accent="destructive"
+        />
+        <StatCard
+          icon={ArrowUpDown}
+          label={t("accounting.cashbook.netBalance")}
+          value={formatCurrency(Math.abs(balance))}
+          accent={balance >= 0 ? "success" : "destructive"}
+        />
       </section>
 
       {/* Filters */}
@@ -129,7 +125,7 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
         <SearchBar
           value={search}
           onChange={setSearch}
-          placeholder="Search transactions…"
+          placeholder={t("reports.widgets.searchRecords")}
           className="flex-1 min-w-[180px]"
         />
         {(["all","in","out","transfer"] as const).map((filterOption) => (
@@ -140,7 +136,13 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
             aria-pressed={filterType === filterOption}
             className="rounded-xl text-xs font-bold"
           >
-            {filterOption === "all" ? "All" : filterOption === "in" ? "Money In" : filterOption === "out" ? "Money Out" : "Transfers"}
+            {filterOption === "all"
+              ? t("accounting.cashbook.all")
+              : filterOption === "in"
+              ? t("accounting.cashbook.moneyIn")
+              : filterOption === "out"
+              ? t("accounting.cashbook.moneyOut")
+              : t("accounting.cashbook.transfers")}
           </Button>
         ))}
       </nav>
@@ -148,7 +150,7 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
       {/* Table */}
       {rows.length === 0 ? (
         <div className="py-16 text-center text-sm text-muted-foreground rounded-xl border border-dashed border-border" role="status">
-          No transactions found.
+          {t("accounting.cashbook.noTransactions")}
         </div>
       ) : (
         <div className="rounded-xl border border-border overflow-hidden">
@@ -157,11 +159,11 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
               <caption className="sr-only">Cashbook Transactions</caption>
               <thead className="bg-muted/60 border-b border-border">
                 <tr>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Date</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Type</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Description</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-success uppercase">Money In</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-destructive uppercase">Money Out</th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.date")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.type")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.description")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-success uppercase">{t("accounting.cashbook.moneyIn")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-destructive uppercase">{t("accounting.cashbook.moneyOut")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -200,7 +202,7 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
               </tbody>
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
-                  <td colSpan={3} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{rows.length} transaction{rows.length !== 1 ? "s" : ""}</td>
+                  <td colSpan={3} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{t("accounting.cashbook.transactionCount", { count: rows.length })}</td>
                   <td className="px-3 py-2 text-right font-mono font-bold text-success text-xs">{formatCurrency(totalIn)}</td>
                   <td className="px-3 py-2 text-right font-mono font-bold text-destructive text-xs">{formatCurrency(totalOut)}</td>
                 </tr>

@@ -57,5 +57,7 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 - **Redundant StatsGrid Proxy & Date Formatting DRY**: Cleaned up the redundant `StatsGrid.tsx` proxy file by importing directly from `StatisticsGrid.tsx` in `DashboardPage.tsx`. Standardized raw `.toLocaleString()` date formatting calls across the frontend to utilize the centralized global settings-aware `formatDateTime` helper.
 - **Date & Money formatting consistency DRY**: Refactored raw date string renderings and manual `.toLocaleString()` calls on currency values in the frontend to resolve through settings-aware `formatDate` and `formatMoney` helpers, eliminating duplicate formatting code.
 - **Settings-Aware Currency Formatting & Unified Date Filters**: Refactored the frontend's accounting and finance feature modules to use settings-aware hooks (`useAccountingCurrency` and `useFinanceCurrency`), eliminating hardcoded `"PKR"` defaults and currency prop-drilling. Consolidated duplicate date range input fields, labels, and fiscal-year presets across reporting subpanels into the reusable `<AccountingDateFilterBar>` component.
+- **Accounting Module Localization & DRY Refactoring**: Refactored the entire Accounting feature module to eliminate all remaining hardcoded strings, placeholders, and fallback strings across all 14 components, the main page shell, and configuration helpers, ensuring 100% localization coverage and compliance with workspace standards.
 
 Do not reintroduce resolved violations.
+
