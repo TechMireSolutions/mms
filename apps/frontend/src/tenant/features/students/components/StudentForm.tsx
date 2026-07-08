@@ -1,7 +1,6 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { Calendar, Clock, FileText, GraduationCap, Hash, User, Users } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
-import { formatDate, formatDateTime } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import ContactPicker from "@/tenant/features/contacts/components/contactLink/ContactPicker";
@@ -34,6 +33,8 @@ import {
   formatStudentZodIssues,
   type ValidationError,
   type FieldDefinition,
+  formatDate,
+  formatDateTime,
 } from "@mms/shared";
 
 function errorMessage(error: unknown): string {

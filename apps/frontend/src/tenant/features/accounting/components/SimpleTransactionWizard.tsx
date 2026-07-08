@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { formatMoney } from "@mms/shared";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, ChevronUp,
   DollarSign, TrendingDown, RefreshCw, BookOpen,
@@ -271,7 +272,7 @@ function StepReview({ type, form, accounts, showAdvanced, setShowAdvanced }: { t
   const rows = [
     { label: "Transaction Type", value: type.label },
     { label: "Date",             value: form.date },
-    { label: "Amount",           value: `₨ ${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` },
+    { label: "Amount",           value: formatMoney(amount) },
     type.group === "Money In"
       ? { label: "Received Into", value: debitAccount?.name || "—" }
       : type.group === "Transfers"
@@ -319,13 +320,13 @@ function StepReview({ type, form, accounts, showAdvanced, setShowAdvanced }: { t
               </div>
               <div className="grid grid-cols-3 bg-info/10/50 border-b border-border">
                 <div className="px-3 py-2 font-semibold text-foreground">{debitAccount?.name || "—"}</div>
-                <div className="px-3 py-2 text-right font-mono text-info font-bold">{amount.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+                <div className="px-3 py-2 text-right font-mono text-info font-bold">{formatMoney(amount, "")}</div>
                 <div className="px-3 py-2 text-right text-muted-foreground">—</div>
               </div>
               <div className="grid grid-cols-3 bg-success/10/50">
                 <div className="px-3 py-2 font-semibold text-foreground">{creditAccount?.name || "—"}</div>
                 <div className="px-3 py-2 text-right text-muted-foreground">—</div>
-                <div className="px-3 py-2 text-right font-mono text-success font-bold">{amount.toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+                <div className="px-3 py-2 text-right font-mono text-success font-bold">{formatMoney(amount, "")}</div>
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground m-0">These journal lines are auto-generated. No manual entry needed.</p>

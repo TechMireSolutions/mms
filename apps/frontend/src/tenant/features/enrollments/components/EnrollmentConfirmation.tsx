@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { formatDate } from "@/lib/utils";
-import { formatMoney } from "@mms/shared";
+import { formatMoney, formatDate } from "@mms/shared";
 import { motion } from "framer-motion";
 import { CheckCircle2, Tag, Loader2, BookOpen, User, Clock, MapPin } from "lucide-react";
 import { Student, StudentSession } from '@/lib/data/studentsData';

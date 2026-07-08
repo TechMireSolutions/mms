@@ -6,9 +6,8 @@ import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatMoney } from "@mms/shared";
+import { formatMoney, getInitials } from "@mms/shared";
 import MessageComposer from "@/components/ui/MessageComposer";
-import { getInitials } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
 /**

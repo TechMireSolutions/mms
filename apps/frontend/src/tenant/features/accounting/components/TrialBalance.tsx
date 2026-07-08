@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { CheckCircle2, AlertCircle, Download } from "lucide-react";
 import { ACCOUNT_TYPE_META, ACCOUNT_TYPES, computeTrialBalance, Account, JournalEntry, FiscalYear } from '@/lib/data/accountingData';
+import { formatMoney } from "@mms/shared";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,7 @@ export function TrialBalance({ accounts, entries, fiscalYears, formatCurrency }:
   const grandCredit = rows.reduce((sum, trialBalanceRow) => sum + trialBalanceRow.totalCredit, 0);
   const isBalanced  = Math.abs(grandDebit - grandCredit) < 0.01;
 
-  const formatPositiveNumber = (amount: number) => amount > 0 ? amount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—";
+  const formatPositiveNumber = (amount: number) => amount > 0 ? (formatCurrency ? formatCurrency(amount) : formatMoney(amount)) : "—";
 
   const exportCSV = () => {
     const exportRows = rows.map((row) => ({
@@ -113,8 +114,8 @@ export function TrialBalance({ accounts, entries, fiscalYears, formatCurrency }:
       <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border ${isBalanced ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"}`} role="status">
         {isBalanced ? <CheckCircle2 className="w-5 h-5" aria-hidden="true" /> : <AlertCircle className="w-5 h-5" aria-hidden="true" />}
         {isBalanced
-          ? `Trial Balance is balanced — Total: ${formatCurrency ? formatCurrency(grandDebit) : grandDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
-          : `OUT OF BALANCE — Difference: ${formatCurrency ? formatCurrency(Math.abs(grandDebit - grandCredit)) : Math.abs(grandDebit - grandCredit).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          ? `Trial Balance is balanced — Total: ${formatCurrency ? formatCurrency(grandDebit) : formatMoney(grandDebit)}`
+          : `OUT OF BALANCE — Difference: ${formatCurrency ? formatCurrency(Math.abs(grandDebit - grandCredit)) : formatMoney(Math.abs(grandDebit - grandCredit))}`}
       </div>
 
       {rows.length === 0 ? (
@@ -177,10 +178,10 @@ export function TrialBalance({ accounts, entries, fiscalYears, formatCurrency }:
                 <tr>
                   <td colSpan={3} className="px-4 py-3 text-sm font-bold text-foreground uppercase tracking-wide">Grand Total</td>
                   <td className="px-4 py-3 text-right font-mono font-bold text-info text-base">
-                    {grandDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    {formatCurrency ? formatCurrency(grandDebit) : formatMoney(grandDebit)}
                   </td>
                   <td className="px-4 py-3 text-right font-mono font-bold text-success text-base">
-                    {grandCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    {formatCurrency ? formatCurrency(grandCredit) : formatMoney(grandCredit)}
                   </td>
                 </tr>
               </tfoot>

@@ -4,6 +4,7 @@ import {
   type StudentsWidgetAggregateResult,
   type TeachersWidgetAggregateResult,
   type Contact,
+  formatMoney,
 } from "@mms/shared";
 import { queryClientInstance } from "@/lib/queryClient";
 import {
@@ -329,7 +330,7 @@ export function computeWidgetSingleValue(
   if (widget.widgetType === "progress" || widget.operation === "percentage") {
     formattedValue = `${computedValue}%`;
   } else if (widget.collection === "finance_invoices" && widget.operation !== "count") {
-    formattedValue = `₨ ${computedValue.toLocaleString()}`;
+    formattedValue = formatMoney(computedValue);
   } else {
     formattedValue = computedValue.toLocaleString();
   }

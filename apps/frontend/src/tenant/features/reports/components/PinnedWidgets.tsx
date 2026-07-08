@@ -5,6 +5,7 @@ import {
   SlidersHorizontal, Info, Pencil, ArrowUpRight, ShieldAlert, ArrowRight, Search, EyeOff, Users
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { formatMoney } from "@mms/shared";
 const CustomWidgetChartFallback = React.lazy(() => import("@/tenant/features/reports/components/pinnedWidgets/CustomWidgetChartFallback"));
 import { getCollection, saveCollection, getObject, saveObject } from "@/lib/db";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
@@ -219,7 +220,7 @@ function WidgetDrilldownModal({
                       name = t("reports.widgets.invoiceText", { invoiceNo: displayRecord.invoiceNo || displayRecord.id });
                       const studentId = String(displayRecord.studentId || "");
                       const studentName = studentNameMap.get(studentId) || t("reports.widgets.studentHash", { id: studentId });
-                      detailText = `${studentName} • ₨ ${Number(displayRecord.finalAmt || 0).toLocaleString()}`;
+                      detailText = `${studentName} • ${formatMoney(displayRecord.finalAmt || 0)}`;
                     } else if (widget.collection === "attendance_records") {
                       const studentId = String(displayRecord.studentId || "");
                       name = studentNameMap.get(studentId) || t("reports.widgets.studentHash", { id: studentId });

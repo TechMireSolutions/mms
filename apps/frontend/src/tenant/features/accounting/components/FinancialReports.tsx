@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { TrendingUp, TrendingDown, Scale, DollarSign, Download } from "lucide-react";
 import { computeFinancials, Account, JournalEntry, FiscalYear, AccountingSettings } from '@/lib/data/accountingData';
+import { formatMoney } from "@mms/shared";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -26,10 +27,11 @@ interface ReportSectionProps {
   total: number;
   debitNormal: boolean;
   color?: string;
+  formatCurrency?: (amount: number) => string;
 }
 
-function ReportSection({ title, rows, totalLabel, total, debitNormal, color }: ReportSectionProps) {
-  const formatNumber = (amount: number) => amount.toLocaleString(undefined, { minimumFractionDigits: 2 });
+function ReportSection({ title, rows, totalLabel, total, debitNormal, color, formatCurrency }: ReportSectionProps) {
+  const formatNumber = (amount: number) => formatCurrency ? formatCurrency(amount) : formatMoney(amount);
   const maxAmount = Math.max(...rows.map((reportRow) => {
     const rowAmount = debitNormal ? reportRow.totalDebit - reportRow.totalCredit : reportRow.totalCredit - reportRow.totalDebit;
     return Math.abs(rowAmount);
@@ -251,8 +253,8 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
       {/* Income Statement */}
       {view === "income" && (
         <section aria-label="Income Statement" className="space-y-4">
-          <ReportSection title="Revenue" rows={getRowsByAccountType("Revenue")} totalLabel="Total Revenue" total={revenue} debitNormal={false} color="bg-success/10/60" />
-          <ReportSection title="Expenses" rows={getRowsByAccountType("Expense")} totalLabel="Total Expenses" total={expenses} debitNormal={true} color="bg-destructive/10/60" />
+          <ReportSection title="Revenue" rows={getRowsByAccountType("Revenue")} totalLabel="Total Revenue" total={revenue} debitNormal={false} color="bg-success/10/60" formatCurrency={formatCurrency} />
+          <ReportSection title="Expenses" rows={getRowsByAccountType("Expense")} totalLabel="Total Expenses" total={expenses} debitNormal={true} color="bg-destructive/10/60" formatCurrency={formatCurrency} />
           <div className={`flex items-center justify-between px-5 py-4 rounded-xl border-2 font-bold text-lg ${netSurplus >= 0 ? "border-success/40 bg-success/10 text-success" : "border-destructive/40 bg-destructive/10 text-destructive"}`}>
             <span>{netSurplus >= 0 ? "📈 Net Surplus" : "📉 Net Deficit"}</span>
             <span className="font-mono">{formatCurrency(Math.abs(netSurplus))}</span>
@@ -263,10 +265,10 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
       {/* Balance Sheet */}
       {view === "balance" && (
         <section aria-label="Balance Sheet" className="space-y-4">
-          <ReportSection title="Assets" rows={getRowsByAccountType("Asset")} totalLabel="Total Assets" total={assets} debitNormal={true} color="bg-info/10/60" />
-          <ReportSection title="Liabilities" rows={getRowsByAccountType("Liability")} totalLabel="Total Liabilities" total={liabilities} debitNormal={false} color="bg-destructive/10/60" />
+          <ReportSection title="Assets" rows={getRowsByAccountType("Asset")} totalLabel="Total Assets" total={assets} debitNormal={true} color="bg-info/10/60" formatCurrency={formatCurrency} />
+          <ReportSection title="Liabilities" rows={getRowsByAccountType("Liability")} totalLabel="Total Liabilities" total={liabilities} debitNormal={false} color="bg-destructive/10/60" formatCurrency={formatCurrency} />
           <ReportSection title="Equity" rows={equityRows} totalLabel="Total Equity (incl. Net Surplus)"
-            total={equityTotal} debitNormal={false} color="bg-primary/10" />
+            total={equityTotal} debitNormal={false} color="bg-primary/10" formatCurrency={formatCurrency} />
           <div className="grid grid-cols-2 gap-3">
             <article className="px-5 py-3 rounded-xl border border-border bg-info/10 text-right">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">Total Assets</h4>

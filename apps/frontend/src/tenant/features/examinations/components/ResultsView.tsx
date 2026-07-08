@@ -13,7 +13,7 @@ import { CertificatePreview } from "@/tenant/features/examinations/components/Ce
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { Button } from "@/components/ui/button";
-import { getInitials } from "@/lib/utils";
+import { getInitials } from "@mms/shared";
 
 
 

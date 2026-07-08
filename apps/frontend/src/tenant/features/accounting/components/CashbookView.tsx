@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { formatDate } from "@/lib/utils";
+import { formatDate } from "@mms/shared";
 import { TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { JournalEntry, Account } from '@/lib/data/accountingData';

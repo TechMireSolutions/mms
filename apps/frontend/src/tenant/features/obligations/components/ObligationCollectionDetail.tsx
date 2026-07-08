@@ -1,15 +1,13 @@
 import React, { useState, lazy, Suspense, useMemo } from "react";
 import { Receipt, Printer } from "lucide-react";
 import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from '@/lib/data/obligationsData';
-import { DEFAULT_CURRENCIES, formatMoney } from '@mms/shared';
+import { DEFAULT_CURRENCIES, formatMoney, formatDate } from '@mms/shared';
 import { useMergedObligationContacts, useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { Modal } from "@/components/ui/Modal";
 import { InvoiceTemplateEditor } from "@/tenant/features/obligations/components/invoice/InvoiceTemplateEditor";
 import { Button } from "@/components/ui/button";
 
 const PrintInvoiceModal = lazy(() => import("@/tenant/features/obligations/components/invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
-
-import { formatDate } from "@/lib/utils";
 
 function fmtDate(date?: string | null): string {
   return formatDate(date);

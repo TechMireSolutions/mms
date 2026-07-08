@@ -2,7 +2,8 @@ import React, { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search, Plus, User, Mail, Phone, Camera } from 'lucide-react';
 import type { Contact } from '@mms/shared';
-import { cn, getInitials } from '@/lib/utils';
+import { getInitials } from '@mms/shared';
+import { cn } from '@/lib/utils';
 import { uploadUserImage } from '@/lib/imageUpload';
 import { genderAvatarGradient, genderBadgeClass } from '@/lib/semanticTone';
 import ContactCreateModal, {

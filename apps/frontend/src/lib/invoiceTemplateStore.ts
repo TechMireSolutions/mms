@@ -1,4 +1,4 @@
-import { DEFAULT_BRANDING_SETTINGS, formatBrandingAddress, mergeBrandingSettings, formatDate, type BrandingSettings } from "@mms/shared";
+import { DEFAULT_BRANDING_SETTINGS, formatBrandingAddress, mergeBrandingSettings, formatDate, formatMoney, type BrandingSettings } from "@mms/shared";
 import { getObject, saveObject } from "@/lib/db";
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 
@@ -428,7 +428,7 @@ export function resolveField(
     case "representative":  return String(findItem(reps, collection.mujtahid_representative_id)?.name || "");
     case "amount": {
       const currency = findItem(currencies, collection.currency_id);
-      return `${String(currency?.code || "PKR")} ${parseFloat(String(collection.amount || 0)).toLocaleString()}`;
+      return formatMoney(collection.amount as number | string | null | undefined, currency?.code || "PKR");
     }
     case "currency":        return String(findItem(currencies, collection.currency_id)?.code || "");
     case "payment_mode":    return String(collection.payment_mode || "");

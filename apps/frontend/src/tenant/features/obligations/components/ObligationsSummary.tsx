@@ -366,7 +366,7 @@ export function ObligationsSummary({
             ]}
             rows={wakalaSummary.map((w) => ({
               ...w,
-              totalFmt: w.total.toLocaleString(),
+              totalFmt: formatMoney(w.total),
               distFmt: w.distributions.map((d: ObligationDistribution) => `${d.name} ${d.percentage}%`).join("; ") || "—",
             }))}
           />
@@ -449,9 +449,9 @@ export function ObligationsSummary({
             ]}
             rows={repSummary.map((r) => ({
               ...r,
-              byTypeFmt: Object.entries(r.byType).map(([n, v]) => `${n}: ${(v as number).toLocaleString()}`).join("; "),
-              totalFmt: r.total.toLocaleString(),
-              dueFmt: r.due.toLocaleString(),
+              byTypeFmt: Object.entries(r.byType).map(([n, v]) => `${n}: ${formatMoney(v as number)}`).join("; "),
+              totalFmt: formatMoney(r.total),
+              dueFmt: formatMoney(r.due),
             }))}
           />
         </header>
@@ -529,7 +529,7 @@ export function ObligationsSummary({
             ]}
             rows={typeBreakdown.map((t) => ({
               ...t,
-              totalFmt: t.total.toLocaleString(),
+              totalFmt: formatMoney(t.total),
               shareFmt: totalAmount ? ((t.total / totalAmount) * 100).toFixed(1) + "%" : "0%",
             }))}
           />

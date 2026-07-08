@@ -12,7 +12,7 @@ import { getGrade } from "@/tenant/features/examinations/components/gradeUtils";
 import { FORM_INPUT_COMPACT } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getInitials } from "@/lib/utils";
+import { getInitials } from "@mms/shared";
 
 interface EnterMarksProps {
   exams: Exam[];

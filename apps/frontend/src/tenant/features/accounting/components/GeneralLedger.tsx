@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { formatDate } from "@/lib/utils";
+import { formatDate } from "@mms/shared";
 import { Download } from "lucide-react";
 import { ACCOUNT_TYPE_META, ACCOUNT_TYPES, computeLedger, Account, JournalEntry, AccountType } from '@/lib/data/accountingData';
 import { DatePicker } from "@/components/ui/DatePicker";

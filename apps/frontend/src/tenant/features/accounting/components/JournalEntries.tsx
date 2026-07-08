@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatMoney } from "@mms/shared";
 import {
   Plus, Eye, Pencil, Trash2, CheckCircle2,
   RotateCcw, Filter, Download, BookOpen,
@@ -557,12 +557,12 @@ export function JournalEntries({
                       )}
                       {showDebit && (
                         <td className="px-3 py-2.5 text-right font-mono text-xs font-semibold text-info">
-                          {totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          {formatCurrency ? formatCurrency(totalDebit) : formatMoney(totalDebit)}
                         </td>
                       )}
                       {showCredit && (
                         <td className="px-3 py-2.5 text-right font-mono text-xs font-semibold text-success">
-                          {totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          {formatCurrency ? formatCurrency(totalCredit) : formatMoney(totalCredit)}
                         </td>
                       )}
                       {showStatus && (
@@ -639,12 +639,12 @@ export function JournalEntries({
                   </td>
                   {showDebit && (
                     <td className="px-3 py-2 text-right font-mono font-bold text-info text-xs">
-                      {grandDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      {formatCurrency ? formatCurrency(grandDebit) : formatMoney(grandDebit)}
                     </td>
                   )}
                   {showCredit && (
                     <td className="px-3 py-2 text-right font-mono font-bold text-success text-xs">
-                      {grandCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      {formatCurrency ? formatCurrency(grandCredit) : formatMoney(grandCredit)}
                     </td>
                   )}
                   <td colSpan={(showStatus ? 1 : 0) + 1} className="px-3 py-2 text-right text-[11px] font-semibold text-muted-foreground">

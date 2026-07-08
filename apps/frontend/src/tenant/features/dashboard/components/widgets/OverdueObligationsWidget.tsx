@@ -5,11 +5,10 @@ import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { ROUTES } from "@/lib/config/routes";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatMoney } from "@mms/shared";
+import { formatMoney, getInitials, formatDate } from "@mms/shared";
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import MessageComposer from "@/components/ui/MessageComposer";
-import { getInitials, formatDate } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
 export interface OverdueStudent {

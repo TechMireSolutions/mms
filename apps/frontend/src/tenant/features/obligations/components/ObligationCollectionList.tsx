@@ -3,7 +3,7 @@ import { Plus, Eye, Search, Receipt, Printer } from "lucide-react";
 import {
   ObligationCollection, ObligationType, MujtahidRep, Mujtahid
 } from '@/lib/data/obligationsData';
-import { DEFAULT_CURRENCIES, formatMoney } from '@mms/shared';
+import { DEFAULT_CURRENCIES, formatMoney, formatDate } from '@mms/shared';
 import { useDebounce } from "@/hooks/useDebounce";
 import { useMergedObligationContacts } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -18,8 +18,6 @@ function fmtAmount(amount: string | number, currencyId: string, currencies: any[
   const currency = currencies.find((candidateCurrency) => candidateCurrency.id === currencyId);
   return formatMoney(amount, currency?.code);
 }
-
-import { formatDate } from "@/lib/utils";
 
 function fmtDate(date?: string | null): string {
   return formatDate(date);

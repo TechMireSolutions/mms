@@ -5,8 +5,8 @@ import { useBackgroundJobs } from "@/tenant/hooks/useBackgroundJobs";
 import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
 import { FormModal } from "@/components/ui/FormModal";
 import { Badge } from "@/components/ui/badge";
-import { cn, formatDateTime } from "@/lib/utils";
-import type { AppTranslationKey } from "@mms/shared";
+import { cn } from "@/lib/utils";
+import { type AppTranslationKey, formatDateTime } from "@mms/shared";
 
 interface BackgroundJobsTrayProps {
   compact?: boolean;

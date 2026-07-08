@@ -5,10 +5,12 @@ import {
   Calendar, User, Clock, BookOpen, GraduationCap, Sparkles
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
-import { formatDate, formatDateTime, getInitials } from "@/lib/utils";
 import {
   DEFAULT_STUDENT_ENABLED_TABS,
   type FieldDefinition,
+  formatDate,
+  formatDateTime,
+  getInitials,
 } from "@mms/shared";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
 import { useContactsByIds } from '@/tenant/features/contacts/hooks/useContacts';

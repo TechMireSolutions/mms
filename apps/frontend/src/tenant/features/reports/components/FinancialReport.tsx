@@ -10,7 +10,6 @@ import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/us
 import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { formatDate } from "@/lib/utils";
 
 import RevenueChart from "@/tenant/features/dashboard/components/widgets/charts/RevenueChart";
 import FeeCollectionSummary from "@/tenant/features/dashboard/components/widgets/FeeCollectionSummary";
@@ -36,7 +35,7 @@ interface FinancialReportProps {
   onEditVisual?: (config: unknown) => void;
 }
 
-import { formatMoney as PKR, formatMonthYear } from "@mms/shared";
+import { formatMoney as PKR, formatMonthYear, formatDate } from "@mms/shared";
 
 const STATUS_COLOR: Record<InvoiceStatus, string> = {
   paid:      "bg-success/10 text-success",

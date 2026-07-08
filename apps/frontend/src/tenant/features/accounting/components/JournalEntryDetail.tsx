@@ -1,5 +1,5 @@
 import { Pencil, CheckCircle2, RotateCcw, Tag } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatMoney } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 import { ACCOUNT_TYPE_META, Account, JournalEntry } from '@/lib/data/accountingData';
@@ -126,10 +126,10 @@ export function JournalEntryDetail({ entry, accounts, formatCurrency, onClose, o
                       </td>
                       <td className="px-4 py-2.5 text-xs text-muted-foreground hidden sm:table-cell">{line.description || "—"}</td>
                       <td className="px-4 py-2.5 text-right font-mono font-semibold text-info">
-                        {line.debit > 0 ? line.debit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"}
+                        {line.debit > 0 ? (formatCurrency ? formatCurrency(line.debit) : formatMoney(line.debit)) : "—"}
                       </td>
                       <td className="px-4 py-2.5 text-right font-mono font-semibold text-success">
-                        {line.credit > 0 ? line.credit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "—"}
+                        {line.credit > 0 ? (formatCurrency ? formatCurrency(line.credit) : formatMoney(line.credit)) : "—"}
                       </td>
                     </tr>
                   );
@@ -138,8 +138,8 @@ export function JournalEntryDetail({ entry, accounts, formatCurrency, onClose, o
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
                   <td colSpan={2} className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase">Totals</td>
-                  <td className="px-4 py-2 text-right font-mono font-bold text-info">{formatCurrency ? formatCurrency(totalDebit) : totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                  <td className="px-4 py-2 text-right font-mono font-bold text-success">{formatCurrency ? formatCurrency(totalCredit) : totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                  <td className="px-4 py-2 text-right font-mono font-bold text-info">{formatCurrency ? formatCurrency(totalDebit) : formatMoney(totalDebit)}</td>
+                  <td className="px-4 py-2 text-right font-mono font-bold text-success">{formatCurrency ? formatCurrency(totalCredit) : formatMoney(totalCredit)}</td>
                 </tr>
               </tfoot>
             </table>
@@ -149,7 +149,7 @@ export function JournalEntryDetail({ entry, accounts, formatCurrency, onClose, o
           <div className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border ${Math.abs(totalDebit - totalCredit) < 0.01 ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"}`} role="status">
             {Math.abs(totalDebit - totalCredit) < 0.01
               ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Balanced entry — Debits equal Credits</>
-              : <>Unbalanced — Difference: {Math.abs(totalDebit - totalCredit).toLocaleString(undefined, { minimumFractionDigits: 2 })}</>
+              : <>Unbalanced — Difference: {formatCurrency ? formatCurrency(Math.abs(totalDebit - totalCredit)) : formatMoney(Math.abs(totalDebit - totalCredit))}</>
             }
         </div>
       </div>

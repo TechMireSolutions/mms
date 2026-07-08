@@ -1,4 +1,4 @@
-import type { AppTranslationKey } from '@mms/shared';
+import { type AppTranslationKey, formatMoney } from '@mms/shared';
 import type { DashboardRole } from '@/lib/dashboardRole';
 import type { Invoice } from '@/lib/data/financeData';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
@@ -70,7 +70,7 @@ export function buildDashboardNotifications(
         id: 'unpaid-invoices',
         type: 'fee',
         title: t('notifications.unpaidInvoicesTitle', { count: unpaidCount }),
-        desc: t('notifications.unpaidInvoicesDesc', { amount: outstandingTotal.toLocaleString() }),
+        desc: t('notifications.unpaidInvoicesDesc', { amount: formatMoney(outstandingTotal) }),
         time: t('notifications.timeNow'),
         urgent: outstandingTotal > 0,
       });

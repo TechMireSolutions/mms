@@ -3,7 +3,7 @@ import { Download, FileSpreadsheet, FileText, Printer, Settings as SettingsIcon 
 import { useTranslation } from "@/hooks/useTranslation";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/utils";
+import { formatDate } from "@mms/shared";
 
 export interface ExportColumn {
   header: string;
