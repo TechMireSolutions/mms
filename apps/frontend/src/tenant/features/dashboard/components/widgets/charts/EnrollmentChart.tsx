@@ -5,8 +5,7 @@ import {
   Tooltip, TooltipContentProps
 } from "recharts";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
-import { useLiveCollection } from "@/hooks/useLiveCollection";
-import type { Enrollment } from '@/lib/data/enrollmentData';
+import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import { TrendingUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -40,7 +39,7 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
 export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: boolean }) {
   const { t } = useTranslation();
   const { enrollment: COLOR_MAP } = useBrandedDashboardChartColors();
-  const enrollments = useLiveCollection<Enrollment>("enrollments");
+  const enrollments = useEnrollmentsCollection();
 
   const [chartType, setChartType] = useState<"area" | "bar" | "line">(() => {
     return (localStorage.getItem("db_chart_type_enrollment") as "area" | "bar" | "line") || "area";

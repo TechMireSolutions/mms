@@ -23,6 +23,7 @@ import sessionsRoutes from "./tenant/sessions.js";
 import backgroundJobRoutes from "./common/backgroundJobs.js";
 import uploadRoutes from "./common/uploads.js";
 import workspaceRoutes from "./tenant/workspace.js";
+import customTabRoutes from "./tenant/customTabs.js";
 import aiRoutes from "./common/ai.js";
 import websocketRoutes from "./common/websocket.js";
 
@@ -36,6 +37,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(workspaceRoutes, { prefix: '/api/workspace' });
   await app.register(uploadRoutes, { prefix: '/api/uploads' });
   await app.register(dbRoutes, { prefix: '/api/db' });
+  await app.register(customTabRoutes, { prefix: '/api/custom-tabs' });
   await app.register(contactRoutes, { prefix: '/api/contacts' });
   await app.register(emailRoutes, { prefix: '/api/email' });
   await app.register(studentsRoutes, { prefix: '/api/students' });

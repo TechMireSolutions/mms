@@ -46,7 +46,7 @@ interface UrgencyBadge {
  */
 export default function OverdueObligationsWidget({ title }: { title?: string }) {
   const { t } = useTranslation();
-  const overdueStudents = useLiveCollection<OverdueStudent>("overdue_obligations", DEFAULT_OVERDUE_STUDENTS);
+  const overdueStudents = useLiveCollection<OverdueStudent>("overdue_obligations", DEFAULT_OVERDUE_STUDENTS, { serverSync: false });
 
   const [expanded, setExpanded] = useState(true);
   const [remindedIds, setRemindedIds] = useState<Set<number>>(new Set());

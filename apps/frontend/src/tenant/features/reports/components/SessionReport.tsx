@@ -6,8 +6,8 @@ import {
 } from "recharts";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
-import { useLiveCollection } from "@/hooks/useLiveCollection";
-import { getIntlLocaleForLanguage, type Enrollment } from '@mms/shared';
+import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
+import { getIntlLocaleForLanguage } from '@mms/shared';
 import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -73,7 +73,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
   const { t, language } = useTranslation();
   const locale = getIntlLocaleForLanguage(language);
   const sessions = useSessionsCollection();
-  const enrollments = useLiveCollection<Enrollment>("enrollments");
+  const enrollments = useEnrollmentsCollection();
 
   const sessionCapacity = useMemo<SessionCapacityItem[]>(() => {
     const sessionCapacityRows: SessionCapacityItem[] = [];

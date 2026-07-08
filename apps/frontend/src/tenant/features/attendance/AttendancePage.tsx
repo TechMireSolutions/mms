@@ -110,7 +110,7 @@ export default function Attendance() {
     if (!effectiveTab) return null;
     if (effectiveTab === "setup") {
       return (
-        <AttendanceSettings role={role} mode="preferences" />
+        <AttendanceSettings mode="preferences" />
       );
     }
 
@@ -150,7 +150,6 @@ export default function Attendance() {
             case "records": return (
               <AttendanceRecords
                 filters={filters}
-                role={role}
                 records={attendanceRecords}
                 setRecords={setRecords}
                 isColumnVisible={columnLayout.isColumnVisible}

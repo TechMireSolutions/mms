@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import type { SystemUser } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { useUsersCollection } from '@/tenant/features/users/hooks/useUsersApi';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -16,7 +16,7 @@ export default function ContactsSavedReportUserPicker({
   onChange,
 }: ContactsSavedReportUserPickerProps): React.JSX.Element {
   const { t } = useTranslation();
-  const users = useLiveCollection<SystemUser>('users');
+  const users = useUsersCollection() as unknown as SystemUser[];
 
   const options = useMemo(
     () => users.slice().sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '')),

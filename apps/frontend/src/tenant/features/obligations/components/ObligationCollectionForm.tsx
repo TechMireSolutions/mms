@@ -5,7 +5,6 @@ import {
   ObligationCollection, ObligationType, WakalaType, MujtahidRep, Mujtahid
 } from '@/lib/data/obligationsData';
 import { DEFAULT_CURRENCIES } from '@mms/shared';
-import { useLiveCollection } from "@/hooks/useLiveCollection";
 import ContactPicker from '@/tenant/features/contacts/components/contactLink/ContactPicker';
 import { useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { FormModal } from "@/components/ui/FormModal";
@@ -61,7 +60,7 @@ export interface ObligationCollectionFormProps {
 export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wakalaTypes, reps, mujtahids, existingCollections }: ObligationCollectionFormProps) {
   const { t } = useTranslation();
   const users = useMergedObligationUsers();
-  const currencies = useLiveCollection<any>("currencies", DEFAULT_CURRENCIES);
+  const currencies = DEFAULT_CURRENCIES;
 
   const [form, setForm] = useState<FormState>({ ...EMPTY, receipt_no: generateReceiptNo(existingCollections) });
   const [errors, setErrors] = useState<Record<string, string>>({});

@@ -2,7 +2,6 @@ import React, { useState, lazy, Suspense, useMemo } from "react";
 import { Receipt, Printer } from "lucide-react";
 import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from '@/lib/data/obligationsData';
 import { DEFAULT_CURRENCIES, formatMoney } from '@mms/shared';
-import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useMergedObligationContacts, useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { ObligationModal } from "@/tenant/features/obligations/components/ObligationModal";
 import { InvoiceTemplateEditor } from "@/tenant/features/obligations/components/invoice/InvoiceTemplateEditor";
@@ -50,7 +49,7 @@ export interface ObligationCollectionDetailProps {
  * @returns {React.ReactElement}
  */
 export function ObligationCollectionDetail({ collection, obligationTypes, reps, mujtahids, distributions, wakalaTypes, onClose }: ObligationCollectionDetailProps) {
-  const currencies = useLiveCollection<any>("currencies", DEFAULT_CURRENCIES);
+  const currencies = DEFAULT_CURRENCIES;
   const [showPrint, setShowPrint] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
 

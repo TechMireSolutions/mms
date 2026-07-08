@@ -24,6 +24,52 @@ import {
 } from "@/lib/contactLink/collectionSync";
 import type { ContactLike } from "@mms/shared";
 
+interface CustomTab {
+  id?: string;
+  moduleId: string;
+  key: string;
+  label: string;
+  icon?: string | null;
+  enabled: boolean;
+  sortOrder: number;
+  permissions?: string[] | null;
+  description?: string | null;
+  color?: string | null;
+  isSystem: boolean;
+}
+
+const MODULE_TO_CONFIG_KEY: Record<string, string> = {
+  contacts: 'contact_field_config',
+  students: 'students_settings',
+  teachers: 'teachers_settings',
+  users: 'users_settings',
+  attendance: 'attendance_settings',
+  sessions: 'sessions_settings',
+  enrollments: 'enrollments_settings',
+  finance: 'finance_settings',
+  obligations: 'obligations_settings',
+  accounting: 'accounting_settings',
+  hasanat: 'hasanat_settings',
+  examinations: 'examinations_settings',
+  'question-bank': 'question_bank_settings',
+};
+
+const CONFIG_KEY_TO_MODULE: Record<string, string> = {
+  contact_field_config: 'contacts',
+  students_settings: 'students',
+  teachers_settings: 'teachers',
+  users_settings: 'users',
+  attendance_settings: 'attendance',
+  sessions_settings: 'sessions',
+  enrollments_settings: 'enrollments',
+  finance_settings: 'finance',
+  obligations_settings: 'obligations',
+  accounting_settings: 'accounting',
+  hasanat_settings: 'hasanat',
+  examinations_settings: 'examinations',
+  question_bank_settings: 'question-bank',
+};
+
 const LINK_MANAGED_COLLECTIONS = new Set([
   "students",
   "teachers",
@@ -223,6 +269,45 @@ export function applySnapshotToLocalCache(snapshot: TenantDatabaseSnapshot): voi
 export async function syncDatabase(): Promise<void> {
   try {
     const tenantSnapshot = await fetchTenantSnapshot();
+    
+    try {
+      const tabsRes = await apiFetch("/api/custom-tabs");
+      if (tabsRes.ok) {
+        const { tabs } = (await tabsRes.json()) as { tabs: CustomTab[] };
+        const grouped: Record<string, any[]> = {};
+        for (const tab of tabs) {
+          if (!grouped[tab.moduleId]) {
+            grouped[tab.moduleId] = [];
+          }
+          grouped[tab.moduleId].push({
+            key: tab.key,
+            label: tab.label,
+            icon: tab.icon ?? undefined,
+            enabled: tab.enabled,
+            order: tab.sortOrder,
+            permissions: tab.permissions ?? undefined,
+            description: tab.description ?? undefined,
+            color: tab.color ?? undefined,
+            isSystem: tab.isSystem,
+          });
+        }
+        if (tenantSnapshot.objects) {
+          for (const [moduleId, formTabs] of Object.entries(grouped)) {
+            const configKey = MODULE_TO_CONFIG_KEY[moduleId];
+            if (configKey) {
+              const currentObj = (tenantSnapshot.objects[configKey] || {}) as Record<string, any>;
+              tenantSnapshot.objects[configKey] = {
+                ...currentObj,
+                formTabs,
+              };
+            }
+          }
+        }
+      }
+    } catch (tabError) {
+      console.warn("Failed to sync custom tabs from server:", tabError);
+    }
+
     applySnapshotToLocalCache(tenantSnapshot);
   } catch (error) {
     console.error("Failed to sync database with backend:", error);
@@ -582,7 +667,37 @@ export function cachePublicBranding(partial: PublicBranding): void {
 export function saveObject<T>(key: string, objectValue: T): void {
   try {
     const processed = writeObjectLocal(key, objectValue);
-    void syncToServer(`/api/db/objects/${key}`, processed);
+    const moduleId = CONFIG_KEY_TO_MODULE[key];
+    if (moduleId && objectValue && typeof objectValue === 'object' && 'formTabs' in objectValue) {
+      const objAny = objectValue as any;
+      const formTabs = objAny.formTabs;
+      
+      const cleaned = { ...processed as any };
+      delete cleaned.formTabs;
+      
+      void syncToServer(`/api/db/objects/${key}`, cleaned);
+      
+      if (Array.isArray(formTabs)) {
+        const tabsForBulk = formTabs.map((tab: any, idx: number) => ({
+          key: tab.key,
+          label: tab.label,
+          icon: tab.icon || null,
+          enabled: tab.enabled !== false,
+          sortOrder: tab.order ?? idx,
+          permissions: tab.permissions || null,
+          description: tab.description || null,
+          color: tab.color || null,
+          isSystem: tab.isSystem === true,
+        }));
+        
+        void syncToServer('/api/custom-tabs/bulk', {
+          moduleId,
+          tabs: tabsForBulk,
+        });
+      }
+    } else {
+      void syncToServer(`/api/db/objects/${key}`, processed);
+    }
   } catch (error) {
     console.error(`Error writing object "${key}" to database:`, error);
   }

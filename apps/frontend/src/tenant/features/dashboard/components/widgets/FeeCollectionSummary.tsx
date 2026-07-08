@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { TrendingUp } from "lucide-react";
-import { Invoice } from '@/lib/data/financeData';
-import { useLiveCollection } from "@/hooks/useLiveCollection";
+import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatMoney, formatMonthYear, formatMonthName } from "@mms/shared";
 
@@ -15,7 +14,7 @@ import { formatMoney, formatMonthYear, formatMonthName } from "@mms/shared";
  */
 export default function FeeCollectionSummary({ title }: { title?: string }) {
   const { t } = useTranslation();
-  const invoices = useLiveCollection<Invoice>("finance_invoices");
+  const invoices = useFinanceInvoicesCollection();
 
   // Calculate overall metrics
   let totalCollected = 0;

@@ -32,6 +32,10 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 | Unified Phone & Zero-Click Form | Unified phone inputs & zero-click form sublist auto-population in ContactForm and Branding |
 | Wrapper files removal | Removed redundant wrapper/alias files for StatCard, ExportToolbar, and SafeResponsiveContainer |
 | Column Customizer Props DRY | Consolidated duplicate local ColumnCustomizerProps interfaces into ModuleColumnCustomizerProps |
+| REST collections migration | Migrated remaining frontend useLiveCollection lookups to TanStack Query REST endpoints |
+| Sentry client-side error reporting | Configured and integrated Sentry with global React ErrorBoundary fallback rendering in `main.tsx` |
+| RBAC read hardening | Hardened `rbacService.ts` mapping and logic by explicitly checking permissions for `user_activity_logs` and `backups` collection reads/writes |
+
 
 ## Open priorities
 
@@ -43,23 +47,11 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 
 **Skills:** `mms-backend-api`, `mms-data-sync`, `mms-frontend`
 
-### P1 — Read RBAC (evaluate)
-
-**Problem:** Any authenticated user can read tenant collections and REST list endpoints.
-
-**Fix:** Role-based read matrix or collection-level ACL — design before implementing.
-
 ### P2 — `can()` registry coverage
 
 **Problem:** Inline `role ===` checks remain (~8 files: Dashboard, KPI, Attendance, WelcomeBanner).
 
 **Fix:** Wire `usePermissions()` / `can()` when touching modules (`mms-auth-security.mdc`).
-
-### P2 — Sentry / client error reporting
-
-**Problem:** Console/toasts only.
-
-**Fix:** Wire in `main.tsx` per `mms-testing-observability.mdc`.
 
 ### P3 — Relational custom fields
 

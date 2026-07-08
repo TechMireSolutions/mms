@@ -347,10 +347,7 @@ export async function getObject(key: string): Promise<unknown | null> {
     const rows = await activeDb().select().from(schema.objects).where(eq(schema.objects.key, storageKey));
     const row = rows[0];
     if (!row) return null;
-    const tenant = getRequestTenant();
-    if (tenant) {
-      return await hydrateObjectData(key, row.data, tenant);
-    }
+    // Deprecated database-level hydration for custom tabs (handled by client REST calls)
     return row.data;
   } catch (error) {
     console.error(`Error getting object "${key}":`, error);
@@ -362,10 +359,8 @@ export async function saveObject(key: string, data: unknown): Promise<void> {
   try {
     const storageKey = resolveObjectStorageKey(key);
     const tenant = getRequestTenant();
-    let processedData = applyTitleCaseRecursive(data);
-    if (tenant) {
-      processedData = await saveCustomTabsForObject(key, processedData, tenant);
-    }
+    const processedData = applyTitleCaseRecursive(data);
+    // Deprecated database-level custom tabs extraction (handled by client REST calls)
     await activeDb().insert(schema.objects)
       .values({ key: storageKey, data: processedData })
       .onConflictDoUpdate({
@@ -419,7 +414,8 @@ export async function getAllData(): Promise<{ collections: Record<string, unknow
 
       if (tenant) {
         if (!parsed || parsed.subdomain !== tenant) continue;
-        objects[parsed.logicalKey] = await hydrateObjectData(parsed.logicalKey, row.data, tenant);
+        // Deprecated database-level hydration for custom tabs (handled by client REST calls)
+        objects[parsed.logicalKey] = row.data;
       } else if (!parsed) {
         objects[row.key] = row.data;
       }
@@ -620,7 +616,7 @@ interface CustomTabInput {
   isSystem?: boolean;
 }
 
-async function hydrateObjectData(key: string, data: unknown, tenant: string): Promise<unknown> {
+async function _hydrateObjectData(key: string, data: unknown, tenant: string): Promise<unknown> {
   const moduleId = CONFIG_KEY_TO_MODULE[key];
   if (!moduleId || !data || typeof data !== 'object') return data;
 
@@ -652,7 +648,7 @@ async function hydrateObjectData(key: string, data: unknown, tenant: string): Pr
   return { ...dataObj, formTabs };
 }
 
-async function saveCustomTabsForObject(key: string, data: unknown, tenant: string): Promise<unknown> {
+async function _saveCustomTabsForObject(key: string, data: unknown, tenant: string): Promise<unknown> {
   const moduleId = CONFIG_KEY_TO_MODULE[key];
   if (!moduleId || !data || typeof data !== 'object') return data;
 

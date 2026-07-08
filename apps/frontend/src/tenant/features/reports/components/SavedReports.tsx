@@ -50,7 +50,7 @@ export default function SavedReports({
   const { t } = useTranslation();
   const { user } = useAuth();
   const globalSettings = useGlobalSettings();
-  const allSaved = useLiveCollection<SavedReportItem>("reports_saved_reports", []);
+  const allSaved = useLiveCollection<SavedReportItem>("reports_saved_reports", [], { serverSync: false });
 
   const [saveOpen, setSaveOpen] = useState(false);
   const [name, setName] = useState("");

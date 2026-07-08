@@ -49,6 +49,8 @@ const COLLECTION_READ_PERMISSION: Record<string, Permission> = {
   tests: QUESTION_BANK_MODULE_CONTRACT.permissions.read,
   assessment_results: QUESTION_BANK_MODULE_CONTRACT.permissions.read,
   users: USERS_MODULE_CONTRACT.permissions.read,
+  user_activity_logs: 'analytics.view',
+  custom_tabs: 'configuration.view',
 };
 
 const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
@@ -79,6 +81,8 @@ const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
   tests: QUESTION_BANK_MODULE_CONTRACT.permissions.write,
   assessment_results: QUESTION_BANK_MODULE_CONTRACT.permissions.write,
   users: USERS_MODULE_CONTRACT.permissions.write,
+  user_activity_logs: 'analytics.view',
+  custom_tabs: 'settings.global.write',
 };
 
 const OBJECT_READ_PERMISSION: Record<string, Permission> = {
@@ -202,6 +206,7 @@ const ALLOWED_COLLECTIONS = new Set([
   'studentGenderFilters',
   'studentDiscountTypes',
   'backups',
+  'custom_tabs',
 ]);
 
 const ALLOWED_OBJECTS = new Set([
@@ -280,6 +285,9 @@ export function canReadCollection(user: User, collectionName: string): boolean {
   if (collectionName.startsWith('whatsappTemplates_u:')) {
     const ownerId = collectionName.split(':')[1];
     return ownerId === String(user.id);
+  }
+  if (collectionName === 'backups') {
+    return user.role === 'admin';
   }
   const mapped = COLLECTION_READ_PERMISSION[collectionName];
   if (mapped) {

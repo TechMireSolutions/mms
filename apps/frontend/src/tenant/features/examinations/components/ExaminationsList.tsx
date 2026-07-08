@@ -13,8 +13,7 @@ import { formatDate } from "@/lib/db";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
-import { useLiveCollection } from "@/hooks/useLiveCollection";
-import type { Enrollment } from "@/lib/data/enrollmentData";
+import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -59,7 +58,7 @@ export default function ExamsList({
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
 
   const sessions = useSessionsCollection();
-  const enrollments = useLiveCollection<Enrollment>("enrollments");
+  const enrollments = useEnrollmentsCollection();
   const classes = React.useMemo(
     () => sessions.flatMap((session) =>
       (session.classes || []).map((sessionClass) => ({

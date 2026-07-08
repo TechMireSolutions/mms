@@ -3,7 +3,6 @@ import { Printer, FileDown, Settings } from "lucide-react";
 import { loadTemplate, PAGE_SIZES, InvoiceTemplate } from "@/lib/invoiceTemplateStore";
 import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid } from '@/lib/data/obligationsData';
 import { DEFAULT_CURRENCIES } from '@mms/shared';
-import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useMergedObligationContacts, useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { InvoicePrintPreview } from "@/tenant/features/obligations/components/invoice/InvoicePrintPreview";
 import { Button } from "@/components/ui/button";
@@ -43,7 +42,7 @@ export function PrintInvoiceModal({
   );
   const liveContacts = useMergedObligationContacts(contactIds);
   const liveUsers = useMergedObligationUsers();
-  const currencies = useLiveCollection<any>("currencies", DEFAULT_CURRENCIES);
+  const currencies = DEFAULT_CURRENCIES;
 
   const lookups = useMemo(() => ({
     contacts: liveContacts,

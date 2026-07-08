@@ -23,7 +23,6 @@ const PAGE_SIZE = 15;
 
 interface AttendanceRecordsProps {
   filters: AttendanceFilterState;
-  role: string;
   records: AttendanceRecord[];
   setRecords: React.Dispatch<React.SetStateAction<AttendanceRecord[]>>;
   isColumnVisible?: (key: string) => boolean;
@@ -32,7 +31,6 @@ interface AttendanceRecordsProps {
 
 export function AttendanceRecords({
   filters,
-  role: _role,
   records,
   setRecords,
   isColumnVisible,

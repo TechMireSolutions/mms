@@ -24,6 +24,26 @@ describe("rbacService", () => {
     expect(canWriteCollection(teacher, "users")).toBe(false);
   });
 
+  it("restricts backups and user_activity_logs to admin only for read and write", () => {
+    // Backups (Admin only)
+    expect(canReadCollection(admin, "backups")).toBe(true);
+    expect(canReadCollection(teacher, "backups")).toBe(false);
+    expect(canReadCollection(accountant, "backups")).toBe(false);
+    expect(canReadCollection(viewer, "backups")).toBe(false);
+    expect(canWriteCollection(admin, "backups")).toBe(true);
+    expect(canWriteCollection(teacher, "backups")).toBe(false);
+    expect(canWriteCollection(accountant, "backups")).toBe(false);
+    expect(canWriteCollection(viewer, "backups")).toBe(false);
+
+    // User Activity Logs (Requires analytics.view permission, viewer denied)
+    expect(canReadCollection(admin, "user_activity_logs")).toBe(true);
+    expect(canReadCollection(teacher, "user_activity_logs")).toBe(true);
+    expect(canReadCollection(viewer, "user_activity_logs")).toBe(false);
+    expect(canWriteCollection(admin, "user_activity_logs")).toBe(true);
+    expect(canWriteCollection(teacher, "user_activity_logs")).toBe(true);
+    expect(canWriteCollection(viewer, "user_activity_logs")).toBe(false);
+  });
+
   it("allows write roles on general collections if role has permission", () => {
     expect(canWriteCollection(teacher, "students")).toBe(true);
     expect(canWriteCollection(accountant, "students")).toBe(false);

@@ -47,5 +47,7 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 - **Unified SEO & Container Layouts**: Converted hardcoded SEO header strings to localized translation mappings (`t()`) and unified margins/spacing limits consistently across all pages.
 - **Design System Primitives**: Refactored raw HTML `<select>`, `<textarea>`, `<input>`, and Radix checkbox controls across all 11 modules to use `FormSelect`, `Textarea`, `Input`, `SearchBar`, and `Checkbox` design system primitives. Cleaned up all unused variables and linter warnings to achieve a 100% clean compilation and lint state.
 - **Consolidated Stats Cards, Export Toolbars & SafeResponsiveContainer**: Merged duplicate local metrics cards and data export toolbars across all feature modules and reports into unified, central primitives (`StatCard` and `ExportToolbar`). Relocated Recharts chart wrappers to the shared design system folder (`SafeResponsiveContainer`) and standardized imports to eliminate zero-width layout rendering warnings.
+- **Sentry Client-Side Error Reporting**: Configured and integrated Sentry and `ErrorState` with global React ErrorBoundary fallback rendering and error type verification in `main.tsx`.
+- **RBAC Read Hardening**: Hardened `rbacService.ts` mapping and logic by explicitly checking permissions for `user_activity_logs` and `backups` collection reads/writes.
 
 Do not reintroduce resolved violations.

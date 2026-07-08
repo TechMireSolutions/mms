@@ -15,9 +15,10 @@ import { apiFetch } from "@/lib/apiClient";
 export function useLiveCollection<T = any>(
   dbKey: string,
   defaultData: T[] = [] as T[],
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; serverSync?: boolean },
 ): T[] {
   const enabled = options?.enabled ?? true;
+  const serverSync = options?.serverSync ?? true;
   const defaultDataRef = useRef(defaultData);
   defaultDataRef.current = defaultData;
 
@@ -38,7 +39,7 @@ export function useLiveCollection<T = any>(
     handleUpdate();
 
     const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
-    if (isAuth && !hasCollectionInCache(dbKey)) {
+    if (isAuth && serverSync && !hasCollectionInCache(dbKey)) {
       apiFetch(`/api/db/collections/${dbKey}`)
         .then(async (res) => {
           if (res.ok) {

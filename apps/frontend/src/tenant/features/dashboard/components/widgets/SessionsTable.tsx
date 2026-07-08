@@ -1,8 +1,7 @@
 import React from "react";
 import { Users, MapPin, Radio } from "lucide-react";
 import { motion } from "framer-motion";
-import { useLiveCollection } from "@/hooks/useLiveCollection";
-import { type Session } from "@/lib/data/sessionsData";
+import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -33,7 +32,7 @@ function hashStringToId(value: string): number {
  */
 export default function SessionsTable({ title }: { title?: string }) {
   const { t } = useTranslation();
-  const dbSessions = useLiveCollection<Session>("sessions");
+  const dbSessions = useSessionsCollection();
 
   const sessions: UpcomingSessionItem[] = [];
 

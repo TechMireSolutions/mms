@@ -18,6 +18,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { useIsAdminViewer } from "@/tenant/hooks/useViewerRole";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import {
   useContactsSavedReportMutations,
@@ -51,6 +52,7 @@ export default function ContactsSavedReports({
   const settings = useGlobalSettings();
   const { user } = useAuth();
   const { role } = usePermissions();
+  const isAdmin = useIsAdminViewer();
   const { genders } = useContactConfig();
   const { data: reports = [], isLoading } = useContactsSavedReports();
   const { createSavedReport, deleteSavedReport, runSavedReport } = useContactsSavedReportMutations();
@@ -66,7 +68,7 @@ export default function ContactsSavedReports({
 
   const shareScopeOptions = useMemo(() => {
     const scopes = [...SHARE_SCOPES];
-    if (role !== "admin") return scopes.filter((scope) => scope !== "global");
+    if (!isAdmin) return scopes.filter((scope) => scope !== "global");
     return scopes;
   }, [role]);
 

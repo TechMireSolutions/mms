@@ -4,7 +4,6 @@ import {
   ObligationCollection, ObligationType, MujtahidRep, Mujtahid
 } from '@/lib/data/obligationsData';
 import { DEFAULT_CURRENCIES, formatMoney } from '@mms/shared';
-import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useMergedObligationContacts } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -52,7 +51,7 @@ export function ObligationCollectionList({
 }: ObligationCollectionListProps) {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
-  const currencies = useLiveCollection<any>("currencies", DEFAULT_CURRENCIES);
+  const currencies = DEFAULT_CURRENCIES;
   const [typeFilter, setTypeFilter] = useState("all");
   const [printCollection, setPrintCollection] = useState<ObligationCollection | null>(null);
 

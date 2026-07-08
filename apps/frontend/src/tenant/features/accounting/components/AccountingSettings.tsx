@@ -10,7 +10,6 @@ import {
   ACCOUNTING_TAB_REGISTRY,
   INITIAL_ACCOUNTING_FIELD_SEED,
 } from "@mms/shared";
-import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useAccountingConfig } from "@/tenant/features/accounting/hooks/useAccountingConfig";
 import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
 import { DatePicker } from "@/components/ui/DatePicker";
@@ -195,7 +194,7 @@ interface AccountingSettingsProps {
 }
 
 export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, mode }: AccountingSettingsProps) {
-  const currencies = useLiveCollection<(typeof DEFAULT_CURRENCIES)[number]>("currencies", DEFAULT_CURRENCIES);
+  const currencies = DEFAULT_CURRENCIES;
   const { settings, updateSettings } = useAccountingConfig();
   const [saved, setSaved] = useState(false);
   const [fyModal, setFyModal] = useState<Partial<FiscalYear> | null>(null);

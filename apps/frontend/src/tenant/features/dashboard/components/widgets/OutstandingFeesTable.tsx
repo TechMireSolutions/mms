@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, Phone, Send } from "lucide-react";
-import type { Invoice } from '@/lib/data/financeData';
-import { useLiveCollection } from "@/hooks/useLiveCollection";
+import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ import MessageComposer from "@/components/ui/MessageComposer";
  */
 export default function OutstandingFeesTable({ title }: { title?: string }) {
   const { t } = useTranslation();
-  const invoices = useLiveCollection<Invoice>("finance_invoices", []);
+  const invoices = useFinanceInvoicesCollection();
   const unpaidInvoices = useMemo(
     () => invoices.filter((invoice) => invoice.status !== "paid" && invoice.status !== "cancelled"),
     [invoices],

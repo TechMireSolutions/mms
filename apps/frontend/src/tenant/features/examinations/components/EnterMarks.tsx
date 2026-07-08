@@ -7,8 +7,7 @@ import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import type { Student } from "@/lib/data/studentsData";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
-import { useLiveCollection } from "@/hooks/useLiveCollection";
-import type { Enrollment } from '@/lib/data/enrollmentData';
+import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import { getGrade } from "@/tenant/features/examinations/components/gradeUtils";
 import { FORM_INPUT_COMPACT } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
@@ -37,7 +36,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
   const exam = exams.find((examOption) => examOption.id === selectedExam);
 
   const sessions = useSessionsCollection();
-  const enrollments = useLiveCollection<Enrollment>("enrollments");
+  const enrollments = useEnrollmentsCollection();
   const classNamesById = useMemo(
     () => new Map(
       sessions.flatMap((session) =>

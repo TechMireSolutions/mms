@@ -14,9 +14,9 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
+import { useIsAdminViewer } from "@/tenant/hooks/useViewerRole";
 
 interface AttendanceSettingsProps {
-  role: string;
   mode?: "fields" | "preferences";
 }
 
@@ -52,7 +52,8 @@ function Toggle({ checked, onChange }: ToggleProps) {
   );
 }
 
-export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
+export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
+  const isAdmin = useIsAdminViewer();
   const { t } = useTranslation();
   const { settings, updateSettings } = useAttendanceConfig();
   const [saved, setSaved] = useState(false);
@@ -121,7 +122,7 @@ export function AttendanceSettings({ role, mode }: AttendanceSettingsProps) {
     );
   }, [settings, fieldsEditor]);
 
-  if (role !== "admin") {
+  if (!isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <Shield className="w-12 h-12 text-muted-foreground/40 mb-3" />

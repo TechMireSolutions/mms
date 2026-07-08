@@ -21,7 +21,6 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { AccountingCommandMetrics } from "@/tenant/features/accounting/components/AccountingCommandMetrics";
 import { useAccountingJournalColumnLayout } from "@/tenant/features/accounting/hooks/useAccountingJournalColumnLayout";
 import { useAccountingAccountColumnLayout } from "@/tenant/features/accounting/hooks/useAccountingAccountColumnLayout";
-import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useAccountingConfig } from "@/tenant/features/accounting/hooks/useAccountingConfig";
 import { DEFAULT_CURRENCIES } from "@mms/shared";
 import {
@@ -71,7 +70,7 @@ export default function Accounting() {
   const accounts = useAccountingAccountsCollection();
   const journalEntries = useAccountingEntriesCollection();
   const fiscalYears = useAccountingFiscalYearsCollection();
-  const currencies = useLiveCollection<any>("currencies", DEFAULT_CURRENCIES);
+  const currencies = DEFAULT_CURRENCIES;
   const { settings } = useAccountingConfig();
   const [filteredCount, setFilteredCount] = useState(0);
   const journalColumnLayout = useAccountingJournalColumnLayout();

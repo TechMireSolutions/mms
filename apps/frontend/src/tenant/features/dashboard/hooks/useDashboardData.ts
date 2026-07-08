@@ -9,7 +9,9 @@ import { useTeachersMetrics, useTeachersWidgetAggregates } from '@/tenant/featur
 import { useContactsMetrics, useContactsWidgetAggregates } from '@/tenant/features/contacts/hooks/useContacts';
 import { useAttendanceRecordsCollection } from '@/tenant/features/attendance/hooks/useAttendance';
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
-import { useLiveCollection } from '@/hooks/useLiveCollection';
+import { useFinanceInvoicesCollection } from '@/tenant/features/finance/hooks/useFinanceApi';
+import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from '@/tenant/features/hasanat/hooks/useHasanatApi';
+import { useQuestionBankQuestionsCollection, useQuestionBankTestsCollection, useQuestionBankResultsCollection } from '@/tenant/features/question-bank/hooks/useQuestionBankApi';
 import type { Invoice } from '@/lib/data/financeData';
 import type { Distribution } from '@/lib/data/hasanatData';
 import type { QuestionBankQuestion, QuestionBankTest, QuestionBankResult } from '@mms/shared';
@@ -34,7 +36,6 @@ export interface DashboardCollectionData {
   questions: QuestionBankQuestion[];
   tests: QuestionBankTest[];
   assessmentResults: QuestionBankResult[];
-  revenueExpenses: { revenue: number; expenses: number }[];
   dataVolume: number;
   studentMetricsInactive: number;
   studentMetricsNew: number;
@@ -42,9 +43,6 @@ export interface DashboardCollectionData {
   contactMetricsNew: number;
 }
 
-function needsRevenueExpenses(widgets: CustomWidget[]): boolean {
-  return widgets.some((widget) => widget.isPinnedToDashboard && widget.widgetType === 'revenue-expenses');
-}
 
 /** Loads only collections referenced by dashboard cards and pinned widgets. */
 export function useDashboardData(
@@ -58,7 +56,6 @@ export function useDashboardData(
 
   const requiresCollection = (collection: ReportCollection): boolean =>
     requiredDashboardCollections.has(collection);
-  const loadRevenueExpenses = needsRevenueExpenses(widgets);
   const shouldLoadContacts = requiresCollection('contacts');
   const shouldLoadStudents = requiresCollection('students');
   const shouldLoadTeachers = requiresCollection('teachers');
@@ -102,34 +99,29 @@ export function useDashboardData(
   const { data: teacherMetrics } = useTeachersMetrics({ enabled: shouldLoadTeachers });
   const teachersTotal = teacherMetrics?.total ?? 0;
   const sessions = useSessionsCollection({ enabled: requiresCollection('sessions') });
-  const invoices = useLiveCollection<Invoice>('finance_invoices', [], {
+  const invoices = useFinanceInvoicesCollection({
     enabled: requiresCollection('finance_invoices'),
   });
   const attendanceRecords = useAttendanceRecordsCollection({
     enabled: requiresCollection('attendance_records'),
   });
-  const hasanatDistributions = useLiveCollection<Distribution>(
-    'hasanat_distributions',
-    [],
-    { enabled: requiresCollection('hasanat_distributions'),
+  const hasanatDistributions = useHasanatDistributionsCollection({
+    enabled: requiresCollection('hasanat_distributions'),
   });
-  const denoms = useLiveCollection<any>('hasanat_denoms', [], {
+  const denoms = useHasanatDenomsCollection({
     enabled: requiresCollection('hasanat_distributions'),
   });
   const { data: contactMetrics } = useContactsMetrics({ enabled: shouldLoadContacts });
   const contactsTotal = contactMetrics?.total ?? 0;
-  const questions = useLiveCollection<QuestionBankQuestion>('questions', [], {
+  const questions = useQuestionBankQuestionsCollection({
     enabled: requiresCollection('questions'),
   });
-  const tests = useLiveCollection<QuestionBankTest>('tests', [], { enabled: requiresCollection('tests') });
-  const assessmentResults = useLiveCollection<QuestionBankResult>('assessment_results', [], {
+  const tests = useQuestionBankTestsCollection({
+    enabled: requiresCollection('tests'),
+  });
+  const assessmentResults = useQuestionBankResultsCollection({
     enabled: requiresCollection('assessment_results'),
   });
-  const revenueExpenses = useLiveCollection<{ revenue: number; expenses: number }>(
-    'revenue_expenses',
-    [],
-    { enabled: loadRevenueExpenses },
-  );
 
   const dataVolume = useMemo(
     () =>
@@ -159,7 +151,6 @@ export function useDashboardData(
     questions,
     tests,
     assessmentResults,
-    revenueExpenses,
     dataVolume,
     studentMetricsNew: studentMetrics?.newThisPeriod ?? 0,
     teacherMetricsNew: teacherMetrics?.newThisPeriod ?? 0,

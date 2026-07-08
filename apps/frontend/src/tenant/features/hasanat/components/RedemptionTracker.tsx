@@ -7,8 +7,8 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { FormModal } from "@/components/ui/FormModal";
 import { UserActorSelect } from "@/components/ui/UserActorSelect";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
-import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useUsersCollection } from "@/tenant/features/users/hooks/useUsersApi";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import type { SystemUser } from "@mms/shared";
 import { useHasanatRedemptionsCollection, useHasanatMutations } from "@/tenant/features/hasanat/hooks/useHasanatApi";
@@ -28,7 +28,7 @@ interface RedeemModalProps {
 function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps) {
   const { t } = useTranslation();
   const activeDistributions = distributions.filter((distribution) => distribution.status === "active");
-  const users = useLiveCollection<SystemUser>("users");
+  const users = useUsersCollection() as unknown as SystemUser[];
   const [data, setData] = useState<Partial<Redemption>>({
     distributionId: activeDistributions[0]?.id || "",
     reward: "",

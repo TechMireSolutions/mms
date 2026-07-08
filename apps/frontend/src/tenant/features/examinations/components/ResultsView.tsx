@@ -6,8 +6,7 @@ import { Exam, ExamResult } from '@/lib/data/examinationData';
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import type { Student } from "@/lib/data/studentsData";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
-import { useLiveCollection } from "@/hooks/useLiveCollection";
-import type { Enrollment } from "@/lib/data/enrollmentData";
+import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import { getGrade } from "@/tenant/features/examinations/components/gradeUtils";
 import { StudentResultCard, StudentResultItem } from "@/tenant/features/examinations/components/StudentResultCard";
 import { CertificatePreview } from "@/tenant/features/examinations/components/CertificatePreview";
@@ -59,7 +58,7 @@ export function ResultsView({
 
   const { data: students = [] } = useStudentsByIds(studentIdsForExam);
   const sessions = useSessionsCollection();
-  const enrollments = useLiveCollection<Enrollment>("enrollments");
+  const enrollments = useEnrollmentsCollection();
 
   const studentsById = useMemo(
     () => new Map(students.map((student: Student) => [String(student.id), student])),

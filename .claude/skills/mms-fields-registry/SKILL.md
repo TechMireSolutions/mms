@@ -55,6 +55,7 @@ Before merging any new/changed field, complete all layers:
 | Settings singleton | `getBrandingSettings` / `await saveBrandingSettings`, etc. |
 | Collection entity | `saveCollection` with full row object |
 | Registry definition | `saveObject('{module}_field_config', …)` |
+| Custom Tabs | `/api/custom-tabs/bulk` REST API |
 
 **Reviewer test:** grep the field key — must appear in type, merge, form, and save. Block if only in `useState`.
 
