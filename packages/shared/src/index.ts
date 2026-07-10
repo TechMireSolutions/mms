@@ -107,8 +107,4 @@ export * from './tenantAuthTypes.js';
 export * from './contactValidation.js';
 export { buildDynamicStudentSchema, formatStudentZodIssues } from './studentValidation.js';
 
-export const DEFAULT_CURRENCIES = [
-  { id: "cur1", code: "PKR", name: "Pakistani Rupee", symbol: "₨" },
-  { id: "cur2", code: "USD", name: "US Dollar", symbol: "$" },
-  { id: "cur3", code: "GBP", name: "British Pound", symbol: "£" }
-];
+export { DEFAULT_CURRENCIES } from './utils.js';

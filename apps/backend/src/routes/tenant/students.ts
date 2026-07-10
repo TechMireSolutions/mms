@@ -19,15 +19,12 @@ import type { User } from '@mms/shared';
 import { STUDENTS_MODULE_CONTRACT, computeStudentsCommandMetrics } from '@mms/shared';
 import { sendForbidden } from '../../lib/httpErrors.js';
 import { resourceIdParamsSchema, softDeleteBodySchema } from '../../validation/commonSchemas.js';
-import { moduleColumnPreferencesBodySchema } from '../../validation/moduleColumnPreferencesSchemas.js';
+import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { studentRecordSchema, studentsListQuerySchema, studentsResolveBodySchema, studentsWidgetAggregatesBodySchema, studentsNextGrNumberQuerySchema, studentsDuplicateCheckBodySchema, studentsLinkedContactIdsQuerySchema } from '../../validation/studentSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { validateStudentDynamic } from '../../services/studentValidationService.js';
-import {
-  getUserColumnPreferencesForModule,
-  setUserColumnPreferencesForModule,
-} from '../../services/userColumnPreferencesService.js';
+
 
 /**
  * Server-first student resource routes (TanStack Query on FE).
@@ -171,35 +168,9 @@ export default async function studentsRoutes(
     }
   });
 
-  fastify.get('/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, 'students')) return sendForbidden(reply);
-    try {
-      const preferences = await getUserColumnPreferencesForModule(
-        STUDENTS_MODULE_CONTRACT.columnPreferencesObjectKey,
-        String(user.id),
-      );
-      return reply.send({ preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
-    }
-  });
-
-  fastify.put('/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, 'students')) return sendForbidden(reply);
-    const parsed = parseRequest(moduleColumnPreferencesBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      await setUserColumnPreferencesForModule(
-        STUDENTS_MODULE_CONTRACT.columnPreferencesObjectKey,
-        String(user.id),
-        parsed.data.preferences,
-      );
-      return reply.send({ success: true, preferences: parsed.data.preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
-    }
+  registerColumnPreferencesRoutes(fastify, {
+    collection: 'students',
+    objectKey: STUDENTS_MODULE_CONTRACT.columnPreferencesObjectKey,
   });
 
   fastify.post('/', {

@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 
 
-import { formatMonthYear, getInitials } from "@mms/shared";
+import { formatMonthYear, getInitials, formatMoney } from "@mms/shared";
 import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
 
 import { StatCard } from "@/components/ui/StatCard";
@@ -65,8 +65,7 @@ export function ObligationsSummary({
   const { formatCurrency, activeCurrency } = useFinanceCurrency();
   
   const formatValueOnly = (amount: number | string | null | undefined): string => {
-    if (amount === null || amount === undefined || isNaN(Number(amount))) return "—";
-    return Number(amount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    return formatMoney(amount, activeCurrency.code, { excludeCurrency: true });
   };
   const users = useMergedObligationUsers();
   const { primary, secondary, charts } = useBrandPalette();

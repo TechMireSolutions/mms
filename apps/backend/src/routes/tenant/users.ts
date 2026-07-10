@@ -1,15 +1,12 @@
-import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { canReadCollection, canWriteCollection } from '../../services/rbacService.js';
 import type { User } from '@mms/shared';
 import { USERS_MODULE_CONTRACT } from '@mms/shared';
 import { sendForbidden } from '../../lib/httpErrors.js';
-import { moduleColumnPreferencesBodySchema } from '../../validation/moduleColumnPreferencesSchemas.js';
+import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import {
-  getUserColumnPreferencesForModule,
-  setUserColumnPreferencesForModule,
-} from '../../services/userColumnPreferencesService.js';
+
 import {
   loadWorkspaceUsers,
   replaceWorkspaceUsers,
@@ -81,40 +78,14 @@ export default async function usersRoutes(
     }
   });
 
-  // --- Column Preferences (both formats) ---
-  const getPrefs = async (request: FastifyRequest, reply: FastifyReply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, USERS_COLLECTION)) return sendForbidden(reply);
-    try {
-      const preferences = await getUserColumnPreferencesForModule(
-        USERS_MODULE_CONTRACT.columnPreferencesObjectKey,
-        String(user.id),
-      );
-      return reply.send({ preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
-    }
-  };
-
-  const putPrefs = async (request: FastifyRequest, reply: FastifyReply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, USERS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(moduleColumnPreferencesBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      await setUserColumnPreferencesForModule(
-        USERS_MODULE_CONTRACT.columnPreferencesObjectKey,
-        String(user.id),
-        parsed.data.preferences,
-      );
-      return reply.send({ success: true, preferences: parsed.data.preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
-    }
-  };
-
-  fastify.get('/column-preferences', getPrefs);
-  fastify.get('/column-prefs', getPrefs);
-  fastify.put('/column-preferences', putPrefs);
-  fastify.put('/column-prefs', putPrefs);
+  registerColumnPreferencesRoutes(fastify, {
+    path: '/column-preferences',
+    collection: USERS_COLLECTION,
+    objectKey: USERS_MODULE_CONTRACT.columnPreferencesObjectKey,
+  });
+  registerColumnPreferencesRoutes(fastify, {
+    path: '/column-prefs',
+    collection: USERS_COLLECTION,
+    objectKey: USERS_MODULE_CONTRACT.columnPreferencesObjectKey,
+  });
 }

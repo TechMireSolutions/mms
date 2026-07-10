@@ -4,13 +4,10 @@ import { canReadCollection, canWriteCollection } from '../../services/rbacServic
 import type { User } from '@mms/shared';
 import { ENROLLMENTS_MODULE_CONTRACT } from '@mms/shared';
 import { sendForbidden } from '../../lib/httpErrors.js';
-import { moduleColumnPreferencesBodySchema } from '../../validation/moduleColumnPreferencesSchemas.js';
+import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { resourceIdParamsSchema, softDeleteBodySchema } from '../../validation/commonSchemas.js';
-import {
-  getUserColumnPreferencesForModule,
-  setUserColumnPreferencesForModule,
-} from '../../services/userColumnPreferencesService.js';
+
 import { loadEnrollmentsCommandMetrics } from '../../services/enrollmentsMetricsService.js';
 import {
   loadEnrollments,
@@ -126,35 +123,8 @@ export default async function enrollmentsRoutes(
     }
   });
 
-  // --- Column Preferences ---
-  fastify.get('/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, ENROLLMENTS_COLLECTION)) return sendForbidden(reply);
-    try {
-      const preferences = await getUserColumnPreferencesForModule(
-        ENROLLMENTS_MODULE_CONTRACT.columnPreferencesObjectKey,
-        String(user.id),
-      );
-      return reply.send({ preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
-    }
-  });
-
-  fastify.put('/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, ENROLLMENTS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(moduleColumnPreferencesBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      await setUserColumnPreferencesForModule(
-        ENROLLMENTS_MODULE_CONTRACT.columnPreferencesObjectKey,
-        String(user.id),
-        parsed.data.preferences,
-      );
-      return reply.send({ success: true, preferences: parsed.data.preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
-    }
+  registerColumnPreferencesRoutes(fastify, {
+    collection: ENROLLMENTS_COLLECTION,
+    objectKey: ENROLLMENTS_MODULE_CONTRACT.columnPreferencesObjectKey,
   });
 }

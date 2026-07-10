@@ -1,15 +1,12 @@
-import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { canReadCollection, canWriteCollection } from '../../services/rbacService.js';
 import type { User } from '@mms/shared';
 import { ACCOUNTING_MODULE_CONTRACT } from '@mms/shared';
 import { sendForbidden } from '../../lib/httpErrors.js';
-import { moduleColumnPreferencesBodySchema } from '../../validation/moduleColumnPreferencesSchemas.js';
+import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import {
-  getUserColumnPreferencesForModule,
-  setUserColumnPreferencesForModule,
-} from '../../services/userColumnPreferencesService.js';
+
 import { loadAccountingCommandMetrics } from '../../services/accountingMetricsService.js';
 import {
   loadAccounts,
@@ -121,75 +118,25 @@ export default async function accountingRoutes(
   });
 
   // --- Column Preferences (both formats) ---
-  const getJournalPrefs = async (request: FastifyRequest, reply: FastifyReply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, ACCOUNTING_ENTRIES_COLLECTION)) return sendForbidden(reply);
-    try {
-      const preferences = await getUserColumnPreferencesForModule(
-        ACCOUNTING_MODULE_CONTRACT.journalColumnPreferencesObjectKey,
-        String(user.id),
-      );
-      return reply.send({ preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
-    }
-  };
+  registerColumnPreferencesRoutes(fastify, {
+    path: '/journal/column-preferences',
+    collection: ACCOUNTING_ENTRIES_COLLECTION,
+    objectKey: ACCOUNTING_MODULE_CONTRACT.journalColumnPreferencesObjectKey,
+  });
+  registerColumnPreferencesRoutes(fastify, {
+    path: '/journal/column-prefs',
+    collection: ACCOUNTING_ENTRIES_COLLECTION,
+    objectKey: ACCOUNTING_MODULE_CONTRACT.journalColumnPreferencesObjectKey,
+  });
 
-  const putJournalPrefs = async (request: FastifyRequest, reply: FastifyReply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, ACCOUNTING_ENTRIES_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(moduleColumnPreferencesBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      await setUserColumnPreferencesForModule(
-        ACCOUNTING_MODULE_CONTRACT.journalColumnPreferencesObjectKey,
-        String(user.id),
-        parsed.data.preferences,
-      );
-      return reply.send({ success: true, preferences: parsed.data.preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
-    }
-  };
-
-  const getAccountPrefs = async (request: FastifyRequest, reply: FastifyReply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, ACCOUNTING_MODULE_CONTRACT.accountCollectionKey)) return sendForbidden(reply);
-    try {
-      const preferences = await getUserColumnPreferencesForModule(
-        ACCOUNTING_MODULE_CONTRACT.accountColumnPreferencesObjectKey,
-        String(user.id),
-      );
-      return reply.send({ preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
-    }
-  };
-
-  const putAccountPrefs = async (request: FastifyRequest, reply: FastifyReply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, ACCOUNTING_MODULE_CONTRACT.accountCollectionKey)) return sendForbidden(reply);
-    const parsed = parseRequest(moduleColumnPreferencesBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      await setUserColumnPreferencesForModule(
-        ACCOUNTING_MODULE_CONTRACT.accountColumnPreferencesObjectKey,
-        String(user.id),
-        parsed.data.preferences,
-      );
-      return reply.send({ success: true, preferences: parsed.data.preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
-    }
-  };
-
-  fastify.get('/journal/column-preferences', getJournalPrefs);
-  fastify.get('/journal/column-prefs', getJournalPrefs);
-  fastify.put('/journal/column-preferences', putJournalPrefs);
-  fastify.put('/journal/column-prefs', putJournalPrefs);
-
-  fastify.get('/accounts/column-preferences', getAccountPrefs);
-  fastify.get('/accounts/column-prefs', getAccountPrefs);
-  fastify.put('/accounts/column-preferences', putAccountPrefs);
-  fastify.put('/accounts/column-prefs', putAccountPrefs);
+  registerColumnPreferencesRoutes(fastify, {
+    path: '/accounts/column-preferences',
+    collection: ACCOUNTING_MODULE_CONTRACT.accountCollectionKey,
+    objectKey: ACCOUNTING_MODULE_CONTRACT.accountColumnPreferencesObjectKey,
+  });
+  registerColumnPreferencesRoutes(fastify, {
+    path: '/accounts/column-prefs',
+    collection: ACCOUNTING_MODULE_CONTRACT.accountCollectionKey,
+    objectKey: ACCOUNTING_MODULE_CONTRACT.accountColumnPreferencesObjectKey,
+  });
 }

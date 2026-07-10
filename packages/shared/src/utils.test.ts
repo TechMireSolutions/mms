@@ -169,6 +169,21 @@ describe("formatMoney", () => {
     expect(formatMoney(undefined)).toBe("—");
     expect(formatMoney("invalid")).toBe("—");
   });
+
+  it("supports formatting with symbols, decimal override, and currency code exclusion", () => {
+    // Symbol prefixing
+    expect(formatMoney(1500, "USD", { useSymbol: true })).toBe("$ 1,500");
+    expect(formatMoney(1500, "PKR", { useSymbol: true })).toBe("₨ 1,500");
+
+    // Decimal overriding
+    expect(formatMoney(1234.56, "PKR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })).toBe("PKR 1,234.560");
+    expect(formatMoney(1234.5, "USD", { minimumFractionDigits: 0, maximumFractionDigits: 0 })).toBe("USD 1,235");
+
+    // Exclude currency prefix
+    expect(formatMoney(1234.56, "PKR", { excludeCurrency: true })).toBe("1,234.56");
+    expect(formatMoney(1234.56, "PKR", { excludeCurrency: true, minimumFractionDigits: 4, maximumFractionDigits: 4 })).toBe("1,234.5600");
+  });
 });
+
 
 

@@ -739,16 +739,52 @@ export function calculateDetailedLunarAge(dob: string): string {
   }
 }
 
+export const DEFAULT_CURRENCIES = [
+  { id: "cur1", code: "PKR", name: "Pakistani Rupee", symbol: "₨" },
+  { id: "cur2", code: "USD", name: "US Dollar", symbol: "$" },
+  { id: "cur3", code: "GBP", name: "British Pound", symbol: "£" }
+];
+
 /**
  * Formats a numeric amount as currency (defaults to PKR).
  * @param amount - The numeric or string amount to format.
  * @param currency - The currency symbol/code (defaults to "PKR").
+ * @param options - Custom format options (e.g. useSymbol, excludeCurrency, decimal places).
  * @returns The formatted currency string, or "—" if invalid.
  */
-export function formatMoney(amount: number | string | null | undefined, currency = "PKR"): string {
+export function formatMoney(
+  amount: number | string | null | undefined,
+  currency = "PKR",
+  options?: {
+    useSymbol?: boolean;
+    excludeCurrency?: boolean;
+    minimumFractionDigits?: number;
+    maximumFractionDigits?: number;
+  }
+): string {
   if (amount === null || amount === undefined) return "—";
-  const numeric = typeof amount === "number" ? amount : parseFloat(amount);
+  const numeric = typeof amount === "number" ? amount : parseFloat(String(amount));
   if (isNaN(numeric)) return "—";
-  return `${currency} ${numeric.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-}
 
+  const minDigits = options?.minimumFractionDigits ?? 0;
+  const maxDigits = options?.maximumFractionDigits ?? 2;
+
+  const formattedNum = numeric.toLocaleString(undefined, {
+    minimumFractionDigits: minDigits,
+    maximumFractionDigits: maxDigits,
+  });
+
+  if (options?.excludeCurrency) {
+    return formattedNum;
+  }
+
+  let prefix = currency;
+  if (options?.useSymbol) {
+    const found = DEFAULT_CURRENCIES.find((c) => c.code === currency || c.symbol === currency);
+    if (found) {
+      prefix = found.symbol;
+    }
+  }
+
+  return `${prefix} ${formattedNum}`;
+}

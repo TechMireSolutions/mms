@@ -1,15 +1,12 @@
-import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { canReadCollection, canWriteCollection } from '../../services/rbacService.js';
 import type { User } from '@mms/shared';
 import { QUESTION_BANK_MODULE_CONTRACT } from '@mms/shared';
 import { sendForbidden } from '../../lib/httpErrors.js';
-import { moduleColumnPreferencesBodySchema } from '../../validation/moduleColumnPreferencesSchemas.js';
+import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import {
-  getUserColumnPreferencesForModule,
-  setUserColumnPreferencesForModule,
-} from '../../services/userColumnPreferencesService.js';
+
 import { loadQuestionBankCommandMetrics } from '../../services/questionBankMetricsService.js';
 import {
   loadQuestions,
@@ -121,40 +118,14 @@ export default async function questionBankRoutes(
     }
   });
 
-  // --- Column Preferences (both formats) ---
-  const getPrefs = async (request: FastifyRequest, reply: FastifyReply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, QUESTIONS_COLLECTION)) return sendForbidden(reply);
-    try {
-      const preferences = await getUserColumnPreferencesForModule(
-        QUESTION_BANK_MODULE_CONTRACT.columnPreferencesObjectKey,
-        String(user.id),
-      );
-      return reply.send({ preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
-    }
-  };
-
-  const putPrefs = async (request: FastifyRequest, reply: FastifyReply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, QUESTIONS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(moduleColumnPreferencesBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      await setUserColumnPreferencesForModule(
-        QUESTION_BANK_MODULE_CONTRACT.columnPreferencesObjectKey,
-        String(user.id),
-        parsed.data.preferences,
-      );
-      return reply.send({ success: true, preferences: parsed.data.preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
-    }
-  };
-
-  fastify.get('/column-preferences', getPrefs);
-  fastify.get('/column-prefs', getPrefs);
-  fastify.put('/column-preferences', putPrefs);
-  fastify.put('/column-prefs', putPrefs);
+  registerColumnPreferencesRoutes(fastify, {
+    path: '/column-preferences',
+    collection: QUESTIONS_COLLECTION,
+    objectKey: QUESTION_BANK_MODULE_CONTRACT.columnPreferencesObjectKey,
+  });
+  registerColumnPreferencesRoutes(fastify, {
+    path: '/column-prefs',
+    collection: QUESTIONS_COLLECTION,
+    objectKey: QUESTION_BANK_MODULE_CONTRACT.columnPreferencesObjectKey,
+  });
 }

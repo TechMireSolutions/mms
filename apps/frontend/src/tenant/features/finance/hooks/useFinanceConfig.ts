@@ -1,16 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_FINANCE_SETTINGS,
   DEFAULT_FINANCE_FIELD_DEFS,
   FINANCE_MODULE_CONTRACT,
-  getSortedFields,
   mergeTabbedFields,
-  getFlatFieldsConfig,
   type FinanceSettings,
 } from "@mms/shared";
-import { getObject, saveObject } from "@/lib/db";
+import { getObject } from "@/lib/db";
+import { useModuleConfig } from "@/hooks/useModuleConfig";
 
-function mergeFinanceSettings(settings: Partial<FinanceSettings> | null | undefined): FinanceSettings {
+export function loadFinanceSettings(): FinanceSettings {
+  const settings = getObject<Partial<FinanceSettings>>(
+    FINANCE_MODULE_CONTRACT.settingsObjectKey,
+    DEFAULT_FINANCE_SETTINGS
+  );
   return {
     ...DEFAULT_FINANCE_SETTINGS,
     ...(settings ?? {}),
@@ -26,48 +28,18 @@ function mergeFinanceSettings(settings: Partial<FinanceSettings> | null | undefi
   };
 }
 
-export function loadFinanceSettings(): FinanceSettings {
-  return mergeFinanceSettings(
-    getObject<Partial<FinanceSettings>>(
-      FINANCE_MODULE_CONTRACT.settingsObjectKey,
-      DEFAULT_FINANCE_SETTINGS
-    ),
-  );
-}
-
 export function useFinanceConfig() {
-  const [settings, setSettings] = useState<FinanceSettings>(() => loadFinanceSettings());
-
-  const reloadFinanceConfig = useCallback(() => {
-    setSettings(loadFinanceSettings());
-  }, []);
-
-  useEffect(() => {
-    reloadFinanceConfig();
-  }, [reloadFinanceConfig]);
-
-  useEffect(() => {
-    const handleLocalDatabaseUpdate = () => {
-      queueMicrotask(reloadFinanceConfig);
-    };
-    window.addEventListener("local-database-update", handleLocalDatabaseUpdate);
-    return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
-  }, [reloadFinanceConfig]);
-
-  const updateSettings = useCallback((settingsDraft: FinanceSettings) => {
-    const merged = mergeFinanceSettings(settingsDraft);
-    saveObject(FINANCE_MODULE_CONTRACT.settingsObjectKey, merged);
-    setSettings(merged);
-  }, []);
-
-  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
-  const customFields = useMemo(() => settings.customFields ?? [], [settings.customFields]);
-  const fieldOrder = useMemo(() => settings.fieldOrder ?? DEFAULT_FINANCE_SETTINGS.fieldOrder ?? [], [settings.fieldOrder]);
-
-  const orderedFields = useMemo(
-    () => getSortedFields(DEFAULT_FINANCE_FIELD_DEFS, fieldOrder, fields, customFields),
-    [fieldOrder, fields, customFields],
-  );
+  const {
+    settings,
+    orderedFields,
+    fields,
+    customFields,
+    updateSettings,
+  } = useModuleConfig({
+    settingsObjectKey: FINANCE_MODULE_CONTRACT.settingsObjectKey,
+    defaultSettings: DEFAULT_FINANCE_SETTINGS,
+    defaultFieldDefs: DEFAULT_FINANCE_FIELD_DEFS,
+  });
 
   return {
     settings,
@@ -77,3 +49,4 @@ export function useFinanceConfig() {
     updateSettings,
   };
 }
+

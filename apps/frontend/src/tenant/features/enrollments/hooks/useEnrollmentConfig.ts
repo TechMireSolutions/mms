@@ -1,16 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_ENROLLMENTS_SETTINGS,
   DEFAULT_ENROLLMENTS_FIELD_DEFS,
   ENROLLMENTS_MODULE_CONTRACT,
-  getSortedFields,
   mergeTabbedFields,
-  getFlatFieldsConfig,
   type EnrollmentsSettings,
 } from "@mms/shared";
-import { getObject, saveObject } from "@/lib/db";
+import { getObject } from "@/lib/db";
+import { useModuleConfig } from "@/hooks/useModuleConfig";
 
-function mergeEnrollmentsSettings(settings: Partial<EnrollmentsSettings> | null | undefined): EnrollmentsSettings {
+export function loadEnrollmentsSettings(): EnrollmentsSettings {
+  const settings = getObject<Partial<EnrollmentsSettings>>(
+    ENROLLMENTS_MODULE_CONTRACT.settingsObjectKey,
+    DEFAULT_ENROLLMENTS_SETTINGS
+  );
   return {
     ...DEFAULT_ENROLLMENTS_SETTINGS,
     ...(settings ?? {}),
@@ -26,48 +28,18 @@ function mergeEnrollmentsSettings(settings: Partial<EnrollmentsSettings> | null 
   };
 }
 
-export function loadEnrollmentsSettings(): EnrollmentsSettings {
-  return mergeEnrollmentsSettings(
-    getObject<Partial<EnrollmentsSettings>>(
-      ENROLLMENTS_MODULE_CONTRACT.settingsObjectKey,
-      DEFAULT_ENROLLMENTS_SETTINGS
-    ),
-  );
-}
-
 export function useEnrollmentConfig() {
-  const [settings, setSettings] = useState<EnrollmentsSettings>(() => loadEnrollmentsSettings());
-
-  const reloadEnrollmentConfig = useCallback(() => {
-    setSettings(loadEnrollmentsSettings());
-  }, []);
-
-  useEffect(() => {
-    reloadEnrollmentConfig();
-  }, [reloadEnrollmentConfig]);
-
-  useEffect(() => {
-    const handleLocalDatabaseUpdate = () => {
-      queueMicrotask(reloadEnrollmentConfig);
-    };
-    window.addEventListener("local-database-update", handleLocalDatabaseUpdate);
-    return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
-  }, [reloadEnrollmentConfig]);
-
-  const updateSettings = useCallback((settingsDraft: EnrollmentsSettings) => {
-    const merged = mergeEnrollmentsSettings(settingsDraft);
-    saveObject(ENROLLMENTS_MODULE_CONTRACT.settingsObjectKey, merged);
-    setSettings(merged);
-  }, []);
-
-  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
-  const customFields = useMemo(() => settings.customFields ?? [], [settings.customFields]);
-  const fieldOrder = useMemo(() => settings.fieldOrder ?? DEFAULT_ENROLLMENTS_SETTINGS.fieldOrder ?? [], [settings.fieldOrder]);
-
-  const orderedFields = useMemo(
-    () => getSortedFields(DEFAULT_ENROLLMENTS_FIELD_DEFS, fieldOrder, fields, customFields),
-    [fieldOrder, fields, customFields],
-  );
+  const {
+    settings,
+    orderedFields,
+    fields,
+    customFields,
+    updateSettings,
+  } = useModuleConfig({
+    settingsObjectKey: ENROLLMENTS_MODULE_CONTRACT.settingsObjectKey,
+    defaultSettings: DEFAULT_ENROLLMENTS_SETTINGS,
+    defaultFieldDefs: DEFAULT_ENROLLMENTS_FIELD_DEFS,
+  });
 
   return {
     settings,
@@ -77,3 +49,4 @@ export function useEnrollmentConfig() {
     updateSettings,
   };
 }
+

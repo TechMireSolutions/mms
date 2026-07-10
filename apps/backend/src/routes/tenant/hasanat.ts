@@ -4,12 +4,9 @@ import { canReadCollection, canWriteCollection } from '../../services/rbacServic
 import type { User } from '@mms/shared';
 import { HASANAT_MODULE_CONTRACT } from '@mms/shared';
 import { sendForbidden } from '../../lib/httpErrors.js';
-import { moduleColumnPreferencesBodySchema } from '../../validation/moduleColumnPreferencesSchemas.js';
+import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import {
-  getUserColumnPreferencesForModule,
-  setUserColumnPreferencesForModule,
-} from '../../services/userColumnPreferencesService.js';
+
 import { loadHasanatCommandMetrics } from '../../services/hasanatMetricsService.js';
 import {
   loadDenoms,
@@ -149,67 +146,16 @@ export default async function hasanatRoutes(
     }
   });
 
-  // --- Column Preferences ---
-  fastify.get('/distributions/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, HASANAT_DISTRIBUTIONS_COLLECTION)) return sendForbidden(reply);
-    try {
-      const preferences = await getUserColumnPreferencesForModule(
-        HASANAT_MODULE_CONTRACT.distributionColumnPreferencesObjectKey,
-        String(user.id),
-      );
-      return reply.send({ preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
-    }
+  registerColumnPreferencesRoutes(fastify, {
+    path: '/distributions/column-preferences',
+    collection: HASANAT_DISTRIBUTIONS_COLLECTION,
+    objectKey: HASANAT_MODULE_CONTRACT.distributionColumnPreferencesObjectKey,
   });
 
-  fastify.put('/distributions/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, HASANAT_DISTRIBUTIONS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(moduleColumnPreferencesBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      await setUserColumnPreferencesForModule(
-        HASANAT_MODULE_CONTRACT.distributionColumnPreferencesObjectKey,
-        String(user.id),
-        parsed.data.preferences,
-      );
-      return reply.send({ success: true, preferences: parsed.data.preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
-    }
-  });
-
-  fastify.get('/redemptions/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, HASANAT_REDEMPTIONS_COLLECTION)) return sendForbidden(reply);
-    try {
-      const preferences = await getUserColumnPreferencesForModule(
-        HASANAT_MODULE_CONTRACT.redemptionColumnPreferencesObjectKey,
-        String(user.id),
-      );
-      return reply.send({ preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
-    }
-  });
-
-  fastify.put('/redemptions/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, HASANAT_REDEMPTIONS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(moduleColumnPreferencesBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      await setUserColumnPreferencesForModule(
-        HASANAT_MODULE_CONTRACT.redemptionColumnPreferencesObjectKey,
-        String(user.id),
-        parsed.data.preferences,
-      );
-      return reply.send({ success: true, preferences: parsed.data.preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
-    }
+  registerColumnPreferencesRoutes(fastify, {
+    path: '/redemptions/column-preferences',
+    collection: HASANAT_REDEMPTIONS_COLLECTION,
+    objectKey: HASANAT_MODULE_CONTRACT.redemptionColumnPreferencesObjectKey,
   });
 }
 

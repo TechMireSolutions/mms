@@ -1,16 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_ACCOUNTING_SETTINGS,
   DEFAULT_ACCOUNT_FIELD_DEFS,
   ACCOUNTING_MODULE_CONTRACT,
-  getSortedFields,
   mergeTabbedFields,
-  getFlatFieldsConfig,
   type AccountingSettings,
 } from "@mms/shared";
-import { getObject, saveObject } from "@/lib/db";
+import { getObject } from "@/lib/db";
+import { useModuleConfig } from "@/hooks/useModuleConfig";
 
-function mergeAccountingSettings(settings: Partial<AccountingSettings> | null | undefined): AccountingSettings {
+export function loadAccountingSettings(): AccountingSettings {
+  const settings = getObject<Partial<AccountingSettings>>(
+    ACCOUNTING_MODULE_CONTRACT.settingsObjectKey,
+    DEFAULT_ACCOUNTING_SETTINGS
+  );
   return {
     ...DEFAULT_ACCOUNTING_SETTINGS,
     ...(settings ?? {}),
@@ -26,48 +28,18 @@ function mergeAccountingSettings(settings: Partial<AccountingSettings> | null | 
   };
 }
 
-export function loadAccountingSettings(): AccountingSettings {
-  return mergeAccountingSettings(
-    getObject<Partial<AccountingSettings>>(
-      ACCOUNTING_MODULE_CONTRACT.settingsObjectKey,
-      DEFAULT_ACCOUNTING_SETTINGS
-    ),
-  );
-}
-
 export function useAccountingConfig() {
-  const [settings, setSettings] = useState<AccountingSettings>(() => loadAccountingSettings());
-
-  const reloadAccountingConfig = useCallback(() => {
-    setSettings(loadAccountingSettings());
-  }, []);
-
-  useEffect(() => {
-    reloadAccountingConfig();
-  }, [reloadAccountingConfig]);
-
-  useEffect(() => {
-    const handleLocalDatabaseUpdate = () => {
-      queueMicrotask(reloadAccountingConfig);
-    };
-    window.addEventListener("local-database-update", handleLocalDatabaseUpdate);
-    return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
-  }, [reloadAccountingConfig]);
-
-  const updateSettings = useCallback((settingsDraft: AccountingSettings) => {
-    const merged = mergeAccountingSettings(settingsDraft);
-    saveObject(ACCOUNTING_MODULE_CONTRACT.settingsObjectKey, merged);
-    setSettings(merged);
-  }, []);
-
-  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
-  const customFields = useMemo(() => settings.customFields ?? [], [settings.customFields]);
-  const fieldOrder = useMemo(() => settings.fieldOrder ?? DEFAULT_ACCOUNTING_SETTINGS.fieldOrder ?? [], [settings.fieldOrder]);
-
-  const orderedFields = useMemo(
-    () => getSortedFields(DEFAULT_ACCOUNT_FIELD_DEFS, fieldOrder, fields, customFields),
-    [fieldOrder, fields, customFields],
-  );
+  const {
+    settings,
+    orderedFields,
+    fields,
+    customFields,
+    updateSettings,
+  } = useModuleConfig({
+    settingsObjectKey: ACCOUNTING_MODULE_CONTRACT.settingsObjectKey,
+    defaultSettings: DEFAULT_ACCOUNTING_SETTINGS,
+    defaultFieldDefs: DEFAULT_ACCOUNT_FIELD_DEFS,
+  });
 
   return {
     settings,
@@ -77,3 +49,4 @@ export function useAccountingConfig() {
     updateSettings,
   };
 }
+

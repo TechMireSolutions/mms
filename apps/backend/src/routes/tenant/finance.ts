@@ -4,13 +4,10 @@ import { canReadCollection, canWriteCollection } from '../../services/rbacServic
 import type { User } from '@mms/shared';
 import { FINANCE_MODULE_CONTRACT } from '@mms/shared';
 import { sendForbidden } from '../../lib/httpErrors.js';
-import { moduleColumnPreferencesBodySchema } from '../../validation/moduleColumnPreferencesSchemas.js';
+import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { resourceIdParamsSchema, softDeleteBodySchema } from '../../validation/commonSchemas.js';
-import {
-  getUserColumnPreferencesForModule,
-  setUserColumnPreferencesForModule,
-} from '../../services/userColumnPreferencesService.js';
+
 import { loadFinanceCommandMetrics } from '../../services/financeMetricsService.js';
 import {
   loadInvoices,
@@ -208,66 +205,16 @@ export default async function financeRoutes(
   });
 
   // --- Column Preferences ---
-  fastify.get('/invoices/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, FINANCE_COLLECTION)) return sendForbidden(reply);
-    try {
-      const preferences = await getUserColumnPreferencesForModule(
-        FINANCE_MODULE_CONTRACT.invoiceColumnPreferencesObjectKey,
-        String(user.id),
-      );
-      return reply.send({ preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
-    }
+  registerColumnPreferencesRoutes(fastify, {
+    path: '/invoices/column-preferences',
+    collection: FINANCE_COLLECTION,
+    objectKey: FINANCE_MODULE_CONTRACT.invoiceColumnPreferencesObjectKey,
   });
 
-  fastify.put('/invoices/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, FINANCE_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(moduleColumnPreferencesBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      await setUserColumnPreferencesForModule(
-        FINANCE_MODULE_CONTRACT.invoiceColumnPreferencesObjectKey,
-        String(user.id),
-        parsed.data.preferences,
-      );
-      return reply.send({ success: true, preferences: parsed.data.preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
-    }
-  });
-
-  fastify.get('/payments/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, PAYMENT_COLLECTION)) return sendForbidden(reply);
-    try {
-      const preferences = await getUserColumnPreferencesForModule(
-        FINANCE_MODULE_CONTRACT.paymentColumnPreferencesObjectKey,
-        String(user.id),
-      );
-      return reply.send({ preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
-    }
-  });
-
-  fastify.put('/payments/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, PAYMENT_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(moduleColumnPreferencesBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      await setUserColumnPreferencesForModule(
-        FINANCE_MODULE_CONTRACT.paymentColumnPreferencesObjectKey,
-        String(user.id),
-        parsed.data.preferences,
-      );
-      return reply.send({ success: true, preferences: parsed.data.preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
-    }
+  registerColumnPreferencesRoutes(fastify, {
+    path: '/payments/column-preferences',
+    collection: PAYMENT_COLLECTION,
+    objectKey: FINANCE_MODULE_CONTRACT.paymentColumnPreferencesObjectKey,
   });
 }
 

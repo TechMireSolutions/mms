@@ -4,12 +4,9 @@ import { canReadCollection, canWriteCollection } from '../../services/rbacServic
 import type { User } from '@mms/shared';
 import { EXAMINATIONS_MODULE_CONTRACT } from '@mms/shared';
 import { sendForbidden } from '../../lib/httpErrors.js';
-import { moduleColumnPreferencesBodySchema } from '../../validation/moduleColumnPreferencesSchemas.js';
+import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import {
-  getUserColumnPreferencesForModule,
-  setUserColumnPreferencesForModule,
-} from '../../services/userColumnPreferencesService.js';
+
 import { loadExaminationsCommandMetrics } from '../../services/examinationsMetricsService.js';
 import {
   loadExams,
@@ -93,65 +90,15 @@ export default async function examinationsRoutes(
     }
   });
 
-  fastify.get('/exams/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, EXAMS_COLLECTION)) return sendForbidden(reply);
-    try {
-      const preferences = await getUserColumnPreferencesForModule(
-        EXAMINATIONS_MODULE_CONTRACT.examColumnPreferencesObjectKey,
-        String(user.id),
-      );
-      return reply.send({ preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
-    }
+  registerColumnPreferencesRoutes(fastify, {
+    path: '/exams/column-preferences',
+    collection: EXAMS_COLLECTION,
+    objectKey: EXAMINATIONS_MODULE_CONTRACT.examColumnPreferencesObjectKey,
   });
 
-  fastify.put('/exams/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, EXAMS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(moduleColumnPreferencesBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      await setUserColumnPreferencesForModule(
-        EXAMINATIONS_MODULE_CONTRACT.examColumnPreferencesObjectKey,
-        String(user.id),
-        parsed.data.preferences,
-      );
-      return reply.send({ success: true, preferences: parsed.data.preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
-    }
-  });
-
-  fastify.get('/results/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, EXAMINATIONS_MODULE_CONTRACT.resultsCollectionKey)) return sendForbidden(reply);
-    try {
-      const preferences = await getUserColumnPreferencesForModule(
-        EXAMINATIONS_MODULE_CONTRACT.resultsColumnPreferencesObjectKey,
-        String(user.id),
-      );
-      return reply.send({ preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
-    }
-  });
-
-  fastify.put('/results/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, EXAMINATIONS_MODULE_CONTRACT.resultsCollectionKey)) return sendForbidden(reply);
-    const parsed = parseRequest(moduleColumnPreferencesBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      await setUserColumnPreferencesForModule(
-        EXAMINATIONS_MODULE_CONTRACT.resultsColumnPreferencesObjectKey,
-        String(user.id),
-        parsed.data.preferences,
-      );
-      return reply.send({ success: true, preferences: parsed.data.preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
-    }
+  registerColumnPreferencesRoutes(fastify, {
+    path: '/results/column-preferences',
+    collection: EXAMINATIONS_MODULE_CONTRACT.resultsCollectionKey,
+    objectKey: EXAMINATIONS_MODULE_CONTRACT.resultsColumnPreferencesObjectKey,
   });
 }

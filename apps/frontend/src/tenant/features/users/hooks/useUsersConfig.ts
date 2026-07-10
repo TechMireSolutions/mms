@@ -1,16 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   DEFAULT_USERS_SETTINGS,
   DEFAULT_USERS_FIELD_DEFS,
   USERS_MODULE_CONTRACT,
-  getSortedFields,
   mergeTabbedFields,
-  getFlatFieldsConfig,
   type UsersSettings,
 } from '@mms/shared';
-import { getObject, saveObject } from '@/lib/db';
+import { getObject } from '@/lib/db';
+import { useModuleConfig } from '@/hooks/useModuleConfig';
 
-function mergeUsersSettings(settings: Partial<UsersSettings> | null | undefined): UsersSettings {
+export function loadUsersSettings(): UsersSettings {
+  const settings = getObject<Partial<UsersSettings>>(
+    USERS_MODULE_CONTRACT.settingsObjectKey,
+    DEFAULT_USERS_SETTINGS
+  );
   return {
     ...DEFAULT_USERS_SETTINGS,
     ...(settings ?? {}),
@@ -26,48 +28,18 @@ function mergeUsersSettings(settings: Partial<UsersSettings> | null | undefined)
   };
 }
 
-export function loadUsersSettings(): UsersSettings {
-  return mergeUsersSettings(
-    getObject<Partial<UsersSettings>>(
-      USERS_MODULE_CONTRACT.settingsObjectKey,
-      DEFAULT_USERS_SETTINGS
-    ),
-  );
-}
-
 export function useUsersConfig() {
-  const [settings, setSettings] = useState<UsersSettings>(() => loadUsersSettings());
-
-  const reloadUsersConfig = useCallback(() => {
-    setSettings(loadUsersSettings());
-  }, []);
-
-  useEffect(() => {
-    reloadUsersConfig();
-  }, [reloadUsersConfig]);
-
-  useEffect(() => {
-    const handleLocalDatabaseUpdate = () => {
-      queueMicrotask(reloadUsersConfig);
-    };
-    window.addEventListener('local-database-update', handleLocalDatabaseUpdate);
-    return () => window.removeEventListener('local-database-update', handleLocalDatabaseUpdate);
-  }, [reloadUsersConfig]);
-
-  const updateSettings = useCallback((settingsDraft: UsersSettings) => {
-    const merged = mergeUsersSettings(settingsDraft);
-    saveObject(USERS_MODULE_CONTRACT.settingsObjectKey, merged);
-    setSettings(merged);
-  }, []);
-
-  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
-  const customFields = useMemo(() => settings.customFields ?? [], [settings.customFields]);
-  const fieldOrder = useMemo(() => settings.fieldOrder ?? DEFAULT_USERS_SETTINGS.fieldOrder ?? [], [settings.fieldOrder]);
-
-  const orderedFields = useMemo(
-    () => getSortedFields(DEFAULT_USERS_FIELD_DEFS, fieldOrder, fields, customFields),
-    [fieldOrder, fields, customFields],
-  );
+  const {
+    settings,
+    orderedFields,
+    fields,
+    customFields,
+    updateSettings,
+  } = useModuleConfig({
+    settingsObjectKey: USERS_MODULE_CONTRACT.settingsObjectKey,
+    defaultSettings: DEFAULT_USERS_SETTINGS,
+    defaultFieldDefs: DEFAULT_USERS_FIELD_DEFS,
+  });
 
   return {
     settings,
@@ -77,3 +49,4 @@ export function useUsersConfig() {
     updateSettings,
   };
 }
+

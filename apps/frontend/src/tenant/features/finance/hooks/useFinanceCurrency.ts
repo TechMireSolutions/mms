@@ -1,5 +1,4 @@
-import { useMemo } from "react";
-import { DEFAULT_CURRENCIES, formatMoney } from "@mms/shared";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useFinanceConfig } from "./useFinanceConfig";
 
 /**
@@ -8,19 +7,9 @@ import { useFinanceConfig } from "./useFinanceConfig";
 export function useFinanceCurrency() {
   const { settings } = useFinanceConfig();
 
-  const activeCurrency = useMemo(() => {
-    return (
-      DEFAULT_CURRENCIES.find((currency) => currency.code === settings.currency) ||
-      DEFAULT_CURRENCIES[0] ||
-      { symbol: "$", code: "USD", name: "US Dollar" }
-    );
-  }, [settings.currency]);
-
-  const formatCurrency = useMemo(() => {
-    return (amount: number | string | null | undefined): string => {
-      return formatMoney(amount, activeCurrency.code);
-    };
-  }, [activeCurrency.code]);
+  const { activeCurrency, formatCurrency } = useCurrency({
+    currencyCode: settings.currency,
+  });
 
   return {
     activeCurrency,
@@ -28,3 +17,4 @@ export function useFinanceCurrency() {
     settings,
   };
 }
+

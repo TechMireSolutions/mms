@@ -1,16 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_EXAMINATIONS_SETTINGS,
   EXAMINATIONS_MODULE_CONTRACT,
   DEFAULT_EXAMINATIONS_FIELD_DEFS,
-  getSortedFields,
   mergeTabbedFields,
-  getFlatFieldsConfig,
   type ExaminationsSettings,
 } from "@mms/shared";
-import { getObject, saveObject } from "@/lib/db";
+import { getObject } from "@/lib/db";
+import { useModuleConfig } from "@/hooks/useModuleConfig";
 
-function mergeExaminationsSettings(settings: Partial<ExaminationsSettings> | null | undefined): ExaminationsSettings {
+export function loadExaminationsSettings(): ExaminationsSettings {
+  const settings = getObject<Partial<ExaminationsSettings>>(
+    EXAMINATIONS_MODULE_CONTRACT.settingsObjectKey,
+    DEFAULT_EXAMINATIONS_SETTINGS
+  );
   return {
     ...DEFAULT_EXAMINATIONS_SETTINGS,
     ...(settings ?? {}),
@@ -26,48 +28,18 @@ function mergeExaminationsSettings(settings: Partial<ExaminationsSettings> | nul
   };
 }
 
-export function loadExaminationsSettings(): ExaminationsSettings {
-  return mergeExaminationsSettings(
-    getObject<Partial<ExaminationsSettings>>(
-      EXAMINATIONS_MODULE_CONTRACT.settingsObjectKey,
-      DEFAULT_EXAMINATIONS_SETTINGS
-    ),
-  );
-}
-
 export function useExaminationConfig() {
-  const [settings, setSettings] = useState<ExaminationsSettings>(() => loadExaminationsSettings());
-
-  const reloadExaminationsConfig = useCallback(() => {
-    setSettings(loadExaminationsSettings());
-  }, []);
-
-  useEffect(() => {
-    reloadExaminationsConfig();
-  }, [reloadExaminationsConfig]);
-
-  useEffect(() => {
-    const handleLocalDatabaseUpdate = () => {
-      queueMicrotask(reloadExaminationsConfig);
-    };
-    window.addEventListener("local-database-update", handleLocalDatabaseUpdate);
-    return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
-  }, [reloadExaminationsConfig]);
-
-  const updateSettings = useCallback((settingsDraft: ExaminationsSettings) => {
-    const merged = mergeExaminationsSettings(settingsDraft);
-    saveObject(EXAMINATIONS_MODULE_CONTRACT.settingsObjectKey, merged);
-    setSettings(merged);
-  }, []);
-
-  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
-  const customFields = useMemo(() => settings.customFields ?? [], [settings.customFields]);
-  const fieldOrder = useMemo(() => settings.fieldOrder ?? DEFAULT_EXAMINATIONS_SETTINGS.fieldOrder ?? [], [settings.fieldOrder]);
-
-  const orderedFields = useMemo(
-    () => getSortedFields(DEFAULT_EXAMINATIONS_FIELD_DEFS, fieldOrder, fields, customFields),
-    [fieldOrder, fields, customFields],
-  );
+  const {
+    settings,
+    orderedFields,
+    fields,
+    customFields,
+    updateSettings,
+  } = useModuleConfig({
+    settingsObjectKey: EXAMINATIONS_MODULE_CONTRACT.settingsObjectKey,
+    defaultSettings: DEFAULT_EXAMINATIONS_SETTINGS,
+    defaultFieldDefs: DEFAULT_EXAMINATIONS_FIELD_DEFS,
+  });
 
   return {
     settings,
@@ -77,3 +49,4 @@ export function useExaminationConfig() {
     updateSettings,
   };
 }
+
