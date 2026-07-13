@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import type { BackgroundJobRecord, Contact, User } from '@mms/shared';
+import type { BackgroundJobRecord, Contact, ContactsListPageResult, User } from '@mms/shared';
 import {
   CONTACTS_MODULE_CONTRACT,
   roleHasPermission,
@@ -17,7 +17,6 @@ import {
 import { getLinkedContactId } from '../../services/auth/userService.js';
 import {
   contactBulkDeleteSchema,
-  contactColumnPreferencesBodySchema,
   contactDeleteBodySchema,
   contactExportAuditSchema,
   contactGoogleSyncAuditSchema,
@@ -31,8 +30,6 @@ import {
   contactsCsvExportBodySchema,
   contactsListQuerySchema,
   contactsReportAnalyticsQuerySchema,
-  contactsWidgetAggregatesBodySchema,
-  contactsResolveBodySchema,
   contactDuplicateCheckBodySchema,
   contactsSavedReportCreateSchema,
 } from '../../validation/contactSchemas.js';
@@ -76,14 +73,20 @@ import {
 import {
   createContactsSavedReport,
   deleteContactsSavedReport,
-  getUserColumnPreferences,
   listContactsSavedReports,
-  setUserColumnPreferences,
   touchContactsSavedReportRun,
 } from '../../services/contactPreferencesService.js';
 import { validateContactDynamic } from '../../services/contactValidationService.js';
 
 import { sendForbidden } from '../../lib/httpErrors.js';
+import {
+  registerMetricsRoute,
+  registerCountRoute,
+  registerResolveRoute,
+  registerWidgetAggregatesRoute,
+  registerPaginatedListRoute,
+} from '../../lib/crudRouter.js';
+import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 
 let backgroundJobRunnersReady = false;
 
@@ -135,6 +138,10 @@ async function auditContact(
   });
 }
 
+function isContactsPageResult(result: Contact[] | ContactsListPageResult): result is ContactsListPageResult {
+  return !Array.isArray(result) && Array.isArray(result.contacts);
+}
+
 /**
  * Server-first contact resource routes (TanStack Query on FE).
  */
@@ -145,60 +152,37 @@ export async function contactRoutes(
   ensureBackgroundJobRunners();
   fastify.addHook('preHandler', authenticateTenant);
 
-  fastify.get('/', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
-    const queryParsed = parseRequest(contactsListQuerySchema, request.query);
-    if (!queryParsed.ok) return replyValidationError(reply, queryParsed.message);
-    try {
-      const contactsListQuery = queryParsed.data;
-      const includeDeleted = contactsListQuery.includeDeleted === 'true';
-      if (includeDeleted && !canDeleteContacts(user)) {
-        return sendForbidden(reply);
+  // --- Custom GET List (Paginated) ---
+  registerPaginatedListRoute(fastify, {
+    collection: 'contacts',
+    schema: contactsListQuerySchema,
+    defaultPageSize: CONTACTS_MODULE_CONTRACT.defaultPageSize,
+    errorMessagePrefix: 'contacts',
+    canWriteDeletedCheck: canDeleteContacts,
+    loadPageFn: (query) => loadContactsPage(query),
+    loadAllFn: (options) => loadContacts(options),
+    responseTransform: async (result: Contact[] | ContactsListPageResult, user) => {
+      if (isContactsPageResult(result)) {
+        return {
+          ...result,
+          contacts: await sanitizeForUser(result.contacts, user),
+        };
       }
-      if (contactsListQuery.page != null) {
-        const page = await loadContactsPage({
-          page: contactsListQuery.page,
-          limit: contactsListQuery.limit ?? CONTACTS_MODULE_CONTRACT.defaultPageSize,
-          search: contactsListQuery.search,
-          gender: contactsListQuery.gender,
-          includeDeleted,
-          sortField: contactsListQuery.sortField,
-          sortDir: contactsListQuery.sortDir,
-          hasPhone: contactsListQuery.hasPhone === 'true',
-        });
-        return reply.send({
-          ...page,
-          contacts: await sanitizeForUser(page.contacts, user),
-        });
-      }
-      const contacts = await sanitizeForUser(await loadContacts({ includeDeleted }), user);
-      return reply.send({ contacts });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to list contacts' });
-    }
+      return sanitizeForUser(result, user);
+    },
   });
 
-  fastify.get('/count', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
-    try {
-      const contacts = await loadContacts();
-      return reply.send({ count: contacts.length });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to count contacts' });
-    }
+  // --- Custom GET Count ---
+  registerCountRoute(fastify, {
+    collection: 'contacts',
+    loadAllFn: loadContacts,
+    errorMessagePrefix: 'contacts',
   });
 
-  fastify.get('/metrics', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
-    try {
-      const metrics = await loadContactsCommandMetrics();
-      return reply.send({ metrics });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load contact metrics' });
-    }
+  registerMetricsRoute(fastify, {
+    collection: 'contacts',
+    loadMetricsFn: loadContactsCommandMetrics,
+    errorMessagePrefix: 'contact',
   });
 
   fastify.get('/report-analytics', async (request, reply) => {
@@ -227,30 +211,23 @@ export async function contactRoutes(
     }
   });
 
-  fastify.post('/widget-aggregates', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
-    const parsed = parseRequest(contactsWidgetAggregatesBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const results = await loadContactsWidgetAggregates(parsed.data.widgets);
-      return reply.send({ results });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load contact widget aggregates' });
-    }
+  // --- Custom POST Widget Aggregates ---
+  registerWidgetAggregatesRoute(fastify, {
+    collection: 'contacts',
+    loadAggregatesFn: loadContactsWidgetAggregates,
+    errorMessagePrefix: 'contact',
   });
 
-  fastify.post('/resolve', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
-    const parsed = parseRequest(contactsResolveBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const contacts = await loadContactsByIds(parsed.data.ids);
-      return reply.send({ contacts: await sanitizeForUser(contacts, user) });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to resolve contacts' });
-    }
+  // --- Custom POST Resolve ---
+  registerResolveRoute(fastify, {
+    collection: 'contacts',
+    loadByIdsFn: async (ids, request) => {
+      const user = request.user as User;
+      const contacts = await loadContactsByIds(ids);
+      return sanitizeForUser(contacts, user);
+    },
+    responseKey: 'contacts',
+    errorMessagePrefix: 'contacts',
   });
 
   fastify.post('/duplicate-check', async (request, reply) => {
@@ -310,28 +287,9 @@ export async function contactRoutes(
     return reply.status(202).send({ job });
   });
 
-  fastify.get('/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
-    try {
-      const preferences = await getUserColumnPreferences(String(user.id));
-      return reply.send({ preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
-    }
-  });
-
-  fastify.put('/column-preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
-    const parsed = parseRequest(contactColumnPreferencesBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      await setUserColumnPreferences(String(user.id), parsed.data.preferences);
-      return reply.send({ success: true, preferences: parsed.data.preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
-    }
+  registerColumnPreferencesRoutes(fastify, {
+    collection: 'contacts',
+    objectKey: CONTACTS_MODULE_CONTRACT.columnPreferencesObjectKey,
   });
 
   fastify.get('/saved-reports', async (request, reply) => {

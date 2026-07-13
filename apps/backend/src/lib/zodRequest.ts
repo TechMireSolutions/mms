@@ -19,3 +19,19 @@ export function replyValidationError(
 ): ReturnType<FastifyReply['status']> {
   return reply.status(400).send({ type: 'validation_error', message });
 }
+
+export function validateOrThrow(schema: ZodType<unknown>, value: unknown): void {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const parsed = schema.safeParse(item);
+      if (!parsed.success) {
+        throw new Error(parsed.error.issues.map((issue) => issue.message).join('; '));
+      }
+    }
+  } else {
+    const parsed = schema.safeParse(value);
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join('; '));
+    }
+  }
+}

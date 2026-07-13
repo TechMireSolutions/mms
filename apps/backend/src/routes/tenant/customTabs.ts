@@ -15,8 +15,10 @@ import {
   customTabSchema,
   customTabUpdateSchema,
   customTabBulkSaveSchema,
+  customTabQuerySchema,
 } from '../../validation/customTabSchemas.js';
-import { z } from 'zod';
+import { resourceIdParamsSchema } from '../../validation/commonSchemas.js';
+import { registerBulkPutRoute } from '../../lib/crudRouter.js';
 
 const CUSTOM_TABS_COLLECTION = 'custom_tabs';
 
@@ -31,10 +33,7 @@ export default async function customTabRoutes(
     const user = request.user as User;
     if (!canReadCollection(user, CUSTOM_TABS_COLLECTION)) return sendForbidden(reply);
     
-    const querySchema = z.object({
-      moduleId: z.string().optional(),
-    });
-    const parsed = parseRequest(querySchema, request.query);
+    const parsed = parseRequest(customTabQuerySchema, request.query);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     
     try {
@@ -62,20 +61,12 @@ export default async function customTabRoutes(
   });
 
   // PUT /api/custom-tabs/bulk
-  fastify.put('/bulk', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, CUSTOM_TABS_COLLECTION)) return sendForbidden(reply);
-    
-    const parsed = parseRequest(customTabBulkSaveSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    
-    try {
-      const { moduleId, tabs } = parsed.data;
-      const updated = await replaceCustomTabs(moduleId, tabs);
-      return reply.send({ tabs: updated });
-    } catch (err) {
-      return reply.status(500).send({ type: 'database_error', message: err instanceof Error ? err.message : 'Failed to bulk replace custom tabs' });
-    }
+  registerBulkPutRoute(fastify, {
+    collection: CUSTOM_TABS_COLLECTION,
+    schema: customTabBulkSaveSchema,
+    saveFn: async (data) => replaceCustomTabs(data.moduleId, data.tabs),
+    responseKey: 'tabs',
+    errorMessagePrefix: 'custom tabs',
   });
 
   // PUT /api/custom-tabs/:id
@@ -83,10 +74,7 @@ export default async function customTabRoutes(
     const user = request.user as User;
     if (!canWriteCollection(user, CUSTOM_TABS_COLLECTION)) return sendForbidden(reply);
     
-    const paramsSchema = z.object({
-      id: z.string().min(1),
-    });
-    const paramsParsed = parseRequest(paramsSchema, request.params);
+    const paramsParsed = parseRequest(resourceIdParamsSchema, request.params);
     if (!paramsParsed.ok) return replyValidationError(reply, paramsParsed.message);
     
     const bodyParsed = parseRequest(customTabUpdateSchema, request.body);
@@ -105,10 +93,7 @@ export default async function customTabRoutes(
     const user = request.user as User;
     if (!canWriteCollection(user, CUSTOM_TABS_COLLECTION)) return sendForbidden(reply);
     
-    const paramsSchema = z.object({
-      id: z.string().min(1),
-    });
-    const paramsParsed = parseRequest(paramsSchema, request.params);
+    const paramsParsed = parseRequest(resourceIdParamsSchema, request.params);
     if (!paramsParsed.ok) return replyValidationError(reply, paramsParsed.message);
     
     try {

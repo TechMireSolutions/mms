@@ -32,7 +32,6 @@ import { resolveSubdomainFromRequest } from '../../lib/tenantContext.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
 import {
   platformChangePasswordBodySchema,
-  platformLoginBodySchema,
   platformPasswordForgotBodySchema,
   platformPasswordResendBodySchema,
   platformPasswordResetBodySchema,
@@ -41,6 +40,7 @@ import {
   platformSetupResendBodySchema,
   platformSetupVerifyBodySchema,
 } from '../../validation/platformSchemas.js';
+import { loginBodySchema as platformLoginBodySchema } from '../../validation/commonSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
 function assertApexHost(hostname: string, forwardedHost: string | string[] | undefined): boolean {
@@ -102,13 +102,16 @@ export default async function platformAuthRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
-  fastify.get('/setup/status', async (request, reply) => {
+  fastify.addHook('preHandler', async (request, reply) => {
     if (!assertApexHost(request.hostname, request.headers['x-forwarded-host'])) {
       return reply.status(403).send({
         type: 'forbidden',
-        message: 'Platform setup is only available on the main domain',
+        message: 'Platform actions are only available on the main domain',
       });
     }
+  });
+
+  fastify.get('/setup/status', async (request, reply) => {
     return reply.send(await getPlatformSetupStatus());
   });
 
@@ -116,13 +119,6 @@ export default async function platformAuthRoutes(
     await inner.register(rateLimit, AUTH_RATE_LIMIT);
 
     inner.post('/setup/register', async (request, reply) => {
-        if (!assertApexHost(request.hostname, request.headers['x-forwarded-host'])) {
-          return reply.status(403).send({
-            type: 'forbidden',
-            message: 'Platform setup is only available on the main domain',
-          });
-        }
-
         const parsed = parseRequest(platformSetupRegisterBodySchema, request.body);
         if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
@@ -140,13 +136,6 @@ export default async function platformAuthRoutes(
     );
 
     inner.post('/setup/verify', async (request, reply) => {
-        if (!assertApexHost(request.hostname, request.headers['x-forwarded-host'])) {
-          return reply.status(403).send({
-            type: 'forbidden',
-            message: 'Platform setup is only available on the main domain',
-          });
-        }
-
         const parsed = parseRequest(platformSetupVerifyBodySchema, request.body);
         if (!parsed.ok) return replyValidationError(reply, parsed.message);
         const { setupId, code } = parsed.data;
@@ -170,13 +159,6 @@ export default async function platformAuthRoutes(
     );
 
     inner.post('/setup/resend', async (request, reply) => {
-        if (!assertApexHost(request.hostname, request.headers['x-forwarded-host'])) {
-          return reply.status(403).send({
-            type: 'forbidden',
-            message: 'Platform setup is only available on the main domain',
-          });
-        }
-
         const parsed = parseRequest(platformSetupResendBodySchema, request.body);
         if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
@@ -198,13 +180,6 @@ export default async function platformAuthRoutes(
     await inner.register(rateLimit, AUTH_RATE_LIMIT);
 
     inner.post('/password/forgot', async (request, reply) => {
-        if (!assertApexHost(request.hostname, request.headers['x-forwarded-host'])) {
-          return reply.status(403).send({
-            type: 'forbidden',
-            message: 'Platform password reset is only available on the main domain',
-          });
-        }
-
         const parsed = parseRequest(platformPasswordForgotBodySchema, request.body);
         if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
@@ -222,13 +197,6 @@ export default async function platformAuthRoutes(
     );
 
     inner.post('/password/reset', async (request, reply) => {
-        if (!assertApexHost(request.hostname, request.headers['x-forwarded-host'])) {
-          return reply.status(403).send({
-            type: 'forbidden',
-            message: 'Platform password reset is only available on the main domain',
-          });
-        }
-
         const parsed = parseRequest(platformPasswordResetBodySchema, request.body);
         if (!parsed.ok) return replyValidationError(reply, parsed.message);
         const { resetId, code, password } = parsed.data;
@@ -252,13 +220,6 @@ export default async function platformAuthRoutes(
     );
 
     inner.post('/password/resend', async (request, reply) => {
-        if (!assertApexHost(request.hostname, request.headers['x-forwarded-host'])) {
-          return reply.status(403).send({
-            type: 'forbidden',
-            message: 'Platform password reset is only available on the main domain',
-          });
-        }
-
         const parsed = parseRequest(platformPasswordResendBodySchema, request.body);
         if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
@@ -280,17 +241,6 @@ export default async function platformAuthRoutes(
     await inner.register(rateLimit, AUTH_RATE_LIMIT);
 
     inner.post('/login', async (request, reply) => {
-      const subdomain = resolveSubdomainFromRequest(
-        request.hostname,
-        request.headers['x-forwarded-host'],
-      );
-      if (subdomain) {
-        return reply.status(403).send({
-          type: 'forbidden',
-          message: 'Platform sign-in is only available on the main domain',
-        });
-      }
-
       const parsed = parseRequest(platformLoginBodySchema, request.body);
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
       const { email, password } = parsed.data;

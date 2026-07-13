@@ -6,20 +6,11 @@ import {
   activityLogListSchema,
 } from '@mms/shared';
 import { getHydratedUsers, saveUsers } from './auth/userService.js';
-import { getRequestTenant } from '../lib/tenantContext.js';
 import {
   listActivityLogsByWorkspace,
   replaceActivityLogsForWorkspace,
 } from '../db/repositories/logsRepository.js';
-
-// --- Helper WebSocket broadcaster ---
-async function broadcast(logicalKey: string) {
-  const tenant = getRequestTenant();
-  if (tenant) {
-    const { broadcastTenantUpdate } = await import('./websocketService.js');
-    broadcastTenantUpdate(tenant, 'collection', logicalKey);
-  }
-}
+import { defineTenantBulkCollectionService } from './tenantBulkService.js';
 
 // --- Users ---
 export async function loadWorkspaceUsers(): Promise<WorkspaceUser[]> {
@@ -34,17 +25,10 @@ export async function replaceWorkspaceUsers(records: WorkspaceUser[]): Promise<W
 }
 
 // --- Activity Logs ---
-export async function loadLogs(): Promise<ActivityLog[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) return [];
-  return listActivityLogsByWorkspace(tenant);
-}
-
-export async function replaceLogs(records: ActivityLog[]): Promise<ActivityLog[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  const parsed = activityLogListSchema.parse(records);
-  await replaceActivityLogsForWorkspace(tenant, parsed);
-  await broadcast('user_activity_logs');
-  return parsed;
-}
+const logService = defineTenantBulkCollectionService<ActivityLog>(
+  { listByWorkspace: listActivityLogsByWorkspace, replaceForWorkspace: replaceActivityLogsForWorkspace },
+  activityLogListSchema,
+  'user_activity_logs',
+);
+export const loadLogs = logService.load;
+export const replaceLogs = logService.replace;

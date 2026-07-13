@@ -1,10 +1,10 @@
-import type { 
-  Contact, 
-  PhoneNumber as ContactPhone, 
-  EmailAddress as ContactEmail, 
-  Address as ContactAddress, 
-  SocialLink as ContactSocial, 
-  EmergencyContact 
+import type {
+  Contact,
+  PhoneNumber as ContactPhone,
+  EmailAddress as ContactEmail,
+  Address as ContactAddress,
+  SocialLink as ContactSocial,
+  EmergencyContact
 } from "./contactTypes.js";
 import { CONTACTS_MODULE_CONTRACT } from "./contactsModuleContract.js";
 
@@ -372,15 +372,15 @@ export function parsePhoneNumber(
 export function normalizeToE164(countryCode: string, number: string): string {
   const cleanCode = countryCode.replace(/[^\d]/g, "");
   let cleanNumber = number.replace(/[^\d]/g, "");
-  
+
   if (cleanCode && cleanNumber.startsWith("0")) {
     cleanNumber = cleanNumber.replace(/^0+/, "");
   }
-  
+
   if (cleanCode && cleanNumber.startsWith(cleanCode)) {
     return `+${cleanNumber}`;
   }
-  
+
   return `+${cleanCode}${cleanNumber}`;
 }
 
@@ -417,7 +417,7 @@ export function getPrimaryEmail(contact: Partial<Contact>): string | null {
 export function getDisplayName(contact: Partial<Contact>): string {
   const baseName = contact.name || contact.firstName || "";
   if (!baseName || !contact.isSyed) return baseName;
-  
+
   const prefix = contact.gender === "male" ? "Syed " : contact.gender === "female" ? "Syeda " : "";
   return prefix ? `${prefix}${baseName}` : baseName;
 }
@@ -496,12 +496,12 @@ export const getEmails = (contact: Contact): string[] => {
 export const cleanName = (name: unknown, prefixesToIgnore?: string[]): string => {
   if (!name) return "";
   let clean = String(name).trim().toLowerCase();
-  
+
   if (prefixesToIgnore && prefixesToIgnore.length > 0) {
     const prefixRegex = new RegExp(`^(${prefixesToIgnore.join('|')})\\s+`, 'i');
     clean = clean.replace(prefixRegex, "");
   }
-  
+
   return clean.replace(/\s+/g, "");
 };
 
@@ -653,11 +653,11 @@ export function calculateDetailedSolarAge(dob: string): string {
     const birth = new Date(dob);
     if (isNaN(birth.getTime())) return "";
     const now = new Date();
-    
+
     let years = now.getFullYear() - birth.getFullYear();
     let months = now.getMonth() - birth.getMonth();
     let days = now.getDate() - birth.getDate();
-    
+
     if (days < 0) {
       months--;
       const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
@@ -717,14 +717,14 @@ export function calculateDetailedLunarAge(dob: string): string {
     const birthDate = new Date(dob);
     if (isNaN(birthDate.getTime())) return "";
     const now = new Date();
-    
+
     const birthParts = getHijriParts(birthDate);
     const nowParts = getHijriParts(now);
-    
+
     let years = nowParts.year - birthParts.year;
     let months = nowParts.month - birthParts.month;
     let days = nowParts.day - birthParts.day;
-    
+
     if (days < 0) {
       months--;
       days += 30; // standard lunar month approximation
@@ -787,4 +787,16 @@ export function formatMoney(
   }
 
   return `${prefix} ${formattedNum}`;
+}
+
+/**
+ * Validates the submitted blueprint ID against the current settings/config version (Rule 16.3 / CS-6).
+ * Throws an error if they mismatch.
+ */
+export function verifyBlueprintVersion(submittedBlueprintId: unknown, currentVersion: string | number): void {
+  if (submittedBlueprintId !== undefined && submittedBlueprintId !== null) {
+    if (String(submittedBlueprintId) !== String(currentVersion)) {
+      throw new Error(`Blueprint version mismatch. Expected version ${currentVersion}, got ${submittedBlueprintId}. Please reload the form.`);
+    }
+  }
 }

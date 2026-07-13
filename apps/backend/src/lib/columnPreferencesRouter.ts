@@ -10,7 +10,7 @@ import {
 } from '../services/userColumnPreferencesService.js';
 
 export interface ColumnPreferencesRoutesOptions {
-  path?: string; // defaults to '/column-preferences'
+  path?: string | string[]; // defaults to '/column-preferences'
   collection: string;
   objectKey: string;
 }
@@ -22,36 +22,46 @@ export function registerColumnPreferencesRoutes(
   fastify: FastifyInstance,
   options: ColumnPreferencesRoutesOptions,
 ): void {
-  const { path = '/column-preferences', collection, objectKey } = options;
+  const { path, collection, objectKey } = options;
+  const paths = typeof path === 'string' ? [path] : (path ?? ['/column-preferences']);
 
-  fastify.get(path, async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, collection)) return sendForbidden(reply);
-    try {
-      const preferences = await getUserColumnPreferencesForModule(
-        objectKey,
-        String(user.id),
-      );
-      return reply.send({ preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
+  const expandedPaths = [...paths];
+  for (const p of paths) {
+    if (p.endsWith('/column-preferences')) {
+      expandedPaths.push(p.replace(/\/column-preferences$/, '/column-prefs'));
     }
-  });
+  }
 
-  fastify.put(path, async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, collection)) return sendForbidden(reply);
-    const parsed = parseRequest(moduleColumnPreferencesBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      await setUserColumnPreferencesForModule(
-        objectKey,
-        String(user.id),
-        parsed.data.preferences,
-      );
-      return reply.send({ success: true, preferences: parsed.data.preferences });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
-    }
-  });
+  for (const routePath of expandedPaths) {
+    fastify.get(routePath, async (request, reply) => {
+      const user = request.user as User;
+      if (!canReadCollection(user, collection)) return sendForbidden(reply);
+      try {
+        const preferences = await getUserColumnPreferencesForModule(
+          objectKey,
+          String(user.id),
+        );
+        return reply.send({ preferences });
+      } catch {
+        return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
+      }
+    });
+
+    fastify.put(routePath, async (request, reply) => {
+      const user = request.user as User;
+      if (!canReadCollection(user, collection)) return sendForbidden(reply);
+      const parsed = parseRequest(moduleColumnPreferencesBodySchema, request.body);
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+      try {
+        await setUserColumnPreferencesForModule(
+          objectKey,
+          String(user.id),
+          parsed.data.preferences,
+        );
+        return reply.send({ success: true, preferences: parsed.data.preferences });
+      } catch {
+        return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
+      }
+    });
+  }
 }

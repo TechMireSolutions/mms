@@ -9,7 +9,7 @@ import {
   listCollectionStorageNames,
 } from '../database.js';
 import { bulkSaveAttendanceRecords } from '../repositories/attendanceRepository.js';
-import type { AttendanceRecord } from '../../validation/attendanceSchemas.js';
+import type { AttendanceRecord } from '@mms/shared';
 
 async function discoverTenantSubdomains(): Promise<Set<string>> {
   const subdomains = new Set<string>();

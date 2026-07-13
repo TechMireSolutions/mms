@@ -39,6 +39,19 @@ import { resourceKeyParamsSchema, resourceNameParamsSchema } from '../../validat
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { validateContactDynamic } from '../../services/contactValidationService.js';
 
+function sanitizeUserCollections(collections: Record<string, unknown[]>, userId: string | number): void {
+  const userMsgKey = `messages_u:${userId}`;
+  const userTplKey = `whatsappTemplates_u:${userId}`;
+  for (const key of Object.keys(collections)) {
+    if (
+      (key.startsWith('messages_u:') && key !== userMsgKey) ||
+      (key.startsWith('whatsappTemplates_u:') && key !== userTplKey)
+    ) {
+      delete collections[key];
+    }
+  }
+}
+
 /**
  * Register database sync and CRUD routes on the Fastify instance.
  *
@@ -66,21 +79,7 @@ export default async function dbRoutes(
       const snapshot = await fetchDatabaseSnapshot();
       if (snapshot.collections) {
         delete snapshot.collections[WORKSPACES_COLLECTION];
-        // Remove other users' message keys to isolate them
-        const userMsgKey = `messages_u:${user.id}`;
-        for (const key of Object.keys(snapshot.collections)) {
-          if (key.startsWith('messages_u:') && key !== userMsgKey) {
-            delete snapshot.collections[key];
-          }
-        }
-
-        // Remove other users' template keys to isolate them
-        const userTplKey = `whatsappTemplates_u:${user.id}`;
-        for (const key of Object.keys(snapshot.collections)) {
-          if (key.startsWith('whatsappTemplates_u:') && key !== userTplKey) {
-            delete snapshot.collections[key];
-          }
-        }
+        sanitizeUserCollections(snapshot.collections, user.id);
       }
       if (snapshot.objects) {
         delete snapshot.objects[PLATFORM_SUPER_USERS_OBJECT_KEY];
@@ -140,20 +139,7 @@ export default async function dbRoutes(
           );
         }
         if (payload.collections) {
-          // Remove other users' message keys to prevent tampering
-          const userMsgKey = `messages_u:${user.id}`;
-          for (const key of Object.keys(payload.collections)) {
-            if (key.startsWith('messages_u:') && key !== userMsgKey) {
-              delete payload.collections[key];
-            }
-          }
-          // Prevent tampering with other users' templates
-          const userTplKey = `whatsappTemplates_u:${user.id}`;
-          for (const key of Object.keys(payload.collections)) {
-            if (key.startsWith('whatsappTemplates_u:') && key !== userTplKey) {
-              delete payload.collections[key];
-            }
-          }
+          sanitizeUserCollections(payload.collections, user.id);
           const disallowedCollection = Object.keys(payload.collections).find((key) => !canWriteCollection(user, key));
           if (disallowedCollection) {
             return reply.status(403).send({

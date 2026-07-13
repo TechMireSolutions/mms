@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import {
   authenticatePlatform,
+  requireSuperUser,
   type PlatformAuthenticatedRequest,
 } from '../../middleware/authenticatePlatform.js';
 import {
@@ -21,29 +22,14 @@ export default async function platformWorkspaceRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticatePlatform);
+  fastify.addHook('preHandler', requireSuperUser);
 
   fastify.get('/', async (request, reply) => {
-    const { platformUser } = request as PlatformAuthenticatedRequest;
-    if (platformUser.role !== 'super_user') {
-      return reply.status(403).send({
-        type: 'forbidden',
-        message: 'Only platform super-users can view workspaces',
-      });
-    }
-
     const workspaces = await listPlatformWorkspaces();
     return reply.send({ workspaces });
   });
 
   fastify.patch('/:subdomain', async (request, reply) => {
-    const { platformUser } = request as PlatformAuthenticatedRequest;
-    if (platformUser.role !== 'super_user') {
-      return reply.status(403).send({
-        type: 'forbidden',
-        message: 'Only platform super-users can modify workspaces',
-      });
-    }
-
     const params = parseRequest(subdomainParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
     const body = parseRequest(workspaceEnabledPatchBodySchema, request.body);
@@ -60,13 +46,6 @@ export default async function platformWorkspaceRoutes(
 
   fastify.delete('/:subdomain', async (request, reply) => {
     const { platformUser } = request as PlatformAuthenticatedRequest;
-    if (platformUser.role !== 'super_user') {
-      return reply.status(403).send({
-        type: 'forbidden',
-        message: 'Only platform super-users can delete workspaces',
-      });
-    }
-
     const params = parseRequest(subdomainParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
     const body = parseRequest(workspaceDeleteBodySchema, request.body);

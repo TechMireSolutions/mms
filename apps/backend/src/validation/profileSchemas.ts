@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { phoneNumberSchema, emailAddressSchema } from '@mms/shared';
 
 export const changePasswordBodySchema = z.object({
   currentPassword: z.string().min(1),
@@ -25,19 +26,10 @@ export const ownContactPatchBodySchema = z.object({
   dob: z.string().optional(),
   city: z.string().optional(),
   avatar: z.string().optional(),
-  phones: z
-    .array(
-      z.object({
-        label: z.string().optional(),
-        number: z.string(),
-        countryCode: z.string().optional(),
-      }),
-    )
-    .optional(),
+  phones: z.array(phoneNumberSchema).optional(),
   emails: z
     .array(
-      z.object({
-        label: z.string().optional(),
+      emailAddressSchema.extend({
         address: z.string().email(),
       }),
     )

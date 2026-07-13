@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { AUDIT_LOG_COLLECTION, type AuditLogEntry } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { saveAuditLogEntry } from '../db/repositories/logsRepository.js';
+import { broadcastCollection } from './websocketService.js';
 
 export interface RecordAuditInput {
   userId: string;
@@ -10,15 +11,6 @@ export interface RecordAuditInput {
   entityType: 'collection' | 'object';
   entityId: string;
   summary?: string;
-}
-
-// --- Helper WebSocket broadcaster ---
-async function broadcast(logicalKey: string) {
-  const tenant = getRequestTenant();
-  if (tenant) {
-    const { broadcastTenantUpdate } = await import('./websocketService.js');
-    broadcastTenantUpdate(tenant, 'collection', logicalKey);
-  }
 }
 
 /**
@@ -42,7 +34,7 @@ export async function recordAudit(input: RecordAuditInput): Promise<void> {
     };
 
     await saveAuditLogEntry(tenant, entry);
-    await broadcast(AUDIT_LOG_COLLECTION);
+    await broadcastCollection(AUDIT_LOG_COLLECTION);
   } catch (error) {
     console.error('audit_log append failed:', error);
   }

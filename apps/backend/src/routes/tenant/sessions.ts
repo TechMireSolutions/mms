@@ -11,11 +11,10 @@ import {
 import type { User } from '@mms/shared';
 import { computeSessionsCommandMetrics, SESSIONS_MODULE_CONTRACT } from '@mms/shared';
 import { sendForbidden } from '../../lib/httpErrors.js';
-import { resourceIdParamsSchema, softDeleteBodySchema } from '../../validation/commonSchemas.js';
 import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
+import { registerResourceRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
 import { sessionRecordSchema, sessionsListQuerySchema } from '../../validation/sessionSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-
 
 const COLLECTION = 'sessions';
 
@@ -28,6 +27,7 @@ export default async function sessionsRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
+  // --- Custom GET ---
   fastify.get('/', async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, COLLECTION)) return sendForbidden(reply);
@@ -45,15 +45,14 @@ export default async function sessionsRoutes(
     }
   });
 
-  fastify.get('/metrics', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, COLLECTION)) return sendForbidden(reply);
-    try {
+  // --- Metrics ---
+  registerMetricsRoute(fastify, {
+    collection: COLLECTION,
+    loadMetricsFn: async () => {
       const sessions = await loadSessions();
-      return reply.send({ metrics: computeSessionsCommandMetrics(sessions) });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load session metrics' });
-    }
+      return computeSessionsCommandMetrics(sessions);
+    },
+    errorMessagePrefix: 'session',
   });
 
   registerColumnPreferencesRoutes(fastify, {
@@ -61,71 +60,17 @@ export default async function sessionsRoutes(
     objectKey: SESSIONS_MODULE_CONTRACT.columnPreferencesObjectKey,
   });
 
-  fastify.post('/', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(sessionRecordSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const session = await createSession(parsed.data);
-      return reply.status(201).send({ session });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to create session' });
-    }
-  });
-
-  fastify.put('/:id', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, COLLECTION)) return sendForbidden(reply);
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    const body = parseRequest(sessionRecordSchema, request.body);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    if (!body.ok) return replyValidationError(reply, body.message);
-    try {
-      const updated = await updateSessionById(params.data.id, {
-        ...body.data,
-        id: body.data.id ?? params.data.id,
-      });
-      if (!updated) {
-        return reply.status(404).send({ type: 'not_found', message: 'Session not found' });
-      }
-      return reply.send({ session: updated });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to update session' });
-    }
-  });
-
-  fastify.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, COLLECTION)) return sendForbidden(reply);
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    const body = parseRequest(softDeleteBodySchema, request.body ?? {});
-    if (!body.ok) return replyValidationError(reply, body.message);
-    try {
-      const deleted = await deleteSessionById(params.data.id, String(user.id), body.data.deletionReason);
-      if (!deleted) {
-        return reply.status(404).send({ type: 'not_found', message: 'Session not found' });
-      }
-      return reply.send({ success: true });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to delete session' });
-    }
-  });
-
-  fastify.post('/:id/restore', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, COLLECTION)) return sendForbidden(reply);
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    try {
-      const restored = await restoreSessionById(params.data.id);
-      if (!restored) {
-        return reply.status(404).send({ type: 'not_found', message: 'Session not found or not deleted' });
-      }
-      return reply.send({ success: true });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to restore session' });
-    }
+  // --- Resource CRUD ---
+  registerResourceRoutes(fastify, {
+    customGetRoute: true,
+    collection: COLLECTION,
+    schema: sessionRecordSchema,
+    loadAllFn: loadSessions,
+    createFn: createSession,
+    updateFn: updateSessionById,
+    deleteFn: deleteSessionById,
+    restoreFn: restoreSessionById,
+    nameSingular: 'session',
+    namePlural: 'sessions',
   });
 }

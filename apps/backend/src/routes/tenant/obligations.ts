@@ -1,13 +1,18 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { canReadCollection, canWriteCollection } from '../../services/rbacService.js';
-import type { User } from '@mms/shared';
-import { OBLIGATIONS_MODULE_CONTRACT } from '@mms/shared';
-import { sendForbidden } from '../../lib/httpErrors.js';
+import {
+  OBLIGATIONS_MODULE_CONTRACT,
+  obligationTypeListSchema,
+  mujtahidListSchema,
+  mujtahidRepListSchema,
+  wakalaTypeListSchema,
+  obligationDistributionListSchema,
+  obligationCollectionListSchema,
+  computeObligationsCommandMetrics,
+} from '@mms/shared';
 import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
-import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { registerBulkRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
 
-import { loadObligationsCommandMetrics } from '../../services/obligationsMetricsService.js';
 import {
   loadObligationTypes,
   replaceObligationTypes,
@@ -22,14 +27,6 @@ import {
   loadObligationCollections,
   replaceObligationCollections,
 } from '../../services/obligationService.js';
-import {
-  obligationTypeListSchema,
-  mujtahidListSchema,
-  mujtahidRepListSchema,
-  wakalaTypeListSchema,
-  obligationDistributionListSchema,
-  obligationCollectionListSchema,
-} from '../../validation/obligationSchemas.js';
 
 const OBLIGATIONS_COLLECTION = OBLIGATIONS_MODULE_CONTRACT.collectionKey;
 
@@ -43,157 +40,83 @@ export default async function obligationsRoutes(
   fastify.addHook('preHandler', authenticateTenant);
 
   // --- Obligation Types ---
-  fastify.get('/types', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, OBLIGATIONS_COLLECTION)) return sendForbidden(reply);
-    try {
-      return reply.send({ types: await loadObligationTypes() });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load obligation types' });
-    }
-  });
-
-  fastify.put('/types/bulk', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, OBLIGATIONS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(obligationTypeListSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const types = await replaceObligationTypes(parsed.data);
-      return reply.send({ types });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to update obligation types' });
-    }
+  registerBulkRoutes(fastify, {
+    path: '/types',
+    collection: OBLIGATIONS_COLLECTION,
+    schema: obligationTypeListSchema,
+    loadFn: loadObligationTypes,
+    saveFn: replaceObligationTypes,
+    responseKey: 'types',
+    errorMessagePrefix: 'obligation types',
   });
 
   // --- Mujtahids ---
-  fastify.get('/mujtahids', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, OBLIGATIONS_COLLECTION)) return sendForbidden(reply);
-    try {
-      return reply.send({ mujtahids: await loadMujtahids() });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load mujtahids' });
-    }
-  });
-
-  fastify.put('/mujtahids/bulk', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, OBLIGATIONS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(mujtahidListSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const mujtahids = await replaceMujtahids(parsed.data);
-      return reply.send({ mujtahids });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to update mujtahids' });
-    }
+  registerBulkRoutes(fastify, {
+    path: '/mujtahids',
+    collection: OBLIGATIONS_COLLECTION,
+    schema: mujtahidListSchema,
+    loadFn: loadMujtahids,
+    saveFn: replaceMujtahids,
+    responseKey: 'mujtahids',
+    errorMessagePrefix: 'mujtahids',
   });
 
   // --- Mujtahid Reps ---
-  fastify.get('/reps', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, OBLIGATIONS_COLLECTION)) return sendForbidden(reply);
-    try {
-      return reply.send({ reps: await loadMujtahidReps() });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load mujtahid reps' });
-    }
-  });
-
-  fastify.put('/reps/bulk', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, OBLIGATIONS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(mujtahidRepListSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const reps = await replaceMujtahidReps(parsed.data);
-      return reply.send({ reps });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to update mujtahid reps' });
-    }
+  registerBulkRoutes(fastify, {
+    path: '/reps',
+    collection: OBLIGATIONS_COLLECTION,
+    schema: mujtahidRepListSchema,
+    loadFn: loadMujtahidReps,
+    saveFn: replaceMujtahidReps,
+    responseKey: 'reps',
+    errorMessagePrefix: 'mujtahid reps',
   });
 
   // --- Wakala Types ---
-  fastify.get('/wakala', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, OBLIGATIONS_COLLECTION)) return sendForbidden(reply);
-    try {
-      return reply.send({ wakalaTypes: await loadWakalaTypes() });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load wakala types' });
-    }
-  });
-
-  fastify.put('/wakala/bulk', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, OBLIGATIONS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(wakalaTypeListSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const wakalaTypes = await replaceWakalaTypes(parsed.data);
-      return reply.send({ wakalaTypes });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to update wakala types' });
-    }
+  registerBulkRoutes(fastify, {
+    path: '/wakala',
+    collection: OBLIGATIONS_COLLECTION,
+    schema: wakalaTypeListSchema,
+    loadFn: loadWakalaTypes,
+    saveFn: replaceWakalaTypes,
+    responseKey: 'wakalaTypes',
+    errorMessagePrefix: 'wakala types',
   });
 
   // --- Obligation Distributions ---
-  fastify.get('/distributions', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, OBLIGATIONS_COLLECTION)) return sendForbidden(reply);
-    try {
-      return reply.send({ distributions: await loadObligationDistributions() });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load obligation distributions' });
-    }
-  });
-
-  fastify.put('/distributions/bulk', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, OBLIGATIONS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(obligationDistributionListSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const distributions = await replaceObligationDistributions(parsed.data);
-      return reply.send({ distributions });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to update obligation distributions' });
-    }
+  registerBulkRoutes(fastify, {
+    path: '/distributions',
+    collection: OBLIGATIONS_COLLECTION,
+    schema: obligationDistributionListSchema,
+    loadFn: loadObligationDistributions,
+    saveFn: replaceObligationDistributions,
+    responseKey: 'distributions',
+    errorMessagePrefix: 'obligation distributions',
   });
 
   // --- Obligation Collections ---
-  fastify.get('/collections', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, OBLIGATIONS_COLLECTION)) return sendForbidden(reply);
-    try {
-      return reply.send({ collections: await loadObligationCollections() });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load obligation collections' });
-    }
+  registerBulkRoutes(fastify, {
+    path: '/collections',
+    collection: OBLIGATIONS_COLLECTION,
+    schema: obligationCollectionListSchema,
+    loadFn: loadObligationCollections,
+    saveFn: replaceObligationCollections,
+    responseKey: 'collections',
+    errorMessagePrefix: 'obligation collections',
   });
 
-  fastify.put('/collections/bulk', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, OBLIGATIONS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(obligationCollectionListSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const collections = await replaceObligationCollections(parsed.data);
-      return reply.send({ collections });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to update obligation collections' });
-    }
-  });
-
-  fastify.get('/metrics', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, OBLIGATIONS_COLLECTION)) return sendForbidden(reply);
-    try {
-      return reply.send({ metrics: await loadObligationsCommandMetrics() });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load obligation metrics' });
-    }
+  // --- Metrics ---
+  registerMetricsRoute(fastify, {
+    collection: OBLIGATIONS_COLLECTION,
+    loadMetricsFn: async () => {
+      const collections = await loadObligationCollections();
+      const types = await loadObligationTypes();
+      return computeObligationsCommandMetrics(
+        collections as Array<{ amount?: number; payment_mode?: string; received_date?: string }>,
+        types.length,
+      );
+    },
+    errorMessagePrefix: 'obligation',
   });
 
   registerColumnPreferencesRoutes(fastify, {

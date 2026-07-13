@@ -34,12 +34,17 @@ const mockLoadStudentsPage = vi.fn();
 const mockDeleteStudentById = vi.fn();
 const mockRestoreStudentById = vi.fn();
 
-vi.mock('../services/studentService.js', () => ({
-  loadStudents: (...args: unknown[]) => mockLoadStudents(...args),
-  loadStudentsPage: (...args: unknown[]) => mockLoadStudentsPage(...args),
-  deleteStudentById: (...args: unknown[]) => mockDeleteStudentById(...args),
-  restoreStudentById: (...args: unknown[]) => mockRestoreStudentById(...args),
-}));
+vi.mock('../services/studentService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/studentService.js')>();
+  return {
+    ...actual,
+    loadStudents: (...args: unknown[]) => mockLoadStudents(...args),
+    loadStudentsPage: (...args: unknown[]) => mockLoadStudentsPage(...args),
+    deleteStudentById: (...args: unknown[]) => mockDeleteStudentById(...args),
+    restoreStudentById: (...args: unknown[]) => mockRestoreStudentById(...args),
+  };
+});
+
 
 function adminToken(app: Awaited<ReturnType<typeof buildApp>>): string {
   return app.jwt.sign({

@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Edit2, MessageCircle, MessageSquare, Phone, Mail,
   ExternalLink, Calendar, User, Clock, Tag,
   Send, LucideIcon,
-  LayoutDashboard, History, Users as UsersIcon, FileText, BrainCircuit, ShieldCheck, Search, Zap
+  LayoutDashboard, History, Users as UsersIcon, FileText, BrainCircuit, ShieldCheck, Search, Zap,
+  Loader2, Trash2
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Contact, ContactActivity, canViewContactField, CONTACTS_MODULE_CONTRACT } from "@mms/shared";
@@ -21,6 +22,9 @@ import { getCollection } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { Input } from "@/components/ui/input";
+import { uploadAttachmentFile } from "@/lib/attachmentUpload";
+import { notify } from "@/lib/notify";
+
 
 const ICON_MAP: Record<string, LucideIcon | typeof Tag> = {
   overview: LayoutDashboard,
@@ -104,6 +108,45 @@ export default function ContactDetailDrawer({
   const [c, setC] = useState<Contact>(initialContact);
   const [noteText, setNoteText] = useState<string>("");
   const [userMessages, setUserMessages] = useState<any[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFiles = async (filesList: FileList | null) => {
+    if (!filesList || filesList.length === 0) return;
+    setIsUploading(true);
+    try {
+      const newAttachments = [...(c.attachments || [])];
+      for (let i = 0; i < filesList.length; i++) {
+        const file = filesList[i];
+        const res = await uploadAttachmentFile(file);
+        newAttachments.push({
+          id: String(Date.now() + Math.random()),
+          name: res.name,
+          type: res.type,
+          size: res.size,
+          url: res.url,
+          date: new Date().toISOString(),
+        });
+      }
+      const updatedContact = {
+        ...c,
+        attachments: newAttachments,
+      };
+      setC(updatedContact);
+      onUpdateContact?.(updatedContact);
+      notify.success(t("contacts.detail.uploadSuccess"));
+    } catch (err) {
+      notify.error(t("contacts.detail.uploadFailed"));
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFiles(e.target.files);
+  };
+
 
   useEffect(() => {
     if (!user?.id) {
@@ -118,7 +161,7 @@ export default function ContactDetailDrawer({
     window.addEventListener("local-database-update", load);
     return () => window.removeEventListener("local-database-update", load);
   }, [user?.id]);
-  
+
   const detailTabs = useMemo(() => {
     const tabsFromConfig = fieldConfig.detailTabs || [];
     const sorted = [...tabsFromConfig]
@@ -313,7 +356,7 @@ export default function ContactDetailDrawer({
             >
               {activeTab === "overview" && (
                 <>
-                  
+
                   <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/30 border border-border/50">
                     <ContactAvatar contact={c} className="w-16 h-16 rounded-2xl text-2xl" />
                     <div className="flex-1 min-w-0">
@@ -330,7 +373,7 @@ export default function ContactDetailDrawer({
                     </div>
                   </div>
 
-                  
+
                   <div className="space-y-2">
                     <div className="flex items-center gap-1.5 text-primary">
                        <BrainCircuit className="w-3.5 h-3.5" />
@@ -341,7 +384,7 @@ export default function ContactDetailDrawer({
                     </div>
                   </div>
 
-                  
+
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {enabledTabIds.has("phones") && (
                       <Button
@@ -390,7 +433,7 @@ export default function ContactDetailDrawer({
                      )}
                   </div>
 
-                  
+
                   <div className="space-y-4">
                     {Object.entries(grouped).filter(([, fields]) => fields.some((field) => field.tab === "basic" || !["timeline", "network", "files"].includes(field.tab))).map(([group, fields]) => (
                       <div key={group} className="space-y-2">
@@ -416,7 +459,7 @@ export default function ContactDetailDrawer({
                       </div>
                     ))}
 
-                    
+
                     {enabledTabIds.has("phones") && visibleCollectionFields.phones.length > 0 && c.phones && c.phones.length > 0 && (
                       <div className="space-y-2">
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">
@@ -723,15 +766,53 @@ export default function ContactDetailDrawer({
 
               {activeTab === "files" && (
                 <div className="space-y-6">
-                   <div className="p-8 rounded-3xl border-2 border-dashed border-border flex flex-col items-center justify-center text-center gap-3 bg-muted/20">
+                   <div
+                     onDragOver={(e) => {
+                       e.preventDefault();
+                       setIsDragging(true);
+                     }}
+                     onDragLeave={() => setIsDragging(false)}
+                     onDrop={(e) => {
+                       e.preventDefault();
+                       setIsDragging(false);
+                       handleFiles(e.dataTransfer.files);
+                     }}
+                     className={`p-8 rounded-3xl border-2 border-dashed flex flex-col items-center justify-center text-center gap-3 transition-all ${
+                       isDragging
+                         ? "border-primary bg-primary/5 scale-[1.02]"
+                         : "border-border bg-muted/20"
+                     }`}
+                   >
                       <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                         <FileText className="w-6 h-6" />
+                         {isUploading ? (
+                           <Loader2 className="w-6 h-6 animate-spin" />
+                         ) : (
+                           <FileText className="w-6 h-6" />
+                         )}
                       </div>
                       <div>
-                         <h4 className="text-sm font-bold text-foreground">{t('contacts.detail.cloudStorageRepository')}</h4>
-                         <p className="text-xs text-muted-foreground mt-1 max-w-[180px]">{t('contacts.detail.dragDropDocuments')}</p>
+                         <h4 className="text-sm font-bold text-foreground">
+                           {isUploading ? t('contacts.detail.uploading') : t('contacts.detail.cloudStorageRepository')}
+                         </h4>
+                         <p className="text-xs text-muted-foreground mt-1 max-w-[180px]">
+                           {t('contacts.detail.dragDropDocuments')}
+                         </p>
                       </div>
-                      <Button className="mt-2 px-6 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:scale-105 active:scale-95 transition-all shadow-none" type="button">{t('contacts.detail.browseFiles')}</Button>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        multiple
+                        className="hidden"
+                      />
+                      <Button
+                        disabled={isUploading}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="mt-2 px-6 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:scale-105 active:scale-95 transition-all shadow-none"
+                        type="button"
+                      >
+                         {t('contacts.detail.browseFiles')}
+                      </Button>
                    </div>
 
                    <div className="space-y-3">
@@ -751,9 +832,29 @@ export default function ContactDetailDrawer({
                                      <p className="text-[9px] text-muted-foreground mt-1">{(file.size / 1024).toFixed(1)} {t('contacts.detail.kbLabel')} · {formatDate(file.date)}</p>
                                   </div>
                                </div>
-                               <a href={file.url} download={file.name} className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-all">
-                                  <ExternalLink className="w-4 h-4" />
-                                </a>
+                               <div className="flex items-center gap-1">
+                                 <a href={file.url} download={file.name} className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-all">
+                                    <ExternalLink className="w-4 h-4" />
+                                 </a>
+                                 {onUpdateContact && (
+                                   <Button
+                                     variant="ghost"
+                                     onClick={() => {
+                                       const updatedContact = {
+                                         ...c,
+                                         attachments: (c.attachments || []).filter((f) => f.id !== file.id)
+                                       };
+                                       setC(updatedContact);
+                                       onUpdateContact(updatedContact);
+                                       notify.success(t("contacts.detail.deleteSuccess"));
+                                     }}
+                                     className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all shadow-none"
+                                     type="button"
+                                   >
+                                     <Trash2 className="w-4 h-4" />
+                                   </Button>
+                                 )}
+                               </div>
                             </div>
                          ))
                       )}
@@ -761,7 +862,7 @@ export default function ContactDetailDrawer({
                 </div>
               )}
 
-              
+
               {!["overview", "timeline", "network", "files"].includes(activeTab) && (
                  <div className="space-y-4">
                     {Object.entries(grouped)

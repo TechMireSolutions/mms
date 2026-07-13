@@ -39,7 +39,10 @@ const mockBulkSoftDeleteContacts = vi.fn();
 const mockBulkRestoreContacts = vi.fn();
 const mockGetUserColumnPreferences = vi.fn();
 const mockSetUserColumnPreferences = vi.fn();
+const mockGetUserColumnPreferencesForModule = vi.fn();
+const mockSetUserColumnPreferencesForModule = vi.fn();
 const mockListContactsSavedReports = vi.fn();
+
 const mockCreateContactsSavedReport = vi.fn();
 const mockDeleteContactsSavedReport = vi.fn();
 const mockTouchContactsSavedReportRun = vi.fn();
@@ -56,7 +59,15 @@ vi.mock('../services/contactService.js', () => ({
   restoreContactById: (...args: unknown[]) => mockRestoreContactById(...args),
   bulkSoftDeleteContacts: (...args: unknown[]) => mockBulkSoftDeleteContacts(...args),
   bulkRestoreContacts: (...args: unknown[]) => mockBulkRestoreContacts(...args),
+  loadContactsCommandMetrics: vi.fn(),
+  loadContactsReportAnalytics: vi.fn(),
+  loadContactsWidgetAggregates: vi.fn(),
+  loadContactsByIds: vi.fn(),
+  loadContactFieldUsageCount: vi.fn(),
+  loadContactDuplicatePairsPage: vi.fn(),
+  prepareContactRecord: vi.fn(),
 }));
+
 
 vi.mock('../services/contactPreferencesService.js', () => ({
   getUserColumnPreferences: (...args: unknown[]) => mockGetUserColumnPreferences(...args),
@@ -66,6 +77,12 @@ vi.mock('../services/contactPreferencesService.js', () => ({
   deleteContactsSavedReport: (...args: unknown[]) => mockDeleteContactsSavedReport(...args),
   touchContactsSavedReportRun: (...args: unknown[]) => mockTouchContactsSavedReportRun(...args),
 }));
+
+vi.mock('../services/userColumnPreferencesService.js', () => ({
+  getUserColumnPreferencesForModule: (...args: unknown[]) => mockGetUserColumnPreferencesForModule(...args),
+  setUserColumnPreferencesForModule: (...args: unknown[]) => mockSetUserColumnPreferencesForModule(...args),
+}));
+
 
 vi.mock('../services/contactConfigService.js', () => ({
   loadContactFieldConfig: vi.fn().mockResolvedValue(null),
@@ -88,6 +105,8 @@ vi.mock('../services/backgroundJobWorkerService.js', async (importOriginal) => {
 });
 
 import { buildApp } from '../app.js';
+import { CONTACTS_MODULE_CONTRACT } from '@mms/shared';
+
 
 const sampleContact = {
   id: 'c1',
@@ -604,7 +623,7 @@ describe('contacts REST routes', () => {
   });
 
   it('GET /api/contacts/column-preferences returns user layout', async () => {
-    mockGetUserColumnPreferences.mockResolvedValue([{ key: 'name', enabled: true, order: 0 }]);
+    mockGetUserColumnPreferencesForModule.mockResolvedValue([{ key: 'name', enabled: true, order: 0 }]);
     const app = await buildApp();
     const res = await app.inject({
       method: 'GET',
@@ -616,7 +635,10 @@ describe('contacts REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ preferences: [{ key: 'name', enabled: true, order: 0 }] });
-    expect(mockGetUserColumnPreferences).toHaveBeenCalledWith('u-teacher');
+    expect(mockGetUserColumnPreferencesForModule).toHaveBeenCalledWith(
+      CONTACTS_MODULE_CONTRACT.columnPreferencesObjectKey,
+      'u-teacher',
+    );
     await app.close();
   });
 
@@ -634,9 +656,14 @@ describe('contacts REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true, preferences });
-    expect(mockSetUserColumnPreferences).toHaveBeenCalledWith('u-teacher', preferences);
+    expect(mockSetUserColumnPreferencesForModule).toHaveBeenCalledWith(
+      CONTACTS_MODULE_CONTRACT.columnPreferencesObjectKey,
+      'u-teacher',
+      preferences,
+    );
     await app.close();
   });
+
 
   it('POST /api/contacts/saved-reports creates preset', async () => {
     const app = await buildApp();

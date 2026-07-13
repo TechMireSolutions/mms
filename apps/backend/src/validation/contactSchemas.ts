@@ -1,111 +1,37 @@
 import { z } from 'zod';
+import { baseListQuerySchema, softDeleteBodySchema } from './commonSchemas.js';
+import {
+  phoneNumberSchema,
+  emailAddressSchema,
+  addressSchema,
+  socialLinkSchema,
+  emergencyContactSchema,
+  relationshipSchema,
+  activitySchema,
+  attachmentSchema,
+  contactRecordSchema,
+  contactListSchema,
+} from '@mms/shared';
 
-const phoneNumberSchema = z
-  .object({
-    label: z.string().optional(),
-    number: z.string(),
-    countryCode: z.string().optional(),
-  })
-  .passthrough();
-
-const emailAddressSchema = z
-  .object({
-    label: z.string().optional(),
-    address: z.string(),
-  })
-  .passthrough();
-
-const addressSchema = z
-  .object({
-    label: z.string().optional(),
-    line1: z.string().optional(),
-    city: z.string().optional(),
-    state: z.string().optional(),
-    country: z.string().optional(),
-  })
-  .passthrough();
-
-const socialLinkSchema = z
-  .object({
-    platform: z.string(),
-    url: z.string(),
-  })
-  .passthrough();
-
-const emergencyContactSchema = z
-  .object({
-    name: z.string().optional(),
-    relationship: z.string().optional(),
-    phone: z.string().optional(),
-    contactId: z.union([z.string(), z.number()]).optional(),
-  })
-  .passthrough();
-
-const relationshipSchema = z.object({
-  contactId: z.union([z.string(), z.number()]),
-  relationship: z.string().optional(),
-});
-
-const activitySchema = z
-  .object({
-    id: z.string(),
-    type: z.enum(['note', 'stage_change', 'whatsapp', 'email', 'system', 'task', 'call']),
-    content: z.string(),
-    date: z.string(),
-    by: z.string().optional(),
-  })
-  .passthrough();
-
-const attachmentSchema = z
-  .object({
-    id: z.string(),
-    name: z.string(),
-    type: z.string(),
-    size: z.number(),
-    url: z.string(),
-    date: z.string(),
-  })
-  .passthrough();
-
-export const contactRecordSchema = z
-  .object({
-    id: z.union([z.string(), z.number()]).optional(),
-    firstName: z.string().min(1),
-    lastName: z.string().optional(),
-    name: z.string().optional(),
-    gender: z.string().optional(),
-    dob: z.string().optional(),
-    cnic: z.string().optional(),
-    isSyed: z.boolean().optional(),
-    avatar: z.union([z.string(), z.null()]).optional(),
-    createdAt: z.string().optional(),
-    updatedAt: z.string().optional(),
-    deletedAt: z.string().optional(),
-    deletedBy: z.string().optional(),
-    deletionReason: z.string().optional(),
-    whatsappStatus: z.enum(['PENDING', 'REGISTERED', 'NOT_REGISTERED', 'FAILED']).optional(),
-    lastCheckedAt: z.string().nullable().optional(),
-    phones: z.array(phoneNumberSchema).optional(),
-    emails: z.array(emailAddressSchema).optional(),
-    addresses: z.array(addressSchema).optional(),
-    socials: z.array(socialLinkSchema).optional(),
-    emergencyContacts: z.array(emergencyContactSchema).optional(),
-    relationships: z.array(relationshipSchema).optional(),
-    activities: z.array(activitySchema).optional(),
-    attachments: z.array(attachmentSchema).optional(),
-  })
-  .passthrough();
-
-export const contactListSchema = z.array(contactRecordSchema);
+export {
+  phoneNumberSchema,
+  emailAddressSchema,
+  addressSchema,
+  socialLinkSchema,
+  emergencyContactSchema,
+  relationshipSchema,
+  activitySchema,
+  attachmentSchema,
+  contactRecordSchema,
+  contactListSchema,
+};
 
 export const contactBulkDeleteSchema = z.object({
   ids: z.array(z.union([z.string(), z.number()])).min(1),
   deletionReason: z.string().max(500).optional(),
 });
 
-export const contactDeleteBodySchema = z.object({
-  deletionReason: z.string().max(500).optional(),
-});
+export const contactDeleteBodySchema = softDeleteBodySchema;
 
 export const contactExportAuditSchema = z.object({
   count: z.number().int().min(0).max(1_000_000),
@@ -116,16 +42,6 @@ export const contactMergeAuditSchema = z.object({
   keepId: z.union([z.string(), z.number()]),
   deleteId: z.union([z.string(), z.number()]),
   mergedName: z.string().optional(),
-});
-
-export const contactColumnPreferenceSchema = z.object({
-  key: z.string().min(1),
-  enabled: z.boolean(),
-  order: z.number().int().min(0),
-});
-
-export const contactColumnPreferencesBodySchema = z.object({
-  preferences: z.array(contactColumnPreferenceSchema),
 });
 
 export const contactsWorkDrillDownSchema = z.object({
@@ -166,14 +82,8 @@ export const contactsDuplicatesQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).optional(),
 });
 
-export const contactsListQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).optional(),
-  limit: z.coerce.number().int().min(1).max(500).optional(),
-  search: z.string().max(500).optional(),
+export const contactsListQuerySchema = baseListQuerySchema.extend({
   gender: z.string().optional(),
-  includeDeleted: z.enum(['true', 'false']).optional(),
-  sortField: z.string().optional(),
-  sortDir: z.enum(['asc', 'desc']).optional(),
   hasPhone: z.enum(['true', 'false']).optional(),
 });
 
@@ -210,24 +120,6 @@ export const contactsReportAnalyticsQuerySchema = z.object({
 
 export const contactFieldUsageParamsSchema = z.object({
   fieldKey: z.string().min(1).max(128),
-});
-
-const contactsWidgetQuerySchema = z.object({
-  id: z.string().min(1).max(128),
-  operation: z.enum(['count', 'sum', 'avg', 'percentage']),
-  targetField: z.string().max(128).optional(),
-  filterField: z.string().max(128).optional(),
-  filterOperator: z.enum(['equals', 'contains', 'gt', 'lt']).optional(),
-  filterValue: z.string().max(256).optional(),
-  xAxisField: z.string().max(128).optional(),
-});
-
-export const contactsWidgetAggregatesBodySchema = z.object({
-  widgets: z.array(contactsWidgetQuerySchema).max(32),
-});
-
-export const contactsResolveBodySchema = z.object({
-  ids: z.array(z.string().min(1).max(64)).max(100),
 });
 
 export const contactDuplicateCheckBodySchema = z.object({

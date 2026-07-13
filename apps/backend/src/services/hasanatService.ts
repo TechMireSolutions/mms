@@ -8,7 +8,6 @@ import {
   distributionListSchema,
   redemptionListSchema,
 } from '@mms/shared';
-import { getRequestTenant } from '../lib/tenantContext.js';
 import {
   listDenomsByWorkspace,
   replaceDenomsForWorkspace,
@@ -19,76 +18,36 @@ import {
   listRedemptionsByWorkspace,
   replaceRedemptionsForWorkspace,
 } from '../db/repositories/hasanatRepository.js';
+import { defineTenantBulkCollectionService } from './tenantBulkService.js';
 
-// --- Helper WebSocket broadcaster ---
-async function broadcast(logicalKey: string) {
-  const tenant = getRequestTenant();
-  if (tenant) {
-    const { broadcastTenantUpdate } = await import('./websocketService.js');
-    broadcastTenantUpdate(tenant, 'collection', logicalKey);
-  }
-}
+const denomService = defineTenantBulkCollectionService<Denomination>(
+  { listByWorkspace: listDenomsByWorkspace, replaceForWorkspace: replaceDenomsForWorkspace },
+  denomListSchema,
+  'hasanat_denoms',
+);
+export const loadDenoms = denomService.load;
+export const replaceDenoms = denomService.replace;
 
-// --- Denominations ---
-export async function loadDenoms(): Promise<Denomination[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) return [];
-  return listDenomsByWorkspace(tenant);
-}
+const batchService = defineTenantBulkCollectionService<StockBatch>(
+  { listByWorkspace: listBatchesByWorkspace, replaceForWorkspace: replaceBatchesForWorkspace },
+  batchListSchema,
+  'hasanat_batches',
+);
+export const loadBatches = batchService.load;
+export const replaceBatches = batchService.replace;
 
-export async function replaceDenoms(records: Denomination[]): Promise<Denomination[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  const parsed = denomListSchema.parse(records);
-  await replaceDenomsForWorkspace(tenant, parsed);
-  await broadcast('hasanat_denoms');
-  return parsed;
-}
+const distributionService = defineTenantBulkCollectionService<Distribution>(
+  { listByWorkspace: listDistributionsByWorkspace, replaceForWorkspace: replaceDistributionsForWorkspace },
+  distributionListSchema,
+  'hasanat_distributions',
+);
+export const loadDistributions = distributionService.load;
+export const replaceDistributions = distributionService.replace;
 
-// --- Batches ---
-export async function loadBatches(): Promise<StockBatch[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) return [];
-  return listBatchesByWorkspace(tenant);
-}
-
-export async function replaceBatches(records: StockBatch[]): Promise<StockBatch[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  const parsed = batchListSchema.parse(records);
-  await replaceBatchesForWorkspace(tenant, parsed);
-  await broadcast('hasanat_batches');
-  return parsed;
-}
-
-// --- Distributions ---
-export async function loadDistributions(): Promise<Distribution[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) return [];
-  return listDistributionsByWorkspace(tenant);
-}
-
-export async function replaceDistributions(records: Distribution[]): Promise<Distribution[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  const parsed = distributionListSchema.parse(records);
-  await replaceDistributionsForWorkspace(tenant, parsed);
-  await broadcast('hasanat_distributions');
-  return parsed;
-}
-
-// --- Redemptions ---
-export async function loadRedemptions(): Promise<Redemption[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) return [];
-  return listRedemptionsByWorkspace(tenant);
-}
-
-export async function replaceRedemptions(records: Redemption[]): Promise<Redemption[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  const parsed = redemptionListSchema.parse(records);
-  await replaceRedemptionsForWorkspace(tenant, parsed);
-  await broadcast('hasanat_redemptions');
-  return parsed;
-}
+const redemptionService = defineTenantBulkCollectionService<Redemption>(
+  { listByWorkspace: listRedemptionsByWorkspace, replaceForWorkspace: replaceRedemptionsForWorkspace },
+  redemptionListSchema,
+  'hasanat_redemptions',
+);
+export const loadRedemptions = redemptionService.load;
+export const replaceRedemptions = redemptionService.replace;

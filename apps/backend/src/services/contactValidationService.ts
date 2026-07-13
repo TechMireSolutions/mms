@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import {
   buildDynamicContactSchema,
+  verifyBlueprintVersion,
 } from '@mms/shared';
 import { loadContactFieldConfig } from './contactConfigService.js';
 
@@ -40,11 +41,7 @@ export async function validateContactDynamic(
   if (contact && typeof contact === 'object' && !Array.isArray(contact)) {
     submittedBlueprintId = (contact as Record<string, unknown>)._blueprintId;
   }
-  if (submittedBlueprintId !== undefined && submittedBlueprintId !== null) {
-    if (String(submittedBlueprintId) !== String(fieldConfig.version)) {
-      throw new Error(`Blueprint version mismatch. Expected version ${fieldConfig.version}, got ${submittedBlueprintId}. Please reload the form.`);
-    }
-  }
+  verifyBlueprintVersion(submittedBlueprintId, fieldConfig.version);
 
   const cacheKey = getBlueprintCacheKey(tenant, fieldConfig, viewerRole);
   let schema = schemaCache.get(cacheKey);
@@ -65,17 +62,6 @@ export async function validateContactDynamic(
     schemaCache.set(cacheKey, schema);
   }
 
-  if (Array.isArray(contact)) {
-    for (const item of contact) {
-      const parsed = schema.safeParse(item);
-      if (!parsed.success) {
-        throw new Error(parsed.error.issues.map((issue) => issue.message).join('; '));
-      }
-    }
-  } else {
-    const parsed = schema.safeParse(contact);
-    if (!parsed.success) {
-      throw new Error(parsed.error.issues.map((issue) => issue.message).join('; '));
-    }
-  }
+  const { validateOrThrow } = await import('../lib/zodRequest.js');
+  validateOrThrow(schema, contact);
 }

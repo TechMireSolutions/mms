@@ -1,10 +1,5 @@
 import { z } from 'zod';
 
-export const loginBodySchema = z.object({
-  email: z.string().min(3),
-  password: z.string().min(6),
-});
-
 export const onboardBodySchema = z.object({
   madrasaName: z.string().min(1),
   adminName: z.string().min(1),

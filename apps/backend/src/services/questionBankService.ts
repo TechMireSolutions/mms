@@ -6,7 +6,6 @@ import {
   questionBankTestListSchema,
   questionBankResultListSchema,
 } from '@mms/shared';
-import { getRequestTenant } from '../lib/tenantContext.js';
 import {
   listQuestionsByWorkspace,
   replaceQuestionsForWorkspace,
@@ -15,60 +14,28 @@ import {
   listResultsByWorkspace,
   replaceResultsForWorkspace,
 } from '../db/repositories/questionBankRepository.js';
+import { defineTenantBulkCollectionService } from './tenantBulkService.js';
 
-// --- Helper WebSocket broadcaster ---
-async function broadcast(logicalKey: string) {
-  const tenant = getRequestTenant();
-  if (tenant) {
-    const { broadcastTenantUpdate } = await import('./websocketService.js');
-    broadcastTenantUpdate(tenant, 'collection', logicalKey);
-  }
-}
+const questionService = defineTenantBulkCollectionService<QuestionBankQuestion>(
+  { listByWorkspace: listQuestionsByWorkspace, replaceForWorkspace: replaceQuestionsForWorkspace },
+  questionBankQuestionListSchema,
+  'questions',
+);
+export const loadQuestions = questionService.load;
+export const replaceQuestions = questionService.replace;
 
-// --- Questions ---
-export async function loadQuestions(): Promise<QuestionBankQuestion[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) return [];
-  return listQuestionsByWorkspace(tenant);
-}
+const testService = defineTenantBulkCollectionService<QuestionBankTest>(
+  { listByWorkspace: listTestsByWorkspace, replaceForWorkspace: replaceTestsForWorkspace },
+  questionBankTestListSchema,
+  'tests',
+);
+export const loadTests = testService.load;
+export const replaceTests = testService.replace;
 
-export async function replaceQuestions(records: QuestionBankQuestion[]): Promise<QuestionBankQuestion[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  const parsed = questionBankQuestionListSchema.parse(records);
-  await replaceQuestionsForWorkspace(tenant, parsed);
-  await broadcast('questions');
-  return parsed;
-}
-
-// --- Tests ---
-export async function loadTests(): Promise<QuestionBankTest[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) return [];
-  return listTestsByWorkspace(tenant);
-}
-
-export async function replaceTests(records: QuestionBankTest[]): Promise<QuestionBankTest[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  const parsed = questionBankTestListSchema.parse(records);
-  await replaceTestsForWorkspace(tenant, parsed);
-  await broadcast('tests');
-  return parsed;
-}
-
-// --- Assessment Results ---
-export async function loadResults(): Promise<QuestionBankResult[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) return [];
-  return listResultsByWorkspace(tenant);
-}
-
-export async function replaceResults(records: QuestionBankResult[]): Promise<QuestionBankResult[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  const parsed = questionBankResultListSchema.parse(records);
-  await replaceResultsForWorkspace(tenant, parsed);
-  await broadcast('assessment_results');
-  return parsed;
-}
+const resultService = defineTenantBulkCollectionService<QuestionBankResult>(
+  { listByWorkspace: listResultsByWorkspace, replaceForWorkspace: replaceResultsForWorkspace },
+  questionBankResultListSchema,
+  'assessment_results',
+);
+export const loadResults = resultService.load;
+export const replaceResults = resultService.replace;

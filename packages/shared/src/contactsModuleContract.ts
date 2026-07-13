@@ -1,4 +1,104 @@
 import type { Permission } from './permissions.js';
+import { z } from 'zod';
+
+export const phoneNumberSchema = z
+  .object({
+    label: z.string().optional(),
+    number: z.string(),
+    countryCode: z.string().optional(),
+  })
+  .passthrough();
+
+export const emailAddressSchema = z
+  .object({
+    label: z.string().optional(),
+    address: z.string(),
+  })
+  .passthrough();
+
+export const addressSchema = z
+  .object({
+    label: z.string().optional(),
+    line1: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    country: z.string().optional(),
+  })
+  .passthrough();
+
+export const socialLinkSchema = z
+  .object({
+    platform: z.string(),
+    url: z.string(),
+  })
+  .passthrough();
+
+export const emergencyContactSchema = z
+  .object({
+    name: z.string().optional(),
+    relationship: z.string().optional(),
+    phone: z.string().optional(),
+    contactId: z.union([z.string(), z.number()]).optional(),
+  })
+  .passthrough();
+
+export const relationshipSchema = z.object({
+  contactId: z.union([z.string(), z.number()]),
+  relationship: z.string().optional(),
+});
+
+export const activitySchema = z
+  .object({
+    id: z.string(),
+    type: z.enum(['note', 'stage_change', 'whatsapp', 'email', 'system', 'task', 'call']),
+    content: z.string(),
+    date: z.string(),
+    by: z.string().optional(),
+  })
+  .passthrough();
+
+export const attachmentSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    type: z.string(),
+    size: z.number(),
+    url: z.string(),
+    date: z.string(),
+  })
+  .passthrough();
+
+export const contactRecordSchema = z
+  .object({
+    id: z.union([z.string(), z.number()]).optional(),
+    firstName: z.string().min(1),
+    lastName: z.string().optional(),
+    name: z.string().optional(),
+    gender: z.string().optional(),
+    dob: z.string().optional(),
+    cnic: z.string().optional(),
+    isSyed: z.boolean().optional(),
+    avatar: z.union([z.string(), z.null()]).optional(),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+    deletedAt: z.string().optional(),
+    deletedBy: z.string().optional(),
+    deletionReason: z.string().optional(),
+    whatsappStatus: z.enum(['PENDING', 'REGISTERED', 'NOT_REGISTERED', 'FAILED']).optional(),
+    lastCheckedAt: z.string().nullable().optional(),
+    phones: z.array(phoneNumberSchema).optional(),
+    emails: z.array(emailAddressSchema).optional(),
+    addresses: z.array(addressSchema).optional(),
+    socials: z.array(socialLinkSchema).optional(),
+    emergencyContacts: z.array(emergencyContactSchema).optional(),
+    relationships: z.array(relationshipSchema).optional(),
+    activities: z.array(activitySchema).optional(),
+    attachments: z.array(attachmentSchema).optional(),
+  })
+  .passthrough();
+
+export const contactListSchema = z.array(contactRecordSchema);
+
 
 /**
  * Contacts module contract — single source of truth per globle1.md §1.1.

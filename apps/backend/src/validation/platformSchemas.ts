@@ -1,11 +1,6 @@
 import { z } from 'zod';
 import { PLATFORM_MIN_PASSWORD_LENGTH } from '@mms/shared';
 
-export const platformLoginBodySchema = z.object({
-  email: z.string().min(3),
-  password: z.string().min(6),
-});
-
 export const platformSetupRegisterBodySchema = z.object({
   name: z.string().min(2),
   email: z.string().min(3),

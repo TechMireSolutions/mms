@@ -52,7 +52,6 @@ import { runMigration030 } from './migrations/030_migrate_hasanat_to_tables.js';
 import { runMigration031 } from './migrations/031_migrate_accounting_to_tables.js';
 import { runMigration032 } from './migrations/032_migrate_question_bank_to_tables.js';
 import { runMigration033 } from './migrations/033_migrate_logs_to_tables.js';
-import { type TenantUserRow } from './repositories/tenantUserRepository.js';
 import { deleteAuthArtifactsForWorkspace, purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
 import { setDb } from './dbClient.js';
@@ -241,94 +240,49 @@ export async function saveCollection(name: string, data: unknown[]): Promise<voi
       });
 
     const parsed = parseTenantScopedStorageKey(storageName);
-    if (parsed && parsed.logicalKey === 'users') {
-      const { replaceTenantUsersForWorkspace } = await import('./repositories/tenantUserRepository.js');
-      await replaceTenantUsersForWorkspace(parsed.subdomain, processedData as TenantUserRow[]);
-    } else if (parsed && parsed.logicalKey === 'contacts') {
-      const { replaceContactsForWorkspace } = await import('./repositories/contactRepository.js');
-      await replaceContactsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Contact[]);
-    } else if (parsed && parsed.logicalKey === 'students') {
-      const { replaceStudentsForWorkspace } = await import('./repositories/studentRepository.js');
-      await replaceStudentsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Student[]);
-    } else if (parsed && parsed.logicalKey === 'teachers') {
-      const { replaceTeachersForWorkspace } = await import('./repositories/teacherRepository.js');
-      await replaceTeachersForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Teacher[]);
-    } else if (parsed && parsed.logicalKey === 'sessions') {
-      const { replaceSessionsForWorkspace } = await import('./repositories/sessionRepository.js');
-      await replaceSessionsForWorkspace(parsed.subdomain, processedData as import('../validation/sessionSchemas.js').SessionRecord[]);
-    } else if (parsed && parsed.logicalKey === 'attendance_records') {
-      const { replaceAttendanceRecordsForWorkspace } = await import('./repositories/attendanceRepository.js');
-      await replaceAttendanceRecordsForWorkspace(parsed.subdomain, processedData as import('../validation/attendanceSchemas.js').AttendanceRecord[]);
-    } else if (parsed && parsed.logicalKey === 'enrollments') {
-      const { replaceEnrollmentsForWorkspace } = await import('./repositories/enrollmentRepository.js');
-      await replaceEnrollmentsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Enrollment[]);
-    } else if (parsed && parsed.logicalKey === 'obligation_types') {
-      const { replaceObligationTypesForWorkspace } = await import('./repositories/obligationRepository.js');
-      await replaceObligationTypesForWorkspace(parsed.subdomain, processedData as import('@mms/shared').ObligationType[]);
-    } else if (parsed && parsed.logicalKey === 'mujtahids') {
-      const { replaceMujtahidsForWorkspace } = await import('./repositories/obligationRepository.js');
-      await replaceMujtahidsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Mujtahid[]);
-    } else if (parsed && parsed.logicalKey === 'mujtahid_reps') {
-      const { replaceMujtahidRepsForWorkspace } = await import('./repositories/obligationRepository.js');
-      await replaceMujtahidRepsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').MujtahidRep[]);
-    } else if (parsed && parsed.logicalKey === 'wakala_types') {
-      const { replaceWakalaTypesForWorkspace } = await import('./repositories/obligationRepository.js');
-      await replaceWakalaTypesForWorkspace(parsed.subdomain, processedData as import('@mms/shared').WakalaType[]);
-    } else if (parsed && parsed.logicalKey === 'obligation_distributions') {
-      const { replaceObligationDistributionsForWorkspace } = await import('./repositories/obligationRepository.js');
-      await replaceObligationDistributionsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').ObligationDistribution[]);
-    } else if (parsed && parsed.logicalKey === 'obligation_collections') {
-      const { replaceObligationCollectionsForWorkspace } = await import('./repositories/obligationRepository.js');
-      await replaceObligationCollectionsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').ObligationCollection[]);
-    } else if (parsed && parsed.logicalKey === 'finance_invoices') {
-      const { replaceInvoicesForWorkspace } = await import('./repositories/financeRepository.js');
-      await replaceInvoicesForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Invoice[]);
-    } else if (parsed && parsed.logicalKey === 'finance_payments') {
-      const { replacePaymentsForWorkspace } = await import('./repositories/financeRepository.js');
-      await replacePaymentsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Payment[]);
-    } else if (parsed && parsed.logicalKey === 'exams') {
-      const { replaceExamsForWorkspace } = await import('./repositories/examinationRepository.js');
-      await replaceExamsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Exam[]);
-    } else if (parsed && parsed.logicalKey === 'exam_results') {
-      const { replaceExamResultsForWorkspace } = await import('./repositories/examinationRepository.js');
-      await replaceExamResultsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').ExamResult[]);
-    } else if (parsed && parsed.logicalKey === 'hasanat_denoms') {
-      const { replaceDenomsForWorkspace } = await import('./repositories/hasanatRepository.js');
-      await replaceDenomsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Denomination[]);
-    } else if (parsed && parsed.logicalKey === 'hasanat_batches') {
-      const { replaceBatchesForWorkspace } = await import('./repositories/hasanatRepository.js');
-      await replaceBatchesForWorkspace(parsed.subdomain, processedData as import('@mms/shared').StockBatch[]);
-    } else if (parsed && parsed.logicalKey === 'hasanat_distributions') {
-      const { replaceDistributionsForWorkspace } = await import('./repositories/hasanatRepository.js');
-      await replaceDistributionsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Distribution[]);
-    } else if (parsed && parsed.logicalKey === 'hasanat_redemptions') {
-      const { replaceRedemptionsForWorkspace } = await import('./repositories/hasanatRepository.js');
-      await replaceRedemptionsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Redemption[]);
-    } else if (parsed && parsed.logicalKey === 'accounting_accounts') {
-      const { replaceAccountsForWorkspace } = await import('./repositories/accountingRepository.js');
-      await replaceAccountsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').Account[]);
-    } else if (parsed && parsed.logicalKey === 'accounting_entries') {
-      const { replaceEntriesForWorkspace } = await import('./repositories/accountingRepository.js');
-      await replaceEntriesForWorkspace(parsed.subdomain, processedData as import('@mms/shared').JournalEntry[]);
-    } else if (parsed && parsed.logicalKey === 'accounting_fiscal_years') {
-      const { replaceFiscalYearsForWorkspace } = await import('./repositories/accountingRepository.js');
-      await replaceFiscalYearsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').FiscalYear[]);
-    } else if (parsed && parsed.logicalKey === 'questions') {
-      const { replaceQuestionsForWorkspace } = await import('./repositories/questionBankRepository.js');
-      await replaceQuestionsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').QuestionBankQuestion[]);
-    } else if (parsed && parsed.logicalKey === 'tests') {
-      const { replaceTestsForWorkspace } = await import('./repositories/questionBankRepository.js');
-      await replaceTestsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').QuestionBankTest[]);
-    } else if (parsed && parsed.logicalKey === 'assessment_results') {
-      const { replaceResultsForWorkspace } = await import('./repositories/questionBankRepository.js');
-      await replaceResultsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').QuestionBankResult[]);
-    } else if (parsed && parsed.logicalKey === 'user_activity_logs') {
-      const { replaceActivityLogsForWorkspace } = await import('./repositories/logsRepository.js');
-      await replaceActivityLogsForWorkspace(parsed.subdomain, processedData as import('@mms/shared').ActivityLog[]);
-    } else if (parsed && parsed.logicalKey === 'audit_log') {
-      const { replaceAuditLogEntriesForWorkspace } = await import('./repositories/logsRepository.js');
-      await replaceAuditLogEntriesForWorkspace(parsed.subdomain, processedData as import('@mms/shared').AuditLogEntry[]);
+    if (parsed) {
+      const REPO_MAPPING: Record<string, { importPath: string; fnName: string }> = {
+        users: { importPath: './repositories/tenantUserRepository.js', fnName: 'replaceTenantUsersForWorkspace' },
+        contacts: { importPath: './repositories/contactRepository.js', fnName: 'replaceContactsForWorkspace' },
+        students: { importPath: './repositories/studentRepository.js', fnName: 'replaceStudentsForWorkspace' },
+        teachers: { importPath: './repositories/teacherRepository.js', fnName: 'replaceTeachersForWorkspace' },
+        sessions: { importPath: './repositories/sessionRepository.js', fnName: 'replaceSessionsForWorkspace' },
+        attendance_records: { importPath: './repositories/attendanceRepository.js', fnName: 'replaceAttendanceRecordsForWorkspace' },
+        enrollments: { importPath: './repositories/enrollmentRepository.js', fnName: 'replaceEnrollmentsForWorkspace' },
+        obligation_types: { importPath: './repositories/obligationRepository.js', fnName: 'replaceObligationTypesForWorkspace' },
+        mujtahids: { importPath: './repositories/obligationRepository.js', fnName: 'replaceMujtahidsForWorkspace' },
+        mujtahid_reps: { importPath: './repositories/obligationRepository.js', fnName: 'replaceMujtahidRepsForWorkspace' },
+        wakala_types: { importPath: './repositories/obligationRepository.js', fnName: 'replaceWakalaTypesForWorkspace' },
+        obligation_distributions: { importPath: './repositories/obligationRepository.js', fnName: 'replaceObligationDistributionsForWorkspace' },
+        obligation_collections: { importPath: './repositories/obligationRepository.js', fnName: 'replaceObligationCollectionsForWorkspace' },
+        finance_invoices: { importPath: './repositories/financeRepository.js', fnName: 'replaceInvoicesForWorkspace' },
+        finance_payments: { importPath: './repositories/financeRepository.js', fnName: 'replacePaymentsForWorkspace' },
+        exams: { importPath: './repositories/examinationRepository.js', fnName: 'replaceExamsForWorkspace' },
+        exam_results: { importPath: './repositories/examinationRepository.js', fnName: 'replaceExamResultsForWorkspace' },
+        hasanat_denoms: { importPath: './repositories/hasanatRepository.js', fnName: 'replaceDenomsForWorkspace' },
+        hasanat_batches: { importPath: './repositories/hasanatRepository.js', fnName: 'replaceBatchesForWorkspace' },
+        hasanat_distributions: { importPath: './repositories/hasanatRepository.js', fnName: 'replaceDistributionsForWorkspace' },
+        hasanat_redemptions: { importPath: './repositories/hasanatRepository.js', fnName: 'replaceRedemptionsForWorkspace' },
+        accounting_accounts: { importPath: './repositories/accountingRepository.js', fnName: 'replaceAccountsForWorkspace' },
+        accounting_entries: { importPath: './repositories/accountingRepository.js', fnName: 'replaceEntriesForWorkspace' },
+        accounting_fiscal_years: { importPath: './repositories/accountingRepository.js', fnName: 'replaceFiscalYearsForWorkspace' },
+        questions: { importPath: './repositories/questionBankRepository.js', fnName: 'replaceQuestionsForWorkspace' },
+        tests: { importPath: './repositories/questionBankRepository.js', fnName: 'replaceTestsForWorkspace' },
+        assessment_results: { importPath: './repositories/questionBankRepository.js', fnName: 'replaceResultsForWorkspace' },
+        user_activity_logs: { importPath: './repositories/logsRepository.js', fnName: 'replaceActivityLogsForWorkspace' },
+        audit_log: { importPath: './repositories/logsRepository.js', fnName: 'replaceAuditLogEntriesForWorkspace' },
+      };
+
+      const mapping = REPO_MAPPING[parsed.logicalKey];
+      if (mapping) {
+        const repoModule = await import(mapping.importPath);
+        const replaceFn = repoModule[mapping.fnName];
+        if (typeof replaceFn === 'function') {
+          await replaceFn(parsed.subdomain, processedData);
+        }
+      }
     }
+
 
     const tenant = getRequestTenant();
     if (tenant) {

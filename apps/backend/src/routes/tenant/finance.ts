@@ -1,14 +1,10 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { canReadCollection, canWriteCollection } from '../../services/rbacService.js';
-import type { User } from '@mms/shared';
-import { FINANCE_MODULE_CONTRACT } from '@mms/shared';
-import { sendForbidden } from '../../lib/httpErrors.js';
+import { FINANCE_MODULE_CONTRACT, computeFinanceCommandMetrics } from '@mms/shared';
 import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
-import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import { resourceIdParamsSchema, softDeleteBodySchema } from '../../validation/commonSchemas.js';
+import { registerResourceRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
+import { invoiceRecordSchema, paymentRecordSchema } from '../../validation/financeSchemas.js';
 
-import { loadFinanceCommandMetrics } from '../../services/financeMetricsService.js';
 import {
   loadInvoices,
   createInvoice,
@@ -21,7 +17,6 @@ import {
   deletePaymentById,
   restorePaymentById,
 } from '../../services/financeService.js';
-import { invoiceRecordSchema, paymentRecordSchema } from '../../validation/financeSchemas.js';
 
 const FINANCE_COLLECTION = FINANCE_MODULE_CONTRACT.collectionKey;
 const PAYMENT_COLLECTION = FINANCE_MODULE_CONTRACT.paymentCollectionKey;
@@ -36,172 +31,45 @@ export default async function financeRoutes(
   fastify.addHook('preHandler', authenticateTenant);
 
   // --- Metrics ---
-  fastify.get('/metrics', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, FINANCE_COLLECTION)) return sendForbidden(reply);
-    try {
-      return reply.send({ metrics: await loadFinanceCommandMetrics() });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load finance metrics' });
-    }
+  registerMetricsRoute(fastify, {
+    collection: FINANCE_COLLECTION,
+    loadMetricsFn: async () => {
+      const invoices = await loadInvoices();
+      const payments = await loadPayments();
+      return computeFinanceCommandMetrics(
+        invoices as Array<{ status?: string }>,
+        payments as Array<{ id?: string | number }>,
+      );
+    },
+    errorMessagePrefix: 'finance',
   });
 
   // --- Invoices ---
-  fastify.get('/invoices', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, FINANCE_COLLECTION)) return sendForbidden(reply);
-    try {
-      return reply.send({ invoices: await loadInvoices() });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to list invoices' });
-    }
-  });
-
-  fastify.post('/invoices', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, FINANCE_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(invoiceRecordSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const invoice = await createInvoice(parsed.data);
-      return reply.status(201).send({ invoice });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to create invoice' });
-    }
-  });
-
-  fastify.put('/invoices/:id', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, FINANCE_COLLECTION)) return sendForbidden(reply);
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    const body = parseRequest(invoiceRecordSchema, request.body);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    if (!body.ok) return replyValidationError(reply, body.message);
-    try {
-      const updated = await updateInvoiceById(params.data.id, {
-        ...body.data,
-        id: body.data.id ?? params.data.id,
-      });
-      if (!updated) {
-        return reply.status(404).send({ type: 'not_found', message: 'Invoice not found' });
-      }
-      return reply.send({ invoice: updated });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to update invoice' });
-    }
-  });
-
-  fastify.delete<{ Params: { id: string } }>('/invoices/:id', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, FINANCE_COLLECTION)) return sendForbidden(reply);
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    const body = parseRequest(softDeleteBodySchema, request.body ?? {});
-    if (!body.ok) return replyValidationError(reply, body.message);
-    try {
-      const deleted = await deleteInvoiceById(params.data.id, String(user.id), body.data.deletionReason);
-      if (!deleted) {
-        return reply.status(404).send({ type: 'not_found', message: 'Invoice not found' });
-      }
-      return reply.send({ success: true });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to delete invoice' });
-    }
-  });
-
-  fastify.post('/invoices/:id/restore', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, FINANCE_COLLECTION)) return sendForbidden(reply);
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    try {
-      const restored = await restoreInvoiceById(params.data.id);
-      if (!restored) {
-        return reply.status(404).send({ type: 'not_found', message: 'Invoice not found or not deleted' });
-      }
-      return reply.send({ success: true });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to restore invoice' });
-    }
+  registerResourceRoutes(fastify, {
+    prefix: '/invoices',
+    collection: FINANCE_COLLECTION,
+    schema: invoiceRecordSchema,
+    loadAllFn: loadInvoices,
+    createFn: createInvoice,
+    updateFn: updateInvoiceById,
+    deleteFn: deleteInvoiceById,
+    restoreFn: restoreInvoiceById,
+    nameSingular: 'invoice',
+    namePlural: 'invoices',
   });
 
   // --- Payments ---
-  fastify.get('/payments', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, PAYMENT_COLLECTION)) return sendForbidden(reply);
-    try {
-      return reply.send({ payments: await loadPayments() });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to list payments' });
-    }
-  });
-
-  fastify.post('/payments', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, PAYMENT_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(paymentRecordSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const payment = await createPayment(parsed.data);
-      return reply.status(201).send({ payment });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to record payment' });
-    }
-  });
-
-  fastify.put('/payments/:id', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, PAYMENT_COLLECTION)) return sendForbidden(reply);
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    const body = parseRequest(paymentRecordSchema, request.body);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    if (!body.ok) return replyValidationError(reply, body.message);
-    try {
-      const updated = await updatePaymentById(params.data.id, {
-        ...body.data,
-        id: body.data.id ?? params.data.id,
-      });
-      if (!updated) {
-        return reply.status(404).send({ type: 'not_found', message: 'Payment not found' });
-      }
-      return reply.send({ payment: updated });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to update payment' });
-    }
-  });
-
-  fastify.delete<{ Params: { id: string } }>('/payments/:id', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, PAYMENT_COLLECTION)) return sendForbidden(reply);
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    const body = parseRequest(softDeleteBodySchema, request.body ?? {});
-    if (!body.ok) return replyValidationError(reply, body.message);
-    try {
-      const deleted = await deletePaymentById(params.data.id, String(user.id), body.data.deletionReason);
-      if (!deleted) {
-        return reply.status(404).send({ type: 'not_found', message: 'Payment not found' });
-      }
-      return reply.send({ success: true });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to delete payment' });
-    }
-  });
-
-  fastify.post('/payments/:id/restore', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, PAYMENT_COLLECTION)) return sendForbidden(reply);
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    try {
-      const restored = await restorePaymentById(params.data.id);
-      if (!restored) {
-        return reply.status(404).send({ type: 'not_found', message: 'Payment not found or not deleted' });
-      }
-      return reply.send({ success: true });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to restore payment' });
-    }
+  registerResourceRoutes(fastify, {
+    prefix: '/payments',
+    collection: PAYMENT_COLLECTION,
+    schema: paymentRecordSchema,
+    loadAllFn: loadPayments,
+    createFn: createPayment,
+    updateFn: updatePaymentById,
+    deleteFn: deletePaymentById,
+    restoreFn: restorePaymentById,
+    nameSingular: 'payment',
+    namePlural: 'payments',
   });
 
   // --- Column Preferences ---
@@ -217,4 +85,3 @@ export default async function financeRoutes(
     objectKey: FINANCE_MODULE_CONTRACT.paymentColumnPreferencesObjectKey,
   });
 }
-

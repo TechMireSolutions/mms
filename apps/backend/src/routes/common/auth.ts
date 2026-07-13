@@ -24,11 +24,12 @@ import { getJwtExpiresIn } from '../../services/globalSettingsService.js';
 import { getPublicUserById, getTenantUserProfile, updateOwnLinkedContact, changeTenantUserPassword } from '../../services/auth/userService.js';
 import { runWithTenant } from '../../lib/tenantContext.js';
 import { rotateRefreshToken, validateRefreshToken } from '../../services/auth/twoFactorService.js';
-import { loginBodySchema, onboardBodySchema } from '../../validation/authSchemas.js';
+import { onboardBodySchema } from '../../validation/authSchemas.js';
 import {
   challengeCodeBodySchema,
   challengeIdBodySchema,
   handoffBodySchema,
+  loginBodySchema,
 } from '../../validation/commonSchemas.js';
 import {
   changePasswordBodySchema,

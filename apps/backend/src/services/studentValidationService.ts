@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   buildDynamicStudentSchema,
   normalizeStudentsSettings,
+  verifyBlueprintVersion,
   type StudentsSettings,
   type Contact,
 } from '@mms/shared';
@@ -72,11 +73,7 @@ export async function validateStudentDynamic(
 
   // Version Lock check (Rule 16.3 / CS-6)
   const submittedBlueprintId = getSubmittedBlueprintId(student);
-  if (submittedBlueprintId !== undefined && submittedBlueprintId !== null) {
-    if (String(submittedBlueprintId) !== String(settings.version)) {
-      throw new Error(`Blueprint version mismatch. Expected version ${settings.version}, got ${submittedBlueprintId}. Please reload the form.`);
-    }
-  }
+  verifyBlueprintVersion(submittedBlueprintId, settings.version || 0);
 
   const cacheKey = `${tenant}:${settings.version || 0}`;
   let schema = schemaCache.get(cacheKey);
@@ -104,19 +101,10 @@ export async function validateStudentDynamic(
     return cachedContacts;
   };
 
-  if (Array.isArray(student)) {
-    for (const item of student) {
-      const validationSubject = await hydrateStudentValidationSubject(item, getContacts);
-      const parsed = schema.safeParse(validationSubject);
-      if (!parsed.success) {
-        throw new Error(parsed.error.issues.map((issue) => issue.message).join('; '));
-      }
-    }
-  } else {
-    const validationSubject = await hydrateStudentValidationSubject(student, getContacts);
-    const parsed = schema.safeParse(validationSubject);
-    if (!parsed.success) {
-      throw new Error(parsed.error.issues.map((issue) => issue.message).join('; '));
-    }
-  }
+  const validationSubject = Array.isArray(student)
+    ? await Promise.all(student.map((item) => hydrateStudentValidationSubject(item, getContacts)))
+    : await hydrateStudentValidationSubject(student, getContacts);
+
+  const { validateOrThrow } = await import('../lib/zodRequest.js');
+  validateOrThrow(schema, validationSubject);
 }

@@ -52,3 +52,19 @@ export async function authenticatePlatform(
     role: payload.role as PlatformRole,
   };
 }
+
+/**
+ * Hook to enforce super-user role validation for platform administration routes.
+ */
+export async function requireSuperUser(
+  request: FastifyRequest,
+  reply: FastifyReply,
+): Promise<void> {
+  const req = request as PlatformAuthenticatedRequest;
+  if (!req.platformUser || req.platformUser.role !== 'super_user') {
+    reply.status(403).send({
+      type: 'forbidden',
+      message: 'Only platform super-users can access this resource',
+    });
+  }
+}

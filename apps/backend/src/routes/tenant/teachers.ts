@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { canReadCollection, canWriteCollection } from '../../services/rbacService.js';
+import { canReadCollection } from '../../services/rbacService.js';
 import {
   createTeacher,
   deleteTeacherById,
@@ -17,11 +17,19 @@ import {
 import type { User } from '@mms/shared';
 import { TEACHERS_MODULE_CONTRACT, computeTeachersCommandMetrics } from '@mms/shared';
 import { sendForbidden } from '../../lib/httpErrors.js';
-import { resourceIdParamsSchema, softDeleteBodySchema } from '../../validation/commonSchemas.js';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
-import { teacherRecordSchema, teachersListQuerySchema, teachersResolveBodySchema, teachersWidgetAggregatesBodySchema, teachersNextEmployeeIdQuerySchema, teachersLinkedContactIdsQuerySchema } from '../../validation/teacherSchemas.js';
+import { teacherRecordSchema, teachersListQuerySchema, teachersNextEmployeeIdQuerySchema } from '../../validation/teacherSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 
+import {
+  registerResourceRoutes,
+  registerMetricsRoute,
+  registerCountRoute,
+  registerResolveRoute,
+  registerWidgetAggregatesRoute,
+  registerLinkedContactIdsRoute,
+  registerPaginatedListRoute,
+} from '../../lib/crudRouter.js';
 
 /**
  * Server-first teacher resource routes (TanStack Query on FE).
@@ -32,80 +40,49 @@ export default async function teachersRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
-  fastify.get('/', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
-    const queryParsed = parseRequest(teachersListQuerySchema, request.query);
-    if (!queryParsed.ok) return replyValidationError(reply, queryParsed.message);
-    try {
-      const query = queryParsed.data;
-      const includeDeleted = query.includeDeleted === 'true';
-      if (includeDeleted && !canWriteCollection(user, 'teachers')) {
-        return sendForbidden(reply);
-      }
-      const page = await loadTeachersPage({
-        page: query.page,
-        limit: query.limit ?? TEACHERS_MODULE_CONTRACT.defaultPageSize,
-        search: query.search,
-        status: query.status,
-        specialization: query.specialization,
-        sortField: query.sortField,
-        sortDir: query.sortDir,
-        includeDeleted,
-      });
-      return reply.send(page);
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to list teachers' });
-    }
+  // --- Custom GET List (Paginated) ---
+  registerPaginatedListRoute(fastify, {
+    collection: 'teachers',
+    schema: teachersListQuerySchema,
+    defaultPageSize: TEACHERS_MODULE_CONTRACT.defaultPageSize,
+    errorMessagePrefix: 'teachers',
+    loadPageFn: (query) => loadTeachersPage(query),
   });
 
-  fastify.get('/count', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
-    try {
+
+  // --- Custom GET Count ---
+  registerCountRoute(fastify, {
+    collection: 'teachers',
+    loadAllFn: loadTeachers,
+    errorMessagePrefix: 'teachers',
+  });
+
+  // --- Custom GET Metrics ---
+  registerMetricsRoute(fastify, {
+    collection: 'teachers',
+    loadMetricsFn: async () => {
       const teachers = await loadTeachers();
-      return reply.send({ count: teachers.length });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to count teachers' });
-    }
+      return computeTeachersCommandMetrics(teachers);
+    },
+    errorMessagePrefix: 'teacher',
   });
 
-  fastify.get('/metrics', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
-    try {
-      const teachers = await loadTeachers();
-      return reply.send({ metrics: computeTeachersCommandMetrics(teachers) });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load teacher metrics' });
-    }
+  // --- Custom POST Widget Aggregates ---
+  registerWidgetAggregatesRoute(fastify, {
+    collection: 'teachers',
+    loadAggregatesFn: loadTeachersWidgetAggregates,
+    errorMessagePrefix: 'teacher',
   });
 
-  fastify.post('/widget-aggregates', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
-    const parsed = parseRequest(teachersWidgetAggregatesBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const results = await loadTeachersWidgetAggregates(parsed.data.widgets);
-      return reply.send({ results });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load teacher widget aggregates' });
-    }
+  // --- Custom POST Resolve ---
+  registerResolveRoute(fastify, {
+    collection: 'teachers',
+    loadByIdsFn: loadTeachersByIds,
+    responseKey: 'teachers',
+    errorMessagePrefix: 'teachers',
   });
 
-  fastify.post('/resolve', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
-    const parsed = parseRequest(teachersResolveBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      return reply.send({ teachers: await loadTeachersByIds(parsed.data.ids) });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to resolve teachers' });
-    }
-  });
-
+  // --- Custom GET Next Employee ID ---
   fastify.get('/next-employee-id', async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
@@ -121,33 +98,11 @@ export default async function teachersRoutes(
     }
   });
 
-  fastify.get('/linked-contact-ids', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
-    const parsed = parseRequest(teachersLinkedContactIdsQuerySchema, request.query);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const contactIds = await loadTeacherLinkedContactIds(parsed.data.excludeId);
-      return reply.send({ contactIds });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load linked contact ids' });
-    }
-  });
-
-  fastify.get('/:id', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    try {
-      const teacher = await loadTeacherById(params.data.id);
-      if (!teacher) {
-        return reply.status(404).send({ type: 'not_found', message: 'Teacher not found' });
-      }
-      return reply.send({ teacher });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load teacher' });
-    }
+  // --- Custom GET Linked Contact IDs ---
+  registerLinkedContactIdsRoute(fastify, {
+    collection: 'teachers',
+    loadLinkedContactIdsFn: loadTeacherLinkedContactIds,
+    errorMessagePrefix: 'teachers',
   });
 
   registerColumnPreferencesRoutes(fastify, {
@@ -155,71 +110,17 @@ export default async function teachersRoutes(
     objectKey: TEACHERS_MODULE_CONTRACT.columnPreferencesObjectKey,
   });
 
-  fastify.post('/', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, 'teachers')) return sendForbidden(reply);
-    const parsed = parseRequest(teacherRecordSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const teacher = await createTeacher(parsed.data);
-      return reply.status(201).send({ teacher });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to create teacher' });
-    }
-  });
-
-  fastify.put('/:id', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, 'teachers')) return sendForbidden(reply);
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    const body = parseRequest(teacherRecordSchema, request.body);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    if (!body.ok) return replyValidationError(reply, body.message);
-    try {
-      const updated = await updateTeacherById(params.data.id, {
-        ...body.data,
-        id: body.data.id ?? params.data.id,
-      });
-      if (!updated) {
-        return reply.status(404).send({ type: 'not_found', message: 'Teacher not found' });
-      }
-      return reply.send({ teacher: updated });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to update teacher' });
-    }
-  });
-
-  fastify.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, 'teachers')) return sendForbidden(reply);
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    const body = parseRequest(softDeleteBodySchema, request.body ?? {});
-    if (!body.ok) return replyValidationError(reply, body.message);
-    try {
-      const deleted = await deleteTeacherById(params.data.id, String(user.id), body.data.deletionReason);
-      if (!deleted) {
-        return reply.status(404).send({ type: 'not_found', message: 'Teacher not found' });
-      }
-      return reply.send({ success: true });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to delete teacher' });
-    }
-  });
-
-  fastify.post('/:id/restore', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, 'teachers')) return sendForbidden(reply);
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    try {
-      const restored = await restoreTeacherById(params.data.id);
-      if (!restored) {
-        return reply.status(404).send({ type: 'not_found', message: 'Teacher not found or not deleted' });
-      }
-      return reply.send({ success: true });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to restore teacher' });
-    }
+  // --- Resource Mutations ---
+  registerResourceRoutes(fastify, {
+    customGetRoute: true,
+    collection: 'teachers',
+    schema: teacherRecordSchema,
+    loadByIdFn: loadTeacherById,
+    createFn: createTeacher,
+    updateFn: updateTeacherById,
+    deleteFn: deleteTeacherById,
+    restoreFn: restoreTeacherById,
+    nameSingular: 'teacher',
+    namePlural: 'teachers',
   });
 }

@@ -68,8 +68,11 @@ export async function upsertUserBackgroundJob(
     updatedAt: new Date(),
   };
 
-  const updated = await db.update(backgroundJobs)
-    .set({
+  await db.insert(backgroundJobs)
+    .values(values)
+    .onConflictDoUpdate({
+      target: backgroundJobs.id,
+      set: {
         status: job.status,
         label: job.label,
         progressCurrent: job.progress?.current ?? null,
@@ -78,17 +81,8 @@ export async function upsertUserBackgroundJob(
         error: job.error ?? null,
         completedAt: job.completedAt ? new Date(job.completedAt) : null,
         updatedAt: new Date(),
-      })
-    .where(and(
-      eq(backgroundJobs.tenantId, tenantId),
-      eq(backgroundJobs.userId, userId),
-      eq(backgroundJobs.id, job.id),
-    ))
-    .returning({ id: backgroundJobs.id });
-
-  if (updated.length === 0) {
-    await db.insert(backgroundJobs).values(values);
-  }
+      },
+    });
 
   return job;
 }

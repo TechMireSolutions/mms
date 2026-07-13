@@ -6,7 +6,6 @@ import {
   journalEntryListSchema,
   fiscalYearListSchema,
 } from '@mms/shared';
-import { getRequestTenant } from '../lib/tenantContext.js';
 import {
   listAccountsByWorkspace,
   replaceAccountsForWorkspace,
@@ -15,60 +14,28 @@ import {
   listFiscalYearsByWorkspace,
   replaceFiscalYearsForWorkspace,
 } from '../db/repositories/accountingRepository.js';
+import { defineTenantBulkCollectionService } from './tenantBulkService.js';
 
-// --- Helper WebSocket broadcaster ---
-async function broadcast(logicalKey: string) {
-  const tenant = getRequestTenant();
-  if (tenant) {
-    const { broadcastTenantUpdate } = await import('./websocketService.js');
-    broadcastTenantUpdate(tenant, 'collection', logicalKey);
-  }
-}
+const accountService = defineTenantBulkCollectionService<Account>(
+  { listByWorkspace: listAccountsByWorkspace, replaceForWorkspace: replaceAccountsForWorkspace },
+  accountListSchema,
+  'accounting_accounts',
+);
+export const loadAccounts = accountService.load;
+export const replaceAccounts = accountService.replace;
 
-// --- Accounts ---
-export async function loadAccounts(): Promise<Account[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) return [];
-  return listAccountsByWorkspace(tenant);
-}
+const entryService = defineTenantBulkCollectionService<JournalEntry>(
+  { listByWorkspace: listEntriesByWorkspace, replaceForWorkspace: replaceEntriesForWorkspace },
+  journalEntryListSchema,
+  'accounting_entries',
+);
+export const loadEntries = entryService.load;
+export const replaceEntries = entryService.replace;
 
-export async function replaceAccounts(records: Account[]): Promise<Account[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  const parsed = accountListSchema.parse(records);
-  await replaceAccountsForWorkspace(tenant, parsed);
-  await broadcast('accounting_accounts');
-  return parsed;
-}
-
-// --- Entries ---
-export async function loadEntries(): Promise<JournalEntry[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) return [];
-  return listEntriesByWorkspace(tenant);
-}
-
-export async function replaceEntries(records: JournalEntry[]): Promise<JournalEntry[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  const parsed = journalEntryListSchema.parse(records);
-  await replaceEntriesForWorkspace(tenant, parsed);
-  await broadcast('accounting_entries');
-  return parsed;
-}
-
-// --- Fiscal Years ---
-export async function loadFiscalYears(): Promise<FiscalYear[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) return [];
-  return listFiscalYearsByWorkspace(tenant);
-}
-
-export async function replaceFiscalYears(records: FiscalYear[]): Promise<FiscalYear[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  const parsed = fiscalYearListSchema.parse(records);
-  await replaceFiscalYearsForWorkspace(tenant, parsed);
-  await broadcast('accounting_fiscal_years');
-  return parsed;
-}
+const fiscalYearService = defineTenantBulkCollectionService<FiscalYear>(
+  { listByWorkspace: listFiscalYearsByWorkspace, replaceForWorkspace: replaceFiscalYearsForWorkspace },
+  fiscalYearListSchema,
+  'accounting_fiscal_years',
+);
+export const loadFiscalYears = fiscalYearService.load;
+export const replaceFiscalYears = fiscalYearService.replace;

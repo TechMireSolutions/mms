@@ -54,11 +54,6 @@ vi.mock('../services/userColumnPreferencesService.js', () => ({
   setUserColumnPreferencesForModule: (...args: unknown[]) => mockSetUserColumnPreferencesForModule(...args),
 }));
 
-const mockLoadAccountingCommandMetrics = vi.fn();
-vi.mock('../services/accountingMetricsService.js', () => ({
-  loadAccountingCommandMetrics: (...args: unknown[]) => mockLoadAccountingCommandMetrics(...args),
-}));
-
 const sampleAccount: Account = {
   id: 'acc-1',
   code: '1000',
@@ -140,7 +135,6 @@ describe('accounting REST routes', () => {
     mockReplaceFiscalYears.mockReset().mockResolvedValue([sampleFiscalYear]);
     mockGetUserColumnPreferencesForModule.mockReset().mockResolvedValue([]);
     mockSetUserColumnPreferencesForModule.mockReset().mockResolvedValue(undefined);
-    mockLoadAccountingCommandMetrics.mockReset().mockResolvedValue({ accountsCount: 1, entriesCount: 1 });
   });
 
   afterEach(() => {
@@ -285,8 +279,19 @@ describe('accounting REST routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ metrics: { accountsCount: 1, entriesCount: 1 } });
-    expect(mockLoadAccountingCommandMetrics).toHaveBeenCalled();
+    expect(res.json()).toEqual({
+      metrics: {
+        activeAccounts: 1,
+        draft: 0,
+        inactiveAccounts: 0,
+        newThisPeriod: 1,
+        posted: 1,
+        postedVolume: 100,
+        totalEntries: 1,
+      },
+    });
+    expect(mockLoadEntries).toHaveBeenCalled();
+    expect(mockLoadAccounts).toHaveBeenCalled();
     await app.close();
   });
 

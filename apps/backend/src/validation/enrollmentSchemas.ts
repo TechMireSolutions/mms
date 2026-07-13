@@ -1,9 +1,7 @@
 import {
   enrollmentRecordSchema as sharedEnrollmentRecordSchema,
-  enrollmentListSchema as sharedEnrollmentListSchema,
+  type Enrollment,
 } from '@mms/shared';
 
 export const enrollmentRecordSchema = sharedEnrollmentRecordSchema.passthrough();
-export const enrollmentListSchema = sharedEnrollmentListSchema;
-
-export type EnrollmentRecord = typeof enrollmentRecordSchema;
+export type EnrollmentRecord = Enrollment;

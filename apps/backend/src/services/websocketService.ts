@@ -86,3 +86,13 @@ export function broadcastTenantUpdate(
     console.log(`[WS] Broadcasted database-update (${type}: "${key}") to ${sentCount} clients in subdomain "${subdomain}".`);
   }
 }
+
+/**
+ * Convenience helper: broadcasts a collection update for the current request tenant.
+ * No-ops if there is no active tenant context.
+ */
+export async function broadcastCollection(key: string): Promise<void> {
+  const { getRequestTenant } = await import('../lib/tenantContext.js');
+  const tenant = getRequestTenant();
+  if (tenant) broadcastTenantUpdate(tenant, 'collection', key);
+}

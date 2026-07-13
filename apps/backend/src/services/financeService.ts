@@ -1,7 +1,4 @@
-import {
-  type Invoice,
-  type Payment,
-} from '@mms/shared';
+import { type Invoice, type Payment } from '@mms/shared';
 import { invoiceRecordSchema, paymentRecordSchema } from '../validation/financeSchemas.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import {
@@ -12,129 +9,42 @@ import {
   findPaymentById,
   savePayment,
 } from '../db/repositories/financeRepository.js';
+import { createGenericRelationalService } from './genericRelationalService.js';
 
-// --- Helper WebSocket broadcaster ---
-async function broadcast(logicalKey: string) {
-  const tenant = getRequestTenant();
-  if (tenant) {
-    const { broadcastTenantUpdate } = await import('./websocketService.js');
-    broadcastTenantUpdate(tenant, 'collection', logicalKey);
-  }
-}
+// --- Invoices CRUD ---
+const invoiceCrud = createGenericRelationalService<Invoice>({
+  repo: {
+    listByWorkspace: listInvoicesByWorkspace,
+    findById: findInvoiceById,
+    save: saveInvoice,
+  },
+  schema: invoiceRecordSchema,
+  websocketCollection: 'finance_invoices',
+  idPrefix: 'inv',
+});
 
-// ==========================================
-// 1. Finance Invoices
-// ==========================================
-export async function loadInvoices(options?: { includeDeleted?: boolean }): Promise<Invoice[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) return [];
-  const rawRows = await listInvoicesByWorkspace(tenant);
-  return options?.includeDeleted ? rawRows : rawRows.filter((row) => !row.deletedAt);
-}
+export const loadInvoices = invoiceCrud.loadAll;
+export const createInvoice = invoiceCrud.create;
+export const updateInvoiceById = invoiceCrud.updateById;
+export const deleteInvoiceById = invoiceCrud.deleteById;
+export const restoreInvoiceById = invoiceCrud.restoreById;
 
-export async function createInvoice(record: Invoice): Promise<Invoice> {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  const resolvedId = String(record.id ?? `inv-${Date.now()}`);
-  const normalized = invoiceRecordSchema.parse({ ...record, id: resolvedId }) as Invoice;
-  await saveInvoice(tenant, normalized);
-  await broadcast('finance_invoices');
-  return normalized;
-}
+// --- Payments CRUD ---
+const paymentCrud = createGenericRelationalService<Payment>({
+  repo: {
+    listByWorkspace: listPaymentsByWorkspace,
+    findById: findPaymentById,
+    save: savePayment,
+  },
+  schema: paymentRecordSchema,
+  websocketCollection: 'finance_payments',
+  idPrefix: 'pay',
+});
 
-export async function updateInvoiceById(id: string, record: Invoice): Promise<Invoice | null> {
-  const tenant = getRequestTenant();
-  if (!tenant) return null;
-  const existing = await findInvoiceById(tenant, id);
-  if (!existing || existing.deletedAt) return null;
-  const normalized = invoiceRecordSchema.parse({ ...record, id }) as Invoice;
-  await saveInvoice(tenant, normalized);
-  await broadcast('finance_invoices');
-  return normalized;
-}
-
-export async function deleteInvoiceById(
-  id: string,
-  deletedBy: string,
-  deletionReason?: string,
-): Promise<boolean> {
-  const tenant = getRequestTenant();
-  if (!tenant) return false;
-  const existing = await findInvoiceById(tenant, id);
-  if (!existing || existing.deletedAt) return false;
-  const updated = {
-    ...existing,
-    deletedAt: new Date().toISOString(),
-    deletedBy,
-    deletionReason: deletionReason || undefined,
-  } as Invoice;
-  await saveInvoice(tenant, updated);
-  await broadcast('finance_invoices');
-  return true;
-}
-
-export async function restoreInvoiceById(id: string): Promise<boolean> {
-  const tenant = getRequestTenant();
-  if (!tenant) return false;
-  const existing = await findInvoiceById(tenant, id);
-  if (!existing || !existing.deletedAt) return false;
-  const { deletedAt: _deletedAt, deletedBy: _deletedBy, deletionReason: _deletionReason, ...rest } = existing;
-  await saveInvoice(tenant, rest as Invoice);
-  await broadcast('finance_invoices');
-  return true;
-}
-
-// ==========================================
-// 2. Finance Payments
-// ==========================================
-export async function loadPayments(options?: { includeDeleted?: boolean }): Promise<Payment[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) return [];
-  const rawRows = await listPaymentsByWorkspace(tenant);
-  return options?.includeDeleted ? rawRows : rawRows.filter((row) => !row.deletedAt);
-}
-
-export async function deletePaymentById(
-  id: string,
-  deletedBy: string,
-  deletionReason?: string,
-): Promise<boolean> {
-  const tenant = getRequestTenant();
-  if (!tenant) return false;
-  const existing = await findPaymentById(tenant, id);
-  if (!existing || existing.deletedAt) return false;
-  const updated = {
-    ...existing,
-    deletedAt: new Date().toISOString(),
-    deletedBy,
-    deletionReason: deletionReason || undefined,
-  } as Payment;
-  await savePayment(tenant, updated);
-  await broadcast('finance_payments');
-  return true;
-}
-
-export async function restorePaymentById(id: string): Promise<boolean> {
-  const tenant = getRequestTenant();
-  if (!tenant) return false;
-  const existing = await findPaymentById(tenant, id);
-  if (!existing || !existing.deletedAt) return false;
-  const { deletedAt: _deletedAt, deletedBy: _deletedBy, deletionReason: _deletionReason, ...rest } = existing;
-  await savePayment(tenant, rest as Payment);
-  await broadcast('finance_payments');
-  return true;
-}
-
-export async function updatePaymentById(id: string, record: Payment): Promise<Payment | null> {
-  const tenant = getRequestTenant();
-  if (!tenant) return null;
-  const existing = await findPaymentById(tenant, id);
-  if (!existing || existing.deletedAt) return null;
-  const normalized = paymentRecordSchema.parse({ ...record, id }) as Payment;
-  await savePayment(tenant, normalized);
-  await broadcast('finance_payments');
-  return normalized;
-}
+export const loadPayments = paymentCrud.loadAll;
+export const updatePaymentById = paymentCrud.updateById;
+export const deletePaymentById = paymentCrud.deleteById;
+export const restorePaymentById = paymentCrud.restoreById;
 
 /**
  * Creates a payment and atomically updates the linked invoice's payment details.
@@ -158,13 +68,15 @@ export async function createPayment(record: Payment): Promise<Payment> {
         method: normalizedPayment.method,
       };
       await saveInvoice(tenant, updatedInvoice);
-      await broadcast('finance_invoices');
+      const { broadcastTenantUpdate } = await import('./websocketService.js');
+      broadcastTenantUpdate(tenant, 'collection', 'finance_invoices');
     }
   }
 
   // 2. Save the payment
   await savePayment(tenant, normalizedPayment);
-  await broadcast('finance_payments');
+  const { broadcastTenantUpdate } = await import('./websocketService.js');
+  broadcastTenantUpdate(tenant, 'collection', 'finance_payments');
 
   return normalizedPayment;
 }

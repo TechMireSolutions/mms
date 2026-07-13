@@ -1,13 +1,15 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { canReadCollection, canWriteCollection } from '../../services/rbacService.js';
-import type { User } from '@mms/shared';
-import { HASANAT_MODULE_CONTRACT } from '@mms/shared';
-import { sendForbidden } from '../../lib/httpErrors.js';
+import {
+  HASANAT_MODULE_CONTRACT,
+  denomListSchema,
+  batchListSchema,
+  distributionListSchema,
+  redemptionListSchema,
+  computeHasanatCommandMetrics,
+} from '@mms/shared';
 import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
-import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-
-import { loadHasanatCommandMetrics } from '../../services/hasanatMetricsService.js';
+import { registerBulkRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
 import {
   loadDenoms,
   replaceDenoms,
@@ -18,12 +20,6 @@ import {
   loadRedemptions,
   replaceRedemptions,
 } from '../../services/hasanatService.js';
-import {
-  denomListSchema,
-  batchListSchema,
-  distributionListSchema,
-  redemptionListSchema,
-} from '../../validation/hasanatSchemas.js';
 
 const HASANAT_DISTRIBUTIONS_COLLECTION = HASANAT_MODULE_CONTRACT.collectionKey;
 const HASANAT_DENOMS_COLLECTION = HASANAT_MODULE_CONTRACT.denomCollectionKey;
@@ -40,112 +36,66 @@ export default async function hasanatRoutes(
   fastify.addHook('preHandler', authenticateTenant);
 
   // --- Metrics ---
-  fastify.get('/metrics', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, HASANAT_DISTRIBUTIONS_COLLECTION)) return sendForbidden(reply);
-    try {
-      return reply.send({ metrics: await loadHasanatCommandMetrics() });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load hasanat metrics' });
-    }
+  registerMetricsRoute(fastify, {
+    collection: HASANAT_DISTRIBUTIONS_COLLECTION,
+    loadMetricsFn: async () => {
+      const batches = await loadBatches();
+      const distributions = await loadDistributions();
+      const denoms = await loadDenoms();
+      return computeHasanatCommandMetrics(
+        batches as Array<{ quantity?: number; remaining?: number }>,
+        distributions as Array<{ status?: string; quantity?: number }>,
+        denoms as Array<{ active?: boolean }>,
+      );
+    },
+    errorMessagePrefix: 'hasanat',
   });
 
   // --- Denominations ---
-  fastify.get('/denoms', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, HASANAT_DENOMS_COLLECTION)) return sendForbidden(reply);
-    try {
-      return reply.send({ denoms: await loadDenoms() });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load denominations' });
-    }
-  });
-
-  fastify.put('/denoms/bulk', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, HASANAT_DENOMS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(denomListSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const denoms = await replaceDenoms(parsed.data);
-      return reply.send({ denoms });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to update denominations' });
-    }
+  registerBulkRoutes(fastify, {
+    path: '/denoms',
+    collection: HASANAT_DENOMS_COLLECTION,
+    schema: denomListSchema,
+    loadFn: loadDenoms,
+    saveFn: replaceDenoms,
+    responseKey: 'denoms',
+    errorMessagePrefix: 'denominations',
   });
 
   // --- Batches ---
-  fastify.get('/batches', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, HASANAT_BATCHES_COLLECTION)) return sendForbidden(reply);
-    try {
-      return reply.send({ batches: await loadBatches() });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load batches' });
-    }
-  });
-
-  fastify.put('/batches/bulk', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, HASANAT_BATCHES_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(batchListSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const batches = await replaceBatches(parsed.data);
-      return reply.send({ batches });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to update batches' });
-    }
+  registerBulkRoutes(fastify, {
+    path: '/batches',
+    collection: HASANAT_BATCHES_COLLECTION,
+    schema: batchListSchema,
+    loadFn: loadBatches,
+    saveFn: replaceBatches,
+    responseKey: 'batches',
+    errorMessagePrefix: 'batches',
   });
 
   // --- Distributions ---
-  fastify.get('/distributions', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, HASANAT_DISTRIBUTIONS_COLLECTION)) return sendForbidden(reply);
-    try {
-      return reply.send({ distributions: await loadDistributions() });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load distributions' });
-    }
-  });
-
-  fastify.put('/distributions/bulk', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, HASANAT_DISTRIBUTIONS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(distributionListSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const distributions = await replaceDistributions(parsed.data);
-      return reply.send({ distributions });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to update distributions' });
-    }
+  registerBulkRoutes(fastify, {
+    path: '/distributions',
+    collection: HASANAT_DISTRIBUTIONS_COLLECTION,
+    schema: distributionListSchema,
+    loadFn: loadDistributions,
+    saveFn: replaceDistributions,
+    responseKey: 'distributions',
+    errorMessagePrefix: 'distributions',
   });
 
   // --- Redemptions ---
-  fastify.get('/redemptions', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, HASANAT_REDEMPTIONS_COLLECTION)) return sendForbidden(reply);
-    try {
-      return reply.send({ redemptions: await loadRedemptions() });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load redemptions' });
-    }
+  registerBulkRoutes(fastify, {
+    path: '/redemptions',
+    collection: HASANAT_REDEMPTIONS_COLLECTION,
+    schema: redemptionListSchema,
+    loadFn: loadRedemptions,
+    saveFn: replaceRedemptions,
+    responseKey: 'redemptions',
+    errorMessagePrefix: 'redemptions',
   });
 
-  fastify.put('/redemptions/bulk', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, HASANAT_REDEMPTIONS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(redemptionListSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const redemptions = await replaceRedemptions(parsed.data);
-      return reply.send({ redemptions });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to update redemptions' });
-    }
-  });
-
+  // --- Column Preferences ---
   registerColumnPreferencesRoutes(fastify, {
     path: '/distributions/column-preferences',
     collection: HASANAT_DISTRIBUTIONS_COLLECTION,
@@ -158,4 +108,3 @@ export default async function hasanatRoutes(
     objectKey: HASANAT_MODULE_CONTRACT.redemptionColumnPreferencesObjectKey,
   });
 }
-

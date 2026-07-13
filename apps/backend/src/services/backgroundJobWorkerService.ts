@@ -5,7 +5,6 @@ import { getDb } from '../db/dbClient.js';
 import { backgroundJobs } from '../db/schema.js';
 import {
   rowToJobRecord,
-  upsertUserBackgroundJob,
   createDatabaseBackgroundJob,
 } from './backgroundJobService.js';
 
@@ -38,23 +37,45 @@ async function patchJob(
   const tenantId = getRequestTenant();
   if (!tenantId) throw new Error('Tenant context is required to patch background job');
 
-  const rows = await db.select()
-    .from(backgroundJobs)
+  const updateValues: {
+    status?: string;
+    label?: string;
+    progressCurrent?: number | null;
+    progressTotal?: number | null;
+    error?: string | null;
+    hasDownload?: boolean;
+    completedAt?: Date | null;
+    updatedAt: Date;
+  } = {
+    updatedAt: new Date(),
+  };
+
+  if (patch.status !== undefined) updateValues.status = patch.status;
+  if (patch.label !== undefined) updateValues.label = patch.label;
+  if (patch.progress !== undefined) {
+    updateValues.progressCurrent = patch.progress.current;
+    updateValues.progressTotal = patch.progress.total;
+  }
+  if (patch.error !== undefined) updateValues.error = patch.error;
+  if (patch.hasDownload !== undefined) updateValues.hasDownload = patch.hasDownload;
+  if (patch.completedAt !== undefined) {
+    updateValues.completedAt = patch.completedAt ? new Date(patch.completedAt) : null;
+  }
+
+  const updatedRows = await db.update(backgroundJobs)
+    .set(updateValues)
     .where(and(
       eq(backgroundJobs.tenantId, tenantId),
       eq(backgroundJobs.userId, userId),
-      eq(backgroundJobs.id, jobId)
+      eq(backgroundJobs.id, jobId),
     ))
-    .limit(1);
+    .returning();
 
-  const row = rows[0];
+  const row = updatedRows[0];
   if (!row) {
     throw new Error(`Background job not found: ${jobId}`);
   }
-
-  const existing = rowToJobRecord(row);
-  const updated: BackgroundJobRecord = { ...existing, ...patch };
-  return upsertUserBackgroundJob(userId, updated);
+  return rowToJobRecord(row);
 }
 
 export async function executeJob(

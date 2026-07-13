@@ -6,25 +6,19 @@ import {
   type ContactPreferences,
   type ContactsSavedReport,
   type ContactsSavedReportViewer,
-  type UserModuleColumnPreferencesMap,
 } from '@mms/shared';
 import { fetchObject, persistObject } from './dbSyncService.js';
+import {
+  getUserColumnPreferencesForModule,
+  setUserColumnPreferencesForModule,
+} from './userColumnPreferencesService.js';
 
 const COLUMN_PREFERENCES_KEY = CONTACTS_MODULE_CONTRACT.columnPreferencesObjectKey;
 const LEGACY_COLUMN_PREFERENCES_KEY = 'contact_user_column_prefs';
 
 export async function getUserColumnPreferences(userId: string): Promise<ContactColumnPreference[]> {
-  const preferencesByUser = await loadColumnPreferencesMap();
-  const preferences = preferencesByUser[userId];
-  if (!Array.isArray(preferences)) return [];
-  return preferences.filter(
-    (preference): preference is ContactColumnPreference =>
-      preference != null &&
-      typeof preference === 'object' &&
-      typeof preference.key === 'string' &&
-      typeof preference.enabled === 'boolean' &&
-      typeof preference.order === 'number',
-  );
+  await fetchMigratedObject(COLUMN_PREFERENCES_KEY, LEGACY_COLUMN_PREFERENCES_KEY);
+  return getUserColumnPreferencesForModule(COLUMN_PREFERENCES_KEY, userId) as Promise<ContactColumnPreference[]>;
 }
 
 const SAVED_REPORTS_KEY = CONTACTS_MODULE_CONTRACT.savedReportsObjectKey;
@@ -38,9 +32,8 @@ export async function loadContactPreferences(): Promise<ContactPreferences | nul
 }
 
 export async function setUserColumnPreferences(userId: string, preferences: ContactColumnPreference[]): Promise<void> {
-  const preferencesByUser = await loadColumnPreferencesMap();
-  preferencesByUser[userId] = preferences;
-  await persistObject(COLUMN_PREFERENCES_KEY, preferencesByUser);
+  await fetchMigratedObject(COLUMN_PREFERENCES_KEY, LEGACY_COLUMN_PREFERENCES_KEY);
+  await setUserColumnPreferencesForModule(COLUMN_PREFERENCES_KEY, userId, preferences);
 }
 
 async function fetchMigratedObject(key: string, legacyKey: string): Promise<unknown | null> {
@@ -53,13 +46,6 @@ async function fetchMigratedObject(key: string, legacyKey: string): Promise<unkn
   return legacy;
 }
 
-async function loadColumnPreferencesMap(): Promise<UserModuleColumnPreferencesMap> {
-  const raw = await fetchMigratedObject(COLUMN_PREFERENCES_KEY, LEGACY_COLUMN_PREFERENCES_KEY);
-  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
-    return raw as UserModuleColumnPreferencesMap;
-  }
-  return {};
-}
 
 async function loadSavedReportsList(): Promise<ContactsSavedReport[]> {
   const raw = await fetchObject(SAVED_REPORTS_KEY);
