@@ -67,6 +67,15 @@ export const questionBankTestRecordSchema = z.object({
   difficulty: z.enum(['easy', 'medium', 'hard', 'mixed']),
   duration: z.number(),
   createdAt: z.string(),
+  examClass: z.string().optional(),
+  totalMarks: z.number().optional(),
+  instructions: z.string().optional(),
+  sections: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    instructions: z.string(),
+    questionIds: z.array(z.string()),
+  })).optional(),
 });
 
 export const questionBankTestListSchema = z.array(questionBankTestRecordSchema);

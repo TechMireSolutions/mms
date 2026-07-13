@@ -36,7 +36,6 @@ const mockLoadTests = vi.fn();
 const mockReplaceTests = vi.fn();
 const mockLoadResults = vi.fn();
 const mockReplaceResults = vi.fn();
-const mockGenerateQuestionBankTestSelection = vi.fn();
 
 vi.mock('../services/questionBankService.js', () => ({
   loadQuestions: (...args: unknown[]) => mockLoadQuestions(...args),
@@ -45,7 +44,6 @@ vi.mock('../services/questionBankService.js', () => ({
   replaceTests: (...args: unknown[]) => mockReplaceTests(...args),
   loadResults: (...args: unknown[]) => mockLoadResults(...args),
   replaceResults: (...args: unknown[]) => mockReplaceResults(...args),
-  generateQuestionBankTestSelection: (...args: unknown[]) => mockGenerateQuestionBankTestSelection(...args),
 }));
 
 const mockGetUserColumnPreferencesForModule = vi.fn();
@@ -81,6 +79,33 @@ const sampleTest: QuestionBankTest = {
   difficulty: 'easy',
   duration: 10,
   createdAt: '2026-06-26',
+};
+
+const samplePaperTest: QuestionBankTest = {
+  id: 'paper-1',
+  name: 'Manual Paper',
+  categoryId: null,
+  questionIds: ['q-1', 'q-2'],
+  difficulty: 'mixed',
+  duration: 45,
+  createdAt: '2026-06-27T10:00:00.000Z',
+  examClass: 'Hifz Level 2',
+  totalMarks: 100,
+  instructions: 'Answer all questions.',
+  sections: [
+    {
+      id: 'section-a',
+      title: 'Part A',
+      instructions: 'Choose the correct answer.',
+      questionIds: ['q-1'],
+    },
+    {
+      id: 'section-b',
+      title: 'Part B',
+      instructions: 'Write short answers.',
+      questionIds: ['q-2'],
+    },
+  ],
 };
 
 const sampleResult: QuestionBankResult = {
@@ -126,10 +151,6 @@ describe('question bank REST routes', () => {
     mockReplaceTests.mockReset().mockResolvedValue([sampleTest]);
     mockLoadResults.mockReset().mockResolvedValue([sampleResult]);
     mockReplaceResults.mockReset().mockResolvedValue([sampleResult]);
-    mockGenerateQuestionBankTestSelection.mockReset().mockResolvedValue({
-      questionIds: ['q-1'],
-      mode: 'ai',
-    });
     mockGetUserColumnPreferencesForModule.mockReset().mockResolvedValue([]);
     mockSetUserColumnPreferencesForModule.mockReset().mockResolvedValue(undefined);
     mockLoadQuestionBankCommandMetrics.mockReset().mockResolvedValue({ totalQuestions: 1, totalTests: 1 });
@@ -232,96 +253,22 @@ describe('question bank REST routes', () => {
     await app.close();
   });
 
-  it('POST /api/question-bank/tests/generate requires auth', async () => {
+  it('PUT /api/question-bank/tests/bulk preserves manual paper builder metadata', async () => {
+    mockReplaceTests.mockResolvedValueOnce([samplePaperTest]);
     const app = await buildApp();
     const res = await app.inject({
-      method: 'POST',
-      url: '/api/question-bank/tests/generate',
-      headers: {
-        host: 'demo.localhost',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        categoryIds: ['cat-1'],
-        difficulty: 'easy',
-        numQuestions: 1,
-        shuffle: true,
-      }),
-    });
-    expect(res.statusCode).toBe(401);
-    expect(mockGenerateQuestionBankTestSelection).not.toHaveBeenCalled();
-    await app.close();
-  });
-
-  it('POST /api/question-bank/tests/generate returns 403 for unauthorized roles', async () => {
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'POST',
-      url: '/api/question-bank/tests/generate',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${unauthorizedToken(app)}`,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        categoryIds: ['cat-1'],
-        difficulty: 'easy',
-        numQuestions: 1,
-        shuffle: true,
-      }),
-    });
-    expect(res.statusCode).toBe(403);
-    expect(mockGenerateQuestionBankTestSelection).not.toHaveBeenCalled();
-    await app.close();
-  });
-
-  it('POST /api/question-bank/tests/generate validates and returns generated selection', async () => {
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'POST',
-      url: '/api/question-bank/tests/generate',
+      method: 'PUT',
+      url: '/api/question-bank/tests/bulk',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${teacherToken(app)}`,
         'content-type': 'application/json',
       },
-      body: JSON.stringify({
-        categoryIds: ['cat-1'],
-        difficulty: 'easy',
-        numQuestions: 1,
-        shuffle: true,
-      }),
+      body: JSON.stringify([samplePaperTest]),
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ questionIds: ['q-1'], mode: 'ai' });
-    expect(mockGenerateQuestionBankTestSelection).toHaveBeenCalledWith({
-      categoryIds: ['cat-1'],
-      difficulty: 'easy',
-      numQuestions: 1,
-      shuffle: true,
-    });
-    await app.close();
-  });
-
-  it('POST /api/question-bank/tests/generate rejects invalid requests', async () => {
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'POST',
-      url: '/api/question-bank/tests/generate',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        categoryIds: ['cat-1'],
-        difficulty: 'easy',
-        numQuestions: 0,
-        shuffle: true,
-      }),
-    });
-    expect(res.statusCode).toBe(400);
-    expect(mockGenerateQuestionBankTestSelection).not.toHaveBeenCalled();
+    expect(res.json()).toEqual({ tests: [samplePaperTest] });
+    expect(mockReplaceTests).toHaveBeenCalledWith([samplePaperTest]);
     await app.close();
   });
 

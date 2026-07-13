@@ -74,6 +74,7 @@ Settings singletons (`branding`, `global_settings`) must survive authentication 
 - **Tuple Keys**: Export query keys as named tuple constants from the hook file.
 - **Auth Gate**: Gate tenant-specific queries using `enabled: isAuthenticated` from the authentication context.
 - **Mutations**: Hook success handlers must invalidate list and count query keys simultaneously.
+- **Save Confirmation**: UI saved/success states must wait for `mutateAsync` or an explicit mutation success callback. Do not mark a REST-backed draft as saved immediately after calling fire-and-forget `mutate()`.
 - **Errors**: Propagate errors through `notify.error()`. Expose loading screens via `isPending` or `isFetching`.
 
 ### Hybrid Trajectory

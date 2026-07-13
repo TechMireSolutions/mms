@@ -891,6 +891,21 @@ export interface QuestionBankTest {
   difficulty: QuestionDifficulty | 'mixed';
   duration: number;
   createdAt: string;
+  /** Manual paper-builder class/section label printed on the exam paper. */
+  examClass?: string;
+  /** Manual paper-builder total marks printed on the exam paper. */
+  totalMarks?: number;
+  /** Manual paper-builder instructions printed before paper sections. */
+  instructions?: string;
+  /** Manual paper-builder sections and their selected question order. */
+  sections?: QuestionBankPaperSection[];
+}
+
+export interface QuestionBankPaperSection {
+  id: string;
+  title: string;
+  instructions: string;
+  questionIds: string[];
 }
 
 export interface QuestionBankResult {

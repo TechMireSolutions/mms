@@ -4,7 +4,7 @@ import { useModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Library, ClipboardList, Sparkles, Plus } from 'lucide-react';
+import { Library, ClipboardList, FileText, Plus } from 'lucide-react';
 import { resolveModuleTierTab } from '@mms/shared';
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -13,7 +13,7 @@ import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs
 import { Button } from '@/components/ui/button';
 import { QuestionBank as QuestionsPanel } from "@/tenant/features/question-bank/components/QuestionBank";
 import { QuestionForm } from "@/tenant/features/question-bank/components/QuestionForm";
-import { GenerateTest } from "@/tenant/features/question-bank/components/GenerateTest";
+import { PaperBuilder } from "@/tenant/features/question-bank/components/PaperBuilder";
 import { PerformanceAnalytics } from "@/tenant/features/question-bank/components/PerformanceAnalytics";
 import { AutoGrading } from "@/tenant/features/question-bank/components/AutoGrading";
 import { QuestionBankSettings } from "@/tenant/features/question-bank/components/QuestionBankSettings";
@@ -42,7 +42,7 @@ export default function QuestionBankPage(): React.JSX.Element {
   const OPS_SUB_TABS = useMemo(
     () => [
       { id: 'questions', label: t('questionBank.questions'), icon: ClipboardList },
-      { id: 'generate', label: t('questionBank.generator'), icon: Sparkles },
+      { id: 'generate', label: t('questionBank.generator'), icon: FileText },
     ],
     [t],
   );
@@ -51,6 +51,7 @@ export default function QuestionBankPage(): React.JSX.Element {
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [editQuestion, setEditQuestion] = useState<QuestionBankQuestion | null>(null);
   const [filteredCount, setFilteredCount] = useState(0);
+  const [paperBuilderSession, setPaperBuilderSession] = useState(0);
   const columnLayout = useQuestionBankColumnLayout();
   const listLayout = (questionBankConfig.settings.defaultViewLayout || 'list') === 'list';
 
@@ -74,6 +75,7 @@ export default function QuestionBankPage(): React.JSX.Element {
   const openCreatePaper = useCallback((): void => {
     setActiveTab('work');
     setActiveSubTab('generate');
+    setPaperBuilderSession((session) => session + 1);
   }, [setActiveTab, setActiveSubTab]);
 
   const handleQuestionSave = useCallback(
@@ -114,7 +116,7 @@ export default function QuestionBankPage(): React.JSX.Element {
       headerActions={
         <div className="flex flex-wrap items-center gap-2">
           <Button type="button" size="sm" variant="outline" onClick={openCreatePaper}>
-            <Sparkles className="h-3.5 w-3.5" />
+            <FileText className="h-3.5 w-3.5" />
             {t('questionBank.generator')}
           </Button>
           <Button type="button" size="sm" onClick={openAddQuestion}>
@@ -192,12 +194,17 @@ export default function QuestionBankPage(): React.JSX.Element {
               )}
 
               {effectiveTab === 'work' && effectiveSubTab === 'generate' && (
-                <GenerateTest
+                <PaperBuilder
+                  key={paperBuilderSession}
                   questions={questions}
                   tests={tests}
-                  onCreateTest={(test: QuestionBankTest) =>
-                    replaceTests.mutate([...tests, test])
-                  }
+                  onSaveTest={async (test: QuestionBankTest) => {
+                    await replaceTests.mutateAsync(
+                      tests.some((paper) => paper.id === test.id)
+                        ? tests.map((paper) => (paper.id === test.id ? test : paper))
+                        : [...tests, test],
+                    );
+                  }}
                 />
               )}
             </motion.div>
