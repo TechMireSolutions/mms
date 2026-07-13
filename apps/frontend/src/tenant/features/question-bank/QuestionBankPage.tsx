@@ -71,6 +71,11 @@ export default function QuestionBankPage(): React.JSX.Element {
     setShowQuestionModal(true);
   }, [setActiveTab, setActiveSubTab]);
 
+  const openCreatePaper = useCallback((): void => {
+    setActiveTab('work');
+    setActiveSubTab('generate');
+  }, [setActiveTab, setActiveSubTab]);
+
   const handleQuestionSave = useCallback(
     (question: QuestionBankQuestion): void => {
       const existingQuestion = questions.find((questionItem) => questionItem.id === question.id);
@@ -107,10 +112,16 @@ export default function QuestionBankPage(): React.JSX.Element {
       headerTitle={t('nav.questionBank')}
       headerSubtitle={t('page.questionBank.subtitle')}
       headerActions={
-        <Button type="button" size="sm" onClick={openAddQuestion}>
-          <Plus className="h-3.5 w-3.5" />
-          {t('questionBank.addQuestion')}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" size="sm" variant="outline" onClick={openCreatePaper}>
+            <Sparkles className="h-3.5 w-3.5" />
+            {t('questionBank.generator')}
+          </Button>
+          <Button type="button" size="sm" onClick={openAddQuestion}>
+            <Plus className="h-3.5 w-3.5" />
+            {t('questionBank.addQuestion')}
+          </Button>
+        </div>
       }
       metricsStrip={
         <QuestionBankCommandMetrics total={questions.length} shown={filteredCount} />

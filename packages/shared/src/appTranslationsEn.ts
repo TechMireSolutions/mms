@@ -1905,7 +1905,7 @@ export const APP_TRANSLATIONS_EN = {
   "questionBank.columns.source": "Source",
   "questionBank.view.cards": "Card view",
   "questionBank.view.list": "List view",
-  "questionBank.generator": "Generate Test",
+  "questionBank.generator": "Create paper",
   "questionBank.settingsIntro": "Configure question categories, AI grading, and custom fields for the question bank.",
   "questionBank.settingsSaved": "Question bank settings saved",
   "questionBank.settingsSavedDesc": "Categories, grading, and field preferences are updated.",

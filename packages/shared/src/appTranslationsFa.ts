@@ -172,7 +172,7 @@ export const APP_TRANSLATIONS_FA = {
   "module.desc.messaging": "پیامک، واتس‌اپ و اطلاعیه‌ها",
 
   "questionBank.questions": "سوالات",
-  "questionBank.generator": "تولید آزمون",
+  "questionBank.generator": "ساخت برگه",
   "questionBank.settingsIntro": "دسته‌بندی‌ها، تصحیح هوشمند و فیلدهای سفارشی بانک سوالات را پیکربندی کنید.",
   "questionBank.settingsSaved": "تنظیمات بانک سوالات ذخیره شد",
   "questionBank.settingsSavedDesc": "دسته‌بندی‌ها، تصحیح و ترجیحات فیلدها به‌روزرسانی شد.",

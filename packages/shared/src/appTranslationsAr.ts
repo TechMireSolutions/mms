@@ -1902,7 +1902,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "questionBank.columns.source": "المصدر",
   "questionBank.view.cards": "عرض البطاقات",
   "questionBank.view.list": "عرض القائمة",
-  "questionBank.generator": "إنشاء اختبار",
+  "questionBank.generator": "إنشاء ورقة",
   "questionBank.settingsIntro": "اضبط فئات الأسئلة والتصحيح بالذكاء الاصطناعي والحقول المخصصة لبنك الأسئلة.",
   "questionBank.settingsSaved": "تم حفظ إعدادات بنك الأسئلة",
   "questionBank.settingsSavedDesc": "تم تحديث الفئات والتصحيح وتفضيلات الحقول.",

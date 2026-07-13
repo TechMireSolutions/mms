@@ -1900,7 +1900,7 @@ export const APP_TRANSLATIONS_UR = {
   "questionBank.columns.source": "ماخذ",
   "questionBank.view.cards": "کارڈ منظر",
   "questionBank.view.list": "فہرست منظر",
-  "questionBank.generator": "ٹیسٹ بنائیں",
+  "questionBank.generator": "پیپر بنائیں",
   "questionBank.settingsIntro": "سوالات کی کیٹیگریز، AI گریڈنگ، اور کسٹم فیلڈز ترتیب دیں۔",
   "questionBank.settingsSaved": "سوالات کے بینک کی ترتیبات محفوظ",
   "questionBank.settingsSavedDesc": "کیٹیگریز، گریڈنگ، اور فیلڈ کی ترجیحات اپ ڈیٹ ہو گئیں۔",
