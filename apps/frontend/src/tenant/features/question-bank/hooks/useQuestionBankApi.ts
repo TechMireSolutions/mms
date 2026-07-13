@@ -13,6 +13,19 @@ import { useCollectionSync } from '@/hooks/useCollectionSync';
 
 const QUESTION_BANK_API = QUESTION_BANK_MODULE_CONTRACT.restBasePath;
 
+export interface GenerateQuestionBankTestPayload {
+  categoryIds: string[];
+  difficulty: 'easy' | 'medium' | 'hard' | 'any';
+  numQuestions: number;
+  shuffle: boolean;
+}
+
+export interface GenerateQuestionBankTestResponse {
+  questionIds: string[];
+  mode: 'ai' | 'fallback';
+  message?: string;
+}
+
 export const QUESTION_BANK_METRICS_QUERY_KEY = [QUESTION_BANK_MODULE_CONTRACT.moduleId, 'metrics'] as const;
 
 export const QUESTION_BANK_QUESTIONS_QUERY_KEY = [QUESTION_BANK_MODULE_CONTRACT.moduleId, 'questions', 'list'] as const;
@@ -126,6 +139,15 @@ export function useQuestionBankMutations() {
   });
 
   return { replaceQuestions, replaceTests, replaceResults };
+}
+
+export async function generateQuestionBankTestSelection(
+  payload: GenerateQuestionBankTestPayload,
+): Promise<GenerateQuestionBankTestResponse> {
+  return apiJson<GenerateQuestionBankTestResponse>(`${QUESTION_BANK_API}/tests/generate`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }
 
 export function useQuestionBankMetrics(options?: { enabled?: boolean }) {

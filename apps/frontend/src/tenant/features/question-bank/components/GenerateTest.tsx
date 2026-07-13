@@ -13,10 +13,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Checkbox } from "@/components/ui/checkbox";
+import { notify } from "@/lib/notify";
+import { generateQuestionBankTestSelection } from "@/tenant/features/question-bank/hooks/useQuestionBankApi";
 
 
 interface AIGeneratingProps {
-  onDone: () => void;
+  active: boolean;
 }
 
 /**
@@ -24,7 +26,7 @@ interface AIGeneratingProps {
  *
  * @returns Component layout.
  */
-function AIGenerating({ onDone }: AIGeneratingProps): React.ReactElement {
+function AIGenerating({ active }: AIGeneratingProps): React.ReactElement {
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const steps = useMemo(
@@ -38,13 +40,13 @@ function AIGenerating({ onDone }: AIGeneratingProps): React.ReactElement {
   );
 
   useEffect(() => {
-    const timeouts: ReturnType<typeof setTimeout>[] = [];
-    steps.forEach((_, index) => {
-      timeouts.push(setTimeout(() => setStep(index), 700 * index));
-    });
-    timeouts.push(setTimeout(onDone, 700 * steps.length + 400));
-    return () => timeouts.forEach(clearTimeout);
-  }, [onDone, steps]);
+    if (!active) return undefined;
+    setStep(0);
+    const intervalId = window.setInterval(() => {
+      setStep((currentStep) => Math.min(currentStep + 1, steps.length - 1));
+    }, 700);
+    return () => window.clearInterval(intervalId);
+  }, [active, steps.length]);
 
   return (
     <div className="py-8 text-center space-y-4" role="status" aria-live="polite">
@@ -108,29 +110,44 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
     shuffle: true,
   }));
   const [generatedQIds, setGeneratedQIds] = useState<string[]>([]);
+  const [generationMode, setGenerationMode] = useState<'ai' | 'fallback' | null>(null);
 
   const updateTestConfig = (field: keyof TestConfig, value: TestConfig[keyof TestConfig]) => setConfig((draftConfig) => ({ ...draftConfig, [field]: value }));
   const toggleCategory = (id: string) => setConfig((draftConfig) => ({ ...draftConfig, categoryIds: draftConfig.categoryIds.includes(id) ? draftConfig.categoryIds.filter((categoryId) => categoryId !== id) : [...draftConfig.categoryIds, id] }));
 
-  const handleGenerate = () => {
-    setStep("generating");
-  };
-
-  const onGeneratingDone = () => {
-    // Pick questions matching criteria
-    let pool = questions.filter((question) => {
+  const eligiblePool = useMemo(() => {
+    return questions.filter((question) => {
       const mCat =
         config.categoryIds.length === 0 ||
         getQuestionCategoryIds(question).some((categoryId) => config.categoryIds.includes(categoryId));
       const mDiff = config.difficulty === "any" || question.difficulty === config.difficulty;
       return mCat && mDiff;
     });
-    if (config.shuffle) {
-      pool = [...pool].sort(() => Math.random() - 0.5);
+  }, [config.categoryIds, config.difficulty, questions]);
+
+  const handleGenerate = async (): Promise<void> => {
+    setStep("generating");
+    setGenerationMode(null);
+    try {
+      const result = await generateQuestionBankTestSelection({
+        categoryIds: config.categoryIds,
+        difficulty: config.difficulty,
+        numQuestions: config.numQuestions,
+        shuffle: config.shuffle,
+      });
+      setGeneratedQIds(result.questionIds);
+      setGenerationMode(result.mode);
+      if (result.mode === 'fallback') {
+        notify.warning(t('questionBank.aiFallbackTitle'), {
+          description: result.message || t('questionBank.aiFallbackDesc'),
+        });
+      }
+      setStep("preview");
+    } catch (caughtError: unknown) {
+      const message = caughtError instanceof Error ? caughtError.message : t('questionBank.aiGenerationFailedDesc');
+      notify.error(t('questionBank.aiGenerationFailed'), { description: message });
+      setStep("config");
     }
-    const picked = pool.slice(0, config.numQuestions).map((question) => question.id);
-    setGeneratedQIds(picked);
-    setStep("preview");
   };
 
   const handleSave = () => {
@@ -188,7 +205,7 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
         </div>
       </div>
 
-      {step === "generating" && <AIGenerating onDone={onGeneratingDone} />}
+      {step === "generating" && <AIGenerating active />}
 
       {step === "config" && (
         <div className="rounded-xl border border-border bg-card p-5 space-y-5">
@@ -268,14 +285,7 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
 
           {/* Pool preview */}
           {(() => {
-            const pool = questions.filter((question) => {
-              const mCat =
-        config.categoryIds.length === 0 ||
-        getQuestionCategoryIds(question).some((categoryId) => config.categoryIds.includes(categoryId));
-              const mDiff = config.difficulty === "any" || question.difficulty === config.difficulty;
-              return mCat && mDiff;
-            });
-            const valid = pool.length >= config.numQuestions;
+            const valid = eligiblePool.length >= config.numQuestions;
             return (
               <div
                 className={`flex items-center gap-2 text-[12px] rounded-lg border px-3 py-2 ${valid ? "border-success/30 bg-success/10 text-success" : "border-warning/30 bg-warning/10 text-warning"}`}
@@ -288,7 +298,7 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
                 )}
                 <span>
                   {valid
-                    ? t("questionBank.poolAvailable", { count: pool.length })
+                    ? t("questionBank.poolAvailable", { count: eligiblePool.length })
                     : t("questionBank.poolInsufficient")}
                 </span>
               </div>
@@ -297,14 +307,8 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
 
           <Button
             type="button"
-            onClick={handleGenerate}
-            disabled={!config.numQuestions || questions.filter((question) => {
-              const mCat =
-        config.categoryIds.length === 0 ||
-        getQuestionCategoryIds(question).some((categoryId) => config.categoryIds.includes(categoryId));
-              const mDiff = config.difficulty === "any" || question.difficulty === config.difficulty;
-              return mCat && mDiff;
-            }).length < config.numQuestions}
+            onClick={() => void handleGenerate()}
+            disabled={!config.numQuestions || eligiblePool.length < config.numQuestions}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 disabled:opacity-60 h-auto"
           >
             <Sparkles className="w-4 h-4" aria-hidden="true" /> {t("questionBank.generateTest")}
@@ -316,11 +320,18 @@ export function GenerateTest({ questions, onCreateTest }: GenerateTestProps): Re
         <div className="space-y-4">
           <section className="rounded-xl border border-border bg-card p-4" aria-label={t("questionBank.previewTest")}>
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-[13px] font-bold text-foreground m-0">
-                {t("questionBank.previewTitle", {
-                  name: config.name || t("questionBank.previewDefaultName"),
-                })}
-              </h3>
+              <div>
+                <h3 className="text-[13px] font-bold text-foreground m-0">
+                  {t("questionBank.previewTitle", {
+                    name: config.name || t("questionBank.previewDefaultName"),
+                  })}
+                </h3>
+                {generationMode ? (
+                  <p className="text-[11px] text-muted-foreground m-0">
+                    {generationMode === 'ai' ? t('questionBank.aiGeneratedSelection') : t('questionBank.fallbackGeneratedSelection')}
+                  </p>
+                ) : null}
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] text-muted-foreground">
                   {t("questionBank.previewQuestionCount", { count: generatedQIds.length })}
