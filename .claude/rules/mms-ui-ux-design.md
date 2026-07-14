@@ -44,10 +44,13 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
 ### Form Shell & Layout
 - Layout repeatable entity forms using full-width single column flows (`COLLECTION_BODY`) inside `space-y-3` containers.
 - Form inputs, selects, and textareas must share a standard sizing of `min-h-[44px]` (via the `INPUT` constant).
+- Create/edit forms, builder forms, and other popup workflows must use the shared `FormModal` shell for header, icon, subtitle, tabs, progress, focus trap, sizing, and mobile behavior. Use raw `Modal` only for lightweight confirmation/content dialogs that are not forms or builders.
+- Long forms and builder workflows should split major tasks into `FormModal` tabs instead of placing every control in one tall scrolling surface. Keep each tab purposeful (details, saved drafts, sections, picker, preview) and preserve form state across tab switches.
 
 ### Overlays & Scroll Controls
 - **Stable Heights**: Tabbed forms must not shift height dynamically. Enforce fixed boundaries with `FormModal(tall)` (`h-[88vh] max-h-[700px]` with scrollable body `flex-1 overflow-y-auto`).
 - **Scroll Containment**: Lock parent body scrolls using `useBodyScrollLock()` and apply `overscroll-contain` to scrollable modal boxes.
+- **Mobile-First Builders**: Wide builder forms may pass explicit `panelClassName` sizing to `FormModal`, but controls must remain usable at phone widths before desktop grids are introduced.
 
 ---
 

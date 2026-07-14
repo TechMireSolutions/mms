@@ -18,6 +18,7 @@ export interface FormModalProps<K extends string = string> {
   subtitle?: React.ReactNode;
   icon?: React.ComponentType<{ className?: string }>;
   size?: 'sm' | 'md' | 'lg' | 'xl'; // default lg — omit on entity forms; xl only for wide grids
+  panelClassName?: string;
   /** Fixed height for multi-tab forms (prevents chrome jump on tab switch). */
   tall?: boolean;
   /** 0–100 completion; renders a header progress bar when set. */
@@ -31,14 +32,15 @@ export interface FormModalProps<K extends string = string> {
   tabPanelIdPrefix?: string;
   lang?: string;
   dir?: 'ltr' | 'rtl';
-  cancelLabel: string;
-  saveLabel: string;
-  onSave: () => void;
+  cancelLabel?: string;
+  saveLabel?: string;
+  onSave?: () => void;
   saving?: boolean;
   saveDisabled?: boolean;
   saved?: boolean;
   savedLabel?: string;
   footerStart?: React.ReactNode;
+  hideFooter?: boolean;
   showBuilderToggle?: boolean;
   builderMode?: boolean;
   onBuilderModeChange?: (active: boolean) => void;
@@ -149,6 +151,7 @@ export function FormModal<K extends string = string>({
   subtitle,
   icon,
   size = 'lg',
+  panelClassName: panelClassNameProp,
   tall = false,
   progress,
   progressLabel,
@@ -168,6 +171,7 @@ export function FormModal<K extends string = string>({
   saved = false,
   savedLabel,
   footerStart,
+  hideFooter = false,
   showBuilderToggle = false,
   builderMode = false,
   onBuilderModeChange,
@@ -186,7 +190,7 @@ export function FormModal<K extends string = string>({
     !hasTabs && progress === undefined,
   );
 
-  const panelClassName = tall ? 'h-[88vh] max-h-[700px]' : undefined;
+  const panelClassName = cn(tall ? 'h-[88vh] max-h-[700px]' : undefined, panelClassNameProp);
 
   const effectiveSize = useMemo((): NonNullable<FormModalProps<K>['size']> => {
     const requested = size ?? 'lg';
@@ -251,6 +255,9 @@ export function FormModal<K extends string = string>({
       </Button>
     );
   }, [showBuilderToggle, builderMode, onBuilderModeChange, t]);
+
+  const resolvedCancelLabel = cancelLabel ?? t('common.cancel');
+  const resolvedSaveLabel = saveLabel ?? t('common.save');
 
   const body = (
     <div ref={containerRef} lang={lang} dir={dir} className="h-full">
@@ -321,7 +328,7 @@ export function FormModal<K extends string = string>({
       headerActions={headerActions}
       panelClassName={panelClassName}
       footer={
-        builderMode ? null : (
+        hideFooter || builderMode ? null : (
           <div
             className={cn(
               'flex w-full flex-col items-stretch gap-2.5 sm:flex-row sm:items-center',
@@ -331,7 +338,7 @@ export function FormModal<K extends string = string>({
             {footerStart ? <div className="min-w-0 sm:flex-1">{footerStart}</div> : null}
             <div className="ml-auto flex items-center gap-2.5">
               <Button type="button" variant="outline" onClick={onClose}>
-                {cancelLabel}
+                {resolvedCancelLabel}
               </Button>
               <Button
                 type="button"
@@ -342,17 +349,17 @@ export function FormModal<K extends string = string>({
                 {saved ? (
                   <>
                     <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-                    {savedLabel ?? saveLabel}
+                    {savedLabel ?? resolvedSaveLabel}
                   </>
                 ) : saving ? (
                   <>
                     <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-                    {saveLabel}
+                    {resolvedSaveLabel}
                   </>
                 ) : (
                   <>
                     <Save className="h-3.5 w-3.5" aria-hidden />
-                    {saveLabel}
+                    {resolvedSaveLabel}
                   </>
                 )}
               </Button>

@@ -11,9 +11,10 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { Button } from '@/components/ui/button';
+import { FormModal, type FormModalTab } from '@/components/ui/FormModal';
 import { QuestionBank as QuestionsPanel } from "@/tenant/features/question-bank/components/QuestionBank";
 import { QuestionForm } from "@/tenant/features/question-bank/components/QuestionForm";
-import { PaperBuilder } from "@/tenant/features/question-bank/components/PaperBuilder";
+import { PaperBuilder, type PaperBuilderTab } from "@/tenant/features/question-bank/components/PaperBuilder";
 import { PerformanceAnalytics } from "@/tenant/features/question-bank/components/PerformanceAnalytics";
 import { AutoGrading } from "@/tenant/features/question-bank/components/AutoGrading";
 import { QuestionBankSettings } from "@/tenant/features/question-bank/components/QuestionBankSettings";
@@ -46,12 +47,24 @@ export default function QuestionBankPage(): React.JSX.Element {
     ],
     [t],
   );
+  const PAPER_BUILDER_TABS = useMemo<FormModalTab<PaperBuilderTab>[]>(
+    () => [
+      { key: 'details', label: t('questionBank.paperDetails'), icon: FileText },
+      { key: 'saved', label: t('questionBank.savedPapers'), icon: Library },
+      { key: 'sections', label: t('questionBank.paperSections'), icon: ClipboardList },
+      { key: 'questions', label: t('questionBank.addQuestionsFromBank'), icon: Plus },
+      { key: 'preview', label: t('questionBank.paperPreview'), icon: FileText },
+    ],
+    [t],
+  );
   const [activeTab, setActiveTab] = usePersistedTabState<string>('question_bank_active_tab', 'work');
   const [activeSubTab, setActiveSubTab] = usePersistedTabState<string>('question_bank_ops_subtab', 'questions');
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [editQuestion, setEditQuestion] = useState<QuestionBankQuestion | null>(null);
   const [filteredCount, setFilteredCount] = useState(0);
   const [paperBuilderSession, setPaperBuilderSession] = useState(0);
+  const [paperBuilderOpen, setPaperBuilderOpen] = useState(false);
+  const [paperBuilderTab, setPaperBuilderTab] = useState<PaperBuilderTab>('details');
   const columnLayout = useQuestionBankColumnLayout();
   const listLayout = (questionBankConfig.settings.defaultViewLayout || 'list') === 'list';
 
@@ -75,7 +88,9 @@ export default function QuestionBankPage(): React.JSX.Element {
   const openCreatePaper = useCallback((): void => {
     setActiveTab('work');
     setActiveSubTab('generate');
+    setPaperBuilderTab('details');
     setPaperBuilderSession((session) => session + 1);
+    setPaperBuilderOpen(true);
   }, [setActiveTab, setActiveSubTab]);
 
   const handleQuestionSave = useCallback(
@@ -194,23 +209,52 @@ export default function QuestionBankPage(): React.JSX.Element {
               )}
 
               {effectiveTab === 'work' && effectiveSubTab === 'generate' && (
-                <PaperBuilder
-                  key={paperBuilderSession}
-                  questions={questions}
-                  tests={tests}
-                  onSaveTest={async (test: QuestionBankTest) => {
-                    await replaceTests.mutateAsync(
-                      tests.some((paper) => paper.id === test.id)
-                        ? tests.map((paper) => (paper.id === test.id ? test : paper))
-                        : [...tests, test],
-                    );
-                  }}
-                />
+                <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <h2 className="m-0 text-sm font-bold text-foreground">{t('questionBank.generatorTitle')}</h2>
+                      <p className="m-0 text-xs text-muted-foreground">{t('questionBank.manualPaperGeneratorSubtitle')}</p>
+                    </div>
+                    <Button type="button" onClick={openCreatePaper} className="w-full sm:w-auto">
+                      <FileText className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t('questionBank.generator')}
+                    </Button>
+                  </div>
+                </section>
               )}
             </motion.div>
           </AnimatePresence>
         </ErrorBoundary>
       </ResponsiveAccordionTabs>
+
+      <FormModal
+        open={paperBuilderOpen}
+        onClose={() => setPaperBuilderOpen(false)}
+        title={t('questionBank.generatorTitle')}
+        subtitle={t('questionBank.manualPaperGeneratorSubtitle')}
+        icon={FileText}
+        size="xl"
+        hideFooter
+        tabs={PAPER_BUILDER_TABS}
+        activeTab={paperBuilderTab}
+        onTabChange={setPaperBuilderTab}
+        panelClassName="h-[94vh] max-w-[calc(100vw-1rem)] rounded-xl sm:h-[92vh] sm:max-w-[calc(100vw-2rem)] sm:rounded-2xl xl:max-w-6xl"
+      >
+        <PaperBuilder
+          key={paperBuilderSession}
+          questions={questions}
+          tests={tests}
+          activeTab={paperBuilderTab}
+          showHeader={false}
+          onSaveTest={async (test: QuestionBankTest) => {
+            await replaceTests.mutateAsync(
+              tests.some((paper) => paper.id === test.id)
+                ? tests.map((paper) => (paper.id === test.id ? test : paper))
+                : [...tests, test],
+            );
+          }}
+        />
+      </FormModal>
 
       <QuestionForm
         open={showQuestionModal}

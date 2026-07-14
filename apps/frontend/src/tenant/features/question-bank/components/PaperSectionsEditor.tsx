@@ -33,15 +33,15 @@ export function PaperSectionsEditor({
   const { t } = useTranslation();
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+    <section className="rounded-xl border border-border bg-card p-3 sm:p-4">
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="m-0 text-[13px] font-bold text-foreground">{t("questionBank.paperSections")}</h3>
           <p className="m-0 text-[11px] text-muted-foreground">
             {t("questionBank.selectedQuestionCount", { count: selectedCount })}
           </p>
         </div>
-        <Button type="button" onClick={onAddSection} size="sm" variant="outline">
+        <Button type="button" onClick={onAddSection} size="sm" variant="outline" className="w-full sm:w-auto">
           <Plus className="h-3.5 w-3.5" aria-hidden="true" />
           {t("questionBank.addSection")}
         </Button>
@@ -75,7 +75,7 @@ export function PaperSectionsEditor({
                   </Button>
                 )}
               </div>
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label htmlFor={`section-title-${section.id}`} className={FORM_LABEL}>{t("questionBank.sectionTitle")}</label>
                   <Input

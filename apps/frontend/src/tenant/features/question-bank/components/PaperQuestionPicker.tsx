@@ -52,7 +52,7 @@ export function PaperQuestionPicker({
   const { t } = useTranslation();
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4">
+    <section className="rounded-xl border border-border bg-card p-3 sm:p-4">
       <div className="mb-3">
         <h3 className="m-0 text-[13px] font-bold text-foreground">{t("questionBank.addQuestionsFromBank")}</h3>
         <p className="m-0 text-[11px] text-muted-foreground">
@@ -60,9 +60,9 @@ export function PaperQuestionPicker({
         </p>
       </div>
 
-      <div className="mb-3 grid gap-2 md:grid-cols-3">
+      <div className="mb-3 grid gap-2 sm:grid-cols-2 md:grid-cols-3">
         <Input
-          className={`${FORM_INPUT} shadow-none md:col-span-3`}
+          className={`${FORM_INPUT} shadow-none sm:col-span-2 md:col-span-3`}
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder={t("questionBank.searchPlaceholder")}
@@ -76,7 +76,7 @@ export function PaperQuestionPicker({
         />
       </div>
 
-      <div className="max-h-[560px] space-y-2 overflow-y-auto pr-1">
+      <div className="max-h-[360px] space-y-2 overflow-y-auto pr-1 sm:max-h-[460px] lg:max-h-[560px]">
         {questions.length === 0 ? (
           <p className="m-0 rounded-lg border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
             {t("questionBank.noQuestionsAvailable")}
@@ -87,14 +87,14 @@ export function PaperQuestionPicker({
             const diffCls = QUESTION_DIFFICULTY_BADGE_CLASSES[question.difficulty] ?? "";
             return (
               <div key={question.id} className="rounded-lg border border-border bg-muted/20 p-3">
-                <div className="flex items-start gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
                   <p className="m-0 flex-1 text-xs font-semibold leading-snug text-foreground">{question.text}</p>
                   <Button
                     type="button"
                     onClick={() => onAddQuestion(question.id)}
                     disabled={!activeSection || selected}
                     size="sm"
-                    className="h-auto px-3 py-1.5 text-xs"
+                    className="h-auto w-full px-3 py-1.5 text-xs sm:w-auto"
                   >
                     {selected ? t("questionBank.questionAdded") : t("questionBank.addToPaper")}
                   </Button>
