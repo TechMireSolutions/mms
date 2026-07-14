@@ -6,11 +6,8 @@ import { ROUTES } from '@/lib/config/routes';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { isCurrentHostApex } from '@/lib/config/tenantConfig';
 import { getWorkspaceLocalStoragePrefix } from '@/lib/db';
-
-export interface AuthError {
-  type: 'invalid_credentials' | 'auth_required' | 'connection_error' | 'user_not_registered';
-  message: string;
-}
+import { parseAuthError, type AuthError } from '@/lib/authErrors';
+export type { AuthError } from '@/lib/authErrors';
 
 export interface AuthContextType {
   user: User | null;
@@ -49,6 +46,13 @@ export interface OnboardResult {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+class AuthFailureError extends Error {
+  constructor(readonly authError: AuthError) {
+    super(authError.message);
+    this.name = 'AuthFailureError';
+  }
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -156,18 +160,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { user: authResponse.user, requires2FA: false };
       }
 
-      const errorData = await response.json() as { message?: string };
-      const errObj: AuthError = {
-        type: 'invalid_credentials',
-        message: errorData.message || 'Login failed',
-      };
+      const errObj = await parseAuthError(response);
       setAuthError(errObj);
-      throw new Error(errObj.message);
+      throw new AuthFailureError(errObj);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to connect to authentication server';
-      if (!authError) {
-        setAuthError({ type: 'connection_error', message });
+      if (error instanceof AuthFailureError) {
+        throw error;
       }
+      const message = error instanceof Error ? error.message : 'Failed to connect to authentication server';
+      setAuthError({ type: 'connection_error', message });
       throw error;
     } finally {
       setIsLoadingAuth(false);
