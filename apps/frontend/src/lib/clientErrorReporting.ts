@@ -6,7 +6,9 @@ import * as Sentry from '@sentry/react';
 export function initErrorReporting(): void {
   const dsn = (import.meta.env.VITE_SENTRY_DSN as string | undefined) || (window as any)._MMS_SENTRY_DSN;
   if (!dsn) {
-    console.log('[MMS] Sentry DSN not found. Client error reporting running in console-only mode.');
+    if (import.meta.env.DEV) {
+      console.info('[MMS] Sentry DSN not found. Client error reporting running in console-only mode.');
+    }
     return;
   }
 
