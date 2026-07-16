@@ -2,7 +2,7 @@ import { type Student } from '@mms/shared';
 import { students } from '../schema.js';
 import { createGenericRepository } from './genericRepository.js';
 
-const repo = createGenericRepository<Student, typeof students>(students);
+const repo = createGenericRepository<Student, typeof students>(students, { conflictTarget: [students.workspaceSubdomain, students.id] });
 
 export const listStudentsByWorkspace = repo.listByWorkspace;
 export const findStudentById = repo.findById;

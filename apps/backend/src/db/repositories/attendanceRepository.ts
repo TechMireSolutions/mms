@@ -2,7 +2,7 @@ import { attendance } from '../schema.js';
 import { createGenericRepository } from './genericRepository.js';
 import type { AttendanceRecord } from '@mms/shared';
 
-const repo = createGenericRepository<AttendanceRecord, typeof attendance>(attendance);
+const repo = createGenericRepository<AttendanceRecord, typeof attendance>(attendance, { conflictTarget: [attendance.workspaceSubdomain, attendance.id] });
 
 export const listAttendanceRecordsByWorkspace = repo.listByWorkspace;
 export const findAttendanceRecordById = repo.findById;

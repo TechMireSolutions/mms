@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, serial, primaryKey } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, serial, primaryKey, foreignKey } from 'drizzle-orm/pg-core';
 import type { PlatformRole } from '@mms/shared';
 
 export const collections = pgTable('collections', {
@@ -46,7 +46,7 @@ export const tenantUsers = pgTable('tenant_users', {
   passwordHash: text('password_hash').notNull(),
   name: text('name').notNull().default(''),
   role: text('role').notNull().default('assistant_teacher'),
-  contactId: text('contact_id').references(() => contacts.id, { onDelete: 'set null' }),
+  contactId: text('contact_id'),
   emailVerifiedAt: timestamp('email_verified_at', { mode: 'date' }),
   pendingLoginEmail: text('pending_login_email'),
   mustChangePassword: boolean('must_change_password').notNull().default(false),
@@ -57,6 +57,10 @@ export const tenantUsers = pgTable('tenant_users', {
 }, (table) => [
   uniqueIndex('tenant_users_workspace_login_email_idx').on(table.workspaceSubdomain, table.loginEmail),
   index('tenant_users_workspace_idx').on(table.workspaceSubdomain),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.contactId],
+    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+  }).onDelete('set null'),
 ]);
 
 export const dataMigrations = pgTable('data_migrations', {
@@ -65,21 +69,23 @@ export const dataMigrations = pgTable('data_migrations', {
 });
 
 export const contacts = pgTable('contacts', {
-  id: text('id').primaryKey(),
+  id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull(),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
   index('contacts_workspace_subdomain_idx').on(table.workspaceSubdomain),
   index('contacts_custom_data_gin_idx').using('gin', table.customData),
 ]);
 
 export const students = pgTable('students', {
-  id: text('id').primaryKey(),
+  id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull(),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
   index('students_workspace_subdomain_idx').on(table.workspaceSubdomain),
   index('students_custom_data_gin_idx').using('gin', table.customData),
 ]);
@@ -95,21 +101,23 @@ export const teachers = pgTable('teachers', {
 ]);
 
 export const sessions = pgTable('sessions', {
-  id: text('id').primaryKey(),
+  id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull(),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
   index('sessions_workspace_subdomain_idx').on(table.workspaceSubdomain),
   index('sessions_custom_data_gin_idx').using('gin', table.customData),
 ]);
 
 export const attendance = pgTable('attendance', {
-  id: text('id').primaryKey(),
+  id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull(),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
   index('attendance_workspace_subdomain_idx').on(table.workspaceSubdomain),
   index('attendance_custom_data_gin_idx').using('gin', table.customData),
 ]);

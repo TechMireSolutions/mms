@@ -5,6 +5,7 @@ import { getDb } from '../dbClient.js';
 
 export interface GenericRepoOptions {
   updateStrategy?: 'merge' | 'overwrite';
+  conflictTarget?: AnyPgColumn | AnyPgColumn[];
 }
 
 type GenericTableRow = {
@@ -123,7 +124,7 @@ export function createGenericRepository<
       .insert(dbTable)
       .values(values)
       .onConflictDoUpdate({
-        target: table.id,
+        target: options.conflictTarget || table.id,
         set: {
           customData: sql`COALESCE(${table.customData}, '{}'::jsonb) || excluded.custom_data`,
           updatedAt: sql`excluded.updated_at`,

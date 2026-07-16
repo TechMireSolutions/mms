@@ -78,7 +78,7 @@ async function main() {
     workspaceSubdomain: subdomain,
     customData: sessionData,
   }).onConflictDoUpdate({
-    target: sessions.id,
+    target: [sessions.workspaceSubdomain, sessions.id],
     set: { customData: sessionData, workspaceSubdomain: subdomain },
   });
 

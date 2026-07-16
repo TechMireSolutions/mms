@@ -155,6 +155,13 @@
       "when": 1783353600000,
       "tag": "0021_force_tenant_password_change",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1784180400000,
+      "tag": "0022_contacts_students_composite_keys",
+      "breakpoints": true
     }
   ]
 }
