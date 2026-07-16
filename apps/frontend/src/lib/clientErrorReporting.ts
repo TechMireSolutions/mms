@@ -4,7 +4,7 @@ import * as Sentry from '@sentry/react';
  * Initializes client-side error reporting using Sentry if the DSN is configured.
  */
 export function initErrorReporting(): void {
-  const dsn = (import.meta.env.VITE_SENTRY_DSN as string | undefined) || (window as any)._MMS_SENTRY_DSN;
+  const dsn = (import.meta.env.VITE_SENTRY_DSN as string | undefined) || (window as unknown as { _MMS_SENTRY_DSN?: string })._MMS_SENTRY_DSN;
   if (!dsn) {
     if (import.meta.env.DEV) {
       console.info('[MMS] Sentry DSN not found. Client error reporting running in console-only mode.');

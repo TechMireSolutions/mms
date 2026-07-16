@@ -7,6 +7,7 @@ import {
   type QuestionTypeRegistryEntry,
   QUESTION_BANK_TAB_REGISTRY,
   INITIAL_QUESTION_BANK_FIELD_SEED,
+  type AppTranslationKey,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsDraft } from '@/tenant/features/settings/hooks/useSettingsDraft';
@@ -181,7 +182,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
                   onClick={() => toggleQuestionType(entry.id)}
                   className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors h-auto ${entry.enabled ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
                 >
-                  {t(`questionBank.type.${entry.id}` as any)}
+                  {t(`questionBank.type.${entry.id}` as AppTranslationKey)}
                 </Button>
               ))}
             </div>
@@ -200,7 +201,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
                   onClick={() => toggleDifficulty(entry.id)}
                   className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors h-auto ${entry.enabled ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
                 >
-                  {t(`questionBank.difficulty.${entry.id}` as any)}
+                  {t(`questionBank.difficulty.${entry.id}` as AppTranslationKey)}
                 </Button>
               ))}
             </div>

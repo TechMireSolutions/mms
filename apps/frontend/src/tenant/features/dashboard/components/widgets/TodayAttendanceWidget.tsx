@@ -8,6 +8,7 @@ import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hoo
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { rateToneClass } from "@/lib/semanticTone";
+import type { AppTranslationKey } from "@mms/shared";
 
 // Type definitions
 
@@ -150,7 +151,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
                 return (
                   <div key={status.id} className={`rounded-xl ${status.bg} ${status.text} border ${status.border} px-2 py-2 text-center`}>
                     <p className="text-base font-bold">{count}</p>
-                    <p className="text-[10px] font-semibold">{t(`attendance.status.${status.id}` as any) || status.label}</p>
+                    <p className="text-[10px] font-semibold">{t(`attendance.status.${status.id}` as AppTranslationKey) || status.label}</p>
                   </div>
                 );
               })}

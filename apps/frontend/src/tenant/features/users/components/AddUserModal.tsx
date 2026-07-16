@@ -338,8 +338,8 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
           <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">{t("users.addAdditionalDetails")}</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {orderedFields.filter((field) => !["name", "email", "role"].includes(field.id)).map((field) => {
-              const value = (form as any)[field.id] ?? "";
-              const updateFieldValue = (fieldValue: any) => setForm((previousForm) => ({ ...previousForm, [field.id]: fieldValue }));
+              const value = (form as unknown as Record<string, unknown>)[field.id] ?? "";
+              const updateFieldValue = (fieldValue: unknown) => setForm((previousForm) => ({ ...previousForm, [field.id]: fieldValue }));
               return (
                 <div key={field.id} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
                   <Label required={field.required}>{field.label}</Label>
@@ -369,7 +369,7 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
                   ) : field.type === "number" ? (
                     <UiInput
                       type="number"
-                      value={value}
+                      value={value as string | number}
                       onChange={(e) => updateFieldValue(e.target.value)}
                       placeholder={field.placeholder || t("users.addEnterNumber")}
                       required={field.required}

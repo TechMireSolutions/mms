@@ -4,6 +4,7 @@ import { Filter, ChevronDown, ChevronUp, X, Calendar } from "lucide-react";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { useTranslation } from "@/hooks/useTranslation";
+import type { AppTranslationKey } from "@mms/shared";
 
 const STATUSES: string[] = ["all", "active", "inactive", "completed"];
 
@@ -163,7 +164,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
                       <option key={status} value={status}>
                         {status === "all"
                           ? t("reports.filters.allStatuses")
-                          : t(`reports.filters.status${status.charAt(0).toUpperCase() + status.slice(1)}` as any)}
+                          : t(`reports.filters.status${status.charAt(0).toUpperCase() + status.slice(1)}` as AppTranslationKey)}
                       </option>
                     ))}
                   </select>

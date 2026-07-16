@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { formatDateTime } from "@mms/shared";
+import { formatDateTime, type AppTranslationKey } from "@mms/shared";
 import { Card } from "@/components/ui/card";
 import { ClipboardList, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -171,12 +171,12 @@ export function AuditLog({ filters }: AuditLogProps) {
             </thead>
             <tbody className="divide-y divide-border">
               {log.map((entry, index) => {
-                const actionLabel = ACTION_LABELS[entry.action] || { labelKey: entry.action as any, color: "bg-muted text-muted-foreground border-border" };
+                const actionLabel = ACTION_LABELS[entry.action] || { labelKey: entry.action as AppTranslationKey, color: "bg-muted text-muted-foreground border-border" };
                 return (
                   <tr key={index} className="hover:bg-muted/20 transition-colors">
                     <td className="px-3 py-2.5 text-[11px] font-mono text-muted-foreground whitespace-nowrap">{formatTimestamp(entry.ts)}</td>
                     <td className="px-3 py-2.5">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border ${actionLabel.color}`}>{t(actionLabel.labelKey as any)}</span>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border ${actionLabel.color}`}>{t(actionLabel.labelKey as AppTranslationKey)}</span>
                     </td>
                     <td className="px-3 py-2.5 text-xs text-foreground">{describeEntry(entry, studentNameFor, t)}</td>
                     <td className="px-3 py-2.5 text-xs font-semibold text-muted-foreground capitalize">{entry.by || "—"}</td>

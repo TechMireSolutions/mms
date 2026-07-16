@@ -1,4 +1,4 @@
-import { type Contact, formatMoney } from "@mms/shared";
+import { type Contact, formatMoney, type AppTranslationKey } from "@mms/shared";
 import { getObject } from "@/lib/db";
 import { type Student } from '@/lib/data/studentsData';
 import { type Teacher } from '@/lib/data/teachersData';
@@ -597,10 +597,10 @@ export function getReportVisual(id: string): VisualizerConfig {
 export function getFieldLabel(
   fieldValue: string,
   defaultLabel: string,
-  t: (key: any, params?: any) => string
+  t: (key: AppTranslationKey, params?: Record<string, string | number>) => string
 ): string {
   const transKey = `reports.fields.${fieldValue}`;
-  const translated = t(transKey as any);
+  const translated = t(transKey as AppTranslationKey);
   return translated === transKey ? defaultLabel : translated;
 }
 
@@ -614,9 +614,9 @@ export function getFieldLabel(
 export function getCollectionLabel(
   collectionValue: string,
   defaultLabel: string,
-  t: (key: any, params?: any) => string
+  t: (key: AppTranslationKey, params?: Record<string, string | number>) => string
 ): string {
   const transKey = `reports.collections.${collectionValue}`;
-  const translated = t(transKey as any);
+  const translated = t(transKey as AppTranslationKey);
   return translated === transKey ? defaultLabel : translated;
 }

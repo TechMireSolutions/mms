@@ -57,7 +57,8 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
     denominationId: denoms[0]?.id || "",
   });
 
-  const updateField = <K extends keyof Distribution>(field: K, value: Distribution[K]) => setData((previousData: Partial<Distribution>) => ({ ...previousData, [field]: value }));
+  const updateField = (field: string, value: unknown) =>
+    setData((previousData: Partial<Distribution>) => ({ ...previousData, [field]: value } as Partial<Distribution>));
 
   React.useEffect(() => {
     if (open) {
@@ -285,7 +286,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
               // Custom Field
               const isCustom = !DEFAULT_HASANAT_FIELD_DEFS.some((defaultField) => defaultField.id === field.id);
               if (isCustom) {
-                const fieldValue = (data as any)[field.id] ?? "";
+                const fieldValue = (data as unknown as Record<string, unknown>)[field.id] ?? "";
                 return (
                   <div key={field.id} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
                     <label className={FORM_LABEL}>
@@ -296,14 +297,14 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                         id={`custom-${field.id}`}
                         name={field.id}
                         value={fieldValue as string}
-                        onChange={(event) => updateField(field.id as any, event.target.value as any)}
+                        onChange={(event) => updateField(field.id, event.target.value)}
                         placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
                         required={field.required}
                       />
                     ) : field.type === "select" ? (
                       <FormSelect
                         value={fieldValue as string}
-                        onChange={(value) => updateField(field.id as any, value as any)}
+                        onChange={(value) => updateField(field.id, value)}
                         placeholder="Select option…"
                         options={field.options || []}
                       />
@@ -311,7 +312,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                       <label className="flex items-center gap-2.5 py-2 cursor-pointer select-none">
                         <Checkbox
                           checked={!!fieldValue}
-                          onCheckedChange={(checked) => updateField(field.id as any, !!checked as any)}
+                          onCheckedChange={(checked) => updateField(field.id, !!checked)}
                         />
                         <span className="text-xs font-medium text-foreground">{field.label}</span>
                       </label>
@@ -319,15 +320,15 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                       <Input
                         type="number"
                         className={FORM_INPUT}
-                        value={fieldValue as number}
-                        onChange={(event) => updateField(field.id as any, event.target.value as any)}
+                        value={fieldValue as string | number}
+                        onChange={(event) => updateField(field.id, event.target.value)}
                         placeholder={field.placeholder || `Enter number…`}
                         required={field.required}
                       />
                     ) : field.type === "date" ? (
                       <DatePicker
                         value={fieldValue as string}
-                        onChange={(value) => updateField(field.id as any, value as any)}
+                        onChange={(value) => updateField(field.id, value)}
                         required={field.required}
                       />
                     ) : (
@@ -335,7 +336,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                         type="text"
                         className={FORM_INPUT}
                         value={fieldValue as string}
-                        onChange={(event) => updateField(field.id as any, event.target.value as any)}
+                        onChange={(event) => updateField(field.id, event.target.value)}
                         placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
                         required={field.required}
                       />

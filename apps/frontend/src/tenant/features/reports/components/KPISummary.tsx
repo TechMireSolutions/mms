@@ -20,7 +20,7 @@ import { useStudentsMetrics, useStudentsWidgetAggregates } from "@/tenant/featur
 import { useTeachersMetrics, useTeachersWidgetAggregates } from "@/tenant/features/teachers/hooks/useTeachers";
 import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
-import { type Contact } from "@mms/shared";
+import { type Contact, type AppTranslationKey } from "@mms/shared";
 import { type AttendanceRecord } from '@/lib/data/attendanceData';
 import { type Invoice } from '@/lib/data/financeData';
 import { type Student } from '@/lib/data/studentsData';
@@ -942,7 +942,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   };
 
   const categoryLabelKey = getCategoryLabelKey(category);
-  const moduleLabel = categoryLabelKey ? t(categoryLabelKey as any) : category;
+  const moduleLabel = categoryLabelKey ? t(categoryLabelKey as AppTranslationKey) : category;
 
   return (
     <div className="space-y-3 w-full">

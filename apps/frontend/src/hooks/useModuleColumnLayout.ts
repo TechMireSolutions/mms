@@ -5,6 +5,7 @@ import {
   isModuleColumnVisible,
   type ModuleColumnPref,
   type ModuleColumnRegistryEntry,
+  type AppTranslationKey,
 } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -123,12 +124,12 @@ export function useModuleColumnLayout({
 
   const customizerLabels = useMemo(
     () => ({
-      trigger: t(`${translationPrefix}.trigger` as any),
-      title: t(`${translationPrefix}.title` as any),
-      visibleAndOrder: t(`${translationPrefix}.visibleAndOrder` as any),
-      hidden: t(`${translationPrefix}.hidden` as any),
-      fixed: t(`${translationPrefix}.fixed` as any),
-      hideColumn: (label: string) => t(`${translationPrefix}.hideColumn` as any, { label }),
+      trigger: t(`${translationPrefix}.trigger` as AppTranslationKey),
+      title: t(`${translationPrefix}.title` as AppTranslationKey),
+      visibleAndOrder: t(`${translationPrefix}.visibleAndOrder` as AppTranslationKey),
+      hidden: t(`${translationPrefix}.hidden` as AppTranslationKey),
+      fixed: t(`${translationPrefix}.fixed` as AppTranslationKey),
+      hideColumn: (label: string) => t(`${translationPrefix}.hideColumn` as AppTranslationKey, { label }),
     }),
     [t, translationPrefix],
   );

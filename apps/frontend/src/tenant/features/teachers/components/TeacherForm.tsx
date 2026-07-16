@@ -204,7 +204,7 @@ export function TeacherForm({
         <Field label={t("teachers.field.status") || "Status"}>
           <FormSelect
             value={teacherDraft.status || "active"}
-            onChange={(val) => updateDraft({ status: val as any })}
+            onChange={(val) => updateDraft({ status: val as Teacher["status"] })}
             options={TEACHER_STATUS_VALUES.map((status) => {
               const translationKey = `teachers.status.${status}` as AppTranslationKey;
               const translated = t(translationKey);

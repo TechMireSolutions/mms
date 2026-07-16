@@ -16,6 +16,7 @@ import {
   buildStorageKeysFromSnapshot,
   type TenantDatabaseSnapshot,
   applyTitleCaseRecursive,
+  type TabDefinition,
 } from "@mms/shared";
 import { getAppDomain } from "@/lib/config/tenantConfig";
 import {
@@ -669,16 +670,12 @@ export function saveObject<T>(key: string, objectValue: T): void {
     const processed = writeObjectLocal(key, objectValue);
     const moduleId = CONFIG_KEY_TO_MODULE[key];
     if (moduleId && objectValue && typeof objectValue === 'object' && 'formTabs' in objectValue) {
-      const objAny = objectValue as any;
-      const formTabs = objAny.formTabs;
-      
-      const cleaned = { ...processed as any };
-      delete cleaned.formTabs;
+      const { formTabs, ...cleaned } = processed as unknown as { formTabs?: unknown } & Record<string, unknown>;
       
       void syncToServer(`/api/db/objects/${key}`, cleaned);
       
       if (Array.isArray(formTabs)) {
-        const tabsForBulk = formTabs.map((tab: any, idx: number) => ({
+        const tabsForBulk = (formTabs as TabDefinition[]).map((tab, idx: number) => ({
           key: tab.key,
           label: tab.label,
           icon: tab.icon || null,

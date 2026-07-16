@@ -24,6 +24,8 @@ import {
   type QuestionSourceBook,
   type QuestionBookCitation,
   type QuestionBankQuestion as Question,
+  type AppTranslationKey,
+  type ModuleFieldDef,
 } from '@mms/shared';
 
 interface QuestionFormProps {
@@ -172,7 +174,7 @@ export function QuestionForm({
             updateDraft({ categoryIds: list });
           }}
           required
-          translate={(key) => t(key as any) || String(key)}
+          translate={(key) => t(key as AppTranslationKey) || String(key)}
         />
         {errors.categoryIds && (
           <p className="text-[10px] text-destructive font-medium">{errors.categoryIds}</p>
@@ -311,7 +313,7 @@ export function QuestionForm({
                 answer={String(questionDraft.answer ?? '')}
                 onOptionsChange={(next) => updateDraft({ options: next })}
                 onAnswerChange={(next) => updateDraft({ answer: next })}
-                t={(key) => t(key as any) || String(key)}
+                t={(key) => t(key as AppTranslationKey) || String(key)}
               />
             )}
           </div>
@@ -342,11 +344,11 @@ export function QuestionForm({
             sourceBooks={sourceBooks}
             citations={questionDraft.sourceCitations}
             availableFieldIds={availableFieldIds}
-            orderedSourceFields={sourceFields as any}
+            orderedSourceFields={sourceFields as ModuleFieldDef[]}
             onCitationsChange={(next) => updateDraft({ sourceCitations: next })}
             onBooksUpdated={() => {}}
             fieldLabel={(id, fallback) => fallback || String(id)}
-            translate={(key) => t(key as any) || String(key)}
+            translate={(key) => t(key as AppTranslationKey) || String(key)}
           />
         </section>
       </div>

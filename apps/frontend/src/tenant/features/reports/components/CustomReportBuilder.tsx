@@ -751,7 +751,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                 )}
                 {aggregate !== "None" && (
                   <span className="text-[9px] font-bold uppercase bg-success/15 text-success px-1.5 py-0.5 rounded-md">
-                    {t(`reports.visualizer.op${aggregate === "Average" ? "Avg" : aggregate}` as any)}
+                    {t(`reports.visualizer.op${aggregate === "Average" ? "Avg" : aggregate}` as AppTranslationKey)}
                   </span>
                 )}
               </div>

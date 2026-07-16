@@ -151,7 +151,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
               <FormSelect
                 id="exam-status"
                 value={examDraft.status || "upcoming"}
-                onChange={(val) => updateDraft({ status: val as any })}
+                onChange={(val) => updateDraft({ status: val as Exam["status"] })}
                 options={[
                   { value: "upcoming", label: "Upcoming" },
                   { value: "ongoing", label: "Ongoing" },

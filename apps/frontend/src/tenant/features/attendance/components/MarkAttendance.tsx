@@ -318,7 +318,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
         timeIn: attendanceRecord.timeIn || "07:00",
         timeOut: attendanceRecord.timeOut || "08:30",
         notes: attendanceRecord.notes || "",
-        ...((attendanceRecord as any).customFields || {}),
+        ...((attendanceRecord as unknown as { customFields?: Record<string, unknown> }).customFields || {}),
       }));
     }
     return buildDefaultRows(students, customFields);
@@ -358,7 +358,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
         timeIn: attendanceRecord.timeIn || "07:00",
         timeOut: attendanceRecord.timeOut || "08:30",
         notes: attendanceRecord.notes || "",
-        ...((attendanceRecord as any).customFields || {}),
+        ...((attendanceRecord as unknown as { customFields?: Record<string, unknown> }).customFields || {}),
       }));
     } else {
       nextRows = buildDefaultRows(students, customFields);

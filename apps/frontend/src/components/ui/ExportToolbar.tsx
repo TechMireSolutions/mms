@@ -136,7 +136,7 @@ export function ExportToolbar({
     const resolvedOrientation = resolvedVariant === "compact" ? "landscape" : orientation;
 
     const doc = new jsPDF({
-      orientation: resolvedOrientation as any,
+      orientation: resolvedOrientation as "p" | "l" | "portrait" | "landscape",
       unit: "mm",
       format: formatSize,
     });

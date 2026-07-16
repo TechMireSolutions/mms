@@ -84,7 +84,7 @@ export default function StudentList({
   const fields = useMemo(() => settings.fields || {}, [settings.fields]);
 
   const isFieldEnabled = React.useCallback((fieldKey: string): boolean => {
-    for (const tabFields of Object.values(fields) as any[][]) {
+    for (const tabFields of Object.values(fields) as FieldDefinition[][]) {
       const fieldDefinition = tabFields.find((tabField) => tabField.key === fieldKey);
       if (fieldDefinition) {
         return fieldDefinition.enabled !== false;
