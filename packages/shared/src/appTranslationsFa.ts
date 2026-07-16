@@ -1,9 +1,11 @@
+import type { AppTranslationKey } from "./appTranslations.js";
+
 /**
  * Persian (Farsi) UI overrides.
  * Merged atop the Arabic map in `appTranslations.ts` (`{ ...ar, ...APP_TRANSLATIONS_FA }`).
  * Add a key here when Persian copy should differ from Arabic; otherwise Arabic fallback applies.
  */
-export const APP_TRANSLATIONS_FA = {
+export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "nav.dashboard": "داشبورد",
   "nav.contacts": "مخاطبین",
   "nav.academics": "آموزش",

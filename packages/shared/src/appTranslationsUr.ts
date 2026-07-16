@@ -1,5 +1,7 @@
+import type { AppTranslationKey } from "./appTranslations.js";
+
 /** Full Urdu UI string pack (Pakistani Urdu). */
-export const APP_TRANSLATIONS_UR = {
+export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "nav.dashboard": "ڈیش بورڈ",
   "nav.contacts": "رابطے",
   "nav.messaging": "پیغام رسانی",

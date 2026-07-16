@@ -71,10 +71,10 @@ describe('custom tabs REST API routes', () => {
       },
     });
 
-    if (postRes.statusCode !== 200) {
+    if (postRes.statusCode !== 201) {
       console.error('postRes failed:', postRes.statusCode, postRes.body);
     }
-    expect(postRes.statusCode).toBe(200);
+    expect(postRes.statusCode).toBe(201);
     const postBody = JSON.parse(postRes.body);
     expect(postBody.tab.key).toBe('route_test_tab');
     expect(postBody.tab.label).toBe('Route Test Tab');

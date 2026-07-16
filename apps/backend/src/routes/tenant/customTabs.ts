@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import type { ZodType } from 'zod';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { canReadCollection, canWriteCollection } from '../../services/rbacService.js';
 import type { User } from '@mms/shared';
@@ -18,7 +19,7 @@ import {
   customTabQuerySchema,
 } from '../../validation/customTabSchemas.js';
 import { resourceIdParamsSchema } from '../../validation/commonSchemas.js';
-import { registerBulkPutRoute } from '../../lib/crudRouter.js';
+import { registerBulkPutRoute, registerResourceRoutes, type ResourceRecord } from '../../lib/crudRouter.js';
 
 const CUSTOM_TABS_COLLECTION = 'custom_tabs';
 
@@ -27,6 +28,21 @@ export default async function customTabRoutes(
   _options: FastifyPluginOptions
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
+
+  // --- Resource CRUD (POST and DELETE) ---
+  registerResourceRoutes(fastify, {
+    collection: CUSTOM_TABS_COLLECTION,
+    schema: customTabSchema as unknown as ZodType<ResourceRecord>,
+    createFn: createCustomTab as unknown as (data: ResourceRecord) => Promise<unknown>,
+    deleteFn: async (id) => {
+      await deleteCustomTab(id);
+      return true;
+    },
+    nameSingular: 'tab',
+    namePlural: 'tabs',
+    customGetRoute: true,
+    customPutRoute: true,
+  });
 
   // GET /api/custom-tabs
   fastify.get('/', async (request, reply) => {
@@ -41,22 +57,6 @@ export default async function customTabRoutes(
       return reply.send({ tabs });
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to load custom tabs' });
-    }
-  });
-
-  // POST /api/custom-tabs
-  fastify.post('/', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, CUSTOM_TABS_COLLECTION)) return sendForbidden(reply);
-    
-    const parsed = parseRequest(customTabSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    
-    try {
-      const tab = await createCustomTab(parsed.data);
-      return reply.send({ tab });
-    } catch (err) {
-      return reply.status(500).send({ type: 'database_error', message: err instanceof Error ? err.message : 'Failed to create custom tab' });
     }
   });
 
@@ -87,20 +87,5 @@ export default async function customTabRoutes(
       return reply.status(500).send({ type: 'database_error', message: err instanceof Error ? err.message : 'Failed to update custom tab' });
     }
   });
-
-  // DELETE /api/custom-tabs/:id
-  fastify.delete('/:id', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, CUSTOM_TABS_COLLECTION)) return sendForbidden(reply);
-    
-    const paramsParsed = parseRequest(resourceIdParamsSchema, request.params);
-    if (!paramsParsed.ok) return replyValidationError(reply, paramsParsed.message);
-    
-    try {
-      await deleteCustomTab(paramsParsed.data.id);
-      return reply.send({ success: true });
-    } catch (err) {
-      return reply.status(500).send({ type: 'database_error', message: err instanceof Error ? err.message : 'Failed to delete custom tab' });
-    }
-  });
 }
+

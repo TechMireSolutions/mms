@@ -124,17 +124,7 @@ export async function rotateRefreshToken(
   accessExpiresIn: string,
 ): Promise<{ accessToken: string; refreshToken: string } | null> {
   // Rotation: issue new pair; old refresh artifact was deleted by the caller.
-  const refreshToken = createRefreshTokenValue();
-  await putAuthArtifact<RefreshTokenPayload>(
-    'refresh_token',
-    {
-      userId: user.id,
-      workspaceSubdomain: user.workspaceSubdomain,
-      tokenHash: hashRefreshToken(refreshToken),
-    },
-    REFRESH_TTL_MS,
-    randomBytes(16).toString('hex'),
-  );
+  const refreshToken = await issueRefreshToken(user);
 
   const accessToken = jwtSigner.sign(
     { ...user, twoFactorVerified: true, tokenType: 'access' },

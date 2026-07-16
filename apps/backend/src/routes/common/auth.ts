@@ -11,7 +11,7 @@ import {
 import { exchangeAuthHandoff } from '../../services/auth/authHandoffService.js';
 import type { Contact } from '@mms/shared';
 import { resendTwoFactorChallenge } from '../../services/auth/twoFactorService.js';
-import { resolveSubdomainFromRequest } from '../../lib/tenantContext.js';
+import { getRequestTenant } from '../../lib/tenantContext.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
 import { clearAuthCookies, REFRESH_COOKIE, setAuthCookies } from '../../services/auth/authCookieService.js';
 import { authenticateTenant } from '../../middleware/authenticate.js';
@@ -55,10 +55,7 @@ export default async function authRoutes(
       const body = parseRequest(loginBodySchema, request.body);
       if (!body.ok) return replyValidationError(reply, body.message);
       const { email, password } = body.data;
-      const subdomain = resolveSubdomainFromRequest(
-        request.hostname,
-        request.headers['x-forwarded-host']
-      );
+      const subdomain = getRequestTenant();
 
       if (!subdomain) {
         return reply.status(400).send({
@@ -319,10 +316,7 @@ export default async function authRoutes(
       return reply.status(401).send({ type: 'auth_required', message: 'Refresh token missing' });
     }
 
-    const subdomain = resolveSubdomainFromRequest(
-      request.hostname,
-      request.headers['x-forwarded-host'],
-    );
+    const subdomain = getRequestTenant();
     if (!subdomain) {
       return reply.status(403).send({ type: 'forbidden', message: 'Invalid refresh context' });
     }
@@ -364,10 +358,7 @@ export default async function authRoutes(
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     const { code } = parsed.data;
 
-    const subdomain = resolveSubdomainFromRequest(
-      request.hostname,
-      request.headers['x-forwarded-host'],
-    );
+    const subdomain = getRequestTenant();
     if (!subdomain) {
       return reply.status(403).send({
         type: 'forbidden',

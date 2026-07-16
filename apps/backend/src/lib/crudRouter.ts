@@ -14,7 +14,7 @@ import {
   widgetQuerySchema,
 } from '../validation/commonSchemas.js';
 
-type ResourceRecord = { id?: string | number };
+export type ResourceRecord = { id?: string | number };
 type WidgetQuery = z.infer<typeof widgetQuerySchema>;
 
 export interface BulkRoutesOptions<T> {
@@ -75,8 +75,8 @@ export interface ResourceRoutesOptions<T extends ResourceRecord> {
   loadByIdFn?: (id: string, includeDeleted?: boolean) => Promise<unknown | null>;
   createFn?: (data: T) => Promise<unknown>;
   updateFn?: (id: string, data: T) => Promise<unknown | null>;
-  deleteFn: (id: string, userId: string, reason?: string) => Promise<unknown | null>;
-  restoreFn: (id: string) => Promise<unknown | null>;
+  deleteFn?: (id: string, userId: string, reason?: string) => Promise<unknown | null>;
+  restoreFn?: (id: string) => Promise<unknown | null>;
   nameSingular: string;
   namePlural: string;
   customGetRoute?: boolean;
@@ -203,52 +203,56 @@ export function registerResourceRoutes<T extends ResourceRecord>(
   }
 
   // DELETE /:id or DELETE /prefix/:id
-  fastify.delete<{ Params: { id: string } }>(`${prefix}/:id`, async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, collection)) return sendForbidden(reply);
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    const body = parseRequest(softDeleteBodySchema, request.body ?? {});
-    if (!body.ok) return replyValidationError(reply, body.message);
-    try {
-      const deleted = await deleteFn(params.data.id, String(user.id), body.data.deletionReason);
-      if (!deleted) {
-        return reply.status(404).send({
-          type: 'not_found',
-          message: `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found`,
+  if (deleteFn) {
+    fastify.delete<{ Params: { id: string } }>(`${prefix}/:id`, async (request, reply) => {
+      const user = request.user as User;
+      if (!canWriteCollection(user, collection)) return sendForbidden(reply);
+      const params = parseRequest(resourceIdParamsSchema, request.params);
+      if (!params.ok) return replyValidationError(reply, params.message);
+      const body = parseRequest(softDeleteBodySchema, request.body ?? {});
+      if (!body.ok) return replyValidationError(reply, body.message);
+      try {
+        const deleted = await deleteFn(params.data.id, String(user.id), body.data.deletionReason);
+        if (!deleted) {
+          return reply.status(404).send({
+            type: 'not_found',
+            message: `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found`,
+          });
+        }
+        return reply.send({ success: true });
+      } catch {
+        return reply.status(500).send({
+          type: 'database_error',
+          message: `Failed to delete ${nameSingular}`,
         });
       }
-      return reply.send({ success: true });
-    } catch {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: `Failed to delete ${nameSingular}`,
-      });
-    }
-  });
+    });
+  }
 
   // POST /:id/restore or POST /prefix/:id/restore
-  fastify.post(`${prefix}/:id/restore`, async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, collection)) return sendForbidden(reply);
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    try {
-      const restored = await restoreFn(params.data.id);
-      if (!restored) {
-        return reply.status(404).send({
-          type: 'not_found',
-          message: `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found or not deleted`,
+  if (restoreFn) {
+    fastify.post(`${prefix}/:id/restore`, async (request, reply) => {
+      const user = request.user as User;
+      if (!canWriteCollection(user, collection)) return sendForbidden(reply);
+      const params = parseRequest(resourceIdParamsSchema, request.params);
+      if (!params.ok) return replyValidationError(reply, params.message);
+      try {
+        const restored = await restoreFn(params.data.id);
+        if (!restored) {
+          return reply.status(404).send({
+            type: 'not_found',
+            message: `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found or not deleted`,
+          });
+        }
+        return reply.send({ success: true });
+      } catch {
+        return reply.status(500).send({
+          type: 'database_error',
+          message: `Failed to restore ${nameSingular}`,
         });
       }
-      return reply.send({ success: true });
-    } catch {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: `Failed to restore ${nameSingular}`,
-      });
-    }
-  });
+    });
+  }
 }
 
 export interface MetricsRouteOptions {

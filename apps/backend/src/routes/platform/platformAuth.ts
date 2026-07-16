@@ -28,8 +28,9 @@ import {
   updatePlatformUserPassword,
   updatePlatformUserProfile,
 } from '../../services/platform/platformProfileService.js';
-import { resolveSubdomainFromRequest } from '../../lib/tenantContext.js';
+import { getRequestTenant } from '../../lib/tenantContext.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
+import { sendMappedError } from '../../lib/httpErrors.js';
 import {
   platformChangePasswordBodySchema,
   platformPasswordForgotBodySchema,
@@ -43,67 +44,43 @@ import {
 import { loginBodySchema as platformLoginBodySchema } from '../../validation/commonSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
-function assertApexHost(hostname: string, forwardedHost: string | string[] | undefined): boolean {
-  return !resolveSubdomainFromRequest(hostname, forwardedHost);
-}
+const SETUP_ERROR_STATUSES: Record<PlatformSetupError['code'], number> = {
+  setup_not_needed: 409,
+  invalid_email: 400,
+  invalid_name: 400,
+  password_too_short: 400,
+  password_weak: 400,
+  email_send_failed: 502,
+  smtp_required: 503,
+  invalid_setup: 404,
+  invalid_code: 401,
+  user_exists: 409,
+};
 
-function mapSetupError(error: PlatformSetupError): { status: number; body: Record<string, string> } {
-  const statusByCode: Record<PlatformSetupError['code'], number> = {
-    setup_not_needed: 409,
-    invalid_email: 400,
-    invalid_name: 400,
-    password_too_short: 400,
-    password_weak: 400,
-    email_send_failed: 502,
-    smtp_required: 503,
-    invalid_setup: 404,
-    invalid_code: 401,
-    user_exists: 409,
-  };
-  return {
-    status: statusByCode[error.code] ?? 400,
-    body: { type: error.code, message: error.message },
-  };
-}
+const PASSWORD_RESET_ERROR_STATUSES: Record<PlatformPasswordResetError['code'], number> = {
+  invalid_email: 400,
+  password_too_short: 400,
+  password_weak: 400,
+  email_send_failed: 502,
+  smtp_required: 503,
+  invalid_reset: 404,
+  invalid_code: 401,
+};
 
-function mapPasswordResetError(
-  error: PlatformPasswordResetError,
-): { status: number; body: Record<string, string> } {
-  const statusByCode: Record<PlatformPasswordResetError['code'], number> = {
-    invalid_email: 400,
-    password_too_short: 400,
-    password_weak: 400,
-    email_send_failed: 502,
-    smtp_required: 503,
-    invalid_reset: 404,
-    invalid_code: 401,
-  };
-  return {
-    status: statusByCode[error.code] ?? 400,
-    body: { type: error.code, message: error.message },
-  };
-}
-
-function mapProfileError(error: PlatformProfileError): { status: number; body: Record<string, string> } {
-  const statusByCode: Record<PlatformProfileError['code'], number> = {
-    invalid_name: 400,
-    password_too_short: 400,
-    password_weak: 400,
-    invalid_current_password: 401,
-    user_not_found: 404,
-  };
-  return {
-    status: statusByCode[error.code] ?? 400,
-    body: { type: error.code, message: error.message },
-  };
-}
+const PROFILE_ERROR_STATUSES: Record<PlatformProfileError['code'], number> = {
+  invalid_name: 400,
+  password_too_short: 400,
+  password_weak: 400,
+  invalid_current_password: 401,
+  user_not_found: 404,
+};
 
 export default async function platformAuthRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', async (request, reply) => {
-    if (!assertApexHost(request.hostname, request.headers['x-forwarded-host'])) {
+    if (getRequestTenant()) {
       return reply.status(403).send({
         type: 'forbidden',
         message: 'Platform actions are only available on the main domain',
@@ -127,8 +104,7 @@ export default async function platformAuthRoutes(
           return reply.send(result);
         } catch (error) {
           if (error instanceof PlatformSetupError) {
-            const mapped = mapSetupError(error);
-            return reply.status(mapped.status).send(mapped.body);
+            return sendMappedError(reply, error, SETUP_ERROR_STATUSES);
           }
           throw error;
         }
@@ -150,8 +126,7 @@ export default async function platformAuthRoutes(
           return reply.send({ user });
         } catch (error) {
           if (error instanceof PlatformSetupError) {
-            const mapped = mapSetupError(error);
-            return reply.status(mapped.status).send(mapped.body);
+            return sendMappedError(reply, error, SETUP_ERROR_STATUSES);
           }
           throw error;
         }
@@ -167,8 +142,7 @@ export default async function platformAuthRoutes(
           return reply.send(result);
         } catch (error) {
           if (error instanceof PlatformSetupError) {
-            const mapped = mapSetupError(error);
-            return reply.status(mapped.status).send(mapped.body);
+            return sendMappedError(reply, error, SETUP_ERROR_STATUSES);
           }
           throw error;
         }
@@ -188,8 +162,7 @@ export default async function platformAuthRoutes(
           return reply.send(result);
         } catch (error) {
           if (error instanceof PlatformPasswordResetError) {
-            const mapped = mapPasswordResetError(error);
-            return reply.status(mapped.status).send(mapped.body);
+            return sendMappedError(reply, error, PASSWORD_RESET_ERROR_STATUSES);
           }
           throw error;
         }
@@ -211,8 +184,7 @@ export default async function platformAuthRoutes(
           return reply.send({ user });
         } catch (error) {
           if (error instanceof PlatformPasswordResetError) {
-            const mapped = mapPasswordResetError(error);
-            return reply.status(mapped.status).send(mapped.body);
+            return sendMappedError(reply, error, PASSWORD_RESET_ERROR_STATUSES);
           }
           throw error;
         }
@@ -228,8 +200,7 @@ export default async function platformAuthRoutes(
           return reply.send(result);
         } catch (error) {
           if (error instanceof PlatformPasswordResetError) {
-            const mapped = mapPasswordResetError(error);
-            return reply.status(mapped.status).send(mapped.body);
+            return sendMappedError(reply, error, PASSWORD_RESET_ERROR_STATUSES);
           }
           throw error;
         }
@@ -286,8 +257,7 @@ export default async function platformAuthRoutes(
         return reply.send({ user: profile });
       } catch (error) {
         if (error instanceof PlatformProfileError) {
-          const mapped = mapProfileError(error);
-          return reply.status(mapped.status).send(mapped.body);
+          return sendMappedError(reply, error, PROFILE_ERROR_STATUSES);
         }
         throw error;
       }
@@ -313,8 +283,7 @@ export default async function platformAuthRoutes(
           return reply.send({ success: true });
         } catch (error) {
           if (error instanceof PlatformProfileError) {
-            const mapped = mapProfileError(error);
-            return reply.status(mapped.status).send(mapped.body);
+            return sendMappedError(reply, error, PROFILE_ERROR_STATUSES);
           }
           throw error;
         }

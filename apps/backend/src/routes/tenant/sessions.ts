@@ -1,6 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { canReadCollection, canWriteCollection } from '../../services/rbacService.js';
 import {
   createSession,
   deleteSessionById,
@@ -8,13 +7,14 @@ import {
   loadSessions,
   updateSessionById,
 } from '../../services/sessionService.js';
-import type { User } from '@mms/shared';
 import { computeSessionsCommandMetrics, SESSIONS_MODULE_CONTRACT } from '@mms/shared';
-import { sendForbidden } from '../../lib/httpErrors.js';
 import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
-import { registerResourceRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
+import {
+  registerResourceRoutes,
+  registerMetricsRoute,
+  registerPaginatedListRoute,
+} from '../../lib/crudRouter.js';
 import { sessionRecordSchema, sessionsListQuerySchema } from '../../validation/sessionSchemas.js';
-import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
 const COLLECTION = 'sessions';
 
@@ -27,22 +27,14 @@ export default async function sessionsRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
-  // --- Custom GET ---
-  fastify.get('/', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, COLLECTION)) return sendForbidden(reply);
-    const queryParsed = parseRequest(sessionsListQuerySchema, request.query);
-    if (!queryParsed.ok) return replyValidationError(reply, queryParsed.message);
-    try {
-      const query = queryParsed.data;
-      const includeDeleted = query.includeDeleted === 'true';
-      if (includeDeleted && !canWriteCollection(user, COLLECTION)) {
-        return sendForbidden(reply);
-      }
-      return reply.send({ sessions: await loadSessions({ includeDeleted }) });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to list sessions' });
-    }
+  // --- GET List (Paginated) ---
+  registerPaginatedListRoute(fastify, {
+    collection: COLLECTION,
+    schema: sessionsListQuerySchema,
+    defaultPageSize: SESSIONS_MODULE_CONTRACT.defaultPageSize,
+    errorMessagePrefix: 'sessions',
+    loadPageFn: async () => ([] as any),
+    loadAllFn: (options) => loadSessions(options),
   });
 
   // --- Metrics ---
