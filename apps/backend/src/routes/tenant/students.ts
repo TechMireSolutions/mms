@@ -19,19 +19,13 @@ import type { User } from '@mms/shared';
 import { STUDENTS_MODULE_CONTRACT, computeStudentsCommandMetrics } from '@mms/shared';
 import { sendForbidden } from '../../lib/httpErrors.js';
 import { resourceIdParamsSchema } from '../../validation/commonSchemas.js';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { studentRecordSchema, studentsListQuerySchema, studentsNextGrNumberQuerySchema, studentsDuplicateCheckBodySchema } from '../../validation/studentSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { validateStudentDynamic } from '../../services/studentValidationService.js';
 import {
   registerResourceRoutes,
-  registerMetricsRoute,
-  registerCountRoute,
-  registerResolveRoute,
-  registerWidgetAggregatesRoute,
-  registerLinkedContactIdsRoute,
-  registerPaginatedListRoute,
+  registerStandardExtendedRoutes,
 } from '../../lib/crudRouter.js';
 
 /**
@@ -43,46 +37,20 @@ export default async function studentsRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
-  // --- Custom GET List (Paginated) ---
-  registerPaginatedListRoute(fastify, {
+  // --- Register Standard Extended Routes ---
+  registerStandardExtendedRoutes(fastify, {
     collection: 'students',
-    schema: studentsListQuerySchema,
+    listQuerySchema: studentsListQuerySchema,
     defaultPageSize: STUDENTS_MODULE_CONTRACT.defaultPageSize,
     errorMessagePrefix: 'students',
+    nameSingular: 'student',
     loadPageFn: (query) => loadStudentsPage(query),
-  });
-
-
-  // --- Custom GET Count ---
-  registerCountRoute(fastify, {
-    collection: 'students',
     loadAllFn: loadStudents,
-    errorMessagePrefix: 'students',
-  });
-
-  // --- Custom GET Metrics ---
-  registerMetricsRoute(fastify, {
-    collection: 'students',
-    loadMetricsFn: async () => {
-      const students = await loadStudents();
-      return computeStudentsCommandMetrics(students);
-    },
-    errorMessagePrefix: 'student',
-  });
-
-  // --- Custom POST Widget Aggregates ---
-  registerWidgetAggregatesRoute(fastify, {
-    collection: 'students',
-    loadAggregatesFn: loadStudentsWidgetAggregates,
-    errorMessagePrefix: 'student',
-  });
-
-  // --- Custom POST Resolve ---
-  registerResolveRoute(fastify, {
-    collection: 'students',
+    computeMetricsFn: (students) => computeStudentsCommandMetrics(students),
+    loadWidgetAggregatesFn: loadStudentsWidgetAggregates,
     loadByIdsFn: loadStudentsByIds,
-    responseKey: 'students',
-    errorMessagePrefix: 'students',
+    loadLinkedContactIdsFn: loadStudentLinkedContactIds,
+    columnPreferencesObjectKey: STUDENTS_MODULE_CONTRACT.columnPreferencesObjectKey,
   });
 
   // --- Custom GET Next GR Number ---
@@ -104,13 +72,6 @@ export default async function studentsRoutes(
     }
   });
 
-  // --- Custom GET Linked Contact IDs ---
-  registerLinkedContactIdsRoute(fastify, {
-    collection: 'students',
-    loadLinkedContactIdsFn: loadStudentLinkedContactIds,
-    errorMessagePrefix: 'students',
-  });
-
   // --- Custom POST Duplicate Check ---
   fastify.post('/duplicate-check', async (request, reply) => {
     const user = request.user as User;
@@ -124,10 +85,6 @@ export default async function studentsRoutes(
     }
   });
 
-  registerColumnPreferencesRoutes(fastify, {
-    collection: 'students',
-    objectKey: STUDENTS_MODULE_CONTRACT.columnPreferencesObjectKey,
-  });
 
   // --- Custom POST Create (Dynamic Validation) ---
   fastify.post('/', {

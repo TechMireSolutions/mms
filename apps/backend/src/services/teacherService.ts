@@ -16,9 +16,7 @@ import {
 import { loadContacts } from './contactService.js';
 import {
   createGenericRelationalService,
-  loadHydratedAll,
-  loadHydratedById,
-  loadHydratedByIds,
+  createContactHydratedService,
   type GenericServiceOptions,
 } from './genericRelationalService.js';
 import {
@@ -46,14 +44,17 @@ export const updateTeacherById = crud.updateById;
 export const deleteTeacherById = crud.deleteById;
 export const restoreTeacherById = crud.restoreById;
 
-export async function loadTeachers(options?: { includeDeleted?: boolean }): Promise<TeacherRecord[]> {
-  return loadHydratedAll(
-    listTeachersByWorkspace,
-    loadContacts,
-    (row, contacts) => hydrateTeacherFromContact(row as never, contacts as never),
-    options,
-  ) as unknown as TeacherRecord[];
-}
+const hydrated = createContactHydratedService<any, any>({
+  listByWorkspaceFn: listTeachersByWorkspace,
+  findByIdFn: findTeacherById,
+  findByIdsFn: findTeachersByIds,
+  loadContactsFn: loadContacts,
+  hydrateFn: (row, contacts) => hydrateTeacherFromContact(row as never, contacts as never) as unknown as TeacherRecord,
+});
+
+export const loadTeachers = hydrated.loadAll;
+export const loadTeacherById = hydrated.loadById;
+export const loadTeachersByIds = hydrated.loadByIds;
 
 export async function loadTeachersWidgetAggregates(
   queries: TeachersWidgetQuery[],
@@ -67,24 +68,7 @@ export async function loadTeachersPage(query: TeachersListQuery & { includeDelet
   return paginateTeachers(rows as import('@mms/shared').Teacher[], query);
 }
 
-export async function loadTeachersByIds(ids: string[]) {
-  return loadHydratedByIds(
-    ids,
-    findTeachersByIds,
-    loadContacts,
-    (row, contacts) => hydrateTeacherFromContact(row as never, contacts as never),
-  ) as unknown as TeacherRecord[];
-}
 
-export async function loadTeacherById(id: string, includeDeleted = false) {
-  return loadHydratedById(
-    id,
-    findTeacherById,
-    loadContacts,
-    (row, contacts) => hydrateTeacherFromContact(row as never, contacts as never),
-    includeDeleted,
-  ) as unknown as TeacherRecord | null;
-}
 
 export async function loadTeacherLinkedContactIds(excludeTeacherId?: string) {
   const all = await loadTeachers();

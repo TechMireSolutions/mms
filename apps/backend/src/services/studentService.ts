@@ -18,9 +18,7 @@ import {
 import { loadContacts } from './contactService.js';
 import {
   createGenericRelationalService,
-  loadHydratedAll,
-  loadHydratedById,
-  loadHydratedByIds,
+  createContactHydratedService,
   type GenericServiceOptions,
 } from './genericRelationalService.js';
 import {
@@ -48,14 +46,17 @@ export const updateStudentById = crud.updateById;
 export const deleteStudentById = crud.deleteById;
 export const restoreStudentById = crud.restoreById;
 
-export async function loadStudents(options?: { includeDeleted?: boolean }): Promise<StudentRecord[]> {
-  return loadHydratedAll(
-    listStudentsByWorkspace,
-    loadContacts,
-    (row, contacts) => hydrateStudentFromContacts(row as never, contacts as never),
-    options,
-  ) as unknown as StudentRecord[];
-}
+const hydrated = createContactHydratedService<any, any>({
+  listByWorkspaceFn: listStudentsByWorkspace,
+  findByIdFn: findStudentById,
+  findByIdsFn: findStudentsByIds,
+  loadContactsFn: loadContacts,
+  hydrateFn: (row, contacts) => hydrateStudentFromContacts(row as never, contacts as never) as unknown as StudentRecord,
+});
+
+export const loadStudents = hydrated.loadAll;
+export const loadStudentById = hydrated.loadById;
+export const loadStudentsByIds = hydrated.loadByIds;
 
 export async function loadStudentsWidgetAggregates(
   queries: StudentsWidgetQuery[],
@@ -69,24 +70,7 @@ export async function loadStudentsPage(query: StudentsListQuery & { includeDelet
   return paginateStudents(rows as import('@mms/shared').Student[], query);
 }
 
-export async function loadStudentsByIds(ids: string[]) {
-  return loadHydratedByIds(
-    ids,
-    findStudentsByIds,
-    loadContacts,
-    (row, contacts) => hydrateStudentFromContacts(row as never, contacts as never),
-  ) as unknown as StudentRecord[];
-}
 
-export async function loadStudentById(id: string, includeDeleted = false) {
-  return loadHydratedById(
-    id,
-    findStudentById,
-    loadContacts,
-    (row, contacts) => hydrateStudentFromContacts(row as never, contacts as never),
-    includeDeleted,
-  ) as unknown as StudentRecord | null;
-}
 
 export async function loadStudentLinkedContactIds(excludeStudentId?: string) {
   const all = await loadStudents();

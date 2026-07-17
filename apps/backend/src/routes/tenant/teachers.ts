@@ -19,16 +19,10 @@ import { TEACHERS_MODULE_CONTRACT, computeTeachersCommandMetrics } from '@mms/sh
 import { sendForbidden } from '../../lib/httpErrors.js';
 import { teacherRecordSchema, teachersListQuerySchema, teachersNextEmployeeIdQuerySchema } from '../../validation/teacherSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 
 import {
   registerResourceRoutes,
-  registerMetricsRoute,
-  registerCountRoute,
-  registerResolveRoute,
-  registerWidgetAggregatesRoute,
-  registerLinkedContactIdsRoute,
-  registerPaginatedListRoute,
+  registerStandardExtendedRoutes,
 } from '../../lib/crudRouter.js';
 
 /**
@@ -40,46 +34,20 @@ export default async function teachersRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
-  // --- Custom GET List (Paginated) ---
-  registerPaginatedListRoute(fastify, {
+  // --- Register Standard Extended Routes ---
+  registerStandardExtendedRoutes(fastify, {
     collection: 'teachers',
-    schema: teachersListQuerySchema,
+    listQuerySchema: teachersListQuerySchema,
     defaultPageSize: TEACHERS_MODULE_CONTRACT.defaultPageSize,
     errorMessagePrefix: 'teachers',
+    nameSingular: 'teacher',
     loadPageFn: (query) => loadTeachersPage(query),
-  });
-
-
-  // --- Custom GET Count ---
-  registerCountRoute(fastify, {
-    collection: 'teachers',
     loadAllFn: loadTeachers,
-    errorMessagePrefix: 'teachers',
-  });
-
-  // --- Custom GET Metrics ---
-  registerMetricsRoute(fastify, {
-    collection: 'teachers',
-    loadMetricsFn: async () => {
-      const teachers = await loadTeachers();
-      return computeTeachersCommandMetrics(teachers);
-    },
-    errorMessagePrefix: 'teacher',
-  });
-
-  // --- Custom POST Widget Aggregates ---
-  registerWidgetAggregatesRoute(fastify, {
-    collection: 'teachers',
-    loadAggregatesFn: loadTeachersWidgetAggregates,
-    errorMessagePrefix: 'teacher',
-  });
-
-  // --- Custom POST Resolve ---
-  registerResolveRoute(fastify, {
-    collection: 'teachers',
+    computeMetricsFn: (teachers) => computeTeachersCommandMetrics(teachers),
+    loadWidgetAggregatesFn: loadTeachersWidgetAggregates,
     loadByIdsFn: loadTeachersByIds,
-    responseKey: 'teachers',
-    errorMessagePrefix: 'teachers',
+    loadLinkedContactIdsFn: loadTeacherLinkedContactIds,
+    columnPreferencesObjectKey: TEACHERS_MODULE_CONTRACT.columnPreferencesObjectKey,
   });
 
   // --- Custom GET Next Employee ID ---
@@ -98,17 +66,6 @@ export default async function teachersRoutes(
     }
   });
 
-  // --- Custom GET Linked Contact IDs ---
-  registerLinkedContactIdsRoute(fastify, {
-    collection: 'teachers',
-    loadLinkedContactIdsFn: loadTeacherLinkedContactIds,
-    errorMessagePrefix: 'teachers',
-  });
-
-  registerColumnPreferencesRoutes(fastify, {
-    collection: 'teachers',
-    objectKey: TEACHERS_MODULE_CONTRACT.columnPreferencesObjectKey,
-  });
 
   // --- Resource Mutations ---
   registerResourceRoutes(fastify, {

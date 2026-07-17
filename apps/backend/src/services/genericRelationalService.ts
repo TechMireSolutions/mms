@@ -121,7 +121,7 @@ export async function hydrateRecordsFromContacts<TRaw, THydrated>(
 /**
  * Loads all database records (optionally including deleted) and hydrates them from contacts.
  */
-export async function loadHydratedAll<TRaw extends { deletedAt?: string | null }, THydrated>(
+export async function loadHydratedAll<TRaw extends Record<string, any>, THydrated>(
   listFn: (subdomain: string) => Promise<TRaw[]>,
   loadContactsFn: () => Promise<unknown>,
   hydrateFn: (record: TRaw, contacts: unknown[]) => THydrated,
@@ -137,7 +137,7 @@ export async function loadHydratedAll<TRaw extends { deletedAt?: string | null }
 /**
  * Loads a single database record by ID and hydrates it from contacts.
  */
-export async function loadHydratedById<TRaw extends { deletedAt?: string | null }, THydrated>(
+export async function loadHydratedById<TRaw extends Record<string, any>, THydrated>(
   id: string,
   findByIdFn: (subdomain: string, id: string) => Promise<TRaw | null>,
   loadContactsFn: () => Promise<unknown>,
@@ -155,7 +155,7 @@ export async function loadHydratedById<TRaw extends { deletedAt?: string | null 
 /**
  * Loads database records by IDs and hydrates them from contacts.
  */
-export async function loadHydratedByIds<TRaw, THydrated>(
+export async function loadHydratedByIds<TRaw extends Record<string, any>, THydrated>(
   ids: string[],
   findByIdsFn: (subdomain: string, ids: string[]) => Promise<TRaw[]>,
   loadContactsFn: () => Promise<unknown>,
@@ -166,3 +166,41 @@ export async function loadHydratedByIds<TRaw, THydrated>(
   const matched = await findByIdsFn(tenant, ids);
   return hydrateRecordsFromContacts(matched, loadContactsFn, hydrateFn);
 }
+
+export interface ContactHydratedServiceOptions<TRaw, THydrated> {
+  listByWorkspaceFn: (subdomain: string) => Promise<TRaw[]>;
+  findByIdFn: (subdomain: string, id: string) => Promise<TRaw | null>;
+  findByIdsFn: (subdomain: string, ids: string[]) => Promise<TRaw[]>;
+  loadContactsFn: () => Promise<unknown>;
+  hydrateFn: (record: TRaw, contacts: unknown[]) => THydrated;
+}
+
+/**
+ * Creates a generic set of hydration queries for a collection linked to contacts.
+ */
+export function createContactHydratedService<
+  TRaw extends Record<string, any>,
+  THydrated,
+>(options: ContactHydratedServiceOptions<TRaw, THydrated>) {
+  const { listByWorkspaceFn, findByIdFn, findByIdsFn, loadContactsFn, hydrateFn } = options;
+
+  async function loadAll(opts?: { includeDeleted?: boolean }): Promise<THydrated[]> {
+    return loadHydratedAll(listByWorkspaceFn, loadContactsFn, hydrateFn, opts);
+  }
+
+  async function loadById(id: string, includeDeleted = false): Promise<THydrated | null> {
+    return loadHydratedById(id, findByIdFn, loadContactsFn, hydrateFn, includeDeleted);
+  }
+
+  async function loadByIds(ids: string[]): Promise<THydrated[]> {
+    return loadHydratedByIds(ids, findByIdsFn, loadContactsFn, hydrateFn);
+  }
+
+  return {
+    loadAll,
+    loadById,
+    loadByIds,
+  };
+}
+
+

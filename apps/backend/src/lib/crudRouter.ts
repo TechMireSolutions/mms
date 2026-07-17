@@ -13,6 +13,8 @@ import {
   widgetAggregatesBodySchema,
   widgetQuerySchema,
 } from '../validation/commonSchemas.js';
+import { registerColumnPreferencesRoutes } from './columnPreferencesRouter.js';
+
 
 export type ResourceRecord = { id?: string | number };
 type WidgetQuery = z.infer<typeof widgetQuerySchema>;
@@ -534,6 +536,95 @@ export function registerPaginatedListRoute<
     }
   });
 }
+
+export interface StandardExtendedRoutesOptions<TQuery, TRecord> {
+  collection: string;
+  listQuerySchema: ZodType<TQuery>;
+  defaultPageSize: number;
+  errorMessagePrefix: string;
+  nameSingular: string;
+  loadPageFn: (query: TQuery & { includeDeleted: boolean }) => Promise<any>;
+  loadAllFn: (options?: { includeDeleted?: boolean }) => Promise<TRecord[]>;
+  computeMetricsFn: (records: TRecord[]) => Promise<any> | any;
+  loadWidgetAggregatesFn: (queries: any[]) => Promise<any>;
+  loadByIdsFn: (ids: string[]) => Promise<TRecord[]>;
+  loadLinkedContactIdsFn: (excludeId?: string) => Promise<(string | number)[]>;
+  columnPreferencesObjectKey: string;
+}
+
+/**
+ * Registers standard extended routes (Paginated List, Count, Metrics, Widget Aggregates, Resolve, Linked Contact IDs, Column Preferences).
+ */
+export function registerStandardExtendedRoutes<
+  TQuery extends { page?: number; limit?: number; includeDeleted?: string },
+  TRecord,
+>(
+  fastify: FastifyInstance,
+  options: StandardExtendedRoutesOptions<TQuery, TRecord>,
+): void {
+  const {
+    collection,
+    listQuerySchema,
+    defaultPageSize,
+    errorMessagePrefix,
+    nameSingular,
+    loadPageFn,
+    loadAllFn,
+    computeMetricsFn,
+    loadWidgetAggregatesFn,
+    loadByIdsFn,
+    columnPreferencesObjectKey,
+    loadLinkedContactIdsFn,
+  } = options;
+
+  registerPaginatedListRoute(fastify, {
+    collection,
+    schema: listQuerySchema,
+    defaultPageSize,
+    errorMessagePrefix,
+    loadPageFn,
+  });
+
+  registerCountRoute(fastify, {
+    collection,
+    loadAllFn: () => loadAllFn(),
+    errorMessagePrefix,
+  });
+
+  registerMetricsRoute(fastify, {
+    collection,
+    loadMetricsFn: async () => {
+      const records = await loadAllFn();
+      return computeMetricsFn(records);
+    },
+    errorMessagePrefix: nameSingular,
+  });
+
+  registerWidgetAggregatesRoute(fastify, {
+    collection,
+    loadAggregatesFn: loadWidgetAggregatesFn,
+    errorMessagePrefix: nameSingular,
+  });
+
+  registerResolveRoute(fastify, {
+    collection,
+    loadByIdsFn: loadByIdsFn,
+    responseKey: errorMessagePrefix,
+    errorMessagePrefix,
+  });
+
+  registerLinkedContactIdsRoute(fastify, {
+    collection,
+    loadLinkedContactIdsFn,
+    errorMessagePrefix,
+  });
+
+  registerColumnPreferencesRoutes(fastify, {
+    collection,
+    objectKey: columnPreferencesObjectKey,
+  });
+}
+
 
 
 
