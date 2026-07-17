@@ -6,7 +6,6 @@ import {
   examResultListSchema,
   computeExaminationsCommandMetrics,
 } from '@mms/shared';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { registerBulkRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
 import {
   loadExams,
@@ -28,6 +27,7 @@ export default async function examinationsRoutes(
   fastify.addHook('preHandler', authenticateTenant);
 
   // --- Exams ---
+  // --- Exams ---
   registerBulkRoutes(fastify, {
     path: '/exams',
     collection: EXAMS_COLLECTION,
@@ -36,6 +36,7 @@ export default async function examinationsRoutes(
     saveFn: replaceExams,
     responseKey: 'exams',
     errorMessagePrefix: 'exams',
+    columnPreferencesObjectKey: EXAMINATIONS_MODULE_CONTRACT.examColumnPreferencesObjectKey,
   });
 
   // --- Results ---
@@ -47,6 +48,7 @@ export default async function examinationsRoutes(
     saveFn: replaceExamResults,
     responseKey: 'results',
     errorMessagePrefix: 'exam results',
+    columnPreferencesObjectKey: EXAMINATIONS_MODULE_CONTRACT.resultsColumnPreferencesObjectKey,
   });
 
   // --- Metrics ---
@@ -61,17 +63,5 @@ export default async function examinationsRoutes(
       );
     },
     errorMessagePrefix: 'examination',
-  });
-
-  registerColumnPreferencesRoutes(fastify, {
-    path: '/exams/column-preferences',
-    collection: EXAMS_COLLECTION,
-    objectKey: EXAMINATIONS_MODULE_CONTRACT.examColumnPreferencesObjectKey,
-  });
-
-  registerColumnPreferencesRoutes(fastify, {
-    path: '/results/column-preferences',
-    collection: EXAMINATIONS_MODULE_CONTRACT.resultsCollectionKey,
-    objectKey: EXAMINATIONS_MODULE_CONTRACT.resultsColumnPreferencesObjectKey,
   });
 }

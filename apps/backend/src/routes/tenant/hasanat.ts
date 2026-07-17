@@ -8,7 +8,6 @@ import {
   redemptionListSchema,
   computeHasanatCommandMetrics,
 } from '@mms/shared';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { registerBulkRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
 import {
   loadDenoms,
@@ -82,6 +81,7 @@ export default async function hasanatRoutes(
     saveFn: replaceDistributions,
     responseKey: 'distributions',
     errorMessagePrefix: 'distributions',
+    columnPreferencesObjectKey: HASANAT_MODULE_CONTRACT.distributionColumnPreferencesObjectKey,
   });
 
   // --- Redemptions ---
@@ -93,18 +93,6 @@ export default async function hasanatRoutes(
     saveFn: replaceRedemptions,
     responseKey: 'redemptions',
     errorMessagePrefix: 'redemptions',
-  });
-
-  // --- Column Preferences ---
-  registerColumnPreferencesRoutes(fastify, {
-    path: '/distributions/column-preferences',
-    collection: HASANAT_DISTRIBUTIONS_COLLECTION,
-    objectKey: HASANAT_MODULE_CONTRACT.distributionColumnPreferencesObjectKey,
-  });
-
-  registerColumnPreferencesRoutes(fastify, {
-    path: '/redemptions/column-preferences',
-    collection: HASANAT_REDEMPTIONS_COLLECTION,
-    objectKey: HASANAT_MODULE_CONTRACT.redemptionColumnPreferencesObjectKey,
+    columnPreferencesObjectKey: HASANAT_MODULE_CONTRACT.redemptionColumnPreferencesObjectKey,
   });
 }

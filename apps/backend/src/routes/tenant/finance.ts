@@ -1,7 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { FINANCE_MODULE_CONTRACT, computeFinanceCommandMetrics } from '@mms/shared';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { registerResourceRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
 import { invoiceRecordSchema, paymentRecordSchema } from '../../validation/financeSchemas.js';
 
@@ -56,6 +55,7 @@ export default async function financeRoutes(
     restoreFn: restoreInvoiceById,
     nameSingular: 'invoice',
     namePlural: 'invoices',
+    columnPreferencesObjectKey: FINANCE_MODULE_CONTRACT.invoiceColumnPreferencesObjectKey,
   });
 
   // --- Payments ---
@@ -70,18 +70,6 @@ export default async function financeRoutes(
     restoreFn: restorePaymentById,
     nameSingular: 'payment',
     namePlural: 'payments',
-  });
-
-  // --- Column Preferences ---
-  registerColumnPreferencesRoutes(fastify, {
-    path: '/invoices/column-preferences',
-    collection: FINANCE_COLLECTION,
-    objectKey: FINANCE_MODULE_CONTRACT.invoiceColumnPreferencesObjectKey,
-  });
-
-  registerColumnPreferencesRoutes(fastify, {
-    path: '/payments/column-preferences',
-    collection: PAYMENT_COLLECTION,
-    objectKey: FINANCE_MODULE_CONTRACT.paymentColumnPreferencesObjectKey,
+    columnPreferencesObjectKey: FINANCE_MODULE_CONTRACT.paymentColumnPreferencesObjectKey,
   });
 }

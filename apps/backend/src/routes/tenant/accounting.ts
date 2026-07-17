@@ -8,7 +8,6 @@ import {
   computeAccountingCommandMetrics,
 } from '@mms/shared';
 
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { registerBulkRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
 
 import {
@@ -42,6 +41,7 @@ export default async function accountingRoutes(
     saveFn: replaceAccounts,
     responseKey: 'accounts',
     errorMessagePrefix: 'accounts',
+    columnPreferencesObjectKey: ACCOUNTING_MODULE_CONTRACT.accountColumnPreferencesObjectKey,
   });
 
   // --- Entries ---
@@ -53,6 +53,8 @@ export default async function accountingRoutes(
     saveFn: replaceEntries,
     responseKey: 'entries',
     errorMessagePrefix: 'entries',
+    columnPreferencesObjectKey: ACCOUNTING_MODULE_CONTRACT.journalColumnPreferencesObjectKey,
+    columnPreferencesPath: '/journal/column-preferences',
   });
 
   // --- Fiscal Years ---
@@ -78,18 +80,5 @@ export default async function accountingRoutes(
       );
     },
     errorMessagePrefix: 'accounting',
-  });
-
-  // --- Column Preferences ---
-  registerColumnPreferencesRoutes(fastify, {
-    path: '/accounts/column-preferences',
-    collection: ACCOUNTING_ACCOUNTS_COLLECTION,
-    objectKey: ACCOUNTING_MODULE_CONTRACT.accountColumnPreferencesObjectKey,
-  });
-
-  registerColumnPreferencesRoutes(fastify, {
-    path: '/journal/column-preferences',
-    collection: ACCOUNTING_ENTRIES_COLLECTION,
-    objectKey: ACCOUNTING_MODULE_CONTRACT.journalColumnPreferencesObjectKey,
   });
 }

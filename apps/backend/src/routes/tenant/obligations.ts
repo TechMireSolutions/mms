@@ -10,7 +10,6 @@ import {
   obligationCollectionListSchema,
   computeObligationsCommandMetrics,
 } from '@mms/shared';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { registerBulkRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
 
 import {
@@ -103,6 +102,8 @@ export default async function obligationsRoutes(
     saveFn: replaceObligationCollections,
     responseKey: 'collections',
     errorMessagePrefix: 'obligation collections',
+    columnPreferencesObjectKey: OBLIGATIONS_MODULE_CONTRACT.columnPreferencesObjectKey,
+    columnPreferencesPath: '/column-preferences',
   });
 
   // --- Metrics ---
@@ -117,10 +118,5 @@ export default async function obligationsRoutes(
       );
     },
     errorMessagePrefix: 'obligation',
-  });
-
-  registerColumnPreferencesRoutes(fastify, {
-    collection: OBLIGATIONS_COLLECTION,
-    objectKey: OBLIGATIONS_MODULE_CONTRACT.columnPreferencesObjectKey,
   });
 }

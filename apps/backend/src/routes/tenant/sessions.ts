@@ -8,7 +8,6 @@ import {
   updateSessionById,
 } from '../../services/sessionService.js';
 import { computeSessionsCommandMetrics, SESSIONS_MODULE_CONTRACT } from '@mms/shared';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import {
   registerResourceRoutes,
   registerMetricsRoute,
@@ -47,11 +46,6 @@ export default async function sessionsRoutes(
     errorMessagePrefix: 'session',
   });
 
-  registerColumnPreferencesRoutes(fastify, {
-    collection: COLLECTION,
-    objectKey: SESSIONS_MODULE_CONTRACT.columnPreferencesObjectKey,
-  });
-
   // --- Resource CRUD ---
   registerResourceRoutes(fastify, {
     customGetRoute: true,
@@ -64,5 +58,6 @@ export default async function sessionsRoutes(
     restoreFn: restoreSessionById,
     nameSingular: 'session',
     namePlural: 'sessions',
+    columnPreferencesObjectKey: SESSIONS_MODULE_CONTRACT.columnPreferencesObjectKey,
   });
 }

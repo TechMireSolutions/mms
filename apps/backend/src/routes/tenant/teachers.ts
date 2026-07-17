@@ -20,10 +20,7 @@ import { sendForbidden } from '../../lib/httpErrors.js';
 import { teacherRecordSchema, teachersListQuerySchema, teachersNextEmployeeIdQuerySchema } from '../../validation/teacherSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
-import {
-  registerResourceRoutes,
-  registerStandardExtendedRoutes,
-} from '../../lib/crudRouter.js';
+import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
 
 /**
  * Server-first teacher resource routes (TanStack Query on FE).
@@ -34,15 +31,22 @@ export default async function teachersRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
-  // --- Register Standard Extended Routes ---
-  registerStandardExtendedRoutes(fastify, {
+  // --- Register Standard Tenant Routes ---
+  registerStandardTenantRoutes(fastify, {
     collection: 'teachers',
+    schema: teacherRecordSchema,
     listQuerySchema: teachersListQuerySchema,
     defaultPageSize: TEACHERS_MODULE_CONTRACT.defaultPageSize,
     errorMessagePrefix: 'teachers',
     nameSingular: 'teacher',
+    namePlural: 'teachers',
     loadPageFn: (query) => loadTeachersPage(query),
     loadAllFn: loadTeachers,
+    loadByIdFn: loadTeacherById,
+    createFn: createTeacher,
+    updateFn: updateTeacherById,
+    deleteFn: deleteTeacherById,
+    restoreFn: restoreTeacherById,
     computeMetricsFn: (teachers) => computeTeachersCommandMetrics(teachers),
     loadWidgetAggregatesFn: loadTeachersWidgetAggregates,
     loadByIdsFn: loadTeachersByIds,
@@ -64,20 +68,5 @@ export default async function teachersRoutes(
     } catch {
       return reply.status(500).send({ type: 'database_error', message: 'Failed to compute employee id' });
     }
-  });
-
-
-  // --- Resource Mutations ---
-  registerResourceRoutes(fastify, {
-    customGetRoute: true,
-    collection: 'teachers',
-    schema: teacherRecordSchema,
-    loadByIdFn: loadTeacherById,
-    createFn: createTeacher,
-    updateFn: updateTeacherById,
-    deleteFn: deleteTeacherById,
-    restoreFn: restoreTeacherById,
-    nameSingular: 'teacher',
-    namePlural: 'teachers',
   });
 }

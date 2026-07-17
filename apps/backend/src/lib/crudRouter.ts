@@ -27,6 +27,8 @@ export interface BulkRoutesOptions<T> {
   saveFn: (data: T) => Promise<unknown>;
   responseKey: string;
   errorMessagePrefix: string;
+  columnPreferencesObjectKey?: string;
+  columnPreferencesPath?: string;
 }
 
 /**
@@ -36,7 +38,17 @@ export function registerBulkRoutes<T>(
   fastify: FastifyInstance,
   options: BulkRoutesOptions<T>,
 ): void {
-  const { path, collection, schema, loadFn, saveFn, responseKey, errorMessagePrefix } = options;
+  const {
+    path,
+    collection,
+    schema,
+    loadFn,
+    saveFn,
+    responseKey,
+    errorMessagePrefix,
+    columnPreferencesObjectKey,
+    columnPreferencesPath,
+  } = options;
 
   fastify.get(path, async (request, reply) => {
     const user = request.user as User;
@@ -67,6 +79,14 @@ export function registerBulkRoutes<T>(
       });
     }
   });
+
+  if (columnPreferencesObjectKey) {
+    registerColumnPreferencesRoutes(fastify, {
+      path: columnPreferencesPath ?? (path === '/' ? '/column-preferences' : `${path}/column-preferences`),
+      collection,
+      objectKey: columnPreferencesObjectKey,
+    });
+  }
 }
 
 export interface ResourceRoutesOptions<T extends ResourceRecord> {
@@ -85,6 +105,7 @@ export interface ResourceRoutesOptions<T extends ResourceRecord> {
   customGetSingleRoute?: boolean;
   customPostRoute?: boolean;
   customPutRoute?: boolean;
+  columnPreferencesObjectKey?: string;
 }
 
 /**
@@ -110,6 +131,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
     customGetSingleRoute = false,
     customPostRoute = false,
     customPutRoute = false,
+    columnPreferencesObjectKey,
   } = options;
 
   // GET / or GET /prefix
@@ -253,6 +275,14 @@ export function registerResourceRoutes<T extends ResourceRecord>(
           message: `Failed to restore ${nameSingular}`,
         });
       }
+    });
+  }
+
+  if (columnPreferencesObjectKey) {
+    registerColumnPreferencesRoutes(fastify, {
+      path: prefix ? `${prefix}/column-preferences` : '/column-preferences',
+      collection,
+      objectKey: columnPreferencesObjectKey,
     });
   }
 }
@@ -624,7 +654,81 @@ export function registerStandardExtendedRoutes<
     objectKey: columnPreferencesObjectKey,
   });
 }
+export interface StandardTenantRoutesOptions<TQuery, TRecord extends ResourceRecord>
+  extends StandardExtendedRoutesOptions<TQuery, TRecord> {
+  schema: ZodType<TRecord>;
+  loadByIdFn?: (id: string, includeDeleted?: boolean) => Promise<unknown | null>;
+  createFn?: (data: TRecord) => Promise<unknown>;
+  updateFn?: (id: string, data: TRecord) => Promise<unknown | null>;
+  deleteFn?: (id: string, userId: string, reason?: string) => Promise<unknown | null>;
+  restoreFn?: (id: string) => Promise<unknown | null>;
+  namePlural: string;
+  customPostRoute?: boolean;
+  customPutRoute?: boolean;
+}
 
+/**
+ * Registers all standard tenant routes (Standard Extended + CRUD).
+ */
+export function registerStandardTenantRoutes<
+  TQuery extends { page?: number; limit?: number; includeDeleted?: string },
+  TRecord extends ResourceRecord,
+>(
+  fastify: FastifyInstance,
+  options: StandardTenantRoutesOptions<TQuery, TRecord>,
+): void {
+  const {
+    collection,
+    listQuerySchema,
+    defaultPageSize,
+    errorMessagePrefix,
+    nameSingular,
+    namePlural,
+    loadPageFn,
+    loadAllFn,
+    computeMetricsFn,
+    loadWidgetAggregatesFn,
+    loadByIdsFn,
+    columnPreferencesObjectKey,
+    loadLinkedContactIdsFn,
+    schema,
+    loadByIdFn,
+    createFn,
+    updateFn,
+    deleteFn,
+    restoreFn,
+    customPostRoute,
+    customPutRoute,
+  } = options;
 
+  registerStandardExtendedRoutes(fastify, {
+    collection,
+    listQuerySchema,
+    defaultPageSize,
+    errorMessagePrefix,
+    nameSingular,
+    loadPageFn,
+    loadAllFn,
+    computeMetricsFn,
+    loadWidgetAggregatesFn,
+    loadByIdsFn,
+    columnPreferencesObjectKey,
+    loadLinkedContactIdsFn,
+  });
 
+  registerResourceRoutes(fastify, {
+    customGetRoute: true, // Extended routes already register GET / via paginated list route
+    customPostRoute,
+    customPutRoute,
+    collection,
+    schema,
+    loadByIdFn,
+    createFn,
+    updateFn,
+    deleteFn,
+    restoreFn,
+    nameSingular,
+    namePlural,
+  });
+}
 

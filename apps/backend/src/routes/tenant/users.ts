@@ -5,7 +5,6 @@ import {
   workspaceUserListSchema,
   activityLogListSchema,
 } from '@mms/shared';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { registerBulkRoutes } from '../../lib/crudRouter.js';
 
 import {
@@ -28,6 +27,7 @@ export default async function usersRoutes(
   fastify.addHook('preHandler', authenticateTenant);
 
   // --- Users ---
+  // --- Users ---
   registerBulkRoutes(fastify, {
     path: '/',
     collection: USERS_COLLECTION,
@@ -36,6 +36,7 @@ export default async function usersRoutes(
     saveFn: replaceWorkspaceUsers,
     responseKey: 'users',
     errorMessagePrefix: 'workspace users',
+    columnPreferencesObjectKey: USERS_MODULE_CONTRACT.columnPreferencesObjectKey,
   });
 
   // --- Activity Logs ---
@@ -47,11 +48,5 @@ export default async function usersRoutes(
     saveFn: replaceLogs,
     responseKey: 'logs',
     errorMessagePrefix: 'activity logs',
-  });
-
-  registerColumnPreferencesRoutes(fastify, {
-    path: '/column-preferences',
-    collection: USERS_COLLECTION,
-    objectKey: USERS_MODULE_CONTRACT.columnPreferencesObjectKey,
   });
 }

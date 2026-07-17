@@ -10,7 +10,6 @@ import {
   updateAttendanceRecordById,
 } from '../../services/attendanceService.js';
 import { computeAttendanceCommandMetrics, ATTENDANCE_MODULE_CONTRACT } from '@mms/shared';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { registerResourceRoutes, registerMetricsRoute, registerBulkPutRoute } from '../../lib/crudRouter.js';
 import {
   attendanceBulkSchema,
@@ -45,11 +44,6 @@ export default async function attendanceRoutes(
   });
 
 
-  registerColumnPreferencesRoutes(fastify, {
-    collection: COLLECTION,
-    objectKey: ATTENDANCE_MODULE_CONTRACT.columnPreferencesObjectKey,
-  });
-
   // --- Bulk Replace ---
   registerBulkPutRoute(fastify, {
     collection: COLLECTION,
@@ -70,5 +64,6 @@ export default async function attendanceRoutes(
     restoreFn: restoreAttendanceRecordById,
     nameSingular: 'record',
     namePlural: 'records',
+    columnPreferencesObjectKey: ATTENDANCE_MODULE_CONTRACT.columnPreferencesObjectKey,
   });
 }

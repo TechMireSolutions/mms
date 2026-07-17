@@ -23,10 +23,7 @@ import { studentRecordSchema, studentsListQuerySchema, studentsNextGrNumberQuery
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { validateStudentDynamic } from '../../services/studentValidationService.js';
-import {
-  registerResourceRoutes,
-  registerStandardExtendedRoutes,
-} from '../../lib/crudRouter.js';
+import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
 
 /**
  * Server-first student resource routes (TanStack Query on FE).
@@ -37,15 +34,22 @@ export default async function studentsRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
-  // --- Register Standard Extended Routes ---
-  registerStandardExtendedRoutes(fastify, {
+  // --- Register Standard Tenant Routes ---
+  registerStandardTenantRoutes(fastify, {
     collection: 'students',
+    schema: studentRecordSchema,
     listQuerySchema: studentsListQuerySchema,
     defaultPageSize: STUDENTS_MODULE_CONTRACT.defaultPageSize,
     errorMessagePrefix: 'students',
     nameSingular: 'student',
+    namePlural: 'students',
     loadPageFn: (query) => loadStudentsPage(query),
     loadAllFn: loadStudents,
+    loadByIdFn: loadStudentById,
+    deleteFn: deleteStudentById,
+    restoreFn: restoreStudentById,
+    customPostRoute: true,
+    customPutRoute: true,
     computeMetricsFn: (students) => computeStudentsCommandMetrics(students),
     loadWidgetAggregatesFn: loadStudentsWidgetAggregates,
     loadByIdsFn: loadStudentsByIds,
@@ -154,17 +158,4 @@ export default async function studentsRoutes(
     }
   });
 
-  // --- Resource Delete & Restore ---
-  registerResourceRoutes(fastify, {
-    customGetRoute: true,
-    customPostRoute: true,
-    customPutRoute: true,
-    collection: 'students',
-    schema: studentRecordSchema,
-    loadByIdFn: loadStudentById,
-    deleteFn: deleteStudentById,
-    restoreFn: restoreStudentById,
-    nameSingular: 'student',
-    namePlural: 'students',
-  });
 }

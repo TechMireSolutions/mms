@@ -1,7 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { QUESTION_BANK_MODULE_CONTRACT } from '@mms/shared';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { registerBulkRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
 
 import { loadQuestionBankCommandMetrics } from '../../services/questionBankMetricsService.js';
@@ -41,6 +40,8 @@ export default async function questionBankRoutes(
     saveFn: replaceQuestions,
     responseKey: 'questions',
     errorMessagePrefix: 'questions',
+    columnPreferencesObjectKey: QUESTION_BANK_MODULE_CONTRACT.columnPreferencesObjectKey,
+    columnPreferencesPath: '/column-preferences',
   });
 
   // --- Tests ---
@@ -70,11 +71,5 @@ export default async function questionBankRoutes(
     collection: QUESTIONS_COLLECTION,
     loadMetricsFn: loadQuestionBankCommandMetrics,
     errorMessagePrefix: 'question bank',
-  });
-
-  registerColumnPreferencesRoutes(fastify, {
-    path: '/column-preferences',
-    collection: QUESTIONS_COLLECTION,
-    objectKey: QUESTION_BANK_MODULE_CONTRACT.columnPreferencesObjectKey,
   });
 }

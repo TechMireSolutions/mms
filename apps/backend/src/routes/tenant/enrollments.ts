@@ -1,7 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { ENROLLMENTS_MODULE_CONTRACT, computeEnrollmentsCommandMetrics } from '@mms/shared';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { registerResourceRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
 import { enrollmentRecordSchema } from '../../validation/enrollmentSchemas.js';
 
@@ -47,10 +46,6 @@ export default async function enrollmentsRoutes(
     restoreFn: restoreEnrollmentById,
     nameSingular: 'enrollment',
     namePlural: 'enrollments',
-  });
-
-  registerColumnPreferencesRoutes(fastify, {
-    collection: ENROLLMENTS_COLLECTION,
-    objectKey: ENROLLMENTS_MODULE_CONTRACT.columnPreferencesObjectKey,
+    columnPreferencesObjectKey: ENROLLMENTS_MODULE_CONTRACT.columnPreferencesObjectKey,
   });
 }
