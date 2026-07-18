@@ -4,7 +4,7 @@ import type { ZodType } from 'zod';
 
 import type { User } from '@mms/shared';
 import { canReadCollection, canWriteCollection } from '../services/rbacService.js';
-import { sendForbidden, sendDatabaseError } from './httpErrors.js';
+import { sendForbidden, sendDatabaseError, sendNotFound } from './httpErrors.js';
 import { parseRequest, replyValidationError, executeDynamicValidation } from './zodRequest.js';
 import {
   resourceIdParamsSchema,
@@ -154,10 +154,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
       try {
         const item = await loadByIdFn(params.data.id, false);
         if (!item) {
-          return reply.status(404).send({
-            type: 'not_found',
-            message: `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found`,
-          });
+          return sendNotFound(reply, `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found`);
         }
         return reply.send({ [nameSingular]: item });
       } catch {
@@ -229,10 +226,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
           id: body.data.id ?? params.data.id,
         });
         if (!updated) {
-          return reply.status(404).send({
-            type: 'not_found',
-            message: `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found`,
-          });
+          return sendNotFound(reply, `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found`);
         }
         return reply.send({ [nameSingular]: updated });
       } catch (error: unknown) {
@@ -254,10 +248,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
       try {
         const deleted = await deleteFn(params.data.id, String(user.id), body.data.deletionReason);
         if (!deleted) {
-          return reply.status(404).send({
-            type: 'not_found',
-            message: `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found`,
-          });
+          return sendNotFound(reply, `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found`);
         }
         return reply.send({ success: true });
       } catch {
@@ -276,10 +267,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
       try {
         const restored = await restoreFn(params.data.id);
         if (!restored) {
-          return reply.status(404).send({
-            type: 'not_found',
-            message: `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found or not deleted`,
-          });
+          return sendNotFound(reply, `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found or not deleted`);
         }
         return reply.send({ success: true });
       } catch {
