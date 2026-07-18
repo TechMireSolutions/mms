@@ -1,4 +1,4 @@
-import { type Contact, formatMoney, type AppTranslationKey } from "@mms/shared";
+import { type Contact, formatMoney, type AppTranslationKey, matchesWidgetFilter } from "@mms/shared";
 import { getObject } from "@/lib/db";
 import { type Student } from '@/lib/data/studentsData';
 import { type Teacher } from '@/lib/data/teachersData';
@@ -262,26 +262,9 @@ function calculateDynamicTrend(
   // Helper to filter and calculate value for a given period of rows
   const computePeriodValue = (periodRows: Record<string, unknown>[]) => {
     // Apply filter
-    const filteredRows = periodRows.filter((periodRow) => {
-      if (!card.filterField) return true;
-      const fieldValue = periodRow[card.filterField];
-      if (fieldValue === undefined || fieldValue === null) return false;
-      const fieldText = String(fieldValue).toLowerCase();
-      const targetText = String(card.filterValue || "").toLowerCase();
-      
-      switch (card.filterOperator) {
-        case "equals":
-          return fieldText === targetText;
-        case "contains":
-          return fieldText.includes(targetText);
-        case "gt":
-          return Number(fieldValue) > Number(card.filterValue);
-        case "lt":
-          return Number(fieldValue) < Number(card.filterValue);
-        default:
-          return true;
-      }
-    });
+    const filteredRows = periodRows.filter((periodRow) =>
+      matchesWidgetFilter(periodRow, card.filterField, card.filterOperator, card.filterValue)
+    );
 
     if (card.operation === "count") {
       return filteredRows.length;
@@ -364,29 +347,9 @@ export function computeCustomCard(
 ) {
   const collectionRows = (collections[card.collection] as Record<string, unknown>[]) || [];
   
-  const filteredRows = collectionRows.filter((collectionRow) => {
-    if (!collectionRow) return false;
-    if (!card.filterField) return true;
-    
-    const fieldValue = collectionRow[card.filterField];
-    if (fieldValue === undefined || fieldValue === null) return false;
-    
-    const fieldText = String(fieldValue).toLowerCase();
-    const targetText = String(card.filterValue || "").toLowerCase();
-    
-    switch (card.filterOperator) {
-      case "equals":
-        return fieldText === targetText;
-      case "contains":
-        return fieldText.includes(targetText);
-      case "gt":
-        return Number(fieldValue) > Number(card.filterValue);
-      case "lt":
-        return Number(fieldValue) < Number(card.filterValue);
-      default:
-        return true;
-    }
-  });
+  const filteredRows = collectionRows.filter((collectionRow) =>
+    matchesWidgetFilter(collectionRow, card.filterField, card.filterOperator, card.filterValue)
+  );
 
   let numericValue = 0;
   if (card.operation === "sum" || card.operation === "avg") {

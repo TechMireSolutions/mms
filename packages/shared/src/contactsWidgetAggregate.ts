@@ -1,5 +1,6 @@
 import type { Contact } from './contactTypes.js';
 import { isContactDeleted } from './contactSoftDelete.js';
+import { matchesWidgetFilter } from './utils.js';
 
 export type ContactsWidgetOperation = 'count' | 'sum' | 'avg' | 'percentage';
 export type ContactsWidgetFilterOperator = 'equals' | 'contains' | 'gt' | 'lt';
@@ -24,32 +25,6 @@ function contactFieldValue(contact: Contact, field: string): unknown {
   return contact[field as keyof Contact];
 }
 
-function matchesWidgetFilter(
-  contact: Contact,
-  filterField?: string,
-  filterOperator?: ContactsWidgetFilterOperator,
-  filterValue?: string,
-): boolean {
-  if (!filterField) return true;
-  const fieldValue = contactFieldValue(contact, filterField);
-  if (fieldValue === undefined || fieldValue === null) return false;
-
-  const fieldValueText = String(fieldValue).toLowerCase();
-  const targetValueText = String(filterValue ?? '').toLowerCase();
-
-  switch (filterOperator) {
-    case 'equals':
-      return fieldValueText === targetValueText;
-    case 'contains':
-      return fieldValueText.includes(targetValueText);
-    case 'gt':
-      return Number(fieldValue) > Number(filterValue);
-    case 'lt':
-      return Number(fieldValue) < Number(filterValue);
-    default:
-      return true;
-  }
-}
 
 function filterContactsForWidget(contacts: Contact[], query: ContactsWidgetQuery): Contact[] {
   const active = contacts.filter((contact) => !isContactDeleted(contact));

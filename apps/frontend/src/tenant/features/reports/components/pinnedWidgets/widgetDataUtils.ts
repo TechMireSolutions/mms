@@ -5,6 +5,7 @@ import {
   type TeachersWidgetAggregateResult,
   type Contact,
   formatMoney,
+  matchesWidgetFilter,
 } from "@mms/shared";
 import { queryClientInstance } from "@/lib/queryClient";
 import {
@@ -66,85 +67,15 @@ function readTeachersTotalFromMetrics(): number {
   return metrics?.total ?? 0;
 }
 
-function formatTeachersWidgetValue(
+function formatGenericWidgetValue(
   widget: CustomWidget,
-  aggregate: TeachersWidgetAggregateResult,
+  aggregate: { value: number; totalCount: number },
 ): { value: number; formattedValue: string; isAlert: boolean; totalCount: number } {
   let formattedValue = String(aggregate.value);
   if (widget.widgetType === "progress" || widget.operation === "percentage") {
     formattedValue = `${aggregate.value}%`;
-  } else {
-    formattedValue = aggregate.value.toLocaleString();
-  }
-
-  let isAlert = false;
-  if (widget.thresholdEnabled && widget.thresholdValue !== undefined) {
-    const numericValue = Number(aggregate.value);
-    const numericThreshold = Number(widget.thresholdValue);
-    switch (widget.thresholdCondition) {
-      case "lt":
-        isAlert = numericValue < numericThreshold;
-        break;
-      case "gt":
-        isAlert = numericValue > numericThreshold;
-        break;
-      case "equals":
-        isAlert = numericValue === numericThreshold;
-        break;
-    }
-  }
-
-  return {
-    value: aggregate.value,
-    formattedValue,
-    isAlert,
-    totalCount: aggregate.totalCount,
-  };
-}
-
-function formatStudentsWidgetValue(
-  widget: CustomWidget,
-  aggregate: StudentsWidgetAggregateResult,
-): { value: number; formattedValue: string; isAlert: boolean; totalCount: number } {
-  let formattedValue = String(aggregate.value);
-  if (widget.widgetType === "progress" || widget.operation === "percentage") {
-    formattedValue = `${aggregate.value}%`;
-  } else {
-    formattedValue = aggregate.value.toLocaleString();
-  }
-
-  let isAlert = false;
-  if (widget.thresholdEnabled && widget.thresholdValue !== undefined) {
-    const numericValue = Number(aggregate.value);
-    const numericThreshold = Number(widget.thresholdValue);
-    switch (widget.thresholdCondition) {
-      case "lt":
-        isAlert = numericValue < numericThreshold;
-        break;
-      case "gt":
-        isAlert = numericValue > numericThreshold;
-        break;
-      case "equals":
-        isAlert = numericValue === numericThreshold;
-        break;
-    }
-  }
-
-  return {
-    value: aggregate.value,
-    formattedValue,
-    isAlert,
-    totalCount: aggregate.totalCount,
-  };
-}
-
-function formatContactsWidgetValue(
-  widget: CustomWidget,
-  aggregate: ContactsWidgetAggregateResult,
-): { value: number; formattedValue: string; isAlert: boolean; totalCount: number } {
-  let formattedValue = String(aggregate.value);
-  if (widget.widgetType === "progress" || widget.operation === "percentage") {
-    formattedValue = `${aggregate.value}%`;
+  } else if (widget.collection === "finance_invoices" && widget.operation !== "count") {
+    formattedValue = formatMoney(aggregate.value);
   } else {
     formattedValue = aggregate.value.toLocaleString();
   }
@@ -209,40 +140,23 @@ export function getFilteredRecords(
   widget: CustomWidget,
   collections: ReturnType<typeof getWidgetCollections>,
 ): Record<string, unknown>[] {
-  if (widget.collection === "contacts") {
-    return [];
-  }
-  if (widget.collection === "students") {
-    return [];
-  }
-  if (widget.collection === "teachers") {
+  if (
+    widget.collection === "contacts" ||
+    widget.collection === "students" ||
+    widget.collection === "teachers"
+  ) {
     return [];
   }
 
   const collectionRecords = (collections[widget.collection] || []) as Record<string, unknown>[];
-  if (!widget.filterField) return collectionRecords;
-
-  return collectionRecords.filter((collectionRecord) => {
-    if (!collectionRecord) return false;
-    const fieldValue = collectionRecord[widget.filterField || ""];
-    if (fieldValue === undefined || fieldValue === null) return false;
-
-    const stringValue = String(fieldValue).toLowerCase();
-    const stringTargetValue = String(widget.filterValue || "").toLowerCase();
-
-    switch (widget.filterOperator) {
-      case "equals":
-        return stringValue === stringTargetValue;
-      case "contains":
-        return stringValue.includes(stringTargetValue);
-      case "gt":
-        return Number(fieldValue) > Number(widget.filterValue);
-      case "lt":
-        return Number(fieldValue) < Number(widget.filterValue);
-      default:
-        return true;
-    }
-  });
+  return collectionRecords.filter((collectionRecord) =>
+    matchesWidgetFilter(
+      collectionRecord,
+      widget.filterField,
+      widget.filterOperator,
+      widget.filterValue,
+    )
+  );
 }
 
 export function computeWidgetSingleValue(
@@ -252,7 +166,7 @@ export function computeWidgetSingleValue(
   if (widget.collection === "contacts") {
     const aggregate = readContactsWidgetAggregate(widget.id);
     if (aggregate) {
-      return formatContactsWidgetValue(widget, aggregate);
+      return formatGenericWidgetValue(widget, aggregate);
     }
     const totalCount = readContactsTotalFromMetrics();
     return {
@@ -266,7 +180,7 @@ export function computeWidgetSingleValue(
   if (widget.collection === "students") {
     const aggregate = readStudentsWidgetAggregate(widget.id);
     if (aggregate) {
-      return formatStudentsWidgetValue(widget, aggregate);
+      return formatGenericWidgetValue(widget, aggregate);
     }
     const totalCount = readStudentsTotalFromMetrics();
     return {
@@ -280,7 +194,7 @@ export function computeWidgetSingleValue(
   if (widget.collection === "teachers") {
     const aggregate = readTeachersWidgetAggregate(widget.id);
     if (aggregate) {
-      return formatTeachersWidgetValue(widget, aggregate);
+      return formatGenericWidgetValue(widget, aggregate);
     }
     const totalCount = readTeachersTotalFromMetrics();
     return {
@@ -326,33 +240,7 @@ export function computeWidgetSingleValue(
     computedValue = widget.operation === "sum" ? numericTotal : (numericRecordCount > 0 ? Math.round(numericTotal / numericRecordCount) : 0);
   }
 
-  let formattedValue = String(computedValue);
-  if (widget.widgetType === "progress" || widget.operation === "percentage") {
-    formattedValue = `${computedValue}%`;
-  } else if (widget.collection === "finance_invoices" && widget.operation !== "count") {
-    formattedValue = formatMoney(computedValue);
-  } else {
-    formattedValue = computedValue.toLocaleString();
-  }
-
-  let isAlert = false;
-  if (widget.thresholdEnabled && widget.thresholdValue !== undefined) {
-    const numericValue = Number(computedValue);
-    const numericThreshold = Number(widget.thresholdValue);
-    switch (widget.thresholdCondition) {
-      case "lt":
-        isAlert = numericValue < numericThreshold;
-        break;
-      case "gt":
-        isAlert = numericValue > numericThreshold;
-        break;
-      case "equals":
-        isAlert = numericValue === numericThreshold;
-        break;
-    }
-  }
-
-  return { value: computedValue, formattedValue, isAlert, totalCount: totalInCollection };
+  return formatGenericWidgetValue(widget, { value: computedValue, totalCount: totalInCollection });
 }
 
 export function computeWidgetChartData(
@@ -373,26 +261,14 @@ export function computeWidgetChartData(
   }
 
   const collectionRecords = collections[widget.collection] || [];
-  const filteredRecords = collectionRecords.filter((collectionRecord) => {
-    if (!collectionRecord) return false;
-    if (!widget.filterField) return true;
-    const fieldValue = (collectionRecord as Record<string, unknown>)[widget.filterField];
-    if (fieldValue === undefined || fieldValue === null) return false;
-    const stringValue = String(fieldValue).toLowerCase();
-    const stringTargetValue = String(widget.filterValue || "").toLowerCase();
-    switch (widget.filterOperator) {
-      case "equals":
-        return stringValue === stringTargetValue;
-      case "contains":
-        return stringValue.includes(stringTargetValue);
-      case "gt":
-        return Number(fieldValue) > Number(widget.filterValue);
-      case "lt":
-        return Number(fieldValue) < Number(widget.filterValue);
-      default:
-        return true;
-    }
-  });
+  const filteredRecords = collectionRecords.filter((collectionRecord) =>
+    matchesWidgetFilter(
+      collectionRecord as Record<string, unknown>,
+      widget.filterField,
+      widget.filterOperator,
+      widget.filterValue,
+    )
+  );
 
   const xAxis = widget.xAxisField || "status";
   const groups: Record<string, Record<string, unknown>[]> = {};
@@ -438,6 +314,25 @@ export function computeWidgetChartData(
 
   return chartData.sort((firstItem, secondItem) => secondItem.value - firstItem.value).slice(0, 8);
 }
+function computeGenericCustomCardValue(
+  card: {
+    operation: CustomWidget["operation"];
+  },
+  aggregate: { value: number; totalCount: number } | undefined,
+): { numericValue: number; finalValue: string | number; totalCount: number } | null {
+  if (!aggregate) return null;
+
+  let displayValue: string | number = aggregate.value;
+  if (card.operation === "percentage") {
+    displayValue = `${aggregate.value}%`;
+  }
+
+  return {
+    numericValue: aggregate.value,
+    finalValue: displayValue,
+    totalCount: aggregate.totalCount,
+  };
+}
 
 /** Resolve dashboard card values for contacts via server widget aggregates. */
 export function computeContactsCustomCardValue(
@@ -448,25 +343,9 @@ export function computeContactsCustomCardValue(
     filterField?: string;
     filterOperator?: CustomWidget["filterOperator"];
     filterValue?: string;
-  },
-): { numericValue: number; finalValue: string | number; totalCount: number } | null {
-  const aggregate = readContactsWidgetAggregate(card.id);
-  if (!aggregate) return null;
-
-  let displayValue: string | number = aggregate.value;
-  if (card.operation === "percentage") {
-    displayValue = `${aggregate.value}%`;
-  } else if (card.operation === "count") {
-    displayValue = aggregate.value;
-  } else {
-    displayValue = aggregate.value;
   }
-
-  return {
-    numericValue: aggregate.value,
-    finalValue: displayValue,
-    totalCount: aggregate.totalCount,
-  };
+) {
+  return computeGenericCustomCardValue(card, readContactsWidgetAggregate(card.id));
 }
 
 /** Resolve dashboard card values for students via server widget aggregates. */
@@ -478,21 +357,9 @@ export function computeStudentsCustomCardValue(
     filterField?: string;
     filterOperator?: CustomWidget["filterOperator"];
     filterValue?: string;
-  },
-): { numericValue: number; finalValue: string | number; totalCount: number } | null {
-  const aggregate = readStudentsWidgetAggregate(card.id);
-  if (!aggregate) return null;
-
-  let displayValue: string | number = aggregate.value;
-  if (card.operation === "percentage") {
-    displayValue = `${aggregate.value}%`;
   }
-
-  return {
-    numericValue: aggregate.value,
-    finalValue: displayValue,
-    totalCount: aggregate.totalCount,
-  };
+) {
+  return computeGenericCustomCardValue(card, readStudentsWidgetAggregate(card.id));
 }
 
 /** Resolve dashboard card values for teachers via server widget aggregates. */
@@ -504,19 +371,7 @@ export function computeTeachersCustomCardValue(
     filterField?: string;
     filterOperator?: CustomWidget["filterOperator"];
     filterValue?: string;
-  },
-): { numericValue: number; finalValue: string | number; totalCount: number } | null {
-  const aggregate = readTeachersWidgetAggregate(card.id);
-  if (!aggregate) return null;
-
-  let displayValue: string | number = aggregate.value;
-  if (card.operation === "percentage") {
-    displayValue = `${aggregate.value}%`;
   }
-
-  return {
-    numericValue: aggregate.value,
-    finalValue: displayValue,
-    totalCount: aggregate.totalCount,
-  };
+) {
+  return computeGenericCustomCardValue(card, readTeachersWidgetAggregate(card.id));
 }

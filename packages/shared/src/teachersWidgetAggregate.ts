@@ -1,3 +1,5 @@
+import { matchesWidgetFilter } from './utils.js';
+
 export type TeachersWidgetOperation = 'count' | 'sum' | 'avg' | 'percentage';
 export type TeachersWidgetFilterOperator = 'equals' | 'contains' | 'gt' | 'lt';
 
@@ -23,32 +25,6 @@ function teacherFieldValue(teacher: TeacherRow, field: string): unknown {
   return teacher[field];
 }
 
-function matchesWidgetFilter(
-  teacher: TeacherRow,
-  filterField?: string,
-  filterOperator?: TeachersWidgetFilterOperator,
-  filterValue?: string,
-): boolean {
-  if (!filterField) return true;
-  const fieldValue = teacherFieldValue(teacher, filterField);
-  if (fieldValue === undefined || fieldValue === null) return false;
-
-  const normalizedFieldValue = String(fieldValue).toLowerCase();
-  const normalizedTargetValue = String(filterValue ?? '').toLowerCase();
-
-  switch (filterOperator) {
-    case 'equals':
-      return normalizedFieldValue === normalizedTargetValue;
-    case 'contains':
-      return normalizedFieldValue.includes(normalizedTargetValue);
-    case 'gt':
-      return Number(fieldValue) > Number(filterValue);
-    case 'lt':
-      return Number(fieldValue) < Number(filterValue);
-    default:
-      return true;
-  }
-}
 
 function filterTeachersForWidget(teachers: TeacherRow[], query: TeachersWidgetQuery): TeacherRow[] {
   return teachers.filter((teacher) =>
