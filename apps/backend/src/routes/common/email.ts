@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import type { User } from '@mms/shared';
-import { mergeEmailIntegrationConfig } from '@mms/shared';
+import { isEmailProviderId, mergeEmailIntegrationConfig } from '@mms/shared';
 import {
   loadEmailIntegrationConfig,
   markEmailIntegrationTestResult,
@@ -8,7 +8,6 @@ import {
   saveEmailIntegrationSecrets,
 } from '../../services/email/emailIntegrationService.js';
 import {
-  isEmailProviderId,
   sendTenantEmail,
   verifyEmailTransport,
 } from '../../services/email/emailService.js';

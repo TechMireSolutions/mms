@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { FINANCE_MODULE_CONTRACT, computeFinanceCommandMetrics } from '@mms/shared';
-import { registerResourceRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
+import { registerStandardTenantRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
 import { invoiceRecordSchema, paymentRecordSchema } from '../../validation/financeSchemas.js';
 
 import {
@@ -44,10 +44,11 @@ export default async function financeRoutes(
   });
 
   // --- Invoices ---
-  registerResourceRoutes(fastify, {
+  registerStandardTenantRoutes(fastify, {
     prefix: '/invoices',
     collection: FINANCE_COLLECTION,
     schema: invoiceRecordSchema,
+    errorMessagePrefix: 'invoices',
     loadAllFn: loadInvoices,
     createFn: createInvoice,
     updateFn: updateInvoiceById,
@@ -59,10 +60,11 @@ export default async function financeRoutes(
   });
 
   // --- Payments ---
-  registerResourceRoutes(fastify, {
+  registerStandardTenantRoutes(fastify, {
     prefix: '/payments',
     collection: PAYMENT_COLLECTION,
     schema: paymentRecordSchema,
+    errorMessagePrefix: 'payments',
     loadAllFn: loadPayments,
     createFn: createPayment,
     updateFn: updatePaymentById,

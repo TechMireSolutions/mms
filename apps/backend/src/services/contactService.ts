@@ -133,9 +133,10 @@ export async function loadContactsWidgetAggregates(
 
 export async function loadContactsByIds(ids: string[]): Promise<Contact[]> {
   if (ids.length === 0) return [];
-  const wanted = new Set(ids.map(String));
-  const all = await loadContacts();
-  return all.filter((contact) => wanted.has(String(contact.id)));
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  const matched = await findContactsByIds(tenant, ids);
+  return matched.filter((contact) => !contact.deletedAt);
 }
 
 export async function loadContactDuplicatePairsPage(query: {
@@ -147,8 +148,9 @@ export async function loadContactDuplicatePairsPage(query: {
 }
 
 export async function getContactById(id: string, includeDeleted = false): Promise<Contact | null> {
-  const all = await loadContacts({ includeDeleted: true });
-  const found = all.find((contact) => String(contact.id) === id);
+  const tenant = getRequestTenant();
+  if (!tenant) return null;
+  const found = await findContactById(tenant, id);
   if (!found) return null;
   if (!includeDeleted && found.deletedAt) return null;
   return found;

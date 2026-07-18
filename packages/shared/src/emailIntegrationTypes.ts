@@ -15,14 +15,22 @@ export function isServerOnlyObjectKey(key: string): boolean {
   return SERVER_ONLY_OBJECT_KEYS.includes(key);
 }
 
-export type EmailProviderId =
-  | 'gmail'
-  | 'microsoft365'
-  | 'outlook'
-  | 'yahoo'
-  | 'icloud'
-  | 'zoho'
-  | 'custom_smtp';
+export const EMAIL_PROVIDERS = [
+  'gmail',
+  'microsoft365',
+  'outlook',
+  'yahoo',
+  'icloud',
+  'zoho',
+  'custom_smtp',
+] as const;
+
+export type EmailProviderId = typeof EMAIL_PROVIDERS[number];
+
+export function isEmailProviderId(value: unknown): value is EmailProviderId {
+  return typeof value === 'string' && (EMAIL_PROVIDERS as readonly string[]).includes(value);
+}
+
 
 export type EmailConnectionType = 'smtp' | 'oauth';
 
@@ -75,20 +83,11 @@ export function mergeEmailIntegrationConfig(
   partial?: Partial<EmailIntegrationConfig> | null,
 ): EmailIntegrationConfig {
   const providerId = partial?.providerId ?? DEFAULT_EMAIL_INTEGRATION.providerId;
-  const validProviders: EmailProviderId[] = [
-    'gmail',
-    'microsoft365',
-    'outlook',
-    'yahoo',
-    'icloud',
-    'zoho',
-    'custom_smtp',
-  ];
   return {
     ...DEFAULT_EMAIL_INTEGRATION,
     ...partial,
-    providerId: validProviders.includes(providerId as EmailProviderId)
-      ? (providerId as EmailProviderId)
+    providerId: isEmailProviderId(providerId)
+      ? providerId
       : DEFAULT_EMAIL_INTEGRATION.providerId,
     fromName: partial?.fromName?.trim() || DEFAULT_EMAIL_INTEGRATION.fromName,
     fromAddress: partial?.fromAddress?.trim() ?? '',

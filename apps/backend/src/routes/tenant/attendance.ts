@@ -10,12 +10,11 @@ import {
   updateAttendanceRecordById,
 } from '../../services/attendanceService.js';
 import { computeAttendanceCommandMetrics, ATTENDANCE_MODULE_CONTRACT } from '@mms/shared';
-import { registerResourceRoutes, registerMetricsRoute, registerBulkPutRoute } from '../../lib/crudRouter.js';
+import { registerStandardTenantRoutes, registerBulkPutRoute } from '../../lib/crudRouter.js';
 import {
   attendanceBulkSchema,
   attendanceRecordSchema,
 } from '@mms/shared';
-
 
 const COLLECTION = 'attendance_records';
 
@@ -28,35 +27,10 @@ export default async function attendanceRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
-  // --- Metrics ---
-  registerMetricsRoute(fastify, {
-    collection: COLLECTION,
-    loadMetricsFn: async (request) => {
-      const dateParam = (request.query as { date?: string }).date;
-      const selectedDate =
-        typeof dateParam === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)
-          ? dateParam
-          : undefined;
-      const records = await loadAttendanceRecords();
-      return computeAttendanceCommandMetrics(records, { selectedDate });
-    },
-    errorMessagePrefix: 'attendance',
-  });
-
-
-  // --- Bulk Replace ---
-  registerBulkPutRoute(fastify, {
-    collection: COLLECTION,
-    schema: attendanceBulkSchema,
-    saveFn: async (data) => replaceAttendanceRecords(data.records),
-    responseKey: 'records',
-    errorMessagePrefix: 'attendance records',
-  });
-
-  // --- Resource CRUD ---
-  registerResourceRoutes(fastify, {
+  registerStandardTenantRoutes(fastify, {
     collection: COLLECTION,
     schema: attendanceRecordSchema,
+    errorMessagePrefix: 'attendance',
     loadAllFn: loadAttendanceRecords,
     createFn: createAttendanceRecord,
     updateFn: updateAttendanceRecordById,
@@ -65,5 +39,22 @@ export default async function attendanceRoutes(
     nameSingular: 'record',
     namePlural: 'records',
     columnPreferencesObjectKey: ATTENDANCE_MODULE_CONTRACT.columnPreferencesObjectKey,
+    computeMetricsFn: (records, request) => {
+      const dateParam = (request.query as { date?: string }).date;
+      const selectedDate =
+        typeof dateParam === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)
+          ? dateParam
+          : undefined;
+      return computeAttendanceCommandMetrics(records, { selectedDate });
+    },
+  });
+
+  // --- Bulk Replace ---
+  registerBulkPutRoute(fastify, {
+    collection: COLLECTION,
+    schema: attendanceBulkSchema,
+    saveFn: async (data) => replaceAttendanceRecords(data.records),
+    responseKey: 'records',
+    errorMessagePrefix: 'attendance records',
   });
 }

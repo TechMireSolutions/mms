@@ -12,7 +12,6 @@ import {
 import { canBulkSync, canDownloadBulkSync, canReadCollection, canReadObject, canResetTenantData, canWriteCollection, canWriteObject } from '../../services/rbacService.js';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import {
-  applyTitleCaseToContact,
   isServerOnlyObjectKey,
   mergeBrandingSettings,
   mergeGlobalSettings,
@@ -37,7 +36,7 @@ import {
 } from '../../validation/dbSchemas.js';
 import { resourceKeyParamsSchema, resourceNameParamsSchema } from '../../validation/commonSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import { validateContactDynamic } from '../../services/contactValidationService.js';
+import { validateAndNormalizeContacts } from '../../services/contactValidationService.js';
 
 function sanitizeUserCollections(collections: Record<string, unknown[]>, userId: string | number): void {
   const userMsgKey = `messages_u:${userId}`;
@@ -123,20 +122,18 @@ export default async function dbRoutes(
           });
         }
         if (payload.collections?.contacts) {
-          const tenant = getRequestTenant();
-          if (!tenant) {
-            return reply.status(403).send({ type: 'forbidden', message: 'Tenant required' });
-          }
+          const tenant = getRequestTenant()!;
           try {
             const lang = (request.headers['accept-language'] as string) || 'en';
-            await validateContactDynamic(tenant, payload.collections.contacts, lang, user.role);
+            payload.collections.contacts = await validateAndNormalizeContacts(
+              tenant,
+              payload.collections.contacts,
+              lang,
+              user.role,
+            );
           } catch (error) {
             return replyValidationError(reply, error instanceof Error ? error.message : String(error));
           }
-
-          payload.collections.contacts = payload.collections.contacts.map((item) =>
-            applyTitleCaseToContact(item as Record<string, unknown>),
-          );
         }
         if (payload.collections) {
           sanitizeUserCollections(payload.collections, user.id);
@@ -245,18 +242,18 @@ export default async function dbRoutes(
       let collectionRowsToSave = normalizeCollectionSaveBody(bodyParsed.data);
 
       if (name === 'contacts') {
-        const tenant = getRequestTenant();
-        if (!tenant) {
-          return reply.status(403).send({ type: 'forbidden', message: 'Tenant required' });
-        }
+        const tenant = getRequestTenant()!;
         try {
           const lang = (request.headers['accept-language'] as string) || 'en';
-          await validateContactDynamic(tenant, collectionRowsToSave, lang, user.role);
+          collectionRowsToSave = await validateAndNormalizeContacts(
+            tenant,
+            collectionRowsToSave,
+            lang,
+            user.role,
+          );
         } catch (error) {
           return replyValidationError(reply, error instanceof Error ? error.message : String(error));
         }
-
-        collectionRowsToSave = collectionRowsToSave.map((item) => applyTitleCaseToContact(item as Record<string, unknown>));
       }
 
       const storageName = name === 'messages' ? `messages_u:${user.id}` : name;
@@ -355,10 +352,8 @@ export default async function dbRoutes(
       }
 
       if (key === 'branding') {
-        const tenant = getRequestTenant();
-        if (tenant) {
-          await syncWorkspaceFromBranding(tenant, objectValueToSave as BrandingSettings);
-        }
+        const tenant = getRequestTenant()!;
+        await syncWorkspaceFromBranding(tenant, objectValueToSave as BrandingSettings);
       }
 
       return reply.send({ success: true });

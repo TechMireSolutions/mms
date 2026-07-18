@@ -27,7 +27,6 @@ export default async function usersRoutes(
   fastify.addHook('preHandler', authenticateTenant);
 
   // --- Users ---
-  // --- Users ---
   registerBulkRoutes(fastify, {
     path: '/',
     collection: USERS_COLLECTION,

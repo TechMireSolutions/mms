@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import {
+  applyTitleCaseToContact,
   buildDynamicContactSchema,
   verifyBlueprintVersion,
 } from '@mms/shared';
@@ -64,4 +65,18 @@ export async function validateContactDynamic(
 
   const { validateOrThrow } = await import('../lib/zodRequest.js');
   validateOrThrow(schema, contact);
+}
+
+/**
+ * Validates contact records dynamically and normalizes them by applying title casing.
+ */
+export async function validateAndNormalizeContacts(
+  tenant: string,
+  contacts: unknown,
+  language = 'en',
+  viewerRole?: string,
+): Promise<any[]> {
+  await validateContactDynamic(tenant, contacts, language, viewerRole);
+  const list = Array.isArray(contacts) ? contacts : [contacts];
+  return list.map((item) => applyTitleCaseToContact(item as Record<string, unknown>));
 }

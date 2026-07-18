@@ -4,7 +4,6 @@ import {
   canSendEmailNotifications,
   getEmailProviderPreset,
   type EmailIntegrationConfig,
-  type EmailProviderId,
   type GlobalSettings,
 } from '@mms/shared';
 import {
@@ -126,15 +125,4 @@ export async function verifyEmailTransport(): Promise<SendEmailResult> {
   }
 }
 
-/** Provider id helper for routes. */
-export function isEmailProviderId(value: string): value is EmailProviderId {
-  return [
-    'gmail',
-    'microsoft365',
-    'outlook',
-    'yahoo',
-    'icloud',
-    'zoho',
-    'custom_smtp',
-  ].includes(value);
-}
+

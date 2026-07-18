@@ -489,6 +489,7 @@ export function registerBulkPutRoute<T>(
 }
 
 export interface PaginatedListRouteOptions<TQuery, TPageResult, TAllResult = unknown[]> {
+  path?: string;
   collection: string;
   schema: ZodType<TQuery>;
   loadPageFn: (query: TQuery & { includeDeleted: boolean }) => Promise<TPageResult>;
@@ -508,6 +509,7 @@ export function registerPaginatedListRoute<
   options: PaginatedListRouteOptions<TQuery, TPageResult, TAllResult>,
 ): void {
   const {
+    path,
     collection,
     schema,
     loadPageFn,
@@ -518,7 +520,7 @@ export function registerPaginatedListRoute<
     loadAllFn,
   } = options;
 
-  fastify.get('/', async (request, reply) => {
+  fastify.get(path || '/', async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, collection)) return sendForbidden(reply);
     const queryParsed = parseRequest(schema, request.query);
@@ -568,31 +570,33 @@ export function registerPaginatedListRoute<
 }
 
 export interface StandardExtendedRoutesOptions<TQuery, TRecord> {
+  prefix?: string;
   collection: string;
-  listQuerySchema: ZodType<TQuery>;
-  defaultPageSize: number;
+  listQuerySchema?: ZodType<TQuery>;
+  defaultPageSize?: number;
   errorMessagePrefix: string;
   nameSingular: string;
-  loadPageFn: (query: TQuery & { includeDeleted: boolean }) => Promise<any>;
+  loadPageFn?: (query: TQuery & { includeDeleted: boolean }) => Promise<any>;
   loadAllFn: (options?: { includeDeleted?: boolean }) => Promise<TRecord[]>;
-  computeMetricsFn: (records: TRecord[]) => Promise<any> | any;
-  loadWidgetAggregatesFn: (queries: any[]) => Promise<any>;
-  loadByIdsFn: (ids: string[]) => Promise<TRecord[]>;
-  loadLinkedContactIdsFn: (excludeId?: string) => Promise<(string | number)[]>;
-  columnPreferencesObjectKey: string;
+  computeMetricsFn?: (records: TRecord[], request: FastifyRequest) => Promise<any> | any;
+  loadWidgetAggregatesFn?: (queries: any[]) => Promise<any>;
+  loadByIdsFn?: (ids: string[]) => Promise<TRecord[]>;
+  loadLinkedContactIdsFn?: (excludeId?: string) => Promise<(string | number)[]>;
+  columnPreferencesObjectKey?: string;
 }
 
 /**
  * Registers standard extended routes (Paginated List, Count, Metrics, Widget Aggregates, Resolve, Linked Contact IDs, Column Preferences).
  */
 export function registerStandardExtendedRoutes<
-  TQuery extends { page?: number; limit?: number; includeDeleted?: string },
-  TRecord,
+  TQuery extends { page?: number; limit?: number; includeDeleted?: string } = any,
+  TRecord = any,
 >(
   fastify: FastifyInstance,
   options: StandardExtendedRoutesOptions<TQuery, TRecord>,
 ): void {
   const {
+    prefix,
     collection,
     listQuerySchema,
     defaultPageSize,
@@ -607,53 +611,73 @@ export function registerStandardExtendedRoutes<
     loadLinkedContactIdsFn,
   } = options;
 
-  registerPaginatedListRoute(fastify, {
-    collection,
-    schema: listQuerySchema,
-    defaultPageSize,
-    errorMessagePrefix,
-    loadPageFn,
-  });
+  if (listQuerySchema && loadPageFn) {
+    registerPaginatedListRoute(fastify, {
+      path: prefix || '/',
+      collection,
+      schema: listQuerySchema,
+      defaultPageSize: defaultPageSize ?? 20,
+      errorMessagePrefix,
+      loadPageFn,
+    });
+  }
 
   registerCountRoute(fastify, {
+    path: prefix ? `${prefix}/count` : '/count',
     collection,
     loadAllFn: () => loadAllFn(),
     errorMessagePrefix,
   });
 
-  registerMetricsRoute(fastify, {
-    collection,
-    loadMetricsFn: async () => {
-      const records = await loadAllFn();
-      return computeMetricsFn(records);
-    },
-    errorMessagePrefix: nameSingular,
-  });
+  if (computeMetricsFn) {
+    registerMetricsRoute(fastify, {
+      path: prefix ? `${prefix}/metrics` : '/metrics',
+      collection,
+      loadMetricsFn: async (request) => {
+        const records = await loadAllFn();
+        return computeMetricsFn(records, request);
+      },
+      errorMessagePrefix: nameSingular,
+    });
+  }
 
-  registerWidgetAggregatesRoute(fastify, {
-    collection,
-    loadAggregatesFn: loadWidgetAggregatesFn,
-    errorMessagePrefix: nameSingular,
-  });
+  if (loadWidgetAggregatesFn) {
+    registerWidgetAggregatesRoute(fastify, {
+      path: prefix ? `${prefix}/widget-aggregates` : '/widget-aggregates',
+      collection,
+      loadAggregatesFn: loadWidgetAggregatesFn,
+      errorMessagePrefix: nameSingular,
+    });
+  }
 
-  registerResolveRoute(fastify, {
-    collection,
-    loadByIdsFn: loadByIdsFn,
-    responseKey: errorMessagePrefix,
-    errorMessagePrefix,
-  });
+  if (loadByIdsFn) {
+    registerResolveRoute(fastify, {
+      path: prefix ? `${prefix}/resolve` : '/resolve',
+      collection,
+      loadByIdsFn: loadByIdsFn,
+      responseKey: errorMessagePrefix,
+      errorMessagePrefix,
+    });
+  }
 
-  registerLinkedContactIdsRoute(fastify, {
-    collection,
-    loadLinkedContactIdsFn,
-    errorMessagePrefix,
-  });
+  if (loadLinkedContactIdsFn) {
+    registerLinkedContactIdsRoute(fastify, {
+      path: prefix ? `${prefix}/linked-contact-ids` : '/linked-contact-ids',
+      collection,
+      loadLinkedContactIdsFn,
+      errorMessagePrefix,
+    });
+  }
 
-  registerColumnPreferencesRoutes(fastify, {
-    collection,
-    objectKey: columnPreferencesObjectKey,
-  });
+  if (columnPreferencesObjectKey) {
+    registerColumnPreferencesRoutes(fastify, {
+      path: prefix ? `${prefix}/column-preferences` : '/column-preferences',
+      collection,
+      objectKey: columnPreferencesObjectKey,
+    });
+  }
 }
+
 export interface StandardTenantRoutesOptions<TQuery, TRecord extends ResourceRecord>
   extends StandardExtendedRoutesOptions<TQuery, TRecord> {
   schema: ZodType<TRecord>;
@@ -671,13 +695,14 @@ export interface StandardTenantRoutesOptions<TQuery, TRecord extends ResourceRec
  * Registers all standard tenant routes (Standard Extended + CRUD).
  */
 export function registerStandardTenantRoutes<
-  TQuery extends { page?: number; limit?: number; includeDeleted?: string },
-  TRecord extends ResourceRecord,
+  TQuery extends { page?: number; limit?: number; includeDeleted?: string } = any,
+  TRecord extends ResourceRecord = any,
 >(
   fastify: FastifyInstance,
   options: StandardTenantRoutesOptions<TQuery, TRecord>,
 ): void {
   const {
+    prefix,
     collection,
     listQuerySchema,
     defaultPageSize,
@@ -702,6 +727,7 @@ export function registerStandardTenantRoutes<
   } = options;
 
   registerStandardExtendedRoutes(fastify, {
+    prefix,
     collection,
     listQuerySchema,
     defaultPageSize,
@@ -716,8 +742,11 @@ export function registerStandardTenantRoutes<
     loadLinkedContactIdsFn,
   });
 
+  const hasPaginatedListRoute = !!(listQuerySchema && loadPageFn);
+
   registerResourceRoutes(fastify, {
-    customGetRoute: true, // Extended routes already register GET / via paginated list route
+    prefix,
+    customGetRoute: hasPaginatedListRoute,
     customPostRoute,
     customPutRoute,
     collection,

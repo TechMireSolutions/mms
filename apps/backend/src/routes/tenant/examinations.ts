@@ -27,7 +27,6 @@ export default async function examinationsRoutes(
   fastify.addHook('preHandler', authenticateTenant);
 
   // --- Exams ---
-  // --- Exams ---
   registerBulkRoutes(fastify, {
     path: '/exams',
     collection: EXAMS_COLLECTION,

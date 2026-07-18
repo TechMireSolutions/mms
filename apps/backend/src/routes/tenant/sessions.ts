@@ -8,14 +8,10 @@ import {
   updateSessionById,
 } from '../../services/sessionService.js';
 import { computeSessionsCommandMetrics, SESSIONS_MODULE_CONTRACT } from '@mms/shared';
-import {
-  registerResourceRoutes,
-  registerMetricsRoute,
-  registerPaginatedListRoute,
-} from '../../lib/crudRouter.js';
-import { sessionRecordSchema, sessionsListQuerySchema } from '../../validation/sessionSchemas.js';
+import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
+import { sessionRecordSchema } from '../../validation/sessionSchemas.js';
 
-const COLLECTION = 'sessions';
+const COLLECTION = SESSIONS_MODULE_CONTRACT.collectionKey;
 
 /**
  * Server-first sessions resource routes (TanStack Query on FE).
@@ -26,38 +22,18 @@ export default async function sessionsRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
-  // --- GET List (Paginated) ---
-  registerPaginatedListRoute(fastify, {
-    collection: COLLECTION,
-    schema: sessionsListQuerySchema,
-    defaultPageSize: SESSIONS_MODULE_CONTRACT.defaultPageSize,
-    errorMessagePrefix: 'sessions',
-    loadPageFn: async () => ([] as any),
-    loadAllFn: (options) => loadSessions(options),
-  });
-
-  // --- Metrics ---
-  registerMetricsRoute(fastify, {
-    collection: COLLECTION,
-    loadMetricsFn: async () => {
-      const sessions = await loadSessions();
-      return computeSessionsCommandMetrics(sessions);
-    },
-    errorMessagePrefix: 'session',
-  });
-
-  // --- Resource CRUD ---
-  registerResourceRoutes(fastify, {
-    customGetRoute: true,
+  registerStandardTenantRoutes(fastify, {
     collection: COLLECTION,
     schema: sessionRecordSchema,
+    errorMessagePrefix: 'sessions',
+    nameSingular: 'session',
+    namePlural: 'sessions',
     loadAllFn: loadSessions,
     createFn: createSession,
     updateFn: updateSessionById,
     deleteFn: deleteSessionById,
     restoreFn: restoreSessionById,
-    nameSingular: 'session',
-    namePlural: 'sessions',
+    computeMetricsFn: (sessions) => computeSessionsCommandMetrics(sessions),
     columnPreferencesObjectKey: SESSIONS_MODULE_CONTRACT.columnPreferencesObjectKey,
   });
 }

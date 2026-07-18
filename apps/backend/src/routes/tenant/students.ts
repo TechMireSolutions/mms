@@ -100,10 +100,7 @@ export default async function studentsRoutes(
     const parsed = parseRequest(studentRecordSchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
-    const tenant = getRequestTenant();
-    if (!tenant) {
-      return reply.status(403).send({ type: 'forbidden', message: 'Tenant required' });
-    }
+    const tenant = getRequestTenant()!;
 
     try {
       const lang = (request.headers['accept-language'] as string) || 'en';
@@ -132,10 +129,7 @@ export default async function studentsRoutes(
     if (!params.ok) return replyValidationError(reply, params.message);
     if (!body.ok) return replyValidationError(reply, body.message);
 
-    const tenant = getRequestTenant();
-    if (!tenant) {
-      return reply.status(403).send({ type: 'forbidden', message: 'Tenant required' });
-    }
+    const tenant = getRequestTenant()!;
 
     try {
       const lang = (request.headers['accept-language'] as string) || 'en';

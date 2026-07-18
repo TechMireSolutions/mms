@@ -267,10 +267,7 @@ export async function contactRoutes(
     const user = request.user as User;
     if (!canReadContacts(user)) return sendForbidden(reply);
 
-    const tenant = getRequestTenant();
-    if (!tenant) {
-      return reply.status(403).send({ type: 'forbidden', message: 'Tenant required' });
-    }
+    const tenant = getRequestTenant()!;
 
     const jobId = crypto.randomUUID();
     const userId = String(user.id);
@@ -488,10 +485,7 @@ export async function contactRoutes(
     const parsed = parseRequest(contactRecordSchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
-    const tenant = getRequestTenant();
-    if (!tenant) {
-      return reply.status(403).send({ type: 'forbidden', message: 'Tenant required' });
-    }
+    const tenant = getRequestTenant()!;
 
     try {
       const lang = (request.headers['accept-language'] as string) || 'en';
@@ -554,10 +548,7 @@ export async function contactRoutes(
     const body = parseRequest(contactRecordSchema, request.body);
     if (!body.ok) return replyValidationError(reply, body.message);
 
-    const tenant = getRequestTenant();
-    if (!tenant) {
-      return reply.status(403).send({ type: 'forbidden', message: 'Tenant required' });
-    }
+    const tenant = getRequestTenant()!;
 
     try {
       const lang = (request.headers['accept-language'] as string) || 'en';
@@ -614,10 +605,7 @@ export async function contactRoutes(
     const parsed = parseRequest(contactsCsvExportBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
-    const tenant = getRequestTenant();
-    if (!tenant) {
-      return reply.status(403).send({ type: 'forbidden', message: 'Tenant required' });
-    }
+    const tenant = getRequestTenant()!;
 
     const jobId = crypto.randomUUID();
     const userId = String(user.id);
