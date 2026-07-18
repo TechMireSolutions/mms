@@ -4,7 +4,7 @@ import { computeFinancials, Account, JournalEntry, FiscalYear, AccountingSetting
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
+import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { AccountingDateFilterBar } from "./AccountingDateFilterBar";
 
 import { StatCard } from "@/components/ui/StatCard";

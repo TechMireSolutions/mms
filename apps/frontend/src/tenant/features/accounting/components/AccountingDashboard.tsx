@@ -9,7 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cel
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { computeFinancials, Account, JournalEntry, AccountingSettings, FiscalYear } from '@/lib/data/accountingData';
 import { useTranslation } from "@/hooks/useTranslation";
-import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
+import { useAccountingCurrency } from "@/hooks/useCurrency";
 
 import { StatCard } from "@/components/ui/StatCard";
 

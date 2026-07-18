@@ -6,7 +6,7 @@ import { Modal } from "@/components/ui/Modal";
 
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDate } from "@mms/shared";
-import { useFinanceCurrency } from "../hooks/useFinanceCurrency";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 interface InvoiceDetailProps {
   invoice: Invoice;

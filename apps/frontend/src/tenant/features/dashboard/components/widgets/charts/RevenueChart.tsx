@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
 
 interface RevenuePoint {

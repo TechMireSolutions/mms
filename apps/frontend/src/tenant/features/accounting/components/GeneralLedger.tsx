@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useTranslation } from "@/hooks/useTranslation";
 
-import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
+import { useAccountingCurrency } from "@/hooks/useCurrency";
 
 interface GeneralLedgerProps {
   accounts: Account[];

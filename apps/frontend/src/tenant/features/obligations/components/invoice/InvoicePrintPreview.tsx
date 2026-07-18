@@ -5,37 +5,11 @@
  */
 import React from "react";
 import { PAGE_SIZES, resolveField, InvoiceTemplate, TemplateElement, FieldLookupInfo } from "@/lib/invoiceTemplateStore";
-import { getObject } from "@/lib/db";
 import { ObligationCollection } from '@/lib/data/obligationsData';
-import { DEFAULT_BRANDING_SETTINGS } from "@mms/shared";
+import { useBranding } from "@/tenant/hooks/useBranding";
 import { getPrintBrandingTokens, PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 
-interface Branding {
-  madrasaName: string;
-  logoUrl: string;
-  primaryColor: string;
-}
 
-function getBranding(): Branding {
-  const branding = getObject<Branding | null>("branding", null);
-  if (branding) return branding;
-  try {
-    const raw = localStorage.getItem("madrasa_branding");
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      localStorage.setItem("mms_branding", raw);
-      try {
-        localStorage.removeItem("madrasa_branding");
-      } catch {
-        void 0;
-      }
-      return parsed;
-    }
-  } catch {
-    void 0;
-  }
-  return { madrasaName: "MMS", logoUrl: "", primaryColor: DEFAULT_BRANDING_SETTINGS.primaryColor };
-}
 
 export interface InvoicePrintPreviewProps {
   template: InvoiceTemplate;
@@ -60,7 +34,7 @@ export function InvoicePrintPreview({
   scale = 1,
   showBoundary = true,
 }: InvoicePrintPreviewProps) {
-  const branding = getBranding();
+  const branding = useBranding();
   const printTokens = getPrintBrandingTokens();
   const size = PAGE_SIZES[template.pageSize] || PAGE_SIZES.A6;
 

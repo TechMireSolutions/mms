@@ -32,7 +32,7 @@ import { computeCustomCard as computeCustomCardShared, CustomCard } from "@/tena
 import DynamicCardBuilder from "@/tenant/features/reports/components/DynamicCardBuilder";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 interface KPIItem {
   icon: LucideIcon;

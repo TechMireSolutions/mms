@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { ACCOUNT_TYPE_META, ACCOUNT_TYPES, computeTrialBalance, Account, JournalEntry, FiscalYear } from '@/lib/data/accountingData';
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
-import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
+import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { AccountingDateFilterBar } from "./AccountingDateFilterBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type AppTranslationKey } from "@mms/shared";

@@ -18,7 +18,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 
 
 import { formatMonthYear, getInitials, formatMoney } from "@mms/shared";
-import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 import { StatCard } from "@/components/ui/StatCard";
 

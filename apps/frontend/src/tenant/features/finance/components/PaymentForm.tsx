@@ -11,7 +11,7 @@ import { notify } from "@/lib/notify";
 import { PAYMENT_METHODS, Invoice, Payment } from '@/lib/data/financeData';
 import { FORM_INPUT } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { useFinanceCurrency } from "../hooks/useFinanceCurrency";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 interface PaymentFormProps {
   open: boolean;

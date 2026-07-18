@@ -23,7 +23,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useDashboardConfig } from '@/tenant/features/dashboard/hooks/useDashboardConfig';
 import { resolveWidgetTitle } from '@/lib/dashboardWidgets';
 import { buildDashboardNotifications } from '@/lib/buildDashboardNotifications';
-import { useFinanceCurrency } from '@/tenant/features/finance/hooks/useFinanceCurrency';
+import { useFinanceCurrency } from '@/hooks/useCurrency';
 
 function Section({ children }: { children: React.ReactNode }) {
   return (

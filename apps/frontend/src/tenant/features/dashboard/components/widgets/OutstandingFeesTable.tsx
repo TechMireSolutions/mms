@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import MessageComposer from "@/components/ui/MessageComposer";
-import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
 /**

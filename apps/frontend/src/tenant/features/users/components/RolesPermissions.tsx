@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Pencil, Shield, Check, X, Lock, BookOpen } from 'lucide-react';
 import {
-  DEFAULT_USERS_SETTINGS,
   filterRbacModulesForSettings,
   groupRbacModulesForPermissionsNav,
   PERMISSION_ACTIONS,
@@ -10,14 +9,13 @@ import {
   type PermissionAction,
   type PermissionMap,
   type RbacModuleDef,
-  type UsersSettings,
   type WorkspaceRole,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useIsAdminViewer } from '@/tenant/hooks/useViewerRole';
 import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
-import { getObject, saveObject } from '@/lib/db';
+import { useUsersConfig } from '@/tenant/features/users/hooks/useUsersConfig';
 import { notify } from '@/lib/notify';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -161,10 +159,6 @@ function RoleFormModal({ open, title, role, visibleModules, onSave, onClose }: R
   );
 }
 
-function persistWorkspaceRoles(roles: WorkspaceRole[]): void {
-  const settings = getObject<UsersSettings>('users_settings', DEFAULT_USERS_SETTINGS);
-  saveObject('users_settings', { ...settings, workspaceRoles: roles });
-}
 
 interface PermissionMatrixProps {
   modules: readonly RbacModuleDef[];
@@ -317,6 +311,7 @@ function PermissionMatrix({
 
 export function RolesPermissions(): React.JSX.Element {
   const { t } = useTranslation();
+  const { settings, updateSettings } = useUsersConfig();
   const globalSettings = useGlobalSettings();
   const isAdmin = useIsAdminViewer();
   const loadedRoles = useWorkspaceRoles();
@@ -386,7 +381,7 @@ export function RolesPermissions(): React.JSX.Element {
       const updatedRoles = existingRole
         ? previousRoles.map((workspaceRole) => (workspaceRole.id === role.id ? role : workspaceRole))
         : [...previousRoles, role];
-      persistWorkspaceRoles(updatedRoles);
+      updateSettings({ ...settings, workspaceRoles: updatedRoles });
       return updatedRoles;
     });
     setEdit(null);

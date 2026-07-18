@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
+import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, ChevronUp,
   DollarSign, TrendingDown, RefreshCw, BookOpen,

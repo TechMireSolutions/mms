@@ -5,7 +5,7 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import { useObligationsMetrics } from '@/tenant/features/obligations/hooks/useObligationsApi';
 import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
-import { useFinanceCurrency } from '@/tenant/features/finance/hooks/useFinanceCurrency';
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 interface ObligationsCommandMetricsProps {
   total: number;

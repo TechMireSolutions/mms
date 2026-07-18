@@ -6,7 +6,7 @@ import { ACCOUNT_TYPE_META, Account, JournalEntry } from '@/lib/data/accountingD
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
+import { useAccountingCurrency } from "@/hooks/useCurrency";
 
 interface JournalEntryDetailProps {
   entry: JournalEntry;

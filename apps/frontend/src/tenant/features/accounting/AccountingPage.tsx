@@ -23,7 +23,7 @@ import { AccountingCommandMetrics } from "@/tenant/features/accounting/component
 import { useAccountingJournalColumnLayout } from "@/tenant/features/accounting/hooks/useAccountingJournalColumnLayout";
 import { useAccountingAccountColumnLayout } from "@/tenant/features/accounting/hooks/useAccountingAccountColumnLayout";
 import { useAccountingConfig } from "@/tenant/features/accounting/hooks/useAccountingConfig";
-import { useAccountingCurrency } from "@/tenant/features/accounting/hooks/useAccountingCurrency";
+import { useAccountingCurrency } from "@/hooks/useCurrency";
 import {
   useAccountingAccountsCollection,
   useAccountingEntriesCollection,

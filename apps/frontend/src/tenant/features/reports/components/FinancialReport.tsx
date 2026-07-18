@@ -37,7 +37,7 @@ interface FinancialReportProps {
 }
 
 import { formatMonthYear, formatDate } from "@mms/shared";
-import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 const STATUS_COLOR: Record<InvoiceStatus, string> = {
   paid:      "bg-success/10 text-success",

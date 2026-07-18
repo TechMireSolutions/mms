@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { formatDate, type AppTranslationKey } from "@mms/shared";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import { useFinanceCurrency } from "../hooks/useFinanceCurrency";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 
 

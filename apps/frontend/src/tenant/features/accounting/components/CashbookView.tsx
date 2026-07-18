@@ -55,7 +55,7 @@ function getEntryLabel(entry: JournalEntry & { transaction_type?: string }, t: (
   return t("accounting.transaction.type.transaction");
 }
 
-import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
+import { useAccountingCurrency } from "@/hooks/useCurrency";
 
 interface CashbookViewProps {
   entries: JournalEntry[];

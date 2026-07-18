@@ -15,7 +15,7 @@ import { useExaminationsResultsCollection } from "@/tenant/features/examinations
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
-import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 import type { AppTranslationKey } from "@mms/shared";
 import {
   buildContactsReportFieldCatalog,

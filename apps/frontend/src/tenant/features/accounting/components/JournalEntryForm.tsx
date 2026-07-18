@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { hasFieldValue } from "@/lib/formCompleteness";
-import { useAccountingCurrency } from "../hooks/useAccountingCurrency";
+import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type AppTranslationKey } from "@mms/shared";
 

@@ -7,7 +7,7 @@ import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/Modal";
-import { useFinanceCurrency } from "../hooks/useFinanceCurrency";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 interface InvoiceFormProps {
   open: boolean;

@@ -34,7 +34,7 @@ import { useDashboardData } from "@/tenant/features/dashboard/hooks/useDashboard
 import { resolveDashboardRole } from "@/lib/dashboardRole";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { buildDashboardNotifications } from "@/lib/buildDashboardNotifications";
-import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 export interface TopBarActionsProps {
   /** Tighter spacing for mobile header. */

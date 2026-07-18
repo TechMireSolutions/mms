@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { getObject } from "@/lib/db";
+import { useBranding } from "@/tenant/hooks/useBranding";
 import {
   Move, Trash2, Copy, Save,
   AlignLeft, AlignCenter, AlignRight, Bold, Italic, Minus, Type, Undo2, Redo2, Eye, EyeOff,
@@ -78,6 +78,7 @@ export interface InvoiceTemplateEditorProps {
  * @param {InvoiceTemplateEditorProps} props
  */
 export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTemplateEditorProps) {
+  const branding = useBranding();
   const printTokens = getPrintBrandingTokens();
   const [template, setTemplate] = useState<InvoiceTemplate>(() => loadTemplate());
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -307,15 +308,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
 
     const content = () => {
       if (templateElement.type === "logo") {
-        const branding = (() => {
-          const current = getObject<{logoUrl?: string}>("branding", {});
-          if (current && Object.keys(current).length > 0) return current;
-          try {
-            return JSON.parse(localStorage.getItem("madrasa_branding") || "{}");
-          } catch {
-            return {};
-          }
-        })();
+
         return branding.logoUrl
           ? <img src={branding.logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: elementStyle.objectFit || "contain" }} />
           : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: printTokens.logoPlaceholderBg, borderRadius: 6, border: `2px dashed ${printTokens.logoPlaceholderBorder}` }}>

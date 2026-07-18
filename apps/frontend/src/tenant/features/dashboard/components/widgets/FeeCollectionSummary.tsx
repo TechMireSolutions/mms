@@ -3,7 +3,7 @@ import { TrendingUp } from "lucide-react";
 import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatMonthYear, formatMonthName } from "@mms/shared";
-import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 /**
  * FeeCollectionSummary Component

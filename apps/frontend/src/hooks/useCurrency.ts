@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { DEFAULT_CURRENCIES, formatMoney } from "@mms/shared";
+import { useStandardModuleConfig } from "./useStandardModuleConfig";
 
 export interface UseCurrencyOptions {
   currencyCode?: string;
@@ -30,3 +31,35 @@ export function useCurrency({ currencyCode, decimalPlaces }: UseCurrencyOptions 
     formatCurrency,
   };
 }
+
+/**
+ * Custom hook to get active currency metadata and a settings-aware formatting function for finance.
+ */
+export function useFinanceCurrency() {
+  const { settings } = useStandardModuleConfig("finance");
+  const { activeCurrency, formatCurrency } = useCurrency({
+    currencyCode: settings.currency,
+  });
+  return {
+    activeCurrency,
+    formatCurrency,
+    settings,
+  };
+}
+
+/**
+ * Custom hook to get active currency metadata and a settings-aware formatting function for accounting.
+ */
+export function useAccountingCurrency() {
+  const { settings } = useStandardModuleConfig("accounting");
+  const { activeCurrency, formatCurrency } = useCurrency({
+    currencyCode: settings.currency,
+    decimalPlaces: settings.decimalPlaces,
+  });
+  return {
+    activeCurrency,
+    formatCurrency,
+    settings,
+  };
+}
+
