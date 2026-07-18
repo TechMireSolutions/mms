@@ -1,14 +1,7 @@
 import { useMemo } from "react";
-import {
-  STUDENTS_MODULE_CONTRACT,
-  DEFAULT_STUDENTS_SETTINGS,
-  DEFAULT_STUDENT_FIELD_DEFS,
-  normalizeStudentsSettings,
-  type StudentsSettings,
-} from "@mms/shared";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useLiveObject } from "@/hooks/useLiveObject";
-import { useModuleConfig } from "@/hooks/useModuleConfig";
+import { useStandardModuleConfig } from "@/hooks/useStandardModuleConfig";
 import {
   STUDENT_CONFIG_COLLECTION_KEYS,
   STUDENT_CONFIG_OBJECT_KEYS,
@@ -20,20 +13,7 @@ import {
 export function useStudentConfig() {
   const defaults = useMemo(() => getStudentConfigCollectionDefaults(), []);
 
-  const {
-    settings,
-    orderedFields,
-    fields,
-    customFields,
-    updateSettings,
-    isFieldEnabled,
-    isFieldRequired,
-  } = useModuleConfig<StudentsSettings>({
-    settingsObjectKey: STUDENTS_MODULE_CONTRACT.settingsObjectKey,
-    defaultSettings: DEFAULT_STUDENTS_SETTINGS,
-    defaultFieldDefs: DEFAULT_STUDENT_FIELD_DEFS,
-    normalizeFn: normalizeStudentsSettings,
-  });
+  const config = useStandardModuleConfig("students");
   
   const statuses = useLiveCollection<string>(
     STUDENT_CONFIG_COLLECTION_KEYS.statuses,
@@ -56,17 +36,12 @@ export function useStudentConfig() {
   );
 
   return {
-    settings,
+    ...config,
     statuses,
     genderFilters,
     discountTypes,
     guardianContactDefaults,
-    updateSettings,
-    fields,
-    customFields,
-    orderedFields,
-    isFieldEnabled,
-    isFieldRequired,
   };
 }
+
 

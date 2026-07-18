@@ -1,12 +1,9 @@
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useModuleConfig } from '@/hooks/useModuleConfig';
+import { useStandardModuleConfig } from '@/hooks/useStandardModuleConfig';
 import {
-  DEFAULT_QUESTION_BANK_FIELD_DEFS,
-  DEFAULT_QUESTION_BANK_SETTINGS,
   QUESTION_BANK_FIELD_LABEL_KEYS,
   mergeQuestionCategories,
-  normalizeQuestionBankSettings,
   type AppTranslationKey,
   type ModuleFieldDef,
   type QuestionBankSettings,
@@ -42,15 +39,10 @@ export function useQuestionBankConfig(
   const {
     settings,
     orderedFields,
-    fields,
     updateSettings,
     isFieldEnabled,
-  } = useModuleConfig<QuestionBankSettings>({
-    settingsObjectKey: 'question_bank_settings',
-    defaultSettings: DEFAULT_QUESTION_BANK_SETTINGS,
-    defaultFieldDefs: DEFAULT_QUESTION_BANK_FIELD_DEFS,
-    normalizeFn: normalizeQuestionBankSettings,
-  });
+  } = useStandardModuleConfig('question-bank');
+
 
   const refresh = useCallback(() => {}, []);
 
