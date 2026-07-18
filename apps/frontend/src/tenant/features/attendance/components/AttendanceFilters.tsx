@@ -10,6 +10,7 @@ import { useTeachersPaginated } from '@/tenant/features/teachers/hooks/useTeache
 import { TEACHERS_MODULE_CONTRACT } from '@mms/shared';
 import { activeTeachersForAssignment } from '@/lib/teachers/teacherAssignment';
 import { useTranslation } from '@/hooks/useTranslation';
+import { todayISO } from '@mms/shared';
 
 export interface AttendanceFilterState {
   sessionId: string;
@@ -62,7 +63,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
     ? allClasses.filter((sessionClass) => sessionClass.sessionId === filters.sessionId)
     : allClasses;
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayISO();
   
   const activeCount = [
     filters.sessionId,

@@ -9,9 +9,6 @@ import { Button } from "@/components/ui/button";
 
 const PrintInvoiceModal = lazy(() => import("@/tenant/features/obligations/components/invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
 
-function fmtDate(date?: string | null): string {
-  return formatDate(date);
-}
 
 interface RowProps {
   label: string;
@@ -59,7 +56,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
   const users = useMergedObligationUsers();
 
   const getContact = (id?: string | number | null) => contacts.find((contact) => String(contact.id) === String(id));
-  const getCurrency = (id: string) => currencies.find((currencyOption: any) => currencyOption.id === id);
+  const getCurrency = (id: string) => currencies.find((currencyOption) => currencyOption.id === id);
   const getUser = (id?: string | number | null) => users.find((u) => String(u.id) === String(id));
   const getRep = (id: string) => reps.find((r) => r.id === id);
   const getMujtahid = (repId: string) => {
@@ -96,7 +93,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
           </div>
           <div className="ms-auto text-end">
             <h3 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">Date</h3>
-            <p className="text-sm font-semibold text-foreground m-0">{fmtDate(selectedCollection.received_date)}</p>
+            <p className="text-sm font-semibold text-foreground m-0">{formatDate(selectedCollection.received_date)}</p>
           </div>
         </header>
 
@@ -112,7 +109,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
           <Row label="Amount" value={formatMoney(selectedCollection.amount, currency?.code)} mono />
           <Row label="Payment Mode" value={selectedCollection.payment_mode} />
           <Row label="Received By" value={user?.name} />
-          <Row label="Created" value={fmtDate(selectedCollection.created_at)} />
+          <Row label="Created" value={formatDate(selectedCollection.created_at)} />
         </section>
 
         {/* Distribution breakdown */}

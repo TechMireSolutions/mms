@@ -26,7 +26,7 @@ import { type Invoice } from '@/lib/data/financeData';
 import { type Student } from '@/lib/data/studentsData';
 import { type Teacher } from '@/lib/data/teachersData';
 import { type Session } from '@/lib/data/sessionsData';
-import { type Distribution } from '@/lib/data/hasanatData';
+import { type Distribution, type Denomination } from '@/lib/data/hasanatData';
 import type { QuestionBankQuestion, QuestionBankResult, QuestionBankTest } from "@mms/shared";
 import { computeCustomCard as computeCustomCardShared, CustomCard } from "@/tenant/features/reports/components/reportMetadata";
 import DynamicCardBuilder from "@/tenant/features/reports/components/DynamicCardBuilder";
@@ -151,7 +151,7 @@ function computeCustomCard(
     questions: QuestionBankQuestion[];
     tests: QuestionBankTest[];
     assessment_results: QuestionBankResult[];
-    hasanat_denoms?: any[];
+    hasanat_denoms?: Denomination[];
   }
 ): KPIItem & { categories: string[] } {
   const computedCard = computeCustomCardShared(card, collections);
@@ -364,7 +364,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     // 5. Hasanat Awarded
     const totalHasanat = distributions.reduce((sum, distribution) => {
       const denominationName = (distribution.denominationName || "").toLowerCase();
-      const matchedDenomination = denominations.find((denomination: any) => denomination.id === distribution.denominationId);
+      const matchedDenomination = denominations.find((denomination) => denomination.id === distribution.denominationId);
       const points = matchedDenomination ? matchedDenomination.points : (
         denominationName.includes("silver") ? 150 :
         denominationName.includes("gold") ? 500 :

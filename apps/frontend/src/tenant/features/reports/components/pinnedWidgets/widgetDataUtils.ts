@@ -21,6 +21,7 @@ import {
   TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
 } from "@/tenant/features/teachers/hooks/useTeachers";
 import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
+import type { Denomination } from "@/lib/data/hasanatData";
 
 function readContactsWidgetAggregate(widgetId: string): ContactsWidgetAggregateResult | undefined {
   const queries = queryClientInstance.getQueriesData<Record<string, ContactsWidgetAggregateResult>>({
@@ -220,7 +221,7 @@ export function computeWidgetSingleValue(
     filteredRecords.forEach((filteredRecord) => {
       if (widget.collection === "hasanat_distributions" && targetField === "points") {
         const denominationName = String(filteredRecord.denominationName || "").toLowerCase();
-        const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === filteredRecord.denominationId);
+        const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: Denomination) => denomination.id === filteredRecord.denominationId);
         const points = matchedDenomination ? matchedDenomination.points : (
           denominationName.includes("silver") ? 150 :
           denominationName.includes("gold") ? 500 :
@@ -290,7 +291,7 @@ export function computeWidgetChartData(
       groupRecords.forEach((groupRecord) => {
         if (widget.collection === "hasanat_distributions" && targetField === "points") {
           const denominationName = String(groupRecord.denominationName || "").toLowerCase();
-          const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === groupRecord.denominationId);
+          const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: Denomination) => denomination.id === groupRecord.denominationId);
           const points = matchedDenomination ? matchedDenomination.points : (
             denominationName.includes("silver") ? 150 :
             denominationName.includes("gold") ? 500 :

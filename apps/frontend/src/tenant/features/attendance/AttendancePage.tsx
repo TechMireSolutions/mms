@@ -7,7 +7,7 @@ import {
   UserCheck, ClipboardEdit, BookOpen, BarChart2,
   ShieldCheck, ClipboardList,
 } from "lucide-react";
-import { resolveModuleTierTab } from "@mms/shared";
+import { resolveModuleTierTab, todayISO } from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -37,7 +37,7 @@ const DEFAULT_FILTERS = {
   sessionId: "",
   classId: "",
   teacherId: "",
-  date: new Date().toISOString().slice(0, 10),
+  date: todayISO(),
 };
 
 /**

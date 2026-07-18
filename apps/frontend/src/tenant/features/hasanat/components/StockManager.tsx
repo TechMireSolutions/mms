@@ -9,6 +9,7 @@ import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { todayISO } from "@mms/shared";
 
 interface AddBatchModalProps {
   open: boolean;
@@ -21,7 +22,7 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
   const [data, setData] = useState<Partial<StockBatch>>({
     denominationId: denoms[0]?.id || "",
     quantity: 0,
-    addedDate: new Date().toISOString().split("T")[0],
+    addedDate: todayISO(),
     addedByUserId: "",
     note: "",
   });
@@ -34,7 +35,7 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
       setData({
         denominationId: denoms[0]?.id || "",
         quantity: 0,
-        addedDate: new Date().toISOString().split("T")[0],
+        addedDate: todayISO(),
         addedBy: "",
         note: "",
       });

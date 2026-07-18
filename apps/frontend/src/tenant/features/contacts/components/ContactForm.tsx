@@ -42,6 +42,7 @@ import {
   SocialLink,
   EmergencyContact,
   RELATIONSHIPS,
+  todayISO,
 } from "@mms/shared";
 import {
   Field,
@@ -385,9 +386,9 @@ export default function ContactForm({
         lastName,
         name: [firstName, lastName].filter(Boolean).join(" "),
         phones: normalizedPhones,
-        updatedAt: new Date().toISOString().slice(0, 10),
+        updatedAt: todayISO(),
         createdAt:
-          cleanedDraft.createdAt || new Date().toISOString().slice(0, 10),
+          cleanedDraft.createdAt || todayISO(),
       } as Contact;
 
       const finalized = applyTitleCaseToContact(contactRaw) as Contact;

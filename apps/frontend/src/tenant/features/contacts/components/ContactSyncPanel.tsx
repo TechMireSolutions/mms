@@ -17,7 +17,7 @@ import {
   useContactGoogleSyncMutations,
 } from '@/tenant/features/contacts/hooks/useContacts';
 import { useTranslation } from "@/hooks/useTranslation";
-import { Contact, normalizeToE164, parsePhoneNumber } from "@mms/shared";
+import { Contact, normalizeToE164, parsePhoneNumber, todayISO } from "@mms/shared";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { isApiError } from "@/lib/apiClient";
 import { queryClientInstance } from "@/lib/queryClient";
@@ -67,7 +67,7 @@ function parseVCard(text: string, mobileLabel: string, personalLabel: string, de
       addresses: [],
       socials: [],
       emergencyContacts: [],
-      createdAt: new Date().toISOString().slice(0, 10),
+      createdAt: todayISO(),
     };
     if (bday) {
       const clean = bday.replace(/[^0-9]/g, "");

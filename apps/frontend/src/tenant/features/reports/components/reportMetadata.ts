@@ -5,7 +5,7 @@ import { type Teacher } from '@/lib/data/teachersData';
 import { type Session } from '@/lib/data/sessionsData';
 import { type Invoice } from '@/lib/data/financeData';
 import { type AttendanceRecord } from '@/lib/data/attendanceData';
-import { type Distribution } from '@/lib/data/hasanatData';
+import { type Distribution, type Denomination } from '@/lib/data/hasanatData';
 import type { QuestionBankQuestion, QuestionBankTest, QuestionBankResult } from '@mms/shared';
 
 export type ReportCollection =
@@ -223,7 +223,7 @@ function calculateDynamicTrend(
   card: CustomCard,
   collectionRows: Record<string, unknown>[],
   collectionName: string,
-  denoms?: any[]
+  denoms?: Denomination[]
 ): number {
   const dateField = {
     students: "registeredDate",
@@ -281,7 +281,7 @@ function calculateDynamicTrend(
     filteredRows.forEach((filteredRow) => {
       if (card.collection === "hasanat_distributions" && targetMetricField === "points") {
         const denominationName = String(filteredRow.denominationName || "").toLowerCase();
-        const matchedDenomination = (denoms || []).find((denomination: any) => denomination.id === filteredRow.denominationId);
+        const matchedDenomination = (denoms || []).find((denomination) => denomination.id === filteredRow.denominationId);
         const points = matchedDenomination ? matchedDenomination.points : (
           denominationName.includes("silver") ? 150 :
           denominationName.includes("gold") ? 500 :
@@ -342,7 +342,7 @@ export function computeCustomCard(
     questions: QuestionBankQuestion[];
     tests: QuestionBankTest[];
     assessment_results: QuestionBankResult[];
-    hasanat_denoms?: any[];
+    hasanat_denoms?: Denomination[];
   }
 ) {
   const collectionRows = (collections[card.collection] as Record<string, unknown>[]) || [];
@@ -359,7 +359,7 @@ export function computeCustomCard(
     filteredRows.forEach((filteredRow) => {
       if (card.collection === "hasanat_distributions" && targetMetricField === "points") {
         const denominationName = String(filteredRow.denominationName || "").toLowerCase();
-        const matchedDenomination = (collections.hasanat_denoms || []).find((denomination: any) => denomination.id === filteredRow.denominationId);
+        const matchedDenomination = (collections.hasanat_denoms || []).find((denomination) => denomination.id === filteredRow.denominationId);
         const points = matchedDenomination ? matchedDenomination.points : (
           denominationName.includes("silver") ? 150 :
           denominationName.includes("gold") ? 500 :

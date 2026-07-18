@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { USER_STATUS_VALUES, toTitleCase, type SystemUser, getInitials } from '@mms/shared';
+import { USER_STATUS_VALUES, toTitleCase, type SystemUser, getInitials, todayISO } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
 import { useContactById } from '@/tenant/features/contacts/hooks/useContacts';
@@ -73,7 +73,7 @@ export function InviteUserModal({
       status: values.status,
       avatarInitials: getInitials(name),
       lastLogin: '',
-      createdDate: new Date().toISOString().slice(0, 10),
+      createdDate: todayISO(),
       failedLoginAttempts: 0,
       twoFactorEnabled: false,
       activeSessions: 0,

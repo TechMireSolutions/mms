@@ -10,7 +10,7 @@ import { FORM_LABEL } from "@/components/ui/formStyles";
 import { hasFieldValue } from "@/lib/formCompleteness";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
-import { type AppTranslationKey } from "@mms/shared";
+import { type AppTranslationKey, todayISO } from "@mms/shared";
 
 interface DraftLine extends Omit<JournalLine, "debit" | "credit"> {
   debit: string | number;
@@ -55,7 +55,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
       : {
           id: "",
           ref: "",
-          date: new Date().toISOString().slice(0, 10),
+          date: todayISO(),
           description: "",
           status: "draft",
           tags: [],

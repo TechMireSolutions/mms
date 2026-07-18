@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { formatDateTime, type AppTranslationKey } from "@mms/shared";
+import { formatDateTime, todayISO, type AppTranslationKey } from "@mms/shared";
 import { Card } from "@/components/ui/card";
 import { ClipboardList, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -44,18 +44,18 @@ function formatTimestamp(timestamp?: string | number): string {
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 
-function describeEntry(entry: AuditEntry, studentNameFor: (id?: string) => string, t: any): string {
+function describeEntry(entry: AuditEntry, studentNameFor: (id?: string) => string, t: (key: AppTranslationKey, vars?: Record<string, string | number>) => string): string {
   if (entry.action === "edit") {
     const studentLabel = studentNameFor(entry.studentId) || entry.studentName || "student";
-    return t("attendance.audit.desc.edit", { field: entry.field, from: entry.from, to: entry.to, name: studentLabel });
+    return t("attendance.audit.desc.edit", { field: entry.field ?? "", from: entry.from ?? "", to: entry.to ?? "", name: studentLabel });
   }
   if (entry.action === "bulk_mark") {
-    return t("attendance.audit.desc.bulkMark", { count: entry.count, status: entry.status });
+    return t("attendance.audit.desc.bulkMark", { count: entry.count ?? 0, status: entry.status ?? "" });
   }
   if (entry.action === "submitted") {
     return entry.geo
-      ? t("attendance.audit.desc.submittedGeo", { count: entry.count })
-      : t("attendance.audit.desc.submitted", { count: entry.count });
+      ? t("attendance.audit.desc.submittedGeo", { count: entry.count ?? 0 })
+      : t("attendance.audit.desc.submitted", { count: entry.count ?? 0 });
   }
   if (entry.action === "draft_saved") {
     return t("attendance.audit.desc.draftSaved");
@@ -91,7 +91,7 @@ export function AuditLog({ filters }: AuditLogProps) {
   }, [sessions]);
 
   const [classId, setClassId] = useState(filters.classId || "");
-  const [date, setDate] = useState(filters.date || new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(filters.date || todayISO());
 
   const reload = useCallback(() => {
     try {

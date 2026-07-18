@@ -10,6 +10,7 @@ import { Distribution, Denomination, StockBatch } from '@/lib/data/hasanatData';
 import { useHasanatConfig } from "@/hooks/useStandardModuleConfig";
 import {
   DEFAULT_HASANAT_FIELD_DEFS,
+  todayISO,
 } from "@mms/shared";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormModal } from "@/components/ui/FormModal";
@@ -37,7 +38,7 @@ const EMPTY_DIST: Partial<Distribution> = {
   recipientClass: "",
   quantity: 1,
   reason: "",
-  issuedDate: new Date().toISOString().split("T")[0],
+  issuedDate: todayISO(),
   issuedByUserId: "",
 };
 
@@ -65,7 +66,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
       setData({
         ...EMPTY_DIST,
         denominationId: denoms[0]?.id || "",
-        issuedDate: new Date().toISOString().split("T")[0],
+        issuedDate: todayISO(),
         issuedByUserId: authUser?.id || "",
       });
     }

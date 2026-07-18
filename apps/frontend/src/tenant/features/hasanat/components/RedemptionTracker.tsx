@@ -10,7 +10,7 @@ import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useUsersCollection } from "@/tenant/features/users/hooks/useUsersApi";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { formatDate, type SystemUser } from "@mms/shared";
+import { formatDate, todayISO, type SystemUser } from "@mms/shared";
 import { useHasanatRedemptionsCollection, useHasanatMutations } from "@/tenant/features/hasanat/hooks/useHasanatApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,7 @@ function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps)
     distributionId: activeDistributions[0]?.id || "",
     reward: "",
     pointsUsed: 0,
-    date: new Date().toISOString().split("T")[0],
+    date: todayISO(),
     approvedByUserId: "",
   });
 
@@ -47,7 +47,7 @@ function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps)
         distributionId: active[0]?.id || "",
         reward: "",
         pointsUsed: 0,
-        date: new Date().toISOString().split("T")[0],
+        date: todayISO(),
         approvedByUserId: "",
       });
     }

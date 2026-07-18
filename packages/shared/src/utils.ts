@@ -832,3 +832,7 @@ export function matchesWidgetFilter(
   }
 }
 
+/** Returns today's date as a YYYY-MM-DD ISO date string (UTC). */
+export function todayISO(): string {
+  return new Date().toISOString().slice(0, 10);
+}

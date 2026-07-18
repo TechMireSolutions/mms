@@ -12,10 +12,12 @@ import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { Input } from "@/components/ui/input";
-import { StatusBadge } from "@/tenant/features/attendance/components/StatusBadge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { getAttendanceStatusInfo } from "@/lib/data/attendanceData";
 import { StatusToggle } from "@/tenant/features/attendance/components/StatusToggle";
 import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
-import type { AppTranslationKey } from "@mms/shared";
+import { type AppTranslationKey } from "@mms/shared";
 import { formatDate } from "@/lib/db";
 
 const PAGE_SIZE = 15;
@@ -221,7 +223,13 @@ export function AttendanceRecords({
                     <td className="px-3 py-2.5">
                       {editing === attendanceRecord.id
                         ? <StatusToggle value={attendanceRecord.status} onChange={(value) => updateRecord(attendanceRecord.id, "status", value as AttendanceRecord["status"])} />
-                        : <StatusBadge status={attendanceRecord.status} />
+                        : (() => {
+                            const info = getAttendanceStatusInfo(attendanceRecord.status, statuses);
+                            const config: Record<string, StatusBadgeConfigItem> = info
+                              ? { [attendanceRecord.status]: { label: info.label, cls: `${info.bg} ${info.text} ${info.border} font-semibold`, dot: info.dot } }
+                              : {};
+                            return <StatusBadge status={attendanceRecord.status} config={config} size="sm" />;
+                          })()
                       }
                     </td>
                   )}

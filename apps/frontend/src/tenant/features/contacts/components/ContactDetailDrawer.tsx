@@ -11,7 +11,7 @@ import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Contact, ContactActivity, canViewContactField, CONTACTS_MODULE_CONTRACT } from "@mms/shared";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, calcAge } from "@mms/shared";
-import { formatDate } from "@mms/shared";
+import { formatDate, todayISO } from "@mms/shared";
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -274,7 +274,7 @@ export default function ContactDetailDrawer({
       id: `act-${Date.now()}`,
       type: "note",
       content: noteText.trim(),
-      date: new Date().toISOString().slice(0, 10),
+      date: todayISO(),
       by: user?.name || t('contacts.detail.systemUser')
     };
 

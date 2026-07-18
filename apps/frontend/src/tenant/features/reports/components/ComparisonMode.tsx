@@ -19,6 +19,12 @@ import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/us
 import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/features/hasanat/hooks/useHasanatApi";
 import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/tenant/features/examinations/hooks/useExaminationsApi";
 import type { Session } from "@/lib/data/sessionsData";
+import type { Enrollment } from "@/lib/data/enrollmentData";
+import type { AttendanceRecord } from "@/lib/data/attendanceData";
+import type { Invoice } from "@/lib/data/financeData";
+import type { Distribution, Denomination } from "@/lib/data/hasanatData";
+import type { Exam, ExamResult } from "@/lib/data/examinationData";
+import type { AppTranslationKey } from "@mms/shared";
 
 interface ComparisonDataItem {
   metric: string;
@@ -41,16 +47,16 @@ interface DateRange {
 
 function computeDynamicSessionComparison(
   sessions: Session[],
-  enrollments: any[],
-  attendanceRecords: any[],
-  financeInvoices: any[],
-  hasanatDistributions: any[],
-  examResults: any[],
-  exams: any[],
-  denoms: any[],
+  enrollments: Enrollment[],
+  attendanceRecords: AttendanceRecord[],
+  financeInvoices: Invoice[],
+  hasanatDistributions: Distribution[],
+  examResults: ExamResult[],
+  exams: Exam[],
+  denoms: Denomination[],
   targetA: string,
   targetB: string,
-  t: (key: any) => string,
+  t: (key: AppTranslationKey) => string,
 ): ComparisonDataItem[] {
   const sessionA = sessions.find((session) => session.id === targetA);
   const sessionB = sessions.find((session) => session.id === targetB);
@@ -133,13 +139,13 @@ function computeDynamicSessionComparison(
 
 function computeDynamicDateRangeComparison(
   category: string,
-  enrollments: any[],
-  attendanceRecords: any[],
-  financeInvoices: any[],
-  hasanatDistributions: any[],
-  examResults: any[],
-  exams: any[],
-  denoms: any[],
+  enrollments: Enrollment[],
+  attendanceRecords: AttendanceRecord[],
+  financeInvoices: Invoice[],
+  hasanatDistributions: Distribution[],
+  examResults: ExamResult[],
+  exams: Exam[],
+  denoms: Denomination[],
   rangeA: DateRange,
   rangeB: DateRange,
 ): DateRangeDataItem[] {

@@ -14,16 +14,6 @@ import { FormSelect } from "@/components/ui/FormSelect";
 
 const PrintInvoiceModal = lazy(() => import("@/tenant/features/obligations/components/invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
 
-function fmtAmount(amount: string | number, currencyId: string, currencies: any[]): string {
-  const currency = currencies.find((candidateCurrency) => candidateCurrency.id === currencyId);
-  return formatMoney(amount, currency?.code);
-}
-
-function fmtDate(date?: string | null): string {
-  return formatDate(date);
-}
-
-
 export interface ObligationCollectionListProps {
   collections: ObligationCollection[];
   obligationTypes: ObligationType[];
@@ -207,7 +197,7 @@ export function ObligationCollectionList({
                           </td>
                         )}
                         {showReceivedDate && (
-                          <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{fmtDate(collection.received_date)}</td>
+                          <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{formatDate(collection.received_date)}</td>
                         )}
                         {showSender && (
                           <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{sender?.name || "—"}</td>
@@ -224,7 +214,7 @@ export function ObligationCollectionList({
                           </td>
                         )}
                         {showAmount && (
-                          <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{fmtAmount(collection.amount, collection.currency_id, currencies)}</td>
+                          <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{formatMoney(collection.amount, currencies.find((c) => c.id === collection.currency_id)?.code)}</td>
                         )}
                         {showPaymentMode && (
                           <td className="px-3 py-2.5">

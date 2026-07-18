@@ -12,7 +12,7 @@ import { Step4ClassAssignment } from "@/tenant/features/enrollments/components/w
 import { Step5FeeCalculation } from "@/tenant/features/enrollments/components/wizard/Step5FeeCalculation";
 import { Step6Confirmation } from "@/tenant/features/enrollments/components/wizard/Step6Confirmation";
 import { suggestClass, runFullEligibility, Enrollment, CalculatedFee } from '@/lib/data/enrollmentData';
-import { formatMoney } from "@mms/shared";
+import { formatMoney, todayISO } from "@mms/shared";
 import { Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
@@ -99,7 +99,7 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
       sessionName: session.name,
       classId: classInfo?.id || "",
       className: classInfo?.name || "",
-      enrolledDate: new Date().toISOString().slice(0, 10),
+      enrolledDate: todayISO(),
       baseFee: session.baseFee,
       discountType: feeResult.id,
       discountLabel: feeResult.label,

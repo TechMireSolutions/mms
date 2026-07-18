@@ -14,4 +14,4 @@ export const isIframe: boolean = window.self !== window.top;
 
 export { hexToHslToken as hexToTailwindHsl } from "@mms/shared";
 
-export { formatDate, formatDateTime, formatMonthYear, formatMonthName, formatDayName, formatLongDate, formatHijriDate, optimizeImage, toTitleCase, getInitials } from "@mms/shared";
+export { formatDate, formatDateTime, formatMonthYear, formatMonthName, formatDayName, formatLongDate, formatHijriDate, optimizeImage, toTitleCase, getInitials, todayISO } from "@mms/shared";

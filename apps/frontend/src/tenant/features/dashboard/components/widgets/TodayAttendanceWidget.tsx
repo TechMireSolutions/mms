@@ -8,7 +8,7 @@ import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hoo
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { rateToneClass } from "@/lib/semanticTone";
-import type { AppTranslationKey } from "@mms/shared";
+import { type AppTranslationKey, todayISO } from "@mms/shared";
 import { formatDate } from "@/lib/db";
 
 // Type definitions
@@ -45,7 +45,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
     );
   }, [sessions]);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayISO();
 
   const todayRecords = useMemo(() =>
     attendanceRecords.filter((attendanceRecord) => attendanceRecord.date === today),

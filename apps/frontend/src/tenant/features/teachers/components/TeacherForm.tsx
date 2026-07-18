@@ -18,6 +18,7 @@ import {
   TEACHER_STATUS_VALUES,
   TEACHER_SPECIALIZATION_VALUES,
   AppTranslationKey,
+  todayISO,
 } from "@mms/shared";
 
 export interface TeacherFormProps {
@@ -42,7 +43,7 @@ export function TeacherForm({
     employeeId: teacher?.employeeId ?? "",
     specialization: teacher?.specialization ?? "General",
     status: teacher?.status ?? "active",
-    joinDate: teacher?.joinDate ?? new Date().toISOString().split("T")[0],
+    joinDate: teacher?.joinDate ?? todayISO(),
     qualification: teacher?.qualification ?? "",
     notes: teacher?.notes ?? "",
   }));

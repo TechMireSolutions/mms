@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useTranslation } from "@/hooks/useTranslation";
-import { type AppTranslationKey } from "@mms/shared";
+import { type AppTranslationKey, todayISO } from "@mms/shared";
 
 // ── Transaction Type Definitions ──────────────────────────────────────────────
 
@@ -388,7 +388,7 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
   const activeFiscalYearLabel = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active")?.label || "";
 
   const [form, setForm] = useState<WizardFormState>({
-    date: new Date().toISOString().slice(0, 10),
+    date: todayISO(),
     amount: "",
     debitAcc: prefillType?.debitAcc || "a1000",
     creditAcc: prefillType?.creditAcc || "a1010",

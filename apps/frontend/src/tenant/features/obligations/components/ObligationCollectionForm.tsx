@@ -4,7 +4,7 @@ import {
   PAYMENT_MODES, generateReceiptNo,
   ObligationCollection, ObligationType, WakalaType, MujtahidRep, Mujtahid
 } from '@/lib/data/obligationsData';
-import { DEFAULT_CURRENCIES } from '@mms/shared';
+import { DEFAULT_CURRENCIES, todayISO } from '@mms/shared';
 import ContactPicker from '@/tenant/features/contacts/components/contactLink/ContactPicker';
 import { useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { FormModal } from "@/components/ui/FormModal";
@@ -30,7 +30,7 @@ interface FormState {
 
 const EMPTY: FormState = {
   receipt_no: "",
-  received_date: new Date().toISOString().slice(0, 10),
+  received_date: todayISO(),
   sender_id: "",
   reference_id: "",
   amount: "",
