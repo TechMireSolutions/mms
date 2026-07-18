@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
+import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
 
 interface RevenuePoint {
   month: string;
@@ -64,12 +65,12 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
   const [period, setPeriod] = useState<"6m" | "10m">("10m");
   const invoices = getCollection<Invoice>("finance_invoices");
 
-  const [chartType, setChartType] = useState<"bar" | "line" | "area">(() => {
-    return (localStorage.getItem("db_chart_type_revenue") as "bar" | "line" | "area") || "bar";
-  });
-  const [colorTheme, setColorTheme] = useState<string>(() => {
-    return localStorage.getItem("db_chart_color_revenue") || "mixed";
-  });
+  const {
+    revenueChartType: chartType,
+    revenueChartColor: colorTheme,
+    updateRevenueChartType,
+    updateRevenueChartColor,
+  } = useDashboardConfig();
 
   const months = [
     { key: "2025-07", label: "Jul" },
@@ -133,9 +134,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
               <Select
                 value={chartType}
                 onValueChange={(chartTypeValue) => {
-                  const selectedChartType = chartTypeValue as "bar" | "line" | "area";
-                  setChartType(selectedChartType);
-                  localStorage.setItem("db_chart_type_revenue", selectedChartType);
+                  updateRevenueChartType(chartTypeValue as "bar" | "line" | "area");
                 }}
               >
                 <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
@@ -150,8 +149,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
               <Select
                 value={colorTheme}
                 onValueChange={(selectedColorTheme) => {
-                  setColorTheme(selectedColorTheme);
-                  localStorage.setItem("db_chart_color_revenue", selectedColorTheme);
+                  updateRevenueChartColor(selectedColorTheme);
                 }}
               >
                 <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">

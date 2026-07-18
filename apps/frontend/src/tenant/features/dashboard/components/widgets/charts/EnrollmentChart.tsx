@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useBrandedDashboardChartColors } from "@/tenant/features/dashboard/hooks/useBrandedDashboardChartColors";
 import {
   ComposedChart, Area, Line, Bar, XAxis, YAxis, CartesianGrid,
@@ -8,6 +8,7 @@ import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer
 import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import { TrendingUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
 
 interface EnrollmentPoint {
   month: string;
@@ -41,15 +42,14 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
   const { enrollment: COLOR_MAP } = useBrandedDashboardChartColors();
   const enrollments = useEnrollmentsCollection();
 
-  const [chartType, setChartType] = useState<"area" | "bar" | "line">(() => {
-    return (localStorage.getItem("db_chart_type_enrollment") as "area" | "bar" | "line") || "area";
-  });
-  const [colorTheme, setColorTheme] = useState<"emerald" | "blue" | "violet" | "amber" | "red">(() => {
-    return (localStorage.getItem("db_chart_color_enrollment") as "emerald" | "blue" | "violet" | "amber" | "red") || "emerald";
-  });
-  const [monthsCount, setMonthsCount] = useState<number>(() => {
-    return Number(localStorage.getItem("db_chart_period_enrollment") || "10");
-  });
+  const {
+    enrollmentChartType: chartType,
+    enrollmentChartColor: colorTheme,
+    enrollmentChartPeriod: monthsCount,
+    updateEnrollmentChartType,
+    updateEnrollmentChartColor,
+    updateEnrollmentChartPeriod,
+  } = useDashboardConfig();
 
   const months = [
     { key: "2025-07", label: "Jul" },
@@ -102,9 +102,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
               <select
                 value={chartType}
                 onChange={(event) => {
-                  const selectedChartType = event.target.value as "area" | "bar" | "line";
-                  setChartType(selectedChartType);
-                  localStorage.setItem("db_chart_type_enrollment", selectedChartType);
+                  updateEnrollmentChartType(event.target.value as "area" | "bar" | "line");
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
@@ -115,9 +113,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
               <select
                 value={colorTheme}
                 onChange={(event) => {
-                  const selectedColorTheme = event.target.value as "emerald" | "blue" | "violet" | "amber" | "red";
-                  setColorTheme(selectedColorTheme);
-                  localStorage.setItem("db_chart_color_enrollment", selectedColorTheme);
+                  updateEnrollmentChartColor(event.target.value as "emerald" | "blue" | "violet" | "amber" | "red");
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
@@ -130,9 +126,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
               <select
                 value={monthsCount}
                 onChange={(event) => {
-                  const count = Number(event.target.value);
-                  setMonthsCount(count);
-                  localStorage.setItem("db_chart_period_enrollment", String(count));
+                  updateEnrollmentChartPeriod(Number(event.target.value));
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >

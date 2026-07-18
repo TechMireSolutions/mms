@@ -31,6 +31,7 @@ import {
   canViewContactTab,
   buildDynamicContactSchema,
   formatZodIssues,
+  applyModuleColumnOverlay,
   type ValidationError,
 } from "@mms/shared";
 import { getCollection, getWorkspaceLocalStoragePrefix, saveCollection, getObject, saveObject } from "@/lib/db";
@@ -38,11 +39,10 @@ import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import {
-  applyUserColumnOverlay,
-  loadUserColumnPreferences,
-  saveUserColumnPreferences,
-  saveUserColumnPreferenceList,
-} from "@/lib/contacts/columnPreferencesStorage";
+  loadModuleColumnPreferences,
+  saveModuleColumnPreferenceList,
+  saveModuleColumnRegistry,
+} from "@/lib/columnPreferences/moduleColumnPreferencesStorage";
 import { useContactColumnPrefs, useContactColumnPrefsMutation } from "@/tenant/features/contacts/hooks/useContacts";
 import {
   CONFIG_KEY,
@@ -226,15 +226,16 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     }
     const userId = String(user.id);
     if (!columnPrefsLoaded) {
-      setUserColumnOverlay(loadUserColumnPreferences(userId));
+      setUserColumnOverlay(loadModuleColumnPreferences("contacts", userId));
       return;
     }
     if (serverColumnPrefs && serverColumnPrefs.length > 0) {
       setUserColumnOverlay(serverColumnPrefs);
-      saveUserColumnPreferenceList(userId, serverColumnPrefs);
+      saveModuleColumnPreferenceList("contacts", userId, serverColumnPrefs);
       return;
     }
-    const local = loadUserColumnPreferences(userId);
+    const local = loadModuleColumnPreferences("contacts", userId);
+
     if (local?.length) {
       setUserColumnOverlay(local);
       if (!migratedLocalColumnPrefs.current) {
@@ -386,7 +387,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const updateUserColumnLayout = useCallback((columnRegistry: ColumnRegistryEntry[]) => {
     const userId = user?.id ? String(user.id) : "";
     if (!userId) return;
-    saveUserColumnPreferences(userId, columnRegistry);
+    saveModuleColumnRegistry("contacts", userId, columnRegistry);
     const preferences: ContactColumnPreference[] = columnRegistry.map(({ key, enabled, order }) => ({ key, enabled, order }));
     setUserColumnOverlay(preferences);
     saveColumnPrefs(preferences);
@@ -552,10 +553,9 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   }, [fieldConfig.columnRegistry, fields, enabledTabIds, isTabFieldEnabled, user?.role]);
 
   const columnRegistry = useMemo(
-    () => applyUserColumnOverlay(tenantColumnRegistry, userColumnOverlay),
+    () => applyModuleColumnOverlay(tenantColumnRegistry, userColumnOverlay as any) as ColumnRegistryEntry[],
     [tenantColumnRegistry, userColumnOverlay],
   );
-
   const availableColumns = useMemo(() => {
     return columnRegistry.map((column) => ({
       id: column.key,

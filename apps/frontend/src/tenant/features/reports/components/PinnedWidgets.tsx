@@ -51,6 +51,7 @@ import { applyContactsWorkDrillDown } from "@/lib/contacts/contactsWorkDrillDown
 import {
   getOrInitializeCustomWidgets,
 } from "@/tenant/features/reports/components/pinnedWidgets/widgetDefaults";
+import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
 
 export type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
 export {
@@ -864,13 +865,10 @@ export function DashboardWidgets({
   onDeleteWidget
 }: DashboardWidgetsProps = {}): React.JSX.Element | null {
   const { t } = useTranslation();
+  const { gridMode, updateGridMode } = useDashboardConfig();
   const [localWidgets, setLocalWidgets] = useState<CustomWidget[]>([]);
   const [collections, setCollections] = useState(() => getWidgetCollections());
   
-  const [gridMode, setGridMode] = useState<"comfortable" | "compact">(() => {
-    return (localStorage.getItem("pinned_widgets_grid_mode") as "comfortable" | "compact") || "comfortable";
-  });
-
   const [drilldownWidget, setDrilldownWidget] = useState<CustomWidget | null>(null);
 
   useEffect(() => {
@@ -976,8 +974,7 @@ export function DashboardWidgets({
   };
 
   const handleToggleGridMode = (mode: "comfortable" | "compact") => {
-    setGridMode(mode);
-    localStorage.setItem("pinned_widgets_grid_mode", mode);
+    updateGridMode(mode);
   };
 
   if (activeWidgets.length === 0) return null;
