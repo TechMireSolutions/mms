@@ -2,14 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Shield, Save } from "lucide-react";
 import {
-  type UsersSettings as UsersSettingsData,
   USERS_TAB_REGISTRY,
   INITIAL_USERS_FIELD_SEED,
 } from "@mms/shared";
 import { useUsersConfig } from "@/tenant/features/users/hooks/useUsersConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
-import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
+import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { Button } from "@/components/ui/button";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
@@ -21,63 +20,34 @@ interface UsersSettingsPanelProps {
 
 export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { settings, updateSettings } = useUsersConfig();
-  const [saved, setSaved] = useState<boolean>(false);
+  const config = useUsersConfig();
+  const {
+    settings,
+    fieldsEditor,
+    saved,
+    setSaved,
+    saveSettings,
+  } = useModuleSettingsEditor({
+    config,
+    tabRegistry: USERS_TAB_REGISTRY,
+  });
 
   // Prefs state
   const [allowSelfRegistration, setAllowSelfRegistration] = useState(settings.allowSelfRegistration);
   const [requireEmailVerification, setRequireEmailVerification] = useState(settings.requireEmailVerification);
 
-  const fieldsEditor = useModuleFieldsEditor({
-    initialTabs: USERS_TAB_REGISTRY,
-    initialFields: settings.fields || {},
-    initialEnabledTabs: Array.from(new Set(settings.enabledTabs || ["basic"])),
-    initialRequiredTabs: Array.from(new Set(settings.requiredTabs || [])),
-  });
-
   useEffect(() => {
     if (!settings) return;
     setAllowSelfRegistration(settings.allowSelfRegistration);
     setRequireEmailVerification(settings.requireEmailVerification);
-
-    const coreKeys = new Set(USERS_TAB_REGISTRY.map((tabDefinition) => tabDefinition.key));
-    const customTabs = (settings.formTabs || []).filter((tabDefinition) => !coreKeys.has(tabDefinition.key));
-    const updatedTabs = [
-      ...USERS_TAB_REGISTRY,
-      ...customTabs
-    ].map((tabDefinition) => ({
-      ...tabDefinition,
-      enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
-    }));
-
-    fieldsEditor.resetAllState(
-      updatedTabs,
-      settings.fields || {},
-      settings.enabledTabs || ["basic"],
-      settings.requiredTabs || []
-    );
-  }, [settings, fieldsEditor]);
+  }, [settings]);
 
   const handleSave = (): void => {
-    const updatedFormTabs = fieldsEditor.formTabs.map((tab) => ({
-      ...tab,
-      enabled: fieldsEditor.enabledTabs.has(tab.key)
-    }));
-
-    const updatedSettings: UsersSettingsData = {
-      ...settings,
+    saveSettings({
       allowSelfRegistration,
       requireEmailVerification,
-      enabledTabs: Array.from(fieldsEditor.enabledTabs),
-      requiredTabs: Array.from(fieldsEditor.requiredTabs),
-      formTabs: updatedFormTabs,
-      fields: fieldsEditor.buildFieldsMap(),
-    };
-
-    updateSettings(updatedSettings);
-    setSaved(true);
+    });
     notify.success(t("users.settingsSaved"), { description: t("users.settingsSavedDesc") });
-    setTimeout(() => setSaved(false), 2500);
   };
 
   const showPrefs = mode === "preferences";

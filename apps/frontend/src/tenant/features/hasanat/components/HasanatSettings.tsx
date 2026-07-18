@@ -2,12 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Save, Star } from "lucide-react";
 import {
-  type HasanatSettings as HasanatSettingsData,
   HASANAT_TAB_REGISTRY,
   INITIAL_HASANAT_FIELD_SEED,
 } from "@mms/shared";
 import { useHasanatConfig } from "@/tenant/features/hasanat/hooks/useHasanatConfig";
-import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
+import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,65 +18,36 @@ interface HasanatSettingsProps {
 }
 
 export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElement {
-  const { settings, updateSettings } = useHasanatConfig();
-  const [saved, setSaved] = useState<boolean>(false);
+  const config = useHasanatConfig();
+  const {
+    settings,
+    fieldsEditor,
+    saved,
+    setSaved,
+    saveSettings,
+  } = useModuleSettingsEditor({
+    config,
+    tabRegistry: HASANAT_TAB_REGISTRY,
+  });
 
   // Prefs state
   const [pointsPerUnit, setPointsPerUnit] = useState(settings.pointsPerUnit);
   const [autoApprovePayouts, setAutoApprovePayouts] = useState(settings.autoApprovePayouts);
   const [defaultViewLayout, setDefaultViewLayout] = useState(settings.defaultViewLayout);
 
-  const fieldsEditor = useModuleFieldsEditor({
-    initialTabs: HASANAT_TAB_REGISTRY,
-    initialFields: settings.fields || {},
-    initialEnabledTabs: Array.from(new Set(settings.enabledTabs || ["basic"])),
-    initialRequiredTabs: Array.from(new Set(settings.requiredTabs || [])),
-  });
-
   useEffect(() => {
     if (!settings) return;
     setPointsPerUnit(settings.pointsPerUnit);
     setAutoApprovePayouts(settings.autoApprovePayouts);
     setDefaultViewLayout(settings.defaultViewLayout);
-
-    const coreTabKeys = new Set(HASANAT_TAB_REGISTRY.map((tabDefinition) => tabDefinition.key));
-    const customTabs = (settings.formTabs || []).filter((tabDefinition) => !coreTabKeys.has(tabDefinition.key));
-    const updatedTabs = [
-      ...HASANAT_TAB_REGISTRY,
-      ...customTabs
-    ].map((tabDefinition) => ({
-      ...tabDefinition,
-      enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
-    }));
-
-    fieldsEditor.resetAllState(
-      updatedTabs,
-      settings.fields || {},
-      settings.enabledTabs || ["basic"],
-      settings.requiredTabs || []
-    );
-  }, [settings, fieldsEditor]);
+  }, [settings]);
 
   const handleSave = () => {
-    const updatedFormTabs = fieldsEditor.formTabs.map((tabDefinition) => ({
-      ...tabDefinition,
-      enabled: fieldsEditor.enabledTabs.has(tabDefinition.key)
-    }));
-
-    const nextSettings: HasanatSettingsData = {
-      ...settings,
+    saveSettings({
       pointsPerUnit,
       autoApprovePayouts,
       defaultViewLayout,
-      enabledTabs: Array.from(fieldsEditor.enabledTabs),
-      requiredTabs: Array.from(fieldsEditor.requiredTabs),
-      formTabs: updatedFormTabs,
-      fields: fieldsEditor.buildFieldsMap(),
-    };
-
-    updateSettings(nextSettings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    });
   };
 
   const showPrefs = mode === "preferences";

@@ -2,26 +2,34 @@ import React, { useEffect, useState } from "react";
 import { Save, GraduationCap } from "lucide-react";
 import {
   type StudentsSettings,
-  type FieldDefinition,
   STUDENT_TAB_REGISTRY,
   DEFAULT_STUDENT_ENABLED_TABS,
   DEFAULT_STUDENT_REQUIRED_TABS,
   DEFAULT_STUDENT_COLUMN_REGISTRY,
   INITIAL_STUDENT_FIELD_SEED,
 } from "@mms/shared";
+import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { useStudentConfig } from "@/tenant/features/students/hooks/useStudentConfig";
-import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 
 export default function StudentsSettings({ mode }: { mode?: "fields" | "preferences" }): React.ReactElement {
-  const { settings, updateSettings } = useStudentConfig();
-  const [saved, setSaved] = useState<boolean>(false);
-
-  const settingsFields = (settings.fields as Record<string, FieldDefinition[]>) || {};
+  const config = useStudentConfig();
+  const {
+    settings,
+    fieldsEditor,
+    saved,
+    setSaved,
+    saveSettings,
+  } = useModuleSettingsEditor({
+    config,
+    tabRegistry: STUDENT_TAB_REGISTRY,
+    defaultEnabledTabs: DEFAULT_STUDENT_ENABLED_TABS,
+    defaultRequiredTabs: DEFAULT_STUDENT_REQUIRED_TABS,
+  });
 
   // General Preferences state
   const [idPrefix, setIdPrefix] = useState(settings.idPrefix);
@@ -36,14 +44,6 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
   const [grNumberDigits, setGrNumberDigits] = useState(settings.grNumberDigits);
   const [grNumberRestartAnnually, setGrNumberRestartAnnually] = useState(settings.grNumberRestartAnnually);
   const [defaultViewLayout, setDefaultViewLayout] = useState(settings.defaultViewLayout);
-
-  // Fields and Tabs state managed by DRY hook
-  const fieldsEditor = useModuleFieldsEditor({
-    initialTabs: STUDENT_TAB_REGISTRY,
-    initialFields: settingsFields,
-    initialEnabledTabs: Array.from(new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS)),
-    initialRequiredTabs: Array.from(new Set(settings.requiredTabs || DEFAULT_STUDENT_REQUIRED_TABS)),
-  });
 
   useEffect(() => {
     if (!settings) return;
@@ -60,33 +60,10 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
     setGrNumberDigits(settings.grNumberDigits);
     setGrNumberRestartAnnually(settings.grNumberRestartAnnually);
     setDefaultViewLayout(settings.defaultViewLayout);
-
-    const coreKeys = new Set(STUDENT_TAB_REGISTRY.map(t => t.key));
-    const customTabs = (settings.formTabs || []).filter(t => !coreKeys.has(t.key));
-    const updatedTabs = [
-      ...STUDENT_TAB_REGISTRY,
-      ...customTabs
-    ].map(t => ({
-      ...t,
-      enabled: t.key === "basic" ? true : (settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS).includes(t.key)
-    }));
-
-    fieldsEditor.resetAllState(
-      updatedTabs,
-      (settings.fields as Record<string, FieldDefinition[]>) || {},
-      settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS,
-      settings.requiredTabs || DEFAULT_STUDENT_REQUIRED_TABS
-    );
-  }, [settings, fieldsEditor]);
+  }, [settings]);
 
   const handleSave = (): void => {
-    const updatedFormTabs = fieldsEditor.formTabs.map((tab) => ({
-      ...tab,
-      enabled: fieldsEditor.enabledTabs.has(tab.key)
-    }));
-
-    const updatedSettings: StudentsSettings = {
-      ...settings,
+    saveSettings({
       idPrefix,
       autoGenerateId,
       requireGuardian,
@@ -99,17 +76,10 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
       grNumberDigits,
       grNumberRestartAnnually,
       defaultViewLayout,
+    }, {
       version: 2,
-      enabledTabs: Array.from(fieldsEditor.enabledTabs),
-      requiredTabs: Array.from(fieldsEditor.requiredTabs),
-      fields: fieldsEditor.buildFieldsMap(),
-      formTabs: updatedFormTabs,
       columnRegistry: settings.columnRegistry || DEFAULT_STUDENT_COLUMN_REGISTRY,
-    };
-
-    updateSettings(updatedSettings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    } as any);
   };
 
   const showFields = mode === "fields";

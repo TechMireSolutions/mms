@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { Card } from "@/components/ui/card";
 import { Library } from 'lucide-react';
 import {
@@ -12,7 +12,7 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsDraft } from '@/tenant/features/settings/hooks/useSettingsDraft';
 import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
-import { useModuleFieldsEditor } from '@/tenant/hooks/useModuleFieldsEditor';
+import { useModuleSettingsEditor } from '@/tenant/hooks/useModuleSettingsEditor';
 import { notify } from '@/lib/notify';
 import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
 import { Switch } from '@/components/ui/switch';
@@ -29,20 +29,20 @@ interface QuestionBankSettingsProps {
 
 export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { settings, updateSettings } = useQuestionBankConfig();
+  const config = useQuestionBankConfig();
 
   const load = useCallback((): QuestionBankSettingsData => {
-    return settings;
-  }, [settings]);
+    return config.settings;
+  }, [config.settings]);
 
   const onSave = useCallback(
     async (draft: QuestionBankSettingsData) => {
-      updateSettings(draft);
+      config.updateSettings(draft);
       notify.success(t('questionBank.settingsSaved'), {
         description: t('questionBank.settingsSavedDesc'),
       });
     },
-    [updateSettings, t],
+    [config.updateSettings, t],
   );
 
   const { data: questionBankSettings, dirty, saving, upd } = useSettingsDraft({
@@ -55,48 +55,21 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
   const showPrefs = mode === 'preferences';
   const showFields = mode === 'fields';
 
-  const fieldsEditor = useModuleFieldsEditor({
-    initialTabs: QUESTION_BANK_TAB_REGISTRY,
-    initialFields: settings.fields || {},
-    initialEnabledTabs: Array.from(new Set(settings.enabledTabs || ['basic'])),
-    initialRequiredTabs: Array.from(new Set(settings.requiredTabs || [])),
+  const editorConfig = React.useMemo(() => ({
+    settings: questionBankSettings,
+    updateSettings: onSave,
+  }), [questionBankSettings, onSave]);
+
+  const {
+    fieldsEditor,
+    saveSettings,
+  } = useModuleSettingsEditor({
+    config: editorConfig,
+    tabRegistry: QUESTION_BANK_TAB_REGISTRY,
   });
 
-  useEffect(() => {
-    if (!settings) return;
-    const coreKeys = new Set(QUESTION_BANK_TAB_REGISTRY.map((tabDefinition) => tabDefinition.key));
-    const customTabs = (settings.formTabs || []).filter((tabDefinition) => !coreKeys.has(tabDefinition.key));
-    const updatedTabs = [
-      ...QUESTION_BANK_TAB_REGISTRY,
-      ...customTabs
-    ].map((tabDefinition) => ({
-      ...tabDefinition,
-      enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
-    }));
-
-    fieldsEditor.resetAllState(
-      updatedTabs,
-      settings.fields || {},
-      settings.enabledTabs || ["basic"],
-      settings.requiredTabs || []
-    );
-  }, [settings, fieldsEditor]);
-
   const executeSave = () => {
-    const updatedFormTabs = fieldsEditor.formTabs.map((tabDefinition) => ({
-      ...tabDefinition,
-      enabled: fieldsEditor.enabledTabs.has(tabDefinition.key)
-    }));
-
-    const nextQuestionBankSettings = {
-      ...questionBankSettings,
-      enabledTabs: Array.from(fieldsEditor.enabledTabs),
-      requiredTabs: Array.from(fieldsEditor.requiredTabs),
-      formTabs: updatedFormTabs,
-      fields: fieldsEditor.buildFieldsMap(),
-    };
-    
-    onSave(nextQuestionBankSettings);
+    saveSettings({});
   };
 
   const toggleQuestionType = (questionTypeId: string): void => {

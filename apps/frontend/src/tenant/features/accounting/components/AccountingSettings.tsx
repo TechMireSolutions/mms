@@ -4,7 +4,7 @@ import {
   DollarSign, Calendar, Plus, Pencil, Trash2,
   CheckCircle2, Lock, Clock, Save, BookOpen
 } from "lucide-react";
-import { Account, AccountingSettings as SettingsType, FiscalYear } from '@/lib/data/accountingData';
+import { Account, FiscalYear } from '@/lib/data/accountingData';
 import {
   DEFAULT_CURRENCIES,
   ACCOUNTING_TAB_REGISTRY,
@@ -12,7 +12,7 @@ import {
   type AppTranslationKey
 } from "@mms/shared";
 import { useAccountingConfig } from "@/tenant/features/accounting/hooks/useAccountingConfig";
-import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
+import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormModal } from "@/components/ui/FormModal";
 import { FORM_LABEL } from "@/components/ui/formStyles";
@@ -183,8 +183,17 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
     { label: t("accounting.settings.decimal.comma"), value: "comma" },
   ], [t]);
   const currencies = DEFAULT_CURRENCIES;
-  const { settings, updateSettings } = useAccountingConfig();
-  const [saved, setSaved] = useState(false);
+  const config = useAccountingConfig();
+  const {
+    settings,
+    fieldsEditor,
+    saved,
+    setSaved,
+    saveSettings,
+  } = useModuleSettingsEditor({
+    config,
+    tabRegistry: ACCOUNTING_TAB_REGISTRY,
+  });
   const [fyModal, setFyModal] = useState<Partial<FiscalYear> | null>(null);
 
   // Prefs state
@@ -201,13 +210,6 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
   const [accountCodeLength, setAccountCodeLength] = useState(settings.accountCodeLength);
   const [retainedEarningsAccount, setRetainedEarningsAccount] = useState(settings.retainedEarningsAccount);
 
-  const fieldsEditor = useModuleFieldsEditor({
-    initialTabs: ACCOUNTING_TAB_REGISTRY,
-    initialFields: settings.fields || {},
-    initialEnabledTabs: Array.from(new Set(settings.enabledTabs || ["basic"])),
-    initialRequiredTabs: Array.from(new Set(settings.requiredTabs || [])),
-  });
-
   useEffect(() => {
     if (!settings) return;
     setOrganizationName(settings.organizationName);
@@ -222,33 +224,10 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
     setAutoPostDrafts(settings.autoPostDrafts);
     setAccountCodeLength(settings.accountCodeLength);
     setRetainedEarningsAccount(settings.retainedEarningsAccount);
-
-    const coreKeys = new Set(ACCOUNTING_TAB_REGISTRY.map((tabDefinition) => tabDefinition.key));
-    const customTabs = (settings.formTabs || []).filter((tabDefinition) => !coreKeys.has(tabDefinition.key));
-    const updatedTabs = [
-      ...ACCOUNTING_TAB_REGISTRY,
-      ...customTabs
-    ].map((tabDefinition) => ({
-      ...tabDefinition,
-      enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
-    }));
-
-    fieldsEditor.resetAllState(
-      updatedTabs,
-      settings.fields || {},
-      settings.enabledTabs || ["basic"],
-      settings.requiredTabs || []
-    );
-  }, [settings, fieldsEditor]);
+  }, [settings]);
 
   const handleSave = () => {
-    const updatedFormTabs = fieldsEditor.formTabs.map(tabDefinition => ({
-      ...tabDefinition,
-      enabled: fieldsEditor.enabledTabs.has(tabDefinition.key)
-    }));
-
-    const nextSettings: SettingsType = {
-      ...settings,
+    saveSettings({
       organizationName,
       currency,
       currencySymbol,
@@ -261,15 +240,7 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
       autoPostDrafts,
       accountCodeLength,
       retainedEarningsAccount,
-      enabledTabs: Array.from(fieldsEditor.enabledTabs),
-      requiredTabs: Array.from(fieldsEditor.requiredTabs),
-      formTabs: updatedFormTabs,
-      fields: fieldsEditor.buildFieldsMap(),
-    };
-
-    updateSettings(nextSettings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    });
   };
 
   const handleSaveFY = (fiscalYear: FiscalYear) => {

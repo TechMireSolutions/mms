@@ -22,12 +22,14 @@ export interface UseModuleConfigOptions<T extends ModuleSettingsShape> {
   settingsObjectKey: string;
   defaultSettings: T;
   defaultFieldDefs: ModuleFieldDef[];
+  normalizeFn?: (settings: any) => T;
 }
 
 export function useModuleConfig<T extends ModuleSettingsShape>({
   settingsObjectKey,
   defaultSettings,
   defaultFieldDefs,
+  normalizeFn,
 }: UseModuleConfigOptions<T>) {
   const mergeSettings = useCallback((settingsDraft: Partial<T> | null | undefined): T => {
     return {
@@ -46,13 +48,15 @@ export function useModuleConfig<T extends ModuleSettingsShape>({
   }, [defaultSettings]);
 
   const loadSettings = useCallback((): T => {
-    return mergeSettings(
-      getObject<Partial<T>>(
-        settingsObjectKey,
-        defaultSettings
-      ),
+    const raw = getObject<Partial<T>>(
+      settingsObjectKey,
+      defaultSettings
     );
-  }, [settingsObjectKey, defaultSettings, mergeSettings]);
+    if (normalizeFn) {
+      return normalizeFn(raw);
+    }
+    return mergeSettings(raw);
+  }, [settingsObjectKey, defaultSettings, mergeSettings, normalizeFn]);
 
   const settings = useLiveObject<T>(
     settingsObjectKey,
@@ -63,9 +67,9 @@ export function useModuleConfig<T extends ModuleSettingsShape>({
   const reloadConfig = useCallback(() => {}, []);
 
   const updateSettings = useCallback((settingsDraft: T) => {
-    const merged = mergeSettings(settingsDraft);
+    const merged = normalizeFn ? normalizeFn(settingsDraft) : mergeSettings(settingsDraft);
     saveObject(settingsObjectKey, merged);
-  }, [settingsObjectKey, mergeSettings]);
+  }, [settingsObjectKey, mergeSettings, normalizeFn]);
 
   const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
   const customFields = useMemo(() => settings.customFields ?? [], [settings.customFields]);

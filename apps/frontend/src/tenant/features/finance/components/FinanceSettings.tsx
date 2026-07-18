@@ -3,11 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Save, DollarSign } from "lucide-react";
 import { useFinanceConfig } from "@/tenant/features/finance/hooks/useFinanceConfig";
 import {
-  type FinanceSettings as FinanceSettingsData,
   FINANCE_TAB_REGISTRY,
   INITIAL_FINANCE_FIELD_SEED,
 } from "@mms/shared";
-import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
+import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,8 +19,17 @@ interface FinanceSettingsProps {
 }
 
 export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElement {
-  const { settings, updateSettings } = useFinanceConfig();
-  const [saved, setSaved] = useState<boolean>(false);
+  const config = useFinanceConfig();
+  const {
+    settings,
+    fieldsEditor,
+    saved,
+    setSaved,
+    saveSettings,
+  } = useModuleSettingsEditor({
+    config,
+    tabRegistry: FINANCE_TAB_REGISTRY,
+  });
 
   // Prefs state
   const [currency, setCurrency] = useState(settings.currency);
@@ -39,13 +47,6 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
   const [feeReminders, setFeeReminders] = useState(settings.feeReminders);
   const [defaultViewLayout, setDefaultViewLayout] = useState(settings.defaultViewLayout);
 
-  const fieldsEditor = useModuleFieldsEditor({
-    initialTabs: FINANCE_TAB_REGISTRY,
-    initialFields: settings.fields || {},
-    initialEnabledTabs: Array.from(new Set(settings.enabledTabs || ["basic"])),
-    initialRequiredTabs: Array.from(new Set(settings.requiredTabs || [])),
-  });
-
   useEffect(() => {
     if (!settings) return;
     setCurrency(settings.currency);
@@ -56,39 +57,18 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
     setPaymentMethods(settings.paymentMethods);
     setAutoGenerateInvoice(settings.autoGenerateInvoice);
     setSendInvoiceEmail(settings.sendInvoiceEmail);
-    setAllowPartialPayment(settings.allowPartialPayment);
+    if (allowPartialPayment !== undefined) {
+      setAllowPartialPayment(settings.allowPartialPayment);
+    }
     setRequireApproval(settings.requireApproval);
     setOverdueReminder(settings.overdueReminder);
     setReminderDaysBefore(settings.reminderDaysBefore);
     setFeeReminders(settings.feeReminders);
     setDefaultViewLayout(settings.defaultViewLayout);
-
-    const coreTabKeys = new Set(FINANCE_TAB_REGISTRY.map((t) => t.key));
-    const customTabs = (settings.formTabs || []).filter((t) => !coreTabKeys.has(t.key));
-    const updatedTabs = [
-      ...FINANCE_TAB_REGISTRY,
-      ...customTabs
-    ].map((t) => ({
-      ...t,
-      enabled: t.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(t.key)
-    }));
-
-    fieldsEditor.resetAllState(
-      updatedTabs,
-      settings.fields || {},
-      settings.enabledTabs || ["basic"],
-      settings.requiredTabs || []
-    );
-  }, [settings, fieldsEditor]);
+  }, [settings]);
 
   const handleSave = () => {
-    const updatedFormTabs = fieldsEditor.formTabs.map((tabDefinition) => ({
-      ...tabDefinition,
-      enabled: fieldsEditor.enabledTabs.has(tabDefinition.key)
-    }));
-
-    const nextSettings: FinanceSettingsData = {
-      ...settings,
+    saveSettings({
       currency,
       invoicePrefix,
       dueDays,
@@ -103,15 +83,7 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
       reminderDaysBefore,
       feeReminders,
       defaultViewLayout,
-      enabledTabs: Array.from(fieldsEditor.enabledTabs),
-      requiredTabs: Array.from(fieldsEditor.requiredTabs),
-      formTabs: updatedFormTabs,
-      fields: fieldsEditor.buildFieldsMap(),
-    };
-
-    updateSettings(nextSettings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    });
   };
 
   const showPrefs = mode === "preferences";

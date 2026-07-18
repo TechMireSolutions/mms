@@ -2,12 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Save, FileText } from "lucide-react";
 import {
-  type ExaminationsSettings as ExaminationsSettingsData,
   EXAMINATIONS_TAB_REGISTRY,
   INITIAL_EXAMINATIONS_FIELD_SEED,
 } from "@mms/shared";
 import { useExaminationConfig } from "@/tenant/features/examinations/hooks/useExaminationConfig";
-import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
+import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,8 +19,17 @@ interface ExaminationsSettingsProps {
 }
 
 export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React.ReactElement {
-  const { settings, updateSettings } = useExaminationConfig();
-  const [saved, setSaved] = useState<boolean>(false);
+  const config = useExaminationConfig();
+  const {
+    settings,
+    fieldsEditor,
+    saved,
+    setSaved,
+    saveSettings,
+  } = useModuleSettingsEditor({
+    config,
+    tabRegistry: EXAMINATIONS_TAB_REGISTRY,
+  });
 
   // Prefs state
   const [passMark, setPassMark] = useState(settings.passMark);
@@ -37,13 +45,6 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
   const [examReminders, setExamReminders] = useState(settings.examReminders);
   const [defaultViewLayout, setDefaultViewLayout] = useState(settings.defaultViewLayout);
 
-  const fieldsEditor = useModuleFieldsEditor({
-    initialTabs: EXAMINATIONS_TAB_REGISTRY,
-    initialFields: settings.fields || {},
-    initialEnabledTabs: Array.from(new Set(settings.enabledTabs || ["basic"])),
-    initialRequiredTabs: Array.from(new Set(settings.requiredTabs || [])),
-  });
-
   useEffect(() => {
     if (!settings) return;
     setPassMark(settings.passMark);
@@ -58,33 +59,10 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
     setDistinguishHonours(settings.distinguishHonours);
     setExamReminders(settings.examReminders);
     setDefaultViewLayout(settings.defaultViewLayout);
-
-    const coreTabKeys = new Set(EXAMINATIONS_TAB_REGISTRY.map((tabDefinition) => tabDefinition.key));
-    const customTabs = (settings.formTabs || []).filter((tabDefinition) => !coreTabKeys.has(tabDefinition.key));
-    const updatedTabs = [
-      ...EXAMINATIONS_TAB_REGISTRY,
-      ...customTabs
-    ].map((tabDefinition) => ({
-      ...tabDefinition,
-      enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
-    }));
-
-    fieldsEditor.resetAllState(
-      updatedTabs,
-      settings.fields || {},
-      settings.enabledTabs || ["basic"],
-      settings.requiredTabs || []
-    );
-  }, [settings, fieldsEditor]);
+  }, [settings]);
 
   const handleSave = () => {
-    const updatedFormTabs = fieldsEditor.formTabs.map((tabDefinition) => ({
-      ...tabDefinition,
-      enabled: fieldsEditor.enabledTabs.has(tabDefinition.key)
-    }));
-
-    const nextSettings: ExaminationsSettingsData = {
-      ...settings,
+    saveSettings({
       passMark,
       maxMark,
       gradingSystem,
@@ -97,15 +75,7 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
       distinguishHonours,
       examReminders,
       defaultViewLayout,
-      enabledTabs: Array.from(fieldsEditor.enabledTabs),
-      requiredTabs: Array.from(fieldsEditor.requiredTabs),
-      formTabs: updatedFormTabs,
-      fields: fieldsEditor.buildFieldsMap(),
-    };
-
-    updateSettings(nextSettings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    });
   };
 
 

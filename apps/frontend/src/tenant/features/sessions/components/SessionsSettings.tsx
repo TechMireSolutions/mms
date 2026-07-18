@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Save, Calendar } from "lucide-react";
 import {
-  type SessionsSettings as SessionsSettingsType,
   SESSIONS_TAB_REGISTRY,
   INITIAL_SESSIONS_FIELD_SEED,
 } from "@mms/shared";
 import { useSessionConfig } from "@/tenant/features/sessions/hooks/useSessionConfig";
 import { SESSION_TYPES } from "@/lib/data/sessionsData";
-import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
+import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,8 +19,18 @@ interface SessionsSettingsProps {
 }
 
 export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Element {
-  const { settings, types, updateSettings } = useSessionConfig();
-  const [saved, setSaved] = useState<boolean>(false);
+  const config = useSessionConfig();
+  const { types } = config;
+  const {
+    settings,
+    fieldsEditor,
+    saved,
+    setSaved,
+    saveSettings,
+  } = useModuleSettingsEditor({
+    config,
+    tabRegistry: SESSIONS_TAB_REGISTRY,
+  });
 
   // Prefs state
   const [defaultDuration, setDefaultDuration] = useState(settings.defaultDuration);
@@ -35,13 +44,6 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
   const [notifyOnSessionStart, setNotifyOnSessionStart] = useState(settings.notifyOnSessionStart);
   const [defaultViewLayout, setDefaultViewLayout] = useState(settings.defaultViewLayout);
 
-  const fieldsEditor = useModuleFieldsEditor({
-    initialTabs: SESSIONS_TAB_REGISTRY,
-    initialFields: settings.fields || {},
-    initialEnabledTabs: Array.from(new Set(settings.enabledTabs || ["basic"])),
-    initialRequiredTabs: Array.from(new Set(settings.requiredTabs || [])),
-  });
-
   useEffect(() => {
     if (!settings) return;
     setDefaultDuration(settings.defaultDuration);
@@ -54,35 +56,12 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
     setTimetableConflictCheck(settings.timetableConflictCheck);
     setNotifyOnSessionStart(settings.notifyOnSessionStart);
     setDefaultViewLayout(settings.defaultViewLayout);
-
-    const coreTabKeys = new Set(SESSIONS_TAB_REGISTRY.map((tabDefinition) => tabDefinition.key));
-    const customTabs = (settings.formTabs || []).filter((tabDefinition) => !coreTabKeys.has(tabDefinition.key));
-    const updatedTabs = [
-      ...SESSIONS_TAB_REGISTRY,
-      ...customTabs
-    ].map((tabDefinition) => ({
-      ...tabDefinition,
-      enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
-    }));
-
-    fieldsEditor.resetAllState(
-      updatedTabs,
-      settings.fields || {},
-      settings.enabledTabs || ["basic"],
-      settings.requiredTabs || []
-    );
-  }, [settings, fieldsEditor]);
+  }, [settings]);
 
   const typeOptions = types.length > 0 ? types : [...SESSION_TYPES];
 
   const handleSave = (): void => {
-    const updatedFormTabs = fieldsEditor.formTabs.map((tabDefinition) => ({
-      ...tabDefinition,
-      enabled: fieldsEditor.enabledTabs.has(tabDefinition.key)
-    }));
-
-    const nextSettings: SessionsSettingsType = {
-      ...settings,
+    saveSettings({
       defaultDuration,
       defaultSessionType,
       academicYear,
@@ -93,15 +72,7 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
       timetableConflictCheck,
       notifyOnSessionStart,
       defaultViewLayout,
-      enabledTabs: Array.from(fieldsEditor.enabledTabs),
-      requiredTabs: Array.from(fieldsEditor.requiredTabs),
-      formTabs: updatedFormTabs,
-      fields: fieldsEditor.buildFieldsMap(),
-    };
-
-    updateSettings(nextSettings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    });
   };
 
   const showPrefs = mode === "preferences";

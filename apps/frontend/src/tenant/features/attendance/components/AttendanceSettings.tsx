@@ -2,12 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Save, QrCode, Bell, Clock, Shield, Scan } from "lucide-react";
 import {
-  type AttendanceModuleSettings as AttendanceSettingsData,
   ATTENDANCE_TAB_REGISTRY,
   INITIAL_ATTENDANCE_FIELD_SEED,
 } from "@mms/shared";
 import { useAttendanceConfig } from "@/tenant/features/attendance/hooks/useAttendanceConfig";
-import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
+import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
@@ -30,7 +29,7 @@ function SettingRow({ label, sub, children }: SettingRowProps) {
   return (
     <div className="flex items-start justify-between gap-4 py-3 border-b border-border last:border-0">
       <div className="flex-1">
-        <p className="text-sm font-semibold text-foreground">{label}</p>
+        <p className="text-sm font-semibold text-foreground m-0">{label}</p>
         {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
       </div>
       <div className="flex-shrink-0">{children}</div>
@@ -41,8 +40,17 @@ function SettingRow({ label, sub, children }: SettingRowProps) {
 export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
   const isAdmin = useIsAdminViewer();
   const { t } = useTranslation();
-  const { settings, updateSettings } = useAttendanceConfig();
-  const [saved, setSaved] = useState(false);
+  const config = useAttendanceConfig();
+  const {
+    settings,
+    fieldsEditor,
+    saved,
+    setSaved,
+    saveSettings,
+  } = useModuleSettingsEditor({
+    config,
+    tabRegistry: ATTENDANCE_TAB_REGISTRY,
+  });
 
   // Prefs state
   const [workingDays, setWorkingDays] = useState(settings.workingDays);
@@ -62,15 +70,6 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
   const [geoTagging, setGeoTagging] = useState(settings.geoTagging);
   const [defaultViewLayout, setDefaultViewLayout] = useState(settings.defaultViewLayout);
 
-  const fieldsEditor = useModuleFieldsEditor({
-    initialTabs: ATTENDANCE_TAB_REGISTRY,
-    initialFields: settings.fields || {},
-    initialEnabledTabs: Array.from(new Set(settings.enabledTabs || ["basic"])),
-    initialRequiredTabs: Array.from(new Set(settings.requiredTabs || [])),
-  });
-
-
-
   useEffect(() => {
     if (!settings) return;
     setWorkingDays(settings.workingDays);
@@ -89,24 +88,7 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
     setOfflineEnabled(settings.offlineEnabled);
     setGeoTagging(settings.geoTagging);
     setDefaultViewLayout(settings.defaultViewLayout);
-
-    const coreTabKeys = new Set(ATTENDANCE_TAB_REGISTRY.map((tabDefinition) => tabDefinition.key));
-    const customTabs = (settings.formTabs || []).filter((tabDefinition) => !coreTabKeys.has(tabDefinition.key));
-    const updatedTabs = [
-      ...ATTENDANCE_TAB_REGISTRY,
-      ...customTabs
-    ].map((tabDefinition) => ({
-      ...tabDefinition,
-      enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
-    }));
-
-    fieldsEditor.resetAllState(
-      updatedTabs,
-      settings.fields || {},
-      settings.enabledTabs || ["basic"],
-      settings.requiredTabs || []
-    );
-  }, [settings, fieldsEditor]);
+  }, [settings]);
 
   if (!isAdmin) {
     return (
@@ -119,13 +101,7 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
   }
 
   const handleSave = () => {
-    const updatedFormTabs = fieldsEditor.formTabs.map((tabDefinition) => ({
-      ...tabDefinition,
-      enabled: fieldsEditor.enabledTabs.has(tabDefinition.key)
-    }));
-
-    const nextSettings: AttendanceSettingsData = {
-      ...settings,
+    saveSettings({
       workingDays,
       cutoffTime,
       lateThresholdMins,
@@ -142,15 +118,7 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
       offlineEnabled,
       geoTagging,
       defaultViewLayout,
-      enabledTabs: Array.from(fieldsEditor.enabledTabs),
-      requiredTabs: Array.from(fieldsEditor.requiredTabs),
-      formTabs: updatedFormTabs,
-      fields: fieldsEditor.buildFieldsMap(),
-    };
-
-    updateSettings(nextSettings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    });
   };
 
   const showPrefs = mode === "preferences";

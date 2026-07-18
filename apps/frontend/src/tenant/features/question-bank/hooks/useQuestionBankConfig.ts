@@ -1,15 +1,12 @@
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useLiveObject } from '@/hooks/useLiveObject';
-import { getObject, saveObject } from '@/lib/db';
+import { useModuleConfig } from '@/hooks/useModuleConfig';
 import {
   DEFAULT_QUESTION_BANK_FIELD_DEFS,
   DEFAULT_QUESTION_BANK_SETTINGS,
   QUESTION_BANK_FIELD_LABEL_KEYS,
-  getSortedFields,
   mergeQuestionCategories,
   normalizeQuestionBankSettings,
-  getFlatFieldsConfig,
   type AppTranslationKey,
   type ModuleFieldDef,
   type QuestionBankSettings,
@@ -42,36 +39,19 @@ export function useQuestionBankConfig(
 ): QuestionBankConfig {
   const { t } = useTranslation();
   
-  const settings = useLiveObject<QuestionBankSettings>(
-    'question_bank_settings',
-    DEFAULT_QUESTION_BANK_SETTINGS,
-    {
-      loadFn: () =>
-        normalizeQuestionBankSettings(
-          getObject<QuestionBankSettings>(
-            'question_bank_settings',
-            DEFAULT_QUESTION_BANK_SETTINGS,
-          ),
-        ),
-    },
-  );
+  const {
+    settings,
+    orderedFields,
+    fields,
+    updateSettings,
+  } = useModuleConfig<QuestionBankSettings>({
+    settingsObjectKey: 'question_bank_settings',
+    defaultSettings: DEFAULT_QUESTION_BANK_SETTINGS,
+    defaultFieldDefs: DEFAULT_QUESTION_BANK_FIELD_DEFS,
+    normalizeFn: normalizeQuestionBankSettings,
+  });
 
   const refresh = useCallback(() => {}, []);
-
-  const updateSettings = useCallback((settingsDraft: QuestionBankSettings) => {
-    const merged = normalizeQuestionBankSettings(settingsDraft);
-    saveObject('question_bank_settings', merged);
-  }, []);
-
-
-  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
-  const customFields = useMemo(() => settings.customFields ?? [], [settings.customFields]);
-  const fieldOrder = useMemo(() => settings.fieldOrder ?? DEFAULT_QUESTION_BANK_SETTINGS.fieldOrder ?? [], [settings.fieldOrder]);
-
-  const orderedFields = useMemo(
-    () => getSortedFields(DEFAULT_QUESTION_BANK_FIELD_DEFS, fieldOrder, fields, customFields),
-    [fieldOrder, fields, customFields],
-  );
 
   const enabledDifficulties = useMemo(
     () =>

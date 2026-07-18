@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Save, School } from "lucide-react";
 import {
-  type TeachersSettings as TeachersSettingsType,
   TEACHERS_TAB_REGISTRY,
   INITIAL_TEACHERS_FIELD_SEED,
   TEACHER_SPECIALIZATION_VALUES,
 } from "@mms/shared";
 import { useTeacherConfig } from "@/tenant/features/teachers/hooks/useTeacherConfig";
-import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
+import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,8 +18,18 @@ import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 
 export function TeachersSettings({ mode }: { mode?: "fields" | "preferences" }): React.JSX.Element {
   const { t } = useTranslation();
-  const { settings, specializations, updateSettings } = useTeacherConfig();
-  const [saved, setSaved] = useState<boolean>(false);
+  const config = useTeacherConfig();
+  const { specializations } = config;
+  const {
+    settings,
+    fieldsEditor,
+    saved,
+    setSaved,
+    saveSettings,
+  } = useModuleSettingsEditor({
+    config,
+    tabRegistry: TEACHERS_TAB_REGISTRY,
+  });
 
   // Prefs state
   const [idPrefix, setIdPrefix] = useState(settings.idPrefix);
@@ -28,62 +37,24 @@ export function TeachersSettings({ mode }: { mode?: "fields" | "preferences" }):
   const [requireContactLink, setRequireContactLink] = useState(settings.requireContactLink);
   const [defaultSpecialization, setDefaultSpecialization] = useState(settings.defaultSpecialization);
 
-  const fieldsEditor = useModuleFieldsEditor({
-    initialTabs: TEACHERS_TAB_REGISTRY,
-    initialFields: settings.fields || {},
-    initialEnabledTabs: Array.from(new Set(settings.enabledTabs || ["basic"])),
-    initialRequiredTabs: Array.from(new Set(settings.requiredTabs || [])),
-  });
-
   useEffect(() => {
     if (!settings) return;
     setIdPrefix(settings.idPrefix);
     setAutoGenerateId(settings.autoGenerateId);
     setRequireContactLink(settings.requireContactLink);
     setDefaultSpecialization(settings.defaultSpecialization);
-
-    const coreKeys = new Set(TEACHERS_TAB_REGISTRY.map((tabDefinition) => tabDefinition.key));
-    const customTabs = (settings.formTabs || []).filter((tabDefinition) => !coreKeys.has(tabDefinition.key));
-    const updatedTabs = [
-      ...TEACHERS_TAB_REGISTRY,
-      ...customTabs
-    ].map((tabDefinition) => ({
-      ...tabDefinition,
-      enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
-    }));
-
-    fieldsEditor.resetAllState(
-      updatedTabs,
-      settings.fields || {},
-      settings.enabledTabs || ["basic"],
-      settings.requiredTabs || []
-    );
-  }, [settings, fieldsEditor]);
+  }, [settings]);
 
   const specializationOptions = specializations.length > 0 ? specializations : [...TEACHER_SPECIALIZATION_VALUES];
 
   const handleSave = (): void => {
-    const updatedFormTabs = fieldsEditor.formTabs.map((tab) => ({
-      ...tab,
-      enabled: fieldsEditor.enabledTabs.has(tab.key)
-    }));
-
-    const updatedSettings: TeachersSettingsType = {
-      ...settings,
+    saveSettings({
       idPrefix,
       autoGenerateId,
       requireContactLink,
       defaultSpecialization,
-      enabledTabs: Array.from(fieldsEditor.enabledTabs),
-      requiredTabs: Array.from(fieldsEditor.requiredTabs),
-      formTabs: updatedFormTabs,
-      fields: fieldsEditor.buildFieldsMap(),
-    };
-
-    updateSettings(updatedSettings);
-    setSaved(true);
+    });
     notify.success(t("teachers.settings.saved"));
-    setTimeout(() => setSaved(false), 2500);
   };
 
   const showPrefs = mode === "preferences";

@@ -1,0 +1,87 @@
+import { useState, useEffect, useCallback } from "react";
+import { type TabDefinition } from "@mms/shared";
+import { type ModuleSettingsShape } from "@/hooks/useModuleConfig";
+import { useModuleFieldsEditor } from "./useModuleFieldsEditor";
+
+interface UseModuleSettingsEditorOptions<T extends ModuleSettingsShape> {
+  config: {
+    settings: T;
+    updateSettings: (settings: T) => void;
+  };
+  tabRegistry: TabDefinition[];
+  defaultEnabledTabs?: string[];
+  defaultRequiredTabs?: string[];
+}
+
+/**
+ * A reusable hook to coordinate module settings configurations and form field customization state.
+ * Reduces duplication of state initialization, reactive resetting of fieldsEditor, and building the saved mapping.
+ */
+export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
+  config,
+  tabRegistry,
+  defaultEnabledTabs = ["basic"],
+  defaultRequiredTabs = [],
+}: UseModuleSettingsEditorOptions<T>) {
+  const { settings, updateSettings } = config;
+  const [saved, setSaved] = useState<boolean>(false);
+
+  const fieldsEditor = useModuleFieldsEditor({
+    initialTabs: tabRegistry,
+    initialFields: settings.fields || {},
+    initialEnabledTabs: Array.from(new Set(settings.enabledTabs || defaultEnabledTabs)),
+    initialRequiredTabs: Array.from(new Set(settings.requiredTabs || defaultRequiredTabs)),
+  });
+
+  // Keep fields state synced when settings load or change
+  useEffect(() => {
+    if (!settings) return;
+
+    const coreTabKeys = new Set(tabRegistry.map((tab) => tab.key));
+    const customTabs = (settings.formTabs || []).filter((tab: TabDefinition) => !coreTabKeys.has(tab.key));
+    const updatedTabs = [
+      ...tabRegistry,
+      ...customTabs,
+    ].map((tab) => ({
+      ...tab,
+      enabled: tab.key === "basic" ? true : (settings.enabledTabs || defaultEnabledTabs).includes(tab.key),
+    }));
+
+    fieldsEditor.resetAllState(
+      updatedTabs,
+      settings.fields || {},
+      settings.enabledTabs || defaultEnabledTabs,
+      settings.requiredTabs || defaultRequiredTabs
+    );
+  }, [settings, fieldsEditor, tabRegistry, defaultEnabledTabs, defaultRequiredTabs]);
+
+  const saveSettings = useCallback((preferencesDraft: Partial<T>, additionalFields?: Partial<T>) => {
+    const updatedFormTabs = fieldsEditor.formTabs.map((tab) => ({
+      ...tab,
+      enabled: fieldsEditor.enabledTabs.has(tab.key),
+    }));
+
+    const nextSettings: T = {
+      ...settings,
+      ...preferencesDraft,
+      enabledTabs: Array.from(fieldsEditor.enabledTabs),
+      requiredTabs: Array.from(fieldsEditor.requiredTabs),
+      formTabs: updatedFormTabs,
+      fields: fieldsEditor.buildFieldsMap(),
+      ...additionalFields,
+    };
+
+    updateSettings(nextSettings);
+    setSaved(true);
+    const timer = setTimeout(() => setSaved(false), 2500);
+    return () => clearTimeout(timer);
+  }, [settings, updateSettings, fieldsEditor]);
+
+  return {
+    settings,
+    fieldsEditor,
+    saved,
+    setSaved,
+    saveSettings,
+  };
+}

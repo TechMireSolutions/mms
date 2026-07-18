@@ -1,12 +1,14 @@
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import {
   STUDENTS_MODULE_CONTRACT,
+  DEFAULT_STUDENTS_SETTINGS,
+  DEFAULT_STUDENT_FIELD_DEFS,
   normalizeStudentsSettings,
   type StudentsSettings,
 } from "@mms/shared";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useLiveObject } from "@/hooks/useLiveObject";
-import { getObject, saveObject } from "@/lib/db";
+import { useModuleConfig } from "@/hooks/useModuleConfig";
 import {
   STUDENT_CONFIG_COLLECTION_KEYS,
   STUDENT_CONFIG_OBJECT_KEYS,
@@ -17,20 +19,19 @@ import {
 
 export function useStudentConfig() {
   const defaults = useMemo(() => getStudentConfigCollectionDefaults(), []);
-  
-  const settings = useLiveObject<StudentsSettings>(
-    STUDENTS_MODULE_CONTRACT.settingsObjectKey,
-    null as any,
-    {
-      loadFn: () =>
-        normalizeStudentsSettings(
-          getObject<Partial<StudentsSettings>>(
-            STUDENTS_MODULE_CONTRACT.settingsObjectKey,
-            null as any,
-          ),
-        ),
-    },
-  );
+
+  const {
+    settings,
+    orderedFields,
+    fields,
+    customFields,
+    updateSettings,
+  } = useModuleConfig<StudentsSettings>({
+    settingsObjectKey: STUDENTS_MODULE_CONTRACT.settingsObjectKey,
+    defaultSettings: DEFAULT_STUDENTS_SETTINGS,
+    defaultFieldDefs: DEFAULT_STUDENT_FIELD_DEFS,
+    normalizeFn: normalizeStudentsSettings,
+  });
   
   const statuses = useLiveCollection<string>(
     STUDENT_CONFIG_COLLECTION_KEYS.statuses,
@@ -52,10 +53,6 @@ export function useStudentConfig() {
     getDefaultStudentGuardianContactDefaults(),
   );
 
-  const updateSettings = useCallback((settingsDraft: StudentsSettings) => {
-    saveObject(STUDENTS_MODULE_CONTRACT.settingsObjectKey, { ...settingsDraft, version: 2 });
-  }, []);
-
   return {
     settings,
     statuses,
@@ -63,6 +60,9 @@ export function useStudentConfig() {
     discountTypes,
     guardianContactDefaults,
     updateSettings,
+    fields,
+    customFields,
+    orderedFields,
   };
 }
 

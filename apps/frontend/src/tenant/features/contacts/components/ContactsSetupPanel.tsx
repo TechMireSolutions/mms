@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Save, Users } from "lucide-react";
 import {
-  DEFAULT_ENABLED_TABS, DEFAULT_REQUIRED_TABS,
   FieldConfig, ContactPreferences, TabDefinition,
   CONFIG_VERSION,
   toTitleCase as sharedToTitleCase,
@@ -19,7 +18,7 @@ import { notify } from "@/lib/notify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ToggleRow } from "@/components/ui/ToggleRow";
-import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
+import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 
@@ -45,16 +44,21 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
     return config.formTabs && config.formTabs.length > 0 ? config.formTabs : DEFAULT_FORM_TABS;
   };
 
-  const fieldsEditor = useModuleFieldsEditor({
-    initialTabs: getInitialTabs(),
-    initialFields: Object.fromEntries(
-      getInitialTabs().map((tab) => [tab.key, config.fields?.[tab.key] || []])
-    ),
-    initialEnabledTabs: config.enabledTabs || DEFAULT_ENABLED_TABS,
-    initialRequiredTabs: config.requiredTabs || DEFAULT_REQUIRED_TABS,
+  const editorConfig = React.useMemo(() => ({
+    settings: config,
+    updateSettings: onConfigChange,
+  }), [config, onConfigChange]);
+
+  const {
+    fieldsEditor,
+    saved,
+    setSaved,
+    saveSettings,
+  } = useModuleSettingsEditor({
+    config: editorConfig,
+    tabRegistry: getInitialTabs(),
   });
 
-  const [saved, setSaved] = useState<boolean>(false);
   const [prefs, setPrefs] = useState<ContactPreferences>(() => contextPrefs);
 
   const updatePreference = <K extends keyof ContactPreferences>(key: K, value: ContactPreferences[K]): void => {
@@ -96,18 +100,14 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
 
   const handleSave = (): void => {
     const applyTitleCaseToTabs = (tabs: TabDefinition[]) => tabs.map((tab) => ({ ...tab, label: toTitleCase(tab.label) }));
-    const updatedConfig: FieldConfig = {
+    saveSettings({}, {
       version: CONFIG_VERSION,
-      enabledTabs: Array.from(fieldsEditor.enabledTabs),
-      requiredTabs: Array.from(fieldsEditor.requiredTabs),
-      fields: fieldsEditor.buildFieldsMap(),
       pageTabs: applyTitleCaseToTabs(config.pageTabs || []),
       formTabs: applyTitleCaseToTabs(fieldsEditor.formTabs),
       detailTabs: applyTitleCaseToTabs(config.detailTabs || []),
       settingsSubTabs: applyTitleCaseToTabs(config.settingsSubTabs || []),
       columnRegistry: config.columnRegistry,
-    };
-    onConfigChange(updatedConfig);
+    });
     const updatedPrefs = {
       ...prefs,
       defaultCountry: prefs.defaultCountry ? toTitleCase(prefs.defaultCountry.trim()) : "",
@@ -121,8 +121,6 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
       area: auditArea,
       summary: t("contacts.setup.auditSummary", { area: auditArea }),
     });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
   };
 
   const isCoreField = (tabId: string, fieldKey: string): boolean =>

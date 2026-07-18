@@ -3,11 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Save, ClipboardList } from "lucide-react";
 import { useEnrollmentConfig } from "@/tenant/features/enrollments/hooks/useEnrollmentConfig";
 import {
-  type EnrollmentsSettings as EnrollmentsSettingsData,
   ENROLLMENTS_TAB_REGISTRY,
   INITIAL_ENROLLMENTS_FIELD_SEED,
 } from "@mms/shared";
-import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
+import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,8 +18,17 @@ interface EnrollmentsSettingsProps {
 }
 
 export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.JSX.Element {
-  const { settings, updateSettings } = useEnrollmentConfig();
-  const [saved, setSaved] = useState<boolean>(false);
+  const config = useEnrollmentConfig();
+  const {
+    settings,
+    fieldsEditor,
+    saved,
+    setSaved,
+    saveSettings,
+  } = useModuleSettingsEditor({
+    config,
+    tabRegistry: ENROLLMENTS_TAB_REGISTRY,
+  });
 
   // Prefs state
   const [maxStudentsPerClass, setMaxStudentsPerClass] = useState(settings.maxStudentsPerClass);
@@ -32,13 +40,6 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
   const [allowTransfers, setAllowTransfers] = useState(settings.allowTransfers);
   const [reenrollmentReminder, setReenrollmentReminder] = useState(settings.reenrollmentReminder);
 
-  const fieldsEditor = useModuleFieldsEditor({
-    initialTabs: ENROLLMENTS_TAB_REGISTRY,
-    initialFields: settings.fields || {},
-    initialEnabledTabs: Array.from(new Set(settings.enabledTabs || ["basic"])),
-    initialRequiredTabs: Array.from(new Set(settings.requiredTabs || [])),
-  });
-
   useEffect(() => {
     if (!settings) return;
     setMaxStudentsPerClass(settings.maxStudentsPerClass);
@@ -49,33 +50,10 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
     setEnrollmentApproval(settings.enrollmentApproval);
     setAllowTransfers(settings.allowTransfers);
     setReenrollmentReminder(settings.reenrollmentReminder);
-
-    const coreTabKeys = new Set(ENROLLMENTS_TAB_REGISTRY.map((tabDefinition) => tabDefinition.key));
-    const customTabs = (settings.formTabs || []).filter((tabDefinition) => !coreTabKeys.has(tabDefinition.key));
-    const updatedTabs = [
-      ...ENROLLMENTS_TAB_REGISTRY,
-      ...customTabs
-    ].map((tabDefinition) => ({
-      ...tabDefinition,
-      enabled: tabDefinition.key === "basic" ? true : (settings.enabledTabs || ["basic"]).includes(tabDefinition.key)
-    }));
-
-    fieldsEditor.resetAllState(
-      updatedTabs,
-      settings.fields || {},
-      settings.enabledTabs || ["basic"],
-      settings.requiredTabs || []
-    );
-  }, [settings, fieldsEditor]);
+  }, [settings]);
 
   const handleSave = (): void => {
-    const updatedFormTabs = fieldsEditor.formTabs.map((tabDefinition) => ({
-      ...tabDefinition,
-      enabled: fieldsEditor.enabledTabs.has(tabDefinition.key)
-    }));
-
-    const nextSettings: EnrollmentsSettingsData = {
-      ...settings,
+    saveSettings({
       maxStudentsPerClass,
       dropDeadlineDays,
       waitlistEnabled,
@@ -84,15 +62,7 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
       enrollmentApproval,
       allowTransfers,
       reenrollmentReminder,
-      enabledTabs: Array.from(fieldsEditor.enabledTabs),
-      requiredTabs: Array.from(fieldsEditor.requiredTabs),
-      formTabs: updatedFormTabs,
-      fields: fieldsEditor.buildFieldsMap(),
-    };
-
-    updateSettings(nextSettings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    });
   };
 
   const showPrefs = mode === "preferences";
