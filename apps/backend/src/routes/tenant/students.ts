@@ -18,7 +18,6 @@ import {
 import type { User } from '@mms/shared';
 import { STUDENTS_MODULE_CONTRACT, computeStudentsCommandMetrics } from '@mms/shared';
 import { sendForbidden, sendDatabaseError } from '../../lib/httpErrors.js';
-import { resourceIdParamsSchema } from '../../validation/commonSchemas.js';
 import { studentRecordSchema, studentsListQuerySchema, studentsNextGrNumberQuerySchema, studentsDuplicateCheckBodySchema } from '../../validation/studentSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { validateStudentDynamic } from '../../services/studentValidationService.js';
