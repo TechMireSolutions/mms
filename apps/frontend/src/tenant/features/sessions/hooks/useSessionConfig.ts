@@ -3,36 +3,13 @@ import {
   DEFAULT_SESSIONS_SETTINGS,
   SESSIONS_MODULE_CONTRACT,
   DEFAULT_SESSIONS_FIELD_DEFS,
-  mergeTabbedFields,
-  type SessionsSettings,
 } from "@mms/shared";
-import { getObject } from "@/lib/db";
 import {
   SESSION_CONFIG_COLLECTION_KEYS,
   getSessionConfigCollectionDefaults,
 } from "@/lib/sessionConfig/sessionConfigSeeds";
 import { useModuleConfig } from "@/hooks/useModuleConfig";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
-
-export function loadSessionSettings(): SessionsSettings {
-  const settings = getObject<Partial<SessionsSettings>>(
-    SESSIONS_MODULE_CONTRACT.settingsObjectKey,
-    DEFAULT_SESSIONS_SETTINGS
-  );
-  return {
-    ...DEFAULT_SESSIONS_SETTINGS,
-    ...(settings ?? {}),
-    formTabs: settings?.formTabs ?? DEFAULT_SESSIONS_SETTINGS.formTabs ?? [],
-    enabledTabs: settings?.enabledTabs ?? DEFAULT_SESSIONS_SETTINGS.enabledTabs ?? [],
-    requiredTabs: settings?.requiredTabs ?? DEFAULT_SESSIONS_SETTINGS.requiredTabs ?? [],
-    fields: mergeTabbedFields(
-      DEFAULT_SESSIONS_SETTINGS.fields || {},
-      settings?.fields
-    ),
-    customFields: settings?.customFields ?? DEFAULT_SESSIONS_SETTINGS.customFields ?? [],
-    fieldOrder: settings?.fieldOrder ?? DEFAULT_SESSIONS_SETTINGS.fieldOrder ?? [],
-  };
-}
 
 export function useSessionConfig() {
   const defaults = useMemo(() => getSessionConfigCollectionDefaults(), []);

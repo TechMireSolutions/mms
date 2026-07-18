@@ -33,12 +33,11 @@ export function useDashboardConfig() {
   }, []);
 
   const toggleCardVisibility = useCallback((cardId: string) => {
-    const current = getObject<string[]>(DASHBOARD_DISABLED_CARDS_KEY, []);
-    const updated = current.includes(cardId)
-      ? current.filter((id) => id !== cardId)
-      : [...current, cardId];
+    const updated = disabledCardIds.includes(cardId)
+      ? disabledCardIds.filter((id) => id !== cardId)
+      : [...disabledCardIds, cardId];
     saveObject(DASHBOARD_DISABLED_CARDS_KEY, updated);
-  }, []);
+  }, [disabledCardIds]);
 
   return {
     disabledCardIds,

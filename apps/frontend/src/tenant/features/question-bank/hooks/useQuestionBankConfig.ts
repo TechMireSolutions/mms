@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useLiveObject } from '@/hooks/useLiveObject';
 import { getObject, saveObject } from '@/lib/db';
 import {
   DEFAULT_QUESTION_BANK_FIELD_DEFS,
@@ -40,30 +41,28 @@ export function useQuestionBankConfig(
   questions?: readonly import('@mms/shared').QuestionCategoryRef[],
 ): QuestionBankConfig {
   const { t } = useTranslation();
-  const [settings, setSettings] = useState<QuestionBankSettings>(() =>
-    normalizeQuestionBankSettings(
-      getObject<QuestionBankSettings>('question_bank_settings', DEFAULT_QUESTION_BANK_SETTINGS),
-    ),
+  
+  const settings = useLiveObject<QuestionBankSettings>(
+    'question_bank_settings',
+    DEFAULT_QUESTION_BANK_SETTINGS,
+    {
+      loadFn: () =>
+        normalizeQuestionBankSettings(
+          getObject<QuestionBankSettings>(
+            'question_bank_settings',
+            DEFAULT_QUESTION_BANK_SETTINGS,
+          ),
+        ),
+    },
   );
 
-  const refresh = useCallback(() => {
-    setSettings(
-      normalizeQuestionBankSettings(
-        getObject<QuestionBankSettings>('question_bank_settings', DEFAULT_QUESTION_BANK_SETTINGS),
-      ),
-    );
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('local-database-update', refresh);
-    return () => window.removeEventListener('local-database-update', refresh);
-  }, [refresh]);
+  const refresh = useCallback(() => {}, []);
 
   const updateSettings = useCallback((settingsDraft: QuestionBankSettings) => {
     const merged = normalizeQuestionBankSettings(settingsDraft);
     saveObject('question_bank_settings', merged);
-    setSettings(merged);
   }, []);
+
 
   const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
   const customFields = useMemo(() => settings.customFields ?? [], [settings.customFields]);

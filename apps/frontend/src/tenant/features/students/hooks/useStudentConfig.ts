@@ -1,9 +1,12 @@
 import { useCallback, useMemo } from "react";
 import {
+  STUDENTS_MODULE_CONTRACT,
+  normalizeStudentsSettings,
   type StudentsSettings,
 } from "@mms/shared";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { useLiveObject } from "@/hooks/useLiveObject";
+import { getObject, saveObject } from "@/lib/db";
 import {
   STUDENT_CONFIG_COLLECTION_KEYS,
   STUDENT_CONFIG_OBJECT_KEYS,
@@ -11,20 +14,22 @@ import {
   getStudentConfigCollectionDefaults,
   type StudentGuardianContactDefaults,
 } from "@/lib/studentConfig/studentConfigSeeds";
-import {
-  loadStudentSettings,
-  saveStudentSettings,
-} from "@/lib/studentConfig/studentFieldsStore";
-
-export { loadStudentSettings };
 
 export function useStudentConfig() {
   const defaults = useMemo(() => getStudentConfigCollectionDefaults(), []);
   
   const settings = useLiveObject<StudentsSettings>(
-    "studentSettings",
+    STUDENTS_MODULE_CONTRACT.settingsObjectKey,
     null as any,
-    { loadFn: () => loadStudentSettings() },
+    {
+      loadFn: () =>
+        normalizeStudentsSettings(
+          getObject<Partial<StudentsSettings>>(
+            STUDENTS_MODULE_CONTRACT.settingsObjectKey,
+            null as any,
+          ),
+        ),
+    },
   );
   
   const statuses = useLiveCollection<string>(
@@ -48,7 +53,7 @@ export function useStudentConfig() {
   );
 
   const updateSettings = useCallback((settingsDraft: StudentsSettings) => {
-    saveStudentSettings(settingsDraft);
+    saveObject(STUDENTS_MODULE_CONTRACT.settingsObjectKey, { ...settingsDraft, version: 2 });
   }, []);
 
   return {
@@ -60,3 +65,4 @@ export function useStudentConfig() {
     updateSettings,
   };
 }
+
