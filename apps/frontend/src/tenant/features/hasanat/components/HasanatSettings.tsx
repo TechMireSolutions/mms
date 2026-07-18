@@ -11,31 +11,8 @@ import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
-
-interface ToggleProps {
-  label: string;
-  description?: string;
-  value: boolean;
-  onChange: (value: boolean) => void;
-}
-
-function Toggle({ label, description, value, onChange }: ToggleProps): React.ReactElement {
-  return (
-    <div className="flex items-center justify-between py-1 text-left">
-      <div>
-        <p className="text-[13px] font-semibold text-foreground">{label}</p>
-        {description && <p className="text-[11px] text-muted-foreground">{description}</p>}
-      </div>
-      <Switch
-        checked={value}
-        onCheckedChange={onChange}
-        aria-label={`${label}: ${description || ""}`}
-      />
-    </div>
-  );
-}
 
 interface HasanatSettingsProps {
   mode?: "fields" | "preferences";
@@ -130,7 +107,7 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
             </div>
           </div>
           <div className="pt-1">
-            <Toggle
+            <ToggleRow
               label="Auto-approve Payouts"
               description="Automatically approve rewards redemption without manual review"
               value={autoApprovePayouts || false}

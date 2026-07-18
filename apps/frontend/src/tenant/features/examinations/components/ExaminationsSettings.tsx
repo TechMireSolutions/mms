@@ -12,31 +12,8 @@ import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { Switch } from "@/components/ui/switch";
+import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
-
-interface ToggleProps {
-  label: string;
-  description?: string;
-  value: boolean;
-  onChange: (value: boolean) => void;
-}
-
-function Toggle({ label, description, value, onChange }: ToggleProps): React.ReactElement {
-  return (
-    <div className="flex items-center justify-between py-1 text-left">
-      <div>
-        <p className="text-[13px] font-semibold text-foreground">{label}</p>
-        {description && <p className="text-[11px] text-muted-foreground">{description}</p>}
-      </div>
-      <Switch
-        checked={value}
-        onCheckedChange={onChange}
-        aria-label={`${label}: ${description || ""}`}
-      />
-    </div>
-  );
-}
 
 interface ExaminationsSettingsProps {
   mode?: "fields" | "preferences";
@@ -194,13 +171,13 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
           </div>
 
           <div className="space-y-2 pt-1" role="group" aria-label="Examinations registry feature flags toggles">
-            <Toggle label="Show Rankings" description="Show student class rank on result cards" value={showRankings} onChange={(value) => { setShowRankings(value); setSaved(false); }} />
-            <Toggle label="Allow Retakes" description="Enable student retakes for failed exams" value={allowRetake} onChange={(value) => { setAllowRetake(value); setSaved(false); }} />
-            <Toggle label="Auto-publish Results" description="Automatically publish results once grading is finished" value={autoPublishResults} onChange={(value) => { setAutoPublishResults(value); setSaved(false); }} />
-            <Toggle label="Notify on Publish" description="Send push notification when results are published" value={notifyOnResult} onChange={(value) => { setNotifyOnResult(value); setSaved(false); }} />
-            <Toggle label="AI Grading Assistant" description="Leverage AI models to analyze and grade open-text answers" value={aiGrading} onChange={(value) => { setAiGrading(value); setSaved(false); }} />
-            <Toggle label="Distinguish Honours" description="Highlight distinctions/honours on profiles and result sheets" value={distinguishHonours} onChange={(value) => { setDistinguishHonours(value); setSaved(false); }} />
-            <Toggle label="Exam Schedule Reminders" description="Auto-send date reminders to guardians prior to exam start" value={examReminders} onChange={(value) => { setExamReminders(value); setSaved(false); }} />
+            <ToggleRow label="Show Rankings" description="Show student class rank on result cards" value={showRankings} onChange={(value) => { setShowRankings(value); setSaved(false); }} />
+            <ToggleRow label="Allow Retakes" description="Enable student retakes for failed exams" value={allowRetake} onChange={(value) => { setAllowRetake(value); setSaved(false); }} />
+            <ToggleRow label="Auto-publish Results" description="Automatically publish results once grading is finished" value={autoPublishResults} onChange={(value) => { setAutoPublishResults(value); setSaved(false); }} />
+            <ToggleRow label="Notify on Publish" description="Send push notification when results are published" value={notifyOnResult} onChange={(value) => { setNotifyOnResult(value); setSaved(false); }} />
+            <ToggleRow label="AI Grading Assistant" description="Leverage AI models to analyze and grade open-text answers" value={aiGrading} onChange={(value) => { setAiGrading(value); setSaved(false); }} />
+            <ToggleRow label="Distinguish Honours" description="Highlight distinctions/honours on profiles and result sheets" value={distinguishHonours} onChange={(value) => { setDistinguishHonours(value); setSaved(false); }} />
+            <ToggleRow label="Exam Schedule Reminders" description="Auto-send date reminders to guardians prior to exam start" value={examReminders} onChange={(value) => { setExamReminders(value); setSaved(false); }} />
           </div>
         </>
       )}

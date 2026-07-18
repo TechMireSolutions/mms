@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { getObject, saveObject } from '@/lib/db';
 import {
   DASHBOARD_DISABLED_CARDS_KEY,
@@ -6,13 +6,18 @@ import {
 } from '@/lib/dashboardPreferences';
 import { getOrInitializeCustomWidgets } from '@/tenant/features/reports/components/pinnedWidgets/widgetDefaults';
 import type { CustomWidget } from '@/tenant/features/reports/components/PinnedWidgets';
+import { useLiveObject } from '@/hooks/useLiveObject';
 
 export function useDashboardConfig() {
-  const [disabledCardIds, setDisabledCardIds] = useState<string[]>(() =>
-    getObject<string[]>(DASHBOARD_DISABLED_CARDS_KEY, [])
+  const disabledCardIds = useLiveObject<string[]>(
+    DASHBOARD_DISABLED_CARDS_KEY,
+    [],
   );
-  const [customWidgets, setCustomWidgets] = useState<CustomWidget[]>(() =>
-    getOrInitializeCustomWidgets()
+
+  const customWidgets = useLiveObject<CustomWidget[]>(
+    DASHBOARD_WIDGETS_KEY,
+    [],
+    { loadFn: () => getOrInitializeCustomWidgets() },
   );
 
   useEffect(() => {
@@ -23,35 +28,16 @@ export function useDashboardConfig() {
     }
   }, []);
 
-  const reloadConfig = useCallback(() => {
-    setDisabledCardIds(getObject<string[]>(DASHBOARD_DISABLED_CARDS_KEY, []));
-    setCustomWidgets(getOrInitializeCustomWidgets());
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('local-database-update', reloadConfig);
-    window.addEventListener('storage', reloadConfig);
-    return () => {
-      window.removeEventListener('local-database-update', reloadConfig);
-      window.removeEventListener('storage', reloadConfig);
-    };
-  }, [reloadConfig]);
-
   const updateCustomWidgets = useCallback((customWidgetsDraft: CustomWidget[]) => {
     saveObject(DASHBOARD_WIDGETS_KEY, customWidgetsDraft);
-    setCustomWidgets(customWidgetsDraft);
-    window.dispatchEvent(new Event('local-database-update'));
   }, []);
 
   const toggleCardVisibility = useCallback((cardId: string) => {
-    setDisabledCardIds((currentDisabledCardIds) => {
-      const disabledCardIds = currentDisabledCardIds.includes(cardId)
-        ? currentDisabledCardIds.filter((id) => id !== cardId)
-        : [...currentDisabledCardIds, cardId];
-      saveObject(DASHBOARD_DISABLED_CARDS_KEY, disabledCardIds);
-      window.dispatchEvent(new Event('local-database-update'));
-      return disabledCardIds;
-    });
+    const current = getObject<string[]>(DASHBOARD_DISABLED_CARDS_KEY, []);
+    const updated = current.includes(cardId)
+      ? current.filter((id) => id !== cardId)
+      : [...current, cardId];
+    saveObject(DASHBOARD_DISABLED_CARDS_KEY, updated);
   }, []);
 
   return {

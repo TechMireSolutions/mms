@@ -55,8 +55,10 @@ export function useLiveCollection<T = any>(
     }
 
     window.addEventListener("local-database-update", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
     return () => {
       window.removeEventListener("local-database-update", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
     };
   }, [dbKey, enabled, serverSync]);
 

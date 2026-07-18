@@ -38,20 +38,6 @@ function SettingRow({ label, sub, children }: SettingRowProps) {
   );
 }
 
-interface ToggleProps {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}
-
-function Toggle({ checked, onChange }: ToggleProps) {
-  return (
-    <Switch 
-      checked={checked} 
-      onCheckedChange={onChange} 
-    />
-  );
-}
-
 export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
   const isAdmin = useIsAdminViewer();
   const { t } = useTranslation();
@@ -212,7 +198,7 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
                 </div>
               </SettingRow>
               <SettingRow label="Lock After Submit" sub="Prevent edits once attendance is submitted">
-                <Toggle checked={lockAfterSubmit} onChange={(value) => { setLockAfterSubmit(value); setSaved(false); }} />
+                <Switch checked={lockAfterSubmit} onCheckedChange={(value) => { setLockAfterSubmit(value); setSaved(false); }} />
               </SettingRow>
             </div>
           </Card>
@@ -225,7 +211,7 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
             </header>
             <div className="px-4 pl-6.5 pb-2">
               <SettingRow label="Enable QR Attendance" sub="Allow teachers to scan student QR codes to mark attendance">
-                <Toggle checked={qrEnabled} onChange={(value) => { setQrEnabled(value); setSaved(false); }} />
+                <Switch checked={qrEnabled} onCheckedChange={(value) => { setQrEnabled(value); setSaved(false); }} />
               </SettingRow>
             </div>
           </Card>
@@ -253,10 +239,10 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
                 </div>
               </SettingRow>
               <SettingRow label="Notify Parents" sub="Send SMS/WhatsApp to parent on student absence">
-                <Toggle checked={notifyParents} onChange={(value) => { setNotifyParents(value); setSaved(false); }} />
+                <Switch checked={notifyParents} onCheckedChange={(value) => { setNotifyParents(value); setSaved(false); }} />
               </SettingRow>
               <SettingRow label="Require Note for Absent" sub="Teacher must add a note when marking a student absent">
-                <Toggle checked={requireNoteForAbsent} onChange={(value) => { setRequireNoteForAbsent(value); setSaved(false); }} />
+                <Switch checked={requireNoteForAbsent} onCheckedChange={(value) => { setRequireNoteForAbsent(value); setSaved(false); }} />
               </SettingRow>
             </div>
           </Card>
@@ -269,10 +255,10 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
             </header>
             <div className="px-4 pl-6.5 pb-2">
               <SettingRow label="Offline Mode" sub="Allow teachers to mark attendance without internet; syncs when reconnected">
-                <Toggle checked={offlineEnabled} onChange={(value) => { setOfflineEnabled(value); setSaved(false); }} />
+                <Switch checked={offlineEnabled} onCheckedChange={(value) => { setOfflineEnabled(value); setSaved(false); }} />
               </SettingRow>
               <SettingRow label="Geo-location Tagging" sub="Record teacher's GPS coordinates when submitting attendance">
-                <Toggle checked={geoTagging} onChange={(value) => { setGeoTagging(value); setSaved(false); }} />
+                <Switch checked={geoTagging} onCheckedChange={(value) => { setGeoTagging(value); setSaved(false); }} />
               </SettingRow>
               <SettingRow label="Default View Layout" sub="Select default layout format for attendance records in work view">
                 <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
@@ -302,7 +288,7 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
                 <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.warningStrong)}>{t("attendance.settings.comingSoon")}</span>
               </SettingRow>
               <SettingRow label="Daily Auto-Lock" sub="Automatically lock attendance after end-of-day submission">
-                <Toggle checked={lockAfterSubmit} onChange={(value) => { setLockAfterSubmit(value); setSaved(false); }} />
+                <Switch checked={lockAfterSubmit} onCheckedChange={(value) => { setLockAfterSubmit(value); setSaved(false); }} />
               </SettingRow>
               <SettingRow label="Audit Logging" sub="Record all edits and submissions in an audit trail (always on)">
                 <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.successStrong)}>{t("attendance.settings.active")}</span>

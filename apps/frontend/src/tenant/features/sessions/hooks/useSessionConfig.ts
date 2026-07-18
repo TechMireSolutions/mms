@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   DEFAULT_SESSIONS_SETTINGS,
   SESSIONS_MODULE_CONTRACT,
@@ -6,12 +6,13 @@ import {
   mergeTabbedFields,
   type SessionsSettings,
 } from "@mms/shared";
-import { getCollection, getObject } from "@/lib/db";
+import { getObject } from "@/lib/db";
 import {
   SESSION_CONFIG_COLLECTION_KEYS,
   getSessionConfigCollectionDefaults,
 } from "@/lib/sessionConfig/sessionConfigSeeds";
 import { useModuleConfig } from "@/hooks/useModuleConfig";
+import { useLiveCollection } from "@/hooks/useLiveCollection";
 
 export function loadSessionSettings(): SessionsSettings {
   const settings = getObject<Partial<SessionsSettings>>(
@@ -42,37 +43,20 @@ export function useSessionConfig() {
     fields,
     customFields,
     updateSettings,
-    reloadConfig,
   } = useModuleConfig({
     settingsObjectKey: SESSIONS_MODULE_CONTRACT.settingsObjectKey,
     defaultSettings: DEFAULT_SESSIONS_SETTINGS,
     defaultFieldDefs: DEFAULT_SESSIONS_FIELD_DEFS,
   });
 
-  const [statuses, setStatuses] = useState<string[]>(() =>
-    getCollection(SESSION_CONFIG_COLLECTION_KEYS.statuses, defaults.statuses),
+  const statuses = useLiveCollection<string>(
+    SESSION_CONFIG_COLLECTION_KEYS.statuses,
+    defaults.statuses,
   );
-  const [types, setTypes] = useState<string[]>(() =>
-    getCollection(SESSION_CONFIG_COLLECTION_KEYS.types, defaults.types),
+  const types = useLiveCollection<string>(
+    SESSION_CONFIG_COLLECTION_KEYS.types,
+    defaults.types,
   );
-
-  const reloadCollections = useCallback(() => {
-    reloadConfig();
-    setStatuses(getCollection(SESSION_CONFIG_COLLECTION_KEYS.statuses, defaults.statuses));
-    setTypes(getCollection(SESSION_CONFIG_COLLECTION_KEYS.types, defaults.types));
-  }, [defaults, reloadConfig]);
-
-  useEffect(() => {
-    reloadCollections();
-  }, [reloadCollections]);
-
-  useEffect(() => {
-    const handleLocalDatabaseUpdate = () => {
-      queueMicrotask(reloadCollections);
-    };
-    window.addEventListener("local-database-update", handleLocalDatabaseUpdate);
-    return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
-  }, [reloadCollections]);
 
   return {
     settings,

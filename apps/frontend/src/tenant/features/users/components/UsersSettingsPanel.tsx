@@ -10,33 +10,10 @@ import { useUsersConfig } from "@/tenant/features/users/hooks/useUsersConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
-import { Switch } from "@/components/ui/switch";
+import { ToggleRow } from "@/components/ui/ToggleRow";
 import { Button } from "@/components/ui/button";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { cn } from "@/lib/utils";
-
-interface ToggleProps {
-  label: string;
-  description?: string;
-  value: boolean;
-  onChange: (newValue: boolean) => void;
-}
-
-function Toggle({ label, description, value, onChange }: ToggleProps): React.JSX.Element {
-  return (
-    <div className="flex items-center justify-between py-1 text-left">
-      <div>
-        <p className="text-[13px] font-semibold text-foreground">{label}</p>
-        {description && <p className="text-[11px] text-muted-foreground">{description}</p>}
-      </div>
-      <Switch
-        checked={value}
-        onCheckedChange={onChange}
-        aria-label={`Toggle ${label}`}
-      />
-    </div>
-  );
-}
 
 interface UsersSettingsPanelProps {
   mode?: "fields" | "preferences";
@@ -117,13 +94,13 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
 
       {showPrefs && (
         <div className="space-y-2 pt-1">
-          <Toggle
+          <ToggleRow
             label={t("users.selfRegistration")}
             description={t("users.selfRegistrationDesc")}
             value={allowSelfRegistration || false}
             onChange={(v) => { setAllowSelfRegistration(v); setSaved(false); }}
           />
-          <Toggle
+          <ToggleRow
             label={t("users.emailVerification")}
             description={t("users.emailVerificationDesc")}
             value={requireEmailVerification || false}

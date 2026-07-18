@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import {
   type StudentsSettings,
 } from "@mms/shared";
-import { getCollection, getObject } from "@/lib/db";
+import { useLiveCollection } from "@/hooks/useLiveCollection";
+import { useLiveObject } from "@/hooks/useLiveObject";
 import {
   STUDENT_CONFIG_COLLECTION_KEYS,
   STUDENT_CONFIG_OBJECT_KEYS,
@@ -19,45 +20,35 @@ export { loadStudentSettings };
 
 export function useStudentConfig() {
   const defaults = useMemo(() => getStudentConfigCollectionDefaults(), []);
-  const [settings, setSettings] = useState<StudentsSettings>(() => loadStudentSettings());
-  const [statuses, setStatuses] = useState<string[]>(() =>
-    getCollection(STUDENT_CONFIG_COLLECTION_KEYS.statuses, defaults.statuses),
+  
+  const settings = useLiveObject<StudentsSettings>(
+    "studentSettings",
+    null as any,
+    { loadFn: () => loadStudentSettings() },
   );
-  const [genderFilters, setGenderFilters] = useState<string[]>(() =>
-    getCollection(STUDENT_CONFIG_COLLECTION_KEYS.genderFilters, defaults.genderFilters),
+  
+  const statuses = useLiveCollection<string>(
+    STUDENT_CONFIG_COLLECTION_KEYS.statuses,
+    defaults.statuses,
   );
-  const [discountTypes, setDiscountTypes] = useState<Array<{ id: string; label: string; pct: number }>>(() =>
-    getCollection(STUDENT_CONFIG_COLLECTION_KEYS.discountTypes, defaults.discountTypes),
+  
+  const genderFilters = useLiveCollection<string>(
+    STUDENT_CONFIG_COLLECTION_KEYS.genderFilters,
+    defaults.genderFilters,
   );
-  const [guardianContactDefaults, setGuardianContactDefaults] = useState<StudentGuardianContactDefaults>(() =>
-    getObject(STUDENT_CONFIG_OBJECT_KEYS.guardianContactDefaults, getDefaultStudentGuardianContactDefaults()),
+  
+  const discountTypes = useLiveCollection<Array<{ id: string; label: string; pct: number }>[number]>(
+    STUDENT_CONFIG_COLLECTION_KEYS.discountTypes,
+    defaults.discountTypes,
   );
-
-  const reloadStudentConfig = useCallback(() => {
-    setSettings(loadStudentSettings());
-    setStatuses(getCollection(STUDENT_CONFIG_COLLECTION_KEYS.statuses, defaults.statuses));
-    setGenderFilters(getCollection(STUDENT_CONFIG_COLLECTION_KEYS.genderFilters, defaults.genderFilters));
-    setDiscountTypes(getCollection(STUDENT_CONFIG_COLLECTION_KEYS.discountTypes, defaults.discountTypes));
-    setGuardianContactDefaults(
-      getObject(STUDENT_CONFIG_OBJECT_KEYS.guardianContactDefaults, getDefaultStudentGuardianContactDefaults()),
-    );
-  }, [defaults]);
-
-  useEffect(() => {
-    reloadStudentConfig();
-  }, [reloadStudentConfig]);
-
-  useEffect(() => {
-    const handleLocalDatabaseUpdate = () => {
-      queueMicrotask(reloadStudentConfig);
-    };
-    window.addEventListener("local-database-update", handleLocalDatabaseUpdate);
-    return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
-  }, [reloadStudentConfig]);
+  
+  const guardianContactDefaults = useLiveObject<StudentGuardianContactDefaults>(
+    STUDENT_CONFIG_OBJECT_KEYS.guardianContactDefaults,
+    getDefaultStudentGuardianContactDefaults(),
+  );
 
   const updateSettings = useCallback((settingsDraft: StudentsSettings) => {
     saveStudentSettings(settingsDraft);
-    setSettings(settingsDraft);
   }, []);
 
   return {

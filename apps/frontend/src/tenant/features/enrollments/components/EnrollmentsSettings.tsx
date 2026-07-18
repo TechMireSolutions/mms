@@ -11,31 +11,8 @@ import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
-
-interface ToggleProps {
-  label: string;
-  description?: string;
-  value: boolean;
-  onChange: (newValue: boolean) => void;
-}
-
-function Toggle({ label, description, value, onChange }: ToggleProps): React.JSX.Element {
-  return (
-    <div className="flex items-center justify-between py-1 text-left">
-      <div>
-        <p className="text-[13px] font-semibold text-foreground">{label}</p>
-        {description && <p className="text-[11px] text-muted-foreground">{description}</p>}
-      </div>
-      <Switch
-        checked={value}
-        onCheckedChange={onChange}
-        aria-label={`Toggle ${label}`}
-      />
-    </div>
-  );
-}
 
 interface EnrollmentsSettingsProps {
   mode?: "fields" | "preferences";
@@ -154,37 +131,37 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
           </div>
 
           <div className="space-y-2 pt-1">
-            <Toggle
+            <ToggleRow
               label="Enable Waitlist"
               description="Allow students to join a waitlist when class is full"
               value={waitlistEnabled}
               onChange={(value) => { setWaitlistEnabled(value); setSaved(false); }}
             />
-            <Toggle
+            <ToggleRow
               label="Require Eligibility Check"
               description="Run eligibility rules before confirming enrollment"
               value={requireEligibilityCheck}
               onChange={(value) => { setRequireEligibilityCheck(value); setSaved(false); }}
             />
-            <Toggle
+            <ToggleRow
               label="Auto-assign to Class"
               description="System automatically places student in best available class"
               value={autoAssignClass}
               onChange={(value) => { setAutoAssignClass(value); setSaved(false); }}
             />
-            <Toggle
+            <ToggleRow
               label="Enrollment Requires Approval"
               description="Admin must approve each enrollment"
               value={enrollmentApproval}
               onChange={(value) => { setEnrollmentApproval(value); setSaved(false); }}
             />
-            <Toggle
+            <ToggleRow
               label="Allow Class Transfers"
               description="Students can be transferred between classes"
               value={allowTransfers}
               onChange={(value) => { setAllowTransfers(value); setSaved(false); }}
             />
-            <Toggle
+            <ToggleRow
               label="Re-enrollment Reminder"
               description="Remind guardians when re-enrollment period opens"
               value={reenrollmentReminder}

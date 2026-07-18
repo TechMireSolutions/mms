@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import {
   getSortedFields,
   mergeTabbedFields,
@@ -6,6 +6,7 @@ import {
   type ModuleFieldDef,
 } from "@mms/shared";
 import { getObject, saveObject } from "@/lib/db";
+import { useLiveObject } from "@/hooks/useLiveObject";
 
 export interface ModuleSettingsShape {
   fields?: Record<string, any>;
@@ -53,28 +54,17 @@ export function useModuleConfig<T extends ModuleSettingsShape>({
     );
   }, [settingsObjectKey, defaultSettings, mergeSettings]);
 
-  const [settings, setSettings] = useState<T>(() => loadSettings());
+  const settings = useLiveObject<T>(
+    settingsObjectKey,
+    defaultSettings,
+    { loadFn: () => loadSettings() },
+  );
 
-  const reloadConfig = useCallback(() => {
-    setSettings(loadSettings());
-  }, [loadSettings]);
-
-  useEffect(() => {
-    reloadConfig();
-  }, [reloadConfig]);
-
-  useEffect(() => {
-    const handleLocalDatabaseUpdate = () => {
-      queueMicrotask(reloadConfig);
-    };
-    window.addEventListener("local-database-update", handleLocalDatabaseUpdate);
-    return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
-  }, [reloadConfig]);
+  const reloadConfig = useCallback(() => {}, []);
 
   const updateSettings = useCallback((settingsDraft: T) => {
     const merged = mergeSettings(settingsDraft);
     saveObject(settingsObjectKey, merged);
-    setSettings(merged);
   }, [settingsObjectKey, mergeSettings]);
 
   const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);

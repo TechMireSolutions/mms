@@ -12,33 +12,10 @@ import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { Switch } from "@/components/ui/switch";
+import { ToggleRow } from "@/components/ui/ToggleRow";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
-
-interface ToggleProps {
-  label: string;
-  description?: string;
-  value: boolean;
-  onChange: (newValue: boolean) => void;
-}
-
-function Toggle({ label, description, value, onChange }: ToggleProps): React.JSX.Element {
-  return (
-    <div className="flex items-center justify-between py-1 text-left">
-      <div>
-        <p className="text-[13px] font-semibold text-foreground">{label}</p>
-        {description && <p className="text-[11px] text-muted-foreground">{description}</p>}
-      </div>
-      <Switch
-        checked={value}
-        onCheckedChange={onChange}
-        aria-label={`Toggle ${label}`}
-      />
-    </div>
-  );
-}
 
 export function TeachersSettings({ mode }: { mode?: "fields" | "preferences" }): React.JSX.Element {
   const { t } = useTranslation();
@@ -132,13 +109,13 @@ export function TeachersSettings({ mode }: { mode?: "fields" | "preferences" }):
             />
           </div>
 
-          <Toggle
+          <ToggleRow
             label={t("teachers.settings.autoGenerateId")}
             value={autoGenerateId}
             onChange={(v) => { setAutoGenerateId(v); setSaved(false); }}
           />
 
-          <Toggle
+          <ToggleRow
             label={t("teachers.settings.requireContactLink")}
             value={requireContactLink}
             onChange={(v) => { setRequireContactLink(v); setSaved(false); }}

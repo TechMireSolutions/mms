@@ -62,22 +62,6 @@ function Field({ label, hint = undefined, children }: FieldProps) {
   );
 }
 
-interface ToggleProps {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  ariaLabel?: string;
-}
-
-function Toggle({ checked, onChange, ariaLabel }: ToggleProps) {
-  return (
-    <Switch 
-      checked={checked} 
-      onCheckedChange={onChange} 
-      aria-label={ariaLabel || "Toggle setting"} 
-    />
-  );
-}
-
 interface FYModalProps {
   open: boolean;
   initial: Partial<FiscalYear> | null;
@@ -471,16 +455,16 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
           {/* Journal Entry Rules */}
           <SectionCard title={t("accounting.settings.secRules")} icon={null}>
             <Field label={t("accounting.settings.fields.requireNarration")} hint={t("accounting.settings.fields.requireNarrationHint")}>
-              <Toggle ariaLabel={t("accounting.settings.fields.requireNarration")} checked={requireNarration} onChange={(checked) => { setRequireNarration(checked); setSaved(false); }} />
+              <Switch aria-label={t("accounting.settings.fields.requireNarration")} checked={requireNarration} onCheckedChange={(checked) => { setRequireNarration(checked); setSaved(false); }} />
             </Field>
             <Field label={t("accounting.settings.fields.allowEditPosted")} hint={t("accounting.settings.fields.allowEditPostedHint")}>
-              <Toggle ariaLabel={t("accounting.settings.fields.allowEditPosted")} checked={allowEditPosted} onChange={(checked) => { setAllowEditPosted(checked); setSaved(false); }} />
+              <Switch aria-label={t("accounting.settings.fields.allowEditPosted")} checked={allowEditPosted} onCheckedChange={(checked) => { setAllowEditPosted(checked); setSaved(false); }} />
               {allowEditPosted && (
                 <p className="text-xs text-warning mt-1 font-semibold m-0" role="alert">{t("accounting.settings.fields.allowEditPostedWarning")}</p>
               )}
             </Field>
             <Field label={t("accounting.settings.fields.autoPostDrafts")} hint={t("accounting.settings.fields.autoPostDraftsHint")}>
-              <Toggle ariaLabel={t("accounting.settings.fields.autoPostDrafts")} checked={autoPostDrafts} onChange={(checked) => { setAutoPostDrafts(checked); setSaved(false); }} />
+              <Switch aria-label={t("accounting.settings.fields.autoPostDrafts")} checked={autoPostDrafts} onCheckedChange={(checked) => { setAutoPostDrafts(checked); setSaved(false); }} />
             </Field>
           </SectionCard>
 

@@ -12,31 +12,8 @@ import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { Switch } from "@/components/ui/switch";
+import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
-
-interface ToggleProps {
-  label: string;
-  description?: string;
-  value: boolean;
-  onChange: (value: boolean) => void;
-}
-
-function Toggle({ label, description, value, onChange }: ToggleProps): React.ReactElement {
-  return (
-    <div className="flex items-center justify-between py-1 text-left">
-      <div>
-        <p className="text-[13px] font-semibold text-foreground">{label}</p>
-        {description && <p className="text-[11px] text-muted-foreground">{description}</p>}
-      </div>
-      <Switch
-        checked={value}
-        onCheckedChange={onChange}
-        aria-label={`${label}: ${description || ""}`}
-      />
-    </div>
-  );
-}
 
 interface FinanceSettingsProps {
   mode?: "fields" | "preferences";
@@ -252,12 +229,12 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
           </div>
 
           <div className="space-y-2 pt-1" role="group" aria-label="Financial registry feature flags toggles">
-            <Toggle label="Auto-generate Invoices" description="Automatically create invoices on enrollment" value={autoGenerateInvoice} onChange={(value) => { setAutoGenerateInvoice(value); setSaved(false); }} />
-            <Toggle label="Send Invoice by Email" description="Email invoice to guardian on creation" value={sendInvoiceEmail} onChange={(value) => { setSendInvoiceEmail(value); setSaved(false); }} />
-            <Toggle label="Allow Partial Payment" description="Accept payments less than the full amount" value={allowPartialPayment} onChange={(value) => { setAllowPartialPayment(value); setSaved(false); }} />
-            <Toggle label="Require Approval for Discounts" description="Discounts need admin approval before applying" value={requireApproval} onChange={(value) => { setRequireApproval(value); setSaved(false); }} />
-            <Toggle label="Overdue Reminders" description="Send reminders for overdue invoices" value={overdueReminder} onChange={(value) => { setOverdueReminder(value); setSaved(false); }} />
-            <Toggle label="Fee Reminders" description="Send notifications when fees are due or overdue" value={feeReminders} onChange={(value) => { setFeeReminders(value); setSaved(false); }} />
+            <ToggleRow label="Auto-generate Invoices" description="Automatically create invoices on enrollment" value={autoGenerateInvoice} onChange={(value) => { setAutoGenerateInvoice(value); setSaved(false); }} />
+            <ToggleRow label="Send Invoice by Email" description="Email invoice to guardian on creation" value={sendInvoiceEmail} onChange={(value) => { setSendInvoiceEmail(value); setSaved(false); }} />
+            <ToggleRow label="Allow Partial Payment" description="Accept payments less than the full amount" value={allowPartialPayment} onChange={(value) => { setAllowPartialPayment(value); setSaved(false); }} />
+            <ToggleRow label="Require Approval for Discounts" description="Discounts need admin approval before applying" value={requireApproval} onChange={(value) => { setRequireApproval(value); setSaved(false); }} />
+            <ToggleRow label="Overdue Reminders" description="Send reminders for overdue invoices" value={overdueReminder} onChange={(value) => { setOverdueReminder(value); setSaved(false); }} />
+            <ToggleRow label="Fee Reminders" description="Send notifications when fees are due or overdue" value={feeReminders} onChange={(value) => { setFeeReminders(value); setSaved(false); }} />
           </div>
         </>
       )}

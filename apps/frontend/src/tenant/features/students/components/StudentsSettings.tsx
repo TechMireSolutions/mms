@@ -14,32 +14,8 @@ import { useStudentConfig } from "@/tenant/features/students/hooks/useStudentCon
 import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
-
-interface ToggleProps {
-  label: string;
-  description?: string;
-  value: boolean;
-  onChange: (enabled: boolean) => void;
-  ariaLabel?: string;
-}
-
-function Toggle({ label, description, value, onChange, ariaLabel }: ToggleProps): React.ReactElement {
-  return (
-    <div className="flex items-center justify-between py-1.5 text-left">
-      <div>
-        <p className="text-[13px] font-semibold text-foreground">{label}</p>
-        {description && <p className="text-[11px] text-muted-foreground">{description}</p>}
-      </div>
-      <Switch
-        checked={value}
-        onCheckedChange={onChange}
-        aria-label={ariaLabel || label}
-      />
-    </div>
-  );
-}
 
 export default function StudentsSettings({ mode }: { mode?: "fields" | "preferences" }): React.ReactElement {
   const { settings, updateSettings } = useStudentConfig();
@@ -178,7 +154,7 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
                 <span className="text-[9px] text-muted-foreground mt-1 block">e.g., 4 is "0001", 3 is "001"</span>
               </div>
             </div>
-            <Toggle
+            <ToggleRow
               label="Restart Sequence Annually"
               description="Reset GR number sequence to 0001 at the beginning of each calendar year"
               value={grNumberRestartAnnually ?? true}
@@ -187,9 +163,9 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
           </div>
 
           <div className="space-y-2 pt-1 border-t border-border/40" role="group" aria-label="Student registry feature flags toggles">
-            <Toggle label="Auto-generate Student ID" description="System assigns unique ID on registration" value={autoGenerateId} onChange={(v) => { setAutoGenerateId(v); setSaved(false); }} />
-            <Toggle label="Require Guardian Contact" description="Student must have at least one guardian linked" value={requireGuardian} onChange={(v) => { setRequireGuardian(v); setSaved(false); }} />
-            <Toggle label="Require Photo" description="Student profile photo is mandatory" value={requirePhoto} onChange={(v) => { setRequirePhoto(v); setSaved(false); }} />
+            <ToggleRow label="Auto-generate Student ID" description="System assigns unique ID on registration" value={autoGenerateId} onChange={(v) => { setAutoGenerateId(v); setSaved(false); }} />
+            <ToggleRow label="Require Guardian Contact" description="Student must have at least one guardian linked" value={requireGuardian} onChange={(v) => { setRequireGuardian(v); setSaved(false); }} />
+            <ToggleRow label="Require Photo" description="Student profile photo is mandatory" value={requirePhoto} onChange={(v) => { setRequirePhoto(v); setSaved(false); }} />
           </div>
 
           <div className="py-3 border-t border-border mt-3 flex items-center justify-between">

@@ -18,41 +18,12 @@ import { CONTACTS_MODULE_CONTRACT } from "@mms/shared";
 import { notify } from "@/lib/notify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+import { ToggleRow } from "@/components/ui/ToggleRow";
 import { useModuleFieldsEditor } from "@/tenant/hooks/useModuleFieldsEditor";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 
 const toTitleCase = (value: string): string => sharedToTitleCase(value) as string;
-
-interface ToggleProps {
-  label: string;
-  description?: string;
-  value: boolean;
-  onChange: (enabled: boolean) => void;
-  ariaLabel?: string;
-}
-
-/**
- * A simple toggle switch component.
- * @param props Component properties.
- * @returns React element.
- */
-function Toggle({ label, description, value, onChange, ariaLabel }: ToggleProps): React.JSX.Element {
-  return (
-    <div className="flex items-center justify-between py-1.5 text-left">
-      <div>
-        <p className="text-[13px] font-semibold text-foreground">{label}</p>
-        {description && <p className="text-[11px] text-muted-foreground">{description}</p>}
-      </div>
-      <Switch
-        checked={value}
-        onCheckedChange={onChange}
-        aria-label={ariaLabel || label}
-      />
-    </div>
-  );
-}
 
 interface ContactsSetupPanelProps {
   config: FieldConfig;
@@ -210,19 +181,19 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
               </div>
 
               <div className="border-t border-border/60 pt-3 mt-3 space-y-2">
-                <Toggle
+                <ToggleRow
                   label={t('contacts.setup.showDetailedSolarAge')}
                   description={t('contacts.setup.showDetailedSolarAgeDesc')}
                   value={!!prefs.showDetailedSolarAge}
                   onChange={(val) => updatePreference("showDetailedSolarAge", val)}
                 />
-                <Toggle
+                <ToggleRow
                   label={t('contacts.setup.showLunarDob')}
                   description={t('contacts.setup.showLunarDobDesc')}
                   value={!!prefs.showLunarDob}
                   onChange={(val) => updatePreference("showLunarDob", val)}
                 />
-                <Toggle
+                <ToggleRow
                   label={t('contacts.setup.showDetailedLunarAge')}
                   description={t('contacts.setup.showDetailedLunarAgeDesc')}
                   value={!!prefs.showDetailedLunarAge}

@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import {
   DEFAULT_TEACHERS_SETTINGS,
   TEACHERS_MODULE_CONTRACT,
   type TeachersSettings,
 } from "@mms/shared";
-import { getCollection, getObject, saveObject } from "@/lib/db";
+import { getObject, saveObject } from "@/lib/db";
 import {
   TEACHER_CONFIG_COLLECTION_KEYS,
   getTeacherConfigCollectionDefaults,
 } from "@/lib/teacherConfig/teacherConfigSeeds";
+import { useLiveCollection } from "@/hooks/useLiveCollection";
+import { useLiveObject } from "@/hooks/useLiveObject";
 
 function mergeTeacherSettings(settings: Partial<TeachersSettings> | null | undefined): TeachersSettings {
   return {
@@ -31,36 +33,26 @@ export function loadTeacherSettings(): TeachersSettings {
 
 export function useTeacherConfig() {
   const defaults = useMemo(() => getTeacherConfigCollectionDefaults(), []);
-  const [settings, setSettings] = useState<TeachersSettings>(() => loadTeacherSettings());
-  const [statuses, setStatuses] = useState<string[]>(() =>
-    getCollection(TEACHER_CONFIG_COLLECTION_KEYS.statuses, defaults.statuses),
+  
+  const settings = useLiveObject<TeachersSettings>(
+    "teacherSettings",
+    null as any,
+    { loadFn: () => loadTeacherSettings() },
   );
-  const [specializations, setSpecializations] = useState<string[]>(() =>
-    getCollection(TEACHER_CONFIG_COLLECTION_KEYS.specializations, defaults.specializations),
+  
+  const statuses = useLiveCollection<string>(
+    TEACHER_CONFIG_COLLECTION_KEYS.statuses,
+    defaults.statuses,
   );
-
-  const reloadTeacherConfig = useCallback(() => {
-    setSettings(loadTeacherSettings());
-    setStatuses(getCollection(TEACHER_CONFIG_COLLECTION_KEYS.statuses, defaults.statuses));
-    setSpecializations(getCollection(TEACHER_CONFIG_COLLECTION_KEYS.specializations, defaults.specializations));
-  }, [defaults]);
-
-  useEffect(() => {
-    reloadTeacherConfig();
-  }, [reloadTeacherConfig]);
-
-  useEffect(() => {
-    const handleLocalDatabaseUpdate = () => {
-      queueMicrotask(reloadTeacherConfig);
-    };
-    window.addEventListener("local-database-update", handleLocalDatabaseUpdate);
-    return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
-  }, [reloadTeacherConfig]);
+  
+  const specializations = useLiveCollection<string>(
+    TEACHER_CONFIG_COLLECTION_KEYS.specializations,
+    defaults.specializations,
+  );
 
   const updateSettings = useCallback((settingsDraft: TeachersSettings) => {
     const merged = mergeTeacherSettings(settingsDraft);
     saveObject(TEACHERS_MODULE_CONTRACT.settingsObjectKey, merged);
-    setSettings(merged);
   }, []);
 
   return {

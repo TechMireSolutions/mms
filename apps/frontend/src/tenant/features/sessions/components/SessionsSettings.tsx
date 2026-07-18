@@ -12,31 +12,8 @@ import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { Switch } from "@/components/ui/switch";
+import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
-
-interface ToggleProps {
-  label: string;
-  description?: string;
-  value: boolean;
-  onChange: (newValue: boolean) => void;
-}
-
-function Toggle({ label, description, value, onChange }: ToggleProps): React.JSX.Element {
-  return (
-    <div className="flex items-center justify-between py-1 text-left">
-      <div>
-        <p className="text-[13px] font-semibold text-foreground">{label}</p>
-        {description && <p className="text-[11px] text-muted-foreground">{description}</p>}
-      </div>
-      <Switch
-        checked={value}
-        onCheckedChange={onChange}
-        aria-label={`Toggle ${label}`}
-      />
-    </div>
-  );
-}
 
 interface SessionsSettingsProps {
   mode?: "fields" | "preferences";
@@ -188,31 +165,31 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
           </div>
 
           <div className="space-y-2 pt-1">
-            <Toggle
+            <ToggleRow
               label="Allow Overlapping Sessions"
               description="Multiple active sessions can run at the same time"
               value={allowOverlap}
               onChange={(value) => { setAllowOverlap(value); setSaved(false); }}
             />
-            <Toggle
+            <ToggleRow
               label="Auto-archive Old Sessions"
               description="Completed sessions are automatically archived"
               value={archiveOldSessions}
               onChange={(value) => { setArchiveOldSessions(value); setSaved(false); }}
             />
-            <Toggle
+            <ToggleRow
               label="Require Budget Plan"
               description="Session must have a budget before activation"
               value={requireBudget}
               onChange={(value) => { setRequireBudget(value); setSaved(false); }}
             />
-            <Toggle
+            <ToggleRow
               label="Timetable Conflict Check"
               description="Warn when class schedules overlap"
               value={timetableConflictCheck}
               onChange={(value) => { setTimetableConflictCheck(value); setSaved(false); }}
             />
-            <Toggle
+            <ToggleRow
               label="Notify on Session Start"
               description="Send notification when a new session begins"
               value={notifyOnSessionStart}
