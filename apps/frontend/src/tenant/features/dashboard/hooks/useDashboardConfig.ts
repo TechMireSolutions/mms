@@ -1,8 +1,9 @@
 import { useCallback, useEffect } from 'react';
 import { getObject, saveObject } from '@/lib/db';
 import {
-  DASHBOARD_DISABLED_CARDS_KEY,
   DASHBOARD_WIDGETS_KEY,
+  DASHBOARD_PREFERENCES_KEY,
+  DASHBOARD_DISABLED_CARDS_KEY,
   PINNED_WIDGETS_GRID_MODE_KEY,
   ENROLLMENT_CHART_TYPE_KEY,
   ENROLLMENT_CHART_COLOR_KEY,
@@ -17,68 +18,47 @@ import {
 import { getOrInitializeCustomWidgets } from '@/tenant/features/reports/components/pinnedWidgets/widgetDefaults';
 import type { CustomWidget } from '@/tenant/features/reports/components/PinnedWidgets';
 import { useLiveObject } from '@/hooks/useLiveObject';
+import {
+  DEFAULT_DASHBOARD_PREFERENCES,
+  type DashboardPreferences,
+} from '@mms/shared';
+
+export function loadDashboardPreferences(): DashboardPreferences {
+  const unified = getObject<DashboardPreferences | null>(DASHBOARD_PREFERENCES_KEY, null);
+  if (unified) {
+    return { ...DEFAULT_DASHBOARD_PREFERENCES, ...unified };
+  }
+
+  // Fallback and migrate from legacy keys on first load
+  const legacy: DashboardPreferences = {
+    disabledCardIds: getObject<string[]>(DASHBOARD_DISABLED_CARDS_KEY, DEFAULT_DASHBOARD_PREFERENCES.disabledCardIds),
+    gridMode: getObject<'comfortable' | 'compact'>(PINNED_WIDGETS_GRID_MODE_KEY, DEFAULT_DASHBOARD_PREFERENCES.gridMode),
+    enrollmentChartType: getObject<'area' | 'bar' | 'line'>(ENROLLMENT_CHART_TYPE_KEY, DEFAULT_DASHBOARD_PREFERENCES.enrollmentChartType),
+    enrollmentChartColor: getObject<'emerald' | 'blue' | 'violet' | 'amber' | 'red'>(ENROLLMENT_CHART_COLOR_KEY, DEFAULT_DASHBOARD_PREFERENCES.enrollmentChartColor),
+    enrollmentChartPeriod: Number(getObject(ENROLLMENT_CHART_PERIOD_KEY, DEFAULT_DASHBOARD_PREFERENCES.enrollmentChartPeriod)),
+    revenueChartType: getObject<'bar' | 'line' | 'area'>(REVENUE_CHART_TYPE_KEY, DEFAULT_DASHBOARD_PREFERENCES.revenueChartType),
+    revenueChartColor: getObject<string>(REVENUE_CHART_COLOR_KEY, DEFAULT_DASHBOARD_PREFERENCES.revenueChartColor),
+    attendanceChartType: getObject<'bar' | 'line' | 'area'>(ATTENDANCE_CHART_TYPE_KEY, DEFAULT_DASHBOARD_PREFERENCES.attendanceChartType),
+    attendanceChartColor: getObject<string>(ATTENDANCE_CHART_COLOR_KEY, DEFAULT_DASHBOARD_PREFERENCES.attendanceChartColor),
+    hasanatChartType: getObject<'pie' | 'bar' | 'radar'>(HASANAT_CHART_TYPE_KEY, DEFAULT_DASHBOARD_PREFERENCES.hasanatChartType),
+    hasanatChartColor: getObject<string>(HASANAT_CHART_COLOR_KEY, DEFAULT_DASHBOARD_PREFERENCES.hasanatChartColor),
+  };
+
+  saveObject(DASHBOARD_PREFERENCES_KEY, legacy);
+  return legacy;
+}
 
 export function useDashboardConfig() {
-  const disabledCardIds = useLiveObject<string[]>(
-    DASHBOARD_DISABLED_CARDS_KEY,
-    [],
+  const prefs = useLiveObject<DashboardPreferences>(
+    DASHBOARD_PREFERENCES_KEY,
+    DEFAULT_DASHBOARD_PREFERENCES,
+    { loadFn: loadDashboardPreferences }
   );
 
   const customWidgets = useLiveObject<CustomWidget[]>(
     DASHBOARD_WIDGETS_KEY,
     [],
     { loadFn: () => getOrInitializeCustomWidgets() },
-  );
-
-  const gridMode = useLiveObject<'comfortable' | 'compact'>(
-    PINNED_WIDGETS_GRID_MODE_KEY,
-    'comfortable',
-  );
-
-  const enrollmentChartType = useLiveObject<'area' | 'bar' | 'line'>(
-    ENROLLMENT_CHART_TYPE_KEY,
-    'area',
-  );
-
-  const enrollmentChartColor = useLiveObject<'emerald' | 'blue' | 'violet' | 'amber' | 'red'>(
-    ENROLLMENT_CHART_COLOR_KEY,
-    'emerald',
-  );
-
-  const enrollmentChartPeriod = useLiveObject<number>(
-    ENROLLMENT_CHART_PERIOD_KEY,
-    10,
-    { loadFn: (key, fallback) => Number(getObject(key, fallback)) },
-  );
-
-  const revenueChartType = useLiveObject<'bar' | 'line' | 'area'>(
-    REVENUE_CHART_TYPE_KEY,
-    'bar',
-  );
-
-  const revenueChartColor = useLiveObject<string>(
-    REVENUE_CHART_COLOR_KEY,
-    'mixed',
-  );
-
-  const attendanceChartType = useLiveObject<'bar' | 'line' | 'area'>(
-    ATTENDANCE_CHART_TYPE_KEY,
-    'bar',
-  );
-
-  const attendanceChartColor = useLiveObject<string>(
-    ATTENDANCE_CHART_COLOR_KEY,
-    'semantic',
-  );
-
-  const hasanatChartType = useLiveObject<'pie' | 'bar' | 'radar'>(
-    HASANAT_CHART_TYPE_KEY,
-    'pie',
-  );
-
-  const hasanatChartColor = useLiveObject<string>(
-    HASANAT_CHART_COLOR_KEY,
-    'mixed',
   );
 
   useEffect(() => {
@@ -93,66 +73,72 @@ export function useDashboardConfig() {
     saveObject(DASHBOARD_WIDGETS_KEY, customWidgetsDraft);
   }, []);
 
+  const updatePref = useCallback(<K extends keyof DashboardPreferences>(key: K, value: DashboardPreferences[K]) => {
+    const current = loadDashboardPreferences();
+    saveObject(DASHBOARD_PREFERENCES_KEY, { ...current, [key]: value });
+  }, []);
+
   const toggleCardVisibility = useCallback((cardId: string) => {
+    const disabledCardIds = prefs.disabledCardIds;
     const updated = disabledCardIds.includes(cardId)
       ? disabledCardIds.filter((id) => id !== cardId)
       : [...disabledCardIds, cardId];
-    saveObject(DASHBOARD_DISABLED_CARDS_KEY, updated);
-  }, [disabledCardIds]);
+    updatePref('disabledCardIds', updated);
+  }, [prefs.disabledCardIds, updatePref]);
 
   const updateGridMode = useCallback((mode: 'comfortable' | 'compact') => {
-    saveObject(PINNED_WIDGETS_GRID_MODE_KEY, mode);
-  }, []);
+    updatePref('gridMode', mode);
+  }, [updatePref]);
 
   const updateEnrollmentChartType = useCallback((type: 'area' | 'bar' | 'line') => {
-    saveObject(ENROLLMENT_CHART_TYPE_KEY, type);
-  }, []);
+    updatePref('enrollmentChartType', type);
+  }, [updatePref]);
 
   const updateEnrollmentChartColor = useCallback((color: 'emerald' | 'blue' | 'violet' | 'amber' | 'red') => {
-    saveObject(ENROLLMENT_CHART_COLOR_KEY, color);
-  }, []);
+    updatePref('enrollmentChartColor', color);
+  }, [updatePref]);
 
   const updateEnrollmentChartPeriod = useCallback((period: number) => {
-    saveObject(ENROLLMENT_CHART_PERIOD_KEY, period);
-  }, []);
+    updatePref('enrollmentChartPeriod', period);
+  }, [updatePref]);
 
   const updateRevenueChartType = useCallback((type: 'bar' | 'line' | 'area') => {
-    saveObject(REVENUE_CHART_TYPE_KEY, type);
-  }, []);
+    updatePref('revenueChartType', type);
+  }, [updatePref]);
 
   const updateRevenueChartColor = useCallback((color: string) => {
-    saveObject(REVENUE_CHART_COLOR_KEY, color);
-  }, []);
+    updatePref('revenueChartColor', color);
+  }, [updatePref]);
 
   const updateAttendanceChartType = useCallback((type: 'bar' | 'line' | 'area') => {
-    saveObject(ATTENDANCE_CHART_TYPE_KEY, type);
-  }, []);
+    updatePref('attendanceChartType', type);
+  }, [updatePref]);
 
   const updateAttendanceChartColor = useCallback((color: string) => {
-    saveObject(ATTENDANCE_CHART_COLOR_KEY, color);
-  }, []);
+    updatePref('attendanceChartColor', color);
+  }, [updatePref]);
 
   const updateHasanatChartType = useCallback((type: 'pie' | 'bar' | 'radar') => {
-    saveObject(HASANAT_CHART_TYPE_KEY, type);
-  }, []);
+    updatePref('hasanatChartType', type);
+  }, [updatePref]);
 
   const updateHasanatChartColor = useCallback((color: string) => {
-    saveObject(HASANAT_CHART_COLOR_KEY, color);
-  }, []);
+    updatePref('hasanatChartColor', color);
+  }, [updatePref]);
 
   return {
-    disabledCardIds,
+    disabledCardIds: prefs.disabledCardIds,
     customWidgets,
-    gridMode,
-    enrollmentChartType,
-    enrollmentChartColor,
-    enrollmentChartPeriod,
-    revenueChartType,
-    revenueChartColor,
-    attendanceChartType,
-    attendanceChartColor,
-    hasanatChartType,
-    hasanatChartColor,
+    gridMode: prefs.gridMode,
+    enrollmentChartType: prefs.enrollmentChartType,
+    enrollmentChartColor: prefs.enrollmentChartColor,
+    enrollmentChartPeriod: prefs.enrollmentChartPeriod,
+    revenueChartType: prefs.revenueChartType,
+    revenueChartColor: prefs.revenueChartColor,
+    attendanceChartType: prefs.attendanceChartType,
+    attendanceChartColor: prefs.attendanceChartColor,
+    hasanatChartType: prefs.hasanatChartType,
+    hasanatChartColor: prefs.hasanatChartColor,
     updateCustomWidgets,
     toggleCardVisibility,
     updateGridMode,
@@ -167,3 +153,4 @@ export function useDashboardConfig() {
     updateHasanatChartColor,
   };
 }
+

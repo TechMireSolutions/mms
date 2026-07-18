@@ -1112,6 +1112,7 @@ export function DashboardWidgets({
  */
 export default function PinnedWidgets({ category }: { category: string }): React.JSX.Element {
   const { t } = useTranslation();
+  const { disabledCardIds, toggleCardVisibility } = useDashboardConfig();
   const [widgets, setWidgets] = useState<CustomWidget[]>(() => {
     return getOrInitializeCustomWidgets();
   });
@@ -1141,26 +1142,10 @@ export default function PinnedWidgets({ category }: { category: string }): React
     });
   });
 
-  const [disabledCardIds, setDisabledCardIds] = useState<string[]>(() => {
-    return getObject<string[]>("mms_dashboard_disabled_cards", []);
-  });
-
   const toggleSectionSetting = (key: string) => {
     const nextSectionSettings = { ...sectionSettings, [key]: !sectionSettings[key] };
     setSectionSettings(nextSectionSettings);
     saveObject("dashboard_section_settings", nextSectionSettings);
-    window.dispatchEvent(new Event("local-database-update"));
-  };
-
-  const toggleCardVisibility = (cardId: string) => {
-    let nextDisabledCardIds: string[];
-    if (disabledCardIds.includes(cardId)) {
-      nextDisabledCardIds = disabledCardIds.filter(id => id !== cardId);
-    } else {
-      nextDisabledCardIds = [...disabledCardIds, cardId];
-    }
-    setDisabledCardIds(nextDisabledCardIds);
-    saveObject("mms_dashboard_disabled_cards", nextDisabledCardIds);
     window.dispatchEvent(new Event("local-database-update"));
   };
 

@@ -2008,3 +2008,34 @@ export const INITIAL_ATTENDANCE_FIELD_SEED: Record<string, FieldDefinition[]> = 
     { key: "notes", label: "Notes / Comments", type: "textarea", enabled: true, order: 3, required: false },
   ]
 };
+
+// ─── Dashboard Preferences ───────────────────────────────────────────────────
+
+export interface DashboardPreferences {
+  disabledCardIds: string[];
+  gridMode: "comfortable" | "compact";
+  enrollmentChartType: "area" | "bar" | "line";
+  enrollmentChartColor: "emerald" | "blue" | "violet" | "amber" | "red";
+  enrollmentChartPeriod: number;
+  revenueChartType: "bar" | "line" | "area";
+  revenueChartColor: string;
+  attendanceChartType: "bar" | "line" | "area";
+  attendanceChartColor: string;
+  hasanatChartType: "pie" | "bar" | "radar";
+  hasanatChartColor: string;
+}
+
+export const DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = {
+  disabledCardIds: [],
+  gridMode: "comfortable",
+  enrollmentChartType: "area",
+  enrollmentChartColor: "emerald",
+  enrollmentChartPeriod: 10,
+  revenueChartType: "bar",
+  revenueChartColor: "mixed",
+  attendanceChartType: "bar",
+  attendanceChartColor: "semantic",
+  hasanatChartType: "pie",
+  hasanatChartColor: "mixed",
+};
+
