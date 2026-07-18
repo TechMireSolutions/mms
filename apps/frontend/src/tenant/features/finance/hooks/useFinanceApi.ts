@@ -17,7 +17,7 @@ export function useFinanceInvoices(options?: { enabled?: boolean }) {
     responseKey: 'invoices',
     collectionName: 'finance_invoices',
     enabled: options?.enabled,
-  }).queryResult;
+  });
 }
 
 export function useFinancePayments(options?: { enabled?: boolean }) {
@@ -27,27 +27,15 @@ export function useFinancePayments(options?: { enabled?: boolean }) {
     responseKey: 'payments',
     collectionName: 'finance_payments',
     enabled: options?.enabled,
-  }).queryResult;
+  });
 }
 
 export function useFinanceInvoicesCollection(options?: { enabled?: boolean }): Invoice[] {
-  return useCollectionSync<Invoice>({
-    queryKey: FINANCE_INVOICES_QUERY_KEY,
-    apiPath: `${FINANCE_API}/invoices`,
-    responseKey: 'invoices',
-    collectionName: 'finance_invoices',
-    enabled: options?.enabled,
-  }).syncedData;
+  return useFinanceInvoices(options).syncedData;
 }
 
 export function useFinancePaymentsCollection(options?: { enabled?: boolean }): Payment[] {
-  return useCollectionSync<Payment>({
-    queryKey: FINANCE_PAYMENTS_QUERY_KEY,
-    apiPath: `${FINANCE_API}/payments`,
-    responseKey: 'payments',
-    collectionName: 'finance_payments',
-    enabled: options?.enabled,
-  }).syncedData;
+  return useFinancePayments(options).syncedData;
 }
 
 export function useFinanceMutations() {

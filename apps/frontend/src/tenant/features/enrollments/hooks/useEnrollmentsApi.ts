@@ -18,19 +18,12 @@ export function useEnrollments(options?: { enabled?: boolean }) {
     collectionName: 'enrollments',
     staleTime: 15_000,
     enabled: options?.enabled,
-  }).queryResult;
+    isSuccessQuery: (res) => res.isSuccess && (res.data?.length ?? 0) > 0,
+  });
 }
 
 export function useEnrollmentsCollection(options?: { enabled?: boolean }): Enrollment[] {
-  return useCollectionSync<Enrollment>({
-    queryKey: ENROLLMENTS_QUERY_KEY,
-    apiPath: ENROLLMENTS_API,
-    responseKey: 'enrollments',
-    collectionName: 'enrollments',
-    staleTime: 15_000,
-    enabled: options?.enabled,
-    isSuccessQuery: (res) => res.isSuccess && (res.data?.length ?? 0) > 0,
-  }).syncedData;
+  return useEnrollments(options).syncedData;
 }
 
 export function useEnrollmentsMetrics(options?: { enabled?: boolean }) {

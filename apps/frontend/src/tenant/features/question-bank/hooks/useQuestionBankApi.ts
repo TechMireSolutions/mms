@@ -26,17 +26,11 @@ export function useQuestionBankQuestions(options?: { enabled?: boolean }) {
     responseKey: 'questions',
     collectionName: 'questions',
     enabled: options?.enabled,
-  }).queryResult;
+  });
 }
 
 export function useQuestionBankQuestionsCollection(options?: { enabled?: boolean }): QuestionBankQuestion[] {
-  return useCollectionSync<QuestionBankQuestion>({
-    queryKey: QUESTION_BANK_QUESTIONS_QUERY_KEY,
-    apiPath: `${QUESTION_BANK_API}/questions`,
-    responseKey: 'questions',
-    collectionName: 'questions',
-    enabled: options?.enabled,
-  }).syncedData;
+  return useQuestionBankQuestions(options).syncedData;
 }
 
 export function useQuestionBankTests(options?: { enabled?: boolean }) {
@@ -46,17 +40,11 @@ export function useQuestionBankTests(options?: { enabled?: boolean }) {
     responseKey: 'tests',
     collectionName: 'tests',
     enabled: options?.enabled,
-  }).queryResult;
+  });
 }
 
 export function useQuestionBankTestsCollection(options?: { enabled?: boolean }): QuestionBankTest[] {
-  return useCollectionSync<QuestionBankTest>({
-    queryKey: QUESTION_BANK_TESTS_QUERY_KEY,
-    apiPath: `${QUESTION_BANK_API}/tests`,
-    responseKey: 'tests',
-    collectionName: 'tests',
-    enabled: options?.enabled,
-  }).syncedData;
+  return useQuestionBankTests(options).syncedData;
 }
 
 export function useQuestionBankResults(options?: { enabled?: boolean }) {
@@ -66,17 +54,11 @@ export function useQuestionBankResults(options?: { enabled?: boolean }) {
     responseKey: 'results',
     collectionName: 'assessment_results',
     enabled: options?.enabled,
-  }).queryResult;
+  });
 }
 
 export function useQuestionBankResultsCollection(options?: { enabled?: boolean }): QuestionBankResult[] {
-  return useCollectionSync<QuestionBankResult>({
-    queryKey: QUESTION_BANK_RESULTS_QUERY_KEY,
-    apiPath: `${QUESTION_BANK_API}/assessment-results`,
-    responseKey: 'results',
-    collectionName: 'assessment_results',
-    enabled: options?.enabled,
-  }).syncedData;
+  return useQuestionBankResults(options).syncedData;
 }
 
 export function useQuestionBankMutations() {

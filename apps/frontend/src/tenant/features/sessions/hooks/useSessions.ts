@@ -20,7 +20,7 @@ export function useSessions(options?: { enabled?: boolean }) {
     defaultData: SESSIONS_DATA,
     staleTime: 15_000,
     enabled: options?.enabled,
-  }).queryResult;
+  });
 }
 
 export function useSessionMutations() {
@@ -59,15 +59,7 @@ export function useSessionMutations() {
 
 /** Query-first sessions; falls back to localStorage cache (hydrated). */
 export function useSessionsCollection(options?: { enabled?: boolean }): Session[] {
-  return useCollectionSync<Session>({
-    queryKey: SESSIONS_QUERY_KEY,
-    apiPath: SESSIONS_API,
-    responseKey: 'sessions',
-    collectionName: 'sessions',
-    defaultData: SESSIONS_DATA,
-    staleTime: 15_000,
-    enabled: options?.enabled,
-  }).syncedData;
+  return useSessions(options).syncedData;
 }
 
 export function useSessionsMetrics(options?: { enabled?: boolean }) {

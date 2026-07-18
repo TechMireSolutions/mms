@@ -19,17 +19,11 @@ export function useExaminationsExams(options?: { enabled?: boolean }) {
     responseKey: 'exams',
     collectionName: 'exams',
     enabled: options?.enabled,
-  }).queryResult;
+  });
 }
 
 export function useExaminationsExamsCollection(options?: { enabled?: boolean }): Exam[] {
-  return useCollectionSync<Exam>({
-    queryKey: EXAMINATIONS_EXAMS_QUERY_KEY,
-    apiPath: `${EXAMINATIONS_API}/exams`,
-    responseKey: 'exams',
-    collectionName: 'exams',
-    enabled: options?.enabled,
-  }).syncedData;
+  return useExaminationsExams(options).syncedData;
 }
 
 export function useExaminationsResults(options?: { enabled?: boolean }) {
@@ -39,17 +33,11 @@ export function useExaminationsResults(options?: { enabled?: boolean }) {
     responseKey: 'results',
     collectionName: 'exam_results',
     enabled: options?.enabled,
-  }).queryResult;
+  });
 }
 
 export function useExaminationsResultsCollection(options?: { enabled?: boolean }): ExamResult[] {
-  return useCollectionSync<ExamResult>({
-    queryKey: EXAMINATIONS_RESULTS_QUERY_KEY,
-    apiPath: `${EXAMINATIONS_API}/results`,
-    responseKey: 'results',
-    collectionName: 'exam_results',
-    enabled: options?.enabled,
-  }).syncedData;
+  return useExaminationsResults(options).syncedData;
 }
 
 export function useExaminationsMetrics(options?: { enabled?: boolean }) {

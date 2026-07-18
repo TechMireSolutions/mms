@@ -22,7 +22,7 @@ export function useAttendanceRecords(options?: { enabled?: boolean }) {
     defaultData: ATTENDANCE_RECORDS,
     staleTime: 15_000,
     enabled: options?.enabled,
-  }).queryResult;
+  });
 }
 
 export function useAttendanceMutations() {
@@ -73,15 +73,7 @@ export function useAttendanceMutations() {
 
 /** Query-first attendance; falls back to localStorage cache (hydrated). */
 export function useAttendanceRecordsCollection(options?: { enabled?: boolean }): AttendanceRecord[] {
-  return useCollectionSync<AttendanceRecord>({
-    queryKey: ATTENDANCE_QUERY_KEY,
-    apiPath: ATTENDANCE_API,
-    responseKey: 'records',
-    collectionName: 'attendance_records',
-    defaultData: ATTENDANCE_RECORDS,
-    staleTime: 15_000,
-    enabled: options?.enabled,
-  }).syncedData;
+  return useAttendanceRecords(options).syncedData;
 }
 
 export function useAttendanceMetrics(selectedDate: string, options?: { enabled?: boolean }) {

@@ -21,17 +21,11 @@ export function useHasanatDenoms(options?: { enabled?: boolean }) {
     responseKey: 'denoms',
     collectionName: 'hasanat_denoms',
     enabled: options?.enabled,
-  }).queryResult;
+  });
 }
 
 export function useHasanatDenomsCollection(options?: { enabled?: boolean }): Denomination[] {
-  return useCollectionSync<Denomination>({
-    queryKey: HASANAT_DENOMS_QUERY_KEY,
-    apiPath: `${HASANAT_API}/denoms`,
-    responseKey: 'denoms',
-    collectionName: 'hasanat_denoms',
-    enabled: options?.enabled,
-  }).syncedData;
+  return useHasanatDenoms(options).syncedData;
 }
 
 export function useHasanatBatches(options?: { enabled?: boolean }) {
@@ -41,17 +35,11 @@ export function useHasanatBatches(options?: { enabled?: boolean }) {
     responseKey: 'batches',
     collectionName: 'hasanat_batches',
     enabled: options?.enabled,
-  }).queryResult;
+  });
 }
 
 export function useHasanatBatchesCollection(options?: { enabled?: boolean }): StockBatch[] {
-  return useCollectionSync<StockBatch>({
-    queryKey: HASANAT_BATCHES_QUERY_KEY,
-    apiPath: `${HASANAT_API}/batches`,
-    responseKey: 'batches',
-    collectionName: 'hasanat_batches',
-    enabled: options?.enabled,
-  }).syncedData;
+  return useHasanatBatches(options).syncedData;
 }
 
 export function useHasanatDistributions(options?: { enabled?: boolean }) {
@@ -61,17 +49,11 @@ export function useHasanatDistributions(options?: { enabled?: boolean }) {
     responseKey: 'distributions',
     collectionName: 'hasanat_distributions',
     enabled: options?.enabled,
-  }).queryResult;
+  });
 }
 
 export function useHasanatDistributionsCollection(options?: { enabled?: boolean }): Distribution[] {
-  return useCollectionSync<Distribution>({
-    queryKey: HASANAT_DISTRIBUTIONS_QUERY_KEY,
-    apiPath: `${HASANAT_API}/distributions`,
-    responseKey: 'distributions',
-    collectionName: 'hasanat_distributions',
-    enabled: options?.enabled,
-  }).syncedData;
+  return useHasanatDistributions(options).syncedData;
 }
 
 export function useHasanatRedemptions(options?: { enabled?: boolean }) {
@@ -81,17 +63,11 @@ export function useHasanatRedemptions(options?: { enabled?: boolean }) {
     responseKey: 'redemptions',
     collectionName: 'hasanat_redemptions',
     enabled: options?.enabled,
-  }).queryResult;
+  });
 }
 
 export function useHasanatRedemptionsCollection(options?: { enabled?: boolean }): Redemption[] {
-  return useCollectionSync<Redemption>({
-    queryKey: HASANAT_REDEMPTIONS_QUERY_KEY,
-    apiPath: `${HASANAT_API}/redemptions`,
-    responseKey: 'redemptions',
-    collectionName: 'hasanat_redemptions',
-    enabled: options?.enabled,
-  }).syncedData;
+  return useHasanatRedemptions(options).syncedData;
 }
 
 export function useHasanatMetrics(options?: { enabled?: boolean }) {

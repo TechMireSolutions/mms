@@ -17,17 +17,11 @@ export function useUsers(options?: { enabled?: boolean }) {
     responseKey: 'users',
     collectionName: 'users',
     enabled: options?.enabled,
-  }).queryResult;
+  });
 }
 
 export function useUsersCollection(options?: { enabled?: boolean }): WorkspaceUser[] {
-  return useCollectionSync<WorkspaceUser>({
-    queryKey: USERS_LIST_QUERY_KEY,
-    apiPath: USERS_API,
-    responseKey: 'users',
-    collectionName: 'users',
-    enabled: options?.enabled,
-  }).syncedData;
+  return useUsers(options).syncedData;
 }
 
 export function useActivityLogs(options?: { enabled?: boolean }) {
@@ -38,18 +32,11 @@ export function useActivityLogs(options?: { enabled?: boolean }) {
     collectionName: 'user_activity_logs',
     staleTime: 15_000,
     enabled: options?.enabled,
-  }).queryResult;
+  });
 }
 
 export function useActivityLogsCollection(options?: { enabled?: boolean }): ActivityLog[] {
-  return useCollectionSync<ActivityLog>({
-    queryKey: ACTIVITY_LOGS_QUERY_KEY,
-    apiPath: `${USERS_API}/activity`,
-    responseKey: 'logs',
-    collectionName: 'user_activity_logs',
-    staleTime: 15_000,
-    enabled: options?.enabled,
-  }).syncedData;
+  return useActivityLogs(options).syncedData;
 }
 
 export function useUsersMutations() {

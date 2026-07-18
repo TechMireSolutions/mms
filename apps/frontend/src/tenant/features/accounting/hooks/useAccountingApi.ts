@@ -26,18 +26,12 @@ export function useAccountingAccounts(options?: { enabled?: boolean }) {
     responseKey: 'accounts',
     collectionName: 'accounting_accounts',
     enabled: options?.enabled,
-  }).queryResult;
+    isSuccessQuery: (res) => res.isSuccess && (res.data?.length ?? 0) > 0,
+  });
 }
 
 export function useAccountingAccountsCollection(options?: { enabled?: boolean }): Account[] {
-  return useCollectionSync<Account>({
-    queryKey: ACCOUNTING_ACCOUNTS_QUERY_KEY,
-    apiPath: `${ACCOUNTING_API}/accounts`,
-    responseKey: 'accounts',
-    collectionName: 'accounting_accounts',
-    enabled: options?.enabled,
-    isSuccessQuery: (res) => res.isSuccess && (res.data?.length ?? 0) > 0,
-  }).syncedData;
+  return useAccountingAccounts(options).syncedData;
 }
 
 export function useAccountingEntries(options?: { enabled?: boolean }) {
@@ -47,18 +41,12 @@ export function useAccountingEntries(options?: { enabled?: boolean }) {
     responseKey: 'entries',
     collectionName: 'accounting_entries',
     enabled: options?.enabled,
-  }).queryResult;
+    isSuccessQuery: (res) => res.isSuccess && (res.data?.length ?? 0) > 0,
+  });
 }
 
 export function useAccountingEntriesCollection(options?: { enabled?: boolean }): JournalEntry[] {
-  return useCollectionSync<JournalEntry>({
-    queryKey: ACCOUNTING_ENTRIES_QUERY_KEY,
-    apiPath: `${ACCOUNTING_API}/entries`,
-    responseKey: 'entries',
-    collectionName: 'accounting_entries',
-    enabled: options?.enabled,
-    isSuccessQuery: (res) => res.isSuccess && (res.data?.length ?? 0) > 0,
-  }).syncedData;
+  return useAccountingEntries(options).syncedData;
 }
 
 export function useAccountingFiscalYears(options?: { enabled?: boolean }) {
@@ -68,18 +56,12 @@ export function useAccountingFiscalYears(options?: { enabled?: boolean }) {
     responseKey: 'fiscalYears',
     collectionName: 'accounting_fiscal_years',
     enabled: options?.enabled,
-  }).queryResult;
+    isSuccessQuery: (res) => res.isSuccess && (res.data?.length ?? 0) > 0,
+  });
 }
 
 export function useAccountingFiscalYearsCollection(options?: { enabled?: boolean }): FiscalYear[] {
-  return useCollectionSync<FiscalYear>({
-    queryKey: ACCOUNTING_FISCAL_YEARS_QUERY_KEY,
-    apiPath: `${ACCOUNTING_API}/fiscal-years`,
-    responseKey: 'fiscalYears',
-    collectionName: 'accounting_fiscal_years',
-    enabled: options?.enabled,
-    isSuccessQuery: (res) => res.isSuccess && (res.data?.length ?? 0) > 0,
-  }).syncedData;
+  return useAccountingFiscalYears(options).syncedData;
 }
 
 export function useAccountingMutations() {
