@@ -16,7 +16,7 @@ import {
 } from '../../services/teacherService.js';
 import type { User } from '@mms/shared';
 import { TEACHERS_MODULE_CONTRACT, computeTeachersCommandMetrics } from '@mms/shared';
-import { sendForbidden, sendDatabaseError } from '../../lib/httpErrors.js';
+import { sendForbidden } from '../../lib/httpErrors.js';
 import { teacherRecordSchema, teachersListQuerySchema, teachersNextEmployeeIdQuerySchema } from '../../validation/teacherSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 

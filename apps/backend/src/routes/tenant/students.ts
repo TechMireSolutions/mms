@@ -17,7 +17,7 @@ import {
 } from '../../services/studentService.js';
 import type { User } from '@mms/shared';
 import { STUDENTS_MODULE_CONTRACT, computeStudentsCommandMetrics } from '@mms/shared';
-import { sendForbidden, sendDatabaseError } from '../../lib/httpErrors.js';
+import { sendForbidden } from '../../lib/httpErrors.js';
 import { studentRecordSchema, studentsListQuerySchema, studentsNextGrNumberQuerySchema, studentsDuplicateCheckBodySchema } from '../../validation/studentSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { validateStudentDynamic } from '../../services/studentValidationService.js';
