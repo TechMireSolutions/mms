@@ -16,6 +16,7 @@ import {
   workspaceEnabledPatchBodySchema,
 } from '../../validation/platformSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { sendNotFound } from '../../lib/httpErrors.js';
 
 export default async function platformWorkspaceRoutes(
   fastify: FastifyInstance,
@@ -37,7 +38,7 @@ export default async function platformWorkspaceRoutes(
 
     const updated = await setWorkspaceEnabled(params.data.subdomain, body.data.enabled);
     if (!updated) {
-      return reply.status(404).send({ type: 'not_found', message: 'Workspace not found' });
+      return sendNotFound(reply, 'Workspace not found');
     }
     const workspaces = await listPlatformWorkspaces();
     const row = workspaces.find((ws) => ws.subdomain === updated.subdomain);
@@ -61,7 +62,7 @@ export default async function platformWorkspaceRoutes(
 
     const removed = await deleteWorkspace(params.data.subdomain);
     if (!removed) {
-      return reply.status(404).send({ type: 'not_found', message: 'Workspace not found' });
+      return sendNotFound(reply, 'Workspace not found');
     }
     return reply.send({ deleted: true, subdomain: removed.subdomain });
   });

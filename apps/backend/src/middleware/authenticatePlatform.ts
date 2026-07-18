@@ -2,6 +2,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { PlatformUser, PlatformRole } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { attachPlatformTokenFromCookie } from '../services/platform/platformCookieService.js';
+import { sendForbidden, sendUnauthorized } from '../lib/httpErrors.js';
 
 export interface PlatformAuthenticatedRequest extends FastifyRequest {
   platformUser: PlatformUser;
@@ -16,10 +17,7 @@ export async function authenticatePlatform(
 ): Promise<void> {
   const tenant = getRequestTenant();
   if (tenant) {
-    reply.status(403).send({
-      type: 'forbidden',
-      message: 'Platform authentication is only available on the main domain',
-    });
+    sendForbidden(reply, 'Platform authentication is only available on the main domain');
     return;
   }
 
@@ -29,19 +27,13 @@ export async function authenticatePlatform(
   try {
     await request.jwtVerify();
   } catch {
-    reply.status(401).send({
-      type: 'auth_required',
-      message: 'Platform authentication is required',
-    });
+    sendUnauthorized(reply, 'Platform authentication is required');
     return;
   }
 
   const payload = request.user as PlatformUser & { tokenType?: string };
   if (payload.tokenType !== 'platform_access') {
-    reply.status(401).send({
-      type: 'auth_required',
-      message: 'Invalid platform session',
-    });
+    sendUnauthorized(reply, 'Invalid platform session');
     return;
   }
 
@@ -62,9 +54,6 @@ export async function requireSuperUser(
 ): Promise<void> {
   const req = request as PlatformAuthenticatedRequest;
   if (!req.platformUser || req.platformUser.role !== 'super_user') {
-    reply.status(403).send({
-      type: 'forbidden',
-      message: 'Only platform super-users can access this resource',
-    });
+    sendForbidden(reply, 'Only platform super-users can access this resource');
   }
 }

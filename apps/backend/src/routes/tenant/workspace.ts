@@ -9,6 +9,7 @@ import {
   fetchPublicBrandingForSubdomain,
 } from '../../services/workspaceService.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
+import { sendNotFound } from '../../lib/httpErrors.js';
 
 export default async function workspaceRoutes(
   fastify: FastifyInstance,
@@ -16,7 +17,7 @@ export default async function workspaceRoutes(
 ): Promise<void> {
   fastify.get('/registry', async (_request, reply) => {
     if (getRequestTenant()) {
-      return reply.status(404).send({ type: 'not_found', message: 'Not found' });
+      return sendNotFound(reply, 'Not found');
     }
     const workspaces = await listPublicWorkspaces();
     return reply.send({ workspaces });
@@ -25,7 +26,7 @@ export default async function workspaceRoutes(
   fastify.get('/public-branding', async (_request, reply) => {
     const workspace = await getWorkspace();
     if (!workspace) {
-      return reply.status(404).send({ type: 'not_found', message: 'No workspace configured' });
+      return sendNotFound(reply, 'No workspace configured');
     }
     const branding = await fetchPublicBrandingForSubdomain(workspace.subdomain);
     return reply.send({ branding });
@@ -34,7 +35,7 @@ export default async function workspaceRoutes(
   fastify.get('/current', async (_request, reply) => {
     const workspace = await getWorkspace();
     if (!workspace) {
-      return reply.status(404).send({ type: 'not_found', message: 'No workspace configured' });
+      return sendNotFound(reply, 'No workspace configured');
     }
     const branding = await fetchPublicBrandingForSubdomain(workspace.subdomain);
     return reply.send({ workspace, branding });
@@ -46,7 +47,7 @@ export default async function workspaceRoutes(
       const subdomain = normalizeSubdomainInput(request.params.subdomain);
       const workspace = await getWorkspaceBySubdomain(subdomain);
       if (!workspace) {
-        return reply.status(404).send({ type: 'not_found', message: 'Workspace not found' });
+        return sendNotFound(reply, 'Workspace not found');
       }
       const branding = await fetchPublicBrandingForSubdomain(workspace.subdomain);
       return reply.send({

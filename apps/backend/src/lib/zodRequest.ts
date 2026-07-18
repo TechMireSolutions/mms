@@ -17,8 +17,9 @@ export function parseRequest<T>(schema: ZodType<T>, value: unknown): ParseResult
 export function replyValidationError(
   reply: FastifyReply,
   message = 'Invalid request',
+  extraFields?: Record<string, unknown>,
 ): ReturnType<FastifyReply['status']> {
-  return reply.status(400).send({ type: 'validation_error', message });
+  return reply.status(400).send({ type: 'validation_error', message, ...extraFields });
 }
 
 /**

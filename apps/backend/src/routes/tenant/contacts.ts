@@ -78,7 +78,7 @@ import {
 } from '../../services/contactPreferencesService.js';
 import { validateContactDynamic } from '../../services/contactValidationService.js';
 
-import { sendForbidden, sendDatabaseError } from '../../lib/httpErrors.js';
+import { sendForbidden, sendDatabaseError, sendNotFound } from '../../lib/httpErrors.js';
 import {
   registerMetricsRoute,
   registerCountRoute,
@@ -337,7 +337,7 @@ export async function contactRoutes(
     try {
       const deleted = await deleteContactsSavedReport(params.data.id, savedReportViewer(user));
       if (!deleted) {
-        return reply.status(404).send({ type: 'not_found', message: 'Saved report not found' });
+        return sendNotFound(reply, 'Saved report not found');
       }
       await auditContact(user, 'contact.saved_report.delete', `Deleted saved report ${params.data.id}`);
       return reply.send({ success: true });
@@ -466,7 +466,7 @@ export async function contactRoutes(
     try {
       const report = await touchContactsSavedReportRun(params.data.id, savedReportViewer(user));
       if (!report) {
-        return reply.status(404).send({ type: 'not_found', message: 'Saved report not found' });
+        return sendNotFound(reply, 'Saved report not found');
       }
       await auditContact(user, 'contact.saved_report.run', `Ran saved report "${report.name}"`);
       return reply.send({ report });
@@ -519,7 +519,7 @@ export async function contactRoutes(
     try {
       const contact = await getContactById(params.data.id);
       if (!contact) {
-        return reply.status(404).send({ type: 'not_found', message: 'Contact not found' });
+        return sendNotFound(reply, 'Contact not found');
       }
       return reply.send({ contact: await sanitizeOneForUser(contact, user) });
     } catch {
@@ -556,7 +556,7 @@ export async function contactRoutes(
         id: body.data.id ?? params.data.id,
       } as Contact);
       if (!updated) {
-        return reply.status(404).send({ type: 'not_found', message: 'Contact not found' });
+        return sendNotFound(reply, 'Contact not found');
       }
       const diff = before ? summarizeContactFieldChanges(before, updated) : `Updated contact ${params.data.id}`;
       await auditContact(user, 'contact.update', diff, params.data.id);
@@ -580,7 +580,7 @@ export async function contactRoutes(
     try {
       const deleted = await softDeleteContactById(params.data.id, user.id, deletionReason);
       if (!deleted) {
-        return reply.status(404).send({ type: 'not_found', message: 'Contact not found' });
+        return sendNotFound(reply, 'Contact not found');
       }
       const reasonNote = deletionReason?.trim() ? ` — ${deletionReason.trim()}` : '';
       await auditContact(user, 'contact.soft_delete', `Soft-deleted contact ${params.data.id}${reasonNote}`, params.data.id);
@@ -679,7 +679,7 @@ export async function contactRoutes(
     try {
       const restored = await restoreContactById(params.data.id, user.id);
       if (!restored) {
-        return reply.status(404).send({ type: 'not_found', message: 'Contact not found or not deleted' });
+        return sendNotFound(reply, 'Contact not found or not deleted');
       }
       await auditContact(user, 'contact.restore', `Restored contact ${params.data.id}`, params.data.id);
       return reply.send({ success: true, contact: await sanitizeOneForUser(restored, user) });

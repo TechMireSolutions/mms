@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import type { User } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import { sendDatabaseError } from '../../lib/httpErrors.js';
+import { sendDatabaseError, sendNotFound } from '../../lib/httpErrors.js';
 import { resourceIdParamsSchema } from '../../validation/commonSchemas.js';
 import { backgroundJobUpsertSchema } from '../../validation/backgroundJobSchemas.js';
 import {
@@ -40,7 +40,7 @@ export default async function backgroundJobRoutes(
     try {
       const artifact = await getExportArtifact(String(user.id), params.data.id);
       if (!artifact) {
-        return reply.status(404).send({ type: 'not_found', message: 'Export file not found or expired' });
+        return sendNotFound(reply, 'Export file not found or expired');
       }
       reply.header('Content-Type', 'text/csv; charset=utf-8');
       reply.header('Content-Disposition', `attachment; filename="${artifact.filename.replace(/"/g, '')}"`);
@@ -57,7 +57,7 @@ export default async function backgroundJobRoutes(
     try {
       const job = await getUserBackgroundJob(String(user.id), params.data.id);
       if (!job) {
-        return reply.status(404).send({ type: 'not_found', message: 'Job not found' });
+        return sendNotFound(reply, 'Job not found');
       }
       return reply.send({ job });
     } catch {
@@ -89,7 +89,7 @@ export default async function backgroundJobRoutes(
     try {
       const removed = await dismissUserBackgroundJob(String(user.id), params.data.id);
       if (!removed) {
-        return reply.status(404).send({ type: 'not_found', message: 'Job not found' });
+        return sendNotFound(reply, 'Job not found');
       }
       await deleteExportArtifact(String(user.id), params.data.id);
       return reply.send({ success: true });

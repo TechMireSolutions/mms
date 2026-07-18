@@ -20,7 +20,7 @@ import { STUDENTS_MODULE_CONTRACT, computeStudentsCommandMetrics } from '@mms/sh
 import { sendForbidden, sendDatabaseError } from '../../lib/httpErrors.js';
 import { resourceIdParamsSchema } from '../../validation/commonSchemas.js';
 import { studentRecordSchema, studentsListQuerySchema, studentsNextGrNumberQuerySchema, studentsDuplicateCheckBodySchema } from '../../validation/studentSchemas.js';
-import { parseRequest, replyValidationError, executeDynamicValidation } from '../../lib/zodRequest.js';
+import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { validateStudentDynamic } from '../../services/studentValidationService.js';
 import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
 
@@ -45,15 +45,16 @@ export default async function studentsRoutes(
     loadPageFn: (query) => loadStudentsPage(query),
     loadAllFn: loadStudents,
     loadByIdFn: loadStudentById,
+    createFn: createStudent,
+    updateFn: updateStudentById,
     deleteFn: deleteStudentById,
     restoreFn: restoreStudentById,
-    customPostRoute: true,
-    customPutRoute: true,
     computeMetricsFn: (students) => computeStudentsCommandMetrics(students),
     loadWidgetAggregatesFn: loadStudentsWidgetAggregates,
     loadByIdsFn: loadStudentsByIds,
     loadLinkedContactIdsFn: loadStudentLinkedContactIds,
     columnPreferencesObjectKey: STUDENTS_MODULE_CONTRACT.columnPreferencesObjectKey,
+    validateDynamicFn: validateStudentDynamic,
   });
 
   // --- Custom GET Next GR Number ---
@@ -87,60 +88,4 @@ export default async function studentsRoutes(
       return sendDatabaseError(reply, 'Failed to check student duplicates');
     }
   });
-
-
-  // --- Custom POST Create (Dynamic Validation) ---
-  fastify.post('/', {
-    bodyLimit: 1048576, // 1MB limit for dynamic payloads (Rule 16.2)
-    schema: { body: { type: 'object', additionalProperties: true } },
-  }, async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, 'students')) return sendForbidden(reply);
-    const parsed = parseRequest(studentRecordSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-
-    const isValid = await executeDynamicValidation(request, reply, (tenant, lang) =>
-      validateStudentDynamic(tenant, parsed.data, lang)
-    );
-    if (!isValid) return;
-
-    try {
-      const student = await createStudent(parsed.data);
-      return reply.status(201).send({ student });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to create student');
-    }
-  });
-
-  // --- Custom PUT Update (Dynamic Validation) ---
-  fastify.put('/:id', {
-    bodyLimit: 1048576, // 1MB limit for dynamic payloads (Rule 16.2)
-    schema: { body: { type: 'object', additionalProperties: true } },
-  }, async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, 'students')) return sendForbidden(reply);
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    const body = parseRequest(studentRecordSchema, request.body);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    if (!body.ok) return replyValidationError(reply, body.message);
-
-    const isValid = await executeDynamicValidation(request, reply, (tenant, lang) =>
-      validateStudentDynamic(tenant, body.data, lang)
-    );
-    if (!isValid) return;
-
-    try {
-      const updated = await updateStudentById(params.data.id, {
-        ...body.data,
-        id: body.data.id ?? params.data.id,
-      });
-      if (!updated) {
-        return reply.status(404).send({ type: 'not_found', message: 'Student not found' });
-      }
-      return reply.send({ student: updated });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to update student');
-    }
-  });
-
 }

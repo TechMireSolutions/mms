@@ -162,10 +162,7 @@ export default async function aiRoutes(
     const { prompt, systemInstruction, configId, customConfig, messages } = parsed.data;
 
     if (!prompt?.trim() && (!messages || messages.length === 0)) {
-      return reply.status(400).send({
-        type: 'validation_error',
-        message: 'Prompt or messages array is required to test AI configuration',
-      });
+      return replyValidationError(reply, 'Prompt or messages array is required to test AI configuration');
     }
 
     try {
@@ -192,10 +189,7 @@ export default async function aiRoutes(
       });
     } catch (caughtError: unknown) {
       const errorMessage = caughtError instanceof Error ? caughtError.message : 'Failed to generate content';
-      return reply.status(400).send({
-        success: false,
-        message: errorMessage,
-      });
+      return replyValidationError(reply, errorMessage, { success: false });
     }
   });
 }

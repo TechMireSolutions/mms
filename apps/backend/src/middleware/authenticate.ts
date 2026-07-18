@@ -3,6 +3,7 @@ import type { User } from '@mms/shared';
 import { isWorkspaceEnabled } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { getWorkspaceBySubdomain } from '../services/workspaceService.js';
+import { sendForbidden, sendUnauthorized } from '../lib/httpErrors.js';
 
 export interface AuthenticatedRequest extends FastifyRequest {
   user: User & { twoFactorVerified?: boolean; tokenType?: string };
@@ -18,10 +19,7 @@ export async function authenticateTenant(
   try {
     await request.jwtVerify();
   } catch {
-    reply.status(401).send({
-      type: 'auth_required',
-      message: 'Authentication is required',
-    });
+    sendUnauthorized(reply);
     return;
   }
 
@@ -29,10 +27,7 @@ export async function authenticateTenant(
   const tenant = getRequestTenant();
 
   if (!tenant) {
-    reply.status(403).send({
-      type: 'forbidden',
-      message: 'This endpoint requires a tenant subdomain',
-    });
+    sendForbidden(reply, 'This endpoint requires a tenant subdomain');
     return;
   }
 
@@ -46,26 +41,17 @@ export async function authenticateTenant(
   }
 
   if (user.workspaceSubdomain?.toLowerCase() !== tenant.toLowerCase()) {
-    reply.status(403).send({
-      type: 'forbidden',
-      message: 'Token is not valid for this workspace',
-    });
+    sendForbidden(reply, 'Token is not valid for this workspace');
     return;
   }
 
   if (user.tokenType === 'refresh') {
-    reply.status(401).send({
-      type: 'auth_required',
-      message: 'Refresh token cannot access this resource',
-    });
+    sendUnauthorized(reply, 'Refresh token cannot access this resource');
     return;
   }
 
   if (user.tokenType === 'platform_access') {
-    reply.status(401).send({
-      type: 'auth_required',
-      message: 'Platform session cannot access tenant resources',
-    });
+    sendUnauthorized(reply, 'Platform session cannot access tenant resources');
     return;
   }
 

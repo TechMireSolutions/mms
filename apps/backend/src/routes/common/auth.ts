@@ -43,6 +43,7 @@ import {
   requestLoginEmailChange,
 } from '../../services/auth/tenantLoginEmailService.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { sendForbidden, sendNotFound, sendUnauthorized } from '../../lib/httpErrors.js';
 
 export default async function authRoutes(
   fastify: FastifyInstance,
@@ -106,10 +107,7 @@ export default async function authRoutes(
       async (request, reply) => {
         const { platformUser } = request as PlatformAuthenticatedRequest;
         if (platformUser.role !== 'super_user') {
-          return reply.status(403).send({
-            type: 'forbidden',
-            message: 'Only platform super-users can create madrasas',
-          });
+          return sendForbidden(reply, 'Only platform super-users can create madrasas');
         }
 
         const parsed = parseRequest(onboardBodySchema, request.body);
@@ -173,10 +171,7 @@ export default async function authRoutes(
       const { challengeId } = parsed.data;
       const ok = await resendTwoFactorChallenge(challengeId);
       if (!ok) {
-        return reply.status(404).send({
-          type: 'not_found',
-          message: 'Challenge not found or expired',
-        });
+        return sendNotFound(reply, 'Challenge not found or expired');
       }
       return reply.send({ success: true });
     });
@@ -191,7 +186,7 @@ export default async function authRoutes(
     const user = request.user as User;
     const profile = await getTenantUserProfile(user.id);
     if (!profile) {
-      return reply.status(404).send({ type: 'not_found', message: 'Profile not found' });
+      return sendNotFound(reply, 'Profile not found');
     }
     return reply.send({ profile });
   });
@@ -216,7 +211,7 @@ export default async function authRoutes(
         id: current.contact.id,
       } as Contact);
       if (!contact) {
-        return reply.status(404).send({ type: 'not_found', message: 'Contact not found' });
+        return sendNotFound(reply, 'Contact not found');
       }
       return reply.send({ contact });
     } catch (error: unknown) {
@@ -289,7 +284,7 @@ export default async function authRoutes(
       try {
         const updated = await confirmLoginEmailChange(parsed.data.challengeId, parsed.data.code);
         if (!updated) {
-          return reply.status(404).send({ type: 'not_found', message: 'User not found' });
+          return sendNotFound(reply, 'User not found');
         }
         await establishSession(updated, fastify.jwt, reply, true);
         return reply.send({ user: updated, success: true });
@@ -313,18 +308,18 @@ export default async function authRoutes(
   fastify.post('/refresh', async (request, reply) => {
     const refreshToken = request.cookies?.[REFRESH_COOKIE];
     if (!refreshToken) {
-      return reply.status(401).send({ type: 'auth_required', message: 'Refresh token missing' });
+      return sendUnauthorized(reply, 'Refresh token missing');
     }
 
     const subdomain = getRequestTenant();
     if (!subdomain) {
-      return reply.status(403).send({ type: 'forbidden', message: 'Invalid refresh context' });
+      return sendForbidden(reply, 'Invalid refresh context');
     }
 
     const validated = await validateRefreshToken(refreshToken, subdomain);
     if (!validated) {
       clearAuthCookies(reply);
-      return reply.status(401).send({ type: 'auth_required', message: 'Invalid refresh token' });
+      return sendUnauthorized(reply, 'Invalid refresh token');
     }
 
     await deleteAuthArtifact(validated.artifactId);
@@ -334,14 +329,14 @@ export default async function authRoutes(
     );
     if (!user || user.workspaceSubdomain.toLowerCase() !== subdomain.toLowerCase()) {
       clearAuthCookies(reply);
-      return reply.status(401).send({ type: 'auth_required', message: 'Invalid refresh token' });
+      return sendUnauthorized(reply, 'Invalid refresh token');
     }
 
     const accessExpiresIn = await getJwtExpiresIn();
     const rotated = await rotateRefreshToken(refreshToken, user, fastify.jwt, accessExpiresIn);
     if (!rotated) {
       clearAuthCookies(reply);
-      return reply.status(401).send({ type: 'auth_required', message: 'Invalid refresh token' });
+      return sendUnauthorized(reply, 'Invalid refresh token');
     }
 
     setAuthCookies(reply, rotated.accessToken, rotated.refreshToken);
@@ -360,25 +355,16 @@ export default async function authRoutes(
 
     const subdomain = getRequestTenant();
     if (!subdomain) {
-      return reply.status(403).send({
-        type: 'forbidden',
-        message: 'Handoff is only available on a tenant subdomain',
-      });
+      return sendForbidden(reply, 'Handoff is only available on a tenant subdomain');
     }
 
     const result = await exchangeAuthHandoff(code);
     if (!result) {
-      return reply.status(401).send({
-        type: 'auth_required',
-        message: 'Invalid or expired handoff code',
-      });
+      return sendUnauthorized(reply, 'Invalid or expired handoff code');
     }
 
     if (result.user.workspaceSubdomain?.toLowerCase() !== subdomain.toLowerCase()) {
-      return reply.status(403).send({
-        type: 'forbidden',
-        message: 'Handoff code is not valid for this workspace',
-      });
+      return sendForbidden(reply, 'Handoff code is not valid for this workspace');
     }
 
     await establishSession(result.user, fastify.jwt, reply, true);

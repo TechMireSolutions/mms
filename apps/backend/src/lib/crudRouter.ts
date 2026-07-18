@@ -5,7 +5,7 @@ import type { ZodType } from 'zod';
 import type { User } from '@mms/shared';
 import { canReadCollection, canWriteCollection } from '../services/rbacService.js';
 import { sendForbidden, sendDatabaseError } from './httpErrors.js';
-import { parseRequest, replyValidationError } from './zodRequest.js';
+import { parseRequest, replyValidationError, executeDynamicValidation } from './zodRequest.js';
 import {
   resourceIdParamsSchema,
   softDeleteBodySchema,
@@ -100,6 +100,7 @@ export interface ResourceRoutesOptions<T extends ResourceRecord> {
   customPostRoute?: boolean;
   customPutRoute?: boolean;
   columnPreferencesObjectKey?: string;
+  validateDynamicFn?: (tenant: string, data: T, lang: string, user: User) => Promise<void>;
 }
 
 /**
@@ -126,6 +127,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
     customPostRoute = false,
     customPutRoute = false,
     columnPreferencesObjectKey,
+    validateDynamicFn,
   } = options;
 
   // GET / or GET /prefix
@@ -167,29 +169,60 @@ export function registerResourceRoutes<T extends ResourceRecord>(
 
   // POST / or POST /prefix
   if (!customPostRoute && createFn) {
-    fastify.post(prefix || '/', async (request, reply) => {
+    const routeOptions = validateDynamicFn
+      ? {
+          bodyLimit: 1048576,
+          schema: { body: { type: 'object', additionalProperties: true } },
+        }
+      : {};
+
+    fastify.post(prefix || '/', routeOptions, async (request, reply) => {
       const user = request.user as User;
       if (!canWriteCollection(user, collection)) return sendForbidden(reply);
       const parsed = parseRequest(schema, request.body);
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
+
+      if (validateDynamicFn) {
+        const isValid = await executeDynamicValidation(request, reply, (tenant, lang) =>
+          validateDynamicFn(tenant, parsed.data, lang, user)
+        );
+        if (!isValid) return;
+      }
+
       try {
         const item = await createFn(parsed.data);
         return reply.status(201).send({ [nameSingular]: item });
-      } catch {
-        return sendDatabaseError(reply, `Failed to create ${nameSingular}`);
+      } catch (error: unknown) {
+        const errMsg = error instanceof Error ? error.message : `Failed to create ${nameSingular}`;
+        return sendDatabaseError(reply, errMsg);
       }
     });
   }
 
   // PUT /:id or PUT /prefix/:id
   if (!customPutRoute && updateFn) {
-    fastify.put(`${prefix}/:id`, async (request, reply) => {
+    const routeOptions = validateDynamicFn
+      ? {
+          bodyLimit: 1048576,
+          schema: { body: { type: 'object', additionalProperties: true } },
+        }
+      : {};
+
+    fastify.put(`${prefix}/:id`, routeOptions, async (request, reply) => {
       const user = request.user as User;
       if (!canWriteCollection(user, collection)) return sendForbidden(reply);
       const params = parseRequest(resourceIdParamsSchema, request.params);
       const body = parseRequest(schema, request.body);
       if (!params.ok) return replyValidationError(reply, params.message);
       if (!body.ok) return replyValidationError(reply, body.message);
+
+      if (validateDynamicFn) {
+        const isValid = await executeDynamicValidation(request, reply, (tenant, lang) =>
+          validateDynamicFn(tenant, body.data, lang, user)
+        );
+        if (!isValid) return;
+      }
+
       try {
         const updated = await updateFn(params.data.id, {
           ...body.data,
@@ -202,8 +235,9 @@ export function registerResourceRoutes<T extends ResourceRecord>(
           });
         }
         return reply.send({ [nameSingular]: updated });
-      } catch {
-        return sendDatabaseError(reply, `Failed to update ${nameSingular}`);
+      } catch (error: unknown) {
+        const errMsg = error instanceof Error ? error.message : `Failed to update ${nameSingular}`;
+        return sendDatabaseError(reply, errMsg);
       }
     });
   }
@@ -644,6 +678,7 @@ export interface StandardTenantRoutesOptions<TQuery, TRecord extends ResourceRec
   namePlural: string;
   customPostRoute?: boolean;
   customPutRoute?: boolean;
+  validateDynamicFn?: (tenant: string, data: TRecord, lang: string, user: User) => Promise<void>;
 }
 
 /**
@@ -679,6 +714,7 @@ export function registerStandardTenantRoutes<
     restoreFn,
     customPostRoute,
     customPutRoute,
+    validateDynamicFn,
   } = options;
 
   registerStandardExtendedRoutes(fastify, {
@@ -713,6 +749,7 @@ export function registerStandardTenantRoutes<
     restoreFn,
     nameSingular,
     namePlural,
+    validateDynamicFn,
   });
 }
 

@@ -37,7 +37,7 @@ import {
 import { resourceKeyParamsSchema, resourceNameParamsSchema } from '../../validation/commonSchemas.js';
 import { parseRequest, replyValidationError, executeDynamicValidation } from '../../lib/zodRequest.js';
 import { validateAndNormalizeContacts } from '../../services/contactValidationService.js';
-import { sendDatabaseError } from '../../lib/httpErrors.js';
+import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
 
 function sanitizeUserCollections(collections: Record<string, unknown[]>, userId: string | number): void {
   const userMsgKey = `messages_u:${userId}`;
@@ -70,10 +70,7 @@ export default async function dbRoutes(
   fastify.get('/sync', async (request, reply) => {
     const user = request.user as User;
     if (!canDownloadBulkSync(user)) {
-      return reply.status(403).send({
-        type: 'forbidden',
-        message: 'Only administrators can download a database snapshot',
-      });
+      return sendForbidden(reply, 'Only administrators can download a database snapshot');
     }
     try {
       const snapshot = await fetchDatabaseSnapshot();
@@ -97,10 +94,7 @@ export default async function dbRoutes(
     async (request, reply) => {
       const user = request.user as User;
       if (!canBulkSync(user)) {
-        return reply.status(403).send({
-          type: 'forbidden',
-          message: 'Only administrators can perform bulk database sync',
-        });
+        return sendForbidden(reply, 'Only administrators can perform bulk database sync');
       }
       const parsed = parseRequest(syncPayloadSchema, request.body);
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
@@ -108,16 +102,10 @@ export default async function dbRoutes(
       try {
         const payload = parsed.data as SyncPayload;
         if (payload.collections && WORKSPACES_COLLECTION in payload.collections) {
-          return reply.status(403).send({
-            type: 'forbidden',
-            message: 'Sync payload contains global collection "workspaces"',
-          });
+          return sendForbidden(reply, 'Sync payload contains global collection "workspaces"');
         }
         if (payload.objects && PLATFORM_SUPER_USERS_OBJECT_KEY in payload.objects) {
-          return reply.status(403).send({
-            type: 'forbidden',
-            message: 'Sync payload contains global object "platform_super_users"',
-          });
+          return sendForbidden(reply, 'Sync payload contains global object "platform_super_users"');
         }
         if (payload.collections?.contacts) {
           const isValid = await executeDynamicValidation(request, reply, async (tenant, lang) => {
@@ -134,10 +122,7 @@ export default async function dbRoutes(
           sanitizeUserCollections(payload.collections, user.id);
           const disallowedCollection = Object.keys(payload.collections).find((key) => !canWriteCollection(user, key));
           if (disallowedCollection) {
-            return reply.status(403).send({
-              type: 'forbidden',
-              message: `Sync payload contains unsupported collection "${disallowedCollection}"`,
-            });
+            return sendForbidden(reply, `Sync payload contains unsupported collection "${disallowedCollection}"`);
           }
         }
         if (payload.objects) {
@@ -145,10 +130,7 @@ export default async function dbRoutes(
             isServerOnlyObjectKey(key) || !canWriteObject(user, key),
           );
           if (disallowedObject) {
-            return reply.status(403).send({
-              type: 'forbidden',
-              message: `Sync payload contains unsupported object "${disallowedObject}"`,
-            });
+            return sendForbidden(reply, `Sync payload contains unsupported object "${disallowedObject}"`);
           }
         }
         await withSyncTimeout(synchronizeData(payload));
@@ -170,10 +152,7 @@ export default async function dbRoutes(
   fastify.post('/reset', async (request, reply) => {
     const user = request.user as User;
     if (!canResetTenantData(user)) {
-      return reply.status(403).send({
-        type: 'forbidden',
-        message: 'Only administrators can reset the database',
-      });
+      return sendForbidden(reply, 'Only administrators can reset the database');
     }
     try {
       await resetToDefaults();
@@ -190,10 +169,7 @@ export default async function dbRoutes(
     const { name } = params.data;
     const user = request.user as User;
     if (!canReadCollection(user, name)) {
-      return reply.status(403).send({
-        type: 'forbidden',
-        message: `You do not have permission to read collection "${name}"`,
-      });
+      return sendForbidden(reply, `You do not have permission to read collection "${name}"`);
     }
     try {
       const storageName = name === 'messages' ? `messages_u:${user.id}` : name;
@@ -217,10 +193,7 @@ export default async function dbRoutes(
     const { name } = params.data;
     const user = request.user as User;
     if (!canWriteCollection(user, name)) {
-      return reply.status(403).send({
-        type: 'forbidden',
-        message: `You do not have permission to write collection "${name}"`,
-      });
+      return sendForbidden(reply, `You do not have permission to write collection "${name}"`);
     }
     try {
       const bodyParsed = parseRequest(collectionSaveBodySchema, request.body);
@@ -271,10 +244,7 @@ export default async function dbRoutes(
         });
       }
       if (!canReadObject(user, key)) {
-        return reply.status(403).send({
-          type: 'forbidden',
-          message: `You do not have permission to read object "${key}"`,
-        });
+        return sendForbidden(reply, `You do not have permission to read object "${key}"`);
       }
       const objectValue = await fetchObject(key);
       if (objectValue === null) {
@@ -296,16 +266,10 @@ export default async function dbRoutes(
     const { key } = params.data;
     const user = request.user as User;
     if (isServerOnlyObjectKey(key)) {
-      return reply.status(403).send({
-        type: 'forbidden',
-        message: `Object key "${key}" cannot be modified through this endpoint`,
-      });
+      return sendForbidden(reply, `Object key "${key}" cannot be modified through this endpoint`);
     }
     if (!canWriteObject(user, key)) {
-      return reply.status(403).send({
-        type: 'forbidden',
-        message: `You do not have permission to write object "${key}"`
-      });
+      return sendForbidden(reply, `You do not have permission to write object "${key}"`);
     }
     try {
       const raw = request.body;

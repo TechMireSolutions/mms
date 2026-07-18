@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { parseImageUploadPurpose, resolveUploadsRoot } from '../../config/uploadConfig.js';
 import { authenticateUploader } from '../../middleware/authenticateUploader.js';
 import { saveUploadedImage } from '../../services/imageAssetService.js';
+import { replyValidationError } from '../../lib/zodRequest.js';
 
 export default async function uploadRoutes(
   fastify: FastifyInstance,
@@ -23,10 +24,7 @@ export default async function uploadRoutes(
         const purpose = parseImageUploadPurpose(request.query.purpose);
         const file = await request.file();
         if (!file) {
-          return reply.status(400).send({
-            type: 'validation_error',
-            message: 'Image file is required',
-          });
+          return replyValidationError(reply, 'Image file is required');
         }
 
         const buffer = await file.toBuffer();
@@ -50,19 +48,13 @@ export default async function uploadRoutes(
       try {
         const file = await request.file();
         if (!file) {
-          return reply.status(400).send({
-            type: 'validation_error',
-            message: 'File is required',
-          });
+          return replyValidationError(reply, 'File is required');
         }
 
         const buffer = await file.toBuffer();
         const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 MB
         if (buffer.length > MAX_ATTACHMENT_SIZE) {
-          return reply.status(400).send({
-            type: 'validation_error',
-            message: 'File size exceeds limit of 10 MB',
-          });
+          return replyValidationError(reply, 'File size exceeds limit of 10 MB');
         }
 
         const root = resolveUploadsRoot();

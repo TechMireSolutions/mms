@@ -47,10 +47,7 @@ export default async function emailRoutes(
     const body = parsed.data;
 
     if (!isEmailProviderId(body.providerId)) {
-      return reply.status(400).send({
-        type: 'validation_error',
-        message: 'Unsupported email provider',
-      });
+      return replyValidationError(reply, 'Unsupported email provider');
     }
 
     const current = await loadEmailIntegrationConfig();
@@ -87,9 +84,7 @@ export default async function emailRoutes(
     const verify = await verifyEmailTransport();
     if (!verify.sent) {
       await markEmailIntegrationTestResult(false, verify.message ?? verify.reason);
-      return reply.status(400).send({
-        type: 'validation_error',
-        message: verify.message ?? 'Email is not configured',
+      return replyValidationError(reply, verify.message ?? 'Email is not configured', {
         reason: verify.reason,
       });
     }
@@ -106,9 +101,7 @@ export default async function emailRoutes(
 
     if (!testSend.sent) {
       await markEmailIntegrationTestResult(false, testSend.message ?? testSend.reason);
-      return reply.status(400).send({
-        type: 'validation_error',
-        message: testSend.message ?? 'Test email could not be sent',
+      return replyValidationError(reply, testSend.message ?? 'Test email could not be sent', {
         reason: testSend.reason,
       });
     }
@@ -134,9 +127,7 @@ export default async function emailRoutes(
     );
 
     if (!result.sent) {
-      return reply.status(400).send({
-        type: 'validation_error',
-        message: result.message ?? 'Verification email could not be sent',
+      return replyValidationError(reply, result.message ?? 'Verification email could not be sent', {
         reason: result.reason,
         delivered: false,
       });

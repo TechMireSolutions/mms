@@ -30,7 +30,7 @@ import {
 } from '../../services/platform/platformProfileService.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
-import { sendMappedError } from '../../lib/httpErrors.js';
+import { sendMappedError, sendForbidden } from '../../lib/httpErrors.js';
 import {
   platformChangePasswordBodySchema,
   platformPasswordForgotBodySchema,
@@ -81,10 +81,7 @@ export default async function platformAuthRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', async (request, reply) => {
     if (getRequestTenant()) {
-      return reply.status(403).send({
-        type: 'forbidden',
-        message: 'Platform actions are only available on the main domain',
-      });
+      return sendForbidden(reply, 'Platform actions are only available on the main domain');
     }
   });
 
