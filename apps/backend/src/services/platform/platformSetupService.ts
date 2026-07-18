@@ -52,12 +52,28 @@ export type PlatformSetupErrorCode =
   | 'user_exists';
 
 export class PlatformSetupError extends Error {
+  readonly statusCode: number;
+
   constructor(
     readonly code: PlatformSetupErrorCode,
     message: string,
   ) {
     super(message);
     this.name = 'PlatformSetupError';
+
+    const statuses: Record<PlatformSetupErrorCode, number> = {
+      setup_not_needed: 409,
+      invalid_email: 400,
+      invalid_name: 400,
+      password_too_short: 400,
+      password_weak: 400,
+      email_send_failed: 502,
+      smtp_required: 503,
+      invalid_setup: 404,
+      invalid_code: 401,
+      user_exists: 409,
+    };
+    this.statusCode = statuses[code] ?? 400;
   }
 }
 

@@ -44,12 +44,25 @@ export type PlatformPasswordResetErrorCode =
   | 'invalid_code';
 
 export class PlatformPasswordResetError extends Error {
+  readonly statusCode: number;
+
   constructor(
     readonly code: PlatformPasswordResetErrorCode,
     message: string,
   ) {
     super(message);
     this.name = 'PlatformPasswordResetError';
+
+    const statuses: Record<PlatformPasswordResetErrorCode, number> = {
+      invalid_email: 400,
+      password_too_short: 400,
+      password_weak: 400,
+      email_send_failed: 502,
+      smtp_required: 503,
+      invalid_reset: 404,
+      invalid_code: 401,
+    };
+    this.statusCode = statuses[code] ?? 400;
   }
 }
 

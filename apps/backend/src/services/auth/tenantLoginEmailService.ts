@@ -28,6 +28,8 @@ export interface LoginEmailChangePayload {
 }
 
 export class LoginEmailChangeError extends Error {
+  readonly statusCode: number;
+
   constructor(
     readonly code:
       | 'invalid_credentials'
@@ -39,6 +41,22 @@ export class LoginEmailChangeError extends Error {
   ) {
     super(message);
     this.name = 'LoginEmailChangeError';
+
+    const statuses: Record<
+      | 'invalid_credentials'
+      | 'invalid_code'
+      | 'not_found'
+      | 'conflict'
+      | 'email_send_failed',
+      number
+    > = {
+      invalid_credentials: 401,
+      invalid_code: 401,
+      not_found: 404,
+      conflict: 409,
+      email_send_failed: 503,
+    };
+    this.statusCode = statuses[code] ?? 400;
   }
 }
 

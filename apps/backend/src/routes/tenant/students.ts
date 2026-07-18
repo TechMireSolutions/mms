@@ -62,17 +62,13 @@ export default async function studentsRoutes(
     if (!canReadCollection(user, 'students')) return sendForbidden(reply);
     const parsed = parseRequest(studentsNextGrNumberQuerySchema, request.query);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const query = parsed.data;
-      const grNumber = await computeNextGrNumberForDate(query.registeredDate, {
-        grNumberTemplate: query.template ?? '{seq}-{year}',
-        grNumberDigits: query.digits ?? 4,
-        grNumberRestartAnnually: query.restartAnnually ?? true,
-      });
-      return reply.send({ grNumber });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to compute GR number');
-    }
+    const query = parsed.data;
+    const grNumber = await computeNextGrNumberForDate(query.registeredDate, {
+      grNumberTemplate: query.template ?? '{seq}-{year}',
+      grNumberDigits: query.digits ?? 4,
+      grNumberRestartAnnually: query.restartAnnually ?? true,
+    });
+    return reply.send({ grNumber });
   });
 
   // --- Custom POST Duplicate Check ---
@@ -81,10 +77,7 @@ export default async function studentsRoutes(
     if (!canWriteCollection(user, 'students')) return sendForbidden(reply);
     const parsed = parseRequest(studentsDuplicateCheckBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      return reply.send(await checkStudentRegistrationDuplicate(parsed.data));
-    } catch {
-      return sendDatabaseError(reply, 'Failed to check student duplicates');
-    }
+    const result = await checkStudentRegistrationDuplicate(parsed.data);
+    return reply.send(result);
   });
 }

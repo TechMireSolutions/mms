@@ -22,15 +22,7 @@ export function sendNotFound(
   return reply.status(404).send({ type: 'not_found', message });
 }
 
-export function sendMappedError<Code extends string>(
-  reply: FastifyReply,
-  error: { code: Code; message: string },
-  statusByCode: Record<Code, number>,
-  defaultStatus = 400,
-): ReturnType<FastifyReply['status']> {
-  const status = statusByCode[error.code] ?? defaultStatus;
-  return reply.status(status).send({ type: error.code, message: error.message } as any);
-}
+
 
 export function sendDatabaseError(
   reply: FastifyReply,

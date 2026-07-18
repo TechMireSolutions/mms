@@ -3,7 +3,7 @@ import type { ZodType } from 'zod';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { canReadCollection, canWriteCollection } from '../../services/rbacService.js';
 import type { User } from '@mms/shared';
-import { sendForbidden, sendDatabaseError } from '../../lib/httpErrors.js';
+import { sendForbidden } from '../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import {
   loadCustomTabs,
@@ -52,12 +52,8 @@ export default async function customTabRoutes(
     const parsed = parseRequest(customTabQuerySchema, request.query);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     
-    try {
-      const tabs = await loadCustomTabs(parsed.data.moduleId);
-      return reply.send({ tabs });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to load custom tabs');
-    }
+    const tabs = await loadCustomTabs(parsed.data.moduleId);
+    return reply.send({ tabs });
   });
 
   // PUT /api/custom-tabs/bulk
@@ -80,13 +76,8 @@ export default async function customTabRoutes(
     const bodyParsed = parseRequest(customTabUpdateSchema, request.body);
     if (!bodyParsed.ok) return replyValidationError(reply, bodyParsed.message);
     
-    try {
-      const updated = await updateCustomTab(paramsParsed.data.id, bodyParsed.data);
-      return reply.send({ tab: updated });
-    } catch (err) {
-      const errMsg = err instanceof Error ? err.message : 'Failed to update custom tab';
-      return sendDatabaseError(reply, errMsg);
-    }
+    const updated = await updateCustomTab(paramsParsed.data.id, bodyParsed.data);
+    return reply.send({ tab: updated });
   });
 }
 

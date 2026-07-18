@@ -28,21 +28,14 @@ export default async function platformUsersRoutes(
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     const { name, email, password } = parsed.data;
 
-    try {
-      const passwordHash = await hashPassword(password);
-      const stored = await createVerifiedPlatformUser({
-        name: name.trim(),
-        email,
-        passwordHash,
-        role: 'admin',
-      });
+    const passwordHash = await hashPassword(password);
+    const stored = await createVerifiedPlatformUser({
+      name: name.trim(),
+      email,
+      passwordHash,
+      role: 'admin',
+    });
 
-      return reply.send({ user: toPlatformUserProfile(stored) });
-    } catch (error: unknown) {
-      return reply.status(409).send({
-        type: 'conflict',
-        message: error instanceof Error ? error.message : 'Failed to create administrator',
-      });
-    }
+    return reply.send({ user: toPlatformUserProfile(stored) });
   });
 }

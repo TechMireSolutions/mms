@@ -17,6 +17,15 @@ export async function hasPlatformUsers(): Promise<boolean> {
   return (await countPlatformUserRows()) > 0;
 }
 
+export class PlatformUserConflictError extends Error {
+  readonly statusCode = 409;
+  readonly code = 'conflict';
+  constructor(message: string) {
+    super(message);
+    this.name = 'PlatformUserConflictError';
+  }
+}
+
 export async function createVerifiedPlatformUser(input: {
   email: string;
   name: string;
@@ -25,7 +34,7 @@ export async function createVerifiedPlatformUser(input: {
 }): Promise<StoredPlatformUser> {
   const existing = await findPlatformUserByEmail(input.email);
   if (existing) {
-    throw new Error('Platform user already exists');
+    throw new PlatformUserConflictError('Platform user already exists');
   }
 
   const count = await countPlatformUsers();

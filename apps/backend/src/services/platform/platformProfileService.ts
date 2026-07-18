@@ -14,12 +14,23 @@ export type PlatformProfileErrorCode =
   | 'user_not_found';
 
 export class PlatformProfileError extends Error {
+  readonly statusCode: number;
+
   constructor(
     readonly code: PlatformProfileErrorCode,
     message: string,
   ) {
     super(message);
     this.name = 'PlatformProfileError';
+
+    const statuses: Record<PlatformProfileErrorCode, number> = {
+      invalid_name: 400,
+      password_too_short: 400,
+      password_weak: 400,
+      invalid_current_password: 401,
+      user_not_found: 404,
+    };
+    this.statusCode = statuses[code] ?? 400;
   }
 }
 

@@ -60,13 +60,9 @@ export default async function teachersRoutes(
     if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
     const parsed = parseRequest(teachersNextEmployeeIdQuerySchema, request.query);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const employeeId = await computeNextTeacherEmployeeIdForSettings({
-        idPrefix: parsed.data.prefix ?? 'TCH',
-      });
-      return reply.send({ employeeId });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to compute employee id');
-    }
+    const employeeId = await computeNextTeacherEmployeeIdForSettings({
+      idPrefix: parsed.data.prefix ?? 'TCH',
+    });
+    return reply.send({ employeeId });
   });
 }

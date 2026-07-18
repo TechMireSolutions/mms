@@ -39,7 +39,6 @@ import {
 } from '../../validation/profileSchemas.js';
 import {
   confirmLoginEmailChange,
-  LoginEmailChangeError,
   requestLoginEmailChange,
 } from '../../services/auth/tenantLoginEmailService.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
@@ -251,50 +250,27 @@ export default async function authRoutes(
       const user = request.user as User;
       const parsed = parseRequest(requestLoginEmailChangeBodySchema, request.body ?? {});
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
-      try {
-        const result = await requestLoginEmailChange(
-          user.id,
-          parsed.data.newLoginEmail,
-          parsed.data.currentPassword,
-        );
-        return reply.send({
-          success: true,
-          challengeId: result.challengeId,
-          devCode: result.devCode,
-        });
-      } catch (error: unknown) {
-        if (error instanceof LoginEmailChangeError) {
-          const status =
-            error.code === 'invalid_credentials'
-              ? 401
-              : error.code === 'conflict'
-                ? 409
-                : error.code === 'email_send_failed'
-                  ? 503
-                  : 400;
-          return reply.status(status).send({ type: error.code, message: error.message });
-        }
-        throw error;
-      }
+      const result = await requestLoginEmailChange(
+        user.id,
+        parsed.data.newLoginEmail,
+        parsed.data.currentPassword,
+      );
+      return reply.send({
+        success: true,
+        challengeId: result.challengeId,
+        devCode: result.devCode,
+      });
     });
 
     inner.post('/login-email/confirm', { preHandler: authenticateTenant }, async (request, reply) => {
       const parsed = parseRequest(confirmLoginEmailChangeBodySchema, request.body ?? {});
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
-      try {
-        const updated = await confirmLoginEmailChange(parsed.data.challengeId, parsed.data.code);
-        if (!updated) {
-          return sendNotFound(reply, 'User not found');
-        }
-        await establishSession(updated, fastify.jwt, reply, true);
-        return reply.send({ user: updated, success: true });
-      } catch (error: unknown) {
-        if (error instanceof LoginEmailChangeError) {
-          const status = error.code === 'conflict' ? 409 : 401;
-          return reply.status(status).send({ type: error.code, message: error.message });
-        }
-        throw error;
+      const updated = await confirmLoginEmailChange(parsed.data.challengeId, parsed.data.code);
+      if (!updated) {
+        return sendNotFound(reply, 'User not found');
       }
+      await establishSession(updated, fastify.jwt, reply, true);
+      return reply.send({ user: updated, success: true });
     });
   });
 
