@@ -2,9 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useStandardModuleConfig } from '@/hooks/useStandardModuleConfig';
 import {
-  QUESTION_BANK_FIELD_LABEL_KEYS,
   mergeQuestionCategories,
-  type AppTranslationKey,
   type ModuleFieldDef,
   type QuestionBankSettings,
   type QuestionCategory,
@@ -12,6 +10,7 @@ import {
   type QuestionDifficulty,
   type QuestionType,
 } from '@mms/shared';
+import { useQuestionBankLabels } from './useQuestionBankLabels';
 
 export interface QuestionBankConfig {
   settings: QuestionBankSettings;
@@ -35,6 +34,7 @@ export function useQuestionBankConfig(
   questions?: readonly import('@mms/shared').QuestionCategoryRef[],
 ): QuestionBankConfig {
   const { t } = useTranslation();
+  const { fieldLabel, typeLabel, difficultyLabel, questionLanguageLabel } = useQuestionBankLabels(t);
   
   const {
     settings,
@@ -60,31 +60,6 @@ export function useQuestionBankConfig(
         .filter((entry) => entry.enabled)
         .map((entry) => entry.id),
     [settings.questionTypes],
-  );
-
-  const fieldLabel = useCallback(
-    (fieldId: string, fallback?: string): string => {
-      const key = QUESTION_BANK_FIELD_LABEL_KEYS[fieldId];
-      return key ? t(key) : (fallback ?? fieldId);
-    },
-    [t],
-  );
-
-  const typeLabel = useCallback(
-    (typeId: string): string => t(`questionBank.type.${typeId}` as AppTranslationKey),
-    [t],
-  );
-
-  const difficultyLabel = useCallback(
-    (difficultyId: string): string =>
-      t(`questionBank.difficulty.${difficultyId}` as AppTranslationKey),
-    [t],
-  );
-
-  const questionLanguageLabel = useCallback(
-    (languageCode: string): string =>
-      t(`questionBank.language.${languageCode}` as AppTranslationKey),
-    [t],
   );
 
   const categories = useMemo(

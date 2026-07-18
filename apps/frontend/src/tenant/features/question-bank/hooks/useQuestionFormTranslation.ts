@@ -1,10 +1,10 @@
 import { useCallback, useMemo } from 'react';
 import {
-  QUESTION_BANK_FIELD_LABEL_KEYS,
   resolveQuestionFormLanguage,
   translateAppParams,
   type AppTranslationKey,
 } from '@mms/shared';
+import { useQuestionBankLabels } from './useQuestionBankLabels';
 
 export function useQuestionFormTranslation(
   systemLanguage: string,
@@ -34,30 +34,7 @@ export function useQuestionFormTranslation(
     [formLanguage],
   );
 
-  const fieldLabel = useCallback(
-    (fieldId: string, fallback?: string): string => {
-      const key = QUESTION_BANK_FIELD_LABEL_KEYS[fieldId];
-      return key ? tForm(key) : (fallback ?? fieldId);
-    },
-    [tForm],
-  );
-
-  const typeLabel = useCallback(
-    (typeId: string): string => tForm(`questionBank.type.${typeId}` as AppTranslationKey),
-    [tForm],
-  );
-
-  const difficultyLabel = useCallback(
-    (difficultyId: string): string =>
-      tForm(`questionBank.difficulty.${difficultyId}` as AppTranslationKey),
-    [tForm],
-  );
-
-  const questionLanguageLabel = useCallback(
-    (languageCode: string): string =>
-      tForm(`questionBank.language.${languageCode}` as AppTranslationKey),
-    [tForm],
-  );
+  const { fieldLabel, typeLabel, difficultyLabel, questionLanguageLabel } = useQuestionBankLabels(tForm);
 
   return {
     formLanguage,
