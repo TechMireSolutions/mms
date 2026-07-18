@@ -20,7 +20,7 @@ import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { Exam, ExamResult } from '@/lib/data/examinationData';
 import { useExaminationExamColumnLayout } from "@/tenant/features/examinations/hooks/useExaminationExamColumnLayout";
 import { useExaminationResultsColumnLayout } from "@/tenant/features/examinations/hooks/useExaminationResultsColumnLayout";
-import { useExaminationConfig } from "@/tenant/features/examinations/hooks/useExaminationConfig";
+import { useExaminationConfig } from "@/hooks/useStandardModuleConfig";
 import {
   useExaminationsExamsCollection,
   useExaminationsResultsCollection,

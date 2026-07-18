@@ -10,7 +10,7 @@ import {
 } from "@mms/shared";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
-import { useStudentConfig } from "@/tenant/features/students/hooks/useStudentConfig";
+import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ToggleRow } from "@/components/ui/ToggleRow";

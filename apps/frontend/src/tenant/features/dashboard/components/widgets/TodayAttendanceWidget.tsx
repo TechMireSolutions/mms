@@ -3,7 +3,7 @@ import { UserCheck, Users, AlertTriangle, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/lib/config/routes";
 import { AttendanceStatus } from '@/lib/data/attendanceData';
-import { useAttendanceConfig } from "@/tenant/features/attendance/hooks/useAttendanceConfig";
+import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
 import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { useTranslation } from "@/hooks/useTranslation";

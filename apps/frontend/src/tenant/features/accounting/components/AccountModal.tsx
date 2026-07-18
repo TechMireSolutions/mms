@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { BookOpen } from "lucide-react";
 import { ACCOUNT_TYPES, ACCOUNT_SUBTYPES, ACCOUNT_TYPE_META, Account, AccountType } from '@/lib/data/accountingData';
-import { useAccountingConfig } from "@/tenant/features/accounting/hooks/useAccountingConfig";
+import { useAccountingConfig } from "@/hooks/useStandardModuleConfig";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormModal } from "@/components/ui/FormModal";
 import { useTranslation } from "@/hooks/useTranslation";

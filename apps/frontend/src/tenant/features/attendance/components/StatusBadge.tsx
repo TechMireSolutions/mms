@@ -1,5 +1,5 @@
 import React from "react";
-import { useAttendanceConfig } from "@/tenant/features/attendance/hooks/useAttendanceConfig";
+import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
 import { getAttendanceStatusInfo } from "@/lib/data/attendanceData";
 import { useTranslation } from "@/hooks/useTranslation";
 import { StatusBadge as GlobalStatusBadge } from "@/components/ui/StatusBadge";

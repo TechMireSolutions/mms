@@ -16,7 +16,7 @@ import { formatMoney } from "@mms/shared";
 import { Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
-import { useEnrollmentConfig } from "@/tenant/features/enrollments/hooks/useEnrollmentConfig";
+import { useEnrollmentConfig } from "@/hooks/useStandardModuleConfig";
 import { Button } from "@/components/ui/button";
 
 const STEPS: Step[] = [

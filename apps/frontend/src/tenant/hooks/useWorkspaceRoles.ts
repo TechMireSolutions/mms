@@ -3,7 +3,7 @@ import {
   cloneDefaultWorkspaceRoles,
   type WorkspaceRole,
 } from "@mms/shared";
-import { useUsersConfig } from "@/tenant/features/users/hooks/useUsersConfig";
+import { useUsersConfig } from "@/hooks/useStandardModuleConfig";
 
 /** Live workspace roles from `users_settings` (system + custom). */
 export function useWorkspaceRoles(): WorkspaceRole[] {

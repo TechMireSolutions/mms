@@ -5,7 +5,7 @@ import {
   EXAMINATIONS_TAB_REGISTRY,
   INITIAL_EXAMINATIONS_FIELD_SEED,
 } from "@mms/shared";
-import { useExaminationConfig } from "@/tenant/features/examinations/hooks/useExaminationConfig";
+import { useExaminationConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";

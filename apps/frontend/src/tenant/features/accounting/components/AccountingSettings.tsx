@@ -11,7 +11,7 @@ import {
   INITIAL_ACCOUNTING_FIELD_SEED,
   type AppTranslationKey
 } from "@mms/shared";
-import { useAccountingConfig } from "@/tenant/features/accounting/hooks/useAccountingConfig";
+import { useAccountingConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormModal } from "@/components/ui/FormModal";

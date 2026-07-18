@@ -7,7 +7,7 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Distribution, Denomination, StockBatch } from '@/lib/data/hasanatData';
-import { useHasanatConfig } from "@/tenant/features/hasanat/hooks/useHasanatConfig";
+import { useHasanatConfig } from "@/hooks/useStandardModuleConfig";
 import {
   DEFAULT_HASANAT_FIELD_DEFS,
 } from "@mms/shared";

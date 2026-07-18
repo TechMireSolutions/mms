@@ -17,7 +17,7 @@ import { useContactsByIds } from '@/tenant/features/contacts/hooks/useContacts';
 import { calcAge, type Student } from '@/lib/data/studentsData';
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { AVATAR_GRADIENT_ROTATION } from "@/lib/semanticTone";
-import { useStudentConfig } from "@/tenant/features/students/hooks/useStudentConfig";
+import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 
 interface StudentDetailProps {
   student: Student;

@@ -28,7 +28,7 @@ import { useTeacherColumnLayout } from '@/tenant/features/teachers/hooks/useTeac
 import { ModuleColumnCustomizer } from '@/components/ui/ModuleColumnCustomizer';
 import { TeachersCommandMetrics } from "@/tenant/features/teachers/components/TeachersCommandMetrics";
 import { ListPagination } from "@/components/ui/ListPagination";
-import { useTeacherConfig } from '@/tenant/features/teachers/hooks/useTeacherConfig';
+import { useTeacherConfig } from '@/hooks/useStandardModuleConfig';
 import { notify } from '@/lib/notify';
 
 function teacherStatusLabel(t: (key: AppTranslationKey) => string, status: string): string {

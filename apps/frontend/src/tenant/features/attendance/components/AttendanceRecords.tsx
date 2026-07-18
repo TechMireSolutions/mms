@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
-import { useAttendanceConfig } from "@/tenant/features/attendance/hooks/useAttendanceConfig";
+import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";

@@ -35,7 +35,7 @@ import {
 } from "@mms/shared";
 import ContactPicker from '@/tenant/features/contacts/components/contactLink/ContactPicker';
 import { getGlobalSettings } from "@/lib/db";
-import { useUsersConfig } from "@/tenant/features/users/hooks/useUsersConfig";
+import { useUsersConfig } from "@/hooks/useStandardModuleConfig";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 

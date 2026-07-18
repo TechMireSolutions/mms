@@ -4,7 +4,7 @@ import { calcAge, Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
 import { CalculatedFee } from '@/lib/data/enrollmentData';
 import { formatMoney } from "@mms/shared";
-import { useEnrollmentConfig } from "@/tenant/features/enrollments/hooks/useEnrollmentConfig";
+import { useEnrollmentConfig } from "@/hooks/useStandardModuleConfig";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";

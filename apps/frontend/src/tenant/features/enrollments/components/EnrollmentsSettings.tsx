@@ -1,7 +1,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Save, ClipboardList } from "lucide-react";
-import { useEnrollmentConfig } from "@/tenant/features/enrollments/hooks/useEnrollmentConfig";
+import { useEnrollmentConfig } from "@/hooks/useStandardModuleConfig";
 import {
   ENROLLMENTS_TAB_REGISTRY,
   INITIAL_ENROLLMENTS_FIELD_SEED,

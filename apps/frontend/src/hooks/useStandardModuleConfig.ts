@@ -349,3 +349,44 @@ export function useStandardModuleConfig<M extends StandardModuleId>(
     ...aux.objects,
   } as any;
 }
+
+export function useUsersConfig() {
+  return useStandardModuleConfig('users');
+}
+
+export function useTeacherConfig() {
+  return useStandardModuleConfig('teachers');
+}
+
+export function useStudentConfig() {
+  return useStandardModuleConfig('students');
+}
+
+export function useSessionConfig() {
+  return useStandardModuleConfig('sessions');
+}
+
+export function useExaminationConfig() {
+  return useStandardModuleConfig('examinations');
+}
+
+export function useHasanatConfig() {
+  return useStandardModuleConfig('hasanat');
+}
+
+export function useEnrollmentConfig() {
+  return useStandardModuleConfig('enrollments');
+}
+
+export function useFinanceConfig() {
+  return useStandardModuleConfig('finance');
+}
+
+export function useAccountingConfig() {
+  return useStandardModuleConfig('accounting');
+}
+
+export function useAttendanceConfig() {
+  return useStandardModuleConfig('attendance');
+}
+

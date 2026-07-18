@@ -11,7 +11,7 @@ import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useContactMutations, useContactById } from "@/tenant/features/contacts/hooks/useContacts";
-import { useStudentConfig } from "@/tenant/features/students/hooks/useStudentConfig";
+import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/ui/StatusBadge";

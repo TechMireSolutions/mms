@@ -10,7 +10,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { formatDate } from '@/lib/db';
 import { DEFAULT_TEACHERS_SETTINGS, type AppTranslationKey } from '@mms/shared';
-import { useTeacherConfig } from '@/tenant/features/teachers/hooks/useTeacherConfig';
+import { useTeacherConfig } from '@/hooks/useStandardModuleConfig';
 import type { Teacher } from '@/lib/data/teachersData';
 import { Button } from '@/components/ui/button';
 

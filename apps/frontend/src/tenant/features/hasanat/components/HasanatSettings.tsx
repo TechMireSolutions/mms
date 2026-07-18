@@ -5,7 +5,7 @@ import {
   HASANAT_TAB_REGISTRY,
   INITIAL_HASANAT_FIELD_SEED,
 } from "@mms/shared";
-import { useHasanatConfig } from "@/tenant/features/hasanat/hooks/useHasanatConfig";
+import { useHasanatConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";

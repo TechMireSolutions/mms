@@ -1,7 +1,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Save, DollarSign } from "lucide-react";
-import { useFinanceConfig } from "@/tenant/features/finance/hooks/useFinanceConfig";
+import { useFinanceConfig } from "@/hooks/useStandardModuleConfig";
 import {
   FINANCE_TAB_REGISTRY,
   INITIAL_FINANCE_FIELD_SEED,

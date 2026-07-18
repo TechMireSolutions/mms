@@ -5,7 +5,7 @@ import {
   USERS_TAB_REGISTRY,
   INITIAL_USERS_FIELD_SEED,
 } from "@mms/shared";
-import { useUsersConfig } from "@/tenant/features/users/hooks/useUsersConfig";
+import { useUsersConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";

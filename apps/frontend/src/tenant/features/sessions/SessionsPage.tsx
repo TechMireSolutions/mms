@@ -27,7 +27,7 @@ import { SESSION_TYPES, Session } from '@/lib/data/sessionsData';
 import { formatDate } from "@/lib/db";
 import { useSessionsCollection, useSessionMutations } from "@/tenant/features/sessions/hooks/useSessions";
 import { useSessionColumnLayout } from "@/tenant/features/sessions/hooks/useSessionColumnLayout";
-import { useSessionConfig } from "@/tenant/features/sessions/hooks/useSessionConfig";
+import { useSessionConfig } from "@/hooks/useStandardModuleConfig";
 import { SessionsCommandMetrics } from "@/tenant/features/sessions/components/SessionsCommandMetrics";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { type AppTranslationKey, formatMoney } from "@mms/shared";

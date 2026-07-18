@@ -5,7 +5,7 @@ import {
   INITIAL_TEACHERS_FIELD_SEED,
   TEACHER_SPECIALIZATION_VALUES,
 } from "@mms/shared";
-import { useTeacherConfig } from "@/tenant/features/teachers/hooks/useTeacherConfig";
+import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";

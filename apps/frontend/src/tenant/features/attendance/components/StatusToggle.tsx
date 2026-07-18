@@ -1,5 +1,5 @@
 import React from "react";
-import { useAttendanceConfig } from "@/tenant/features/attendance/hooks/useAttendanceConfig";
+import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
 import type { AttendanceStatus } from "@/lib/data/attendanceData";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";

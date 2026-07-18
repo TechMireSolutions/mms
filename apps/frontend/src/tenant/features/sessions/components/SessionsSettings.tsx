@@ -4,7 +4,7 @@ import {
   SESSIONS_TAB_REGISTRY,
   INITIAL_SESSIONS_FIELD_SEED,
 } from "@mms/shared";
-import { useSessionConfig } from "@/tenant/features/sessions/hooks/useSessionConfig";
+import { useSessionConfig } from "@/hooks/useStandardModuleConfig";
 import { SESSION_TYPES } from "@/lib/data/sessionsData";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { FORM_LABEL } from "@/components/ui/formStyles";

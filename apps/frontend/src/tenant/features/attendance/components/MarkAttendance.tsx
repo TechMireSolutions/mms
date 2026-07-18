@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ClassStudent, AttendanceRecord, AttendanceStatus, getAttendanceStatusInfo } from '@/lib/data/attendanceData';
-import { useAttendanceConfig } from "@/tenant/features/attendance/hooks/useAttendanceConfig";
+import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
 import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import { useStudentsByIds } from '@/tenant/features/students/hooks/useStudents';

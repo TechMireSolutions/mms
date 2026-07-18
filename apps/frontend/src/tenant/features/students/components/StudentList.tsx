@@ -26,7 +26,7 @@ import { runCsvDownloadJob } from '@/lib/backgroundJobs/runCsvDownloadJob';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppTranslationKey, FieldDefinition } from "@mms/shared";
 import StudentDetail from "@/tenant/features/students/components/StudentDetail";
-import { useStudentConfig } from "@/tenant/features/students/hooks/useStudentConfig";
+import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 
 import { UserAvatar } from "@/components/ui/UserAvatar";
 

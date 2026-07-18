@@ -3,7 +3,7 @@ import { formatMoney, formatDate } from "@mms/shared";
 import { motion } from "framer-motion";
 import { CheckCircle2, Tag, Loader2, BookOpen, User, Clock, MapPin } from "lucide-react";
 import { Student, StudentSession } from '@/lib/data/studentsData';
-import { useStudentConfig } from "@/tenant/features/students/hooks/useStudentConfig";
+import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { Button } from "@/components/ui/button";
 
 interface FeeRowProps {

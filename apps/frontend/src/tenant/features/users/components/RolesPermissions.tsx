@@ -15,7 +15,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useIsAdminViewer } from '@/tenant/hooks/useViewerRole';
 import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
-import { useUsersConfig } from '@/tenant/features/users/hooks/useUsersConfig';
+import { useUsersConfig } from '@/hooks/useStandardModuleConfig';
 import { notify } from '@/lib/notify';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

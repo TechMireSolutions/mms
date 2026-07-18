@@ -22,7 +22,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { AccountingCommandMetrics } from "@/tenant/features/accounting/components/AccountingCommandMetrics";
 import { useAccountingJournalColumnLayout } from "@/tenant/features/accounting/hooks/useAccountingJournalColumnLayout";
 import { useAccountingAccountColumnLayout } from "@/tenant/features/accounting/hooks/useAccountingAccountColumnLayout";
-import { useAccountingConfig } from "@/tenant/features/accounting/hooks/useAccountingConfig";
+import { useAccountingConfig } from "@/hooks/useStandardModuleConfig";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import {
   useAccountingAccountsCollection,

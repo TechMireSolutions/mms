@@ -32,7 +32,7 @@ import { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStud
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { StudentsCommandMetrics } from "@/tenant/features/students/components/StudentsCommandMetrics";
 import { ListPagination } from "@/components/ui/ListPagination";
-import { useStudentConfig } from "@/tenant/features/students/hooks/useStudentConfig";
+import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 
 const STUDENTS_GR_MIGRATION_KEY = "mms_students_gr_migration_v1";
 

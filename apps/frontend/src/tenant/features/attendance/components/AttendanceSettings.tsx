@@ -5,7 +5,7 @@ import {
   ATTENDANCE_TAB_REGISTRY,
   INITIAL_ATTENDANCE_FIELD_SEED,
 } from "@mms/shared";
-import { useAttendanceConfig } from "@/tenant/features/attendance/hooks/useAttendanceConfig";
+import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
