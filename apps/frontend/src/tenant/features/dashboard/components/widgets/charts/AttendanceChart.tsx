@@ -12,6 +12,13 @@ import { getCollection } from "@/lib/db";
 import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
 import { AttendanceRecord } from '@/lib/data/attendanceData';
 import { Distribution } from '@/lib/data/hasanatData';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AttendancePoint {
   day: string;
@@ -112,31 +119,40 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
         <div className="flex items-center gap-2 ml-auto">
           {isEditMode && (
             <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-lg border border-border/50">
-              <select
+              <Select
                 value={chartType}
-                onChange={(event) => {
-                  updatePref("attendanceChartType", event.target.value as "bar" | "line" | "area");
+                onValueChange={(value) => {
+                  updatePref("attendanceChartType", value as "bar" | "line" | "area");
                 }}
-                className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
-                <option value="bar">{t("dashboard.charts.attendance.barChart")}</option>
-                <option value="line">{t("dashboard.charts.attendance.lineChart")}</option>
-                <option value="area">{t("dashboard.charts.attendance.areaChart")}</option>
-              </select>
-              <select
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                  <SelectValue placeholder="Select chart type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bar">{t("dashboard.charts.attendance.barChart")}</SelectItem>
+                  <SelectItem value="line">{t("dashboard.charts.attendance.lineChart")}</SelectItem>
+                  <SelectItem value="area">{t("dashboard.charts.attendance.areaChart")}</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
                 value={colorTheme}
-                onChange={(event) => {
-                  updatePref("attendanceChartColor", event.target.value);
+                onValueChange={(value) => {
+                  updatePref("attendanceChartColor", value);
                 }}
-                className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
-                <option value="semantic">{t("dashboard.charts.attendance.semantic")}</option>
-                <option value="emerald">{t("dashboard.charts.attendance.emerald")}</option>
-                <option value="blue">{t("dashboard.charts.attendance.blue")}</option>
-                <option value="violet">{t("dashboard.charts.attendance.violet")}</option>
-                <option value="amber">{t("dashboard.charts.attendance.amber")}</option>
-                <option value="red">{t("dashboard.charts.attendance.red")}</option>
-              </select>
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                  <SelectValue placeholder="Select color theme" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="semantic">{t("dashboard.charts.attendance.semantic")}</SelectItem>
+                  <SelectItem value="emerald">{t("dashboard.charts.attendance.emerald")}</SelectItem>
+                  <SelectItem value="blue">{t("dashboard.charts.attendance.blue")}</SelectItem>
+                  <SelectItem value="violet">{t("dashboard.charts.attendance.violet")}</SelectItem>
+                  <SelectItem value="amber">{t("dashboard.charts.attendance.amber")}</SelectItem>
+                  <SelectItem value="red">{t("dashboard.charts.attendance.red")}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           )}
           <div className="text-right select-none">
@@ -269,29 +285,38 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
         <div className="flex items-center gap-2 ml-auto">
           {isEditMode && (
             <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-lg border border-border/50">
-              <select
+              <Select
                 value={chartType}
-                onChange={(event) => {
-                  updatePref("hasanatChartType", event.target.value as "pie" | "bar" | "radar");
+                onValueChange={(value) => {
+                  updatePref("hasanatChartType", value as "pie" | "bar" | "radar");
                 }}
-                className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
-                <option value="pie">{t("dashboard.charts.hasanat.pieDonut")}</option>
-                <option value="bar">{t("dashboard.charts.hasanat.barChart")}</option>
-                <option value="radar">{t("dashboard.charts.hasanat.radarChart")}</option>
-              </select>
-              <select
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                  <SelectValue placeholder="Select chart type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pie">{t("dashboard.charts.hasanat.pieDonut")}</SelectItem>
+                  <SelectItem value="bar">{t("dashboard.charts.hasanat.barChart")}</SelectItem>
+                  <SelectItem value="radar">{t("dashboard.charts.hasanat.radarChart")}</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
                 value={colorTheme}
-                onChange={(event) => {
-                  updatePref("hasanatChartColor", event.target.value);
+                onValueChange={(value) => {
+                  updatePref("hasanatChartColor", value);
                 }}
-                className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
-                <option value="mixed">{t("dashboard.charts.hasanat.mixed")}</option>
-                <option value="emerald">{t("dashboard.charts.attendance.emerald")}</option>
-                <option value="blue">{t("dashboard.charts.attendance.blue")}</option>
-                <option value="violet">{t("dashboard.charts.attendance.violet")}</option>
-              </select>
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                  <SelectValue placeholder="Select color theme" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mixed">{t("dashboard.charts.hasanat.mixed")}</SelectItem>
+                  <SelectItem value="emerald">{t("dashboard.charts.attendance.emerald")}</SelectItem>
+                  <SelectItem value="blue">{t("dashboard.charts.attendance.blue")}</SelectItem>
+                  <SelectItem value="violet">{t("dashboard.charts.attendance.violet")}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           )}
           <p className="text-lg font-bold text-foreground m-0 select-none">{total.toLocaleString()}</p>

@@ -8,6 +8,7 @@ import { getAuditLog } from "@/tenant/features/attendance/components/MarkAttenda
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
 import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
 import { useTranslation } from "@/hooks/useTranslation";
+import { FormSelect } from "@/components/ui/FormSelect";
 
 const ACTION_LABELS: Record<string, { labelKey: string; color: string }> = {
   edit:        { labelKey: "attendance.audit.action.edit",    color: "bg-info/10 text-info border-info/30" },
@@ -133,15 +134,14 @@ export function AuditLog({ filters }: AuditLogProps) {
       {/* Filters */}
       <div className="flex gap-2 flex-wrap">
         <label htmlFor="audit-class-select" className="sr-only">{t("attendance.audit.filterClass")}</label>
-        <select 
+        <FormSelect
           id="audit-class-select"
-          value={classId} 
-          onChange={(event) => setClassId(event.target.value)}
-          className="text-sm rounded-xl border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
-        >
-          <option value="">{t("attendance.audit.allClasses")}</option>
-          {allClasses.map((sessionClass) => <option key={sessionClass.id} value={sessionClass.id}>{sessionClass.name}</option>)}
-        </select>
+          value={classId}
+          onChange={setClassId}
+          placeholder={t("attendance.audit.allClasses")}
+          options={allClasses.map((sessionClass) => ({ value: sessionClass.id, label: sessionClass.name }))}
+          className="text-sm min-w-[160px]"
+        />
         
         <DatePicker
           id="audit-date-select"

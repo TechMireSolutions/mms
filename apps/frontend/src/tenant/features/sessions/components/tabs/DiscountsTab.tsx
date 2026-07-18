@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { formatMoney } from "@mms/shared";
 
 const EMPTY: Partial<Discount> = { name: "", type: "percentage", value: 0, conditions: "", active: true };
 
@@ -146,7 +147,7 @@ export function DiscountsTab({ session, onUpdate }: DiscountsTabProps) {
                   </span>
                 </div>
                 <p className="text-[13px] font-semibold text-primary m-0">
-                  {discountItem.type === "percentage" ? `${discountItem.value}% off` : `${session.currency || "PKR"} ${discountItem.value} off`}
+                  {discountItem.type === "percentage" ? `${discountItem.value}% off` : `${formatMoney(discountItem.value, session.currency)} off`}
                 </p>
                 {discountItem.conditions && <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{discountItem.conditions}</p>}
               </div>

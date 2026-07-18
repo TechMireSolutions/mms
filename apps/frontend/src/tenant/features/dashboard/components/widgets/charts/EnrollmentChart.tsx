@@ -9,6 +9,13 @@ import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/us
 import { TrendingUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface EnrollmentPoint {
   month: string;
@@ -99,41 +106,55 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
         <div className="flex items-center gap-2 ml-auto">
           {isEditMode && (
             <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-lg border border-border/50">
-              <select
+              <Select
                 value={chartType}
-                onChange={(event) => {
-                  updatePref("enrollmentChartType", event.target.value as "area" | "bar" | "line");
+                onValueChange={(value) => {
+                  updatePref("enrollmentChartType", value as "area" | "bar" | "line");
                 }}
-                className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
-                <option value="area">{t("dashboard.charts.enrollment.area")}</option>
-                <option value="bar">{t("dashboard.charts.enrollment.bar")}</option>
-                <option value="line">{t("dashboard.charts.enrollment.line")}</option>
-              </select>
-              <select
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                  <SelectValue placeholder="Select chart type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="area">{t("dashboard.charts.enrollment.area")}</SelectItem>
+                  <SelectItem value="bar">{t("dashboard.charts.enrollment.bar")}</SelectItem>
+                  <SelectItem value="line">{t("dashboard.charts.enrollment.line")}</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
                 value={colorTheme}
-                onChange={(event) => {
-                  updatePref("enrollmentChartColor", event.target.value as "emerald" | "blue" | "violet" | "amber" | "red");
+                onValueChange={(value) => {
+                  updatePref("enrollmentChartColor", value as "emerald" | "blue" | "violet" | "amber" | "red");
                 }}
-                className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
-                <option value="emerald">{t("dashboard.charts.attendance.emerald")}</option>
-                <option value="blue">{t("dashboard.charts.attendance.blue")}</option>
-                <option value="violet">{t("dashboard.charts.attendance.violet")}</option>
-                <option value="amber">{t("dashboard.charts.attendance.amber")}</option>
-                <option value="red">{t("dashboard.charts.attendance.red")}</option>
-              </select>
-              <select
-                value={monthsCount}
-                onChange={(event) => {
-                  updatePref("enrollmentChartPeriod", Number(event.target.value));
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                  <SelectValue placeholder="Select color theme" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="emerald">{t("dashboard.charts.attendance.emerald")}</SelectItem>
+                  <SelectItem value="blue">{t("dashboard.charts.attendance.blue")}</SelectItem>
+                  <SelectItem value="violet">{t("dashboard.charts.attendance.violet")}</SelectItem>
+                  <SelectItem value="amber">{t("dashboard.charts.attendance.amber")}</SelectItem>
+                  <SelectItem value="red">{t("dashboard.charts.attendance.red")}</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={String(monthsCount)}
+                onValueChange={(value) => {
+                  updatePref("enrollmentChartPeriod", Number(value));
                 }}
-                className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
-                <option value={3}>{t("dashboard.charts.monthsRange", { count: 3 })}</option>
-                <option value={6}>{t("dashboard.charts.monthsRange", { count: 6 })}</option>
-                <option value={10}>{t("dashboard.charts.monthsRange", { count: 10 })}</option>
-              </select>
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                  <SelectValue placeholder="Select period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="3">{t("dashboard.charts.monthsRange", { count: 3 })}</SelectItem>
+                  <SelectItem value="6">{t("dashboard.charts.monthsRange", { count: 6 })}</SelectItem>
+                  <SelectItem value="10">{t("dashboard.charts.monthsRange", { count: 10 })}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           )}
           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${activeColor.bg} ${activeColor.text}`} aria-label={`Growth: ${growth}%`}>

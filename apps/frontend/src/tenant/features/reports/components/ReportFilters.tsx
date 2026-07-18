@@ -4,6 +4,7 @@ import { Filter, ChevronDown, ChevronUp, X, Calendar } from "lucide-react";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { useTranslation } from "@/hooks/useTranslation";
+import { FormSelect } from "@/components/ui/FormSelect";
 import type { AppTranslationKey } from "@mms/shared";
 
 const STATUSES: string[] = ["all", "active", "inactive", "completed"];
@@ -123,15 +124,12 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
               {allowed.includes("session") && (
                 <div className="flex flex-col gap-1 text-left min-w-[140px] flex-1">
                   <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.session")}</label>
-                  <select
+                  <FormSelect
                     value={filters.session}
-                    onChange={(event) => set("session", event.target.value)}
-                    className="text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  >
-                    {sessions.map((session) => (
-                      <option key={session.id} value={session.id}>{session.name}</option>
-                    ))}
-                  </select>
+                    onChange={(val) => set("session", val)}
+                    options={sessions.map((session) => ({ value: session.id, label: session.name }))}
+                    className="w-full"
+                  />
                 </div>
               )}
 
@@ -139,15 +137,12 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
               {allowed.includes("class") && (
                 <div className="flex flex-col gap-1 text-left min-w-[140px] flex-1">
                   <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.class")}</label>
-                  <select
+                  <FormSelect
                     value={filters.class}
-                    onChange={(event) => set("class", event.target.value)}
-                    className="text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  >
-                    {classes.map((sessionClass) => (
-                      <option key={sessionClass.id} value={sessionClass.id}>{sessionClass.name}</option>
-                    ))}
-                  </select>
+                    onChange={(val) => set("class", val)}
+                    options={classes.map((sessionClass) => ({ value: sessionClass.id, label: sessionClass.name }))}
+                    className="w-full"
+                  />
                 </div>
               )}
 
@@ -155,19 +150,17 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
               {allowed.includes("status") && (
                 <div className="flex flex-col gap-1 text-left min-w-[120px] flex-1">
                   <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.status")}</label>
-                  <select
+                  <FormSelect
                     value={filters.status}
-                    onChange={(event) => set("status", event.target.value)}
-                    className="text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  >
-                    {STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {status === "all"
-                          ? t("reports.filters.allStatuses")
-                          : t(`reports.filters.status${status.charAt(0).toUpperCase() + status.slice(1)}` as AppTranslationKey)}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => set("status", val)}
+                    options={STATUSES.map((status) => ({
+                      value: status,
+                      label: status === "all"
+                        ? t("reports.filters.allStatuses")
+                        : t(`reports.filters.status${status.charAt(0).toUpperCase() + status.slice(1)}` as AppTranslationKey)
+                    }))}
+                    className="w-full"
+                  />
                 </div>
               )}
 

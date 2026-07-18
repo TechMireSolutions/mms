@@ -48,9 +48,6 @@ import { useContactsWidgetAggregates } from "@/tenant/features/contacts/hooks/us
 import { useStudentsWidgetAggregates } from "@/tenant/features/students/hooks/useStudents";
 import { useTeachersWidgetAggregates } from "@/tenant/features/teachers/hooks/useTeachers";
 import { applyContactsWorkDrillDown } from "@/lib/contacts/contactsWorkDrillDown";
-import {
-  getOrInitializeCustomWidgets,
-} from "@/tenant/features/reports/components/pinnedWidgets/widgetDefaults";
 import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
 
 export type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
@@ -1112,10 +1109,12 @@ export function DashboardWidgets({
  */
 export default function PinnedWidgets({ category }: { category: string }): React.JSX.Element {
   const { t } = useTranslation();
-  const { disabledCardIds, toggleCardVisibility } = useDashboardConfig();
-  const [widgets, setWidgets] = useState<CustomWidget[]>(() => {
-    return getOrInitializeCustomWidgets();
-  });
+  const {
+    disabledCardIds,
+    toggleCardVisibility,
+    customWidgets: widgets,
+    updateCustomWidgets,
+  } = useDashboardConfig();
 
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [collections, setCollections] = useState(() => getWidgetCollections());
@@ -1163,25 +1162,16 @@ export default function PinnedWidgets({ category }: { category: string }): React
 
   const [editingWidgetId, setEditingWidgetId] = useState<string | null>(null);
 
-
-
   const handleDeleteWidget = (id: string) => {
-    const nextWidgets = widgets.filter((widget) => widget.id !== id);
-    setWidgets(nextWidgets);
-    saveObject("kpi_custom_widgets", nextWidgets);
-    window.dispatchEvent(new Event("local-database-update"));
+    updateCustomWidgets(widgets.filter((widget) => widget.id !== id));
   };
 
   const handleTogglePin = (id: string) => {
-    const nextWidgets = widgets.map((widget) => {
-      if (widget.id === id) {
-        return { ...widget, isPinnedToDashboard: !widget.isPinnedToDashboard };
-      }
-      return widget;
-    });
-    setWidgets(nextWidgets);
-    saveObject("kpi_custom_widgets", nextWidgets);
-    window.dispatchEvent(new Event("local-database-update"));
+    updateCustomWidgets(
+      widgets.map((widget) =>
+        widget.id === id ? { ...widget, isPinnedToDashboard: !widget.isPinnedToDashboard } : widget
+      )
+    );
   };
 
   const handleEditClick = (widget: CustomWidget) => {
@@ -1437,17 +1427,12 @@ export default function PinnedWidgets({ category }: { category: string }): React
             }}
             onSaveWidget={(savedWidget) => {
               const widgetAlreadyExists = widgets.some((widget) => widget.id === savedWidget.id);
-              let nextWidgets: CustomWidget[];
-              if (widgetAlreadyExists) {
-                nextWidgets = widgets.map((widget) => widget.id === savedWidget.id ? savedWidget : widget);
-              } else {
-                nextWidgets = [...widgets, savedWidget];
-              }
-              setWidgets(nextWidgets);
-              saveObject("kpi_custom_widgets", nextWidgets);
+              const nextWidgets = widgetAlreadyExists
+                ? widgets.map((widget) => widget.id === savedWidget.id ? savedWidget : widget)
+                : [...widgets, savedWidget];
+              updateCustomWidgets(nextWidgets);
               setIsBuilderOpen(false);
               setEditingWidgetId(null);
-              window.dispatchEvent(new Event("local-database-update"));
             }}
             category={category}
           />

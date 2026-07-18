@@ -1,6 +1,11 @@
 import { useCallback, useEffect } from 'react';
 import { getObject, saveObject } from '@/lib/db';
+import { getOrInitializeCustomWidgets } from '@/tenant/features/reports/components/pinnedWidgets/widgetDefaults';
+import type { CustomWidget } from '@/tenant/features/reports/components/PinnedWidgets';
+import { useLiveObject } from '@/hooks/useLiveObject';
 import {
+  DEFAULT_DASHBOARD_PREFERENCES,
+  type DashboardPreferences,
   DASHBOARD_WIDGETS_KEY,
   DASHBOARD_PREFERENCES_KEY,
   DASHBOARD_DISABLED_CARDS_KEY,
@@ -14,13 +19,6 @@ import {
   ATTENDANCE_CHART_COLOR_KEY,
   HASANAT_CHART_TYPE_KEY,
   HASANAT_CHART_COLOR_KEY,
-} from '@/lib/dashboardPreferences';
-import { getOrInitializeCustomWidgets } from '@/tenant/features/reports/components/pinnedWidgets/widgetDefaults';
-import type { CustomWidget } from '@/tenant/features/reports/components/PinnedWidgets';
-import { useLiveObject } from '@/hooks/useLiveObject';
-import {
-  DEFAULT_DASHBOARD_PREFERENCES,
-  type DashboardPreferences,
 } from '@mms/shared';
 
 export function loadDashboardPreferences(): DashboardPreferences {

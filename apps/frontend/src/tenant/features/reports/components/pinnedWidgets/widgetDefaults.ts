@@ -1,6 +1,6 @@
 import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
 import { DEFAULT_WIDGET_TITLE_KEYS } from "@/lib/dashboardWidgets";
-import { DASHBOARD_WIDGETS_KEY } from "@/lib/dashboardPreferences";
+import { DASHBOARD_WIDGETS_KEY } from "@mms/shared";
 import { getObject } from "@/lib/db";
 
 function withDefaultTitleKey(widget: CustomWidget): CustomWidget {
