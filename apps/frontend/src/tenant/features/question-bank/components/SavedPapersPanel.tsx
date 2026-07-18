@@ -3,6 +3,7 @@ import { FileText } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import type { QuestionBankTest } from "@mms/shared";
+import { formatDate } from "@/lib/db";
 
 interface SavedPapersPanelProps {
   activePaperId: string | null;
@@ -11,9 +12,7 @@ interface SavedPapersPanelProps {
 }
 
 function formatPaperDate(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString();
+  return formatDate(value);
 }
 
 export function SavedPapersPanel({

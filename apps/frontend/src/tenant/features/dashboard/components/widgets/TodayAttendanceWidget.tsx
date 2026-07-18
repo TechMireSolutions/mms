@@ -9,6 +9,7 @@ import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessi
 import { useTranslation } from "@/hooks/useTranslation";
 import { rateToneClass } from "@/lib/semanticTone";
 import type { AppTranslationKey } from "@mms/shared";
+import { formatDate } from "@/lib/db";
 
 // Type definitions
 
@@ -105,7 +106,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
             {title || (isToday ? t("dashboard.widgets.todaysAttendanceSummary") : t("dashboard.widgets.latestAttendanceSummary"))}
           </h2>
           {!isToday && (
-            <span className="text-[11px] text-muted-foreground px-1.5 py-0.5 rounded-full bg-muted font-medium">{displayDate}</span>
+            <span className="text-[11px] text-muted-foreground px-1.5 py-0.5 rounded-full bg-muted font-medium">{formatDate(displayDate)}</span>
           )}
         </div>
         <Link to={ROUTES.attendance} className="flex items-center gap-1 text-xs text-primary font-semibold hover:underline">

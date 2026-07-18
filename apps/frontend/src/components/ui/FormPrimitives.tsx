@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
 import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "@/components/ui/formStyles";
 export const INPUT = FORM_INPUT;
 export const SELECT = FORM_SELECT;
@@ -474,6 +475,7 @@ interface CustomFieldInputProps {
  */
 export function CustomFieldInput({ field, value, onChange, disabled = false, error = false }: CustomFieldInputProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { activeCurrency } = useFinanceCurrency();
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const displayValue = value ?? "";
 
@@ -776,7 +778,7 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
           className={cn("ps-7", error ? "border-destructive focus-visible:ring-destructive" : "")}
         />
         <div className="absolute inset-y-0 start-0 ps-3 flex items-center pointer-events-none text-muted-foreground text-sm font-semibold">
-          ₨
+          {activeCurrency.symbol || "₨"}
         </div>
       </div>
     );
