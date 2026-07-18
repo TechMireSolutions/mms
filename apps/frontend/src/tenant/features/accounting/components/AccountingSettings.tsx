@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { formatDate as sharedFormatDate } from "@/lib/utils";
 import {
   DollarSign, Calendar, Plus, Pencil, Trash2,
@@ -185,10 +185,11 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
   const currencies = DEFAULT_CURRENCIES;
   const config = useAccountingConfig();
   const {
-    settings,
+    settingsDraft,
     fieldsEditor,
     saved,
     setSaved,
+    upd,
     saveSettings,
   } = useModuleSettingsEditor({
     config,
@@ -196,51 +197,8 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
   });
   const [fyModal, setFyModal] = useState<Partial<FiscalYear> | null>(null);
 
-  // Prefs state
-  const [organizationName, setOrganizationName] = useState(settings.organizationName);
-  const [currency, setCurrency] = useState(settings.currency);
-  const [currencySymbol, setCurrencySymbol] = useState(settings.currencySymbol);
-  const [dateFormat, setDateFormat] = useState(settings.dateFormat);
-  const [decimalSeparator, setDecimalSeparator] = useState(settings.decimalSeparator);
-  const [decimalPlaces, setDecimalPlaces] = useState(settings.decimalPlaces);
-  const [fyStartMonth, setFyStartMonth] = useState(settings.fyStartMonth);
-  const [requireNarration, setRequireNarration] = useState(settings.requireNarration);
-  const [allowEditPosted, setAllowEditPosted] = useState(settings.allowEditPosted);
-  const [autoPostDrafts, setAutoPostDrafts] = useState(settings.autoPostDrafts);
-  const [accountCodeLength, setAccountCodeLength] = useState(settings.accountCodeLength);
-  const [retainedEarningsAccount, setRetainedEarningsAccount] = useState(settings.retainedEarningsAccount);
-
-  useEffect(() => {
-    if (!settings) return;
-    setOrganizationName(settings.organizationName);
-    setCurrency(settings.currency);
-    setCurrencySymbol(settings.currencySymbol);
-    setDateFormat(settings.dateFormat);
-    setDecimalSeparator(settings.decimalSeparator);
-    setDecimalPlaces(settings.decimalPlaces);
-    setFyStartMonth(settings.fyStartMonth);
-    setRequireNarration(settings.requireNarration);
-    setAllowEditPosted(settings.allowEditPosted);
-    setAutoPostDrafts(settings.autoPostDrafts);
-    setAccountCodeLength(settings.accountCodeLength);
-    setRetainedEarningsAccount(settings.retainedEarningsAccount);
-  }, [settings]);
-
   const handleSave = () => {
-    saveSettings({
-      organizationName,
-      currency,
-      currencySymbol,
-      dateFormat,
-      decimalSeparator,
-      decimalPlaces,
-      fyStartMonth,
-      requireNarration,
-      allowEditPosted,
-      autoPostDrafts,
-      accountCodeLength,
-      retainedEarningsAccount,
-    });
+    saveSettings();
   };
 
   const handleSaveFY = (fiscalYear: FiscalYear) => {
@@ -257,7 +215,7 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
     if (confirm(t("accounting.settings.fy.deleteConfirm"))) onSaveFiscalYears(fiscalYears.filter((existingFiscalYear) => existingFiscalYear.id !== fiscalYearId));
   };
 
-  const activeCurrency = currencies.find((currencyOption) => currencyOption.code === currency);
+  const activeCurrency = currencies.find((currencyOption) => currencyOption.code === settingsDraft.currency);
   const formatDate   = (dateValue: string) => sharedFormatDate(dateValue);
 
   const showPrefs = mode === "preferences";
@@ -284,7 +242,7 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
           {/* Organisation */}
           <SectionCard title={t("accounting.settings.secOrganisation")} icon={null}>
             <Field label={t("accounting.settings.fields.organisationName")} hint={t("accounting.settings.fields.organisationNameHint")}>
-              <Input value={organizationName || ""} aria-label={t("accounting.settings.fields.organisationName")} onChange={(event) => { setOrganizationName(event.target.value); setSaved(false); }} />
+              <Input value={settingsDraft.organizationName || ""} aria-label={t("accounting.settings.fields.organisationName")} onChange={(event) => upd("organizationName", event.target.value)} />
             </Field>
           </SectionCard>
 
@@ -293,12 +251,11 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
             <Field label={t("accounting.settings.fields.baseCurrency")} hint={t("accounting.settings.fields.baseCurrencyHint")}>
               <FormSelect
                 aria-label={t("accounting.settings.fields.baseCurrency")}
-                value={currency}
+                value={settingsDraft.currency}
                 onChange={(currencyValue) => {
                   const selectedCurrency = currencies.find((currencyOption) => currencyOption.code === currencyValue);
-                  setCurrency(currencyValue);
-                  if (selectedCurrency) setCurrencySymbol(selectedCurrency.symbol);
-                  setSaved(false);
+                  upd("currency", currencyValue);
+                  if (selectedCurrency) upd("currencySymbol", selectedCurrency.symbol);
                 }}
                 options={currencies.map((currencyOption) => ({
                   value: currencyOption.code,
@@ -314,24 +271,24 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
             <Field label={t("accounting.settings.fields.dateFormat")}>
               <FormSelect
                 aria-label={t("accounting.settings.fields.dateFormat")}
-                value={dateFormat}
-                onChange={(dateFormatValue) => { setDateFormat(dateFormatValue); setSaved(false); }}
+                value={settingsDraft.dateFormat}
+                onChange={(dateFormatValue) => upd("dateFormat", dateFormatValue)}
                 options={DATE_FORMATS}
               />
             </Field>
             <Field label={t("accounting.settings.fields.numberFormat")}>
               <FormSelect
                 aria-label={t("accounting.settings.fields.numberFormat")}
-                value={decimalSeparator}
-                onChange={(separatorValue) => { setDecimalSeparator(separatorValue as "period" | "comma"); setSaved(false); }}
+                value={settingsDraft.decimalSeparator}
+                onChange={(separatorValue) => upd("decimalSeparator", separatorValue as "period" | "comma")}
                 options={decimalSeparators}
               />
             </Field>
             <Field label={t("accounting.settings.fields.decimalPlaces")}>
               <FormSelect
                 aria-label={t("accounting.settings.fields.decimalPlaces")}
-                value={String(decimalPlaces)}
-                onChange={(decimalPlacesValue) => { setDecimalPlaces(parseInt(decimalPlacesValue)); setSaved(false); }}
+                value={String(settingsDraft.decimalPlaces ?? 2)}
+                onChange={(decimalPlacesValue) => upd("decimalPlaces", parseInt(decimalPlacesValue))}
                 options={[0, 1, 2, 3].map((placeCount) => String(placeCount))}
                 className="w-32"
               />
@@ -343,8 +300,8 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
             <Field label={t("accounting.settings.fields.fyStartMonth")} hint={t("accounting.settings.fields.fyStartMonthHint")}>
               <FormSelect
                 aria-label={t("accounting.settings.fields.fyStartMonth")}
-                value={fyStartMonth}
-                onChange={(startMonthValue) => { setFyStartMonth(startMonthValue); setSaved(false); }}
+                value={settingsDraft.fyStartMonth}
+                onChange={(startMonthValue) => upd("fyStartMonth", startMonthValue)}
                 options={localizedMonths}
                 className="w-48"
               />
@@ -426,16 +383,16 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
           {/* Journal Entry Rules */}
           <SectionCard title={t("accounting.settings.secRules")} icon={null}>
             <Field label={t("accounting.settings.fields.requireNarration")} hint={t("accounting.settings.fields.requireNarrationHint")}>
-              <Switch aria-label={t("accounting.settings.fields.requireNarration")} checked={requireNarration} onCheckedChange={(checked) => { setRequireNarration(checked); setSaved(false); }} />
+              <Switch aria-label={t("accounting.settings.fields.requireNarration")} checked={settingsDraft.requireNarration} onCheckedChange={(checked) => upd("requireNarration", checked)} />
             </Field>
             <Field label={t("accounting.settings.fields.allowEditPosted")} hint={t("accounting.settings.fields.allowEditPostedHint")}>
-              <Switch aria-label={t("accounting.settings.fields.allowEditPosted")} checked={allowEditPosted} onCheckedChange={(checked) => { setAllowEditPosted(checked); setSaved(false); }} />
-              {allowEditPosted && (
+              <Switch aria-label={t("accounting.settings.fields.allowEditPosted")} checked={settingsDraft.allowEditPosted} onCheckedChange={(checked) => upd("allowEditPosted", checked)} />
+              {settingsDraft.allowEditPosted && (
                 <p className="text-xs text-warning mt-1 font-semibold m-0" role="alert">{t("accounting.settings.fields.allowEditPostedWarning")}</p>
               )}
             </Field>
             <Field label={t("accounting.settings.fields.autoPostDrafts")} hint={t("accounting.settings.fields.autoPostDraftsHint")}>
-              <Switch aria-label={t("accounting.settings.fields.autoPostDrafts")} checked={autoPostDrafts} onCheckedChange={(checked) => { setAutoPostDrafts(checked); setSaved(false); }} />
+              <Switch aria-label={t("accounting.settings.fields.autoPostDrafts")} checked={settingsDraft.autoPostDrafts} onCheckedChange={(checked) => upd("autoPostDrafts", checked)} />
             </Field>
           </SectionCard>
 
@@ -444,8 +401,8 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
             <Field label={t("accounting.settings.fields.defaultCodeLength")} hint={t("accounting.settings.fields.defaultCodeLengthHint")}>
               <FormSelect
                 aria-label={t("accounting.settings.fields.defaultCodeLength")}
-                value={String(accountCodeLength)}
-                onChange={(codeLengthValue) => { setAccountCodeLength(parseInt(codeLengthValue)); setSaved(false); }}
+                value={String(settingsDraft.accountCodeLength ?? 4)}
+                onChange={(codeLengthValue) => upd("accountCodeLength", parseInt(codeLengthValue))}
                 options={[3, 4, 5, 6].map((digitCount) => String(digitCount))}
                 className="w-32"
               />
@@ -453,8 +410,8 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
             <Field label={t("accounting.settings.fields.retainedEarningsAccount")} hint={t("accounting.settings.fields.retainedEarningsAccountHint")}>
               <FormSelect
                 aria-label={t("accounting.settings.fields.retainedEarningsAccount")}
-                value={retainedEarningsAccount || ""}
-                onChange={(accountId) => { setRetainedEarningsAccount(accountId); setSaved(false); }}
+                value={settingsDraft.retainedEarningsAccount || ""}
+                onChange={(accountId) => upd("retainedEarningsAccount", accountId)}
                 placeholder={t("accounting.journal.form.none")}
                 options={accounts
                   .filter((account) => account.type === "Equity" && account.isActive !== false)

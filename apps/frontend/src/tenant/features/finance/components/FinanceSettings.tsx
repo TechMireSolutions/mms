@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Card } from "@/components/ui/card";
 import { Save, DollarSign } from "lucide-react";
 import { useFinanceConfig } from "@/tenant/features/finance/hooks/useFinanceConfig";
@@ -21,69 +21,19 @@ interface FinanceSettingsProps {
 export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElement {
   const config = useFinanceConfig();
   const {
-    settings,
+    settingsDraft,
     fieldsEditor,
     saved,
     setSaved,
+    upd,
     saveSettings,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: FINANCE_TAB_REGISTRY,
   });
 
-  // Prefs state
-  const [currency, setCurrency] = useState(settings.currency);
-  const [invoicePrefix, setInvoicePrefix] = useState(settings.invoicePrefix);
-  const [dueDays, setDueDays] = useState(settings.dueDays);
-  const [lateFeePercent, setLateFeePercent] = useState(settings.lateFeePercent);
-  const [taxRate, setTaxRate] = useState(settings.taxRate);
-  const [paymentMethods, setPaymentMethods] = useState(settings.paymentMethods);
-  const [autoGenerateInvoice, setAutoGenerateInvoice] = useState(settings.autoGenerateInvoice);
-  const [sendInvoiceEmail, setSendInvoiceEmail] = useState(settings.sendInvoiceEmail);
-  const [allowPartialPayment, setAllowPartialPayment] = useState(settings.allowPartialPayment);
-  const [requireApproval, setRequireApproval] = useState(settings.requireApproval);
-  const [overdueReminder, setOverdueReminder] = useState(settings.overdueReminder);
-  const [reminderDaysBefore, setReminderDaysBefore] = useState(settings.reminderDaysBefore);
-  const [feeReminders, setFeeReminders] = useState(settings.feeReminders);
-  const [defaultViewLayout, setDefaultViewLayout] = useState(settings.defaultViewLayout);
-
-  useEffect(() => {
-    if (!settings) return;
-    setCurrency(settings.currency);
-    setInvoicePrefix(settings.invoicePrefix);
-    setDueDays(settings.dueDays);
-    setLateFeePercent(settings.lateFeePercent);
-    setTaxRate(settings.taxRate);
-    setPaymentMethods(settings.paymentMethods);
-    setAutoGenerateInvoice(settings.autoGenerateInvoice);
-    setSendInvoiceEmail(settings.sendInvoiceEmail);
-    if (allowPartialPayment !== undefined) {
-      setAllowPartialPayment(settings.allowPartialPayment);
-    }
-    setRequireApproval(settings.requireApproval);
-    setOverdueReminder(settings.overdueReminder);
-    setReminderDaysBefore(settings.reminderDaysBefore);
-    setFeeReminders(settings.feeReminders);
-    setDefaultViewLayout(settings.defaultViewLayout);
-  }, [settings]);
-
   const handleSave = () => {
-    saveSettings({
-      currency,
-      invoicePrefix,
-      dueDays,
-      lateFeePercent,
-      taxRate,
-      paymentMethods,
-      autoGenerateInvoice,
-      sendInvoiceEmail,
-      allowPartialPayment,
-      requireApproval,
-      overdueReminder,
-      reminderDaysBefore,
-      feeReminders,
-      defaultViewLayout,
-    });
+    saveSettings();
   };
 
   const showPrefs = mode === "preferences";
@@ -91,11 +41,11 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
 
   const ALL_METHODS = ["cash", "bank_transfer", "cheque", "online", "card", "other"];
   const toggleMethod = (method: string) => {
+    const paymentMethods = settingsDraft.paymentMethods || [];
     const nextMethods = paymentMethods.includes(method)
       ? paymentMethods.filter((selectedMethod) => selectedMethod !== method)
       : [...paymentMethods, method];
-    setPaymentMethods(nextMethods);
-    setSaved(false);
+    upd("paymentMethods", nextMethods);
   };
 
   return (
@@ -114,8 +64,8 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
               <label htmlFor="finance-currency" className={FORM_LABEL}>Currency</label>
               <FormSelect
                 id="finance-currency"
-                value={currency}
-                onChange={(value) => { setCurrency(value); setSaved(false); }}
+                value={settingsDraft.currency}
+                onChange={(value) => upd("currency", value)}
                 options={[
                   { value: "PKR", label: "PKR — Pakistani Rupee" },
                   { value: "USD", label: "USD — US Dollar" },
@@ -131,8 +81,8 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
               <Input
                 id="inv-prefix"
                 className={FORM_INPUT}
-                value={invoicePrefix}
-                onChange={(event) => { setInvoicePrefix(event.target.value); setSaved(false); }}
+                value={settingsDraft.invoicePrefix || ""}
+                onChange={(event) => upd("invoicePrefix", event.target.value)}
                 placeholder="INV"
               />
             </div>
@@ -142,8 +92,8 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
                 id="due-days"
                 type="number"
                 className={FORM_INPUT}
-                value={dueDays}
-                onChange={(event) => { setDueDays(event.target.value); setSaved(false); }}
+                value={settingsDraft.dueDays || ""}
+                onChange={(event) => upd("dueDays", event.target.value)}
               />
             </div>
             <div>
@@ -152,8 +102,8 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
                 id="late-fee"
                 type="number"
                 className={FORM_INPUT}
-                value={lateFeePercent}
-                onChange={(event) => { setLateFeePercent(event.target.value); setSaved(false); }}
+                value={settingsDraft.lateFeePercent || ""}
+                onChange={(event) => upd("lateFeePercent", event.target.value)}
               />
             </div>
             <div>
@@ -162,8 +112,8 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
                 id="tax-rate"
                 type="number"
                 className={FORM_INPUT}
-                value={taxRate}
-                onChange={(event) => { setTaxRate(event.target.value); setSaved(false); }}
+                value={settingsDraft.taxRate || ""}
+                onChange={(event) => upd("taxRate", event.target.value)}
               />
             </div>
             <div>
@@ -172,8 +122,8 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
                 id="reminder-days"
                 type="number"
                 className={FORM_INPUT}
-                value={reminderDaysBefore}
-                onChange={(event) => { setReminderDaysBefore(event.target.value); setSaved(false); }}
+                value={settingsDraft.reminderDaysBefore || ""}
+                onChange={(event) => upd("reminderDaysBefore", event.target.value)}
               />
             </div>
           </div>
@@ -182,7 +132,7 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
             <span className={FORM_LABEL}>Accepted Payment Methods</span>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Select payment methods">
               {ALL_METHODS.map((method) => {
-                const active = paymentMethods.includes(method);
+                const active = (settingsDraft.paymentMethods || []).includes(method);
                 return (
                   <Button
                     key={method}
@@ -201,12 +151,12 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
           </div>
 
           <div className="space-y-2 pt-1" role="group" aria-label="Financial registry feature flags toggles">
-            <ToggleRow label="Auto-generate Invoices" description="Automatically create invoices on enrollment" value={autoGenerateInvoice} onChange={(value) => { setAutoGenerateInvoice(value); setSaved(false); }} />
-            <ToggleRow label="Send Invoice by Email" description="Email invoice to guardian on creation" value={sendInvoiceEmail} onChange={(value) => { setSendInvoiceEmail(value); setSaved(false); }} />
-            <ToggleRow label="Allow Partial Payment" description="Accept payments less than the full amount" value={allowPartialPayment} onChange={(value) => { setAllowPartialPayment(value); setSaved(false); }} />
-            <ToggleRow label="Require Approval for Discounts" description="Discounts need admin approval before applying" value={requireApproval} onChange={(value) => { setRequireApproval(value); setSaved(false); }} />
-            <ToggleRow label="Overdue Reminders" description="Send reminders for overdue invoices" value={overdueReminder} onChange={(value) => { setOverdueReminder(value); setSaved(false); }} />
-            <ToggleRow label="Fee Reminders" description="Send notifications when fees are due or overdue" value={feeReminders} onChange={(value) => { setFeeReminders(value); setSaved(false); }} />
+            <ToggleRow label="Auto-generate Invoices" description="Automatically create invoices on enrollment" value={settingsDraft.autoGenerateInvoice} onChange={(value) => upd("autoGenerateInvoice", value)} />
+            <ToggleRow label="Send Invoice by Email" description="Email invoice to guardian on creation" value={settingsDraft.sendInvoiceEmail} onChange={(value) => upd("sendInvoiceEmail", value)} />
+            <ToggleRow label="Allow Partial Payment" description="Accept payments less than the full amount" value={settingsDraft.allowPartialPayment} onChange={(value) => upd("allowPartialPayment", value)} />
+            <ToggleRow label="Require Approval for Discounts" description="Discounts need admin approval before applying" value={settingsDraft.requireApproval} onChange={(value) => upd("requireApproval", value)} />
+            <ToggleRow label="Overdue Reminders" description="Send reminders for overdue invoices" value={settingsDraft.overdueReminder} onChange={(value) => upd("overdueReminder", value)} />
+            <ToggleRow label="Fee Reminders" description="Send notifications when fees are due or overdue" value={settingsDraft.feeReminders} onChange={(value) => upd("feeReminders", value)} />
           </div>
         </>
       )}

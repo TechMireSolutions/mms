@@ -25,6 +25,19 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
 }: UseModuleSettingsEditorOptions<T>) {
   const { settings, updateSettings } = config;
   const [saved, setSaved] = useState<boolean>(false);
+  const [settingsDraft, setSettingsDraft] = useState<T>(settings);
+
+  // Sync draft whenever upstream settings change
+  useEffect(() => {
+    if (settings) {
+      setSettingsDraft(settings);
+    }
+  }, [settings]);
+
+  const upd = useCallback(<K extends keyof T>(field: K, value: T[K]): void => {
+    setSettingsDraft((curr) => ({ ...curr, [field]: value }));
+    setSaved(false);
+  }, []);
 
   const fieldsEditor = useModuleFieldsEditor({
     initialTabs: tabRegistry,
@@ -55,7 +68,7 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     );
   }, [settings, fieldsEditor, tabRegistry, defaultEnabledTabs, defaultRequiredTabs]);
 
-  const saveSettings = useCallback((preferencesDraft: Partial<T>, additionalFields?: Partial<T>) => {
+  const saveSettings = useCallback((preferencesDraft?: Partial<T>, additionalFields?: Partial<T>) => {
     const updatedFormTabs = fieldsEditor.formTabs.map((tab) => ({
       ...tab,
       enabled: fieldsEditor.enabledTabs.has(tab.key),
@@ -63,25 +76,28 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
 
     const nextSettings: T = {
       ...settings,
-      ...preferencesDraft,
+      ...settingsDraft,
+      ...(preferencesDraft ?? {}),
       enabledTabs: Array.from(fieldsEditor.enabledTabs),
       requiredTabs: Array.from(fieldsEditor.requiredTabs),
       formTabs: updatedFormTabs,
       fields: fieldsEditor.buildFieldsMap(),
-      ...additionalFields,
+      ...(additionalFields ?? {}),
     };
 
     updateSettings(nextSettings);
     setSaved(true);
     const timer = setTimeout(() => setSaved(false), 2500);
     return () => clearTimeout(timer);
-  }, [settings, updateSettings, fieldsEditor]);
+  }, [settings, settingsDraft, updateSettings, fieldsEditor]);
 
   return {
     settings,
+    settingsDraft,
     fieldsEditor,
     saved,
     setSaved,
+    upd,
     saveSettings,
   };
 }

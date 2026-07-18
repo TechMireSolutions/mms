@@ -86,46 +86,6 @@ export function useDashboardConfig() {
     updatePref('disabledCardIds', updated);
   }, [prefs.disabledCardIds, updatePref]);
 
-  const updateGridMode = useCallback((mode: 'comfortable' | 'compact') => {
-    updatePref('gridMode', mode);
-  }, [updatePref]);
-
-  const updateEnrollmentChartType = useCallback((type: 'area' | 'bar' | 'line') => {
-    updatePref('enrollmentChartType', type);
-  }, [updatePref]);
-
-  const updateEnrollmentChartColor = useCallback((color: 'emerald' | 'blue' | 'violet' | 'amber' | 'red') => {
-    updatePref('enrollmentChartColor', color);
-  }, [updatePref]);
-
-  const updateEnrollmentChartPeriod = useCallback((period: number) => {
-    updatePref('enrollmentChartPeriod', period);
-  }, [updatePref]);
-
-  const updateRevenueChartType = useCallback((type: 'bar' | 'line' | 'area') => {
-    updatePref('revenueChartType', type);
-  }, [updatePref]);
-
-  const updateRevenueChartColor = useCallback((color: string) => {
-    updatePref('revenueChartColor', color);
-  }, [updatePref]);
-
-  const updateAttendanceChartType = useCallback((type: 'bar' | 'line' | 'area') => {
-    updatePref('attendanceChartType', type);
-  }, [updatePref]);
-
-  const updateAttendanceChartColor = useCallback((color: string) => {
-    updatePref('attendanceChartColor', color);
-  }, [updatePref]);
-
-  const updateHasanatChartType = useCallback((type: 'pie' | 'bar' | 'radar') => {
-    updatePref('hasanatChartType', type);
-  }, [updatePref]);
-
-  const updateHasanatChartColor = useCallback((color: string) => {
-    updatePref('hasanatChartColor', color);
-  }, [updatePref]);
-
   return {
     disabledCardIds: prefs.disabledCardIds,
     customWidgets,
@@ -141,16 +101,7 @@ export function useDashboardConfig() {
     hasanatChartColor: prefs.hasanatChartColor,
     updateCustomWidgets,
     toggleCardVisibility,
-    updateGridMode,
-    updateEnrollmentChartType,
-    updateEnrollmentChartColor,
-    updateEnrollmentChartPeriod,
-    updateRevenueChartType,
-    updateRevenueChartColor,
-    updateAttendanceChartType,
-    updateAttendanceChartColor,
-    updateHasanatChartType,
-    updateHasanatChartColor,
+    updatePref,
   };
 }
 

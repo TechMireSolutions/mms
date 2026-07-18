@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Card } from "@/components/ui/card";
 import { Save, ClipboardList } from "lucide-react";
 import { useEnrollmentConfig } from "@/tenant/features/enrollments/hooks/useEnrollmentConfig";
@@ -20,49 +20,19 @@ interface EnrollmentsSettingsProps {
 export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.JSX.Element {
   const config = useEnrollmentConfig();
   const {
-    settings,
+    settingsDraft,
     fieldsEditor,
     saved,
     setSaved,
+    upd,
     saveSettings,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: ENROLLMENTS_TAB_REGISTRY,
   });
 
-  // Prefs state
-  const [maxStudentsPerClass, setMaxStudentsPerClass] = useState(settings.maxStudentsPerClass);
-  const [dropDeadlineDays, setDropDeadlineDays] = useState(settings.dropDeadlineDays);
-  const [waitlistEnabled, setWaitlistEnabled] = useState(settings.waitlistEnabled);
-  const [requireEligibilityCheck, setRequireEligibilityCheck] = useState(settings.requireEligibilityCheck);
-  const [autoAssignClass, setAutoAssignClass] = useState(settings.autoAssignClass);
-  const [enrollmentApproval, setEnrollmentApproval] = useState(settings.enrollmentApproval);
-  const [allowTransfers, setAllowTransfers] = useState(settings.allowTransfers);
-  const [reenrollmentReminder, setReenrollmentReminder] = useState(settings.reenrollmentReminder);
-
-  useEffect(() => {
-    if (!settings) return;
-    setMaxStudentsPerClass(settings.maxStudentsPerClass);
-    setDropDeadlineDays(settings.dropDeadlineDays);
-    setWaitlistEnabled(settings.waitlistEnabled);
-    setRequireEligibilityCheck(settings.requireEligibilityCheck);
-    setAutoAssignClass(settings.autoAssignClass);
-    setEnrollmentApproval(settings.enrollmentApproval);
-    setAllowTransfers(settings.allowTransfers);
-    setReenrollmentReminder(settings.reenrollmentReminder);
-  }, [settings]);
-
   const handleSave = (): void => {
-    saveSettings({
-      maxStudentsPerClass,
-      dropDeadlineDays,
-      waitlistEnabled,
-      requireEligibilityCheck,
-      autoAssignClass,
-      enrollmentApproval,
-      allowTransfers,
-      reenrollmentReminder,
-    });
+    saveSettings();
   };
 
   const showPrefs = mode === "preferences";
@@ -85,8 +55,8 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
               <Input
                 id="maxStudentsPerClass"
                 type="number"
-                value={maxStudentsPerClass}
-                onChange={(event) => { setMaxStudentsPerClass(event.target.value); setSaved(false); }}
+                value={settingsDraft.maxStudentsPerClass || ""}
+                onChange={(event) => upd("maxStudentsPerClass", event.target.value)}
               />
             </div>
             <div>
@@ -94,8 +64,8 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
               <Input
                 id="dropDeadlineDays"
                 type="number"
-                value={dropDeadlineDays}
-                onChange={(event) => { setDropDeadlineDays(event.target.value); setSaved(false); }}
+                value={settingsDraft.dropDeadlineDays || ""}
+                onChange={(event) => upd("dropDeadlineDays", event.target.value)}
               />
             </div>
           </div>
@@ -104,38 +74,38 @@ export function EnrollmentsSettings({ mode }: EnrollmentsSettingsProps): React.J
             <ToggleRow
               label="Enable Waitlist"
               description="Allow students to join a waitlist when class is full"
-              value={waitlistEnabled}
-              onChange={(value) => { setWaitlistEnabled(value); setSaved(false); }}
+              value={settingsDraft.waitlistEnabled}
+              onChange={(value) => upd("waitlistEnabled", value)}
             />
             <ToggleRow
               label="Require Eligibility Check"
               description="Run eligibility rules before confirming enrollment"
-              value={requireEligibilityCheck}
-              onChange={(value) => { setRequireEligibilityCheck(value); setSaved(false); }}
+              value={settingsDraft.requireEligibilityCheck}
+              onChange={(value) => upd("requireEligibilityCheck", value)}
             />
             <ToggleRow
               label="Auto-assign to Class"
               description="System automatically places student in best available class"
-              value={autoAssignClass}
-              onChange={(value) => { setAutoAssignClass(value); setSaved(false); }}
+              value={settingsDraft.autoAssignClass}
+              onChange={(value) => upd("autoAssignClass", value)}
             />
             <ToggleRow
               label="Enrollment Requires Approval"
               description="Admin must approve each enrollment"
-              value={enrollmentApproval}
-              onChange={(value) => { setEnrollmentApproval(value); setSaved(false); }}
+              value={settingsDraft.enrollmentApproval}
+              onChange={(value) => upd("enrollmentApproval", value)}
             />
             <ToggleRow
               label="Allow Class Transfers"
               description="Students can be transferred between classes"
-              value={allowTransfers}
-              onChange={(value) => { setAllowTransfers(value); setSaved(false); }}
+              value={settingsDraft.allowTransfers}
+              onChange={(value) => upd("allowTransfers", value)}
             />
             <ToggleRow
               label="Re-enrollment Reminder"
               description="Remind guardians when re-enrollment period opens"
-              value={reenrollmentReminder}
-              onChange={(value) => { setReenrollmentReminder(value); setSaved(false); }}
+              value={settingsDraft.reenrollmentReminder}
+              onChange={(value) => upd("reenrollmentReminder", value)}
             />
           </div>
         </>

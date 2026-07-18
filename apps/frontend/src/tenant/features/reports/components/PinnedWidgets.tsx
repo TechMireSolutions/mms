@@ -865,7 +865,7 @@ export function DashboardWidgets({
   onDeleteWidget
 }: DashboardWidgetsProps = {}): React.JSX.Element | null {
   const { t } = useTranslation();
-  const { gridMode, updateGridMode } = useDashboardConfig();
+  const { gridMode, updatePref } = useDashboardConfig();
   const [localWidgets, setLocalWidgets] = useState<CustomWidget[]>([]);
   const [collections, setCollections] = useState(() => getWidgetCollections());
   
@@ -974,7 +974,7 @@ export function DashboardWidgets({
   };
 
   const handleToggleGridMode = (mode: "comfortable" | "compact") => {
-    updateGridMode(mode);
+    updatePref("gridMode", mode);
   };
 
   if (activeWidgets.length === 0) return null;

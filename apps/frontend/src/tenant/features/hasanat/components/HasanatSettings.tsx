@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Card } from "@/components/ui/card";
 import { Save, Star } from "lucide-react";
 import {
@@ -20,34 +20,19 @@ interface HasanatSettingsProps {
 export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElement {
   const config = useHasanatConfig();
   const {
-    settings,
+    settingsDraft,
     fieldsEditor,
     saved,
     setSaved,
+    upd,
     saveSettings,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: HASANAT_TAB_REGISTRY,
   });
 
-  // Prefs state
-  const [pointsPerUnit, setPointsPerUnit] = useState(settings.pointsPerUnit);
-  const [autoApprovePayouts, setAutoApprovePayouts] = useState(settings.autoApprovePayouts);
-  const [defaultViewLayout, setDefaultViewLayout] = useState(settings.defaultViewLayout);
-
-  useEffect(() => {
-    if (!settings) return;
-    setPointsPerUnit(settings.pointsPerUnit);
-    setAutoApprovePayouts(settings.autoApprovePayouts);
-    setDefaultViewLayout(settings.defaultViewLayout);
-  }, [settings]);
-
   const handleSave = () => {
-    saveSettings({
-      pointsPerUnit,
-      autoApprovePayouts,
-      defaultViewLayout,
-    });
+    saveSettings();
   };
 
   const showPrefs = mode === "preferences";
@@ -71,8 +56,8 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
                 id="points-per-unit"
                 type="number"
                 className={FORM_INPUT}
-                value={pointsPerUnit || 10}
-                onChange={(event) => { setPointsPerUnit(Number(event.target.value)); setSaved(false); }}
+                value={settingsDraft.pointsPerUnit || 10}
+                onChange={(event) => upd("pointsPerUnit", Number(event.target.value))}
               />
             </div>
           </div>
@@ -80,8 +65,8 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
             <ToggleRow
               label="Auto-approve Payouts"
               description="Automatically approve rewards redemption without manual review"
-              value={autoApprovePayouts || false}
-              onChange={(value) => { setAutoApprovePayouts(value); setSaved(false); }}
+              value={settingsDraft.autoApprovePayouts || false}
+              onChange={(value) => upd("autoApprovePayouts", value)}
             />
           </div>
         </div>

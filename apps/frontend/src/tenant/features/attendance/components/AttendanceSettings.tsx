@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Card } from "@/components/ui/card";
 import { Save, QrCode, Bell, Clock, Shield, Scan } from "lucide-react";
 import {
@@ -42,53 +42,16 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
   const { t } = useTranslation();
   const config = useAttendanceConfig();
   const {
-    settings,
+    settingsDraft,
     fieldsEditor,
     saved,
     setSaved,
+    upd,
     saveSettings,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: ATTENDANCE_TAB_REGISTRY,
   });
-
-  // Prefs state
-  const [workingDays, setWorkingDays] = useState(settings.workingDays);
-  const [cutoffTime, setCutoffTime] = useState(settings.cutoffTime);
-  const [lateThresholdMins, setLateThresholdMins] = useState(settings.lateThresholdMins);
-  const [autoAbsentAfterMins, setAutoAbsentAfterMins] = useState(settings.autoAbsentAfterMins);
-  const [qrEnabled, setQrEnabled] = useState(settings.qrEnabled);
-  const [lowAttendanceThreshold, setLowAttendanceThreshold] = useState(settings.lowAttendanceThreshold);
-  const [notifyParents, setNotifyParents] = useState(settings.notifyParents);
-  const [requireNoteForAbsent, setRequireNoteForAbsent] = useState(settings.requireNoteForAbsent);
-  const [lockAfterSubmit, setLockAfterSubmit] = useState(settings.lockAfterSubmit);
-  const [trackHalfDay, setTrackHalfDay] = useState(settings.trackHalfDay);
-  const [weeklyReport, setWeeklyReport] = useState(settings.weeklyReport);
-  const [attendanceAlerts, setAttendanceAlerts] = useState(settings.attendanceAlerts);
-  const [allowManualOverride, setAllowManualOverride] = useState(settings.allowManualOverride);
-  const [offlineEnabled, setOfflineEnabled] = useState(settings.offlineEnabled);
-  const [geoTagging, setGeoTagging] = useState(settings.geoTagging);
-  const [defaultViewLayout, setDefaultViewLayout] = useState(settings.defaultViewLayout);
-
-  useEffect(() => {
-    if (!settings) return;
-    setWorkingDays(settings.workingDays);
-    setCutoffTime(settings.cutoffTime);
-    setLateThresholdMins(settings.lateThresholdMins);
-    setAutoAbsentAfterMins(settings.autoAbsentAfterMins);
-    setQrEnabled(settings.qrEnabled);
-    setLowAttendanceThreshold(settings.lowAttendanceThreshold);
-    setNotifyParents(settings.notifyParents);
-    setRequireNoteForAbsent(settings.requireNoteForAbsent);
-    setLockAfterSubmit(settings.lockAfterSubmit);
-    setTrackHalfDay(settings.trackHalfDay);
-    setWeeklyReport(settings.weeklyReport);
-    setAttendanceAlerts(settings.attendanceAlerts);
-    setAllowManualOverride(settings.allowManualOverride);
-    setOfflineEnabled(settings.offlineEnabled);
-    setGeoTagging(settings.geoTagging);
-    setDefaultViewLayout(settings.defaultViewLayout);
-  }, [settings]);
 
   if (!isAdmin) {
     return (
@@ -101,24 +64,7 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
   }
 
   const handleSave = () => {
-    saveSettings({
-      workingDays,
-      cutoffTime,
-      lateThresholdMins,
-      autoAbsentAfterMins,
-      qrEnabled,
-      lowAttendanceThreshold,
-      notifyParents,
-      requireNoteForAbsent,
-      lockAfterSubmit,
-      trackHalfDay,
-      weeklyReport,
-      attendanceAlerts,
-      allowManualOverride,
-      offlineEnabled,
-      geoTagging,
-      defaultViewLayout,
-    });
+    saveSettings();
   };
 
   const showPrefs = mode === "preferences";
@@ -143,8 +89,8 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
                     type="number" 
                     min={1} 
                     max={60} 
-                    value={lateThresholdMins}
-                    onChange={(event) => { setLateThresholdMins(Number(event.target.value)); setSaved(false); }}
+                    value={settingsDraft.lateThresholdMins || ""}
+                    onChange={(event) => upd("lateThresholdMins", Number(event.target.value))}
                     className="w-16 text-sm text-center rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20" 
                   />
                   <span className="text-xs text-muted-foreground">min</span>
@@ -158,15 +104,15 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
                     type="number" 
                     min={10} 
                     max={120} 
-                    value={autoAbsentAfterMins}
-                    onChange={(event) => { setAutoAbsentAfterMins(Number(event.target.value)); setSaved(false); }}
+                    value={settingsDraft.autoAbsentAfterMins || ""}
+                    onChange={(event) => upd("autoAbsentAfterMins", Number(event.target.value))}
                     className="w-16 text-sm text-center rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20" 
                   />
                   <span className="text-xs text-muted-foreground">min</span>
                 </div>
               </SettingRow>
               <SettingRow label="Lock After Submit" sub="Prevent edits once attendance is submitted">
-                <Switch checked={lockAfterSubmit} onCheckedChange={(value) => { setLockAfterSubmit(value); setSaved(false); }} />
+                <Switch checked={settingsDraft.lockAfterSubmit} onCheckedChange={(value) => upd("lockAfterSubmit", value)} />
               </SettingRow>
             </div>
           </Card>
@@ -179,7 +125,7 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
             </header>
             <div className="px-4 pl-6.5 pb-2">
               <SettingRow label="Enable QR Attendance" sub="Allow teachers to scan student QR codes to mark attendance">
-                <Switch checked={qrEnabled} onCheckedChange={(value) => { setQrEnabled(value); setSaved(false); }} />
+                <Switch checked={settingsDraft.qrEnabled} onCheckedChange={(value) => upd("qrEnabled", value)} />
               </SettingRow>
             </div>
           </Card>
@@ -199,18 +145,18 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
                     type="number" 
                     min={50} 
                     max={100} 
-                    value={lowAttendanceThreshold}
-                    onChange={(event) => { setLowAttendanceThreshold(Number(event.target.value)); setSaved(false); }}
+                    value={settingsDraft.lowAttendanceThreshold || ""}
+                    onChange={(event) => upd("lowAttendanceThreshold", Number(event.target.value))}
                     className="w-16 text-sm text-center rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20" 
                   />
                   <span className="text-xs text-muted-foreground">%</span>
                 </div>
               </SettingRow>
               <SettingRow label="Notify Parents" sub="Send SMS/WhatsApp to parent on student absence">
-                <Switch checked={notifyParents} onCheckedChange={(value) => { setNotifyParents(value); setSaved(false); }} />
+                <Switch checked={settingsDraft.notifyParents} onCheckedChange={(value) => upd("notifyParents", value)} />
               </SettingRow>
               <SettingRow label="Require Note for Absent" sub="Teacher must add a note when marking a student absent">
-                <Switch checked={requireNoteForAbsent} onCheckedChange={(value) => { setRequireNoteForAbsent(value); setSaved(false); }} />
+                <Switch checked={settingsDraft.requireNoteForAbsent} onCheckedChange={(value) => upd("requireNoteForAbsent", value)} />
               </SettingRow>
             </div>
           </Card>
@@ -223,30 +169,30 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
             </header>
             <div className="px-4 pl-6.5 pb-2">
               <SettingRow label="Offline Mode" sub="Allow teachers to mark attendance without internet; syncs when reconnected">
-                <Switch checked={offlineEnabled} onCheckedChange={(value) => { setOfflineEnabled(value); setSaved(false); }} />
+                <Switch checked={settingsDraft.offlineEnabled} onCheckedChange={(value) => upd("offlineEnabled", value)} />
               </SettingRow>
               <SettingRow label="Geo-location Tagging" sub="Record teacher's GPS coordinates when submitting attendance">
-                <Switch checked={geoTagging} onCheckedChange={(value) => { setGeoTagging(value); setSaved(false); }} />
+                <Switch checked={settingsDraft.geoTagging} onCheckedChange={(value) => upd("geoTagging", value)} />
               </SettingRow>
               <SettingRow label="Default View Layout" sub="Select default layout format for attendance records in work view">
                 <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
                   <Button
                     type="button"
-                    variant={(defaultViewLayout || "list") === "list" ? "secondary" : "ghost"}
+                    variant={(settingsDraft.defaultViewLayout || "list") === "list" ? "secondary" : "ghost"}
                     size="sm"
-                    onClick={() => { setDefaultViewLayout("list"); setSaved(false); }}
+                    onClick={() => upd("defaultViewLayout", "list")}
                     className="h-7 text-xs font-semibold rounded-lg px-3 shadow-none bg-transparent data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
-                    data-state={(defaultViewLayout || "list") === "list" ? "active" : "inactive"}
+                    data-state={(settingsDraft.defaultViewLayout || "list") === "list" ? "active" : "inactive"}
                   >
                     List View
                   </Button>
                   <Button
                     type="button"
-                    variant={defaultViewLayout === "cards" ? "secondary" : "ghost"}
+                    variant={settingsDraft.defaultViewLayout === "cards" ? "secondary" : "ghost"}
                     size="sm"
-                    onClick={() => { setDefaultViewLayout("cards"); setSaved(false); }}
+                    onClick={() => upd("defaultViewLayout", "cards")}
                     className="h-7 text-xs font-semibold rounded-lg px-3 shadow-none bg-transparent data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
-                    data-state={defaultViewLayout === "cards" ? "active" : "inactive"}
+                    data-state={settingsDraft.defaultViewLayout === "cards" ? "active" : "inactive"}
                   >
                     Card Grid
                   </Button>
@@ -256,7 +202,7 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
                 <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.warningStrong)}>{t("attendance.settings.comingSoon")}</span>
               </SettingRow>
               <SettingRow label="Daily Auto-Lock" sub="Automatically lock attendance after end-of-day submission">
-                <Switch checked={lockAfterSubmit} onCheckedChange={(value) => { setLockAfterSubmit(value); setSaved(false); }} />
+                <Switch checked={settingsDraft.lockAfterSubmit} onCheckedChange={(value) => upd("lockAfterSubmit", value)} />
               </SettingRow>
               <SettingRow label="Audit Logging" sub="Record all edits and submissions in an audit trail (always on)">
                 <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.successStrong)}>{t("attendance.settings.active")}</span>

@@ -58,8 +58,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
   const {
     attendanceChartType: chartType,
     attendanceChartColor: colorTheme,
-    updateAttendanceChartType,
-    updateAttendanceChartColor,
+    updatePref,
   } = useDashboardConfig();
 
   const uniqueDates = [...new Set(attendanceRecords.map((attendanceRecord) => attendanceRecord.date as string))].sort().reverse().slice(0, 7).reverse();
@@ -116,7 +115,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
               <select
                 value={chartType}
                 onChange={(event) => {
-                  updateAttendanceChartType(event.target.value as "bar" | "line" | "area");
+                  updatePref("attendanceChartType", event.target.value as "bar" | "line" | "area");
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
@@ -127,7 +126,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
               <select
                 value={colorTheme}
                 onChange={(event) => {
-                  updateAttendanceChartColor(event.target.value);
+                  updatePref("attendanceChartColor", event.target.value);
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
@@ -213,8 +212,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
   const {
     hasanatChartType: chartType,
     hasanatChartColor: colorTheme,
-    updateHasanatChartType,
-    updateHasanatChartColor,
+    updatePref,
   } = useDashboardConfig();
 
   let memorisationPoints = 0;
@@ -274,7 +272,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
               <select
                 value={chartType}
                 onChange={(event) => {
-                  updateHasanatChartType(event.target.value as "pie" | "bar" | "radar");
+                  updatePref("hasanatChartType", event.target.value as "pie" | "bar" | "radar");
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
@@ -285,7 +283,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
               <select
                 value={colorTheme}
                 onChange={(event) => {
-                  updateHasanatChartColor(event.target.value);
+                  updatePref("hasanatChartColor", event.target.value);
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >

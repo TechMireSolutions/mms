@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Card } from "@/components/ui/card";
 import { Save, FileText } from "lucide-react";
 import {
@@ -21,61 +21,19 @@ interface ExaminationsSettingsProps {
 export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React.ReactElement {
   const config = useExaminationConfig();
   const {
-    settings,
+    settingsDraft,
     fieldsEditor,
     saved,
     setSaved,
+    upd,
     saveSettings,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: EXAMINATIONS_TAB_REGISTRY,
   });
 
-  // Prefs state
-  const [passMark, setPassMark] = useState(settings.passMark);
-  const [maxMark, setMaxMark] = useState(settings.maxMark);
-  const [gradingSystem, setGradingSystem] = useState(settings.gradingSystem);
-  const [showRankings, setShowRankings] = useState(settings.showRankings);
-  const [allowRetake, setAllowRetake] = useState(settings.allowRetake);
-  const [autoPublishResults, setAutoPublishResults] = useState(settings.autoPublishResults);
-  const [notifyOnResult, setNotifyOnResult] = useState(settings.notifyOnResult);
-  const [certificateTemplate, setCertificateTemplate] = useState(settings.certificateTemplate);
-  const [aiGrading, setAiGrading] = useState(settings.aiGrading);
-  const [distinguishHonours, setDistinguishHonours] = useState(settings.distinguishHonours);
-  const [examReminders, setExamReminders] = useState(settings.examReminders);
-  const [defaultViewLayout, setDefaultViewLayout] = useState(settings.defaultViewLayout);
-
-  useEffect(() => {
-    if (!settings) return;
-    setPassMark(settings.passMark);
-    setMaxMark(settings.maxMark);
-    setGradingSystem(settings.gradingSystem);
-    setShowRankings(settings.showRankings);
-    setAllowRetake(settings.allowRetake);
-    setAutoPublishResults(settings.autoPublishResults);
-    setNotifyOnResult(settings.notifyOnResult);
-    setCertificateTemplate(settings.certificateTemplate);
-    setAiGrading(settings.aiGrading);
-    setDistinguishHonours(settings.distinguishHonours);
-    setExamReminders(settings.examReminders);
-    setDefaultViewLayout(settings.defaultViewLayout);
-  }, [settings]);
-
   const handleSave = () => {
-    saveSettings({
-      passMark,
-      maxMark,
-      gradingSystem,
-      showRankings,
-      allowRetake,
-      autoPublishResults,
-      notifyOnResult,
-      certificateTemplate,
-      aiGrading,
-      distinguishHonours,
-      examReminders,
-      defaultViewLayout,
-    });
+    saveSettings();
   };
 
 
@@ -98,8 +56,8 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
               <label htmlFor="exams-grading-system" className={FORM_LABEL}>Grading System</label>
               <FormSelect
                 id="exams-grading-system"
-                value={gradingSystem}
-                onChange={(value) => { setGradingSystem(value); setSaved(false); }}
+                value={settingsDraft.gradingSystem}
+                onChange={(value) => upd("gradingSystem", value)}
                 options={[
                   { value: "percentage", label: "Percentage (%)" },
                   { value: "letter", label: "Letter Grade (A, B, C...)" },
@@ -111,8 +69,8 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
               <label htmlFor="exams-cert-template" className={FORM_LABEL}>Certificate Template</label>
               <FormSelect
                 id="exams-cert-template"
-                value={certificateTemplate}
-                onChange={(value) => { setCertificateTemplate(value); setSaved(false); }}
+                value={settingsDraft.certificateTemplate}
+                onChange={(value) => upd("certificateTemplate", value)}
                 options={[
                   { value: "default", label: "Standard Classical" },
                   { value: "modern", label: "Modern Clean" },
@@ -125,8 +83,8 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
               <Input
                 id="exams-pass-mark"
                 className={FORM_INPUT}
-                value={passMark}
-                onChange={(event) => { setPassMark(event.target.value); setSaved(false); }}
+                value={settingsDraft.passMark || ""}
+                onChange={(event) => upd("passMark", event.target.value)}
               />
             </div>
             <div>
@@ -134,20 +92,20 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
               <Input
                 id="exams-max-mark"
                 className={FORM_INPUT}
-                value={maxMark}
-                onChange={(event) => { setMaxMark(event.target.value); setSaved(false); }}
+                value={settingsDraft.maxMark || ""}
+                onChange={(event) => upd("maxMark", event.target.value)}
               />
             </div>
           </div>
 
           <div className="space-y-2 pt-1" role="group" aria-label="Examinations registry feature flags toggles">
-            <ToggleRow label="Show Rankings" description="Show student class rank on result cards" value={showRankings} onChange={(value) => { setShowRankings(value); setSaved(false); }} />
-            <ToggleRow label="Allow Retakes" description="Enable student retakes for failed exams" value={allowRetake} onChange={(value) => { setAllowRetake(value); setSaved(false); }} />
-            <ToggleRow label="Auto-publish Results" description="Automatically publish results once grading is finished" value={autoPublishResults} onChange={(value) => { setAutoPublishResults(value); setSaved(false); }} />
-            <ToggleRow label="Notify on Publish" description="Send push notification when results are published" value={notifyOnResult} onChange={(value) => { setNotifyOnResult(value); setSaved(false); }} />
-            <ToggleRow label="AI Grading Assistant" description="Leverage AI models to analyze and grade open-text answers" value={aiGrading} onChange={(value) => { setAiGrading(value); setSaved(false); }} />
-            <ToggleRow label="Distinguish Honours" description="Highlight distinctions/honours on profiles and result sheets" value={distinguishHonours} onChange={(value) => { setDistinguishHonours(value); setSaved(false); }} />
-            <ToggleRow label="Exam Schedule Reminders" description="Auto-send date reminders to guardians prior to exam start" value={examReminders} onChange={(value) => { setExamReminders(value); setSaved(false); }} />
+            <ToggleRow label="Show Rankings" description="Show student class rank on result cards" value={settingsDraft.showRankings} onChange={(value) => upd("showRankings", value)} />
+            <ToggleRow label="Allow Retakes" description="Enable student retakes for failed exams" value={settingsDraft.allowRetake} onChange={(value) => upd("allowRetake", value)} />
+            <ToggleRow label="Auto-publish Results" description="Automatically publish results once grading is finished" value={settingsDraft.autoPublishResults} onChange={(value) => upd("autoPublishResults", value)} />
+            <ToggleRow label="Notify on Publish" description="Send push notification when results are published" value={settingsDraft.notifyOnResult} onChange={(value) => upd("notifyOnResult", value)} />
+            <ToggleRow label="AI Grading Assistant" description="Leverage AI models to analyze and grade open-text answers" value={settingsDraft.aiGrading} onChange={(value) => upd("aiGrading", value)} />
+            <ToggleRow label="Distinguish Honours" description="Highlight distinctions/honours on profiles and result sheets" value={settingsDraft.distinguishHonours} onChange={(value) => upd("distinguishHonours", value)} />
+            <ToggleRow label="Exam Schedule Reminders" description="Auto-send date reminders to guardians prior to exam start" value={settingsDraft.examReminders} onChange={(value) => upd("examReminders", value)} />
           </div>
         </>
       )}

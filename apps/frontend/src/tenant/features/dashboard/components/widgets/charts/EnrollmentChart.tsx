@@ -46,9 +46,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
     enrollmentChartType: chartType,
     enrollmentChartColor: colorTheme,
     enrollmentChartPeriod: monthsCount,
-    updateEnrollmentChartType,
-    updateEnrollmentChartColor,
-    updateEnrollmentChartPeriod,
+    updatePref,
   } = useDashboardConfig();
 
   const months = [
@@ -61,12 +59,14 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
     { key: "2026-01", label: "Jan" },
     { key: "2026-02", label: "Feb" },
     { key: "2026-03", label: "Mar" },
-    { key: "2026-04", label: "Apr" }
+    { key: "2026-04", label: "Apr" },
+    { key: "2026-05", label: "May" },
+    { key: "2026-06", label: "Jun" }
   ];
 
   const activeMonths = months.slice(-monthsCount);
 
-  const enrollmentData: EnrollmentPoint[] = activeMonths.map((month) => {
+  const enrollmentData = activeMonths.map((month) => {
     const count = enrollments.filter((enrollment) => {
       if (!enrollment?.enrolledDate) return false;
       return enrollment.enrolledDate <= `${month.key}-31`;
@@ -102,7 +102,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
               <select
                 value={chartType}
                 onChange={(event) => {
-                  updateEnrollmentChartType(event.target.value as "area" | "bar" | "line");
+                  updatePref("enrollmentChartType", event.target.value as "area" | "bar" | "line");
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
@@ -113,7 +113,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
               <select
                 value={colorTheme}
                 onChange={(event) => {
-                  updateEnrollmentChartColor(event.target.value as "emerald" | "blue" | "violet" | "amber" | "red");
+                  updatePref("enrollmentChartColor", event.target.value as "emerald" | "blue" | "violet" | "amber" | "red");
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >
@@ -126,7 +126,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
               <select
                 value={monthsCount}
                 onChange={(event) => {
-                  updateEnrollmentChartPeriod(Number(event.target.value));
+                  updatePref("enrollmentChartPeriod", Number(event.target.value));
                 }}
                 className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer"
               >

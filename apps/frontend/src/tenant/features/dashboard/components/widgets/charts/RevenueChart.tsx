@@ -68,8 +68,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
   const {
     revenueChartType: chartType,
     revenueChartColor: colorTheme,
-    updateRevenueChartType,
-    updateRevenueChartColor,
+    updatePref,
   } = useDashboardConfig();
 
   const months = [
@@ -134,7 +133,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
               <Select
                 value={chartType}
                 onValueChange={(chartTypeValue) => {
-                  updateRevenueChartType(chartTypeValue as "bar" | "line" | "area");
+                  updatePref("revenueChartType", chartTypeValue as "bar" | "line" | "area");
                 }}
               >
                 <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
@@ -149,7 +148,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
               <Select
                 value={colorTheme}
                 onValueChange={(selectedColorTheme) => {
-                  updateRevenueChartColor(selectedColorTheme);
+                  updatePref("revenueChartColor", selectedColorTheme);
                 }}
               >
                 <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">

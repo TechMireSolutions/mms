@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Save, GraduationCap } from "lucide-react";
 import {
   type StudentsSettings,
@@ -20,9 +20,11 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
   const config = useStudentConfig();
   const {
     settings,
+    settingsDraft,
     fieldsEditor,
     saved,
     setSaved,
+    upd,
     saveSettings,
   } = useModuleSettingsEditor({
     config,
@@ -31,52 +33,8 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
     defaultRequiredTabs: DEFAULT_STUDENT_REQUIRED_TABS,
   });
 
-  // General Preferences state
-  const [idPrefix, setIdPrefix] = useState(settings.idPrefix);
-  const [autoGenerateId, setAutoGenerateId] = useState(settings.autoGenerateId);
-  const [requireGuardian, setRequireGuardian] = useState(settings.requireGuardian);
-  const [requirePhoto, setRequirePhoto] = useState(settings.requirePhoto);
-  const [defaultGender, setDefaultGender] = useState(settings.defaultGender);
-  const [maxAge, setMaxAge] = useState(settings.maxAge);
-  const [minAge, setMinAge] = useState(settings.minAge);
-  const [allowSiblingDiscount, setAllowSiblingDiscount] = useState(settings.allowSiblingDiscount);
-  const [grNumberTemplate, setGrNumberTemplate] = useState(settings.grNumberTemplate);
-  const [grNumberDigits, setGrNumberDigits] = useState(settings.grNumberDigits);
-  const [grNumberRestartAnnually, setGrNumberRestartAnnually] = useState(settings.grNumberRestartAnnually);
-  const [defaultViewLayout, setDefaultViewLayout] = useState(settings.defaultViewLayout);
-
-  useEffect(() => {
-    if (!settings) return;
-    // Keep internal state updated when context settings reload/change
-    setIdPrefix(settings.idPrefix);
-    setAutoGenerateId(settings.autoGenerateId);
-    setRequireGuardian(settings.requireGuardian);
-    setRequirePhoto(settings.requirePhoto);
-    setDefaultGender(settings.defaultGender);
-    setMaxAge(settings.maxAge);
-    setMinAge(settings.minAge);
-    setAllowSiblingDiscount(settings.allowSiblingDiscount);
-    setGrNumberTemplate(settings.grNumberTemplate);
-    setGrNumberDigits(settings.grNumberDigits);
-    setGrNumberRestartAnnually(settings.grNumberRestartAnnually);
-    setDefaultViewLayout(settings.defaultViewLayout);
-  }, [settings]);
-
   const handleSave = (): void => {
-    saveSettings({
-      idPrefix,
-      autoGenerateId,
-      requireGuardian,
-      requirePhoto,
-      defaultGender,
-      maxAge,
-      minAge,
-      allowSiblingDiscount,
-      grNumberTemplate,
-      grNumberDigits,
-      grNumberRestartAnnually,
-      defaultViewLayout,
-    }, {
+    saveSettings(undefined, {
       version: 2,
       columnRegistry: settings.columnRegistry || DEFAULT_STUDENT_COLUMN_REGISTRY,
     } as any);
@@ -104,8 +62,8 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
                 <Input
                   id="gr-template"
                   className={FORM_INPUT}
-                  value={grNumberTemplate || ""}
-                  onChange={(event) => { setGrNumberTemplate(event.target.value); setSaved(false); }}
+                  value={settingsDraft.grNumberTemplate || ""}
+                  onChange={(event) => upd("grNumberTemplate", event.target.value)}
                   placeholder="e.g. {seq}-{year}"
                 />
                 <span className="text-[9px] text-muted-foreground mt-1 block">Use placeholders: <code>{`{seq}`}</code>, <code>{`{year}`}</code></span>
@@ -118,8 +76,8 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
                   min="1"
                   max="8"
                   className={FORM_INPUT}
-                  value={grNumberDigits || 4}
-                  onChange={(event) => { setGrNumberDigits(Number(event.target.value)); setSaved(false); }}
+                  value={settingsDraft.grNumberDigits || 4}
+                  onChange={(event) => upd("grNumberDigits", Number(event.target.value))}
                 />
                 <span className="text-[9px] text-muted-foreground mt-1 block">e.g., 4 is "0001", 3 is "001"</span>
               </div>
@@ -127,15 +85,15 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
             <ToggleRow
               label="Restart Sequence Annually"
               description="Reset GR number sequence to 0001 at the beginning of each calendar year"
-              value={grNumberRestartAnnually ?? true}
-              onChange={(v) => { setGrNumberRestartAnnually(v); setSaved(false); }}
+              value={settingsDraft.grNumberRestartAnnually ?? true}
+              onChange={(v) => upd("grNumberRestartAnnually", v)}
             />
           </div>
 
           <div className="space-y-2 pt-1 border-t border-border/40" role="group" aria-label="Student registry feature flags toggles">
-            <ToggleRow label="Auto-generate Student ID" description="System assigns unique ID on registration" value={autoGenerateId} onChange={(v) => { setAutoGenerateId(v); setSaved(false); }} />
-            <ToggleRow label="Require Guardian Contact" description="Student must have at least one guardian linked" value={requireGuardian} onChange={(v) => { setRequireGuardian(v); setSaved(false); }} />
-            <ToggleRow label="Require Photo" description="Student profile photo is mandatory" value={requirePhoto} onChange={(v) => { setRequirePhoto(v); setSaved(false); }} />
+            <ToggleRow label="Auto-generate Student ID" description="System assigns unique ID on registration" value={settingsDraft.autoGenerateId} onChange={(v) => upd("autoGenerateId", v)} />
+            <ToggleRow label="Require Guardian Contact" description="Student must have at least one guardian linked" value={settingsDraft.requireGuardian} onChange={(v) => upd("requireGuardian", v)} />
+            <ToggleRow label="Require Photo" description="Student profile photo is mandatory" value={settingsDraft.requirePhoto} onChange={(v) => upd("requirePhoto", v)} />
           </div>
 
           <div className="py-3 border-t border-border mt-3 flex items-center justify-between">
@@ -147,9 +105,9 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => { setDefaultViewLayout("list"); setSaved(false); }}
+                onClick={() => upd("defaultViewLayout", "list")}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all h-auto ${
-                  (defaultViewLayout || "list") === "list"
+                  (settingsDraft.defaultViewLayout || "list") === "list"
                     ? "bg-card text-foreground shadow-sm hover:bg-card"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -159,9 +117,9 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => { setDefaultViewLayout("cards"); setSaved(false); }}
+                onClick={() => upd("defaultViewLayout", "cards")}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all h-auto ${
-                  defaultViewLayout === "cards"
+                  settingsDraft.defaultViewLayout === "cards"
                     ? "bg-card text-foreground shadow-sm hover:bg-card"
                     : "text-muted-foreground hover:text-foreground"
                 }`}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Save, School } from "lucide-react";
 import {
   TEACHERS_TAB_REGISTRY,
@@ -21,39 +21,21 @@ export function TeachersSettings({ mode }: { mode?: "fields" | "preferences" }):
   const config = useTeacherConfig();
   const { specializations } = config;
   const {
-    settings,
+    settingsDraft,
     fieldsEditor,
     saved,
     setSaved,
+    upd,
     saveSettings,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: TEACHERS_TAB_REGISTRY,
   });
 
-  // Prefs state
-  const [idPrefix, setIdPrefix] = useState(settings.idPrefix);
-  const [autoGenerateId, setAutoGenerateId] = useState(settings.autoGenerateId);
-  const [requireContactLink, setRequireContactLink] = useState(settings.requireContactLink);
-  const [defaultSpecialization, setDefaultSpecialization] = useState(settings.defaultSpecialization);
-
-  useEffect(() => {
-    if (!settings) return;
-    setIdPrefix(settings.idPrefix);
-    setAutoGenerateId(settings.autoGenerateId);
-    setRequireContactLink(settings.requireContactLink);
-    setDefaultSpecialization(settings.defaultSpecialization);
-  }, [settings]);
-
   const specializationOptions = specializations.length > 0 ? specializations : [...TEACHER_SPECIALIZATION_VALUES];
 
   const handleSave = (): void => {
-    saveSettings({
-      idPrefix,
-      autoGenerateId,
-      requireContactLink,
-      defaultSpecialization,
-    });
+    saveSettings();
     notify.success(t("teachers.settings.saved"));
   };
 
@@ -75,29 +57,29 @@ export function TeachersSettings({ mode }: { mode?: "fields" | "preferences" }):
             <label className={FORM_LABEL} htmlFor="teacher-idPrefix">{t("teachers.settings.idPrefix")}</label>
             <Input
               id="teacher-idPrefix"
-              value={idPrefix}
-              onChange={(event) => { setIdPrefix(event.target.value); setSaved(false); }}
+              value={settingsDraft.idPrefix || ""}
+              onChange={(event) => upd("idPrefix", event.target.value)}
             />
           </div>
 
           <ToggleRow
             label={t("teachers.settings.autoGenerateId")}
-            value={autoGenerateId}
-            onChange={(v) => { setAutoGenerateId(v); setSaved(false); }}
+            value={settingsDraft.autoGenerateId}
+            onChange={(v) => upd("autoGenerateId", v)}
           />
 
           <ToggleRow
             label={t("teachers.settings.requireContactLink")}
-            value={requireContactLink}
-            onChange={(v) => { setRequireContactLink(v); setSaved(false); }}
+            value={settingsDraft.requireContactLink}
+            onChange={(v) => upd("requireContactLink", v)}
           />
 
           <div>
             <label className={FORM_LABEL} htmlFor="teacher-defaultSpecialization">{t("teachers.settings.defaultSpecialization")}</label>
             <FormSelect
               id="teacher-defaultSpecialization"
-              value={defaultSpecialization}
-            onChange={(specialization) => { setDefaultSpecialization(specialization); setSaved(false); }}
+              value={settingsDraft.defaultSpecialization}
+              onChange={(specialization) => upd("defaultSpecialization", specialization)}
               options={specializationOptions}
             />
           </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Card } from "@/components/ui/card";
 import { Shield, Save } from "lucide-react";
 import {
@@ -22,31 +22,19 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
   const { t } = useTranslation();
   const config = useUsersConfig();
   const {
-    settings,
+    settingsDraft,
     fieldsEditor,
     saved,
     setSaved,
+    upd,
     saveSettings,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: USERS_TAB_REGISTRY,
   });
 
-  // Prefs state
-  const [allowSelfRegistration, setAllowSelfRegistration] = useState(settings.allowSelfRegistration);
-  const [requireEmailVerification, setRequireEmailVerification] = useState(settings.requireEmailVerification);
-
-  useEffect(() => {
-    if (!settings) return;
-    setAllowSelfRegistration(settings.allowSelfRegistration);
-    setRequireEmailVerification(settings.requireEmailVerification);
-  }, [settings]);
-
   const handleSave = (): void => {
-    saveSettings({
-      allowSelfRegistration,
-      requireEmailVerification,
-    });
+    saveSettings();
     notify.success(t("users.settingsSaved"), { description: t("users.settingsSavedDesc") });
   };
 
@@ -67,14 +55,14 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
           <ToggleRow
             label={t("users.selfRegistration")}
             description={t("users.selfRegistrationDesc")}
-            value={allowSelfRegistration || false}
-            onChange={(v) => { setAllowSelfRegistration(v); setSaved(false); }}
+            value={settingsDraft.allowSelfRegistration || false}
+            onChange={(v) => upd("allowSelfRegistration", v)}
           />
           <ToggleRow
             label={t("users.emailVerification")}
             description={t("users.emailVerificationDesc")}
-            value={requireEmailVerification || false}
-            onChange={(v) => { setRequireEmailVerification(v); setSaved(false); }}
+            value={settingsDraft.requireEmailVerification || false}
+            onChange={(v) => upd("requireEmailVerification", v)}
           />
         </div>
       )}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Save, Calendar } from "lucide-react";
 import {
   SESSIONS_TAB_REGISTRY,
@@ -22,57 +22,21 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
   const config = useSessionConfig();
   const { types } = config;
   const {
-    settings,
+    settingsDraft,
     fieldsEditor,
     saved,
     setSaved,
+    upd,
     saveSettings,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: SESSIONS_TAB_REGISTRY,
   });
 
-  // Prefs state
-  const [defaultDuration, setDefaultDuration] = useState(settings.defaultDuration);
-  const [defaultSessionType, setDefaultSessionType] = useState(settings.defaultSessionType);
-  const [academicYear, setAcademicYear] = useState(settings.academicYear);
-  const [sessionStart, setSessionStart] = useState(settings.sessionStart);
-  const [allowOverlap, setAllowOverlap] = useState(settings.allowOverlap);
-  const [archiveOldSessions, setArchiveOldSessions] = useState(settings.archiveOldSessions);
-  const [requireBudget, setRequireBudget] = useState(settings.requireBudget);
-  const [timetableConflictCheck, setTimetableConflictCheck] = useState(settings.timetableConflictCheck);
-  const [notifyOnSessionStart, setNotifyOnSessionStart] = useState(settings.notifyOnSessionStart);
-  const [defaultViewLayout, setDefaultViewLayout] = useState(settings.defaultViewLayout);
-
-  useEffect(() => {
-    if (!settings) return;
-    setDefaultDuration(settings.defaultDuration);
-    setDefaultSessionType(settings.defaultSessionType);
-    setAcademicYear(settings.academicYear);
-    setSessionStart(settings.sessionStart);
-    setAllowOverlap(settings.allowOverlap);
-    setArchiveOldSessions(settings.archiveOldSessions);
-    setRequireBudget(settings.requireBudget);
-    setTimetableConflictCheck(settings.timetableConflictCheck);
-    setNotifyOnSessionStart(settings.notifyOnSessionStart);
-    setDefaultViewLayout(settings.defaultViewLayout);
-  }, [settings]);
-
   const typeOptions = types.length > 0 ? types : [...SESSION_TYPES];
 
   const handleSave = (): void => {
-    saveSettings({
-      defaultDuration,
-      defaultSessionType,
-      academicYear,
-      sessionStart,
-      allowOverlap,
-      archiveOldSessions,
-      requireBudget,
-      timetableConflictCheck,
-      notifyOnSessionStart,
-      defaultViewLayout,
-    });
+    saveSettings();
   };
 
   const showPrefs = mode === "preferences";
@@ -95,16 +59,16 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
               <Input
                 id="defaultDuration"
                 type="number"
-                value={defaultDuration}
-                onChange={(event) => { setDefaultDuration(event.target.value); setSaved(false); }}
+                value={settingsDraft.defaultDuration || ""}
+                onChange={(event) => upd("defaultDuration", event.target.value)}
               />
             </div>
             <div>
               <label className={FORM_LABEL} htmlFor="defaultSessionType">Default Session Type</label>
               <FormSelect
                 id="defaultSessionType"
-                value={defaultSessionType}
-                onChange={(value) => { setDefaultSessionType(value); setSaved(false); }}
+                value={settingsDraft.defaultSessionType}
+                onChange={(value) => upd("defaultSessionType", value)}
                 options={typeOptions}
                 className="w-full"
               />
@@ -114,8 +78,8 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
               <Input
                 id="academicYear"
                 type="text"
-                value={academicYear}
-                onChange={(event) => { setAcademicYear(event.target.value); setSaved(false); }}
+                value={settingsDraft.academicYear || ""}
+                onChange={(event) => upd("academicYear", event.target.value)}
                 placeholder="2025-2026"
               />
             </div>
@@ -123,8 +87,8 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
               <label className={FORM_LABEL} htmlFor="sessionStart">Session Starts (Month)</label>
               <FormSelect
                 id="sessionStart"
-                value={sessionStart}
-                onChange={(value) => { setSessionStart(value); setSaved(false); }}
+                value={settingsDraft.sessionStart}
+                onChange={(value) => upd("sessionStart", value)}
                 options={["january", "february", "march", "april", "may", "june",
                   "july", "august", "september", "october", "november", "december"].map((month) => ({
                     value: month,
@@ -139,32 +103,32 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
             <ToggleRow
               label="Allow Overlapping Sessions"
               description="Multiple active sessions can run at the same time"
-              value={allowOverlap}
-              onChange={(value) => { setAllowOverlap(value); setSaved(false); }}
+              value={settingsDraft.allowOverlap}
+              onChange={(value) => upd("allowOverlap", value)}
             />
             <ToggleRow
               label="Auto-archive Old Sessions"
               description="Completed sessions are automatically archived"
-              value={archiveOldSessions}
-              onChange={(value) => { setArchiveOldSessions(value); setSaved(false); }}
+              value={settingsDraft.archiveOldSessions}
+              onChange={(value) => upd("archiveOldSessions", value)}
             />
             <ToggleRow
               label="Require Budget Plan"
               description="Session must have a budget before activation"
-              value={requireBudget}
-              onChange={(value) => { setRequireBudget(value); setSaved(false); }}
+              value={settingsDraft.requireBudget}
+              onChange={(value) => upd("requireBudget", value)}
             />
             <ToggleRow
               label="Timetable Conflict Check"
               description="Warn when class schedules overlap"
-              value={timetableConflictCheck}
-              onChange={(value) => { setTimetableConflictCheck(value); setSaved(false); }}
+              value={settingsDraft.timetableConflictCheck}
+              onChange={(value) => upd("timetableConflictCheck", value)}
             />
             <ToggleRow
               label="Notify on Session Start"
               description="Send notification when a new session begins"
-              value={notifyOnSessionStart}
-              onChange={(value) => { setNotifyOnSessionStart(value); setSaved(false); }}
+              value={settingsDraft.notifyOnSessionStart}
+              onChange={(value) => upd("notifyOnSessionStart", value)}
             />
 
             <div className="py-3 border-t border-border mt-3 flex items-center justify-between">
@@ -175,9 +139,9 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
               <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
                 <Button
                   variant="ghost"
-                  onClick={() => { setDefaultViewLayout("list"); setSaved(false); }}
+                  onClick={() => upd("defaultViewLayout", "list")}
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all h-auto ${
-                    (defaultViewLayout || "cards") === "list"
+                    (settingsDraft.defaultViewLayout || "cards") === "list"
                       ? "bg-card text-foreground shadow-sm hover:bg-card hover:text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-transparent"
                   }`}
@@ -186,9 +150,9 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
                 </Button>
                 <Button
                   variant="ghost"
-                  onClick={() => { setDefaultViewLayout("cards"); setSaved(false); }}
+                  onClick={() => upd("defaultViewLayout", "cards")}
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all h-auto ${
-                    (defaultViewLayout || "cards") === "cards"
+                    (settingsDraft.defaultViewLayout || "cards") === "cards"
                       ? "bg-card text-foreground shadow-sm hover:bg-card hover:text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-transparent"
                   }`}
