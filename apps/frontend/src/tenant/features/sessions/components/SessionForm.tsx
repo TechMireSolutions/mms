@@ -9,6 +9,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { notify } from "@/lib/notify";
 import { Session } from '@/lib/data/sessionsData';
 import { toTitleCase, AppTranslationKey } from "@mms/shared";
@@ -33,6 +34,9 @@ export function SessionForm({
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
 
+  const { activeCurrency } = useFinanceCurrency();
+  const defaultCurrency = activeCurrency.code;
+
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -43,7 +47,7 @@ export function SessionForm({
     startDate: session?.startDate ?? new Date().toISOString().split("T")[0],
     endDate: session?.endDate ?? "",
     baseFee: session?.baseFee ?? 0,
-    currency: session?.currency ?? "PKR",
+    currency: session?.currency ?? defaultCurrency,
     description: session?.description ?? "",
     classes: session?.classes ?? [],
     timetable: session?.timetable ?? [],
@@ -219,7 +223,7 @@ export function SessionForm({
 
         <Field label="Currency">
           <FormSelect
-            value={sessionDraft.currency || "PKR"}
+            value={sessionDraft.currency || defaultCurrency}
             onChange={(val) => updateDraft({ currency: val })}
             options={CURRENCIES}
           />
