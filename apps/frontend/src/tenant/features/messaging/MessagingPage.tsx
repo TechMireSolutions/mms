@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { 
   MessageSquare, MessageCircle, Send, Search, 
   Trash2, User, Clock, Plus, Tag, Filter, Check, Mail, BarChart2
@@ -49,7 +50,7 @@ export default function MessagingPage(): React.JSX.Element {
   }, []);
 
   // Local state
-  const [activeTab, setActiveTab] = useState<'work' | 'reports' | 'setup'>('work');
+  const [activeTab, setActiveTab] = usePersistedTabState<'work' | 'reports' | 'setup'>("messaging_active_tab", "work");
   const [searchContact, setSearchContact] = useState('');
   const [searchLog, setSearchLog] = useState('');
   

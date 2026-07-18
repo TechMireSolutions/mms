@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input as UiInput } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Textarea } from "@/components/ui/textarea";
 import type { Contact } from "@mms/shared";
 import {
@@ -254,9 +255,7 @@ function Step1({ form, setForm, errors }: Step1Props): JSX.Element {
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
           className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-2">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-bold text-primary">{getInitials(form.name)}</span>
-            </div>
+            <UserAvatar id={form.contactId} name={form.name} className="w-10 h-10 rounded-full text-xs font-semibold" />
             <div>
               <p className="text-sm font-bold text-foreground">{form.name}</p>
               <p className="text-[11px] text-muted-foreground">{form.email}</p>

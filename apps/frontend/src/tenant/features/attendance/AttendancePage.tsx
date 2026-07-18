@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
+import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -48,7 +49,7 @@ export default function Attendance() {
   const { t } = useTranslation();
   const role = useViewerRole();
   const { can } = usePermissions();
-  const [activeTab, setActiveTab] = useState("work");
+  const [activeTab, setActiveTab] = usePersistedTabState<string>("attendance_active_tab", "work");
   const [activeOpsTab, setActiveOpsTab] = useState("mark");
   const [activeAnalyticsTab, setActiveAnalyticsTab] = useState("charts");
   const [filters, setFilters] = useState(DEFAULT_FILTERS);

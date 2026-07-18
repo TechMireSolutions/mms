@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useTranslation } from "@/hooks/useTranslation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -41,7 +42,7 @@ export default function Finance() {
     ],
     [t]
   );
-  const [activeTab, setActiveTab] = useState("work");
+  const [activeTab, setActiveTab] = usePersistedTabState<string>("finance_active_tab", "work");
   const [activeSubTab, setActiveSubTab] = useState("invoices");
   const invoices = useFinanceInvoicesCollection();
   const payments = useFinancePaymentsCollection();

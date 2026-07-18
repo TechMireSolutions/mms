@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -52,7 +53,7 @@ export default function HasanatCards() {
     ],
     [t],
   );
-  const [activeTab, setActiveTab] = useState("work");
+  const [activeTab, setActiveTab] = usePersistedTabState<string>("hasanat_active_tab", "work");
   const [activeSubTab, setActiveSubTab] = useState("overview");
   const [configSubTab, setConfigSubTab] = useState<"denominations" | "preferences">("denominations");
   const denoms = useHasanatDenomsCollection();

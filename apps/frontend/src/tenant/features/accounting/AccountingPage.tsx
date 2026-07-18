@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -65,7 +66,7 @@ export default function Accounting() {
     })),
     [t]
   );
-  const [activeTab, setActiveTab]     = useState("work");
+  const [activeTab, setActiveTab]     = usePersistedTabState<string>("accounting_active_tab", "work");
   const [activeSubTab, setActiveSubTab] = useState("overview");
   const accounts = useAccountingAccountsCollection();
   const journalEntries = useAccountingEntriesCollection();

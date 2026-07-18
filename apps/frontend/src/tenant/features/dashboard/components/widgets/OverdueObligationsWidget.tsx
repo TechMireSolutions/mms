@@ -5,9 +5,10 @@ import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { ROUTES } from "@/lib/config/routes";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatMoney, getInitials, formatDate } from "@mms/shared";
+import { formatMoney, formatDate } from "@mms/shared";
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import MessageComposer from "@/components/ui/MessageComposer";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
@@ -165,11 +166,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                   <tr key={overdueStudent.id} className="hover:bg-muted/20 transition-colors">
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0" aria-hidden="true">
-                          <span className="text-[10px] font-bold text-primary">
-                            {getInitials(overdueStudent.name)}
-                          </span>
-                        </div>
+                        <UserAvatar id={overdueStudent.id} name={overdueStudent.name} className="w-7 h-7 rounded-full text-[10px] font-bold" />
                         <span className="font-medium text-foreground text-xs">{overdueStudent.name}</span>
                       </div>
                     </td>

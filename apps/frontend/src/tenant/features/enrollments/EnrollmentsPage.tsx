@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -40,7 +41,7 @@ export default function EnrollmentsPage() {
     [t]
   );
   const TABS = useModuleTierTabs();
-  const [tab, setTab]                 = useState("work");
+  const [tab, setTab]                 = usePersistedTabState<string>("enrollments_active_tab", "work");
   const [activeSubTab, setActiveSubTab] = useState("list");
   const role = useEnrollmentViewerRole();
   const { can } = usePermissions();

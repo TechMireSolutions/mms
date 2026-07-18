@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
+import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import type { AppTranslationKey, Contact, PhoneNumber } from "@mms/shared";
 import {
   parsePhoneNumber,
@@ -115,7 +116,7 @@ export function useContactsPageState({
   const [editContact, setEditContact] = useState<Contact | null>(null);
   const [showDuplicates, setShowDuplicates] = useState(false);
   const [messagingTarget, setMessagingTarget] = useState<{ channel: 'sms' | 'whatsapp' | 'email'; contacts: Contact[] } | null>(null);
-  const [activeTab, setActiveTab] = useState("work");
+  const [activeTab, setActiveTab] = usePersistedTabState<string>("contacts_active_tab", "work");
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string | number; name?: string } | null>(null);

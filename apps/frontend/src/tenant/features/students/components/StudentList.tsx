@@ -25,27 +25,11 @@ import { formatDate } from "@/lib/db";
 import { runCsvDownloadJob } from '@/lib/backgroundJobs/runCsvDownloadJob';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppTranslationKey, FieldDefinition } from "@mms/shared";
-import { getInitials } from "@mms/shared";
 import StudentDetail from "@/tenant/features/students/components/StudentDetail";
 import { useStudentConfig } from "@/tenant/features/students/hooks/useStudentConfig";
 
-const AVATAR_COLORS = [
-  "bg-primary/15 text-primary",
-  "bg-info/15 text-info",
-  "bg-success/15 text-success",
-  "bg-warning/15 text-warning",
-  "bg-secondary/15 text-secondary",
-] as const;
+import { UserAvatar } from "@/components/ui/UserAvatar";
 
-function StudentAvatar({ student }: { student: Student }): JSX.Element {
-  const initials = getInitials(student.name);
-  const colorIndex = student.id.charCodeAt(student.id.length - 1) % AVATAR_COLORS.length;
-  return (
-    <div className={`w-8 h-8 rounded-full ${AVATAR_COLORS[colorIndex]} flex items-center justify-center text-[11px] font-bold flex-shrink-0`}>
-      {initials}
-    </div>
-  );
-}
 
 export interface StudentListServerPagination {
   total: number;
@@ -285,7 +269,7 @@ export default function StudentList({
                   </div>
 
                   <div className="flex flex-col items-center text-center mt-3 mb-4">
-                    <StudentAvatar student={studentCard} />
+                    <UserAvatar id={studentCard.id} name={studentCard.name} className="w-8 h-8 rounded-full text-[11px] font-bold" />
                     <h4 className="text-sm font-bold text-foreground mt-2 group-hover:text-primary transition-colors truncate w-full max-w-[150px]">
                       {studentCard.name}
                     </h4>
@@ -505,7 +489,7 @@ export default function StudentList({
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <StudentAvatar student={studentRow} />
+                            <UserAvatar id={studentRow.id} name={studentRow.name} className="w-8 h-8 rounded-full text-[11px] font-bold" />
                             <div>
                               <div className="flex items-center gap-1.5">
                                 <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors">

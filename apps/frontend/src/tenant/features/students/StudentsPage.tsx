@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
+import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -99,7 +100,7 @@ export default function Students() {
   const { data: serverCount } = useStudentCount();
   const { createStudent, updateStudent, deleteStudent } = useStudentMutations();
   const { settings, statuses: studentStatusOptions, genderFilters } = useStudentConfig();
-  const [activeTab, setActiveTab] = useState("work");
+  const [activeTab, setActiveTab] = usePersistedTabState<string>("students_active_tab", "work");
   const [needsMigrationScan, setNeedsMigrationScan] = useState(() => !grMigrationAlreadyDone());
   const [showStudentForm, setShowStudentForm] = useState(false);
   const [listPage, setListPage] = useState(1);

@@ -9,31 +9,13 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { formatDate } from '@/lib/db';
-import { DEFAULT_TEACHERS_SETTINGS, type AppTranslationKey, getInitials } from '@mms/shared';
+import { DEFAULT_TEACHERS_SETTINGS, type AppTranslationKey } from '@mms/shared';
 import { useTeacherConfig } from '@/tenant/features/teachers/hooks/useTeacherConfig';
 import type { Teacher } from '@/lib/data/teachersData';
 import { Button } from '@/components/ui/button';
 
-const AVATAR_COLORS = [
-  'bg-primary/15 text-primary',
-  'bg-info/15 text-info',
-  'bg-success/15 text-success',
-  'bg-warning/15 text-warning',
-  'bg-secondary/15 text-secondary',
-] as const;
+import { UserAvatar } from '@/components/ui/UserAvatar';
 
-function TeacherAvatar({ teacher, fallback }: { teacher: Teacher; fallback: string }): React.JSX.Element {
-  const displayName = teacher.name || fallback;
-  const initials = getInitials(displayName);
-  const colorIndex = Math.abs(displayName.split('').reduce((hashTotal, character) => hashTotal + character.charCodeAt(0), 0)) % AVATAR_COLORS.length;
-  const colorClass = AVATAR_COLORS[colorIndex];
-
-  return (
-    <div className={`flex h-8 w-8 items-center justify-center rounded-full font-semibold ${colorClass}`}>
-      {initials}
-    </div>
-  );
-}
 
 export interface TeacherListProps {
   teachers: Teacher[];
@@ -190,7 +172,7 @@ export function TeacherList({
               <tr key={teacher.id} className="hover:bg-muted/20 transition-colors">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <TeacherAvatar teacher={teacher} fallback={displayName} />
+                    <UserAvatar id={teacher.id} name={displayName} className="h-8 w-8 rounded-full text-xs font-semibold" />
                     <div className="min-w-0">
                       <p className="font-medium text-foreground truncate">{displayName}</p>
                       {teacher.employeeId && (

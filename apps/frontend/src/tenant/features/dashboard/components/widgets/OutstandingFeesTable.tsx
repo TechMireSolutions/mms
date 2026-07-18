@@ -6,7 +6,7 @@ import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
-import { getInitials } from "@mms/shared";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import MessageComposer from "@/components/ui/MessageComposer";
 import { useFinanceCurrency } from "@/tenant/features/finance/hooks/useFinanceCurrency";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -129,11 +129,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
               >
                 <td className="px-5 py-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0" aria-hidden="true">
-                      <span className="text-[10px] font-bold text-primary">
-                        {getInitials(outstandingFee.student)}
-                      </span>
-                    </div>
+                    <UserAvatar id={outstandingFee.studentId} name={outstandingFee.student} className="w-7 h-7 rounded-full text-[10px] font-bold" />
                     <span className="text-[13px] font-medium text-foreground">{outstandingFee.student}</span>
                   </div>
                 </td>

@@ -12,7 +12,7 @@ import { getGrade } from "@/tenant/features/examinations/components/gradeUtils";
 import { FORM_INPUT_COMPACT } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getInitials } from "@mms/shared";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 
 interface EnterMarksProps {
   exams: Exam[];
@@ -154,9 +154,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
                     className="flex items-center gap-4 px-4 py-3"
                     role="listitem"
                   >
-                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-primary" aria-hidden="true">
-                      {getInitials(student.name)}
-                    </div>
+                    <UserAvatar id={student.id} name={student.name} className="w-7 h-7 rounded-full text-[11px] font-bold" />
                     <div className="flex-1 min-w-0">
                       <p className="text-[13px] font-semibold text-foreground">{student.name ?? "—"}</p>
                       <p className="text-[10px] text-muted-foreground">{classNamesById.get(student.classId) || student.classId} · {student.rollNo}</p>

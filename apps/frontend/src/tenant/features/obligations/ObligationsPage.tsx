@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -49,7 +50,7 @@ export default function Obligations() {
     ],
     [t]
   );
-  const [activeTab, setActiveTab] = useState("work");
+  const [activeTab, setActiveTab] = usePersistedTabState<string>("obligations_active_tab", "work");
   const [activeConfigTab, setActiveConfigTab] = useState("types");
 
   const obligationTypes = useObligationsTypesCollection();

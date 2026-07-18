@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -153,7 +154,7 @@ export default function Sessions() {
   const [showForm, setShowForm] = useState(false);
   const [editSession, setEditSession] = useState<Session | null>(null);
   const [detailSession, setDetailSession] = useState<Session | null>(null);
-  const [activeTab, setActiveTab] = useState("work");
+  const [activeTab, setActiveTab] = usePersistedTabState<string>("sessions_active_tab", "work");
 
   const filtered = useMemo(() => {
     return sessions.filter((sessionItem) => {

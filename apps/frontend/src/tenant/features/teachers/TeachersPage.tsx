@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
@@ -68,7 +69,7 @@ export default function Teachers(): React.JSX.Element {
     customizerLabels,
   } = useTeacherColumnLayout(settings);
 
-  const [activeTab, setActiveTab] = useState('work');
+  const [activeTab, setActiveTab] = usePersistedTabState<string>('teachers_active_tab', 'work');
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterSpecialization, setFilterSpecialization] = useState('');
