@@ -274,7 +274,7 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
  */
 export function MarkAttendance({ filters, role, records, setRecords }: MarkAttendanceProps) {
   const { t } = useTranslation();
-  const { statuses, fields, customFields, orderedFields } = useAttendanceConfig();
+  const { statuses, fields, customFields, orderedFields, isFieldEnabled } = useAttendanceConfig();
   const { can } = usePermissions();
   const sessions = useSessionsCollection();
   const enrollments = useEnrollmentsCollection();
@@ -619,7 +619,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
                 <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase w-8">#</th>
                 <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("attendance.columns.student")}</th>
                 {orderedFields.map((field) => {
-                  const isEnabled = fields[field.id]?.enabled !== false;
+                  const isEnabled = isFieldEnabled(field.id);
                   if (!isEnabled) return null;
                   return (
                     <th
@@ -636,7 +636,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
             </thead>
             <tbody className="divide-y divide-border">
               {filteredRows.length === 0 ? (
-                <tr><td colSpan={orderedFields.filter((field) => fields[field.id]?.enabled !== false).length + 2} className="px-4 py-10 text-center text-muted-foreground text-sm">No students found</td></tr>
+                <tr><td colSpan={orderedFields.filter((field) => isFieldEnabled(field.id)).length + 2} className="px-4 py-10 text-center text-muted-foreground text-sm">No students found</td></tr>
               ) : filteredRows.map((row) => {
                 const statusInfo = getAttendanceStatusInfo(row.status, statuses);
                 return (
@@ -644,7 +644,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
                     <td className="px-3 py-2.5 text-[11px] text-muted-foreground font-mono">{row.rollNo}</td>
                     <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{row.name}</td>
                     {orderedFields.map((field) => {
-                      const isEnabled = fields[field.id]?.enabled !== false;
+                      const isEnabled = isFieldEnabled(field.id);
                       if (!isEnabled) return null;
 
                       if (field.id === "status") {

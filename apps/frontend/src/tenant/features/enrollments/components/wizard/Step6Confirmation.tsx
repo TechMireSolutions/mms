@@ -79,7 +79,7 @@ export function Step6Confirmation({
 }: Step6ConfirmationProps): React.ReactElement {
   const age = student ? calcAge(student.dob) : null;
 
-  const { fields, orderedFields: allOrderedFields } = useEnrollmentConfig();
+  const { fields, orderedFields: allOrderedFields, isFieldEnabled } = useEnrollmentConfig();
 
   const orderedFields = React.useMemo(() => {
     return allOrderedFields.filter((field) => !["studentId", "sessionId", "classId"].includes(field.id));
@@ -127,7 +127,7 @@ export function Step6Confirmation({
       {/* Dynamic Render Notes & Custom Fields */}
       <div className="space-y-4">
         {orderedFields.map((field) => {
-          const isEnabled = fields[field.id]?.enabled !== false;
+          const isEnabled = isFieldEnabled(field.id);
           if (!isEnabled) return null;
 
           if (field.id === "notes") {

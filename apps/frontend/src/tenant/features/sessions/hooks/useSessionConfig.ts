@@ -20,6 +20,8 @@ export function useSessionConfig() {
     fields,
     customFields,
     updateSettings,
+    isFieldEnabled,
+    isFieldRequired,
   } = useModuleConfig({
     settingsObjectKey: SESSIONS_MODULE_CONTRACT.settingsObjectKey,
     defaultSettings: DEFAULT_SESSIONS_SETTINGS,
@@ -43,6 +45,8 @@ export function useSessionConfig() {
     customFields,
     orderedFields,
     updateSettings,
+    isFieldEnabled,
+    isFieldRequired,
   };
 }
 

@@ -27,6 +27,8 @@ export function useTeacherConfig() {
     fields,
     customFields,
     updateSettings,
+    isFieldEnabled,
+    isFieldRequired,
   } = useModuleConfig({
     settingsObjectKey: TEACHERS_MODULE_CONTRACT.settingsObjectKey,
     defaultSettings: DEFAULT_TEACHERS_SETTINGS,
@@ -51,6 +53,8 @@ export function useTeacherConfig() {
     customFields,
     orderedFields,
     updateSettings,
+    isFieldEnabled,
+    isFieldRequired,
   };
 }
 

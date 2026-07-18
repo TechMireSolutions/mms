@@ -26,6 +26,8 @@ export function useStudentConfig() {
     fields,
     customFields,
     updateSettings,
+    isFieldEnabled,
+    isFieldRequired,
   } = useModuleConfig<StudentsSettings>({
     settingsObjectKey: STUDENTS_MODULE_CONTRACT.settingsObjectKey,
     defaultSettings: DEFAULT_STUDENTS_SETTINGS,
@@ -63,6 +65,8 @@ export function useStudentConfig() {
     fields,
     customFields,
     orderedFields,
+    isFieldEnabled,
+    isFieldRequired,
   };
 }
 

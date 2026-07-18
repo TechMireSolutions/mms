@@ -80,6 +80,16 @@ export function useModuleConfig<T extends ModuleSettingsShape>({
     [defaultFieldDefs, fieldOrder, fields, customFields],
   );
 
+  const isFieldEnabled = useCallback(
+    (fieldId: string): boolean => fields[fieldId]?.enabled !== false,
+    [fields],
+  );
+
+  const isFieldRequired = useCallback(
+    (fieldId: string): boolean => !!fields[fieldId]?.required,
+    [fields],
+  );
+
   return {
     settings,
     orderedFields,
@@ -89,5 +99,7 @@ export function useModuleConfig<T extends ModuleSettingsShape>({
     reloadConfig,
     mergeSettings,
     loadSettings,
+    isFieldEnabled,
+    isFieldRequired,
   };
 }

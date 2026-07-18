@@ -80,22 +80,11 @@ export default function StudentList({
 }: StudentListProps): JSX.Element {
   const { t } = useTranslation();
   const sessions = useSessionsCollection();
-  const { settings, statuses } = useStudentConfig();
-  const fields = useMemo(() => settings.fields || {}, [settings.fields]);
-
-  const isFieldEnabled = React.useCallback((fieldKey: string): boolean => {
-    for (const tabFields of Object.values(fields) as FieldDefinition[][]) {
-      const fieldDefinition = tabFields.find((tabField) => tabField.key === fieldKey);
-      if (fieldDefinition) {
-        return fieldDefinition.enabled !== false;
-      }
-    }
-    return true; // default enabled
-  }, [fields]);
+  const { settings, statuses, isFieldEnabled } = useStudentConfig();
 
   const sortedCustomFields = useMemo(() => {
     const customFieldColumns: Array<{ id: string; label: string }> = [];
-    Object.entries(fields).forEach(([tabId, tabFields]) => {
+    Object.entries(settings.fields || {}).forEach(([tabId, tabFields]) => {
       (tabFields as FieldDefinition[]).forEach((fieldDefinition) => {
         const isSystemField =
           (tabId === "basic" && ["gender", "dob", "registeredDate"].includes(fieldDefinition.key)) ||
@@ -106,7 +95,7 @@ export default function StudentList({
       });
     });
     return customFieldColumns;
-  }, [fields]);
+  }, [settings.fields]);
 
   const showDob = isColumnVisible
     ? isColumnVisible("dob")

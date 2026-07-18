@@ -75,13 +75,13 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
   const availableBatches = batches.filter((batch) => batch.denominationId === data.denominationId && batch.remaining > 0);
   const totalAvailable = availableBatches.reduce((sum: number, batch: StockBatch) => sum + batch.remaining, 0);
 
-  const { fields, orderedFields } = useHasanatConfig();
+  const { fields, orderedFields, isFieldEnabled, isFieldRequired } = useHasanatConfig();
 
   const isValid = useMemo(() => {
     if (totalAvailable === 0) return false;
     for (const field of orderedFields) {
-      const isEnabled = fields[field.id]?.enabled !== false;
-      const isRequired = !!fields[field.id]?.required;
+      const isEnabled = isFieldEnabled(field.id);
+      const isRequired = isFieldRequired(field.id);
       if (!isEnabled || !isRequired) continue;
       if (field.id === "recipientName") {
         const recipientId = data.recipientType === "faculty"
@@ -132,7 +132,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {orderedFields.map((field) => {
-              const isEnabled = fields[field.id]?.enabled !== false;
+              const isEnabled = isFieldEnabled(field.id);
               if (!isEnabled) return null;
 
               if (field.id === "denominationId") {

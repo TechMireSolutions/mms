@@ -44,6 +44,7 @@ export function useQuestionBankConfig(
     orderedFields,
     fields,
     updateSettings,
+    isFieldEnabled,
   } = useModuleConfig<QuestionBankSettings>({
     settingsObjectKey: 'question_bank_settings',
     defaultSettings: DEFAULT_QUESTION_BANK_SETTINGS,
@@ -67,11 +68,6 @@ export function useQuestionBankConfig(
         .filter((entry) => entry.enabled)
         .map((entry) => entry.id),
     [settings.questionTypes],
-  );
-
-  const isFieldEnabled = useCallback(
-    (fieldId: string): boolean => fields[fieldId]?.enabled !== false,
-    [fields],
   );
 
   const fieldLabel = useCallback(

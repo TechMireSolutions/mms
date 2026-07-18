@@ -28,7 +28,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
   const type = form.type as AccountType;
   const subtypes = type ? (ACCOUNT_SUBTYPES[type] || []) : [];
 
-  const { fields, orderedFields } = useAccountingConfig();
+  const { fields, orderedFields, isFieldEnabled } = useAccountingConfig();
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -71,7 +71,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {orderedFields.map((field) => {
-          const isEnabled = fields[field.id]?.enabled !== false;
+          const isEnabled = isFieldEnabled(field.id);
           if (!isEnabled) return null;
 
           if (field.id === "code") {

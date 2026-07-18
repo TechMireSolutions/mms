@@ -21,6 +21,8 @@ export function useAttendanceConfig() {
     fields,
     customFields,
     updateSettings,
+    isFieldEnabled,
+    isFieldRequired,
   } = useModuleConfig({
     settingsObjectKey: ATTENDANCE_MODULE_CONTRACT.settingsObjectKey,
     defaultSettings: DEFAULT_ATTENDANCE_SETTINGS,
@@ -39,6 +41,8 @@ export function useAttendanceConfig() {
     customFields,
     orderedFields,
     updateSettings,
+    isFieldEnabled,
+    isFieldRequired,
   };
 }
 

@@ -6,24 +6,10 @@ import {
 import { useModuleConfig } from "@/hooks/useModuleConfig";
 
 export function useHasanatConfig() {
-  const {
-    settings,
-    orderedFields,
-    fields,
-    customFields,
-    updateSettings,
-  } = useModuleConfig({
+  return useModuleConfig({
     settingsObjectKey: HASANAT_MODULE_CONTRACT.settingsObjectKey,
     defaultSettings: DEFAULT_HASANAT_SETTINGS,
     defaultFieldDefs: DEFAULT_HASANAT_FIELD_DEFS,
   });
-
-  return {
-    settings,
-    orderedFields,
-    fields,
-    customFields,
-    updateSettings,
-  };
 }
 

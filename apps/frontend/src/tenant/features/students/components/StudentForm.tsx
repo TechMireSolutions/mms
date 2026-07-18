@@ -32,7 +32,6 @@ import {
   buildDynamicStudentSchema,
   formatStudentZodIssues,
   type ValidationError,
-  type FieldDefinition,
   formatDate,
   formatDateTime,
 } from "@mms/shared";
@@ -61,7 +60,7 @@ export default function StudentForm({
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
   const { updateContact } = useContactMutations();
-  const { settings, statuses: configStatuses } = useStudentConfig();
+  const { settings, statuses: configStatuses, isFieldEnabled } = useStudentConfig();
 
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
@@ -98,15 +97,6 @@ export default function StudentForm({
     [enabledTabs]
   );
 
-  const isFieldEnabled = useCallback(
-    (tabId: string, fieldId: string) => {
-      const tabFields = (settings.fields?.[tabId] || []) as FieldDefinition[];
-      const fieldDef = tabFields.find((fieldDefinition) => fieldDefinition.key === fieldId);
-      if (!fieldDef) return true;
-      return fieldDef.enabled !== false;
-    },
-    [settings.fields]
-  );
 
   const getFieldError = (fieldId: string) => {
     const fieldError = validationErrors.find((validationError) => validationError.fieldId === fieldId);
@@ -433,7 +423,7 @@ export default function StudentForm({
           accentColor="indigo"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {isFieldEnabled("guardian", "fatherLink") && (
+            {isFieldEnabled("fatherLink") && (
               <div className="space-y-1">
                 <ContactPicker
                   label={t("students.form.fatherLink") || "Father"}
@@ -451,7 +441,7 @@ export default function StudentForm({
               </div>
             )}
 
-            {isFieldEnabled("guardian", "motherLink") && (
+            {isFieldEnabled("motherLink") && (
               <div className="space-y-1">
                 <ContactPicker
                   label={t("students.form.motherLink") || "Mother"}
@@ -469,7 +459,7 @@ export default function StudentForm({
               </div>
             )}
 
-            {isFieldEnabled("guardian", "guardianLink") && (
+            {isFieldEnabled("guardianLink") && (
               <div className="sm:col-span-2 space-y-1">
                 <ContactPicker
                   label={t("students.form.guardianLink") || "Guardian (Other)"}

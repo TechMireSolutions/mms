@@ -6,25 +6,11 @@ import {
 import { useModuleConfig } from '@/hooks/useModuleConfig';
 
 export function useUsersConfig() {
-  const {
-    settings,
-    orderedFields,
-    fields,
-    customFields,
-    updateSettings,
-  } = useModuleConfig({
+  return useModuleConfig({
     settingsObjectKey: USERS_MODULE_CONTRACT.settingsObjectKey,
     defaultSettings: DEFAULT_USERS_SETTINGS,
     defaultFieldDefs: DEFAULT_USERS_FIELD_DEFS,
   });
-
-  return {
-    settings,
-    orderedFields,
-    fields,
-    customFields,
-    updateSettings,
-  };
 }
 
 

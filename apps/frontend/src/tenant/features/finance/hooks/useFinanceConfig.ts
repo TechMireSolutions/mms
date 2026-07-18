@@ -6,24 +6,10 @@ import {
 import { useModuleConfig } from "@/hooks/useModuleConfig";
 
 export function useFinanceConfig() {
-  const {
-    settings,
-    orderedFields,
-    fields,
-    customFields,
-    updateSettings,
-  } = useModuleConfig({
+  return useModuleConfig({
     settingsObjectKey: FINANCE_MODULE_CONTRACT.settingsObjectKey,
     defaultSettings: DEFAULT_FINANCE_SETTINGS,
     defaultFieldDefs: DEFAULT_FINANCE_FIELD_DEFS,
   });
-
-  return {
-    settings,
-    orderedFields,
-    fields,
-    customFields,
-    updateSettings,
-  };
 }
 
