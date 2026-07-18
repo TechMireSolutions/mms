@@ -730,6 +730,7 @@ export function registerStandardTenantRoutes<
     customPutRoute,
     collection,
     schema,
+    loadAllFn,
     loadByIdFn,
     createFn,
     updateFn,
