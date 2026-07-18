@@ -32,3 +32,11 @@ export function sendMappedError<Code extends string>(
   return reply.status(status).send({ type: error.code, message: error.message } as any);
 }
 
+export function sendDatabaseError(
+  reply: FastifyReply,
+  message = 'Database error occurred',
+): ReturnType<FastifyReply['status']> {
+  return reply.status(500).send({ type: 'database_error', message });
+}
+
+

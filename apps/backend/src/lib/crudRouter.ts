@@ -4,7 +4,7 @@ import type { ZodType } from 'zod';
 
 import type { User } from '@mms/shared';
 import { canReadCollection, canWriteCollection } from '../services/rbacService.js';
-import { sendForbidden } from './httpErrors.js';
+import { sendForbidden, sendDatabaseError } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
 import {
   resourceIdParamsSchema,
@@ -57,10 +57,7 @@ export function registerBulkRoutes<T>(
       const data = await loadFn();
       return reply.send({ [responseKey]: data });
     } catch {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: `Failed to load ${errorMessagePrefix}`,
-      });
+      return sendDatabaseError(reply, `Failed to load ${errorMessagePrefix}`);
     }
   });
 
@@ -73,10 +70,7 @@ export function registerBulkRoutes<T>(
       const updated = await saveFn(parsed.data);
       return reply.send({ [responseKey]: updated });
     } catch {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: `Failed to update ${errorMessagePrefix}`,
-      });
+      return sendDatabaseError(reply, `Failed to update ${errorMessagePrefix}`);
     }
   });
 
@@ -143,10 +137,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
         const data = await loadAllFn();
         return reply.send({ [namePlural]: data });
       } catch {
-        return reply.status(500).send({
-          type: 'database_error',
-          message: `Failed to list ${namePlural}`,
-        });
+        return sendDatabaseError(reply, `Failed to list ${namePlural}`);
       }
     });
   }
@@ -168,10 +159,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
         }
         return reply.send({ [nameSingular]: item });
       } catch {
-        return reply.status(500).send({
-          type: 'database_error',
-          message: `Failed to load ${nameSingular}`,
-        });
+        return sendDatabaseError(reply, `Failed to load ${nameSingular}`);
       }
     });
   }
@@ -188,10 +176,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
         const item = await createFn(parsed.data);
         return reply.status(201).send({ [nameSingular]: item });
       } catch {
-        return reply.status(500).send({
-          type: 'database_error',
-          message: `Failed to create ${nameSingular}`,
-        });
+        return sendDatabaseError(reply, `Failed to create ${nameSingular}`);
       }
     });
   }
@@ -218,10 +203,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
         }
         return reply.send({ [nameSingular]: updated });
       } catch {
-        return reply.status(500).send({
-          type: 'database_error',
-          message: `Failed to update ${nameSingular}`,
-        });
+        return sendDatabaseError(reply, `Failed to update ${nameSingular}`);
       }
     });
   }
@@ -245,10 +227,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
         }
         return reply.send({ success: true });
       } catch {
-        return reply.status(500).send({
-          type: 'database_error',
-          message: `Failed to delete ${nameSingular}`,
-        });
+        return sendDatabaseError(reply, `Failed to delete ${nameSingular}`);
       }
     });
   }
@@ -270,10 +249,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
         }
         return reply.send({ success: true });
       } catch {
-        return reply.status(500).send({
-          type: 'database_error',
-          message: `Failed to restore ${nameSingular}`,
-        });
+        return sendDatabaseError(reply, `Failed to restore ${nameSingular}`);
       }
     });
   }
@@ -310,10 +286,7 @@ export function registerMetricsRoute(
       const metrics = await loadMetricsFn(request);
       return reply.send({ metrics });
     } catch {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: `Failed to load ${errorMessagePrefix} metrics`,
-      });
+      return sendDatabaseError(reply, `Failed to load ${errorMessagePrefix} metrics`);
     }
   });
 }
@@ -341,10 +314,7 @@ export function registerCountRoute(
       const items = await loadAllFn();
       return reply.send({ count: items.length });
     } catch {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: `Failed to count ${errorMessagePrefix}`,
-      });
+      return sendDatabaseError(reply, `Failed to count ${errorMessagePrefix}`);
     }
   });
 }
@@ -375,10 +345,7 @@ export function registerResolveRoute(
       const items = await loadByIdsFn(parsed.data.ids, request);
       return reply.send({ [responseKey]: items });
     } catch {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: `Failed to resolve ${errorMessagePrefix}`,
-      });
+      return sendDatabaseError(reply, `Failed to resolve ${errorMessagePrefix}`);
     }
   });
 }
@@ -408,10 +375,7 @@ export function registerWidgetAggregatesRoute(
       const results = await loadAggregatesFn(parsed.data.widgets);
       return reply.send({ results });
     } catch {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: `Failed to load ${errorMessagePrefix} widget aggregates`,
-      });
+      return sendDatabaseError(reply, `Failed to load ${errorMessagePrefix} widget aggregates`);
     }
   });
 }
@@ -445,10 +409,7 @@ export function registerLinkedContactIdsRoute(
       const contactIds = await loadLinkedContactIdsFn(parsed.data.excludeId);
       return reply.send({ contactIds });
     } catch {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: `Failed to load linked contact ids for ${errorMessagePrefix}`,
-      });
+      return sendDatabaseError(reply, `Failed to load linked contact ids for ${errorMessagePrefix}`);
     }
   });
 }
@@ -480,10 +441,7 @@ export function registerBulkPutRoute<T>(
       const updated = await saveFn(parsed.data);
       return reply.send({ [responseKey]: updated });
     } catch {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: `Failed to replace ${errorMessagePrefix}`,
-      });
+      return sendDatabaseError(reply, `Failed to replace ${errorMessagePrefix}`);
     }
   });
 }
@@ -561,10 +519,7 @@ export function registerPaginatedListRoute<
       const responseData = responseTransform ? await responseTransform(page, user) : page;
       return reply.send(responseData);
     } catch {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: `Failed to list ${errorMessagePrefix}`,
-      });
+      return sendDatabaseError(reply, `Failed to list ${errorMessagePrefix}`);
     }
   });
 }

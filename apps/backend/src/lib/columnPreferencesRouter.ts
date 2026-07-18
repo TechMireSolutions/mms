@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import type { User } from '@mms/shared';
 import { canReadCollection } from '../services/rbacService.js';
-import { sendForbidden } from './httpErrors.js';
+import { sendForbidden, sendDatabaseError } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
 import { moduleColumnPreferencesBodySchema } from '../validation/moduleColumnPreferencesSchemas.js';
 import {
@@ -43,7 +43,7 @@ export function registerColumnPreferencesRoutes(
         );
         return reply.send({ preferences });
       } catch {
-        return reply.status(500).send({ type: 'database_error', message: 'Failed to load column preferences' });
+        return sendDatabaseError(reply, 'Failed to load column preferences');
       }
     });
 
@@ -60,7 +60,7 @@ export function registerColumnPreferencesRoutes(
         );
         return reply.send({ success: true, preferences: parsed.data.preferences });
       } catch {
-        return reply.status(500).send({ type: 'database_error', message: 'Failed to save column preferences' });
+        return sendDatabaseError(reply, 'Failed to save column preferences');
       }
     });
   }

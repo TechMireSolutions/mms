@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import type { User } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { sendDatabaseError } from '../../lib/httpErrors.js';
 import { resourceIdParamsSchema } from '../../validation/commonSchemas.js';
 import { backgroundJobUpsertSchema } from '../../validation/backgroundJobSchemas.js';
 import {
@@ -28,7 +29,7 @@ export default async function backgroundJobRoutes(
       const jobs = await listUserBackgroundJobs(String(user.id));
       return reply.send({ jobs });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to list background jobs' });
+      return sendDatabaseError(reply, 'Failed to list background jobs');
     }
   });
 
@@ -45,7 +46,7 @@ export default async function backgroundJobRoutes(
       reply.header('Content-Disposition', `attachment; filename="${artifact.filename.replace(/"/g, '')}"`);
       return reply.send(artifact.content);
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to download export' });
+      return sendDatabaseError(reply, 'Failed to download export');
     }
   });
 
@@ -60,7 +61,7 @@ export default async function backgroundJobRoutes(
       }
       return reply.send({ job });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load background job' });
+      return sendDatabaseError(reply, 'Failed to load background job');
     }
   });
 
@@ -77,7 +78,7 @@ export default async function backgroundJobRoutes(
       const job = await upsertUserBackgroundJob(String(user.id), parsed.data);
       return reply.send({ job });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to save background job' });
+      return sendDatabaseError(reply, 'Failed to save background job');
     }
   });
 
@@ -93,7 +94,7 @@ export default async function backgroundJobRoutes(
       await deleteExportArtifact(String(user.id), params.data.id);
       return reply.send({ success: true });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to dismiss background job' });
+      return sendDatabaseError(reply, 'Failed to dismiss background job');
     }
   });
 
@@ -103,7 +104,7 @@ export default async function backgroundJobRoutes(
       const removed = await clearFinishedUserBackgroundJobs(String(user.id));
       return reply.send({ success: true, removed });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to clear background jobs' });
+      return sendDatabaseError(reply, 'Failed to clear background jobs');
     }
   });
 }

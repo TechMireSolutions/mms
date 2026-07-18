@@ -35,7 +35,7 @@ import {
 } from '../../validation/contactSchemas.js';
 import { resourceIdParamsSchema } from '../../validation/commonSchemas.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
-import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { parseRequest, replyValidationError, executeDynamicValidation } from '../../lib/zodRequest.js';
 import { registerDefaultBackgroundJobRunners } from '../../services/backgroundJobRunnerService.js';
 import { countContactDuplicateMatches } from '../../services/contactDuplicateScanService.js';
 import { enqueueBackgroundJob } from '../../services/backgroundJobWorkerService.js';
@@ -78,7 +78,7 @@ import {
 } from '../../services/contactPreferencesService.js';
 import { validateContactDynamic } from '../../services/contactValidationService.js';
 
-import { sendForbidden } from '../../lib/httpErrors.js';
+import { sendForbidden, sendDatabaseError } from '../../lib/httpErrors.js';
 import {
   registerMetricsRoute,
   registerCountRoute,
@@ -194,7 +194,7 @@ export async function contactRoutes(
       const result = await loadContactsReportAnalytics({ compareYears: parsed.data.years });
       return reply.send(result);
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load contact report analytics' });
+      return sendDatabaseError(reply, 'Failed to load contact report analytics');
     }
   });
 
@@ -207,7 +207,7 @@ export async function contactRoutes(
       const count = await loadContactFieldUsageCount(params.data.fieldKey);
       return reply.send({ count });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load field usage' });
+      return sendDatabaseError(reply, 'Failed to load field usage');
     }
   });
 
@@ -240,7 +240,7 @@ export async function contactRoutes(
       const matchCount = await countContactDuplicateMatches(prepared);
       return reply.send({ matchCount });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to check contact duplicates' });
+      return sendDatabaseError(reply, 'Failed to check contact duplicates');
     }
   });
 
@@ -259,7 +259,7 @@ export async function contactRoutes(
       );
       return reply.send({ ...page, pairs });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load duplicate pairs' });
+      return sendDatabaseError(reply, 'Failed to load duplicate pairs');
     }
   });
 
@@ -296,7 +296,7 @@ export async function contactRoutes(
       const reports = await listContactsSavedReports(savedReportViewer(user));
       return reply.send({ reports });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to list saved reports' });
+      return sendDatabaseError(reply, 'Failed to list saved reports');
     }
   });
 
@@ -325,7 +325,7 @@ export async function contactRoutes(
       await auditContact(user, 'contact.saved_report.create', `Saved report "${report.name}" (${scope})`);
       return reply.status(201).send({ report });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to save report' });
+      return sendDatabaseError(reply, 'Failed to save report');
     }
   });
 
@@ -342,7 +342,7 @@ export async function contactRoutes(
       await auditContact(user, 'contact.saved_report.delete', `Deleted saved report ${params.data.id}`);
       return reply.send({ success: true });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to delete saved report' });
+      return sendDatabaseError(reply, 'Failed to delete saved report');
     }
   });
 
@@ -353,7 +353,7 @@ export async function contactRoutes(
       const config = await getContactGoogleSyncConfig(String(user.id));
       return reply.send({ config: redactGoogleSyncConfigForClient(config) });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load Google sync config' });
+      return sendDatabaseError(reply, 'Failed to load Google sync config');
     }
   });
 
@@ -379,7 +379,7 @@ export async function contactRoutes(
       await auditContact(user, 'contact.google_sync.update', 'Updated Google Contacts sync credentials', 'google-sync');
       return reply.send({ config: redactGoogleSyncConfigForClient(saved) });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to save Google sync config' });
+      return sendDatabaseError(reply, 'Failed to save Google sync config');
     }
   });
 
@@ -391,7 +391,7 @@ export async function contactRoutes(
       await auditContact(user, 'contact.google_sync.clear', 'Disconnected Google Contacts sync', 'google-sync');
       return reply.send({ success: true });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to clear Google sync config' });
+      return sendDatabaseError(reply, 'Failed to clear Google sync config');
     }
   });
 
@@ -412,7 +412,7 @@ export async function contactRoutes(
       if (error instanceof GoogleOAuthExchangeError) {
         return reply.status(400).send({ type: 'oauth_error', message: error.message });
       }
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to exchange OAuth code' });
+      return sendDatabaseError(reply, 'Failed to exchange OAuth code');
     }
   });
 
@@ -435,7 +435,7 @@ export async function contactRoutes(
         }
         return reply.status(400).send({ type: error.code, message: error.message });
       }
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to sync Google contacts' });
+      return sendDatabaseError(reply, 'Failed to sync Google contacts');
     }
   });
 
@@ -471,7 +471,7 @@ export async function contactRoutes(
       await auditContact(user, 'contact.saved_report.run', `Ran saved report "${report.name}"`);
       return reply.send({ report });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to run saved report' });
+      return sendDatabaseError(reply, 'Failed to run saved report');
     }
   });
 
@@ -485,14 +485,10 @@ export async function contactRoutes(
     const parsed = parseRequest(contactRecordSchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
-    const tenant = getRequestTenant()!;
-
-    try {
-      const lang = (request.headers['accept-language'] as string) || 'en';
-      await validateContactDynamic(tenant, parsed.data, lang, user.role);
-    } catch (error) {
-      return replyValidationError(reply, error instanceof Error ? error.message : String(error));
-    }
+    const isValid = await executeDynamicValidation(request, reply, (tenant, lang) =>
+      validateContactDynamic(tenant, parsed.data, lang, user.role)
+    );
+    if (!isValid) return;
 
     try {
       const { contact, created, restoredFromDelete } = await upsertContact(parsed.data as Contact);
@@ -511,7 +507,7 @@ export async function contactRoutes(
         .send({ success: true, contact: await sanitizeOneForUser(contact, user) });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to save contact record';
-      return reply.status(500).send({ type: 'database_error', message: errorMessage });
+      return sendDatabaseError(reply, errorMessage);
     }
   });
 
@@ -527,7 +523,7 @@ export async function contactRoutes(
       }
       return reply.send({ contact: await sanitizeOneForUser(contact, user) });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load contact' });
+      return sendDatabaseError(reply, 'Failed to load contact');
     }
   });
 
@@ -548,14 +544,10 @@ export async function contactRoutes(
     const body = parseRequest(contactRecordSchema, request.body);
     if (!body.ok) return replyValidationError(reply, body.message);
 
-    const tenant = getRequestTenant()!;
-
-    try {
-      const lang = (request.headers['accept-language'] as string) || 'en';
-      await validateContactDynamic(tenant, body.data, lang, user.role);
-    } catch (error) {
-      return replyValidationError(reply, error instanceof Error ? error.message : String(error));
-    }
+    const isValid = await executeDynamicValidation(request, reply, (tenant, lang) =>
+      validateContactDynamic(tenant, body.data, lang, user.role)
+    );
+    if (!isValid) return;
 
     try {
       const before = await getContactById(params.data.id);
@@ -571,7 +563,7 @@ export async function contactRoutes(
       return reply.send({ contact: await sanitizeOneForUser(updated, user) });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update contact';
-      return reply.status(500).send({ type: 'database_error', message: errorMessage });
+      return sendDatabaseError(reply, errorMessage);
     }
   });
 
@@ -594,7 +586,7 @@ export async function contactRoutes(
       await auditContact(user, 'contact.soft_delete', `Soft-deleted contact ${params.data.id}${reasonNote}`, params.data.id);
       return reply.send({ success: true });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to delete contact' });
+      return sendDatabaseError(reply, 'Failed to delete contact');
     }
   });
 
@@ -692,7 +684,7 @@ export async function contactRoutes(
       await auditContact(user, 'contact.restore', `Restored contact ${params.data.id}`, params.data.id);
       return reply.send({ success: true, contact: await sanitizeOneForUser(restored, user) });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to restore contact' });
+      return sendDatabaseError(reply, 'Failed to restore contact');
     }
   });
 
@@ -714,7 +706,7 @@ export async function contactRoutes(
       );
       return reply.send({ success: true, ...result });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to bulk delete contacts' });
+      return sendDatabaseError(reply, 'Failed to bulk delete contacts');
     }
   });
 
@@ -735,7 +727,7 @@ export async function contactRoutes(
       );
       return reply.send({ success: true, ...result });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to bulk restore contacts' });
+      return sendDatabaseError(reply, 'Failed to bulk restore contacts');
     }
   });
   // end of contacts routes

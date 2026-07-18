@@ -17,11 +17,10 @@ import {
 } from '../../services/studentService.js';
 import type { User } from '@mms/shared';
 import { STUDENTS_MODULE_CONTRACT, computeStudentsCommandMetrics } from '@mms/shared';
-import { sendForbidden } from '../../lib/httpErrors.js';
+import { sendForbidden, sendDatabaseError } from '../../lib/httpErrors.js';
 import { resourceIdParamsSchema } from '../../validation/commonSchemas.js';
 import { studentRecordSchema, studentsListQuerySchema, studentsNextGrNumberQuerySchema, studentsDuplicateCheckBodySchema } from '../../validation/studentSchemas.js';
-import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import { getRequestTenant } from '../../lib/tenantContext.js';
+import { parseRequest, replyValidationError, executeDynamicValidation } from '../../lib/zodRequest.js';
 import { validateStudentDynamic } from '../../services/studentValidationService.js';
 import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
 
@@ -72,7 +71,7 @@ export default async function studentsRoutes(
       });
       return reply.send({ grNumber });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to compute GR number' });
+      return sendDatabaseError(reply, 'Failed to compute GR number');
     }
   });
 
@@ -85,7 +84,7 @@ export default async function studentsRoutes(
     try {
       return reply.send(await checkStudentRegistrationDuplicate(parsed.data));
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to check student duplicates' });
+      return sendDatabaseError(reply, 'Failed to check student duplicates');
     }
   });
 
@@ -100,20 +99,16 @@ export default async function studentsRoutes(
     const parsed = parseRequest(studentRecordSchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
-    const tenant = getRequestTenant()!;
-
-    try {
-      const lang = (request.headers['accept-language'] as string) || 'en';
-      await validateStudentDynamic(tenant, parsed.data, lang);
-    } catch (error) {
-      return replyValidationError(reply, error instanceof Error ? error.message : String(error));
-    }
+    const isValid = await executeDynamicValidation(request, reply, (tenant, lang) =>
+      validateStudentDynamic(tenant, parsed.data, lang)
+    );
+    if (!isValid) return;
 
     try {
       const student = await createStudent(parsed.data);
       return reply.status(201).send({ student });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to create student' });
+      return sendDatabaseError(reply, 'Failed to create student');
     }
   });
 
@@ -129,14 +124,10 @@ export default async function studentsRoutes(
     if (!params.ok) return replyValidationError(reply, params.message);
     if (!body.ok) return replyValidationError(reply, body.message);
 
-    const tenant = getRequestTenant()!;
-
-    try {
-      const lang = (request.headers['accept-language'] as string) || 'en';
-      await validateStudentDynamic(tenant, body.data, lang);
-    } catch (error) {
-      return replyValidationError(reply, error instanceof Error ? error.message : String(error));
-    }
+    const isValid = await executeDynamicValidation(request, reply, (tenant, lang) =>
+      validateStudentDynamic(tenant, body.data, lang)
+    );
+    if (!isValid) return;
 
     try {
       const updated = await updateStudentById(params.data.id, {
@@ -148,7 +139,7 @@ export default async function studentsRoutes(
       }
       return reply.send({ student: updated });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to update student' });
+      return sendDatabaseError(reply, 'Failed to update student');
     }
   });
 

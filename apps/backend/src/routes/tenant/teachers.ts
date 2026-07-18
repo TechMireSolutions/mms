@@ -16,7 +16,7 @@ import {
 } from '../../services/teacherService.js';
 import type { User } from '@mms/shared';
 import { TEACHERS_MODULE_CONTRACT, computeTeachersCommandMetrics } from '@mms/shared';
-import { sendForbidden } from '../../lib/httpErrors.js';
+import { sendForbidden, sendDatabaseError } from '../../lib/httpErrors.js';
 import { teacherRecordSchema, teachersListQuerySchema, teachersNextEmployeeIdQuerySchema } from '../../validation/teacherSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
@@ -66,7 +66,7 @@ export default async function teachersRoutes(
       });
       return reply.send({ employeeId });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to compute employee id' });
+      return sendDatabaseError(reply, 'Failed to compute employee id');
     }
   });
 }

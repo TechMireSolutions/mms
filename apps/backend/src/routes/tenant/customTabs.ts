@@ -3,7 +3,7 @@ import type { ZodType } from 'zod';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { canReadCollection, canWriteCollection } from '../../services/rbacService.js';
 import type { User } from '@mms/shared';
-import { sendForbidden } from '../../lib/httpErrors.js';
+import { sendForbidden, sendDatabaseError } from '../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import {
   loadCustomTabs,
@@ -56,7 +56,7 @@ export default async function customTabRoutes(
       const tabs = await loadCustomTabs(parsed.data.moduleId);
       return reply.send({ tabs });
     } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to load custom tabs' });
+      return sendDatabaseError(reply, 'Failed to load custom tabs');
     }
   });
 
@@ -84,7 +84,8 @@ export default async function customTabRoutes(
       const updated = await updateCustomTab(paramsParsed.data.id, bodyParsed.data);
       return reply.send({ tab: updated });
     } catch (err) {
-      return reply.status(500).send({ type: 'database_error', message: err instanceof Error ? err.message : 'Failed to update custom tab' });
+      const errMsg = err instanceof Error ? err.message : 'Failed to update custom tab';
+      return sendDatabaseError(reply, errMsg);
     }
   });
 }

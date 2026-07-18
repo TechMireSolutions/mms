@@ -35,8 +35,9 @@ import {
   syncPayloadSchema,
 } from '../../validation/dbSchemas.js';
 import { resourceKeyParamsSchema, resourceNameParamsSchema } from '../../validation/commonSchemas.js';
-import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { parseRequest, replyValidationError, executeDynamicValidation } from '../../lib/zodRequest.js';
 import { validateAndNormalizeContacts } from '../../services/contactValidationService.js';
+import { sendDatabaseError } from '../../lib/httpErrors.js';
 
 function sanitizeUserCollections(collections: Record<string, unknown[]>, userId: string | number): void {
   const userMsgKey = `messages_u:${userId}`;
@@ -84,11 +85,8 @@ export default async function dbRoutes(
         delete snapshot.objects[PLATFORM_SUPER_USERS_OBJECT_KEY];
       }
       return reply.send(snapshot);
-    } catch (error) {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: 'Failed to retrieve database snapshot'
-      });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to retrieve database snapshot');
     }
   });
 
@@ -122,18 +120,15 @@ export default async function dbRoutes(
           });
         }
         if (payload.collections?.contacts) {
-          const tenant = getRequestTenant()!;
-          try {
-            const lang = (request.headers['accept-language'] as string) || 'en';
-            payload.collections.contacts = await validateAndNormalizeContacts(
+          const isValid = await executeDynamicValidation(request, reply, async (tenant, lang) => {
+            payload.collections!.contacts = await validateAndNormalizeContacts(
               tenant,
-              payload.collections.contacts,
+              payload.collections!.contacts,
               lang,
               user.role,
             );
-          } catch (error) {
-            return replyValidationError(reply, error instanceof Error ? error.message : String(error));
-          }
+          });
+          if (!isValid) return;
         }
         if (payload.collections) {
           sanitizeUserCollections(payload.collections, user.id);
@@ -166,10 +161,7 @@ export default async function dbRoutes(
             message: err.message,
           });
         }
-        return reply.status(500).send({
-          type: 'database_error',
-          message: 'Failed to synchronize database snapshot',
-        });
+        return sendDatabaseError(reply, 'Failed to synchronize database snapshot');
       }
     },
   );
@@ -186,11 +178,8 @@ export default async function dbRoutes(
     try {
       await resetToDefaults();
       return reply.send({ success: true, message: 'Workspace reset to minimal defaults' });
-    } catch (error) {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: 'Failed to reset database'
-      });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to reset database');
     }
   });
 
@@ -213,11 +202,8 @@ export default async function dbRoutes(
         return reply.send([]);
       }
       return reply.send(collectionRows);
-    } catch (error) {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: `Failed to retrieve collection "${name}"`
-      });
+    } catch {
+      return sendDatabaseError(reply, `Failed to retrieve collection "${name}"`);
     }
   });
 
@@ -242,18 +228,15 @@ export default async function dbRoutes(
       let collectionRowsToSave = normalizeCollectionSaveBody(bodyParsed.data);
 
       if (name === 'contacts') {
-        const tenant = getRequestTenant()!;
-        try {
-          const lang = (request.headers['accept-language'] as string) || 'en';
+        const isValid = await executeDynamicValidation(request, reply, async (tenant, lang) => {
           collectionRowsToSave = await validateAndNormalizeContacts(
             tenant,
             collectionRowsToSave,
             lang,
             user.role,
           );
-        } catch (error) {
-          return replyValidationError(reply, error instanceof Error ? error.message : String(error));
-        }
+        });
+        if (!isValid) return;
       }
 
       const storageName = name === 'messages' ? `messages_u:${user.id}` : name;
@@ -270,10 +253,7 @@ export default async function dbRoutes(
       }
       return reply.send({ success: true });
     } catch {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: `Failed to save collection "${name}"`,
-      });
+      return sendDatabaseError(reply, `Failed to save collection "${name}"`);
     }
   });
 
@@ -304,11 +284,8 @@ export default async function dbRoutes(
         });
       }
       return reply.send(objectValue);
-    } catch (error) {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: `Failed to retrieve object "${key}"`
-      });
+    } catch {
+      return sendDatabaseError(reply, `Failed to retrieve object "${key}"`);
     }
   });
 
@@ -357,11 +334,8 @@ export default async function dbRoutes(
       }
 
       return reply.send({ success: true });
-    } catch (error) {
-      return reply.status(500).send({
-        type: 'database_error',
-        message: `Failed to save object "${key}"`
-      });
+    } catch {
+      return sendDatabaseError(reply, `Failed to save object "${key}"`);
     }
   });
 }

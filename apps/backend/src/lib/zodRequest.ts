@@ -1,5 +1,6 @@
-import type { FastifyReply } from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import type { ZodType } from 'zod';
+import { getRequestTenant } from './tenantContext.js';
 
 type ParseResult<T> =
   | { ok: true; data: T }
@@ -19,6 +20,30 @@ export function replyValidationError(
 ): ReturnType<FastifyReply['status']> {
   return reply.status(400).send({ type: 'validation_error', message });
 }
+
+/**
+ * Centrally manages accept-language parsing, tenant retrieval, dynamic validation exception handling, and bad request replies.
+ */
+export async function executeDynamicValidation(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  validateFn: (tenant: string, lang: string) => Promise<unknown>,
+): Promise<boolean> {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    replyValidationError(reply, 'Tenant context required');
+    return false;
+  }
+  try {
+    const lang = (request.headers['accept-language'] as string) || 'en';
+    await validateFn(tenant, lang);
+    return true;
+  } catch (error) {
+    replyValidationError(reply, error instanceof Error ? error.message : String(error));
+    return false;
+  }
+}
+
 
 export function validateOrThrow(schema: ZodType<unknown>, value: unknown): void {
   if (Array.isArray(value)) {
