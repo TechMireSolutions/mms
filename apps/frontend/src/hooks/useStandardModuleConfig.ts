@@ -52,26 +52,47 @@ import { useModuleConfig } from './useModuleConfig';
 import { getCollection, getObject, hasCollectionInCache, saveCollectionCacheOnly } from '@/lib/db';
 import { apiFetch } from '@/lib/apiClient';
 
-import {
-  STUDENT_CONFIG_COLLECTION_KEYS,
-  STUDENT_CONFIG_OBJECT_KEYS,
-  getDefaultStudentGuardianContactDefaults,
-  getStudentConfigCollectionDefaults,
-  type StudentGuardianContactDefaults,
-} from '@/lib/studentConfig/studentConfigSeeds';
-import {
-  TEACHER_CONFIG_COLLECTION_KEYS,
-  getTeacherConfigCollectionDefaults,
-} from '@/lib/teacherConfig/teacherConfigSeeds';
-import {
-  SESSION_CONFIG_COLLECTION_KEYS,
-  getSessionConfigCollectionDefaults,
-} from '@/lib/sessionConfig/sessionConfigSeeds';
-import {
-  ATTENDANCE_CONFIG_COLLECTION_KEYS,
-  getAttendanceConfigCollectionDefaults,
-} from '@/lib/attendanceConfig/attendanceConfigSeeds';
 import type { AttendanceStatus } from '@/lib/data/attendanceData';
+
+// Seed Collection/Object Keys and Defaults colocated for DRY
+const STUDENT_CONFIG_COLLECTION_KEYS = {
+  statuses: 'studentStatuses',
+  genderFilters: 'studentGenderFilters',
+  discountTypes: 'studentDiscountTypes',
+} as const;
+
+const STUDENT_CONFIG_OBJECT_KEYS = {
+  guardianContactDefaults: 'studentGuardianContactDefaults',
+} as const;
+
+export interface StudentGuardianContactDefault {
+  filterGender?: string;
+  createGender?: string;
+  lockGender?: boolean;
+}
+
+export type StudentGuardianContactDefaults = Record<string, StudentGuardianContactDefault>;
+
+const TEACHER_CONFIG_COLLECTION_KEYS = {
+  statuses: 'teacherStatuses',
+  specializations: 'teacherSpecializations',
+} as const;
+
+const SESSION_CONFIG_COLLECTION_KEYS = {
+  statuses: 'sessionStatuses',
+  types: 'sessionTypes',
+} as const;
+
+const ATTENDANCE_CONFIG_COLLECTION_KEYS = {
+  statuses: 'attendanceStatuses',
+} as const;
+
+const DEFAULT_ATTENDANCE_STATUSES: AttendanceStatus[] = [
+  { id: 'present', label: 'Present', short: 'P', color: 'emerald', bg: 'bg-success/10', text: 'text-success', border: 'border-success/30', dot: 'bg-success' },
+  { id: 'absent',  label: 'Absent',  short: 'A', color: 'red',     bg: 'bg-destructive/10',     text: 'text-destructive',     border: 'border-destructive/30',     dot: 'bg-destructive' },
+  { id: 'late',    label: 'Late',    short: 'L', color: 'amber',   bg: 'bg-warning/10',   text: 'text-warning',   border: 'border-warning/30',   dot: 'bg-warning' },
+  { id: 'excused', label: 'Excused', short: 'E', color: 'blue',    bg: 'bg-info/10',    text: 'text-info',    border: 'border-info/30',    dot: 'bg-info' },
+];
 
 // Helper hook to fetch multiple collections and objects in a single React state & effect.
 // Avoids dynamic loop hook calls, completely adhering to the rules of hooks.
@@ -169,7 +190,7 @@ export const STANDARD_MODULES_CONFIG_REGISTRY = {
     collections: {
       statuses: {
         dbKey: ATTENDANCE_CONFIG_COLLECTION_KEYS.statuses,
-        default: () => getAttendanceConfigCollectionDefaults().statuses,
+        default: () => DEFAULT_ATTENDANCE_STATUSES,
       },
     },
   },
@@ -200,11 +221,11 @@ export const STANDARD_MODULES_CONFIG_REGISTRY = {
     collections: {
       statuses: {
         dbKey: SESSION_CONFIG_COLLECTION_KEYS.statuses,
-        default: () => getSessionConfigCollectionDefaults().statuses,
+        default: () => [],
       },
       types: {
         dbKey: SESSION_CONFIG_COLLECTION_KEYS.types,
-        default: () => getSessionConfigCollectionDefaults().types,
+        default: () => [],
       },
     },
   },
@@ -216,21 +237,21 @@ export const STANDARD_MODULES_CONFIG_REGISTRY = {
     collections: {
       statuses: {
         dbKey: STUDENT_CONFIG_COLLECTION_KEYS.statuses,
-        default: () => getStudentConfigCollectionDefaults().statuses,
+        default: () => [],
       },
       genderFilters: {
         dbKey: STUDENT_CONFIG_COLLECTION_KEYS.genderFilters,
-        default: () => getStudentConfigCollectionDefaults().genderFilters,
+        default: () => [],
       },
       discountTypes: {
         dbKey: STUDENT_CONFIG_COLLECTION_KEYS.discountTypes,
-        default: () => getStudentConfigCollectionDefaults().discountTypes,
+        default: () => [],
       },
     },
     objects: {
       guardianContactDefaults: {
         dbKey: STUDENT_CONFIG_OBJECT_KEYS.guardianContactDefaults,
-        default: () => getDefaultStudentGuardianContactDefaults(),
+        default: () => ({}),
       },
     },
   },
@@ -241,11 +262,11 @@ export const STANDARD_MODULES_CONFIG_REGISTRY = {
     collections: {
       statuses: {
         dbKey: TEACHER_CONFIG_COLLECTION_KEYS.statuses,
-        default: () => getTeacherConfigCollectionDefaults().statuses,
+        default: () => [],
       },
       specializations: {
         dbKey: TEACHER_CONFIG_COLLECTION_KEYS.specializations,
-        default: () => getTeacherConfigCollectionDefaults().specializations,
+        default: () => [],
       },
     },
   },

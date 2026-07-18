@@ -1,3 +1,5 @@
+import type { WhatsAppTemplate } from "@mms/shared";
+
 export const CONTACT_CONFIG_COLLECTION_KEYS = {
   genders: "genders",
   socialPlatforms: "socialPlatforms",
@@ -44,4 +46,3 @@ export function getContactConfigCollectionDefaults(): {
 export function getDefaultSocialPlaceholders() {
   return {};
 }
-import type { WhatsAppTemplate } from "@mms/shared";

@@ -51,17 +51,17 @@ import {
   PREFERENCES_KEY,
   savePreferences,
   syncOptionsInConfig,
-} from "@/lib/contactConfig/preferencesStorage";
+} from "@/lib/contacts/preferencesStorage";
 import {
   CONTACT_CONFIG_COLLECTION_KEYS,
   CONTACT_CONFIG_OBJECT_KEYS,
   contactWhatsappTemplatesKey,
   getContactConfigCollectionDefaults,
   getDefaultSocialPlaceholders,
-} from "@/lib/contactConfig/contactConfigSeeds";
+} from "@/lib/contacts/contactConfigSeeds";
 
-export { calculateProfileCompleteness } from "@/lib/contactConfig/profileMetrics";
 export {
+  calculateProfileCompleteness,
   buildCustomFieldSchema,
   buildDynamicContactSchema,
   formatZodIssues,
