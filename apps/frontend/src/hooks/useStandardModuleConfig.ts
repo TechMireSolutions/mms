@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import {
   ACCOUNTING_MODULE_CONTRACT,
   DEFAULT_ACCOUNTING_SETTINGS,
@@ -49,6 +49,112 @@ import {
   type QuestionBankSettings,
 } from '@mms/shared';
 import { useModuleConfig } from './useModuleConfig';
+import { getCollection, getObject, hasCollectionInCache, saveCollectionCacheOnly } from '@/lib/db';
+import { apiFetch } from '@/lib/apiClient';
+
+import {
+  STUDENT_CONFIG_COLLECTION_KEYS,
+  STUDENT_CONFIG_OBJECT_KEYS,
+  getDefaultStudentGuardianContactDefaults,
+  getStudentConfigCollectionDefaults,
+  type StudentGuardianContactDefaults,
+} from '@/lib/studentConfig/studentConfigSeeds';
+import {
+  TEACHER_CONFIG_COLLECTION_KEYS,
+  getTeacherConfigCollectionDefaults,
+} from '@/lib/teacherConfig/teacherConfigSeeds';
+import {
+  SESSION_CONFIG_COLLECTION_KEYS,
+  getSessionConfigCollectionDefaults,
+} from '@/lib/sessionConfig/sessionConfigSeeds';
+import {
+  ATTENDANCE_CONFIG_COLLECTION_KEYS,
+  getAttendanceConfigCollectionDefaults,
+} from '@/lib/attendanceConfig/attendanceConfigSeeds';
+import type { AttendanceStatus } from '@/lib/data/attendanceData';
+
+// Helper hook to fetch multiple collections and objects in a single React state & effect.
+// Avoids dynamic loop hook calls, completely adhering to the rules of hooks.
+export function useLiveCollectionsAndObjects(
+  collections?: Record<string, { dbKey: string; default: () => any[] }>,
+  objects?: Record<string, { dbKey: string; default: () => any }>,
+) {
+  const collectionsRef = useRef(collections);
+  collectionsRef.current = collections;
+  const objectsRef = useRef(objects);
+  objectsRef.current = objects;
+
+  const [state, setState] = useState(() => {
+    const initialCollections: Record<string, any[]> = {};
+    const initialObjects: Record<string, any> = {};
+
+    if (collections) {
+      for (const [key, conf] of Object.entries(collections)) {
+        initialCollections[key] = getCollection(conf.dbKey, conf.default());
+      }
+    }
+    if (objects) {
+      for (const [key, conf] of Object.entries(objects)) {
+        initialObjects[key] = getObject(conf.dbKey, conf.default());
+      }
+    }
+
+    return { collections: initialCollections, objects: initialObjects };
+  });
+
+  useEffect(() => {
+    if (!collectionsRef.current && !objectsRef.current) return;
+
+    const handleUpdate = (): void => {
+      setState(() => {
+        const nextCollections: Record<string, any[]> = {};
+        const nextObjects: Record<string, any> = {};
+
+        if (collectionsRef.current) {
+          for (const [key, conf] of Object.entries(collectionsRef.current)) {
+            nextCollections[key] = getCollection(conf.dbKey, conf.default());
+          }
+        }
+        if (objectsRef.current) {
+          for (const [key, conf] of Object.entries(objectsRef.current)) {
+            nextObjects[key] = getObject(conf.dbKey, conf.default());
+          }
+        }
+
+        return { collections: nextCollections, objects: nextObjects };
+      });
+    };
+
+    handleUpdate();
+
+    const isAuth = typeof window !== 'undefined' && localStorage.getItem('mms_user') !== null;
+    if (isAuth && collectionsRef.current) {
+      for (const conf of Object.values(collectionsRef.current)) {
+        if (!hasCollectionInCache(conf.dbKey)) {
+          apiFetch(`/api/db/collections/${conf.dbKey}`)
+            .then(async (res) => {
+              if (res.ok) {
+                const fetched = (await res.json()) as any[];
+                saveCollectionCacheOnly(conf.dbKey, fetched);
+              }
+            })
+            .catch((error) => {
+              console.error(`Error fetching collection "${conf.dbKey}" on-demand:`, error);
+            });
+        }
+      }
+    }
+
+    window.addEventListener('local-database-update', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('local-database-update', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
+
+  return state;
+}
 
 export const STANDARD_MODULES_CONFIG_REGISTRY = {
   accounting: {
@@ -60,6 +166,12 @@ export const STANDARD_MODULES_CONFIG_REGISTRY = {
     settingsObjectKey: ATTENDANCE_MODULE_CONTRACT.settingsObjectKey,
     defaultSettings: DEFAULT_ATTENDANCE_SETTINGS,
     defaultFieldDefs: DEFAULT_ATTENDANCE_FIELD_DEFS,
+    collections: {
+      statuses: {
+        dbKey: ATTENDANCE_CONFIG_COLLECTION_KEYS.statuses,
+        default: () => getAttendanceConfigCollectionDefaults().statuses,
+      },
+    },
   },
   enrollments: {
     settingsObjectKey: ENROLLMENTS_MODULE_CONTRACT.settingsObjectKey,
@@ -85,17 +197,57 @@ export const STANDARD_MODULES_CONFIG_REGISTRY = {
     settingsObjectKey: SESSIONS_MODULE_CONTRACT.settingsObjectKey,
     defaultSettings: DEFAULT_SESSIONS_SETTINGS,
     defaultFieldDefs: DEFAULT_SESSIONS_FIELD_DEFS,
+    collections: {
+      statuses: {
+        dbKey: SESSION_CONFIG_COLLECTION_KEYS.statuses,
+        default: () => getSessionConfigCollectionDefaults().statuses,
+      },
+      types: {
+        dbKey: SESSION_CONFIG_COLLECTION_KEYS.types,
+        default: () => getSessionConfigCollectionDefaults().types,
+      },
+    },
   },
   students: {
     settingsObjectKey: STUDENTS_MODULE_CONTRACT.settingsObjectKey,
     defaultSettings: DEFAULT_STUDENTS_SETTINGS,
     defaultFieldDefs: DEFAULT_STUDENT_FIELD_DEFS,
     normalizeFn: normalizeStudentsSettings,
+    collections: {
+      statuses: {
+        dbKey: STUDENT_CONFIG_COLLECTION_KEYS.statuses,
+        default: () => getStudentConfigCollectionDefaults().statuses,
+      },
+      genderFilters: {
+        dbKey: STUDENT_CONFIG_COLLECTION_KEYS.genderFilters,
+        default: () => getStudentConfigCollectionDefaults().genderFilters,
+      },
+      discountTypes: {
+        dbKey: STUDENT_CONFIG_COLLECTION_KEYS.discountTypes,
+        default: () => getStudentConfigCollectionDefaults().discountTypes,
+      },
+    },
+    objects: {
+      guardianContactDefaults: {
+        dbKey: STUDENT_CONFIG_OBJECT_KEYS.guardianContactDefaults,
+        default: () => getDefaultStudentGuardianContactDefaults(),
+      },
+    },
   },
   teachers: {
     settingsObjectKey: TEACHERS_MODULE_CONTRACT.settingsObjectKey,
     defaultSettings: DEFAULT_TEACHERS_SETTINGS,
     defaultFieldDefs: DEFAULT_TEACHER_FIELD_DEFS,
+    collections: {
+      statuses: {
+        dbKey: TEACHER_CONFIG_COLLECTION_KEYS.statuses,
+        default: () => getTeacherConfigCollectionDefaults().statuses,
+      },
+      specializations: {
+        dbKey: TEACHER_CONFIG_COLLECTION_KEYS.specializations,
+        default: () => getTeacherConfigCollectionDefaults().specializations,
+      },
+    },
   },
   users: {
     settingsObjectKey: USERS_MODULE_CONTRACT.settingsObjectKey,
@@ -126,8 +278,30 @@ export type StandardModuleSettingsMap = {
   'question-bank': QuestionBankSettings;
 };
 
-export function useStandardModuleConfig<M extends StandardModuleId>(moduleId: M) {
-  const config = STANDARD_MODULES_CONFIG_REGISTRY[moduleId];
+export type StandardModuleConfigExtraMap = {
+  accounting: Record<string, never>;
+  attendance: { statuses: AttendanceStatus[] };
+  enrollments: Record<string, never>;
+  examinations: Record<string, never>;
+  finance: Record<string, never>;
+  hasanat: Record<string, never>;
+  sessions: { statuses: string[]; types: string[] };
+  students: {
+    statuses: string[];
+    genderFilters: string[];
+    discountTypes: Array<{ id: string; label: string; pct: number }>;
+    guardianContactDefaults: StudentGuardianContactDefaults;
+  };
+  teachers: { statuses: string[]; specializations: string[] };
+  users: Record<string, never>;
+  'question-bank': Record<string, never>;
+};
+
+export function useStandardModuleConfig<M extends StandardModuleId>(
+  moduleId: M,
+): ReturnType<typeof useModuleConfig<StandardModuleSettingsMap[M]>> &
+  StandardModuleConfigExtraMap[M] {
+  const config = STANDARD_MODULES_CONFIG_REGISTRY[moduleId] as any;
 
   const defaultFieldDefs = useMemo(() => {
     if (moduleId === 'teachers') {
@@ -139,10 +313,18 @@ export function useStandardModuleConfig<M extends StandardModuleId>(moduleId: M)
     return config.defaultFieldDefs as ModuleFieldDef[];
   }, [moduleId, config.defaultFieldDefs]);
 
-  return useModuleConfig<StandardModuleSettingsMap[M]>({
+  const moduleConfigResult = useModuleConfig<StandardModuleSettingsMap[M]>({
     settingsObjectKey: config.settingsObjectKey,
     defaultSettings: config.defaultSettings as any,
     defaultFieldDefs,
     normalizeFn: 'normalizeFn' in config ? (config.normalizeFn as any) : undefined,
   });
+
+  const aux = useLiveCollectionsAndObjects(config.collections, config.objects);
+
+  return {
+    ...moduleConfigResult,
+    ...aux.collections,
+    ...aux.objects,
+  } as any;
 }
