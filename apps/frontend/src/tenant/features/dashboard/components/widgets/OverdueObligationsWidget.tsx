@@ -90,12 +90,14 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
 
   const handleRemind = (overdueStudent: OverdueStudent) => {
     const student = students.find((s) => String(s.id) === String(overdueStudent.id));
+    const phone = student?.phone || "";
+    if (!phone) return;
     setMessagingTarget({
       channel: "sms",
       recipients: [{
         id: overdueStudent.id,
         name: overdueStudent.name,
-        phone: student?.phone || "+92 300 1234567",
+        phone,
         email: student?.email || "",
       }],
     });
@@ -107,22 +109,27 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
   };
 
   const handleRemindAll = () => {
-    const recipients = filteredStudents.map((os) => {
-      const student = students.find((s) => String(s.id) === String(os.id));
-      return {
-        id: os.id,
-        name: os.name,
-        phone: student?.phone || "+92 300 1234567",
-        email: student?.email || "",
-      };
-    });
+    const recipients = filteredStudents
+      .map((os) => {
+        const student = students.find((s) => String(s.id) === String(os.id));
+        return {
+          id: os.id,
+          name: os.name,
+          phone: student?.phone || "",
+          email: student?.email || "",
+        };
+      })
+      .filter((r) => Boolean(r.phone));
+
+    if (recipients.length === 0) return;
+
     setMessagingTarget({
       channel: "sms",
       recipients,
     });
     setRemindedIds((prev) => {
       const next = new Set(prev);
-      filteredStudents.forEach((os) => next.add(os.id));
+      recipients.forEach((r) => next.add(Number(r.id)));
       return next;
     });
   };
@@ -262,20 +269,26 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                           />
                         </TableCell>
                         <TableCell className="px-3 py-3 text-center">
-                          <Button
-                            variant="ghost"
-                            onClick={() => handleRemind(overdueStudent)}
-                            disabled={reminded}
-                            aria-label={reminded ? `Reminder sent to ${overdueStudent.name}` : `Send reminder to ${overdueStudent.name}`}
-                            className={`flex items-center gap-1 mx-auto px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors h-auto shadow-none cursor-pointer ${
-                              reminded
-                                ? "bg-success/10 text-success border border-success/35 cursor-default hover:bg-success/10 hover:text-success"
-                                : "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:text-primary"
-                            }`}
-                          >
-                            <Bell className="w-2.5 h-2.5" aria-hidden="true" />
-                            {reminded ? t("dashboard.widgets.sent") : t("dashboard.widgets.remind")}
-                          </Button>
+                          {(() => {
+                            const student = students.find((s) => String(s.id) === String(overdueStudent.id));
+                            const hasPhone = Boolean(student?.phone);
+                            return (
+                              <Button
+                                variant="ghost"
+                                onClick={() => handleRemind(overdueStudent)}
+                                disabled={reminded || !hasPhone}
+                                aria-label={reminded ? `Reminder sent to ${overdueStudent.name}` : `Send reminder to ${overdueStudent.name}`}
+                                className={`flex items-center gap-1 mx-auto px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors h-auto shadow-none cursor-pointer ${
+                                  reminded
+                                    ? "bg-success/10 text-success border border-success/35 cursor-default hover:bg-success/10 hover:text-success"
+                                    : "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:text-primary"
+                                }`}
+                              >
+                                <Bell className="w-2.5 h-2.5" aria-hidden="true" />
+                                {reminded ? t("dashboard.widgets.sent") : t("dashboard.widgets.remind")}
+                              </Button>
+                            );
+                          })()}
                         </TableCell>
                       </TableRow>
                     );

@@ -1,9 +1,45 @@
 import React, { useMemo } from "react";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatMonthYear, formatMonthName } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
+import type { Invoice } from "@/lib/data/financeData";
+
+function getCollectedAmountForMonth(invoices: Invoice[], year: number, month: number): number {
+  let sum = 0;
+  invoices.forEach((inv) => {
+    if (!inv || inv.status === "cancelled") return;
+    const dateStr = inv.paidDate || inv.dueDate || "";
+    if (!dateStr) return;
+    const invYear = Number(dateStr.slice(0, 4));
+    const invMonth = Number(dateStr.slice(5, 7)) - 1;
+    if (invYear === year && invMonth === month) {
+      if (inv.status === "paid") {
+        sum += inv.finalAmt;
+      } else if (inv.status === "partial") {
+        sum += inv.paidAmt || 0;
+      }
+    }
+  });
+  return sum;
+}
+
+function getOutstandingAmountForMonth(invoices: Invoice[], year: number, month: number): number {
+  let sum = 0;
+  invoices.forEach((inv) => {
+    if (!inv || inv.status === "cancelled" || inv.status === "paid") return;
+    const dateStr = inv.dueDate || "";
+    if (!dateStr) return;
+    const invYear = Number(dateStr.slice(0, 4));
+    const invMonth = Number(dateStr.slice(5, 7)) - 1;
+    if (invYear === year && invMonth === month) {
+      const outstanding = inv.status === "partial" ? (inv.finalAmt - (inv.paidAmt || 0)) : inv.finalAmt;
+      sum += outstanding;
+    }
+  });
+  return sum;
+}
 
 /**
  * FeeCollectionSummary Component
@@ -18,21 +54,25 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
   const invoices = useFinanceInvoicesCollection();
   const { formatCurrency } = useFinanceCurrency();
 
-  // Calculate overall metrics
-  let totalCollected = 0;
-  let totalOutstanding = 0;
+  const now = useMemo(() => new Date(), []);
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
 
-  invoices.forEach((inv) => {
-    if (inv.status === "cancelled") return;
-    if (inv.status === "paid") {
-      totalCollected += inv.finalAmt;
-    } else if (inv.status === "partial") {
-      totalCollected += inv.paidAmt || 0;
-      totalOutstanding += (inv.finalAmt - (inv.paidAmt || 0));
-    } else {
-      totalOutstanding += inv.finalAmt;
-    }
-  });
+  const prevMonthDate = useMemo(() => {
+    return new Date(currentYear, currentMonth - 1, 1);
+  }, [currentYear, currentMonth]);
+  const prevYear = prevMonthDate.getFullYear();
+  const prevMonth = prevMonthDate.getMonth();
+
+  // Calculate overall metrics for current month
+  const totalCollected = useMemo(
+    () => getCollectedAmountForMonth(invoices, currentYear, currentMonth),
+    [invoices, currentYear, currentMonth]
+  );
+  const totalOutstanding = useMemo(
+    () => getOutstandingAmountForMonth(invoices, currentYear, currentMonth),
+    [invoices, currentYear, currentMonth]
+  );
 
   const totalTarget = totalCollected + totalOutstanding;
   const collectedPct = totalTarget > 0 ? Math.round((totalCollected / totalTarget) * 100) : 0;
@@ -43,34 +83,56 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
     { label: t("finance.report.outstanding"), value: totalOutstanding,  total: totalTarget, color: "bg-destructive",     pct: outstandingPct },
   ];
 
-  // Group by Class
-  const classMap: Record<string, { name: string; collected: number; target: number }> = {};
-  invoices.forEach((inv) => {
-    if (inv.status === "cancelled") return;
-    const className = inv.class || "Other";
-    if (!classMap[className]) {
-      classMap[className] = { name: className, collected: 0, target: 0 };
-    }
-    classMap[className].target += inv.finalAmt;
-    if (inv.status === "paid") {
-      classMap[className].collected += inv.finalAmt;
-    } else if (inv.status === "partial") {
-      classMap[className].collected += inv.paidAmt || 0;
-    }
-  });
+  // Group by Class for current month
+  const classMap = useMemo(() => {
+    const map: Record<string, { name: string; collected: number; target: number }> = {};
+    invoices.forEach((inv) => {
+      if (!inv || inv.status === "cancelled") return;
+      const dateStr = inv.paidDate || inv.dueDate || "";
+      if (!dateStr) return;
+      const invYear = Number(dateStr.slice(0, 4));
+      const invMonth = Number(dateStr.slice(5, 7)) - 1;
+      
+      if (invYear === currentYear && invMonth === currentMonth) {
+        const className = inv.class || "Other";
+        if (!map[className]) {
+          map[className] = { name: className, collected: 0, target: 0 };
+        }
+        map[className].target += inv.finalAmt;
+        if (inv.status === "paid") {
+          map[className].collected += inv.finalAmt;
+        } else if (inv.status === "partial") {
+          map[className].collected += inv.paidAmt || 0;
+        }
+      }
+    });
+    return map;
+  }, [invoices, currentYear, currentMonth]);
 
-  const byClass = Object.values(classMap);
+  const byClass = useMemo(() => Object.values(classMap), [classMap]);
 
   const displayDate = useMemo(() => {
-    return formatMonthYear(new Date(), "long");
-  }, []);
+    return formatMonthYear(now, "long");
+  }, [now]);
 
   const comparisonMonthName = useMemo(() => {
-    // March is month index 2 (Mar)
-    const comparisonDate = new Date();
-    comparisonDate.setMonth(2);
-    return formatMonthName(comparisonDate);
-  }, []);
+    return formatMonthName(prevMonthDate);
+  }, [prevMonthDate]);
+
+  const prevCollected = useMemo(
+    () => getCollectedAmountForMonth(invoices, prevYear, prevMonth),
+    [invoices, prevYear, prevMonth]
+  );
+
+  const changePct = useMemo(() => {
+    if (prevCollected > 0) {
+      return Math.round(((totalCollected - prevCollected) / prevCollected) * 100);
+    }
+    return totalCollected > 0 ? 100 : 0;
+  }, [totalCollected, prevCollected]);
+
+  const displayTrendPct = Math.abs(changePct);
+  const isPositiveTrend = changePct >= 0;
 
   return (
     <section aria-labelledby="fee-collection-heading" className="relative overflow-hidden group rounded-2xl surface-glass shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
@@ -84,10 +146,14 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
         </div>
         <div className="text-right shrink-0">
           <p className="text-base font-black text-foreground m-0 tabular-nums">{formatCurrency(totalCollected)}</p>
-          <div className="flex items-center gap-1 text-success justify-end mt-0.5">
-            <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
+          <div className={`flex items-center gap-1 justify-end mt-0.5 ${isPositiveTrend ? "text-success" : "text-destructive"}`}>
+            {isPositiveTrend ? (
+              <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
+            ) : (
+              <TrendingDown className="w-3.5 h-3.5" aria-hidden="true" />
+            )}
             <span className="text-[10px] font-bold">
-              {t("dashboard.widgets.comparisonTrend", { value: 11, month: comparisonMonthName })}
+              {t("dashboard.widgets.comparisonTrend", { value: displayTrendPct, month: comparisonMonthName })}
             </span>
           </div>
         </div>

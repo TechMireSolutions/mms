@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useBrandedDashboardChartColors } from "@/tenant/features/dashboard/hooks/useBrandedDashboardChartColors";
 import {
   ComposedChart, Area, Line, Bar, XAxis, YAxis, CartesianGrid,
@@ -56,20 +56,37 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
     updatePref,
   } = useDashboardConfig();
 
-  const months = [
-    { key: "2025-07", label: "Jul" },
-    { key: "2025-08", label: "Aug" },
-    { key: "2025-09", label: "Sep" },
-    { key: "2025-10", label: "Oct" },
-    { key: "2025-11", label: "Nov" },
-    { key: "2025-12", label: "Dec" },
-    { key: "2026-01", label: "Jan" },
-    { key: "2026-02", label: "Feb" },
-    { key: "2026-03", label: "Mar" },
-    { key: "2026-04", label: "Apr" },
-    { key: "2026-05", label: "May" },
-    { key: "2026-06", label: "Jun" }
-  ];
+  const months = useMemo(() => {
+    const list: { key: string; label: string }[] = [];
+    const now = new Date();
+    const monthKeys = [
+      "january",
+      "february",
+      "march",
+      "april",
+      "may",
+      "june",
+      "july",
+      "august",
+      "september",
+      "october",
+      "november",
+      "december"
+    ];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const year = d.getFullYear();
+      const monthIndex = d.getMonth();
+      const monthNum = String(monthIndex + 1).padStart(2, "0");
+      const key = `${year}-${monthNum}`;
+
+      const transKey = `accounting.settings.months.${monthKeys[monthIndex]}` as any;
+      const fullLabel = t(transKey);
+      const label = fullLabel.slice(0, 3);
+      list.push({ key, label });
+    }
+    return list;
+  }, [t]);
 
   const activeMonths = months.slice(-monthsCount);
 

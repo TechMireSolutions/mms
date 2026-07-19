@@ -61,7 +61,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
   const mappedRows = useMemo(() => {
     return unpaidInvoices.map((invoice) => {
       const student = students.find((studentOption) => String(studentOption.id) === String(invoice.studentId));
-      const contact = student?.phone || "+92 300 1234567";
+      const contact = student?.phone || "";
       const amount = invoice.status === "partial" ? (invoice.finalAmt - (invoice.paidAmt || 0)) : invoice.finalAmt;
 
       const due = new Date(invoice.dueDate);
@@ -120,15 +120,20 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
           className="text-[12px] font-bold h-auto p-0"
           onClick={() => {
             if (filteredRows.length > 0) {
-              setMessagingTarget({
-                channel: "sms",
-                recipients: filteredRows.map((row) => ({
+              const recipients = filteredRows
+                .map((row) => ({
                   id: row.studentId,
                   name: row.student,
                   phone: row.contact,
                   email: row.email,
-                })),
-              });
+                }))
+                .filter((r) => Boolean(r.phone));
+              if (recipients.length > 0) {
+                setMessagingTarget({
+                  channel: "sms",
+                  recipients,
+                });
+              }
             }
           }}
         >
@@ -215,6 +220,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                         aria-label={`${t("contacts.detail.call")} ${outstandingFee.student}`}
                         title={t("contacts.detail.call")}
                         className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shadow-none cursor-pointer"
+                        disabled={!outstandingFee.contact}
                         onClick={() => {
                           setMessagingTarget({
                             channel: "whatsapp",
@@ -234,6 +240,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                         aria-label={`${t("dashboard.widgets.sendReminder")} ${outstandingFee.student}`}
                         title={t("dashboard.widgets.sendReminder")}
                         className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer"
+                        disabled={!outstandingFee.contact}
                         onClick={() => {
                           setMessagingTarget({
                             channel: "sms",

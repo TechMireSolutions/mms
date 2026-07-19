@@ -7,8 +7,8 @@ import {
   Tooltip, TooltipContentProps, TooltipPayloadEntry,
 } from "recharts";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
-import { getCollection } from "@/lib/db";
-import type { Invoice } from '@/lib/data/financeData';
+import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
+import { useAccountingEntriesCollection, useAccountingAccountsCollection } from "@/tenant/features/accounting/hooks/useAccountingApi";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -66,7 +66,9 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
   const { formatCurrency } = useFinanceCurrency();
   const { revenue: COLOR_THEMES } = useBrandedDashboardChartColors();
   const [period, setPeriod] = useState<"6m" | "10m">("10m");
-  const invoices = getCollection<Invoice>("finance_invoices");
+  const invoices = useFinanceInvoicesCollection();
+  const entries = useAccountingEntriesCollection();
+  const accounts = useAccountingAccountsCollection();
 
   const {
     revenueChartType: chartType,
@@ -107,21 +109,42 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
   }, [t]);
 
   const revenueData: RevenuePoint[] = useMemo(() => {
+    const postedEntries = entries.filter((journalEntry) => journalEntry.status === "posted");
+    const hasAccountingData = postedEntries.length > 0 && accounts.length > 0;
+
     return months.map((monthDefinition) => {
       let revenue = 0;
-      invoices.forEach((invoice) => {
-        if (!invoice || invoice.status === "cancelled") return;
-        const invoiceMonth = (invoice.paidDate || invoice.dueDate || "").slice(0, 7);
-        if (invoiceMonth === monthDefinition.key) {
-          if (invoice.status === "paid") {
-            revenue += Number(invoice.finalAmt || 0);
-          } else if (invoice.status === "partial") {
-            revenue += Number(invoice.paidAmt || 0);
-          }
-        }
-      });
+      let expenses = 0;
 
-      const expenses = invoices.length > 0 ? Math.round(revenue * 0.6) : 0;
+      if (hasAccountingData) {
+        postedEntries.forEach((journalEntry) => {
+          const entryMonth = journalEntry.date.slice(0, 7);
+          if (entryMonth === monthDefinition.key) {
+            journalEntry.lines.forEach((journalLine) => {
+              const account = accounts.find((accountOption) => accountOption.id === journalLine.account_id);
+              if (account?.type === "Revenue") {
+                revenue += (journalLine.credit - journalLine.debit);
+              }
+              if (account?.type === "Expense") {
+                expenses += (journalLine.debit - journalLine.credit);
+              }
+            });
+          }
+        });
+      } else {
+        invoices.forEach((invoice) => {
+          if (!invoice || invoice.status === "cancelled") return;
+          const invoiceMonth = (invoice.paidDate || invoice.dueDate || "").slice(0, 7);
+          if (invoiceMonth === monthDefinition.key) {
+            if (invoice.status === "paid") {
+              revenue += Number(invoice.finalAmt || 0);
+            } else if (invoice.status === "partial") {
+              revenue += Number(invoice.paidAmt || 0);
+            }
+          }
+        });
+        expenses = invoices.length > 0 ? Math.round(revenue * 0.6) : 0;
+      }
 
       return {
         month: monthDefinition.label,
@@ -129,7 +152,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
         expenses
       };
     });
-  }, [months, invoices]);
+  }, [months, invoices, entries, accounts]);
   
   const visibleRevenueData = period === "6m" ? revenueData.slice(-6) : revenueData;
   const activeColors = COLOR_THEMES[colorTheme] || COLOR_THEMES.mixed;

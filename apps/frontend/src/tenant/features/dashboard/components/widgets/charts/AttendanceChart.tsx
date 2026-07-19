@@ -10,11 +10,10 @@ import {
 } from "recharts";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { useTranslation } from "@/hooks/useTranslation";
-import { getCollection } from "@/lib/db";
+import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
+import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/features/hasanat/hooks/useHasanatApi";
 import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
 import { getDenominationPoints } from "@mms/shared";
-import { AttendanceRecord } from '@/lib/data/attendanceData';
-import { Distribution } from '@/lib/data/hasanatData';
 import {
   Select,
   SelectContent,
@@ -64,7 +63,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
   const navigate = useNavigate();
   const { attendance: ATTENDANCE_COLORS } = useBrandedDashboardChartColors();
   const palette = useBrandPalette();
-  const attendanceRecords = getCollection<AttendanceRecord>("attendance_records");
+  const attendanceRecords = useAttendanceRecordsCollection();
 
   const {
     attendanceChartType: chartType,
@@ -239,8 +238,8 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
 export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
   const { t } = useTranslation();
   const { hasanat: HASANAT_THEMES } = useBrandedDashboardChartColors();
-  const distributions = getCollection<Distribution>("hasanat_distributions");
-  const denominations = getCollection<any>("hasanat_denoms");
+  const distributions = useHasanatDistributionsCollection();
+  const denominations = useHasanatDenomsCollection();
 
   const {
     hasanatChartType: chartType,
