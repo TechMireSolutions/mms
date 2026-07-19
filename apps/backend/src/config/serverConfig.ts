@@ -12,23 +12,33 @@ export interface ServerConfig {
 
 export function loadServerConfig(): ServerConfig {
   const isProd = process.env.NODE_ENV === 'production';
-  const jwtSecret = process.env.JWT_SECRET;
+  const isTest = process.env.NODE_ENV === 'test';
+
+  let jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret) {
-    throw new Error(
-      'JWT_SECRET environment variable is required but not set. ' +
-        'Set it in your .env file or deployment environment before starting the server.',
-    );
+    if (isTest) {
+      jwtSecret = 'test-secret-at-least-32-characters-long';
+    } else {
+      throw new Error(
+        'JWT_SECRET environment variable is required but not set. ' +
+          'Set it in your .env file or deployment environment before starting the server.',
+      );
+    }
   }
   if (isProd && jwtSecret.length < 32) {
     throw new Error('JWT_SECRET must be at least 32 characters in production');
   }
 
-  const databaseUrl = process.env.DATABASE_URL;
+  let databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
-    throw new Error(
-      'DATABASE_URL environment variable is required but not set. ' +
-        'Set it in your .env file or deployment environment before starting the server.',
-    );
+    if (isTest) {
+      databaseUrl = 'postgres://postgres:postgres@localhost:5432/mms_test';
+    } else {
+      throw new Error(
+        'DATABASE_URL environment variable is required but not set. ' +
+          'Set it in your .env file or deployment environment before starting the server.',
+      );
+    }
   }
 
   return {
