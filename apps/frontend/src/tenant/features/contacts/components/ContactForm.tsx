@@ -400,9 +400,9 @@ export default function ContactForm({
           : t("contacts.form.contactCreated"),
       );
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       notify.error(t("settings.serverSaveFailed"), {
-        description: err.message,
+        description: err instanceof Error ? err.message : String(err),
       });
     } finally {
       setSaving(false);

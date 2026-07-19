@@ -160,8 +160,8 @@ export async function extractLogoBrandColors(
     const swatches = extractDominantSwatchesFromRgba(data, width, height, samplingOptions);
 
     return deriveBrandColorsFromPalette(swatches);
-  } catch (error: any) {
-    if (error.name === 'AbortError') {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
       throw error;
     }
     return null;

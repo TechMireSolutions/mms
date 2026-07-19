@@ -50,8 +50,8 @@ export function useApplyLogoColors({
       onPrimaryChange(colors.primaryColor);
       onSecondaryChange(colors.secondaryColor);
       notify.success(t('theme.logoColorsApplied'), { description: t('theme.logoColorsAppliedDesc') });
-    } catch (err: any) {
-      if (err.name === 'AbortError') return;
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'name' in err && err.name === 'AbortError') return;
       notify.error(t('theme.logoColorsFailed'));
     } finally {
       if (controllerRef.current === controller) {

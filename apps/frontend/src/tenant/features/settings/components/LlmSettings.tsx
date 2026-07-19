@@ -328,13 +328,13 @@ export default function LlmSettings(): React.JSX.Element {
           },
         ]);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setSandboxMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          content: err.message || 'Failed to send message.',
+          content: err instanceof Error ? err.message : 'Failed to send message.',
           error: true,
         },
       ]);
@@ -473,11 +473,11 @@ export default function LlmSettings(): React.JSX.Element {
         metrics: res.metrics,
       });
       setHealthStatuses((prev) => ({ ...prev, [configId]: res.success ? 'verified' : 'failed' }));
-    } catch (err: any) {
+    } catch (err: unknown) {
       setTestResult({
         configId,
         success: false,
-        message: err.message || 'Test request failed',
+        message: err instanceof Error ? err.message : 'Test request failed',
       });
       setHealthStatuses((prev) => ({ ...prev, [configId]: 'failed' }));
     } finally {

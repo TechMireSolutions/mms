@@ -69,6 +69,9 @@ export const obligationCollectionRecordSchema = z.object({
 export type ObligationCollection = z.infer<typeof obligationCollectionRecordSchema>;
 export const obligationCollectionListSchema = z.array(obligationCollectionRecordSchema);
 
+/** Tenant-scoped object key for the obligations invoice template. */
+export const INVOICE_TEMPLATE_OBJECT_KEY = 'mms_invoice_template';
+
 /** Obligations module contract — aligns with globle1 universal module architecture. */
 export const OBLIGATIONS_MODULE_CONTRACT = {
   moduleId: 'obligations',

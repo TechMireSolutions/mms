@@ -95,8 +95,8 @@ export function SessionForm({
       onSave(saved);
       notify.success(session ? "Session updated successfully" : "Session created successfully");
       onClose();
-    } catch (err: any) {
-      notify.error(t("settings.serverSaveFailed") || "Failed to save", { description: err.message });
+    } catch (err: unknown) {
+      notify.error(t("settings.serverSaveFailed") || "Failed to save", { description: err instanceof Error ? err.message : String(err) });
     } finally {
       setSaving(false);
     }

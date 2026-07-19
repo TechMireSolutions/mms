@@ -42,7 +42,7 @@ export function loadDashboardPreferences(): DashboardPreferences {
     hasanatChartColor: getObject<string>(HASANAT_CHART_COLOR_KEY, DEFAULT_DASHBOARD_PREFERENCES.hasanatChartColor),
   };
 
-  saveObject(DASHBOARD_PREFERENCES_KEY, legacy);
+  queueMicrotask(() => saveObject(DASHBOARD_PREFERENCES_KEY, legacy));
   return legacy;
 }
 
@@ -102,4 +102,3 @@ export function useDashboardConfig() {
     updatePref,
   };
 }
-

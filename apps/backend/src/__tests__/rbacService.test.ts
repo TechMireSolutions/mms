@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { User } from "@mms/shared";
+import { DASHBOARD_PREFERENCES_KEY, INVOICE_TEMPLATE_OBJECT_KEY, type User } from "@mms/shared";
 import {
   canBulkSync,
   canDeleteContacts,
@@ -55,6 +55,17 @@ describe("rbacService", () => {
     expect(canWriteCollection(admin, "tenant_escape")).toBe(false);
     expect(canReadObject(admin, "tenant_escape")).toBe(false);
     expect(canWriteObject(admin, "tenant_escape")).toBe(false);
+  });
+
+  it("allows staff persistence for frontend dashboard and invoice configuration objects", () => {
+    for (const key of [DASHBOARD_PREFERENCES_KEY, INVOICE_TEMPLATE_OBJECT_KEY]) {
+      expect(canReadObject(admin, key)).toBe(true);
+      expect(canWriteObject(admin, key)).toBe(true);
+      expect(canReadObject(teacher, key)).toBe(true);
+      expect(canWriteObject(teacher, key)).toBe(true);
+      expect(canReadObject(viewer, key)).toBe(false);
+      expect(canWriteObject(viewer, key)).toBe(false);
+    }
   });
 
   it("restricts students read to roles with students.read", () => {

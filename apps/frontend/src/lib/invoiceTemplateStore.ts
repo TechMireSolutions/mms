@@ -1,8 +1,8 @@
-import { DEFAULT_BRANDING_SETTINGS, formatBrandingAddress, mergeBrandingSettings, formatDate, formatMoney, type BrandingSettings } from "@mms/shared";
+import { DEFAULT_BRANDING_SETTINGS, formatBrandingAddress, mergeBrandingSettings, formatDate, formatMoney, INVOICE_TEMPLATE_OBJECT_KEY, type BrandingSettings } from "@mms/shared";
 import { getObject, saveObject } from "@/lib/db";
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 
-const STORAGE_KEY = "mms_invoice_template";
+const STORAGE_KEY = INVOICE_TEMPLATE_OBJECT_KEY;
 
 export interface PageSizeInfo {
   width: number;

@@ -78,8 +78,8 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
       } as unknown as Payment);
       notify.success("Payment recorded successfully");
       onClose();
-    } catch (err: any) {
-      notify.error("Failed to save payment", { description: err.message });
+    } catch (err: unknown) {
+      notify.error("Failed to save payment", { description: err instanceof Error ? err.message : String(err) });
     } finally {
       setSaving(false);
     }

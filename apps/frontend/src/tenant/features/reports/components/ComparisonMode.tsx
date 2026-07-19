@@ -231,7 +231,7 @@ function computeDynamicDateRangeComparison(
     });
   } else if (lowerCat === "students" || lowerCat === "enrollments") {
     enrollments.forEach((enrollment) => {
-      const date = enrollment.enrolledDate || enrollment.createdDate || rangeA.from;
+      const date = enrollment.enrolledDate || rangeA.from;
       if (inRange(date, rangeA.from, rangeA.to)) {
         const monthIndex = getMonthIndex(date);
         if (monthIndex >= 0) bucketA[monthIndex] += 1;
@@ -242,7 +242,7 @@ function computeDynamicDateRangeComparison(
       }
     });
   } else if (lowerCat === "examinations" || lowerCat === "academic") {
-    const examMap = new Map<string, any>();
+    const examMap = new Map<string, Exam>();
     exams.forEach((exam) => examMap.set(exam.id, exam));
 
     examResults.forEach((examResult) => {

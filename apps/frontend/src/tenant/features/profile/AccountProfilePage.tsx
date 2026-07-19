@@ -140,7 +140,7 @@ export default function AccountProfile(): React.JSX.Element {
       });
       await queryClient.invalidateQueries({ queryKey: TENANT_PROFILE_KEY });
       await refetch();
-      await checkUserAuth({ force: true });
+      await checkUserAuth();
       setShowCropper(null);
       notify.success(t("account.contactSaved"));
     } catch (error: unknown) {
@@ -169,7 +169,7 @@ export default function AccountProfile(): React.JSX.Element {
       });
       await queryClient.invalidateQueries({ queryKey: TENANT_PROFILE_KEY });
       await refetch();
-      await checkUserAuth({ force: true });
+      await checkUserAuth();
       notify.success(t("account.contactSaved"));
     } catch (error: unknown) {
       const message = error instanceof ApiError ? error.message : t("errors.boundary.description");
@@ -222,7 +222,7 @@ export default function AccountProfile(): React.JSX.Element {
       setNewLoginEmail("");
       setLoginPassword("");
       setDevCode(null);
-      await checkUserAuth({ force: true });
+      await checkUserAuth();
       await queryClient.invalidateQueries({ queryKey: TENANT_PROFILE_KEY });
       await refetch();
       notify.success(t("account.loginEmailChanged"));

@@ -1,6 +1,9 @@
 import { env } from '@/lib/config/env';
 
 const JSON_CONTENT_TYPE = 'application/json';
+const REFRESH_PATH = '/api/auth/refresh';
+
+let refreshPromise: Promise<boolean> | null = null;
 
 export interface ApiErrorBody {
   type?: string;
@@ -31,6 +34,55 @@ export function resolveApiUrl(path: string): string {
   }
   const normalized = path.startsWith('/') ? path : `/${path}`;
   return env.apiUrl ? `${env.apiUrl}${normalized}` : normalized;
+}
+
+function isTenantSessionRequest(path: string): boolean {
+  const apiOrigin = env.apiUrl || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+  let url: URL;
+  try {
+    url = new URL(resolveApiUrl(path), apiOrigin);
+  } catch {
+    return false;
+  }
+
+  const expectedOrigin = new URL(apiOrigin, apiOrigin).origin;
+  if (url.origin !== expectedOrigin || !url.pathname.startsWith('/api/')) {
+    return false;
+  }
+
+  if (url.pathname.startsWith('/api/platform/')) return false;
+  if (url.pathname === REFRESH_PATH || url.pathname === '/api/auth/logout') return false;
+
+  return ![
+    '/api/auth/login',
+    '/api/auth/onboard',
+    '/api/auth/handoff',
+    '/api/auth/2fa/verify',
+    '/api/auth/2fa/resend',
+    '/api/auth/onboarding-status',
+  ].includes(url.pathname);
+}
+
+async function refreshSession(): Promise<boolean> {
+  if (!refreshPromise) {
+    refreshPromise = fetch(resolveApiUrl(REFRESH_PATH), {
+      method: 'POST',
+      credentials: 'include',
+    })
+      .then((response) => response.ok)
+      .catch(() => false)
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  return refreshPromise;
+}
+
+async function isAuthenticationRequired(response: Response): Promise<boolean> {
+  if (response.status !== 401) return false;
+  const body = await response.clone().json().catch(() => null) as ApiErrorBody | null;
+  return body?.type === 'auth_required';
 }
 
 /** Cookie-first API client (`credentials: 'include'`). */
@@ -87,11 +139,18 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
     }
   }
 
-  return fetch(resolveApiUrl(path), {
+  const requestInit: RequestInit = {
     ...init,
     credentials: 'include',
     headers,
-  });
+  };
+  const response = await fetch(resolveApiUrl(path), requestInit);
+
+  if (isTenantSessionRequest(path) && await isAuthenticationRequired(response) && await refreshSession()) {
+    return fetch(resolveApiUrl(path), requestInit);
+  }
+
+  return response;
 }
 
 export async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {

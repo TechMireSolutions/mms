@@ -91,8 +91,8 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
       } as unknown as Exam);
       notify.success(exam ? "Exam updated successfully" : "Exam created successfully");
       onClose();
-    } catch (err: any) {
-      notify.error("Failed to save exam", { description: err.message });
+    } catch (err: unknown) {
+      notify.error("Failed to save exam", { description: err instanceof Error ? err.message : String(err) });
     } finally {
       setSaving(false);
     }

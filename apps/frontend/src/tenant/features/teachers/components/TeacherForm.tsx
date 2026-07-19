@@ -99,8 +99,8 @@ export function TeacherForm({
       } as Teacher);
       notify.success(teacher ? "Teacher updated successfully" : "Teacher created successfully");
       onClose();
-    } catch (err: any) {
-      notify.error(t("settings.serverSaveFailed") || "Failed to save", { description: err.message });
+    } catch (err: unknown) {
+      notify.error(t("settings.serverSaveFailed") || "Failed to save", { description: err instanceof Error ? err.message : String(err) });
     } finally {
       setSaving(false);
     }

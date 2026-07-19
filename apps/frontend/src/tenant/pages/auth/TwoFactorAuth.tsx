@@ -122,7 +122,7 @@ export default function TwoFactorAuth(): React.JSX.Element {
     const entered = code.join("");
     const ok = await verify2FACode(challengeId, entered);
     if (ok) {
-      await checkUserAuth({ force: true });
+      await checkUserAuth();
       navigate(redirectTo, { replace: true });
     } else {
       setError("Invalid or expired code. Please try again.");

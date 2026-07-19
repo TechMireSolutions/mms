@@ -125,8 +125,8 @@ export function QuestionForm({
       } as unknown as Question);
       notify.success(question ? "Question updated successfully" : "Question created successfully");
       onClose();
-    } catch (err: any) {
-      notify.error("Failed to save question", { description: err.message });
+    } catch (err: unknown) {
+      notify.error("Failed to save question", { description: err instanceof Error ? err.message : String(err) });
     } finally {
       setSaving(false);
     }

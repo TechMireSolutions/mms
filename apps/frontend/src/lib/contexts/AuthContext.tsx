@@ -20,7 +20,7 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<{ user: User; requires2FA: boolean; challengeId?: string }>;
   logout: (shouldRedirect?: boolean) => void;
   navigateToLogin: () => void;
-  checkUserAuth: (options?: { force?: boolean }) => Promise<void>;
+  checkUserAuth: () => Promise<void>;
   checkAppState: () => Promise<void>;
   onboard: (onboardingPayload: {
     madrasaName: string;
@@ -86,17 +86,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     void import('@/lib/db').then(({ syncDatabase }) => syncDatabase());
   }, []);
 
-  const checkUserAuth = useCallback(async (options?: { force?: boolean }): Promise<void> => {
+  const checkUserAuth = useCallback(async (): Promise<void> => {
     if (isCurrentHostApex()) {
-      setUser(null);
-      setIsAuthenticated(false);
-      setAuthChecked(true);
-      setIsLoadingAuth(false);
-      return;
-    }
-
-    const hasCachedUser = localStorage.getItem('mms_user') !== null;
-    if (!options?.force && !hasCachedUser) {
       setUser(null);
       setIsAuthenticated(false);
       setAuthChecked(true);
