@@ -113,7 +113,8 @@ function isKeyIgnored(k?: string): boolean {
     lk.startsWith("_") ||
     lk.includes("hash") ||
     lk.includes("password") ||
-    lk.includes("salt")
+    lk.includes("salt") ||
+    lk.includes("key")
   );
 }
 

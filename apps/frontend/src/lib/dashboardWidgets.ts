@@ -40,7 +40,12 @@ export function resolveWidgetTitle(
   widget: Pick<CustomWidget, 'id' | 'title' | 'titleKey'>,
   t: (key: AppTranslationKey) => string,
 ): string {
-  const key = widget.titleKey ?? DEFAULT_WIDGET_TITLE_KEYS[widget.id];
-  if (key) return t(key);
+  const rawKey = widget.titleKey ?? DEFAULT_WIDGET_TITLE_KEYS[widget.id];
+  if (rawKey) {
+    const key = rawKey.startsWith('Widget.title.')
+      ? (`widget.title.${rawKey.substring(13)}` as AppTranslationKey)
+      : rawKey;
+    return t(key);
+  }
   return widget.title;
 }
