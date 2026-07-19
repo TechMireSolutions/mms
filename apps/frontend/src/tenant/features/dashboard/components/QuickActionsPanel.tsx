@@ -70,7 +70,7 @@ export default function QuickActionsPanel({ dashboardRole }: QuickActionsPanelPr
   if (actions.length === 0) return null;
 
   return (
-    <section aria-labelledby="quick-actions-panel-heading" className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 px-6 pb-6 shadow-sm hover:shadow-md transition-all duration-300 text-left">
+    <section aria-labelledby="quick-actions-panel-heading" className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 px-6 pb-6 shadow-sm hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-300 text-left">
       <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
       <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4.5">
         <Sparkles className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
@@ -93,8 +93,9 @@ export default function QuickActionsPanel({ dashboardRole }: QuickActionsPanelPr
               <Link
                 to={href}
                 aria-label={label}
-                className="group/item flex flex-col items-start gap-2.5 p-3.5 rounded-xl border border-border bg-card/25 backdrop-blur-xs hover:border-primary/25 hover:shadow-sm transition-all duration-250 text-left h-full w-full"
+                className="relative overflow-hidden group/item flex flex-col items-start gap-2.5 p-3.5 rounded-xl border border-border bg-card/25 backdrop-blur-xs hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md transition-all duration-250 text-left h-full w-full"
               >
+                <div className={`absolute -right-8 -top-8 w-20 h-20 rounded-full ${quickAction.color === 'emerald' ? 'bg-success/5 blur-lg group-hover/item:bg-success/10' : quickAction.color === 'blue' ? 'bg-info/5 blur-lg group-hover/item:bg-info/10' : quickAction.color === 'amber' ? 'bg-warning/5 blur-lg group-hover/item:bg-warning/10' : quickAction.color === 'violet' ? 'bg-primary/5 blur-lg group-hover/item:bg-primary/10' : 'bg-slate/5 blur-lg group-hover/item:bg-slate/10'} transition-all duration-500`} />
                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-transform group-hover/item:scale-110 duration-200 ${ACTION_COLOR_CLASSES[quickAction.color]}`} aria-hidden="true">
                   <Icon className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} />
                 </div>

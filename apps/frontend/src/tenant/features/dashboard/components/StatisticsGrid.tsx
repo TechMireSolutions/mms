@@ -138,8 +138,9 @@ export default function StatsGrid({
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: statIndex * 0.05, duration: 0.35, ease: "easeOut" }}
-            className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4.5 md:p-5 px-5.5 hover:shadow-md transition-all duration-300 text-left flex flex-col justify-between"
+            className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4.5 md:p-5 px-5.5 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-300 text-left flex flex-col justify-between"
           >
+            <div className={`absolute -right-8 -top-8 w-24 h-24 rounded-full ${statItem.color === 'emerald' ? 'bg-success/5 blur-xl group-hover:bg-success/10' : statItem.color === 'blue' ? 'bg-info/5 blur-xl group-hover:bg-info/10' : statItem.color === 'violet' ? 'bg-primary/5 blur-xl group-hover:bg-primary/10' : statItem.color === 'amber' ? 'bg-warning/5 blur-xl group-hover:bg-warning/10' : 'bg-destructive/5 blur-xl group-hover:bg-destructive/10'} transition-all duration-500`} />
             <div className={`absolute left-0 top-0 bottom-0 w-1 ${ACCENT_BAR_MAP[statItem.color] || "bg-success/60"} transition-colors`} />
             <header className="flex items-start justify-between mb-3 select-none">
               <div

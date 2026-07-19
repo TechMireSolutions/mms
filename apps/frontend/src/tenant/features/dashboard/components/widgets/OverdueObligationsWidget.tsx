@@ -120,7 +120,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
   };
 
   return (
-    <section aria-labelledby="overdue-obligations-heading" className="relative overflow-hidden group/overdue rounded-2xl border border-destructive/30 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
+    <section aria-labelledby="overdue-obligations-heading" className="relative overflow-hidden group/overdue rounded-2xl border border-destructive/30 bg-card/45 backdrop-blur-sm shadow-sm hover:-translate-y-0.5 hover:border-destructive/50 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-300">
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-destructive/50 transition-colors group-hover/overdue:bg-destructive" />
       {/* Header */}
       <header className="flex items-center justify-between px-5 py-3 bg-destructive/10 border-b border-destructive/30 pl-6">

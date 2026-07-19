@@ -23,7 +23,7 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
   const urgent = visible.filter((n) => n.urgent).length;
 
   return (
-    <section aria-labelledby="notifications-heading" className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 text-left">
+    <section aria-labelledby="notifications-heading" className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-300 text-left">
       <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-warning/60 transition-colors group-hover:bg-warning" />
       <header className="px-5 py-4 border-b border-border/40 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
