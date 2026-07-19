@@ -164,11 +164,17 @@ function WidgetDrilldownModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in font-sans">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm font-sans"
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
+        transition={{ type: "spring", duration: 0.35, bounce: 0.15 }}
         className="w-full max-w-2xl bg-card border border-border rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] text-left"
       >
         {/* Modal Header */}
@@ -302,7 +308,7 @@ function WidgetDrilldownModal({
           )}
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -376,7 +382,21 @@ function CustomWidgetRenderer({
   const { t } = useTranslation();
   const palette = useBrandPalette();
   
-  const resolvedWidgetType = widget.widgetType || (["bar", "line", "area", "pie", "radar"].includes(widget.chartType || "") ? "chart" : "kpi");
+  const resolvedWidgetType = useMemo(() => {
+    const type = widget.widgetType || "";
+    if (["bar", "line", "area", "pie", "radar"].includes(type) || ["bar", "line", "area", "pie", "radar"].includes(widget.chartType || "")) {
+      return "chart";
+    }
+    const knownTypes = [
+      "kpi", "progress", "switch", "card",
+      "sessions-list", "attendance-summary", "fee-summary", "outstanding-list", "overdue-obligations",
+      "enrollment-trends", "revenue-expenses", "attendance-rate", "hasanat-distribution"
+    ];
+    if (knownTypes.includes(type)) {
+      return type;
+    }
+    return "kpi";
+  }, [widget.widgetType, widget.chartType]);
 
   const { value, formattedValue, isAlert } = useMemo(() => {
     if (resolvedWidgetType === "card") {
@@ -507,7 +527,8 @@ function CustomWidgetRenderer({
     }
     
     return (
-      <div className="bg-card rounded-2xl border border-border p-5 hover:shadow-md transition-all duration-300 relative text-left flex flex-col justify-between min-h-[140px] font-sans">
+      <div className="bg-card rounded-2xl border border-border p-5 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-300 relative text-left flex flex-col justify-between min-h-[140px] font-sans overflow-hidden group">
+        <div className={`absolute -right-8 -top-8 w-20 h-20 rounded-full ${computed.color === 'emerald' ? 'bg-success/5 blur-lg group-hover:bg-success/10' : computed.color === 'blue' ? 'bg-info/5 blur-lg group-hover:bg-info/10' : computed.color === 'violet' ? 'bg-primary/5 blur-lg group-hover:bg-primary/10' : computed.color === 'amber' ? 'bg-warning/5 blur-lg group-hover:bg-warning/10' : 'bg-destructive/5 blur-lg group-hover:bg-destructive/10'} transition-all duration-500`} />
         <div className="flex items-start justify-between">
           <div className={`w-9 h-9 rounded-lg ${colorClasses.bg} ring-4 ${colorClasses.ring} flex items-center justify-center aspect-square flex-shrink-0`}>
             <Icon className={`w-4.5 h-4.5 ${colorClasses.text}`} style={{ width: 18, height: 18 }} />
@@ -743,12 +764,13 @@ function CustomWidgetRenderer({
   return (
     <motion.div
       layout
-      className={`rounded-3xl border p-5 flex flex-col justify-between shadow-sm relative group hover:shadow-md transition-all ${
+      className={`rounded-3xl border p-5 flex flex-col justify-between shadow-sm relative group hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-300 overflow-hidden ${
         alertScheme 
           ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} border-[1.5px]` 
           : "bg-card/50 backdrop-blur-md border-border/60"
       }`}
     >
+      <div className={`absolute -right-8 -top-8 w-24 h-24 rounded-full ${widget.color === 'emerald' ? 'bg-success/5 blur-xl group-hover:bg-success/10' : widget.color === 'blue' ? 'bg-info/5 blur-xl group-hover:bg-info/10' : widget.color === 'violet' ? 'bg-primary/5 blur-xl group-hover:bg-primary/10' : widget.color === 'amber' ? 'bg-warning/5 blur-xl group-hover:bg-warning/10' : 'bg-destructive/5 blur-xl group-hover:bg-destructive/10'} transition-all duration-500`} />
       {/* Widget Card Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-0.5 text-left">
@@ -985,13 +1007,13 @@ export function DashboardWidgets({
         </div>
         
         {/* Layout Density Controls */}
-        <div className="flex items-center gap-1 border border-border/80 bg-muted/30 p-1 rounded-xl">
+        <div className="flex items-center gap-1 border border-border/60 bg-muted/20 p-1 rounded-xl shadow-inner backdrop-blur-xs">
           <button
             onClick={() => handleToggleGridMode("comfortable")}
-            className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
               gridMode === "comfortable" 
-                ? "bg-card text-foreground shadow-sm" 
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-card text-foreground shadow-sm scale-[1.02] border border-border/40" 
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/10"
             }`}
             type="button"
           >
@@ -999,10 +1021,10 @@ export function DashboardWidgets({
           </button>
           <button
             onClick={() => handleToggleGridMode("compact")}
-            className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
               gridMode === "compact" 
-                ? "bg-card text-foreground shadow-sm" 
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-card text-foreground shadow-sm scale-[1.02] border border-border/40" 
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/10"
             }`}
             type="button"
           >
@@ -1227,6 +1249,10 @@ export default function PinnedWidgets({ category }: { category: string }): React
   const filteredWidgets = useMemo(() => {
     return widgets.filter((widget) => widget.category === category);
   }, [widgets, category]);
+
+  useContactsWidgetAggregates(filteredWidgets);
+  useStudentsWidgetAggregates(filteredWidgets);
+  useTeachersWidgetAggregates(filteredWidgets);
 
 
   return (

@@ -1,7 +1,7 @@
 import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
 import { DEFAULT_WIDGET_TITLE_KEYS } from "@/lib/dashboardWidgets";
 import { DASHBOARD_WIDGETS_KEY } from "@mms/shared";
-import { getObject } from "@/lib/db";
+import { getObject, saveObject } from "@/lib/db";
 
 function withDefaultTitleKey(widget: CustomWidget): CustomWidget {
   const titleKey = widget.titleKey ?? DEFAULT_WIDGET_TITLE_KEYS[widget.id];
@@ -549,20 +549,33 @@ export function getOrInitializeCustomWidgets(): CustomWidget[] {
       ...getDefaultCustomWidgets("sessions"),
     ].map(withDefaultTitleKey);
     if (!saved) {
+      saveObject(DASHBOARD_WIDGETS_KEY, defaults);
       return defaults;
     }
     const parsed = saved.map(withDefaultTitleKey);
     const existingIds = new Set(parsed.map((widget) => widget.id));
     const merged = [...parsed];
+    let hasChanges = false;
     for (const defaultWidget of defaults) {
       if (!existingIds.has(defaultWidget.id)) {
         merged.push(defaultWidget);
+        hasChanges = true;
       } else {
         const widgetIndex = merged.findIndex((widget) => widget.id === defaultWidget.id);
-        if (widgetIndex >= 0 && defaultWidget.titleKey && !merged[widgetIndex].titleKey) {
-          merged[widgetIndex] = { ...merged[widgetIndex], titleKey: defaultWidget.titleKey };
+        if (widgetIndex >= 0) {
+          if (merged[widgetIndex].widgetType !== defaultWidget.widgetType) {
+            merged[widgetIndex] = { ...merged[widgetIndex], widgetType: defaultWidget.widgetType };
+            hasChanges = true;
+          }
+          if (defaultWidget.titleKey && !merged[widgetIndex].titleKey) {
+            merged[widgetIndex] = { ...merged[widgetIndex], titleKey: defaultWidget.titleKey };
+            hasChanges = true;
+          }
         }
       }
+    }
+    if (hasChanges) {
+      saveObject(DASHBOARD_WIDGETS_KEY, merged);
     }
     return merged;
   } catch (error) {

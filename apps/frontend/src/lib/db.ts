@@ -95,7 +95,7 @@ type CollectionRow = Record<string, unknown>;
 function readRawCollection<T = CollectionRow>(key: string): T[] {
   try {
     const saved = localStorage.getItem(scopedStorageKey(key));
-    if (saved === null) return [];
+    if (saved === null || saved === "undefined") return [];
     const parsed = JSON.parse(saved) as unknown;
     return Array.isArray(parsed) ? (parsed as T[]) : [];
   } catch {
@@ -276,7 +276,7 @@ export async function syncDatabase(): Promise<void> {
       const tabsRes = await apiFetch("/api/custom-tabs");
       if (tabsRes.ok) {
         const { tabs } = (await tabsRes.json()) as { tabs: CustomTab[] };
-        const grouped: Record<string, any[]> = {};
+        const grouped: Record<string, TabDefinition[]> = {};
         for (const tab of tabs) {
           if (!grouped[tab.moduleId]) {
             grouped[tab.moduleId] = [];
@@ -297,7 +297,7 @@ export async function syncDatabase(): Promise<void> {
           for (const [moduleId, formTabs] of Object.entries(grouped)) {
             const configKey = MODULE_TO_CONFIG_KEY[moduleId];
             if (configKey) {
-              const currentObj = (tenantSnapshot.objects[configKey] || {}) as Record<string, any>;
+              const currentObj = (tenantSnapshot.objects[configKey] || {}) as Record<string, unknown>;
               tenantSnapshot.objects[configKey] = {
                 ...currentObj,
                 formTabs,
@@ -444,15 +444,19 @@ export function saveCollectionCacheOnly<T>(key: string, collectionItems: T[]): v
 export function getCollection<T = any>(key: string, defaultData: T[] = [] as T[]): T[] {
   try {
     const saved = localStorage.getItem(scopedStorageKey(key));
-    if (saved !== null) {
-      const parsed = JSON.parse(saved) as unknown;
-      if (Array.isArray(parsed)) {
-        let collection = parsed as T[];
-        if (key === "sessions") {
-          collection = validateSessions(collection) as unknown as T[];
+    if (saved !== null && saved !== "undefined") {
+      try {
+        const parsed = JSON.parse(saved) as unknown;
+        if (Array.isArray(parsed)) {
+          let collection = parsed as T[];
+          if (key === "sessions") {
+            collection = validateSessions(collection) as unknown as T[];
+          }
+          collection = hydrateLinkedCollection(key, collection);
+          return collection;
         }
-        collection = hydrateLinkedCollection(key, collection);
-        return collection;
+      } catch {
+        console.warn(`Failed to parse cached collection "${key}", resetting to default.`);
       }
     }
     const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
@@ -525,8 +529,12 @@ export function saveCollection<T>(key: string, collectionItems: T[]): void {
 export function getObject<T>(key: string, defaultData: T): T {
   try {
     const saved = localStorage.getItem(scopedStorageKey(key));
-    if (saved !== null) {
-      return JSON.parse(saved) as T;
+    if (saved !== null && saved !== "undefined") {
+      try {
+        return JSON.parse(saved) as T;
+      } catch {
+        console.warn(`Failed to parse cached object "${key}", resetting to default.`);
+      }
     }
     localStorage.setItem(scopedStorageKey(key), JSON.stringify(defaultData));
 
@@ -624,14 +632,36 @@ export function getEffectiveBrandingSettings(): BrandingSettings {
   });
 }
 
+const TITLE_CASE_EXCLUDED_KEYWORDS = [
+  "settings",
+  "config",
+  "widgets",
+  "preferences",
+  "visuals",
+  "cards",
+  "categories",
+  "sourcebooks",
+  "template",
+  "tabs",
+  "placeholders",
+  "draft",
+  "backup",
+];
+
+function shouldSkipTitleCase(key: string): boolean {
+  const lk = key.toLowerCase();
+  return TITLE_CASE_EXCLUDED_KEYWORDS.some((kw) => lk.includes(kw));
+}
+
 function writeObjectLocal<T>(key: string, objectValue: T): T {
-  const processed = applyTitleCaseRecursive(objectValue) as T;
+  const processed = shouldSkipTitleCase(key) ? objectValue : (applyTitleCaseRecursive(objectValue) as T);
   localStorage.setItem(scopedStorageKey(key), JSON.stringify(processed));
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("local-database-update"));
   }
   return processed;
 }
+
 
 /**
  * Persists merged branding locally and waits for PostgreSQL sync to complete.
@@ -651,8 +681,12 @@ export async function saveBrandingSettings(brandingSettings: BrandingSettings): 
 export function readObjectLocal<T>(key: string): T | null {
   try {
     const saved = localStorage.getItem(scopedStorageKey(key));
-    if (saved !== null) {
-      return JSON.parse(saved) as T;
+    if (saved !== null && saved !== "undefined") {
+      try {
+        return JSON.parse(saved) as T;
+      } catch {
+        console.warn(`Failed to parse cached object "${key}"`);
+      }
     }
   } catch (error) {
     console.error(`Error reading object "${key}" from local cache:`, error);
