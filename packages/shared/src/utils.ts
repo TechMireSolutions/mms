@@ -747,15 +747,44 @@ export const DEFAULT_CURRENCIES = [
 ];
 
 /**
- * Formats a numeric amount as currency (defaults to PKR).
+ * Retrieves the stored finance currency from localStorage if available (client-safe).
+ */
+export function getStoredFinanceCurrency(): string {
+  if (typeof window !== "undefined") {
+    try {
+      let saved = localStorage.getItem("mms_finance_settings");
+      if (!saved) {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key?.endsWith(":finance_settings")) {
+            saved = localStorage.getItem(key);
+            break;
+          }
+        }
+      }
+      if (saved) {
+        const settings = JSON.parse(saved);
+        if (settings?.currency) {
+          return settings.currency;
+        }
+      }
+    } catch {
+      // Ignored
+    }
+  }
+  return "PKR";
+}
+
+/**
+ * Formats a numeric amount as currency (defaults to settings-aware currency or PKR).
  * @param amount - The numeric or string amount to format.
- * @param currency - The currency symbol/code (defaults to "PKR").
+ * @param currency - The currency symbol/code (defaults to settings-aware currency).
  * @param options - Custom format options (e.g. useSymbol, excludeCurrency, decimal places).
  * @returns The formatted currency string, or "—" if invalid.
  */
 export function formatMoney(
   amount: number | string | null | undefined,
-  currency = "PKR",
+  currency?: string,
   options?: {
     useSymbol?: boolean;
     excludeCurrency?: boolean;
@@ -766,6 +795,8 @@ export function formatMoney(
   if (amount === null || amount === undefined) return "—";
   const numeric = typeof amount === "number" ? amount : parseFloat(String(amount));
   if (isNaN(numeric)) return "—";
+
+  const resolvedCurrency = currency || getStoredFinanceCurrency();
 
   const minDigits = options?.minimumFractionDigits ?? 0;
   const maxDigits = options?.maximumFractionDigits ?? 2;
@@ -779,9 +810,9 @@ export function formatMoney(
     return formattedNum;
   }
 
-  let prefix = currency;
+  let prefix = resolvedCurrency;
   if (options?.useSymbol) {
-    const found = DEFAULT_CURRENCIES.find((c) => c.code === currency || c.symbol === currency);
+    const found = DEFAULT_CURRENCIES.find((c) => c.code === resolvedCurrency || c.symbol === resolvedCurrency);
     if (found) {
       prefix = found.symbol;
     }

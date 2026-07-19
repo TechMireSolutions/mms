@@ -7,7 +7,7 @@ import {
   UserCheck, ClipboardEdit, BookOpen, BarChart2,
   ShieldCheck, ClipboardList,
 } from "lucide-react";
-import { resolveModuleTierTab, todayISO } from "@mms/shared";
+import { resolveModuleTierTab, todayISO, ATTENDANCE_MODULE_CONTRACT } from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -31,7 +31,7 @@ import {
 import { useAttendanceColumnLayout } from '@/tenant/features/attendance/hooks/useAttendanceColumnLayout';
 import { useQueryClient } from '@tanstack/react-query';
 import { useViewerRole } from "@/tenant/hooks/useViewerRole";
-import { usePermissions } from "@/tenant/hooks/usePermissions";
+import { usePermissions, useModulePermissions } from "@/tenant/hooks/usePermissions";
 
 const DEFAULT_FILTERS = {
   sessionId: "",
@@ -47,8 +47,14 @@ const DEFAULT_FILTERS = {
  */
 export default function Attendance() {
   const { t } = useTranslation();
-  const role = useViewerRole();
+  const {
+    canWrite: canWriteAttendance,
+    canDelete: canDeleteAttendance,
+    canRead: canAnalyticsView,
+    canViewSetup,
+  } = useModulePermissions(ATTENDANCE_MODULE_CONTRACT);
   const { can } = usePermissions();
+  const role = useViewerRole();
   const [activeTab, setActiveTab] = usePersistedTabState<string>("attendance_active_tab", "work");
   const [activeOpsTab, setActiveOpsTab] = useState("mark");
   const [activeAnalyticsTab, setActiveAnalyticsTab] = useState("charts");
@@ -73,23 +79,21 @@ export default function Attendance() {
     replaceAll.mutate(nextAttendanceRecords);
   }, [attendanceRecords, replaceAll, queryClient]);
 
-
-
-  const canSeeAttendanceAnalytics = can("analytics.view")
-    && (can("users.manage") || can("attendance.write") || can("enrollments.write") || !can("finance.write"));
+  const canSeeAttendanceAnalytics = canAnalyticsView
+    && (can("users.manage") || canWriteAttendance || can("enrollments.write") || !can("finance.write"));
 
   const visibleTopTabs = useFilteredModuleTierTabs({
-    canViewSetup: can("settings.global.write"),
+    canViewSetup,
     canViewReports: canSeeAttendanceAnalytics,
   });
 
   const visibleOperationsTabs = useMemo(
     () => [
-      { id: "mark",    label: t("attendance.tabs.mark"),    icon: ClipboardEdit, visible: can("attendance.write") },
-      { id: "records", label: t("attendance.tabs.records"), icon: BookOpen,      visible: can("analytics.view") },
-      { id: "audit",   label: t("attendance.tabs.audit"),   icon: ClipboardList, visible: can("users.manage") },
+      { id: "mark",    label: t("attendance.tabs.mark"),    icon: ClipboardEdit, visible: canWriteAttendance },
+      { id: "records", label: t("attendance.tabs.records"), icon: BookOpen,      visible: canAnalyticsView },
+      { id: "audit",   label: t("attendance.tabs.audit"),   icon: ClipboardList, visible: canDeleteAttendance },
     ].filter((tab) => tab.visible),
-    [t, can],
+    [t, canWriteAttendance, canAnalyticsView, canDeleteAttendance],
   );
 
   const visibleAnalyticsTabs = useMemo(

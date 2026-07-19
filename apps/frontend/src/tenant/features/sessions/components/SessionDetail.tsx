@@ -6,7 +6,8 @@ import {
 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { formatDate } from "@/lib/db";
-import { formatMoney } from "@mms/shared";
+import { formatMoney, SESSIONS_MODULE_CONTRACT } from "@mms/shared";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 
 import { ClassesTab } from "@/tenant/features/sessions/components/tabs/ClassesTab";
@@ -61,6 +62,7 @@ interface SessionDetailProps {
  * @returns {React.ReactElement}
  */
 export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDetailProps) {
+  const { canWrite } = useModulePermissions(SESSIONS_MODULE_CONTRACT);
   const [tab, setTab] = useState("classes");
   const TabContent = TAB_COMPONENTS[tab];
 
@@ -88,9 +90,11 @@ export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDet
         </div>
       }
       headerActions={
-        <Button onClick={() => onEdit(session)} variant="ghost" size="icon" aria-label="Edit Session" className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
-          <Edit2 className="w-4 h-4" aria-hidden="true" />
-        </Button>
+        canWrite && (
+          <Button onClick={() => onEdit(session)} variant="ghost" size="icon" aria-label="Edit Session" className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+            <Edit2 className="w-4 h-4" aria-hidden="true" />
+          </Button>
+        )
       }
     >
 

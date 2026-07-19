@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Calendar, Users, BookOpen,
@@ -30,7 +30,8 @@ import { useSessionColumnLayout } from "@/tenant/features/sessions/hooks/useSess
 import { useSessionConfig } from "@/hooks/useStandardModuleConfig";
 import { SessionsCommandMetrics } from "@/tenant/features/sessions/components/SessionsCommandMetrics";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
-import { type AppTranslationKey, formatMoney } from "@mms/shared";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { type AppTranslationKey, formatMoney, SESSIONS_MODULE_CONTRACT } from "@mms/shared";
 
 type SessionStatus = string;
 type SessionType = string;
@@ -127,7 +128,12 @@ function SessionCard({ session, onClick, statusConfig }: SessionCardProps) {
  * @returns The Sessions page.
  */
 export default function Sessions() {
-  const PAGE_TABS = useModuleTierTabs();
+  const {
+    canWrite,
+    canReports: canViewReports,
+    canViewSetup,
+  } = useModulePermissions(SESSIONS_MODULE_CONTRACT);
+  const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const { t } = useTranslation();
   const sessions = useSessionsCollection();
   const { createSession, updateSession } = useSessionMutations();
@@ -218,9 +224,11 @@ export default function Sessions() {
       headerTitle={t("nav.sessions")}
       headerSubtitle={t("page.sessions.subtitle")}
       headerActions={
-        <ActionButton variant="primary" icon={Plus} onClick={() => { setEditSession(null); setShowForm(true); }}>
-          New Session
-        </ActionButton>
+        canWrite && (
+          <ActionButton variant="primary" icon={Plus} onClick={() => { setEditSession(null); setShowForm(true); }}>
+            New Session
+          </ActionButton>
+        )
       }
       metricsStrip={
         <SessionsCommandMetrics total={sessions.length} shown={filtered.length} />

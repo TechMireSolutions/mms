@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { formatMoney, formatDate } from "@mms/shared";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 /** A single income or expense transaction entry. */
 interface TransactionEntry {
@@ -98,6 +99,7 @@ interface BudgetTabProps {
  * @returns {React.ReactElement}
  */
 export function BudgetTab({ session, onUpdate }: BudgetTabProps) {
+  const { activeCurrency } = useFinanceCurrency();
   const [addType, setAddType] = useState<"income" | "expense" | null>(null);
   const budget = session.budget || { totalRevenue: 0, collected: 0, expenses: [], incomes: [] };
 
@@ -210,7 +212,7 @@ export function BudgetTab({ session, onUpdate }: BudgetTabProps) {
       <TransactionModal
         open={addType !== null}
         type={addType ?? "income"}
-        currency={session.currency || "PKR"}
+        currency={session.currency || activeCurrency.code}
         onClose={() => setAddType(null)}
         onSave={(transaction) => handleAdd(addType!, transaction)}
       />

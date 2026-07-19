@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClipboardList, Plus, UserCheck } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
-import { usePermissions } from "@/tenant/hooks/usePermissions";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { EnrollmentWizard } from "@/tenant/features/enrollments/components/EnrollmentWizard";
 import { EnrollmentList } from "@/tenant/features/enrollments/components/EnrollmentList";
 import { EnrollmentsCommandMetrics } from "@/tenant/features/enrollments/components/EnrollmentsCommandMetrics";
@@ -22,7 +22,7 @@ import { Enrollment } from '@/lib/data/enrollmentData';
 import { useEnrollmentsCollection, useEnrollmentMutations } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import { useStudentMutations, type StudentRecord } from "@/tenant/features/students/hooks/useStudents";
 import { apiJson } from "@/lib/apiClient";
-import { STUDENTS_MODULE_CONTRACT } from "@mms/shared";
+import { STUDENTS_MODULE_CONTRACT, ENROLLMENTS_MODULE_CONTRACT } from "@mms/shared";
 import { useEnrollmentViewerRole } from "@/tenant/hooks/useViewerRole";
 import { useEnrollmentColumnLayout } from "@/tenant/features/enrollments/hooks/useEnrollmentColumnLayout";
 
@@ -40,12 +40,15 @@ export default function EnrollmentsPage() {
     ],
     [t]
   );
-  const TABS = useModuleTierTabs();
+  const {
+    canWrite: canWriteEnrollments,
+    canReports: canViewReports,
+    canViewSetup,
+  } = useModulePermissions(ENROLLMENTS_MODULE_CONTRACT);
+  const TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const [tab, setTab]                 = usePersistedTabState<string>("enrollments_active_tab", "work");
   const [activeSubTab, setActiveSubTab] = useState("list");
   const role = useEnrollmentViewerRole();
-  const { can } = usePermissions();
-  const canWriteEnrollments = can("enrollments.write");
   const enrollments = useEnrollmentsCollection();
   const { createEnrollment, updateEnrollment } = useEnrollmentMutations();
   const { updateStudent } = useStudentMutations();

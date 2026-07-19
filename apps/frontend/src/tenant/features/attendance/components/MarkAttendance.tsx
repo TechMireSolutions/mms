@@ -24,7 +24,8 @@ import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/us
 import { useStudentsByIds } from '@/tenant/features/students/hooks/useStudents';
 import type { Student } from "@/lib/data/studentsData";
 import type { Enrollment } from "@/lib/data/enrollmentData";
-import { usePermissions } from "@/tenant/hooks/usePermissions";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { ATTENDANCE_MODULE_CONTRACT } from "@mms/shared";
 import { StatusToggle } from "@/tenant/features/attendance/components/StatusToggle";
 import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
 import {
@@ -275,7 +276,7 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
 export function MarkAttendance({ filters, role, records, setRecords }: MarkAttendanceProps) {
   const { t } = useTranslation();
   const { statuses, customFields, orderedFields, isFieldEnabled } = useAttendanceConfig();
-  const { can } = usePermissions();
+  const { canWrite: canWriteAttendance } = useModulePermissions(ATTENDANCE_MODULE_CONTRACT);
   const sessions = useSessionsCollection();
   const enrollments = useEnrollmentsCollection();
   const studentIds = useMemo(() => {
@@ -763,7 +764,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
             <Save className="w-3.5 h-3.5" aria-hidden="true" /> {t("attendance.mark.saveDraft")}
           </Button>
           <Button onClick={handleSubmit}
-            disabled={!can("attendance.write")}
+            disabled={!canWriteAttendance}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors h-auto">
             <Send className="w-3.5 h-3.5" aria-hidden="true" />
             {isOffline ? t("attendance.mark.saveOffline") : submitted ? t("attendance.mark.updateAttendance") : t("attendance.mark.submitAttendance")}

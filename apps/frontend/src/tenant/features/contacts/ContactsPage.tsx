@@ -7,8 +7,10 @@ import { getPrimaryPhone, hasWhatsApp, Contact, CONTACTS_MODULE_CONTRACT, resolv
 import type { AppTranslationKey } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
-import { usePermissions } from "@/tenant/hooks/usePermissions";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useContacts, useContactsCollection, useContactsPaginated, useContactsByIds, CONTACTS_DUPLICATES_QUERY_KEY } from "@/tenant/features/contacts/hooks/useContacts";
+// ... (rest of imports unchanged, targeting line 146-170 for inner body refactor)
+
 import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
 import { useContactsPageActions } from "@/tenant/features/contacts/hooks/useContactsPageActions";
 import { useContactsPageState } from "@/tenant/features/contacts/hooks/useContactsPageState";
@@ -145,15 +147,15 @@ function SettingsPanel({ contacts, onImport, canWrite, canEditSetup }: SettingsP
 
 function ContactsInner() {
   const queryClient = useQueryClient();
-  const { can } = usePermissions();
-  const perms = CONTACTS_MODULE_CONTRACT.permissions;
+  const {
+    canWrite,
+    canDelete,
+    canExport,
+    canReports: canViewReports,
+    canViewSetup,
+    canEditSetup,
+  } = useModulePermissions(CONTACTS_MODULE_CONTRACT);
   const bulkActions = CONTACTS_MODULE_CONTRACT.work.bulkActions;
-  const canWrite = can(perms.write);
-  const canDelete = can(perms.delete);
-  const canExport = can(perms.export);
-  const canViewReports = can(perms.reports);
-  const canViewSetup = can(perms.setupView);
-  const canEditSetup = can(perms.setupWrite);
   const { prefs, countryCodesMap } = useContactConfig();
   const tableColumns = useContactColumns();
   const [showDeletedArchives, setShowDeletedArchives] = useState(false);

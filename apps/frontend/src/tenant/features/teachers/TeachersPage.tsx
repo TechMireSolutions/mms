@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useTranslation } from '@/hooks/useTranslation';
-import { usePermissions } from '@/tenant/hooks/usePermissions';
+import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserPlus, School, Filter, ChevronDown } from 'lucide-react';
 import {
@@ -42,10 +42,11 @@ function teacherStatusLabel(t: (key: AppTranslationKey) => string, status: strin
  */
 export default function Teachers(): React.JSX.Element {
   const { t } = useTranslation();
-  const { can } = usePermissions();
-  const canWrite = can('teachers.write');
-  const canViewReports = can('analytics.view');
-  const canViewSetup = can('configuration.view') || can('settings.global.write');
+  const {
+    canWrite,
+    canReports: canViewReports,
+    canViewSetup,
+  } = useModulePermissions(TEACHERS_MODULE_CONTRACT);
 
   const visibleTabs = useFilteredModuleTierTabs({
     canViewSetup,

@@ -9,7 +9,8 @@ import { useLocalPagination } from "@/hooks/useLocalPagination";
 import { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
-import { usePermissions } from "@/tenant/hooks/usePermissions";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { ATTENDANCE_MODULE_CONTRACT } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { Input } from "@/components/ui/input";
@@ -42,7 +43,10 @@ export function AttendanceRecords({
 }: AttendanceRecordsProps) {
   const { statuses } = useAttendanceConfig();
   const { t } = useTranslation();
-  const { can } = usePermissions();
+  const {
+    canWrite: canWriteAttendance,
+    canDelete: canDeleteAttendance,
+  } = useModulePermissions(ATTENDANCE_MODULE_CONTRACT);
   const sessions = useSessionsCollection();
 
   const allClasses = useMemo(() => {
@@ -109,7 +113,7 @@ export function AttendanceRecords({
     setRecords((previousRecords) => previousRecords.map((attendanceRecord) => attendanceRecord.id === id ? { ...attendanceRecord, [key]: value } : attendanceRecord));
 
   const deleteRecord = (id: string) => {
-    if (!can("users.manage")) return;
+    if (!canDeleteAttendance) return;
     setRecords((previousRecords) => previousRecords.filter((attendanceRecord) => attendanceRecord.id !== id));
   };
 
@@ -268,7 +272,7 @@ export function AttendanceRecords({
                   )}
                   <td className="px-3 py-2.5 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      {can("attendance.write") && (
+                      {canWriteAttendance && (
                         <Button
                           type="button"
                           variant="ghost"
@@ -280,7 +284,7 @@ export function AttendanceRecords({
                           {editing === attendanceRecord.id ? <X className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
                         </Button>
                       )}
-                      {can("users.manage") && (
+                      {canDeleteAttendance && (
                         <Button
                           type="button"
                           variant="ghost"

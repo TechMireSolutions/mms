@@ -428,7 +428,7 @@ export function resolveField(
     case "representative":  return String(findItem(reps, collection.mujtahid_representative_id)?.name || "");
     case "amount": {
       const currency = findItem(currencies, collection.currency_id);
-      return formatMoney(collection.amount as number | string | null | undefined, currency?.code || "PKR");
+      return formatMoney(collection.amount as number | string | null | undefined, currency?.code || undefined);
     }
     case "currency":        return String(findItem(currencies, collection.currency_id)?.code || "");
     case "payment_mode":    return String(collection.payment_mode || "");
