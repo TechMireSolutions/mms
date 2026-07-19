@@ -99,22 +99,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthError(null);
 
     try {
-      const response = await apiFetch('/api/auth/me');
-
-      if (response.ok) {
-        const authResponse = await response.json() as { user: User };
-        await applyAuthSession(authResponse.user);
-      } else if (response.status === 401) {
-        setUser(null);
-        setIsAuthenticated(false);
-        localStorage.removeItem('mms_user');
-      } else {
-        setUser(null);
-        setIsAuthenticated(false);
-      }
-    } catch {
+      const authResponse = await apiJson<{ user: User }>('/api/auth/me');
+      await applyAuthSession(authResponse.user);
+    } catch (error) {
       setUser(null);
       setIsAuthenticated(false);
+      if (error && typeof error === 'object' && 'status' in error && (error as any).status === 401) {
+        localStorage.removeItem('mms_user');
+      }
     } finally {
       setAuthChecked(true);
       setIsLoadingAuth(false);

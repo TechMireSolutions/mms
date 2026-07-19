@@ -225,6 +225,6 @@ export async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     return JSON.parse(text) as T;
   } catch (err) {
-    throw new Error(`Failed to parse success JSON response: ${err instanceof Error ? err.message : String(err)}`);
+    throw new Error(`Failed to parse success JSON response: ${err instanceof Error ? err.message : String(err)}`, { cause: err });
   }
 }

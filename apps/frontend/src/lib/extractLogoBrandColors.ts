@@ -4,7 +4,7 @@ import {
   type LogoBrandColors,
   type LogoPaletteSamplingOptions,
 } from '@mms/shared';
-import { resolveApiUrl } from '@/lib/apiClient';
+import { apiFetch, resolveApiUrl } from '@/lib/apiClient';
 
 export type ExtractLogoBrandColorsOptions = LogoPaletteSamplingOptions & {
   /** Longest canvas edge when downsampling before pixel read (performance vs accuracy). */
@@ -73,7 +73,7 @@ async function resolveImageLoadSource(
     return { src: normalized };
   }
 
-  const response = await fetch(normalized, { credentials: 'include', signal });
+  const response = await apiFetch(normalized, { signal });
   if (!response.ok) {
     throw new Error('Failed to fetch image for colour extraction');
   }

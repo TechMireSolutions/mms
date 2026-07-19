@@ -1,6 +1,7 @@
 export interface ServerConfig {
   isProd: boolean;
   jwtSecret: string;
+  databaseUrl: string;
   trustProxy: boolean;
   logLevel: string;
   allowedOrigin: string;
@@ -22,9 +23,18 @@ export function loadServerConfig(): ServerConfig {
     throw new Error('JWT_SECRET must be at least 32 characters in production');
   }
 
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error(
+      'DATABASE_URL environment variable is required but not set. ' +
+        'Set it in your .env file or deployment environment before starting the server.',
+    );
+  }
+
   return {
     isProd,
     jwtSecret,
+    databaseUrl,
     trustProxy: process.env.TRUST_PROXY === 'true' || isProd,
     logLevel: process.env.LOG_LEVEL || 'info',
     allowedOrigin: process.env.ALLOWED_ORIGIN || 'http://localhost:5173',

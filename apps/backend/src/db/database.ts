@@ -92,11 +92,12 @@ function getRootDb(): DbClient {
 
 export async function initDb(): Promise<void> {
   try {
-    const connectionString = process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/mms';
+    const config = loadServerConfig();
+    const connectionString = config.databaseUrl;
 
     pool = new pg.Pool({
       connectionString,
-      max: loadServerConfig().pgPoolMax,
+      max: config.pgPoolMax,
     });
 
     _rootDb = drizzle(pool, { schema });
