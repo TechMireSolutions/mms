@@ -49,14 +49,13 @@ function CopyBtn({ text }: CopyBtnProps): React.JSX.Element {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       })
-      .catch((error: unknown) => {
-        console.error("Failed to copy text to clipboard:", error);
-      });
+      .catch(() => undefined);
   };
   return (
     <Button
       onClick={copyToClipboard}
       title={copied ? t('contacts.table.copied') : t('contacts.table.copy')}
+      aria-label={copied ? t('contacts.table.copied') : t('contacts.table.copy')}
       variant="ghost"
       className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded text-muted-foreground hover:text-foreground"
       type="button"
@@ -90,7 +89,7 @@ interface ContactsTableProps {
   onSort: (field: string) => void;
   columns?: ColumnConfig[];
   allContacts?: Contact[];
-  onUpdateContact?: (contact: Contact) => void;
+  onUpdateContact?: (contact: Contact) => Promise<void>;
   canWrite?: boolean;
   canDelete?: boolean;
 }
@@ -151,7 +150,7 @@ export default function ContactsTable({
 
   const TH = ({ field, children }: { field: string; children: React.ReactNode }): React.JSX.Element => (
     <th
-      className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer select-none hover:text-foreground transition-colors"
+      className="px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer select-none hover:text-foreground transition-colors"
       onClick={() => onSort(field)}
     >
       <div className="flex items-center gap-1">{children}<SortIcon field={field} /></div>
@@ -169,7 +168,7 @@ export default function ContactsTable({
                 <Button
                   onClick={() => setViewContact(contact)}
                   variant="ghost"
-                  className="min-h-[44px] h-auto p-0 text-[13px] font-semibold text-foreground hover:text-primary transition-colors text-left justify-start hover:bg-transparent"
+                  className="min-h-[44px] h-auto p-0 text-[13px] font-semibold text-foreground hover:text-primary transition-colors text-start justify-start hover:bg-transparent"
                   type="button"
                 >
                   {getDisplayName(contact)}
@@ -336,7 +335,7 @@ export default function ContactsTable({
 
   return (
     <>
-      <div className="overflow-x-auto rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl shadow-sm">
+      <div className="overflow-x-auto rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl shadow-xs">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
@@ -344,6 +343,7 @@ export default function ContactsTable({
                 <Checkbox
                   checked={someSelected ? "indeterminate" : allSelected}
                   onCheckedChange={() => onSelectAll()}
+                  aria-label={allSelected ? t("contacts.deselect") : t("contacts.table.selectAll")}
                   className="cursor-pointer"
                 />
               </th>
@@ -352,7 +352,7 @@ export default function ContactsTable({
                 return sortFieldKey ? (
                   <TH key={col.id} field={sortFieldKey}>{col.label}</TH>
                 ) : (
-                  <th key={col.id} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{col.label}</th>
+                  <th key={col.id} className="px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{col.label}</th>
                 );
               })}
               <th className="px-4 py-3 w-16" />
@@ -362,6 +362,7 @@ export default function ContactsTable({
             <AnimatePresence>
               {contacts.map((contact) => {
                 const isSelected = selected.includes(contact.id);
+                const primaryEmailVal = getPrimaryEmail(contact);
                 return (
                   <motion.tr
                     key={contact.id}
@@ -375,6 +376,7 @@ export default function ContactsTable({
                       <Checkbox
                         checked={isSelected}
                         onCheckedChange={() => onSelect(contact.id)}
+                        aria-label={`Select ${getDisplayName(contact)}`}
                         className="cursor-pointer"
                       />
                     </td>
@@ -388,30 +390,30 @@ export default function ContactsTable({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
                           <DropdownMenuItem onClick={() => setViewContact(contact)}>
-                            <Eye className="w-3.5 h-3.5 mr-2" /> {t('contacts.table.viewProfile')}
+                            <Eye className="w-3.5 h-3.5 me-2" /> {t('contacts.table.viewProfile')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onEdit(contact)} disabled={!canWrite || showArchived}>
-                            <Edit2 className="w-3.5 h-3.5 mr-2" /> {t('contacts.table.edit')}
+                            <Edit2 className="w-3.5 h-3.5 me-2" /> {t('contacts.table.edit')}
                           </DropdownMenuItem>
                           {!showArchived ? (
                             <>
                               <DropdownMenuItem disabled={!hasWhatsApp(contact)} onClick={() => onWhatsApp([contact])}>
-                                <MessageCircle className={`w-3.5 h-3.5 mr-2 ${hasWhatsApp(contact) ? "text-success" : "text-muted-foreground"}`} /> {t('contacts.whatsapp')}
+                                <MessageCircle className={`w-3.5 h-3.5 me-2 ${hasWhatsApp(contact) ? "text-success" : "text-muted-foreground"}`} /> {t('contacts.whatsapp')}
                               </DropdownMenuItem>
-                              <DropdownMenuItem disabled={!contact.email?.trim()} onClick={() => onEmail([contact])}>
-                                <Mail className={`w-3.5 h-3.5 mr-2 ${contact.email?.trim() ? "text-warning" : "text-muted-foreground"}`} /> {t("contacts.detail.emailAction")}
+                              <DropdownMenuItem disabled={!primaryEmailVal} onClick={() => onEmail([contact])}>
+                                <Mail className={`w-3.5 h-3.5 me-2 ${primaryEmailVal ? "text-warning" : "text-muted-foreground"}`} /> {t("contacts.detail.emailAction")}
                               </DropdownMenuItem>
                               <DropdownMenuItem disabled={!getPrimaryPhone(contact)} onClick={() => onSms([contact])}>
-                                <MessageSquare className="w-3.5 h-3.5 mr-2 text-primary" /> {t("contacts.sms")}
+                                <MessageSquare className="w-3.5 h-3.5 me-2 text-primary" /> {t("contacts.sms")}
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={() => onDelete(contact.id)} disabled={!canDelete} className="text-destructive focus:text-destructive">
-                                <Trash2 className="w-3.5 h-3.5 mr-2" /> {t('contacts.table.deleteContact')}
+                                <Trash2 className="w-3.5 h-3.5 me-2" /> {t('contacts.table.deleteContact')}
                               </DropdownMenuItem>
                             </>
                           ) : (
                             <DropdownMenuItem onClick={() => onRestore?.(contact.id)} disabled={!canDelete}>
-                              <RotateCcw className="w-3.5 h-3.5 mr-2" /> {t("contacts.restoreContact")}
+                              <RotateCcw className="w-3.5 h-3.5 me-2" /> {t("contacts.restoreContact")}
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>

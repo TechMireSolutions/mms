@@ -2,7 +2,7 @@ import React, { useState, lazy, Suspense, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MoreHorizontal, MessageCircle, MessageSquare, Edit2, Trash2, Eye, Phone, Mail, RotateCcw, Copy, Check,
-  MapPin, User, Calendar, CheckCircle2
+  MapPin, User, Calendar, CheckCircle2, AlertTriangle
 } from "lucide-react";
 import { 
   type Contact, 
@@ -149,17 +149,17 @@ export default function ContactCards({
               {formatDate(item.dob)}
             </span>
             {prefs.showDetailedSolarAge && (
-              <span className="text-muted-foreground/80 pl-4.5 block">
+              <span className="text-muted-foreground/80 ps-4.5 block">
                 {t("contacts.table.solarAgeLabel")} {calculateDetailedSolarAge(item.dob)}
               </span>
             )}
             {prefs.showLunarDob && (
-              <span className="text-muted-foreground/80 pl-4.5 block">
+              <span className="text-muted-foreground/80 ps-4.5 block">
                 {t("contacts.table.lunarDobLabel")} {getLunarDateString(item.dob)}
               </span>
             )}
             {prefs.showDetailedLunarAge && (
-              <span className="text-muted-foreground/80 pl-4.5 block">
+              <span className="text-muted-foreground/80 ps-4.5 block">
                 {t("contacts.table.lunarAgeLabel")} {calculateDetailedLunarAge(item.dob)}
               </span>
             )}
@@ -259,14 +259,14 @@ export default function ContactCards({
               whileHover={{ y: -4, scale: 1.01, transition: { duration: 0.2 } }}
               role="region"
               aria-label={displayName}
-              className={`relative overflow-hidden group rounded-2xl border bg-gradient-to-br from-card/95 via-card/85 to-background/70 dark:from-card/95 dark:via-card/80 dark:to-background/60 backdrop-blur-xl p-4 pl-5.5 space-y-4 transition-all duration-300 shadow-sm hover:shadow-md ${isSelected
+              className={`relative overflow-hidden group rounded-2xl border bg-gradient-to-br from-card/95 via-card/85 to-background/70 dark:from-card/95 dark:via-card/80 dark:to-background/60 backdrop-blur-xl p-4 ps-5.5 space-y-4 transition-all duration-300 shadow-sm hover:shadow-md ${isSelected
                   ? "border-primary/50 bg-primary/[0.015] dark:bg-primary/[0.02] shadow-sm shadow-primary/5"
                   : "border-border/50 dark:border-border/30 hover:border-primary/35 dark:hover:border-primary/20"
                 }`}
             >
               <div 
                 aria-hidden="true"
-                className={`absolute left-0 top-0 bottom-0 w-1.5 ${
+                className={`absolute inset-inline-start-0 top-0 bottom-0 w-1.5 ${
                   isSelected
                     ? "bg-primary/70 group-hover:bg-primary"
                     : contact.gender?.toLowerCase() === "male"
@@ -278,7 +278,7 @@ export default function ContactCards({
               />
  
               {/* Core Profile Area */}
-              <div className="flex gap-3 pr-16 items-start ml-1">
+              <div className="flex gap-3 pe-16 items-start ms-1">
                 <div className="flex items-center justify-center flex-shrink-0 pt-1">
                   <Checkbox
                     checked={isSelected}
@@ -289,7 +289,7 @@ export default function ContactCards({
                 <Button
                   type="button"
                   variant="ghost"
-                  className="h-auto p-0 hover:bg-transparent flex flex-1 items-start gap-2.5 min-w-0 text-left cursor-pointer hover:text-foreground shadow-none justify-start"
+                  className="h-auto p-0 hover:bg-transparent flex flex-1 items-start gap-2.5 min-w-0 text-start cursor-pointer hover:text-foreground shadow-none justify-start"
                   onClick={() => setViewContact(contact)}
                   aria-label={t("contacts.table.viewProfile") || "View Profile"}
                 >
@@ -315,7 +315,7 @@ export default function ContactCards({
  
               {/* Contact Information Pills */}
               {(showPhonePill || showEmailPill) && (
-                <div className="space-y-2 py-0.5 ml-1">
+                <div className="space-y-2 py-0.5 ms-1">
                   {phone && showPhonePill && (
                     <Button
                       type="button"
@@ -324,7 +324,7 @@ export default function ContactCards({
                       className="w-full flex items-center justify-between h-auto text-xs font-normal text-muted-foreground bg-muted/40 dark:bg-muted/20 hover:bg-muted/65 dark:hover:bg-muted/35 hover:text-foreground backdrop-blur-sm px-3 py-2 rounded-xl border border-border/30 dark:border-border/15 transition-all group/pill cursor-pointer min-w-0 shadow-none"
                       aria-label={`${t("contacts.detail.call")}: ${phone}. ${t("contacts.table.copy")}`}
                     >
-                      <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1 pe-2">
                         <Phone aria-hidden="true" className="w-3.5 h-3.5 text-primary/80 dark:text-primary/70 flex-shrink-0 group-hover/pill:text-primary transition-colors" />
                         <span className="font-semibold tracking-tight truncate select-all">{phone}</span>
                       </div>
@@ -359,7 +359,7 @@ export default function ContactCards({
                       className="w-full flex items-center justify-between h-auto text-xs font-normal text-muted-foreground bg-muted/40 dark:bg-muted/20 hover:bg-muted/65 dark:hover:bg-muted/35 hover:text-foreground backdrop-blur-sm px-3 py-2 rounded-xl border border-border/30 dark:border-border/15 transition-all group/pill cursor-pointer min-w-0 shadow-none"
                       aria-label={`${t("contacts.reportFields.email")}: ${email}. ${t("contacts.table.copy")}`}
                     >
-                      <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1 pe-2">
                         <Mail aria-hidden="true" className="w-3.5 h-3.5 text-primary/80 dark:text-primary/70 flex-shrink-0 group-hover/pill:text-primary transition-colors" />
                         <span className="font-semibold tracking-tight truncate select-all">{email}</span>
                       </div>
@@ -391,15 +391,17 @@ export default function ContactCards({
  
               {/* Dynamic Metadata Section */}
               {otherColumns.length > 0 && (
-                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40 dark:border-border/20 ml-1">
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40 dark:border-border/20 ms-1">
                   {otherColumns.map((col) => {
                     const value = contact[col.id as keyof Contact];
                     // Skip empty custom values unless they are booleans/ratings
                     if (value === undefined || value === null || (value === "" && col.id !== "rating")) return null;
                     return (
-                      <div key={col.id} className="flex flex-col gap-0.5 bg-muted/40 dark:bg-muted/15 px-2.5 py-1.5 rounded-xl border border-border/30 dark:border-border/10 text-left min-w-0">
-                        <span className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">{col.label}</span>
-                        <div className="text-[12px] font-bold text-foreground truncate mt-0.5">
+                      <div key={col.id} className="flex flex-col gap-0.5 bg-muted/40 dark:bg-muted/15 px-2.5 py-1.5 rounded-xl border border-border/30 dark:border-border/10 text-start min-w-0">
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-tight truncate leading-none">
+                          {col.label}
+                        </span>
+                        <div className="text-xs font-semibold text-foreground truncate mt-0.5">
                           {renderMetadataValue(col.id, contact)}
                         </div>
                       </div>
@@ -410,9 +412,9 @@ export default function ContactCards({
  
               {/* Archived Warning Banner */}
               {contact.deletedAt && (
-                <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-2.5 space-y-1 text-[11px] text-destructive text-left">
+                <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-2.5 space-y-1 text-[11px] text-destructive text-start">
                   <div className="flex items-center gap-1.5 font-bold">
-                    <AlertCircleWarningIcon className="w-3.5 h-3.5" />
+                    <AlertTriangle className="w-3.5 h-3.5" />
                     <span>Deleted {formatDate(contact.deletedAt)}</span>
                   </div>
                   {contact.deletionReason && (
@@ -431,7 +433,7 @@ export default function ContactCards({
                       href={`tel:${phone}`}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="p-2.5 rounded-xl border border-border/50 dark:border-border/30 bg-muted/40 dark:bg-card/60 text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/20 transition-colors shadow-sm"
+                      className="p-2.5 rounded-xl border border-border/50 dark:border-border/30 bg-muted/40 dark:bg-card/60 text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/20 transition-colors shadow-xs"
                       title={t("contacts.detail.call")}
                       aria-label={t("contacts.detail.call")}
                     >
@@ -476,6 +478,23 @@ export default function ContactCards({
                   >
                     <MessageSquare aria-hidden="true" className="w-4 h-4" />
                   </MotionButton>
+
+                  <MotionButton
+                    type="button"
+                    variant="ghost"
+                    disabled={!email}
+                    whileHover={email ? { scale: 1.05 } : undefined}
+                    whileTap={email ? { scale: 0.95 } : undefined}
+                    onClick={() => onEmail([contact])}
+                    className={`h-auto p-2.5 rounded-xl border transition-colors shadow-none ${email
+                        ? "border-secondary/30 dark:border-secondary/20 bg-secondary/5 text-secondary hover:text-secondary hover:bg-secondary/10 cursor-pointer"
+                        : "border-border/20 text-muted-foreground/30 opacity-40 cursor-not-allowed"
+                      }`}
+                    title={t("contacts.detail.emailAction")}
+                    aria-label={t("contacts.detail.emailAction")}
+                  >
+                    <Mail aria-hidden="true" className="w-4 h-4" />
+                  </MotionButton>
                 </div>
  
                 <div className="flex items-center gap-1.5">
@@ -507,7 +526,7 @@ export default function ContactCards({
                     <DropdownMenuContent align="end" className="w-44">
                       {canWrite && !showArchived && (
                         <DropdownMenuItem onClick={() => onEdit(contact)}>
-                          <Edit2 aria-hidden="true" className="w-3.5 h-3.5 mr-2" /> {t("contacts.table.edit")}
+                          <Edit2 aria-hidden="true" className="w-3.5 h-3.5 me-2" /> {t("contacts.table.edit")}
                         </DropdownMenuItem>
                       )}
                       {!showArchived ? (
@@ -518,14 +537,14 @@ export default function ContactCards({
                               onClick={() => onDelete(contact.id)}
                               className="text-destructive focus:text-destructive"
                             >
-                              <Trash2 aria-hidden="true" className="w-3.5 h-3.5 mr-2" /> {t("contacts.table.deleteContact")}
+                              <Trash2 aria-hidden="true" className="w-3.5 h-3.5 me-2" /> {t("contacts.table.deleteContact")}
                             </DropdownMenuItem>
                           </>
                         )
                       ) : (
                         canDelete && (
                           <DropdownMenuItem onClick={() => onRestore?.(contact.id)}>
-                            <RotateCcw aria-hidden="true" className="w-3.5 h-3.5 mr-2" /> {t("contacts.restoreContact")}
+                            <RotateCcw aria-hidden="true" className="w-3.5 h-3.5 me-2" /> {t("contacts.restoreContact")}
                           </DropdownMenuItem>
                         )
                       )}

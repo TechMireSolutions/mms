@@ -232,10 +232,13 @@ export function useContactsPageState({
     });
   }, [contacts, search, filterGender, sortField, sortDir]);
 
-  const rowSource = directoryRowsRef?.current ?? directoryRows ?? filtered;
+  const rowSource = useMemo(
+    () => directoryRowsRef?.current ?? directoryRows ?? filtered,
+    [directoryRowsRef, directoryRows, filtered],
+  );
 
   const hasActiveFilters = !!(filterGender || search);
-  const activeFilterCount = (filterGender ? 1 : 0);
+  const activeFilterCount = filterGender ? 1 : 0;
 
   const handleSort = useCallback((field: string) => {
     if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -305,11 +308,14 @@ export function useContactsPageState({
   );
 
   const handleUpdateContact = useCallback(
-    (updated: Contact) => {
-      if (!canWrite) return;
-      void updateContact.mutateAsync({ id: String(updated.id), contact: updated }).catch(() => {
-        notify.error(t("contacts.saveFailed"));
-      });
+    (updated: Contact): Promise<void> => {
+      if (!canWrite) return Promise.resolve();
+      return updateContact.mutateAsync({ id: String(updated.id), contact: updated })
+        .then(() => undefined)
+        .catch((err: unknown) => {
+          notify.error(t("contacts.saveFailed"));
+          throw err;
+        });
     },
     [canWrite, updateContact, t],
   );
