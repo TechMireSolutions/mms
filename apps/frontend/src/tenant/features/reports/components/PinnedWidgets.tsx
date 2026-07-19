@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { formatMoney, type AppTranslationKey } from "@mms/shared";
 const CustomWidgetChartFallback = React.lazy(() => import("@/tenant/features/reports/components/pinnedWidgets/CustomWidgetChartFallback"));
 import { getCollection, saveCollection, getObject, saveObject } from "@/lib/db";
+import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { resolveThresholdChartHex, resolveWidgetChartHex } from "@/lib/brandingChartPalette";
 import { Session, Class } from '@/lib/data/sessionsData';
@@ -207,7 +208,7 @@ function WidgetDrilldownModal({
         <div className="p-6 border-b border-border/45 bg-muted/20 flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-[10px] text-primary uppercase font-black tracking-widest block">{t("reports.widgets.drilldownTitle")}</span>
-            <h3 className="text-base font-black text-foreground">{t("reports.widgets.records", { title: widget.title })}</h3>
+            <h3 className="text-base font-black text-foreground">{t("reports.widgets.records", { title: resolveWidgetTitle(widget, t) })}</h3>
           </div>
           <Button
             variant="ghost"
@@ -502,7 +503,7 @@ function CustomWidgetRenderer({
       if (aggregateValue) {
         computed = {
           id: card.id,
-          title: card.title,
+          title: resolveWidgetTitle(card, t),
           value: String(aggregateValue.finalValue),
           sub: card.fixedSubText || t("reports.widgets.totalCountText", { count: aggregateValue.totalCount }),
           icon: card.icon,
@@ -522,7 +523,7 @@ function CustomWidgetRenderer({
       if (aggregateValue) {
         computed = {
           id: card.id,
-          title: card.title,
+          title: resolveWidgetTitle(card, t),
           value: String(aggregateValue.finalValue),
           sub: card.fixedSubText || t("reports.widgets.totalCountText", { count: aggregateValue.totalCount }),
           icon: card.icon,
@@ -542,7 +543,7 @@ function CustomWidgetRenderer({
       if (aggregateValue) {
         computed = {
           id: card.id,
-          title: card.title,
+          title: resolveWidgetTitle(card, t),
           value: String(aggregateValue.finalValue),
           sub: card.fixedSubText || t("reports.widgets.totalCountText", { count: aggregateValue.totalCount }),
           icon: card.icon,
@@ -573,7 +574,7 @@ function CustomWidgetRenderer({
           type="button"
         >
           <span className="text-[7.5px] font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
-            {widget.title}
+            {resolveWidgetTitle(widget, t)}
           </span>
           <span className="text-base font-black tracking-tight font-mono my-auto max-w-full truncate text-foreground">
             {computed.value}
@@ -643,7 +644,7 @@ function CustomWidgetRenderer({
             type="button"
           >
             <span className="text-[7.5px] font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
-              {widget.title}
+              {resolveWidgetTitle(widget, t)}
             </span>
             <div className="my-auto">
               <ProgressRing percentage={value} colorHex={colorHex} isCompact />
@@ -665,7 +666,7 @@ function CustomWidgetRenderer({
             type="button"
           >
             <span className="text-[7.5px] font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
-              {widget.title}
+              {resolveWidgetTitle(widget, t)}
             </span>
             <span className={`text-base font-black tracking-tight font-mono my-auto max-w-full truncate ${alertScheme ? alertScheme.text : "text-foreground"}`}>
               {formattedValue}
@@ -690,7 +691,7 @@ function CustomWidgetRenderer({
           type="button"
         >
           <span className="text-[7.5px] font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
-            {widget.title}
+            {resolveWidgetTitle(widget, t)}
           </span>
           <span className={`text-base font-black tracking-tight font-mono my-auto max-w-full truncate ${alertScheme ? alertScheme.text : "text-foreground"}`}>
             {formattedValue}
@@ -714,7 +715,7 @@ function CustomWidgetRenderer({
           type="button"
         >
           <span className="text-[7.5px] font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
-            {widget.title}
+            {resolveWidgetTitle(widget, t)}
           </span>
           <div className="my-auto">
             <ProgressRing percentage={value} colorHex={colorHex} isCompact />
@@ -732,7 +733,7 @@ function CustomWidgetRenderer({
           className="w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border surface-glass border-border/55 overflow-hidden relative transition-all duration-300 hover:border-primary/20 hover:shadow-md"
         >
           <span className="text-[7.5px] font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
-            {widget.title}
+            {resolveWidgetTitle(widget, t)}
           </span>
           
           <button
@@ -759,35 +760,35 @@ function CustomWidgetRenderer({
   if (resolvedWidgetType === "sessions-list") {
     return (
       <React.Suspense fallback={<div className="min-h-[140px] bg-muted/20 animate-pulse rounded-3xl" />}>
-        <SessionsTable title={widget.title} />
+        <SessionsTable title={resolveWidgetTitle(widget, t)} />
       </React.Suspense>
     );
   }
   if (resolvedWidgetType === "attendance-summary") {
     return (
       <React.Suspense fallback={<div className="min-h-[140px] bg-muted/20 animate-pulse rounded-3xl" />}>
-        <TodayAttendanceWidget title={widget.title} />
+        <TodayAttendanceWidget title={resolveWidgetTitle(widget, t)} />
       </React.Suspense>
     );
   }
   if (resolvedWidgetType === "fee-summary") {
     return (
       <React.Suspense fallback={<div className="min-h-[140px] bg-muted/20 animate-pulse rounded-3xl" />}>
-        <FeeCollectionSummary title={widget.title} />
+        <FeeCollectionSummary title={resolveWidgetTitle(widget, t)} />
       </React.Suspense>
     );
   }
   if (resolvedWidgetType === "outstanding-list") {
     return (
       <React.Suspense fallback={<div className="min-h-[140px] bg-muted/20 animate-pulse rounded-3xl" />}>
-        <OutstandingFeesTable title={widget.title} />
+        <OutstandingFeesTable title={resolveWidgetTitle(widget, t)} />
       </React.Suspense>
     );
   }
   if (resolvedWidgetType === "overdue-obligations") {
     return (
       <React.Suspense fallback={<div className="min-h-[140px] bg-muted/20 animate-pulse rounded-3xl" />}>
-        <OverdueObligationsWidget title={widget.title} />
+        <OverdueObligationsWidget title={resolveWidgetTitle(widget, t)} />
       </React.Suspense>
     );
   }
@@ -834,10 +835,18 @@ function CustomWidgetRenderer({
       <div className="flex items-center justify-between">
         <div className="space-y-0.5 text-left">
           <span className="text-[10px] font-black text-foreground uppercase tracking-widest leading-none block">
-            {widget.title}
+            {resolveWidgetTitle(widget, t)}
           </span>
           <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">
-            {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)} {resolvedWidgetType !== "switch" ? `• ${t(`reports.widgets.builder.formula${widget.operation.charAt(0).toUpperCase() + widget.operation.slice(1)}` as AppTranslationKey) || widget.operation}` : ""}
+            {(() => {
+              const widgetTitle = resolveWidgetTitle(widget, t);
+              const collectionLabel = getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t);
+              const showCollection = !widgetTitle.toLowerCase().includes(collectionLabel.toLowerCase());
+              const formulaPart = resolvedWidgetType !== "switch" ? t(`reports.widgets.builder.formula${widget.operation.charAt(0).toUpperCase() + widget.operation.slice(1)}` as AppTranslationKey) || widget.operation : "";
+              return showCollection
+                ? `${collectionLabel}${formulaPart ? ` • ${formulaPart}` : ""}`
+                : formulaPart;
+            })()}
           </p>
         </div>
         
@@ -1543,7 +1552,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
               >
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <span className="text-[10px] font-black text-foreground uppercase tracking-widest leading-none block">{widget.title}</span>
+                    <span className="text-[10px] font-black text-foreground uppercase tracking-widest leading-none block">{resolveWidgetTitle(widget, t)}</span>
                     <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">
                       {widget.widgetType || "kpi"} • {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection.replace("_", " "), t)}
                     </p>
