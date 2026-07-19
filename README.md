@@ -30,6 +30,17 @@ MMS is structured as a `pnpm` workspace orchestrated by a unified Turbo build sy
 
 ---
 
+## 🔒 Data Architecture & Tenant Isolation
+
+MMS is built with a zero-trust multi-tenant architecture designed to ensure absolute data isolation between different madrasa subdomains:
+
+*   **Strict Tenant Isolation**: Every request is intercepted by the Fastify backend to resolve the active tenant subdomain from the `Host` or `X-Forwarded-Host` header. The resolved subdomain is bound to an asynchronous execution context (`AsyncLocalStorage`).
+*   **Composite Key Constraints**: All core PostgreSQL tables (such as students, contacts, sessions, and attendance records) utilize composite primary keys consisting of `(workspace_subdomain, id)`. This ensures that tenant boundaries are hard-enforced directly at the database engine level.
+*   **Server-Authoritative REST & TanStack Query**: All 11 feature modules are fully migrated to a server-authoritative REST API architecture. Local storage caching is deprecated for primary records, and client-side data is dynamically cached and mutated using TanStack Query.
+*   **MFA & Security Challenges**: OTP codes, 2FA tokens, and opaque refresh tokens are managed out-of-memory via a dedicated database-backed `auth_artifacts` table.
+
+---
+
 ## 🛠️ Technology Stack
 
 MMS targets stable, modern runtime and framework versions. Run `pnpm outdated -r` from the root to review upgrades.
@@ -38,17 +49,19 @@ MMS targets stable, modern runtime and framework versions. Run `pnpm outdated -r
 | :--- | :--- | :--- | :--- |
 | **Runtime** | Node.js | `>=24.14.0` (LTS) | Server JavaScript execution environment |
 | **Package Manager**| pnpm | `11.9.0` | High-performance monorepo package workspace manager |
-| **Build Pipeline** | Turbo | `^2.10.0` | Monorepo build orchestrator with remote caching |
+| **Build Pipeline** | Turbo | `^2.10.3` | Monorepo build orchestrator with remote caching |
 | **Language** | TypeScript | `^6.0.3` | Strict type safety, validation, and compile target |
 | **Frontend SPA** | React | `^19.2.7` | UI component engine with React 19 inputs |
-| **Frontend Tooling** | Vite | `^8.1.0` | Bundler and development server tool |
-| **Styling** | Tailwind CSS | `^4.3.1` | Utility-first CSS engine with native CSS variables |
-| **Animations** | Framer Motion | `^12.42.0` | Smooth interactive animations and transitions |
+| **Frontend Tooling** | Vite | `^8.1.3` | Bundler and development server tool |
+| **Styling** | Tailwind CSS | `^4.3.2` | Utility-first CSS engine with native CSS variables |
+| **Animations** | Framer Motion | `^12.42.2` | Smooth interactive animations and transitions |
 | **Query Cache** | TanStack Query | `^5.101.2` | Client data synchronizer, optimistic updates, and cache |
+| **Error Reporting**| Sentry | `^10.63.0` | Client-side error tracking and logging boundaries |
 | **Backend API** | Fastify | `^5.9.0` | High-throughput, low-overhead HTTP API framework |
 | **Database ORM** | Drizzle ORM | `^0.45.2` | Type-safe SQL query generation and schema migrations |
 | **Database** | PostgreSQL | `>=15.0` (17 in CI) | Relational multi-tenant persistent storage |
 | **Test Runner** | Vitest | `^4.1.9` | ESM-first unit & integration test framework |
+| **E2E Testing** | Playwright | `^1.49.0` | Cross-browser onboarding & integration end-to-end testing |
 | **Validation** | Zod | `^4.4.3` | Schema validation for forms, APIs, and workspace state |
 
 ---
@@ -66,10 +79,15 @@ Ensure environment settings are configured in `apps/backend/.env` and `apps/fron
 | `PORT` | Number | `3000` (Dev) / `5002` (Prod) | Fastify listener port |
 | `NODE_ENV` | String | `development` | Runtime environment (`development` / `production`) |
 | `MMS_APP_DOMAIN` | Hostname | `yourdomain.com` | **Required**. Apex domain to resolve tenant subdomains |
+| `PLATFORM_APP_URL` | URL | `https://yourdomain.com` | Public absolute application URL used in transactional emails, links, etc. |
 | `ALLOWED_ORIGIN` | URL | `http://localhost:5173` | CORS allowed origin header value |
 | `MMS_UPLOADS_DIR` | Path | `apps/backend/uploads` | Asset upload location (e.g. workspace logos) |
 | `PG_POOL_MAX` | Number | `20` | Maximum PostgreSQL pool connection limits |
 | `LOG_LEVEL` | String | `info` | Logger verbosity (`debug`, `info`, `warn`, `error`) |
+| `PLATFORM_ALLOW_ENV_BOOTSTRAP` | Boolean | `false` | Set `true` to auto-create the initial platform super-user admin on start |
+| `PLATFORM_ADMIN_EMAIL` | String | *(None)* | Initial admin email address for bootstrap |
+| `PLATFORM_ADMIN_PASSWORD` | String | *(None)* | Initial admin password for bootstrap |
+| `PLATFORM_ADMIN_NAME` | String | `"Platform Admin"` | Initial admin name for bootstrap |
 
 ### Platform Email Integration
 
@@ -85,6 +103,14 @@ Emails (for login, onboarding, or reports) support two configurations. Define **
   * `PLATFORM_SMTP_SECURE`: Use SSL/TLS (`true`/`false`).
   * `PLATFORM_SMTP_USER`: SMTP username credentials.
   * `PLATFORM_SMTP_PASS`: SMTP password credentials.
+
+### Frontend Environment Variables (`apps/frontend/.env` / `.env.local`)
+
+| Variable | Type | Default / Example | Description |
+| :--- | :--- | :--- | :--- |
+| `VITE_APP_DOMAIN` | Hostname | `yourdomain.com` | **Required**. Apex platform domain for subdomain-based tenant routing. |
+| `VITE_API_URL` | URL | `http://localhost:3000` | Optional absolute API origin when not using same-host reverse proxy. |
+| `VITE_SENTRY_DSN` | URL | *(None)* | Optional Sentry browser DSN for client-side error reporting. |
 
 ---
 
@@ -110,13 +136,23 @@ bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
 ```
 
 ### 4. Running the Dev Stack
-Install dependencies and run servers using the unified control script:
+
+You can run the development servers in two different modes:
+
+#### Option A: Direct Foreground Mode (Standard)
+Start both frontend and backend development servers concurrently in your active terminal:
+```bash
+pnpm dev
+```
+
+#### Option B: GNU Screen Background Mode (Unified Control)
+Run the servers as background services managed inside a screen session:
 ```bash
 pnpm install
 ./restart_servers.sh          # Launches servers inside a background GNU screen session
 ```
 
-#### Handy Development Commands
+##### Handy Development Commands
 * **Inspect Status**: `./restart_servers.sh status` lists active ports, health checks, and running logs.
 * **Stop Servers**: `./restart_servers.sh stop` terminates the screen session and releases ports.
 * **Foreground Mode**: `./restart_servers.sh --foreground` runs the services directly in your active terminal.
@@ -124,6 +160,13 @@ pnpm install
 * **Tail Logs**: `tail -f .logs/frontend.log .logs/backend.log .logs/worker.log` reviews realtime outputs.
 
 *Note: Drizzle schema migrations and demo datasets seed automatically on backend start if an empty database is detected.*
+
+### 5. Running the Background Worker
+
+Heavy out-of-process operations (such as data exports and duplicate contact scans) require the background worker to be running. To start the polling background worker process locally:
+```bash
+pnpm --filter mms-backend run worker
+```
 
 ---
 
@@ -206,6 +249,14 @@ On a fresh Ubuntu 22.04 or 24.04 VPS:
    curl -fsS http://127.0.0.1:5002/ready       # Should return 200 OK
    ```
 
+### Wildcard TLS Certs & Tenant SNI Troubleshooting
+
+If tenant subdomain URLs resolve to the incorrect default Apache vhost (falling back to default SSL sites due to SNI issues), run the wildcard TLS configuration utility:
+```bash
+sudo bash scripts/production/fix-tenant-tls-wildcard.sh apps/backend/.env
+```
+This utility automates Certbot DNS validation challenges to acquire a proper `*.MMS_APP_DOMAIN` certificate and update the host virtual hosts mapping.
+
 ### Daily Backups and Database Restores
 * **Cron Daily Backups**:
   Add this to your crontab (`crontab -e`) to backup the PostgreSQL database nightly at 3:00 AM:
@@ -230,13 +281,14 @@ MMS implements automated quality checks across the codebase workspace:
 pnpm test          # Run Vitest test suites across the monorepo
 pnpm lint          # Validate ESLint code rules
 pnpm typecheck     # Strict TypeScript type compiler check
+pnpm test:e2e      # Run Playwright end-to-end integration tests
 ```
 
 ### Test Scope Breakdown
 * **Backend Tests** (`apps/backend/src/__tests__`): Route tests utilizing Fastify's `inject()` helper. This validates REST handlers, authentication artifacts, and tenant isolation middleware without opening network sockets.
 * **Frontend Tests** (`apps/frontend/vitest.config.ts`): React components unit tests executed within `happy-dom` mock environments, utilizing mocked networks.
 * **Shared Logic** (`packages/shared/src/__tests__`): Validates date/timezone utils, validation schemas, translation maps, and custom formulas.
-* **End-to-End E2E Tests** (`e2e/`): Web client integration test flows run via Playwright. Run locally with `pnpm exec playwright test`.
+* **End-to-End E2E Tests** (`e2e/`): Web client integration test flows run via Playwright. Run locally with `pnpm test:e2e`. The test runner automatically invokes `e2e/scripts/start-web-server.mjs` to orchestrate isolated development backend and frontend instances before running onboarding and login test suites.
 
 ---
 

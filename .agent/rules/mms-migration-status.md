@@ -9,7 +9,6 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | Area | Current state | Target (rules) |
 |------|---------------|----------------|
 | Hardcoded labels/colours | Widespread in modules | Config/registry + `t()` — `mms-settings-i18n.md` |
-| TanStack Query | Students + contacts + workspace registry + auth; most modules still localStorage | New REST resources Query-first — `mms-data-layer.md` |
 | `can()` permissions hook | Shipped; Enrollments + Attendance wired; registry partial | Full registry-driven matrix — `mms-auth-security.md` |
 | Inline `role ===` checks | Dashboard widget filtering uses `resolveDashboardRole(can)`; `useViewerRole` derives from `can()` | Full registry-driven matrix — `mms-auth-security.md` |
 | Custom tab provisioning | JSON document store only | Table + migration + CRUD per custom tab — `mms-fields.md` |
@@ -19,10 +18,6 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | Legacy entity forms | Some deep module sheets | `FormModal` / `Modal` / `DetailDrawerShell` — `mms-ui-ux-design.md` |
 | Status colours inline | Residual in chart color maps | `StatusBadge` + semantic tokens — `mms-ui-ux-design.md` |
 | Automated tests | Shared + backend (auth, rbac, health, security); frontend apiClient + hooks; Playwright API + Contacts UI in CI `e2e/` | Expand Playwright for login/onboard — `mms-testing-observability.md` |
-| Server-first data | Students + contacts Query-first; most modules localStorage primary | Query + API authoritative for new modules — `mms-data-layer.md` |
-| Per-entity REST API | Students, contacts, teachers, finance, enrollments, obligations, accounting, hasanat, examinations, question-bank, users, attendance, and sessions have resource routes; generic `/api/db` still serves legacy sync paths | Resource routes + validation per domain — `mms-api-interface.md` |
-| Internal `fetch('/api/...')` | External OAuth only | All MMS API via `apiClient` — `mms-api-interface.md` |
-| Client error reporting | Console/toasts only | Sentry or equivalent — `mms-testing-observability.md` |
 | Global a11y pass | Partial (dropdowns only) | WCAG baseline on new UI — `mms-ui-ux-design.md` |
 | Universal module architecture | All modules have `{Module}ModuleContract` + command centre metric strips | Report drill-down on remaining modules |
 | Soft deletion | Contacts REST soft delete + restore + bulk; most modules hard DELETE | `deletedAt` per module; restore API where needed |
@@ -32,6 +27,10 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 
 ## Recently Resolved (Do not reintroduce)
 
+- **Client Error Reporting (Sentry)**: Integrated client-side error boundaries with Sentry instrumentation in `main.tsx`.
+- **Per-Entity REST APIs**: Migrated students, contacts, teachers, finance, enrollments, obligations, accounting, hasanat, examinations, question-bank, users, attendance, and sessions to dedicated server-authoritative REST routes.
+- **Internal API Communications**: Banned raw `fetch('/api/...')` calls in favor of the typesafe `apiClient` (`apiFetch`/`apiJson`).
+- **TanStack Query & Server-First Data**: Refactored all 11 frontend modules to use TanStack Query hooks, replacing legacy client-side localStorage synchronization as the primary data source.
 - **Slide-Over Drawer Shell Layouts**: Unified student detail drawer and contact detail drawer to use the central `<DetailDrawerShell>` primitive component, resolving layout, backdrop trigger, and spring animation duplication.
 - **Generic Saved Reports Overlay**: Integrated a generic `<SavedReports>` panel overlay tab in `ModuleReports.tsx` to dynamically run saved filter presets and redirect back to dashboards.
 - **Removed custom ObligationModal wrapper**: Deleted redundant `ObligationModal.tsx` and replaced it with direct `<Modal>` usage inside `ObligationCollectionDetail.tsx`.

@@ -44,8 +44,7 @@ packages/shared/   @mms/shared
 
 | Phase | Pattern | Owner |
 |-------|---------|--------|
-| **Current** | `localStorage` + sync to PostgreSQL JSON documents | `mms-data-layer.md` |
-| **New REST features** | Server authoritative + TanStack Query cache | `mms-data-layer.md` |
+| **Current** | REST APIs + TanStack Query cache | `mms-data-layer.md` |
 | **Target** | Per-entity API resources; localStorage as offline cache only | `mms-migration-status.md` |
 
 ## Platform rules (modern app)

@@ -11,6 +11,7 @@
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "lint": "turbo run lint",
     "test:e2e": "pnpm --filter e2e-tests exec playwright test"
   },
   "devDependencies": {

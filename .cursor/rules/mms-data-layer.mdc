@@ -38,16 +38,16 @@ Authoritative standards for backend databases, migrations, caching architectures
 
 ---
 
-## 2. Client Persistence & Synchronization (`db.ts`)
+## 2. Client Persistence & Synchronization (`db.ts` [DEPRECATED for Primary Collections])
 
-### Local Storage Caching
-- **Schema Mapping**: Map collections and singletons locally using `getCollection`, `saveCollection`, and the live event hook `useLiveCollection('name')`.
-- **Event Bus Refreshes**: Trigger window-level events on local state writes:
+### Local Storage Caching (Legacy)
+- **Settings & Singletons Only**: The client-side database helper `db.ts` is deprecated for primary feature collection storage. Its usage is restricted to singletons (e.g. `branding`, `global_settings`) and custom field configuration objects.
+- **Event Bus Refreshes**: Local updates for settings drafts trigger window-level events on local state writes:
   ```typescript
   window.dispatchEvent(new Event('local-database-update'));
   ```
-- **Sync Endpoints**: Sync operations route through `/api/db/sync` (bulk snapshot GET/POST), `/api/db/collections/:name`, and `/api/db/reset` (admin-only tenant reset).
-- **Title Case Formatting**: All save operations to local storage (`saveCollection` / `saveObject` / `dbSyncService` / backend repository writes) must recursively apply Title Case formatting using `applyTitleCaseRecursive` from `@mms/shared` before committing the write, ensuring consistent text casing across local and synchronized states.
+- **Sync Endpoints**: Legacy bulk synchronization routes through `/api/db/sync` (bulk snapshot GET/POST), `/api/db/collections/:name`, and `/api/db/reset` (admin-only tenant reset).
+- **Title Case Formatting**: All save operations to local storage (`saveCollection` / `saveObject` / `dbSyncService` / backend repository writes) must recursively apply Title Case formatting using `applyTitleCaseRecursive` from `@mms/shared` before committing the write.
 
 ### Settings Singletons
 Settings singletons (`branding`, `global_settings`) must survive authentication syncs:
@@ -68,19 +68,7 @@ Settings singletons (`branding`, `global_settings`) must survive authentication 
 - **Save Confirmation**: UI saved/success states must wait for `mutateAsync` or an explicit mutation success callback. Do not mark a REST-backed draft as saved immediately after calling fire-and-forget `mutate()`.
 - **Errors**: Propagate errors through `notify.error()`. Expose loading screens via `isPending` or `isFetching`.
 
-### Hybrid Trajectory
-When legacy analytics widgets require local storage but the module is REST-migrated, synchronize values inside the query loader:
-```typescript
-async function fetchContacts(): Promise<Contact[] | unknown[]> {
-  const body = await apiJson<{ contacts: Contact[] }>('/api/contacts');
-  saveCollection('contacts', body.contacts);
-  return body.contacts;
-}
+### Hybrid Trajectory (Deprecated)
+- **Banned for New Modules**: The hybrid pattern (saving query responses to local storage to satisfy legacy widgets) is a transition mechanism only. New feature modules must read directly from TanStack Query hooks without cache mirroring.
+- **Constraint**: Never use `useLiveCollection` for an entity that is already fetched via Query on the same viewport.
 
-export function useContactsCollection(): Contact[] | unknown[] {
-  const { data: fromQuery = [] } = useContacts();
-  const fromLocal = useLiveCollection<Contact>('contacts');
-  return fromQuery.length > 0 ? fromQuery : fromLocal;
-}
-```
-*Constraint*: Never use `useLiveCollection` for an entity that is already fetched via Query on the same viewport.
