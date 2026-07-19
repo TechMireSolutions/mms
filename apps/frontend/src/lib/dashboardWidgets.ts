@@ -36,15 +36,23 @@ export const DEFAULT_WIDGET_TITLE_KEYS: Partial<Record<string, AppTranslationKey
   'def-sessions-list': 'widget.title.activeSessionsList',
 };
 
+const LOWERCASE_KEYS = Object.values(DEFAULT_WIDGET_TITLE_KEYS).reduce<Record<string, AppTranslationKey>>((acc, key) => {
+  if (key) {
+    acc[key.toLowerCase()] = key;
+  }
+  return acc;
+}, {});
+
 export function resolveWidgetTitle(
   widget: Pick<CustomWidget, 'id' | 'title' | 'titleKey'>,
   t: (key: AppTranslationKey) => string,
 ): string {
   const rawKey = widget.titleKey ?? DEFAULT_WIDGET_TITLE_KEYS[widget.id];
   if (rawKey) {
-    const key = rawKey.startsWith('Widget.title.')
+    const normalized = rawKey.toLowerCase();
+    const key = LOWERCASE_KEYS[normalized] ?? (rawKey.startsWith('Widget.title.')
       ? (`widget.title.${rawKey.substring(13)}` as AppTranslationKey)
-      : rawKey;
+      : rawKey);
     return t(key);
   }
   return widget.title;
