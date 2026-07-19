@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from "react";
-import { Users, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { SimplePagination } from "@/components/ui/SimplePagination";
 
 export interface UpcomingSessionItem {
   id: number;
@@ -180,27 +181,11 @@ export default function SessionsTable({ title }: { title?: string }) {
 
       {totalPages > 1 && (
         <footer className="px-5 py-3.5 border-t border-border/40 flex items-center justify-end gap-2 bg-muted/10 select-none">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-[11px] font-bold text-muted-foreground select-none">
-            {currentPage} / {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          <SimplePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </footer>
       )}
     </section>

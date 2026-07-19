@@ -2,11 +2,11 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { 
   LayoutDashboard, Pin, X, PinOff, Trash2,
-  SlidersHorizontal, Info, Pencil, ArrowUpRight, ShieldAlert, ArrowRight, Search, EyeOff, Users,
-  ChevronLeft, ChevronRight
+  SlidersHorizontal, Info, Pencil, ArrowUpRight, ShieldAlert, ArrowRight, Search, EyeOff, Users
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatMoney, type AppTranslationKey } from "@mms/shared";
+import { SimplePagination } from "@/components/ui/SimplePagination";
 const CustomWidgetChartFallback = React.lazy(() => import("@/tenant/features/reports/components/pinnedWidgets/CustomWidgetChartFallback"));
 import { getCollection, saveCollection, getObject, saveObject } from "@/lib/db";
 import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
@@ -340,31 +340,11 @@ function WidgetDrilldownModal({
             <span className="text-[11px] font-bold text-muted-foreground">
               {t("reports.widgets.foundCount", { count: filteredRecords.length })}
             </span>
-            <div className="flex items-center gap-1.5">
-              <Button
-                variant="outline"
-                size="icon"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <span className="text-[11px] font-bold text-muted-foreground select-none">
-                {currentPage} / {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
-                aria-label="Next page"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
+              <SimplePagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
           </div>
         )}
       </motion.div>

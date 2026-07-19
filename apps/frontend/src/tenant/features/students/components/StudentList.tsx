@@ -38,6 +38,83 @@ export interface StudentListServerPagination {
   hasMore: boolean;
 }
 
+interface ListPaginationFooterProps {
+  totalItems: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+  pageSizeOptions: number[];
+  itemLabel: string;
+  className?: string;
+}
+
+function ListPaginationFooter({
+  totalItems,
+  currentPage,
+  pageSize,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
+  pageSizeOptions,
+  itemLabel,
+  className,
+}: ListPaginationFooterProps) {
+  return (
+    <div className={className}>
+      <div>
+        Showing {Math.min(totalItems, (currentPage - 1) * pageSize + 1)}-
+        {Math.min(totalItems, currentPage * pageSize)} of {totalItems} {itemLabel}
+      </div>
+
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1.5">
+          <span>Rows per page:</span>
+          <Select value={String(pageSize)} onValueChange={(val) => onPageSizeChange(Number(val))}>
+            <SelectTrigger className="h-7 w-[60px] bg-background border border-border rounded px-1.5 py-0.5 text-foreground cursor-pointer">
+              <SelectValue placeholder={String(pageSize)} />
+            </SelectTrigger>
+            <SelectContent>
+              {pageSizeOptions.map((size) => (
+                <SelectItem key={size} value={String(size)}>
+                  {size}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            disabled={currentPage === 1}
+            onClick={() => onPageChange(currentPage - 1)}
+            className="h-7 w-7 p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            disabled={currentPage === totalPages}
+            onClick={() => onPageChange(currentPage + 1)}
+            className="h-7 w-7 p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export interface StudentListProps {
   students: Student[];
   onEdit: (student: Student) => void;
@@ -318,56 +395,17 @@ export default function StudentList({
 
         {/* Footer with pagination */}
         {students.length > 0 && !serverPagination && (
-          <div className="px-5 py-3 border border-border bg-muted/10 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
-            <div>
-              Showing {Math.min(students.length, (currentPage - 1) * pageSize + 1)}-
-              {Math.min(students.length, currentPage * pageSize)} of {students.length} students
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5">
-                <span>Rows per page:</span>
-                <Select value={String(pageSize)} onValueChange={(pageSizeValue) => setPageSize(Number(pageSizeValue))}>
-                  <SelectTrigger className="h-7 w-[60px] bg-background border border-border rounded px-1.5 py-0.5 text-foreground cursor-pointer">
-                    <SelectValue placeholder={pageSize} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[8, 16, 24, 48].map((size) => (
-                      <SelectItem key={size} value={String(size)}>
-                        {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((currentPageNumber) => currentPageNumber - 1)}
-                  className="h-7 w-7 p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <span>
-                  Page {currentPage} of {totalPages}
-                </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((currentPageNumber) => currentPageNumber + 1)}
-                  className="h-7 w-7 p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
+          <ListPaginationFooter
+            totalItems={students.length}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            pageSizeOptions={[8, 16, 24, 48]}
+            itemLabel="students"
+            className="px-5 py-3 border border-border bg-muted/10 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground"
+          />
         )}
 
         <AnimatePresence>
@@ -612,56 +650,17 @@ export default function StudentList({
 
         {/* Footer with pagination */}
         {students.length > 0 && !serverPagination && (
-          <div className="px-5 py-3 border-t border-border/50 bg-muted/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
-            <div>
-              Showing {Math.min(students.length, (currentPage - 1) * pageSize + 1)}-
-              {Math.min(students.length, currentPage * pageSize)} of {students.length} students
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5">
-                <span>Rows per page:</span>
-                <Select value={String(pageSize)} onValueChange={(pageSizeValue) => setPageSize(Number(pageSizeValue))}>
-                  <SelectTrigger className="h-7 w-[60px] bg-background border border-border rounded px-1.5 py-0.5 text-foreground cursor-pointer">
-                    <SelectValue placeholder={pageSize} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[5, 10, 25, 50].map((size) => (
-                      <SelectItem key={size} value={String(size)}>
-                        {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((currentPageNumber) => currentPageNumber - 1)}
-                  className="h-7 w-7 p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <span>
-                  Page {currentPage} of {totalPages}
-                </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((currentPageNumber) => currentPageNumber + 1)}
-                  className="h-7 w-7 p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
+          <ListPaginationFooter
+            totalItems={students.length}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            pageSizeOptions={[5, 10, 25, 50]}
+            itemLabel="students"
+            className="px-5 py-3 border-t border-border/50 bg-muted/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground"
+          />
         )}
       </div>
 

@@ -8,8 +8,7 @@ import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hoo
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { rateToneClass } from "@/lib/semanticTone";
-import { type AppTranslationKey, todayISO } from "@mms/shared";
-import { formatDate } from "@/lib/db";
+import { type AppTranslationKey, todayISO, formatDate } from "@mms/shared";
 
 // Type definitions
 

@@ -11,7 +11,7 @@ import { getObject } from "@/lib/db";
  * @param {T} defaultData - Seeding and fallback data if the object is uninitialized.
  * @returns {T} The reactive, live object data.
  */
-export function useLiveObject<T = any>(
+export function useLiveObject<T = unknown>(
   dbKey: string,
   defaultData: T,
   options?: { loadFn?: (key: string, fallback: T) => T },

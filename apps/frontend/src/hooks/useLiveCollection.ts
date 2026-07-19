@@ -12,7 +12,7 @@ import { apiFetch } from "@/lib/apiClient";
  * @param {T[]} defaultData - Seeding and fallback data if the collection is uninitialized.
  * @returns {T[]} The reactive, live collection data array.
  */
-export function useLiveCollection<T = any>(
+export function useLiveCollection<T = unknown>(
   dbKey: string,
   defaultData: T[] = [] as T[],
   options?: { enabled?: boolean; serverSync?: boolean },

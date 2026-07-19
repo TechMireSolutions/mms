@@ -8,7 +8,7 @@ import {
   DEFAULT_GLOBAL_SETTINGS,
   mergeBrandingSettings,
   mergeGlobalSettings,
-  formatDate as sharedFormatDate,
+  formatDate,
   parseTenantFromHost,
   tenantLocalStoragePrefix,
   validateWorkspaceBackupJson,
@@ -240,6 +240,14 @@ export async function fetchTenantSnapshot(): Promise<TenantDatabaseSnapshot> {
   return (await response.json()) as TenantDatabaseSnapshot;
 }
 
+function dispatchLocalDatabaseUpdate(): void {
+  if (typeof window !== "undefined") {
+    setTimeout(() => {
+      window.dispatchEvent(new Event("local-database-update"));
+    }, 0);
+  }
+}
+
 /**
  * Writes a server snapshot into the scoped localStorage cache.
  */
@@ -257,9 +265,7 @@ export function applySnapshotToLocalCache(snapshot: TenantDatabaseSnapshot): voi
     }
   }
 
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new Event("local-database-update"));
-  }
+  dispatchLocalDatabaseUpdate();
 }
 
 /**
@@ -425,9 +431,7 @@ export function saveCollectionCacheOnly<T>(key: string, collectionItems: T[]): v
     dataToSave = normalizeLinkedCollection(key, dataToSave);
     dataToSave = applyTitleCaseRecursive(dataToSave) as T[];
     localStorage.setItem(scopedStorageKey(key), JSON.stringify(dataToSave));
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("local-database-update"));
-    }
+    dispatchLocalDatabaseUpdate();
   } catch (error) {
     console.error(`Error saving collection "${key}" to local cache:`, error);
   }
@@ -507,9 +511,7 @@ export function saveCollection<T>(key: string, collectionItems: T[]): void {
     dataToSave = normalizeLinkedCollection(key, dataToSave);
     dataToSave = applyTitleCaseRecursive(dataToSave) as T[];
     localStorage.setItem(scopedStorageKey(key), JSON.stringify(dataToSave));
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("local-database-update"));
-    }
+    dispatchLocalDatabaseUpdate();
 
     // Sync to backend asynchronously
     void syncToServer(`/api/db/collections/${key}`, dataToSave);
@@ -656,9 +658,7 @@ function shouldSkipTitleCase(key: string): boolean {
 function writeObjectLocal<T>(key: string, objectValue: T): T {
   const processed = shouldSkipTitleCase(key) ? objectValue : (applyTitleCaseRecursive(objectValue) as T);
   localStorage.setItem(scopedStorageKey(key), JSON.stringify(processed));
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new Event("local-database-update"));
-  }
+  dispatchLocalDatabaseUpdate();
   return processed;
 }
 
@@ -811,9 +811,7 @@ export async function importDatabase(jsonString: string): Promise<void> {
       }
     }
 
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("local-database-update"));
-    }
+    dispatchLocalDatabaseUpdate();
 
     // Pushes backup bulk sync to backend
     const result = await syncToServer("/api/db/sync", { collections, objects });
@@ -833,7 +831,5 @@ export async function importDatabase(jsonString: string): Promise<void> {
  * @param {boolean} [showMonthName] - Whether to show the short month name instead of numeric.
  * @returns {string} The formatted date string.
  */
-export function formatDate(date: string | Date | null | undefined, showMonthName = false): string {
-  const settings = getEffectiveGlobalSettings();
-  return sharedFormatDate(date, settings.dateFormat, showMonthName);
-}
+// Re-export settings-aware formatDate helper directly from @mms/shared
+export { formatDate };

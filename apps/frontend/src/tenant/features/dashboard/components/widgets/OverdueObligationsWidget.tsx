@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { AlertTriangle, ChevronDown, ChevronUp, Bell, Scale, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, Bell, Scale } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { ROUTES } from "@/lib/config/routes";
@@ -12,6 +12,8 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 import MessageComposer from "@/components/ui/MessageComposer";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
+import { SimplePagination } from "@/components/ui/SimplePagination";
 import {
   Table,
   TableHeader,
@@ -43,6 +45,7 @@ export interface OverdueStudent {
 export default function OverdueObligationsWidget({ title }: { title?: string }) {
   const { t } = useTranslation();
   const overdueStudents = useLiveCollection<OverdueStudent>("overdue_obligations", [], { serverSync: true });
+  const { activeCurrency } = useFinanceCurrency();
 
   const [expanded, setExpanded] = useState(true);
   const [remindedIds, setRemindedIds] = useState<Set<number>>(new Set());
@@ -148,7 +151,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
               {title || t("dashboard.widgets.overdueObligations")}
             </h3>
             <p className="text-[11px] text-destructive/80 font-semibold mt-0.5 m-0 uppercase tracking-wider tabular-nums">
-              {t("dashboard.widgets.studentsCount", { count: filteredStudents.length })} · {formatMoney(totalOverdue, overdueStudents[0]?.currency)} {t("finance.report.outstanding")}
+              {t("dashboard.widgets.studentsCount", { count: filteredStudents.length })} · {formatMoney(totalOverdue, overdueStudents[0]?.currency || activeCurrency.code)} {t("finance.report.outstanding")}
             </p>
           </div>
         </div>
@@ -245,7 +248,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                         </TableCell>
                         <TableCell className="px-3 py-3 text-right">
                           <span className="text-xs font-bold text-foreground tabular-nums">
-                            {formatMoney(overdueStudent.amount, overdueStudent.currency)}
+                            {formatMoney(overdueStudent.amount, overdueStudent.currency || activeCurrency.code)}
                           </span>
                         </TableCell>
                         <TableCell className="px-3 py-3 text-center">
@@ -303,33 +306,11 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                 <p className="text-[11px] font-bold text-success/90 uppercase tracking-wider m-0">
                   {remindedIds.size > 0 && t("dashboard.widgets.remindersSent", { count: remindedIds.size })}
                 </p>
-                {totalPages > 1 && (
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
-                      aria-label="Previous page"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <span className="text-[11px] font-bold text-muted-foreground select-none">
-                      {currentPage} / {totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      disabled={currentPage === totalPages}
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                      className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
-                      aria-label="Next page"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )}
+                <SimplePagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
               </div>
               <Link to={ROUTES.obligations} className="text-xs font-bold text-primary hover:underline">
                 {t("dashboard.widgets.viewObligations")}

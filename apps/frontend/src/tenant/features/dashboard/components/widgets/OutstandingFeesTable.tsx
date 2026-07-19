@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { AlertCircle, Phone, Send, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertCircle, Phone, Send } from "lucide-react";
 import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
@@ -11,6 +11,7 @@ import MessageComposer from "@/components/ui/MessageComposer";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { SimplePagination } from "@/components/ui/SimplePagination";
 import {
   Table,
   TableHeader,
@@ -268,31 +269,11 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
         <Button variant="link" className="text-xs font-bold h-auto p-0">
           {t("dashboard.widgets.viewAllOutstanding")}
         </Button>
-        {totalPages > 1 && (
-          <div className="flex items-center gap-1.5">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-[11px] font-bold text-muted-foreground select-none">
-              {currentPage} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
+        <SimplePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </footer>
 
       {messagingTarget && (
