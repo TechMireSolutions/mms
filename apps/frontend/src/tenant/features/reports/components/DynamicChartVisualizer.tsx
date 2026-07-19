@@ -18,6 +18,7 @@ import {
   getChartPaletteColors,
   isColorblindSafeChartPalette,
   formatDateTime,
+  getDenominationPoints,
   type AppTranslationKey,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -185,8 +186,6 @@ export default function DynamicChartVisualizer({
   const processedData = useMemo<AggregatedItem[]>(() => {
     const collectionRows = getCollection(activeMeta.dbKey, activeMeta.defaultData as unknown[]) as Record<string, unknown>[];
     const denominations = getCollection<any>("hasanat_denoms", []);
-    const pointsMap = new Map<string, number>();
-    denominations.forEach((denomination) => pointsMap.set(denomination.id, denomination.points));
     
     // 1. Apply multiple filters
     const filteredRows = collectionRows.filter((collectionRow) => {
@@ -239,12 +238,10 @@ export default function DynamicChartVisualizer({
         groupItems.forEach((groupItem) => {
           // Special Hasanat points calculation
           if (collectionKey === "hasanat_distributions" && targetMetricField === "points") {
-            const denominationName = String(groupItem.denominationName || "").toLowerCase();
-            const points = pointsMap.get(groupItem.denominationId as string) || (
-              denominationName.includes("silver") ? 150 :
-              denominationName.includes("gold") ? 500 :
-              denominationName.includes("platinum") ? 1000 :
-              denominationName.includes("diamond") ? 2500 : 50
+            const points = getDenominationPoints(
+              groupItem.denominationId as string,
+              groupItem.denominationName as string,
+              denominations
             );
             values.push(Number(groupItem.quantity || 1) * points);
           } else {

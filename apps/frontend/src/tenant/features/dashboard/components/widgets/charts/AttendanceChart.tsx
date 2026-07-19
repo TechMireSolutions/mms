@@ -10,6 +10,7 @@ import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer
 import { useTranslation } from "@/hooks/useTranslation";
 import { getCollection } from "@/lib/db";
 import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
+import { getDenominationPoints } from "@mms/shared";
 import { AttendanceRecord } from '@/lib/data/attendanceData';
 import { Distribution } from '@/lib/data/hasanatData';
 import {
@@ -235,18 +236,9 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
   let attendancePoints = 0;
   let behaviorPoints = 0;
 
-  const pointsMap = new Map<string, number>();
-  (denominations || []).forEach((denomination) => pointsMap.set(denomination.id, denomination.points));
-
   distributions.forEach((distribution) => {
     if (!distribution) return;
-    const denominationName = String(distribution.denominationName || "").toLowerCase();
-    const points = pointsMap.get(distribution.denominationId) || (
-      denominationName.includes("silver") ? 150 :
-      denominationName.includes("gold") ? 500 :
-      denominationName.includes("platinum") ? 1000 :
-      denominationName.includes("diamond") ? 2500 : 50
-    );
+    const points = getDenominationPoints(distribution.denominationId, distribution.denominationName, denominations);
 
     const totalPoints = Number(distribution.quantity || 1) * points;
 

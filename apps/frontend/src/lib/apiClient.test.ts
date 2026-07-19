@@ -127,4 +127,79 @@ describe('apiClient', () => {
     expect(seenPaths).toEqual(['/api/auth/login']);
     globalThis.fetch = original;
   });
+
+  it('injects X-Request-Id header in requests', async () => {
+    const original = globalThis.fetch;
+    let seenHeaders: Headers | undefined;
+    globalThis.fetch = async (_input, init) => {
+      seenHeaders = init?.headers as Headers;
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    };
+
+    const { apiFetch } = await import('@/lib/apiClient');
+    await apiFetch('/api/health');
+    expect(seenHeaders?.get('X-Request-Id')).toBeDefined();
+    expect(seenHeaders?.get('X-Request-Id')?.length).toBeGreaterThan(0);
+    globalThis.fetch = original;
+  });
+
+  it('safely handles non-JSON responses in apiJson', async () => {
+    const original = globalThis.fetch;
+    globalThis.fetch = async () =>
+      new Response('<html>Error</html>', { status: 502, statusText: 'Bad Gateway' });
+
+    const { apiJson, ApiError } = await import('@/lib/apiClient');
+    await expect(apiJson('/api/health')).rejects.toThrow(ApiError);
+    try {
+      await apiJson('/api/health');
+    } catch (error) {
+      if (error instanceof ApiError) {
+        expect(error.status).toBe(502);
+        expect(error.message).toContain('Error');
+      }
+    }
+    globalThis.fetch = original;
+  });
+
+  it('supports request timeouts and abort signal propagation', async () => {
+    const original = globalThis.fetch;
+    globalThis.fetch = async (_input, init) => {
+      return new Promise((resolve, reject) => {
+        if (init?.signal?.aborted) {
+          reject(new DOMException('Request aborted', 'AbortError'));
+          return;
+        }
+        init?.signal?.addEventListener('abort', () => {
+          reject(new DOMException('Request aborted', 'AbortError'));
+        });
+      });
+    };
+
+    const { apiFetch } = await import('@/lib/apiClient');
+    await expect(apiFetch('/api/health', { timeout: 10 } as any)).rejects.toThrow();
+    globalThis.fetch = original;
+  });
+
+  it('parses and attaches x-request-id on ApiError on failure', async () => {
+    const original = globalThis.fetch;
+    globalThis.fetch = async () => {
+      const headers = new Headers({ 'x-request-id': 'test-trace-id-123' });
+      return new Response(JSON.stringify({ type: 'forbidden', message: 'Access denied' }), {
+        status: 403,
+        headers,
+      });
+    };
+
+    const { apiJson, ApiError } = await import('@/lib/apiClient');
+    try {
+      await apiJson('/api/health');
+      expect.unreachable('should throw');
+    } catch (error) {
+      if (error instanceof ApiError) {
+        expect(error.status).toBe(403);
+        expect(error.requestId).toBe('test-trace-id-123');
+      }
+    }
+    globalThis.fetch = original;
+  });
 });

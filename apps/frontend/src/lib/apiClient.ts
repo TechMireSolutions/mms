@@ -14,12 +14,14 @@ export interface ApiErrorBody {
 export class ApiError extends Error {
   readonly status: number;
   readonly type: string;
+  readonly requestId?: string;
 
-  constructor(status: number, message: string, type?: string) {
+  constructor(status: number, message: string, type?: string, requestId?: string) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.type = type ?? (status === 401 ? 'auth_required' : status === 403 ? 'forbidden' : 'request_failed');
+    this.requestId = requestId;
   }
 }
 
@@ -93,6 +95,14 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
     headers.set('Content-Type', JSON_CONTENT_TYPE);
   }
 
+  // Inject unique trace ID for request observability and distributed log correlation
+  if (!headers.has('X-Request-Id')) {
+    const reqId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : Math.random().toString(36).substring(2, 15);
+    headers.set('X-Request-Id', reqId);
+  }
+
   // Intercept and sanitize outgoing column preference payloads to guarantee zero-trust schema compliance.
   if ((path.includes('column-preferences') || path.includes('column-prefs')) && init.body && typeof init.body === 'string') {
     try {
@@ -144,10 +154,48 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
     credentials: 'include',
     headers,
   };
-  const response = await fetch(resolveApiUrl(path), requestInit);
+
+  const executeFetch = async (targetPath: string, baseInit: RequestInit): Promise<Response> => {
+    const timeoutMs = (baseInit as { timeout?: number }).timeout ?? 15000;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort(new DOMException('Request timeout', 'TimeoutError'));
+    }, timeoutMs);
+
+    let onAbort: (() => void) | undefined;
+    if (baseInit.signal) {
+      if (baseInit.signal.aborted) {
+        clearTimeout(timeoutId);
+        throw baseInit.signal.reason || new DOMException('Request aborted', 'AbortError');
+      }
+      onAbort = () => {
+        clearTimeout(timeoutId);
+        controller.abort(baseInit.signal?.reason);
+      };
+      baseInit.signal.addEventListener('abort', onAbort);
+    }
+
+    try {
+      const response = await fetch(resolveApiUrl(targetPath), {
+        ...baseInit,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    } finally {
+      if (baseInit.signal && onAbort) {
+        baseInit.signal.removeEventListener('abort', onAbort);
+      }
+    }
+  };
+
+  const response = await executeFetch(path, requestInit);
 
   if (isTenantSessionRequest(path) && await isAuthenticationRequired(response) && await refreshSession()) {
-    return fetch(resolveApiUrl(path), requestInit);
+    return executeFetch(path, requestInit);
   }
 
   return response;
@@ -155,9 +203,28 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
 
 export async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await apiFetch(path, init);
+  const text = await res.text().catch(() => '');
+
   if (!res.ok) {
-    const errorBody = await res.json().catch(() => ({})) as ApiErrorBody;
-    throw new ApiError(res.status, errorBody.message ?? `Request failed (${res.status})`, errorBody.type);
+    let errorBody: ApiErrorBody = {};
+    try {
+      if (text) {
+        errorBody = JSON.parse(text) as ApiErrorBody;
+      }
+    } catch {
+      errorBody = { message: text.substring(0, 100) || res.statusText || `Request failed (${res.status})` };
+    }
+    const requestId = res.headers.get('x-request-id') || undefined;
+    throw new ApiError(res.status, errorBody.message ?? `Request failed (${res.status})`, errorBody.type, requestId);
   }
-  return res.json() as Promise<T>;
+
+  if (!text) {
+    return {} as T;
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch (err) {
+    throw new Error(`Failed to parse success JSON response: ${err instanceof Error ? err.message : String(err)}`);
+  }
 }

@@ -12,6 +12,7 @@ import { PAYMENT_METHODS, Invoice, Payment } from '@/lib/data/financeData';
 import { FORM_INPUT } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface PaymentFormProps {
   open: boolean;
@@ -22,6 +23,7 @@ interface PaymentFormProps {
 
 export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps): React.JSX.Element {
   const { user: authUser } = useAuth();
+  const { t } = useTranslation();
   const { formatCurrency, activeCurrency } = useFinanceCurrency();
   const balance = invoice ? invoice.finalAmt - (invoice.paidAmt || 0) : 0;
 
@@ -45,21 +47,21 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
     const newErrors: Record<string, string> = {};
 
     if (!paymentDraft.amount || Number(paymentDraft.amount) <= 0) {
-      newErrors.amount = "Amount must be greater than zero.";
+      newErrors.amount = t("finance.amountRequired");
     }
     if (!paymentDraft.method) {
-      newErrors.method = "Method is required.";
+      newErrors.method = t("finance.methodRequired");
     }
     if (!paymentDraft.date) {
-      newErrors.date = "Date is required.";
+      newErrors.date = t("finance.dateRequired");
     }
     if (!paymentDraft.receivedByUserId) {
-      newErrors.receivedByUserId = "Received By is required.";
+      newErrors.receivedByUserId = t("finance.receivedByRequired");
     }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      notify.error("Please fix validation errors");
+      notify.error(t("finance.fixErrors"));
       return;
     }
 
@@ -76,10 +78,10 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
         receivedByUserId: paymentDraft.receivedByUserId || authUser?.id || '',
         id: `pay${Date.now()}`,
       } as unknown as Payment);
-      notify.success("Payment recorded successfully");
+      notify.success(t("finance.paymentSaved"));
       onClose();
     } catch (err: unknown) {
-      notify.error("Failed to save payment", { description: err instanceof Error ? err.message : String(err) });
+      notify.error(t("finance.paymentSaveFailed"), { description: err instanceof Error ? err.message : String(err) });
     } finally {
       setSaving(false);
     }
@@ -92,7 +94,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
       </span>
       <div className="flex items-center gap-1.5">
         <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-success/10 text-success font-semibold border border-success/20 text-[10px]">
-          Balance: {formatCurrency(balance - Number(paymentDraft.amount || 0))}
+          {t("finance.balance", { balance: formatCurrency(balance - Number(paymentDraft.amount || 0)) })}
         </span>
       </div>
     </div>
@@ -102,10 +104,10 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
     <FormModal
       open={open}
       onClose={onClose}
-      title="Record Payment"
+      title={t("finance.recordPayment")}
       icon={ReceiptText}
-      cancelLabel="Cancel"
-      saveLabel="Record Payment"
+      cancelLabel={t("common.cancel")}
+      saveLabel={t("finance.recordPayment")}
       onSave={handleSave}
       saving={saving}
       saveDisabled={!paymentDraft.amount || Number(paymentDraft.amount) <= 0}
@@ -121,7 +123,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
                 <p className="text-[11px] text-muted-foreground m-0 mt-0.5">{invoice.id} · {invoice.class}</p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground">Balance Due</p>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground">{t("finance.balanceDue")}</p>
                 <p className="text-[14px] font-bold text-primary m-0 mt-0.5">{formatCurrency(balance)}</p>
               </div>
             </div>
@@ -132,12 +134,12 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
           <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
           <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
             <Coins className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Payment Details</h3>
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("finance.paymentDetails")}</h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <Field label={`Amount (${activeCurrency.code}) *`} error={errors.amount}>
+              <Field label={`${t("finance.columns.amount")} (${activeCurrency.code}) *`} error={errors.amount}>
                 <div className="relative flex items-center group/input">
                   <DollarSign className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                   <input
@@ -152,13 +154,13 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
                 </div>
                 {Number(paymentDraft.amount) < balance && Number(paymentDraft.amount) > 0 && (
                   <p className="m-0 mt-1 text-[10px] text-warning">
-                    Partial payment — balance remaining: {formatCurrency(balance - Number(paymentDraft.amount))}
+                    {t("finance.partialPayment", { balance: formatCurrency(balance - Number(paymentDraft.amount)) })}
                   </p>
                 )}
               </Field>
             </div>
 
-            <Field label="Method *" error={errors.method}>
+            <Field label={`${t("finance.columns.method")} *`} error={errors.method}>
               <FormSelect
                 id="payment-method"
                 name="method"
@@ -168,7 +170,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
               />
             </Field>
 
-            <Field label="Date *" error={errors.date}>
+            <Field label={`${t("finance.columns.paymentDate")} *`} error={errors.date}>
               <DatePicker
                 value={paymentDraft.date || ""}
                 onChange={(val) => updateDraft({ date: val })}
@@ -179,7 +181,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
             <div className="sm:col-span-2">
               <UserActorSelect
                 id="payment-receivedBy"
-                label="Received By"
+                label={t("finance.columns.receivedBy")}
                 required
                 value={paymentDraft.receivedByUserId || ""}
                 onChange={(val) => updateDraft({ receivedByUserId: val })}
@@ -187,14 +189,14 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
             </div>
 
             <div className="sm:col-span-2">
-              <Field label="Note" error={errors.note}>
+              <Field label={t("finance.columns.note")} error={errors.note}>
                 <div className="relative flex items-center group/input">
                   <FileText className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                   <Input
                     className={`${FORM_INPUT} pl-10`}
                     value={paymentDraft.note || ""}
                     onChange={(event) => updateDraft({ note: event.target.value })}
-                    placeholder="e.g. Cash received, receipt #123"
+                    placeholder={t("finance.paymentNotePlaceholder")}
                   />
                 </div>
               </Field>

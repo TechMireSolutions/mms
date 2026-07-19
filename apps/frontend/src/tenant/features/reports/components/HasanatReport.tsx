@@ -11,6 +11,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
+import { getDenominationPoints } from "@mms/shared";
 
 /** Active filter state passed down from the parent report view. */
 import { HasanatChart } from "@/tenant/features/dashboard/components/widgets/charts/AttendanceChart";
@@ -79,14 +80,9 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
     const studentMap: Record<string, HasanatReportItem> = {};
     const facultyMap: Record<string, HasanatByFacultyItem> = {};
 
-    const pointsMap = new Map<string, number>();
-    denominations.forEach((denomination) => {
-      pointsMap.set(denomination.id, denomination.points);
-    });
-
     distributions.forEach((distributionRecord) => {
       // Resolve points from the database denominations collection
-      const points = pointsMap.get(distributionRecord.denominationId) || 50;
+      const points = getDenominationPoints(distributionRecord.denominationId, distributionRecord.denominationName, denominations);
 
       const totalPoints = points * distributionRecord.quantity;
       const isRedeemed = distributionRecord.status === "redeemed";

@@ -24,12 +24,15 @@ import type { AttendanceRecord } from "@/lib/data/attendanceData";
 import type { Invoice } from "@/lib/data/financeData";
 import type { Distribution, Denomination } from "@/lib/data/hasanatData";
 import type { Exam, ExamResult } from "@/lib/data/examinationData";
-import type { AppTranslationKey } from "@mms/shared";
+import { getDenominationPoints, type AppTranslationKey } from "@mms/shared";
+import { formatDate } from "@/lib/db";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 interface ComparisonDataItem {
   metric: string;
   a: number;
   b: number;
+  metricKey?: string;
 }
 
 interface DateRangeDataItem {
@@ -104,21 +107,10 @@ function computeDynamicSessionComparison(
       : 0;
 
     const studentIds = new Set(sessionEnrollments.map((enrollment) => enrollment.studentId));
-    const pointsMap = new Map<string, number>();
-    denoms.forEach((denomination) => pointsMap.set(denomination.id, denomination.points));
-    const getDenomPoints = (denomId: string) => {
-      if (pointsMap.has(denomId)) return pointsMap.get(denomId)!;
-      if (denomId === "den1") return 50;
-      if (denomId === "den2") return 150;
-      if (denomId === "den3") return 500;
-      if (denomId === "den4") return 1000;
-      if (denomId === "den5") return 2500;
-      return 0;
-    };
     let hasanat = 0;
     hasanatDistributions.forEach((distribution) => {
       if (distribution.recipientStudentId && studentIds.has(distribution.recipientStudentId)) {
-        hasanat += (distribution.quantity || 1) * getDenomPoints(distribution.denominationId);
+        hasanat += (distribution.quantity || 1) * getDenominationPoints(distribution.denominationId, distribution.denominationName, denoms);
       }
     });
 
@@ -129,11 +121,11 @@ function computeDynamicSessionComparison(
   const metricsB = getMetrics(sessionB);
 
   return [
-    { metric: t("reports.comparison.metricEnrollment"),   a: metricsA.enrollment,     b: metricsB.enrollment },
-    { metric: t("reports.comparison.metricAttendance"),  a: metricsA.attendancePct,  b: metricsB.attendancePct },
-    { metric: t("reports.comparison.metricFeeCollected"),a: metricsA.feeCollected,   b: metricsB.feeCollected },
-    { metric: t("reports.comparison.metricPassRate"),   a: metricsA.passRatePct,    b: metricsB.passRatePct },
-    { metric: t("reports.comparison.metricHasanat"),      a: metricsA.hasanat,        b: metricsB.hasanat },
+    { metric: t("reports.comparison.metricEnrollment"),   a: metricsA.enrollment,     b: metricsB.enrollment, metricKey: "enrollment" },
+    { metric: t("reports.comparison.metricAttendance"),  a: metricsA.attendancePct,  b: metricsB.attendancePct, metricKey: "attendancePct" },
+    { metric: t("reports.comparison.metricFeeCollected"),a: metricsA.feeCollected,   b: metricsB.feeCollected, metricKey: "feeCollected" },
+    { metric: t("reports.comparison.metricPassRate"),   a: metricsA.passRatePct,    b: metricsB.passRatePct, metricKey: "passRatePct" },
+    { metric: t("reports.comparison.metricHasanat"),      a: metricsA.hasanat,        b: metricsB.hasanat, metricKey: "hasanat" },
   ];
 }
 
@@ -206,20 +198,8 @@ function computeDynamicDateRangeComparison(
       }
     });
   } else if (lowerCat === "hasanat") {
-    const pointsMap = new Map<string, number>();
-    denoms.forEach((denomination) => pointsMap.set(denomination.id, denomination.points));
-    const getDenomPoints = (denomId: string) => {
-      if (pointsMap.has(denomId)) return pointsMap.get(denomId)!;
-      if (denomId === "den1") return 50;
-      if (denomId === "den2") return 150;
-      if (denomId === "den3") return 500;
-      if (denomId === "den4") return 1000;
-      if (denomId === "den5") return 2500;
-      return 0;
-    };
-
     hasanatDistributions.forEach((distribution) => {
-      const points = (distribution.quantity || 1) * getDenomPoints(distribution.denominationId);
+      const points = (distribution.quantity || 1) * getDenominationPoints(distribution.denominationId, distribution.denominationName, denoms);
       if (inRange(distribution.issuedDate, rangeA.from, rangeA.to)) {
         const monthIndex = getMonthIndex(distribution.issuedDate);
         if (monthIndex >= 0) bucketA[monthIndex] += points;
@@ -333,6 +313,7 @@ interface ComparisonModeProps {
  */
 export default function ComparisonMode({ category, onClose }: ComparisonModeProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { formatCurrency } = useFinanceCurrency();
   const { primary, secondary } = useBrandPalette();
 
   const isContacts = category.toLowerCase() === "contacts";
@@ -382,8 +363,8 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
   }, [category, isContacts]);
 
   const options = SESSIONS_OPTIONS;
-  const labelA = mode === "sessions" ? options.find((option) => option.id === valA)?.name : `${rangeA.from} → ${rangeA.to}`;
-  const labelB = mode === "sessions" ? options.find((option) => option.id === valB)?.name : `${rangeB.from} → ${rangeB.to}`;
+  const labelA = mode === "sessions" ? options.find((option) => option.id === valA)?.name : `${formatDate(rangeA.from)} → ${formatDate(rangeA.to)}`;
+  const labelB = mode === "sessions" ? options.find((option) => option.id === valB)?.name : `${formatDate(rangeB.from)} → ${formatDate(rangeB.to)}`;
 
   const comparisonData = useMemo(() => {
     if (mode === "sessions") {
@@ -588,13 +569,35 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
               <tbody className="divide-y divide-border/50 text-left bg-transparent">
                 {(translatedData as ComparisonDataItem[]).map((row) => {
                   const diff = parseFloat((row.a - row.b).toFixed(1));
+                  
+                  const formatVal = (val: number, key?: string) => {
+                    if (key === "feeCollected") {
+                      return formatCurrency(val);
+                    }
+                    if (key === "attendancePct" || key === "passRatePct") {
+                      return `${val}%`;
+                    }
+                    return val.toLocaleString();
+                  };
+
+                  const formatDiff = (d: number, key?: string) => {
+                    const sign = d > 0 ? "+" : "";
+                    if (key === "feeCollected") {
+                      return `${sign}${formatCurrency(d)}`;
+                    }
+                    if (key === "attendancePct" || key === "passRatePct") {
+                      return `${sign}${d}%`;
+                    }
+                    return `${sign}${d.toLocaleString()}`;
+                  };
+
                   return (
                     <tr key={row.metric} className="hover:bg-muted/30 transition-colors">
                       <td className="px-3 py-3 font-bold text-foreground">{row.metric}</td>
-                      <td className="px-3 py-3 text-primary font-bold">{row.a.toLocaleString()}</td>
-                      <td className="px-3 py-3 text-warning font-bold">{row.b.toLocaleString()}</td>
+                      <td className="px-3 py-3 text-primary font-bold">{formatVal(row.a, row.metricKey)}</td>
+                      <td className="px-3 py-3 text-warning font-bold">{formatVal(row.b, row.metricKey)}</td>
                       <td className={`px-3 py-3 text-xs font-black ${diff > 0 ? "text-success" : diff < 0 ? "text-destructive" : "text-muted-foreground"}`}>
-                        {diff > 0 ? "+" : ""}{diff.toLocaleString()}
+                        {formatDiff(diff, row.metricKey)}
                       </td>
                     </tr>
                   );

@@ -45,6 +45,10 @@ export function reportClientError(error: unknown, context?: Record<string, unkno
   }
 
   Sentry.withScope((scope) => {
+    if (error && typeof error === 'object' && 'requestId' in error && (error as any).requestId) {
+      scope.setExtra('requestId', (error as any).requestId);
+    }
+
     if (context) {
       const sanitizedContext = { ...context };
       // Security/observability compliance: scrub credentials

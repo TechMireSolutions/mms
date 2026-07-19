@@ -836,3 +836,42 @@ export function matchesWidgetFilter(
 export function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
+
+/**
+ * Resolves points for a Hasanat denomination.
+ * @param denomId - The ID of the denomination (e.g. "den1").
+ * @param denomName - Optional name of the denomination (e.g. "Silver").
+ * @param denominations - Optional array of active denominations to search within.
+ * @returns The points value, falling back to name/ID heuristics if not found.
+ */
+export function getDenominationPoints(
+  denomId: string | null | undefined,
+  denomName?: string | null,
+  denominations?: Array<{ id: string; points: number }> | null
+): number {
+  if (!denomId) return 0;
+  
+  if (denominations) {
+    const found = denominations.find((d) => d.id === denomId);
+    if (found) return found.points;
+  }
+
+  // Fallback to ID-based heuristics
+  if (denomId === "den1") return 50;
+  if (denomId === "den2") return 150;
+  if (denomId === "den3") return 500;
+  if (denomId === "den4") return 1000;
+  if (denomId === "den5") return 2500;
+
+  // Fallback to name-based heuristics
+  if (denomName) {
+    const lowerName = denomName.toLowerCase();
+    if (lowerName.includes("silver")) return 150;
+    if (lowerName.includes("gold")) return 500;
+    if (lowerName.includes("platinum")) return 1000;
+    if (lowerName.includes("diamond")) return 2500;
+    if (lowerName.includes("bronze") || lowerName.includes("standard")) return 50;
+  }
+
+  return 50; // Default fallback
+}
