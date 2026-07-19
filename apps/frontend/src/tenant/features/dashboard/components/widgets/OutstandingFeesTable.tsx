@@ -12,6 +12,7 @@ import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { SimplePagination } from "@/components/ui/SimplePagination";
+import { useLocalPagination } from "@/hooks/useLocalPagination";
 import {
   Table,
   TableHeader,
@@ -50,15 +51,6 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
     recipients: { id: string | number; name: string; phone: string; email?: string }[];
   } | null>(null);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
-
-  const handleSearchChange = (val: string) => {
-    setSearchQuery(val);
-    setCurrentPage(1);
-  };
-
   const mappedRows = useMemo(() => {
     return unpaidInvoices.map((invoice) => {
       const student = students.find((studentOption) => String(studentOption.id) === String(invoice.studentId));
@@ -82,24 +74,19 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
     });
   }, [unpaidInvoices, students]);
 
-  const filteredRows = useMemo(() => {
-    if (!searchQuery.trim()) return mappedRows;
-    const query = searchQuery.toLowerCase();
-    return mappedRows.filter(
-      (row) =>
-        row.student.toLowerCase().includes(query) ||
-        row.class.toLowerCase().includes(query)
-    );
-  }, [mappedRows, searchQuery]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(filteredRows.length / pageSize));
-  }, [filteredRows]);
-
-  const paginatedRows = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return filteredRows.slice(startIndex, startIndex + pageSize);
-  }, [filteredRows, currentPage]);
+  const {
+    searchQuery,
+    currentPage,
+    setCurrentPage,
+    handleSearchChange,
+    paginatedItems: paginatedRows,
+    filteredItems: filteredRows,
+    totalPages,
+  } = useLocalPagination({
+    items: mappedRows,
+    pageSize: 5,
+    searchFields: (row) => [row.student, row.class],
+  });
 
   const totalUnpaid = unpaidInvoices.length;
 

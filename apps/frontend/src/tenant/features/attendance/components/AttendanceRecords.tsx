@@ -5,6 +5,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ListPagination } from "@/components/ui/ListPagination";
+import { useLocalPagination } from "@/hooks/useLocalPagination";
 import { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
@@ -50,12 +51,34 @@ export function AttendanceRecords({
     );
   }, [sessions]);
 
-  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+
+  const baseFiltered = useMemo(() => {
+    return records.filter((attendanceRecord) => {
+      if (filters.classId && attendanceRecord.classId !== filters.classId) return false;
+      if (statusFilter !== "all" && attendanceRecord.status !== statusFilter) return false;
+      if (dateFrom && attendanceRecord.date < dateFrom) return false;
+      if (dateTo && attendanceRecord.date > dateTo) return false;
+      return true;
+    });
+  }, [records, filters, statusFilter, dateFrom, dateTo]);
+
+  const {
+    searchQuery: search,
+    currentPage: page,
+    setCurrentPage: setPage,
+    handleSearchChange,
+    paginatedItems: paginatedRecords,
+    filteredItems: filtered,
+    totalPages,
+  } = useLocalPagination({
+    items: baseFiltered,
+    pageSize: PAGE_SIZE,
+    searchFields: (attendanceRecord) => [attendanceRecord.studentName],
+  });
 
   const statusLabel = (statusId: string) => {
     const found = statuses.find((status) => status.id === statusId);
@@ -82,19 +105,6 @@ export function AttendanceRecords({
     (showNotes ? 1 : 0) +
     1;
 
-  const filtered = useMemo(() => {
-    return records.filter((attendanceRecord) => {
-      if (filters.classId && attendanceRecord.classId !== filters.classId) return false;
-      if (statusFilter !== "all" && attendanceRecord.status !== statusFilter) return false;
-      if (dateFrom && attendanceRecord.date < dateFrom) return false;
-      if (dateTo && attendanceRecord.date > dateTo) return false;
-      if (search && !attendanceRecord.studentName.toLowerCase().includes(search.toLowerCase())) return false;
-      return true;
-    });
-  }, [records, filters, statusFilter, dateFrom, dateTo, search]);
-
-  const paginatedRecords = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
   const updateRecord = <K extends keyof AttendanceRecord>(id: string, key: K, value: AttendanceRecord[K]) =>
     setRecords((previousRecords) => previousRecords.map((attendanceRecord) => attendanceRecord.id === id ? { ...attendanceRecord, [key]: value } : attendanceRecord));
 
@@ -110,7 +120,7 @@ export function AttendanceRecords({
       <div className="flex flex-wrap gap-2 items-center">
         <SearchBar
           value={search}
-          onChange={(val) => { setSearch(val); setPage(1); }}
+          onChange={handleSearchChange}
           placeholder={t("attendance.searchStudent")}
           className="flex-1 min-w-[180px]"
         />

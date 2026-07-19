@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import { Users, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { SimplePagination } from "@/components/ui/SimplePagination";
+import { useLocalPagination } from "@/hooks/useLocalPagination";
 
 export interface UpcomingSessionItem {
   id: number;
@@ -35,15 +36,6 @@ function hashStringToId(value: string): number {
 export default function SessionsTable({ title }: { title?: string }) {
   const { t } = useTranslation();
   const dbSessions = useSessionsCollection();
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
-
-  const handleSearchChange = (val: string) => {
-    setSearchQuery(val);
-    setCurrentPage(1);
-  };
 
   const sessions = useMemo(() => {
     const list: UpcomingSessionItem[] = [];
@@ -80,25 +72,19 @@ export default function SessionsTable({ title }: { title?: string }) {
     return list;
   }, [dbSessions, t]);
 
-  const filteredSessions = useMemo(() => {
-    if (!searchQuery.trim()) return sessions;
-    const query = searchQuery.toLowerCase();
-    return sessions.filter(
-      (s) =>
-        s.name.toLowerCase().includes(query) ||
-        s.teacher.toLowerCase().includes(query) ||
-        s.room.toLowerCase().includes(query)
-    );
-  }, [sessions, searchQuery]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(filteredSessions.length / pageSize));
-  }, [filteredSessions]);
-
-  const paginatedSessions = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return filteredSessions.slice(startIndex, startIndex + pageSize);
-  }, [filteredSessions, currentPage]);
+  const {
+    searchQuery,
+    currentPage,
+    setCurrentPage,
+    handleSearchChange,
+    paginatedItems: paginatedSessions,
+    filteredItems: filteredSessions,
+    totalPages,
+  } = useLocalPagination({
+    items: sessions,
+    pageSize: 5,
+    searchFields: (s) => [s.name, s.teacher, s.room],
+  });
 
   return (
     <section aria-labelledby="sessions-table-heading" className="relative overflow-hidden group rounded-2xl surface-glass shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">

@@ -14,6 +14,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { SimplePagination } from "@/components/ui/SimplePagination";
+import { useLocalPagination } from "@/hooks/useLocalPagination";
 import {
   Table,
   TableHeader,
@@ -54,31 +55,19 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
     recipients: { id: string | number; name: string; phone: string; email?: string }[];
   } | null>(null);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
-
-  const handleSearchChange = (val: string) => {
-    setSearchQuery(val);
-    setCurrentPage(1);
-  };
-
-  const filteredStudents = useMemo(() => {
-    if (!searchQuery.trim()) return overdueStudents;
-    const query = searchQuery.toLowerCase();
-    return overdueStudents.filter(
-      (os) =>
-        os.name.toLowerCase().includes(query) ||
-        os.obligationType.toLowerCase().includes(query)
-    );
-  }, [overdueStudents, searchQuery]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredStudents.length / pageSize));
-
-  const paginatedStudents = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return filteredStudents.slice(startIndex, startIndex + pageSize);
-  }, [filteredStudents, currentPage]);
+  const {
+    searchQuery,
+    currentPage,
+    setCurrentPage,
+    handleSearchChange,
+    paginatedItems: paginatedStudents,
+    filteredItems: filteredStudents,
+    totalPages,
+  } = useLocalPagination({
+    items: overdueStudents,
+    pageSize: 5,
+    searchFields: (os) => [os.name, os.obligationType],
+  });
 
   const studentIds = useMemo(
     () => uniqueRegistryIds(overdueStudents.map((os) => os.id)),

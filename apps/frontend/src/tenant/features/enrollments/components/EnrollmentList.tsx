@@ -4,6 +4,7 @@ import { Search, Eye, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ListPagination } from "@/components/ui/ListPagination";
+import { useLocalPagination } from "@/hooks/useLocalPagination";
 import { ENROLLMENT_STATUSES, STATUS_MAP, Enrollment, EnrollmentStatus } from '@/lib/data/enrollmentData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
@@ -40,29 +41,37 @@ export function EnrollmentList({
   columnCustomizer,
 }: EnrollmentListProps): React.ReactElement {
   const { t } = useTranslation();
-  const [search, setSearch]         = useState<string>(" ");
   const [statusFilter, setStatus]   = useState<string>("all");
   const [sessionFilter, setSession] = useState<string>("all");
-  const [page, setPage]             = useState<number>(1);
 
   const sessions = useSessionsCollection();
 
-  const filtered = useMemo<Enrollment[]>(() => {
-    const trimmed = search.trim();
+  const baseFiltered = useMemo<Enrollment[]>(() => {
     return enrollments.filter((enrollment) => {
       if (statusFilter !== "all" && enrollment.status !== statusFilter) return false;
       if (sessionFilter !== "all" && enrollment.sessionId !== sessionFilter) return false;
-      if (trimmed && !enrollment.studentName.toLowerCase().includes(trimmed.toLowerCase()) &&
-          !enrollment.sessionName.toLowerCase().includes(trimmed.toLowerCase())) return false;
       return true;
     });
-  }, [enrollments, search, statusFilter, sessionFilter]);
+  }, [enrollments, statusFilter, sessionFilter]);
+
+  const {
+    searchQuery: search,
+    currentPage: page,
+    setCurrentPage: setPage,
+    handleSearchChange,
+    paginatedItems: paginatedEnrollments,
+    filteredItems: filtered,
+    totalPages,
+  } = useLocalPagination({
+    items: baseFiltered,
+    pageSize: PAGE_SIZE,
+    searchFields: (enrollment) => [enrollment.studentName, enrollment.sessionName],
+  });
 
   useEffect(() => {
     onFilteredCountChange?.(filtered.length);
   }, [filtered.length, onFilteredCountChange]);
 
-  const paginatedEnrollments = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const { data: students = [] } = useStudentsByIds(paginatedEnrollments.map((enrollment) => enrollment.studentId));
 
   const showStudent = isColumnVisible ? isColumnVisible("student") : true;
@@ -82,19 +91,12 @@ export function EnrollmentList({
     return "text-muted-foreground";
   };
 
-  // set search state safely
-  useEffect(() => {
-    if (search === " ") {
-      setSearch("");
-    }
-  }, [search]);
-
   return (
     <section className="space-y-4" aria-label="Enrollment list interface">
       <div className="flex flex-wrap gap-2 items-center">
         <SearchBar
-          value={search === " " ? "" : search}
-          onChange={(val) => { setSearch(val); setPage(1); }}
+          value={search}
+          onChange={handleSearchChange}
           placeholder={t("enrollments.searchPlaceholder")}
           className="flex-1 min-w-[180px]"
         />

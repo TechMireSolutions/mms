@@ -7,6 +7,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { formatMoney, type AppTranslationKey } from "@mms/shared";
 import { SimplePagination } from "@/components/ui/SimplePagination";
+import { useLocalPagination } from "@/hooks/useLocalPagination";
 const CustomWidgetChartFallback = React.lazy(() => import("@/tenant/features/reports/components/pinnedWidgets/CustomWidgetChartFallback"));
 import { getCollection, saveCollection, getObject, saveObject } from "@/lib/db";
 import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
@@ -106,8 +107,6 @@ function WidgetDrilldownModal({
   onClose: () => void;
 }): React.JSX.Element {
   const { t } = useTranslation();
-  const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [collections, setCollections] = useState(() => getWidgetCollections());
 
   useEffect(() => {
@@ -118,33 +117,29 @@ function WidgetDrilldownModal({
     return () => window.removeEventListener("local-database-update", handleUpdate);
   }, []);
 
-  const handleSearchChange = (val: string) => {
-    setSearch(val);
-    setCurrentPage(1);
-  };
+  const widgetRecords = useMemo(() => getFilteredRecords(widget, collections), [widget, collections]);
+
+  const {
+    searchQuery: search,
+    currentPage,
+    setCurrentPage,
+    handleSearchChange,
+    paginatedItems: paginatedRecords,
+    filteredItems: filteredRecords,
+    totalPages,
+  } = useLocalPagination({
+    items: widgetRecords,
+    pageSize: 10,
+    filterFn: (record, query) =>
+      Object.values(record).some((fieldValue) =>
+        String(fieldValue).toLowerCase().includes(query)
+      ),
+  });
 
   const students = useMemo(() => collections.students, [collections]);
   const studentNameMap = useMemo(() => {
     return new Map((students as unknown as Record<string, unknown>[]).map((student) => [String(student.id), String(student.name || student.studentName || student.id)]));
   }, [students]);
-
-  const filteredRecords = useMemo(() => {
-    const widgetRecords = getFilteredRecords(widget, collections);
-    if (!search) return widgetRecords;
-    const searchText = search.toLowerCase();
-    return widgetRecords.filter((widgetRecord) => {
-      return Object.values(widgetRecord).some((fieldValue) => String(fieldValue).toLowerCase().includes(searchText));
-    });
-  }, [widget, collections, search]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(filteredRecords.length / 10));
-  }, [filteredRecords]);
-
-  const paginatedRecords = useMemo(() => {
-    const startIndex = (currentPage - 1) * 10;
-    return filteredRecords.slice(startIndex, startIndex + 10);
-  }, [filteredRecords, currentPage]);
 
   const handleToggleStatus = (recordId: string) => {
     try {

@@ -14,6 +14,7 @@ import { ActivityActionBadge } from '@/tenant/features/users/components/UserBadg
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
+import { useLocalPagination } from '@/hooks/useLocalPagination';
 
 const PAGE_SIZE = 15;
 
@@ -25,32 +26,37 @@ export interface ActivityLogsProps {
 export function ActivityLogs({ logs, users }: ActivityLogsProps): React.JSX.Element {
   const { t } = useTranslation();
   const globalSettings = useGlobalSettings();
-  const [search, setSearch] = useState('');
   const [userFilter, setUser] = useState('all');
   const [actionFilter, setAct] = useState('all');
   const [dateFrom, setFrom] = useState('');
   const [dateTo, setTo] = useState('');
-  const [page, setPage] = useState(1);
 
   const userNameFor = useCallback((log: ActivityLog): string =>
     log.userName ?? users.find((user) => user.id === log.userId)?.name ?? log.userId, [users]);
 
-  const filtered = useMemo(() => {
+  const baseFilteredLogs = useMemo(() => {
     return logs.filter((log) => {
       if (userFilter !== 'all' && log.userId !== userFilter) return false;
       if (actionFilter !== 'all' && log.action !== actionFilter) return false;
       if (dateFrom && log.ts < dateFrom) return false;
       if (dateTo && log.ts > `${dateTo}T23:59:59`) return false;
-      if (search) {
-        const searchQuery = search.toLowerCase();
-        if (!userNameFor(log).toLowerCase().includes(searchQuery) && !log.detail.toLowerCase().includes(searchQuery)) return false;
-      }
       return true;
     });
-  }, [logs, search, userFilter, actionFilter, dateFrom, dateTo, userNameFor]);
+  }, [logs, userFilter, actionFilter, dateFrom, dateTo]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const {
+    searchQuery: search,
+    setSearchQuery: setSearch,
+    currentPage: page,
+    setCurrentPage: setPage,
+    paginatedItems: paginated,
+    filteredItems: filtered,
+    totalPages,
+  } = useLocalPagination({
+    items: baseFilteredLogs,
+    pageSize: PAGE_SIZE,
+    searchFields: (log) => [userNameFor(log), log.detail],
+  });
 
   const fmtTs = (ts: string): string => formatDate(ts, globalSettings.dateFormat, false);
 
