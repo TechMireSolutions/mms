@@ -37,11 +37,8 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
         registerLanguagePack('ur', translationModule.APP_TRANSLATIONS_UR);
       });
     } else if (language === 'fa') {
-      promise = Promise.all([
-        import('@mms/shared/translations/ar').then((translationModule) => translationModule.APP_TRANSLATIONS_AR),
-        import('@mms/shared/translations/fa').then((translationModule) => translationModule.APP_TRANSLATIONS_FA)
-      ]).then(([arDict, faDict]) => {
-        registerLanguagePack('fa', { ...arDict, ...faDict });
+      promise = import('@mms/shared/translations/fa').then((translationModule) => {
+        registerLanguagePack('fa', translationModule.APP_TRANSLATIONS_FA);
       });
     } else {
       setIsLoading(false);

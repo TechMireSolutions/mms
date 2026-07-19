@@ -1,9 +1,6 @@
-import { useCallback, useMemo } from "react";
-import { useLocation } from "react-router-dom";
-import { translateAppParams, type AppTranslationKey } from "@mms/shared";
-import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
-import { useTenant } from "@/lib/contexts/TenantContext";
-import { isEntryPath } from "@/lib/config/routes";
+import { useContext } from "react";
+import { type AppTranslationKey } from "@mms/shared";
+import { TranslationContext } from "@/lib/contexts/TranslationContext";
 
 /**
  * Reactive app-wide UI translations from global language preference.
@@ -13,21 +10,13 @@ export function useTranslation(): {
   language: string;
   t: (key: AppTranslationKey, params?: Record<string, string | number>) => string;
 } {
-  const settings = useGlobalSettings();
-  const { pathname } = useLocation();
-  const { isApex } = useTenant();
-
-  const language = useMemo(
-    () => (isEntryPath(pathname, { isApex }) ? "en" : settings.language),
-    [pathname, isApex, settings.language]
-  );
-
-  const t = useCallback(
-    (key: AppTranslationKey, params?: Record<string, string | number>) =>
-      translateAppParams(key, language, params),
-    [language]
-  );
-
-  return { language, t };
+  const context = useContext(TranslationContext);
+  if (!context) {
+    throw new Error("useTranslation must be used within a TranslationProvider");
+  }
+  return {
+    language: context.language,
+    t: context.t,
+  };
 }
 
