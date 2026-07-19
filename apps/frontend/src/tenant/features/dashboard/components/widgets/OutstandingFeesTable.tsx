@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { AlertCircle, Phone, Send, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertCircle, Phone, Send, ChevronLeft, ChevronRight } from "lucide-react";
 import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";

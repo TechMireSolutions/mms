@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Users, MapPin, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { Button } from "@/components/ui/button";

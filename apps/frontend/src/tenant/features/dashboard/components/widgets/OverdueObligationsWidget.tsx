@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { AlertTriangle, ChevronDown, ChevronUp, Bell, Scale, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, Bell, Scale, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { ROUTES } from "@/lib/config/routes";
