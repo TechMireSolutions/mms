@@ -47,7 +47,7 @@ export function PaperPreviewPanel({
           </Button>
         </div>
       </div>
-      <div className="max-h-[520px] overflow-auto rounded-lg border border-border bg-white p-2 sm:max-h-[720px] sm:p-3">
+      <div className="max-h-[520px] overflow-auto rounded-lg border border-border bg-card p-2 sm:max-h-[720px] sm:p-3">
         <div
           ref={printRef}
           className="origin-top-left scale-[0.42] sm:scale-[0.58] md:scale-[0.7] lg:scale-[0.78]"

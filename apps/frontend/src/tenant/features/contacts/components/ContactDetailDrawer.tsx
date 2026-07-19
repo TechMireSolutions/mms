@@ -136,7 +136,7 @@ export default function ContactDetailDrawer({
       setC(updatedContact);
       onUpdateContact?.(updatedContact);
       notify.success(t("contacts.detail.uploadSuccess"));
-    } catch (err) {
+    } catch {
       notify.error(t("contacts.detail.uploadFailed"));
     } finally {
       setIsUploading(false);

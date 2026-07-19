@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/lib/config/routes";
 import { useBrandedDashboardChartColors } from "@/tenant/features/dashboard/hooks/useBrandedDashboardChartColors";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import {
@@ -59,6 +61,7 @@ const HasanatTooltip = ({ active = false, payload = [] }: Partial<TooltipContent
  */
 export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { attendance: ATTENDANCE_COLORS } = useBrandedDashboardChartColors();
   const palette = useBrandPalette();
   const attendanceRecords = getCollection<AttendanceRecord>("attendance_records");
@@ -69,33 +72,36 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
     updatePref,
   } = useDashboardConfig();
 
-  const uniqueDates = [...new Set(attendanceRecords.map((attendanceRecord) => attendanceRecord.date as string))].sort().reverse().slice(0, 7).reverse();
+  const attendanceData: AttendancePoint[] = useMemo(() => {
+    const uniqueDates = [...new Set(attendanceRecords.map((attendanceRecord) => attendanceRecord.date as string))].sort().reverse().slice(0, 7).reverse();
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    return days.map((dayLabel, index) => {
+      const targetDate = uniqueDates.find((attendanceDate) => {
+        const dateObj = new Date(attendanceDate);
+        const dayIndex = (dateObj.getDay() + 6) % 7; // Mon=0, Sun=6
+        return dayIndex === index;
+      });
 
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const attendanceData: AttendancePoint[] = days.map((dayLabel, index) => {
-    const targetDate = uniqueDates.find((attendanceDate) => {
-      const dateObj = new Date(attendanceDate);
-      const dayIndex = (dateObj.getDay() + 6) % 7; // Mon=0, Sun=6
-      return dayIndex === index;
-    });
+      if (targetDate) {
+        const dayRecords = attendanceRecords.filter((attendanceRecord) => attendanceRecord.date === targetDate);
+        const total = dayRecords.length;
+        const present = dayRecords.filter((attendanceRecord) => attendanceRecord.status === "present" || attendanceRecord.status === "late").length;
+        return {
+          day: dayLabel,
+          rate: total > 0 ? Math.round((present / total) * 100) : 0
+        };
+      }
 
-    if (targetDate) {
-      const dayRecords = attendanceRecords.filter((attendanceRecord) => attendanceRecord.date === targetDate);
-      const total = dayRecords.length;
-      const present = dayRecords.filter((attendanceRecord) => attendanceRecord.status === "present" || attendanceRecord.status === "late").length;
       return {
         day: dayLabel,
-        rate: total > 0 ? Math.round((present / total) * 100) : 0
+        rate: 0
       };
-    }
-
-    return {
-      day: dayLabel,
-      rate: 0
-    };
-  });
+    });
+  }, [attendanceRecords]);
   
-  const avg = attendanceData.length ? Math.round(attendanceData.reduce((sum, attendancePoint) => sum + attendancePoint.rate, 0) / attendanceData.length) : 0;
+  const avg = useMemo(() => {
+    return attendanceData.length ? Math.round(attendanceData.reduce((sum, attendancePoint) => sum + attendancePoint.rate, 0) / attendanceData.length) : 0;
+  }, [attendanceData]);
 
   const isSemantic = colorTheme === "semantic";
   const themeColor = ATTENDANCE_COLORS[colorTheme] || ATTENDANCE_COLORS.brand;
@@ -164,7 +170,16 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
       </header>
       
       <SafeResponsiveContainer height={170}>
-        <ComposedChart data={attendanceData} margin={{ top: 4, right: 4, bottom: 0, left: -28 }}>
+        <ComposedChart
+          data={attendanceData}
+          margin={{ top: 4, right: 4, bottom: 0, left: -28 }}
+          onClick={() => {
+            if (!isEditMode) {
+              navigate(ROUTES.attendance);
+            }
+          }}
+          className={isEditMode ? "cursor-default" : "cursor-pointer"}
+        >
           <defs>
             <linearGradient id="attGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%"  stopColor={themeColor} stopOpacity={0.18} />
@@ -232,35 +247,38 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
     updatePref,
   } = useDashboardConfig();
 
-  let memorisationPoints = 0;
-  let attendancePoints = 0;
-  let behaviorPoints = 0;
+  const { hasanatData, total, activeColors } = useMemo(() => {
+    let memorisationPoints = 0;
+    let attendancePoints = 0;
+    let behaviorPoints = 0;
 
-  distributions.forEach((distribution) => {
-    if (!distribution) return;
-    const points = getDenominationPoints(distribution.denominationId, distribution.denominationName, denominations);
+    distributions.forEach((distribution) => {
+      if (!distribution) return;
+      const points = getDenominationPoints(distribution.denominationId, distribution.denominationName, denominations);
 
-    const totalPoints = Number(distribution.quantity || 1) * points;
+      const totalPoints = Number(distribution.quantity || 1) * points;
 
-    const reason = String(distribution.reason || "").toLowerCase();
-    if (reason.includes("attendance") || reason.includes("absence")) {
-      attendancePoints += totalPoints;
-    } else if (reason.includes("juz") || reason.includes("hifz") || reason.includes("completion") || reason.includes("memorisation") || reason.includes("memorization") || reason.includes("milestone")) {
-      memorisationPoints += totalPoints;
-    } else {
-      behaviorPoints += totalPoints;
-    }
-  });
+      const reason = String(distribution.reason || "").toLowerCase();
+      if (reason.includes("attendance") || reason.includes("absence")) {
+        attendancePoints += totalPoints;
+      } else if (reason.includes("juz") || reason.includes("hifz") || reason.includes("completion") || reason.includes("memorisation") || reason.includes("memorization") || reason.includes("milestone")) {
+        memorisationPoints += totalPoints;
+      } else {
+        behaviorPoints += totalPoints;
+      }
+    });
 
-  const activeColors = HASANAT_THEMES[colorTheme] || HASANAT_THEMES.mixed;
+    const activeColors = HASANAT_THEMES[colorTheme] || HASANAT_THEMES.mixed;
 
-  const hasanatData: HasanatPoint[] = [
-    { name: t("dashboard.charts.hasanat.memorisation"), value: memorisationPoints, color: activeColors.mem },
-    { name: t("dashboard.charts.hasanat.attendance"),   value: attendancePoints, color: activeColors.att },
-    { name: t("dashboard.charts.hasanat.behavior"),     value: behaviorPoints, color: activeColors.beh }
-  ];
-  
-  const total = hasanatData.reduce((sum, hasanatPoint) => sum + hasanatPoint.value, 0);
+    const data: HasanatPoint[] = [
+      { name: t("dashboard.charts.hasanat.memorisation"), value: memorisationPoints, color: activeColors.mem },
+      { name: t("dashboard.charts.hasanat.attendance"),   value: attendancePoints, color: activeColors.att },
+      { name: t("dashboard.charts.hasanat.behavior"),     value: behaviorPoints, color: activeColors.beh }
+    ];
+    
+    const sum = data.reduce((s, hasanatPoint) => s + hasanatPoint.value, 0);
+    return { hasanatData: data, total: sum, activeColors };
+  }, [distributions, denominations, colorTheme, HASANAT_THEMES, t]);
 
   return (
     <section aria-labelledby="hasanat-chart-heading" className="bg-card rounded-xl border border-border p-5">

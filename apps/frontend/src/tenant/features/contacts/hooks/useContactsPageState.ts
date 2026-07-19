@@ -129,7 +129,7 @@ export function useContactsPageState({
       if (filter.search) setSearch(filter.search);
       setActiveTab("work");
     },
-    [],
+    [setActiveTab],
   );
 
   useEffect(() => {
@@ -148,7 +148,7 @@ export function useContactsPageState({
     if (effectiveTab !== activeTab) {
       setActiveTab(effectiveTab);
     }
-  }, [activeTab, effectiveTab]);
+  }, [activeTab, effectiveTab, setActiveTab]);
 
   const exportLabels = useMemo(
     () => ({ yes: t("common.yes"), no: t("common.no") }),

@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/lib/config/routes";
 import { useBrandedDashboardChartColors } from "@/tenant/features/dashboard/hooks/useBrandedDashboardChartColors";
 import {
   ComposedChart, Bar, Line, Area, XAxis, YAxis, CartesianGrid,
@@ -60,6 +62,7 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
  */
 export default function RevenueChart({ isEditMode = false }: { isEditMode?: boolean }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { formatCurrency } = useFinanceCurrency();
   const { revenue: COLOR_THEMES } = useBrandedDashboardChartColors();
   const [period, setPeriod] = useState<"6m" | "10m">("10m");
@@ -71,49 +74,70 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
     updatePref,
   } = useDashboardConfig();
 
-  const months = [
-    { key: "2025-07", label: "Jul" },
-    { key: "2025-08", label: "Aug" },
-    { key: "2025-09", label: "Sep" },
-    { key: "2025-10", label: "Oct" },
-    { key: "2025-11", label: "Nov" },
-    { key: "2025-12", label: "Dec" },
-    { key: "2026-01", label: "Jan" },
-    { key: "2026-02", label: "Feb" },
-    { key: "2026-03", label: "Mar" },
-    { key: "2026-04", label: "Apr" }
-  ];
+  const months = useMemo((): { key: string; label: string }[] => {
+    const list: { key: string; label: string }[] = [];
+    const now = new Date();
+    const monthKeys = [
+      "january",
+      "february",
+      "march",
+      "april",
+      "may",
+      "june",
+      "july",
+      "august",
+      "september",
+      "october",
+      "november",
+      "december"
+    ];
+    for (let i = 9; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const year = d.getFullYear();
+      const monthIndex = d.getMonth();
+      const monthNum = String(monthIndex + 1).padStart(2, "0");
+      const key = `${year}-${monthNum}`;
 
-  const revenueData: RevenuePoint[] = months.map((monthDefinition) => {
-    let revenue = 0;
-    invoices.forEach((invoice) => {
-      if (!invoice || invoice.status === "cancelled") return;
-      const invoiceMonth = (invoice.paidDate || invoice.dueDate || "").slice(0, 7);
-      if (invoiceMonth === monthDefinition.key) {
-        if (invoice.status === "paid") {
-          revenue += Number(invoice.finalAmt || 0);
-        } else if (invoice.status === "partial") {
-          revenue += Number(invoice.paidAmt || 0);
+      const transKey = `accounting.settings.months.${monthKeys[monthIndex]}` as any;
+      const fullLabel = t(transKey);
+      const label = fullLabel.slice(0, 3);
+      list.push({ key, label });
+    }
+    return list;
+  }, [t]);
+
+  const revenueData: RevenuePoint[] = useMemo(() => {
+    return months.map((monthDefinition) => {
+      let revenue = 0;
+      invoices.forEach((invoice) => {
+        if (!invoice || invoice.status === "cancelled") return;
+        const invoiceMonth = (invoice.paidDate || invoice.dueDate || "").slice(0, 7);
+        if (invoiceMonth === monthDefinition.key) {
+          if (invoice.status === "paid") {
+            revenue += Number(invoice.finalAmt || 0);
+          } else if (invoice.status === "partial") {
+            revenue += Number(invoice.paidAmt || 0);
+          }
         }
-      }
+      });
+
+      const expenses = invoices.length > 0 ? Math.round(revenue * 0.6) : 0;
+
+      return {
+        month: monthDefinition.label,
+        revenue,
+        expenses
+      };
     });
-
-    const expenses = invoices.length > 0 ? Math.round(revenue * 0.6) : 0;
-
-    return {
-      month: monthDefinition.label,
-      revenue,
-      expenses
-    };
-  });
+  }, [months, invoices]);
   
   const visibleRevenueData = period === "6m" ? revenueData.slice(-6) : revenueData;
   const activeColors = COLOR_THEMES[colorTheme] || COLOR_THEMES.mixed;
 
-  const formatYAxisTick = (value: number) => {
+  const formatYAxisTick = useCallback((value: number) => {
     if (value === 0) return formatCurrency(0);
     return `${formatCurrency(Math.round(value / 1000))}k`;
-  };
+  }, [formatCurrency]);
 
   return (
     <section aria-labelledby="revenue-chart-heading" className="bg-card rounded-xl border border-border p-5">
@@ -200,7 +224,16 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
       </div>
  
       <SafeResponsiveContainer height={200}>
-        <ComposedChart data={visibleRevenueData} margin={{ top: 4, right: 4, bottom: 0, left: -24 }}>
+        <ComposedChart
+          data={visibleRevenueData}
+          margin={{ top: 4, right: 4, bottom: 0, left: -24 }}
+          onClick={() => {
+            if (!isEditMode) {
+              navigate(ROUTES.accounting);
+            }
+          }}
+          className={isEditMode ? "cursor-default" : "cursor-pointer"}
+        >
           <defs>
             <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%"  stopColor={activeColors.revenue} stopOpacity={0.2} />

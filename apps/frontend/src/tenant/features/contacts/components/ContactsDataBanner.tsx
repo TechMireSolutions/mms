@@ -18,7 +18,7 @@ export default function ContactsDataBanner({
   listFetchEnabled = true,
 }: ContactsDataBannerProps): React.JSX.Element | null {
   const { t } = useTranslation();
-  const { isError, isFetching, failureCount } = useContacts({ enabled: listFetchEnabled });
+  const { isError, isFetching } = useContacts({ enabled: listFetchEnabled });
   const { pendingCount, conflictCount, flushing, flush, clearConflicts } = useContactsSyncOutbox();
   const [offline, setOffline] = React.useState(() =>
     typeof navigator !== 'undefined' ? !navigator.onLine : false,

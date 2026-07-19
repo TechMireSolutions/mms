@@ -553,10 +553,10 @@ export interface StandardExtendedRoutesOptions<TQuery, TRecord> {
   defaultPageSize?: number;
   errorMessagePrefix: string;
   nameSingular: string;
-  loadPageFn?: (query: TQuery & { includeDeleted: boolean }) => Promise<any>;
+  loadPageFn?: (query: TQuery & { includeDeleted: boolean }) => Promise<unknown>;
   loadAllFn: (options?: { includeDeleted?: boolean }) => Promise<TRecord[]>;
-  computeMetricsFn?: (records: TRecord[], request: FastifyRequest) => Promise<any> | any;
-  loadWidgetAggregatesFn?: (queries: any[]) => Promise<any>;
+  computeMetricsFn?: (records: TRecord[], request: FastifyRequest) => Promise<unknown> | unknown;
+  loadWidgetAggregatesFn?: (queries: unknown[]) => Promise<unknown>;
   loadByIdsFn?: (ids: string[]) => Promise<TRecord[]>;
   loadLinkedContactIdsFn?: (excludeId?: string) => Promise<(string | number)[]>;
   columnPreferencesObjectKey?: string;
@@ -566,8 +566,8 @@ export interface StandardExtendedRoutesOptions<TQuery, TRecord> {
  * Registers standard extended routes (Paginated List, Count, Metrics, Widget Aggregates, Resolve, Linked Contact IDs, Column Preferences).
  */
 export function registerStandardExtendedRoutes<
-  TQuery extends { page?: number; limit?: number; includeDeleted?: string } = any,
-  TRecord = any,
+  TQuery extends { page?: number; limit?: number; includeDeleted?: string } = Record<string, unknown>,
+  TRecord = unknown,
 >(
   fastify: FastifyInstance,
   options: StandardExtendedRoutesOptions<TQuery, TRecord>,
@@ -673,8 +673,8 @@ export interface StandardTenantRoutesOptions<TQuery, TRecord extends ResourceRec
  * Registers all standard tenant routes (Standard Extended + CRUD).
  */
 export function registerStandardTenantRoutes<
-  TQuery extends { page?: number; limit?: number; includeDeleted?: string } = any,
-  TRecord extends ResourceRecord = any,
+  TQuery extends { page?: number; limit?: number; includeDeleted?: string } = Record<string, unknown>,
+  TRecord extends ResourceRecord = ResourceRecord,
 >(
   fastify: FastifyInstance,
   options: StandardTenantRoutesOptions<TQuery, TRecord>,

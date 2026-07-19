@@ -100,7 +100,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
       if (fieldValue === undefined || fieldValue === null || fieldValue === "") return false;
     }
     return true;
-  }, [orderedFields, fields, data, totalAvailable]);
+  }, [orderedFields, data, totalAvailable, isFieldEnabled, isFieldRequired]);
 
   return (
     <FormModal

@@ -10,6 +10,7 @@ import {
   type StudentDuplicateCheckInput,
   type StudentsListQuery,
   type StudentsWidgetQuery,
+  type Student,
 } from '@mms/shared';
 import {
   type StudentRecord,
@@ -46,7 +47,7 @@ export const updateStudentById = crud.updateById;
 export const deleteStudentById = crud.deleteById;
 export const restoreStudentById = crud.restoreById;
 
-const hydrated = createContactHydratedService<any, any>({
+const hydrated = createContactHydratedService<Student, StudentRecord>({
   listByWorkspaceFn: listStudentsByWorkspace,
   findByIdFn: findStudentById,
   findByIdsFn: findStudentsByIds,

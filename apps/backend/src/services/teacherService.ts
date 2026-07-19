@@ -8,6 +8,7 @@ import {
   type TeacherEmployeeIdSettings,
   type TeachersListQuery,
   type TeachersWidgetQuery,
+  type Teacher,
 } from '@mms/shared';
 import {
   type TeacherRecord,
@@ -44,7 +45,7 @@ export const updateTeacherById = crud.updateById;
 export const deleteTeacherById = crud.deleteById;
 export const restoreTeacherById = crud.restoreById;
 
-const hydrated = createContactHydratedService<any, any>({
+const hydrated = createContactHydratedService<Teacher, TeacherRecord>({
   listByWorkspaceFn: listTeachersByWorkspace,
   findByIdFn: findTeacherById,
   findByIdsFn: findTeachersByIds,

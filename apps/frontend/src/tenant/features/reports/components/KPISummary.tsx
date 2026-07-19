@@ -625,7 +625,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     ];
 
     return kpiItems;
-  }, [contactAnalytics, attendanceRecords, invoices, exams, examResults, sessions, distributions, questionBankQuestions, questionBankTests, questionBankResults, category, studentMetrics, isStudentsCategory, teacherMetrics, isTeachersCategory, auxiliaryStudentMetrics, auxiliaryTeacherMetrics, needsContactAnalytics, crossStudentMetrics, denominations, t]);
+  }, [contactAnalytics, attendanceRecords, invoices, exams, examResults, sessions, distributions, questionBankQuestions, questionBankTests, questionBankResults, category, studentMetrics, isStudentsCategory, teacherMetrics, isTeachersCategory, auxiliaryStudentMetrics, auxiliaryTeacherMetrics, needsContactAnalytics, crossStudentMetrics, denominations, t, activeCurrency.code]);
 
   // Determine standard possible cards for this category and user role
   const standardPossibleCards = useMemo(() => {

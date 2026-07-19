@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   GraduationCap, CalendarCheck, BookOpen, UserCheck,
@@ -32,6 +32,14 @@ const COLOR_MAP: Record<string, ColorTheme> = {
   red: { bg: "bg-destructive/10", text: "text-destructive", ring: "ring-destructive/20" },
 };
 
+const ACCENT_BAR_MAP: Record<string, string> = {
+  emerald: "bg-success/60",
+  blue: "bg-info/60",
+  violet: "bg-primary/60",
+  amber: "bg-warning/60",
+  red: "bg-destructive/60",
+};
+
 export interface StatItem {
   id: string;
   icon: string;
@@ -40,6 +48,61 @@ export interface StatItem {
   value: string | number;
   title: string;
   sub: string;
+  sparklineData?: number[];
+}
+
+function Sparkline({ trend, data, color }: { trend: number; data?: number[]; color: string }) {
+  const points = useMemo(() => {
+    if (data && data.length > 1) return data;
+    const base = 100;
+    const change = trend;
+    const factor = change >= 0 ? 1 : -1;
+    return [
+      base,
+      base + change * 0.2 + factor * 2,
+      base + change * 0.5 - factor * 3,
+      base + change * 0.8 + factor * 1.5,
+      base + change
+    ];
+  }, [data, trend]);
+
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const range = max - min === 0 ? 1 : max - min;
+
+  const width = 60;
+  const height = 24;
+
+  const svgPoints = points.map((p, idx) => {
+    const x = (idx / (points.length - 1)) * width;
+    const y = height - ((p - min) / range) * (height - 4) - 2;
+    return { x, y };
+  });
+
+  const pathD = svgPoints.map((pt, idx) => `${idx === 0 ? 'M' : 'L'} ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`).join(' ');
+
+  const strokeColor = {
+    emerald: "stroke-success",
+    blue: "stroke-info",
+    violet: "stroke-primary",
+    amber: "stroke-warning",
+    red: "stroke-destructive",
+  }[color] || "stroke-success";
+
+  return (
+    <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} fill="none" className="overflow-visible">
+      <motion.path
+        d={pathD}
+        className={strokeColor}
+        strokeWidth={1.75}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 0.55, ease: "easeOut" }}
+      />
+    </svg>
+  );
 }
 
 interface StatsGridProps {
@@ -69,14 +132,6 @@ export default function StatsGrid({
         const hasPositiveTrend = statItem.trend >= 0;
         const isCustomCard = customCardIds.includes(statItem.id);
 
-        const ACCENT_BAR_MAP: Record<string, string> = {
-          emerald: "bg-success/60",
-          blue: "bg-info/60",
-          violet: "bg-primary/60",
-          amber: "bg-warning/60",
-          red: "bg-destructive/60",
-        };
-
         return (
           <motion.article
             key={statItem.id}
@@ -91,7 +146,7 @@ export default function StatsGrid({
                 className={`w-9 h-9 rounded-lg ${colorTheme.bg} ring-4 ${colorTheme.ring} flex items-center justify-center aspect-square flex-shrink-0`}
                 aria-hidden="true"
               >
-                <Icon className={`w-4.5 h-4.5 ${colorTheme.text}`} style={{ width: 18, height: 18 }} />
+                <Icon className={`w-4.5 h-4.5 ${colorTheme.text}`} />
               </div>
 
               <div className="flex items-center gap-1">
@@ -142,14 +197,21 @@ export default function StatsGrid({
               </div>
             </header>
 
-            <main className="space-y-0.5 flex-1 min-w-0">
-              <p className="text-[22px] font-black text-foreground tracking-tight leading-none m-0 truncate">
-                {statItem.value}
-              </p>
-              <h4 className="text-[12px] font-bold text-foreground/80 mt-1 m-0 truncate">
-                {statItem.title}
-              </h4>
-            </main>
+            <div className="flex items-end justify-between mt-1">
+              <main className="space-y-0.5 flex-1 min-w-0">
+                <p className="text-[22px] font-black text-foreground tracking-tight leading-none m-0 truncate">
+                  {statItem.value}
+                </p>
+                <h4 className="text-[12px] font-bold text-foreground/80 mt-1 m-0 truncate">
+                  {statItem.title}
+                </h4>
+              </main>
+              {!isEditMode && (
+                <div className="w-16 h-8 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0 pointer-events-none flex-shrink-0 ml-2">
+                  <Sparkline trend={statItem.trend} data={statItem.sparklineData} color={statItem.color} />
+                </div>
+              )}
+            </div>
 
             <footer className="text-[11px] text-muted-foreground mt-2.5 border-t border-border/30 pt-2 m-0 truncate">
               {statItem.sub}

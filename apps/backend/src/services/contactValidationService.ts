@@ -4,6 +4,7 @@ import {
   applyTitleCaseToContact,
   buildDynamicContactSchema,
   verifyBlueprintVersion,
+  type Contact,
 } from '@mms/shared';
 import { loadContactFieldConfig } from './contactConfigService.js';
 
@@ -75,8 +76,8 @@ export async function validateAndNormalizeContacts(
   contacts: unknown,
   language = 'en',
   viewerRole?: string,
-): Promise<any[]> {
+): Promise<Contact[]> {
   await validateContactDynamic(tenant, contacts, language, viewerRole);
   const list = Array.isArray(contacts) ? contacts : [contacts];
-  return list.map((item) => applyTitleCaseToContact(item as Record<string, unknown>));
+  return list.map((item) => applyTitleCaseToContact(item as Record<string, unknown>) as unknown as Contact);
 }

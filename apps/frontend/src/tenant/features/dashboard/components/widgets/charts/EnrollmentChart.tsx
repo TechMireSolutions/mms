@@ -73,7 +73,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
 
   const activeMonths = months.slice(-monthsCount);
 
-  const enrollmentData = activeMonths.map((month) => {
+  const enrollmentData: EnrollmentPoint[] = activeMonths.map((month) => {
     const count = enrollments.filter((enrollment) => {
       if (!enrollment?.enrolledDate) return false;
       return enrollment.enrolledDate <= `${month.key}-31`;

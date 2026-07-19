@@ -2,6 +2,10 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Pencil, Trash2, Plus } from 'lucide-react';
 import type { Permission } from '@mms/shared';
+import type { Invoice } from '@/lib/data/financeData';
+import type { Distribution } from '@/lib/data/hasanatData';
+import type { Session } from '@/lib/data/sessionsData';
+import type { AttendanceRecord } from '@/lib/data/attendanceData';
 
 import StatsGrid from '@/tenant/features/dashboard/components/StatisticsGrid';
 import QuickActionsPanel from '@/tenant/features/dashboard/components/QuickActionsPanel';
@@ -24,6 +28,96 @@ import { useDashboardConfig } from '@/tenant/features/dashboard/hooks/useDashboa
 import { resolveWidgetTitle } from '@/lib/dashboardWidgets';
 import { buildDashboardNotifications } from '@/lib/buildDashboardNotifications';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
+
+
+function getLocalDateString(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getAttendanceRateForDate(records: AttendanceRecord[], dateStr: string): number | null {
+  const dayRecords = records.filter((r) => r.date === dateStr);
+  if (dayRecords.length === 0) return null;
+  const present = dayRecords.filter((r) => r.status === "present" || r.status === "late").length;
+  return (present / dayRecords.length) * 100;
+}
+
+function getCollectedAmountForMonth(invoices: Invoice[], year: number, month: number): number {
+  let sum = 0;
+  invoices.forEach((inv) => {
+    if (!inv || inv.status === "cancelled") return;
+    const dateStr = inv.paidDate || inv.dueDate || "";
+    if (!dateStr) return;
+    const invYear = Number(dateStr.slice(0, 4));
+    const invMonth = Number(dateStr.slice(5, 7)) - 1;
+    if (invYear === year && invMonth === month) {
+      if (inv.status === "paid") {
+        sum += inv.finalAmt;
+      } else if (inv.status === "partial") {
+        sum += inv.paidAmt || 0;
+      }
+    }
+  });
+  return sum;
+}
+
+function getOutstandingAmountForMonth(invoices: Invoice[], year: number, month: number): number {
+  let sum = 0;
+  invoices.forEach((inv) => {
+    if (!inv || inv.status === "cancelled" || inv.status === "paid") return;
+    const dateStr = inv.dueDate || "";
+    if (!dateStr) return;
+    const invYear = Number(dateStr.slice(0, 4));
+    const invMonth = Number(dateStr.slice(5, 7)) - 1;
+    if (invYear === year && invMonth === month) {
+      const outstanding = inv.status === "partial" ? (inv.finalAmt - (inv.paidAmt || 0)) : inv.finalAmt;
+      sum += outstanding;
+    }
+  });
+  return sum;
+}
+
+function getHasanatPointsInPeriod(
+  distributions: Distribution[],
+  pointsMap: Map<string, number>,
+  daysStart: number,
+  daysEnd: number
+): number {
+  let sum = 0;
+  const startD = new Date();
+  startD.setDate(startD.getDate() - daysStart);
+  const startTime = getLocalDateString(startD);
+
+  const endD = new Date();
+  endD.setDate(endD.getDate() - daysEnd);
+  const endTime = getLocalDateString(endD);
+
+  distributions.forEach((d) => {
+    if (!d.issuedDate) return;
+    if (d.issuedDate >= endTime && d.issuedDate <= startTime) {
+      const points = pointsMap.get(d.denominationId) || 50;
+      sum += (d.quantity || 1) * points;
+    }
+  });
+  return sum;
+}
+
+function getSessionsInPeriod(sessions: Session[], daysStart: number, daysEnd: number): number {
+  const startD = new Date();
+  startD.setDate(startD.getDate() - daysStart);
+  const startTime = getLocalDateString(startD);
+
+  const endD = new Date();
+  endD.setDate(endD.getDate() - daysEnd);
+  const endTime = getLocalDateString(endD);
+
+  return sessions.filter((s) => {
+    if (!s.startDate) return false;
+    return s.startDate >= endTime && s.startDate <= startTime;
+  }).length;
+}
 
 function Section({ children }: { children: React.ReactNode }) {
   return (
@@ -176,62 +270,27 @@ export default function Dashboard() {
       : 0;
 
     // 4. Dynamic Attendance Today Trend (Latest vs Previous Day Rate Change)
-    const getAttendanceRateForDate = (dateStr: string) => {
-      const dayRecords = attendanceRecords.filter((r) => r.date === dateStr);
-      if (dayRecords.length === 0) return null;
-      const present = dayRecords.filter((r) => r.status === "present" || r.status === "late").length;
-      return (present / dayRecords.length) * 100;
-    };
     const sortedDates = [...new Set(attendanceRecords.map((r) => r.date as string))].sort();
     const latestDate = sortedDates[sortedDates.length - 1];
     const prevDate = sortedDates[sortedDates.length - 2];
-    const latestRate = latestDate ? getAttendanceRateForDate(latestDate) : null;
-    const prevRate = prevDate ? getAttendanceRateForDate(prevDate) : null;
+    const latestRate = latestDate ? getAttendanceRateForDate(attendanceRecords, latestDate) : null;
+    const prevRate = prevDate ? getAttendanceRateForDate(attendanceRecords, prevDate) : null;
     const attendanceTrend = (latestRate !== null && prevRate !== null && prevRate > 0)
       ? Math.round(latestRate - prevRate)
       : 0;
 
     // 5. Dynamic Fees (Revenue) Trend (Current month collections vs Last month)
-    const getCollectedAmountForMonth = (year: number, month: number) => {
-      let sum = 0;
-      invoices.forEach((inv) => {
-        if (!inv || inv.status === "cancelled") return;
-        const dateStr = inv.paidDate || inv.dueDate || "";
-        const date = new Date(dateStr);
-        if (date.getFullYear() === year && date.getMonth() === month) {
-          if (inv.status === "paid") {
-            sum += inv.finalAmt;
-          } else if (inv.status === "partial") {
-            sum += inv.paidAmt || 0;
-          }
-        }
-      });
-      return sum;
-    };
     const now = new Date();
-    const currentMonthCollected = getCollectedAmountForMonth(now.getFullYear(), now.getMonth());
+    const currentMonthCollected = getCollectedAmountForMonth(invoices, now.getFullYear(), now.getMonth());
     const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const prevMonthCollected = getCollectedAmountForMonth(prevMonthDate.getFullYear(), prevMonthDate.getMonth());
+    const prevMonthCollected = getCollectedAmountForMonth(invoices, prevMonthDate.getFullYear(), prevMonthDate.getMonth());
     const feesTrend = prevMonthCollected > 0
       ? Math.round(((currentMonthCollected - prevMonthCollected) / prevMonthCollected) * 100)
       : (currentMonthCollected > 0 ? 100 : 0);
 
     // 6. Dynamic Outstanding Payments Trend
-    const getOutstandingAmountForMonth = (year: number, month: number) => {
-      let sum = 0;
-      invoices.forEach((inv) => {
-        if (!inv || inv.status === "cancelled" || inv.status === "paid") return;
-        const dateStr = inv.dueDate || "";
-        const date = new Date(dateStr);
-        if (date.getFullYear() === year && date.getMonth() === month) {
-          const outstanding = inv.status === "partial" ? (inv.finalAmt - (inv.paidAmt || 0)) : inv.finalAmt;
-          sum += outstanding;
-        }
-      });
-      return sum;
-    };
-    const currentOutstanding = getOutstandingAmountForMonth(now.getFullYear(), now.getMonth());
-    const prevOutstanding = getOutstandingAmountForMonth(prevMonthDate.getFullYear(), prevMonthDate.getMonth());
+    const currentOutstanding = getOutstandingAmountForMonth(invoices, now.getFullYear(), now.getMonth());
+    const prevOutstanding = getOutstandingAmountForMonth(invoices, prevMonthDate.getFullYear(), prevMonthDate.getMonth());
     const outstandingTrend = prevOutstanding > 0
       ? Math.round(((currentOutstanding - prevOutstanding) / prevOutstanding) * 100)
       : (currentOutstanding > 0 ? 100 : 0);
@@ -239,38 +298,15 @@ export default function Dashboard() {
     // 7. Dynamic Hasanat Awarded Trend (This week vs Last week points issued)
     const pointsMap = new Map<string, number>();
     (denoms || []).forEach((d) => pointsMap.set(d.id, d.points));
-    const getHasanatPointsInPeriod = (daysStart: number, daysEnd: number) => {
-      let sum = 0;
-      const nowVal = new Date();
-      const startTime = new Date(nowVal.getTime() - daysStart * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-      const endTime = new Date(nowVal.getTime() - daysEnd * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-      hasanatDistributions.forEach((d) => {
-        if (!d.issuedDate) return;
-        if (d.issuedDate >= endTime && d.issuedDate <= startTime) {
-          const points = pointsMap.get(d.denominationId) || 50;
-          sum += (d.quantity || 1) * points;
-        }
-      });
-      return sum;
-    };
-    const pointsThisWeek = getHasanatPointsInPeriod(0, 7);
-    const pointsLastWeek = getHasanatPointsInPeriod(7, 14);
+    const pointsThisWeek = getHasanatPointsInPeriod(hasanatDistributions, pointsMap, 0, 7);
+    const pointsLastWeek = getHasanatPointsInPeriod(hasanatDistributions, pointsMap, 7, 14);
     const hasanatTrend = pointsLastWeek > 0
       ? Math.round(((pointsThisWeek - pointsLastWeek) / pointsLastWeek) * 100)
       : (pointsThisWeek > 0 ? 100 : 0);
 
     // 8. Dynamic Active Sessions Trend (This week vs Last week counts)
-    const getSessionsInPeriod = (daysStart: number, daysEnd: number) => {
-      const nowVal = new Date();
-      const startTime = new Date(nowVal.getTime() - daysStart * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-      const endTime = new Date(nowVal.getTime() - daysEnd * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-      return sessions.filter((s) => {
-        if (!s.startDate) return false;
-        return s.startDate >= endTime && s.startDate <= startTime;
-      }).length;
-    };
-    const sessionsThisWeek = getSessionsInPeriod(0, 7);
-    const sessionsLastWeek = getSessionsInPeriod(7, 14);
+    const sessionsThisWeek = getSessionsInPeriod(sessions, 0, 7);
+    const sessionsLastWeek = getSessionsInPeriod(sessions, 7, 14);
     const sessionsTrend = sessionsLastWeek > 0
       ? Math.round(((sessionsThisWeek - sessionsLastWeek) / sessionsLastWeek) * 100)
       : (sessionsThisWeek > 0 ? 100 : 0);

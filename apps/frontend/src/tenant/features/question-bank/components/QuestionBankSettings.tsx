@@ -29,20 +29,20 @@ interface QuestionBankSettingsProps {
 
 export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React.JSX.Element {
   const { t } = useTranslation();
-  const config = useQuestionBankConfig();
+  const { settings, updateSettings } = useQuestionBankConfig();
 
   const load = useCallback((): QuestionBankSettingsData => {
-    return config.settings;
-  }, [config.settings]);
+    return settings;
+  }, [settings]);
 
   const onSave = useCallback(
     async (draft: QuestionBankSettingsData) => {
-      config.updateSettings(draft);
+      updateSettings(draft);
       notify.success(t('questionBank.settingsSaved'), {
         description: t('questionBank.settingsSavedDesc'),
       });
     },
-    [config.updateSettings, t],
+    [updateSettings, t],
   );
 
   const { data: questionBankSettings, dirty, saving, upd } = useSettingsDraft({

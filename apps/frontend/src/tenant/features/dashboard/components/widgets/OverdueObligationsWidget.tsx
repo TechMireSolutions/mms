@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { AlertTriangle, ChevronDown, ChevronUp, Bell, Scale } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, Bell, Scale, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { ROUTES } from "@/lib/config/routes";
@@ -11,6 +11,7 @@ import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import MessageComposer from "@/components/ui/MessageComposer";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Input } from "@/components/ui/input";
 
 export interface OverdueStudent {
   id: number;
@@ -21,18 +22,6 @@ export interface OverdueStudent {
   currency: string;
   daysOverdue: number;
 }
-
-const DEFAULT_OVERDUE_STUDENTS: OverdueStudent[] = [
-  { id: 1, name: "Ahmad Raza",       obligationType: "Khums",   dueDate: "2026-04-01", amount: 12000, currency: "PKR", daysOverdue: 48 },
-  { id: 2, name: "Fatima Noor",      obligationType: "Zakat",   dueDate: "2026-04-10", amount: 8500,  currency: "PKR", daysOverdue: 39 },
-  { id: 3, name: "Hassan Ali",       obligationType: "Khums",   dueDate: "2026-04-15", amount: 30000, currency: "PKR", daysOverdue: 34 },
-  { id: 4, name: "Zainab Hussain",   obligationType: "Fidya",   dueDate: "2026-04-22", amount: 3200,  currency: "PKR", daysOverdue: 27 },
-  { id: 5, name: "Ibrahim Khalid",   obligationType: "Kaffarah",dueDate: "2026-04-28", amount: 15000, currency: "PKR", daysOverdue: 21 },
-  { id: 6, name: "Maryam Tahir",     obligationType: "Zakat",   dueDate: "2026-05-01", amount: 6000,  currency: "PKR", daysOverdue: 18 },
-  { id: 7, name: "Ali Mustafa",      obligationType: "Khums",   dueDate: "2026-05-05", amount: 22500, currency: "PKR", daysOverdue: 14 },
-  { id: 8, name: "Sara Jaffery",     obligationType: "Fidya",   dueDate: "2026-05-10", amount: 1800,  currency: "PKR", daysOverdue: 9  },
-];
-
 
 
 /**
@@ -45,7 +34,7 @@ const DEFAULT_OVERDUE_STUDENTS: OverdueStudent[] = [
  */
 export default function OverdueObligationsWidget({ title }: { title?: string }) {
   const { t } = useTranslation();
-  const overdueStudents = useLiveCollection<OverdueStudent>("overdue_obligations", DEFAULT_OVERDUE_STUDENTS, { serverSync: false });
+  const overdueStudents = useLiveCollection<OverdueStudent>("overdue_obligations", [], { serverSync: true });
 
   const [expanded, setExpanded] = useState(true);
   const [remindedIds, setRemindedIds] = useState<Set<number>>(new Set());
@@ -54,13 +43,42 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
     recipients: { id: string | number; name: string; phone: string; email?: string }[];
   } | null>(null);
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const filteredStudents = useMemo(() => {
+    if (!searchQuery.trim()) return overdueStudents;
+    const query = searchQuery.toLowerCase();
+    return overdueStudents.filter(
+      (os) =>
+        os.name.toLowerCase().includes(query) ||
+        os.obligationType.toLowerCase().includes(query)
+    );
+  }, [overdueStudents, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredStudents.length / pageSize));
+
+  const paginatedStudents = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredStudents.slice(startIndex, startIndex + pageSize);
+  }, [filteredStudents, currentPage]);
+
   const studentIds = useMemo(
     () => uniqueRegistryIds(overdueStudents.map((os) => os.id)),
     [overdueStudents]
   );
   const { data: students = [] } = useStudentsByIds(studentIds);
 
-  const totalOverdue = overdueStudents.reduce((sum, overdueStudent) => sum + overdueStudent.amount, 0);
+  const totalOverdue = useMemo(
+    () => overdueStudents.reduce((sum, overdueStudent) => sum + overdueStudent.amount, 0),
+    [overdueStudents]
+  );
 
   const handleRemind = (overdueStudent: OverdueStudent) => {
     const student = students.find((s) => String(s.id) === String(overdueStudent.id));
@@ -73,11 +91,15 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
         email: student?.email || "",
       }],
     });
-    setRemindedIds((prev) => new Set([...prev, overdueStudent.id]));
+    setRemindedIds((prev) => {
+      const next = new Set(prev);
+      next.add(overdueStudent.id);
+      return next;
+    });
   };
 
   const handleRemindAll = () => {
-    const recipients = overdueStudents.map((os) => {
+    const recipients = filteredStudents.map((os) => {
       const student = students.find((s) => String(s.id) === String(os.id));
       return {
         id: os.id,
@@ -90,7 +112,11 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
       channel: "sms",
       recipients,
     });
-    setRemindedIds(new Set(overdueStudents.map((overdueStudent) => overdueStudent.id)));
+    setRemindedIds((prev) => {
+      const next = new Set(prev);
+      filteredStudents.forEach((os) => next.add(os.id));
+      return next;
+    });
   };
 
   return (
@@ -107,7 +133,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
               {title || t("dashboard.widgets.overdueObligations")}
             </h3>
             <p className="text-xs text-destructive m-0">
-              {t("dashboard.widgets.studentsCount", { count: overdueStudents.length })} · {formatMoney(totalOverdue, overdueStudents[0]?.currency)} {t("finance.report.outstanding")}
+              {t("dashboard.widgets.studentsCount", { count: filteredStudents.length })} · {formatMoney(totalOverdue, overdueStudents[0]?.currency)} {t("finance.report.outstanding")}
             </p>
           </div>
         </div>
@@ -134,113 +160,166 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
 
       {/* Table */}
       {expanded && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/30">
-                <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
-                  {t("hasanat.columns.redemption.student")}
-                </th>
-                <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
-                  {t("nav.obligations")}
-                </th>
-                <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
-                  {t("finance.columns.dueDate")}
-                </th>
-                <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
-                  {t("finance.columns.amount")}
-                </th>
-                <th scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
-                  {t("hasanat.columns.distribution.status")}
-                </th>
-                <th scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
-                  {t("hasanat.columns.actions")}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {overdueStudents.map((overdueStudent) => {
-                const reminded = remindedIds.has(overdueStudent.id);
-                const urgencyStatus = overdueStudent.daysOverdue >= 30 ? "critical" : overdueStudent.daysOverdue >= 14 ? "high" : "moderate";
-                return (
-                  <tr key={overdueStudent.id} className="hover:bg-muted/20 transition-colors">
-                    <td className="px-4 py-2.5">
-                      <div className="flex items-center gap-2">
-                        <UserAvatar id={overdueStudent.id} name={overdueStudent.name} className="w-7 h-7 rounded-full text-[10px] font-bold" />
-                        <span className="font-medium text-foreground text-xs">{overdueStudent.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <div className="flex items-center gap-1">
-                        <Scale className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
-                        <span className="text-xs text-foreground">{overdueStudent.obligationType}</span>
-                      </div>
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <div>
-                        <p className="text-xs text-foreground m-0">{formatDate(overdueStudent.dueDate)}</p>
-                        <p className="text-[10px] text-destructive font-semibold m-0">
-                          {t("dashboard.widgets.daysOverdue", { count: overdueStudent.daysOverdue })}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-3 py-2.5 text-right">
-                      <span className="text-xs font-bold text-foreground">
-                        {formatMoney(overdueStudent.amount, overdueStudent.currency)}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 text-center">
-                      <StatusBadge
-                        status={urgencyStatus}
-                        config={{
-                          critical: {
-                            label: t("dashboard.widgets.urgency.critical"),
-                            cls: "bg-destructive/15 text-destructive border-destructive/30",
-                          },
-                          high: {
-                            label: t("dashboard.widgets.urgency.high"),
-                            cls: "bg-warning/15 text-warning border-warning/30",
-                          },
-                          moderate: {
-                            label: t("dashboard.widgets.urgency.moderate"),
-                            cls: "bg-warning/15 text-warning border-warning/30",
-                          },
-                        }}
-                        size="sm"
-                      />
-                    </td>
-                    <td className="px-3 py-2.5 text-center">
-                      <Button
-                        variant="ghost"
-                        onClick={() => handleRemind(overdueStudent)}
-                        disabled={reminded}
-                        aria-label={reminded ? `Reminder sent to ${overdueStudent.name}` : `Send reminder to ${overdueStudent.name}`}
-                        className={`flex items-center gap-1 mx-auto px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors h-auto shadow-none ${
-                          reminded
-                            ? "bg-success/10 text-success border border-success/30 cursor-default hover:bg-success/10 hover:text-success"
-                            : "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:text-primary"
-                        }`}
-                      >
-                        <Bell className="w-2.5 h-2.5" aria-hidden="true" />
-                        {reminded ? t("dashboard.widgets.sent") : t("dashboard.widgets.remind")}
-                      </Button>
+        <>
+          {/* Search bar */}
+          <div className="px-5 py-2.5 border-b border-border bg-card/20 flex items-center justify-between gap-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder={t("contacts.searchPlaceholder") || "Search student or obligation..."}
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="pl-8 text-xs h-8.5 rounded-lg border-border/60 focus-visible:ring-1 focus-visible:ring-ring bg-background/50"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/30">
+                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                    {t("hasanat.columns.redemption.student")}
+                  </th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                    {t("nav.obligations")}
+                  </th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                    {t("finance.columns.dueDate")}
+                  </th>
+                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                    {t("finance.columns.amount")}
+                  </th>
+                  <th scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                    {t("hasanat.columns.distribution.status")}
+                  </th>
+                  <th scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                    {t("hasanat.columns.actions")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {paginatedStudents.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-8 text-xs text-muted-foreground">
+                      {t("finance.report.noInvoicesMatch")}
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                ) : (
+                  paginatedStudents.map((overdueStudent) => {
+                    const reminded = remindedIds.has(overdueStudent.id);
+                    const urgencyStatus = overdueStudent.daysOverdue >= 30 ? "critical" : overdueStudent.daysOverdue >= 14 ? "high" : "moderate";
+                    return (
+                      <tr key={overdueStudent.id} className="hover:bg-muted/20 transition-colors">
+                        <td className="px-4 py-2.5">
+                          <div className="flex items-center gap-2">
+                            <UserAvatar id={overdueStudent.id} name={overdueStudent.name} className="w-7 h-7 rounded-full text-[10px] font-bold" />
+                            <span className="font-medium text-foreground text-xs">{overdueStudent.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <div className="flex items-center gap-1">
+                            <Scale className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
+                            <span className="text-xs text-foreground">{overdueStudent.obligationType}</span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <div>
+                            <p className="text-xs text-foreground m-0">{formatDate(overdueStudent.dueDate)}</p>
+                            <p className="text-[10px] text-destructive font-semibold m-0">
+                              {t("dashboard.widgets.daysOverdue", { count: overdueStudent.daysOverdue })}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2.5 text-right">
+                          <span className="text-xs font-bold text-foreground">
+                            {formatMoney(overdueStudent.amount, overdueStudent.currency)}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 text-center">
+                          <StatusBadge
+                            status={urgencyStatus}
+                            config={{
+                              critical: {
+                                label: t("dashboard.widgets.urgency.critical"),
+                                cls: "bg-destructive/15 text-destructive border-destructive/30",
+                              },
+                              high: {
+                                label: t("dashboard.widgets.urgency.high"),
+                                cls: "bg-warning/15 text-warning border-warning/30",
+                              },
+                              moderate: {
+                                label: t("dashboard.widgets.urgency.moderate"),
+                                cls: "bg-warning/15 text-warning border-warning/30",
+                              },
+                            }}
+                            size="sm"
+                          />
+                        </td>
+                        <td className="px-3 py-2.5 text-center">
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleRemind(overdueStudent)}
+                            disabled={reminded}
+                            aria-label={reminded ? `Reminder sent to ${overdueStudent.name}` : `Send reminder to ${overdueStudent.name}`}
+                            className={`flex items-center gap-1 mx-auto px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors h-auto shadow-none ${
+                              reminded
+                                ? "bg-success/10 text-success border border-success/30 cursor-default hover:bg-success/10 hover:text-success"
+                                : "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:text-primary"
+                            }`}
+                          >
+                            <Bell className="w-2.5 h-2.5" aria-hidden="true" />
+                            {reminded ? t("dashboard.widgets.sent") : t("dashboard.widgets.remind")}
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
 
-          {/* Footer */}
-          <footer className="px-4 py-2.5 border-t border-border flex items-center justify-between bg-muted/20">
-            <p className="text-xs text-muted-foreground m-0">
-              {remindedIds.size > 0 && t("dashboard.widgets.remindersSent", { count: remindedIds.size })}
-            </p>
-            <Link to={ROUTES.obligations} className="text-xs font-semibold text-primary hover:underline">
-              {t("dashboard.widgets.viewObligations")}
-            </Link>
-          </footer>
-        </div>
+            {/* Footer */}
+            <footer className="px-4 py-2.5 border-t border-border flex items-center justify-between bg-muted/20">
+              <div className="flex items-center gap-4">
+                <p className="text-xs text-muted-foreground m-0">
+                  {remindedIds.size > 0 && t("dashboard.widgets.remindersSent", { count: remindedIds.size })}
+                </p>
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none"
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </Button>
+                    <span className="text-[11px] font-bold text-muted-foreground select-none">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none"
+                      aria-label="Next page"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+              <Link to={ROUTES.obligations} className="text-xs font-semibold text-primary hover:underline">
+                {t("dashboard.widgets.viewObligations")}
+              </Link>
+            </footer>
+          </div>
+        </>
       )}
 
       {messagingTarget && (

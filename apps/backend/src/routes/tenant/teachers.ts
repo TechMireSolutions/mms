@@ -48,7 +48,7 @@ export default async function teachersRoutes(
     deleteFn: deleteTeacherById,
     restoreFn: restoreTeacherById,
     computeMetricsFn: (teachers) => computeTeachersCommandMetrics(teachers),
-    loadWidgetAggregatesFn: loadTeachersWidgetAggregates,
+    loadWidgetAggregatesFn: loadTeachersWidgetAggregates as unknown as (queries: unknown[]) => Promise<unknown>,
     loadByIdsFn: loadTeachersByIds,
     loadLinkedContactIdsFn: loadTeacherLinkedContactIds,
     columnPreferencesObjectKey: TEACHERS_MODULE_CONTRACT.columnPreferencesObjectKey,

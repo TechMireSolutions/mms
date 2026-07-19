@@ -433,7 +433,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
     }
 
     setPreviewData(processedRows.slice(0, 20));
-  }, [source, selectedFields, aggregate, groupBy, contactsColl, studentsColl, sessionsColl, financialColl, attendanceColl, hasanatColl, academicColl, t, resolveFieldLabel]);
+  }, [source, selectedFields, aggregate, groupBy, contactsColl, studentsColl, sessionsColl, financialColl, attendanceColl, hasanatColl, academicColl, t, resolveFieldLabel, activeCurrency.code]);
 
   /** Appends a field to the selected columns list. */
   const addField = (field: string): void => {
