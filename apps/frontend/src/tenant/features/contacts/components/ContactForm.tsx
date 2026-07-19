@@ -1214,7 +1214,6 @@ export default function ContactForm({
                         });
                       }}
                       excludeIds={excludeIds(idx)}
-                      hasPhone={true}
                       allowCreate={false}
                       searchPlaceholder={t("contacts.form.searchByName")}
                       emptyTitle={t("contacts.form.noContactsFound")}

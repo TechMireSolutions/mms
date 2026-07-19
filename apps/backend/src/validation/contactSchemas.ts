@@ -84,7 +84,12 @@ export const contactsDuplicatesQuerySchema = z.object({
 
 export const contactsListQuerySchema = baseListQuerySchema.extend({
   gender: z.string().optional(),
-  hasPhone: z.enum(['true', 'false']).optional(),
+  hasPhone: z
+    .preprocess((val) => {
+      if (val === undefined) return undefined;
+      return val === 'true' || val === true;
+    }, z.boolean())
+    .optional(),
 });
 
 export const contactSetupAuditSchema = z.object({
