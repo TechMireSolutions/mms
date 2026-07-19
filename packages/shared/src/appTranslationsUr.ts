@@ -3099,6 +3099,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "reports.widgets.noEmail": "کوئی ای میل نہیں",
   "reports.widgets.class": "کلاس",
   "reports.widgets.totalCountText": "کل {count}",
+  "reports.widgets.matchedCountText": "{total} میں سے {matched} مماثل",
   "reports.widgets.statusOn": "آن",
   "reports.widgets.statusOff": "آف",
   "reports.widgets.alertLevel": "الرٹ لیول",

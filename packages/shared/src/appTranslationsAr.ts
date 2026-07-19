@@ -2538,6 +2538,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "reports.widgets.noEmail": "لا يوجد بريد إلكتروني",
   "reports.widgets.class": "الفصل",
   "reports.widgets.totalCountText": "الإجمالي {count}",
+  "reports.widgets.matchedCountText": "{matched} من {total} مطابقة",
   "reports.widgets.statusOn": "تشغيل",
   "reports.widgets.statusOff": "إيقاف",
   "reports.widgets.alertLevel": "مستوى التنبيه",

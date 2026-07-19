@@ -7,6 +7,7 @@ import { type Invoice } from '@/lib/data/financeData';
 import { type AttendanceRecord } from '@/lib/data/attendanceData';
 import { type Distribution, type Denomination } from '@/lib/data/hasanatData';
 import type { QuestionBankQuestion, QuestionBankTest, QuestionBankResult } from '@mms/shared';
+import { type TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 export type ReportCollection =
   | "students"
@@ -343,7 +344,8 @@ export function computeCustomCard(
     tests: QuestionBankTest[];
     assessment_results: QuestionBankResult[];
     hasanat_denoms?: Denomination[];
-  }
+  },
+  t?: TranslationFunction
 ) {
   const collectionRows = (collections[card.collection] as Record<string, unknown>[]) || [];
   
@@ -403,7 +405,9 @@ export function computeCustomCard(
   if (card.subTextType === "fixed") {
     subText = card.fixedSubText || "";
   } else {
-    subText = `${filteredRows.length} of ${collectionRows.length} matched`;
+    subText = t
+      ? t("reports.widgets.matchedCountText", { matched: filteredRows.length, total: collectionRows.length })
+      : `${filteredRows.length} of ${collectionRows.length} matched`;
   }
 
   let trendValue = card.trend || 0;

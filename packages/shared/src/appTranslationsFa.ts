@@ -2946,6 +2946,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "reports.widgets.title": "ابزارک‌های تحلیلی",
   "reports.widgets.toggleStatus": "تغییر وضعیت",
   "reports.widgets.totalCountText": "{count} کل",
+  "reports.widgets.matchedCountText": "{matched} از {total} منطبق",
   "reports.widgets.unpinWidget": "برداشتن سنجاق ابزارک",
   "sessions.classes.noTeachersHint": "قبل از تعیین کلاس‌ها، معلمان را در بخش معلمان اضافه کنید.",
   "sessions.classes.teacher": "معلم",

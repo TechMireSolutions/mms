@@ -3104,6 +3104,7 @@ export const APP_TRANSLATIONS_EN = {
   "reports.widgets.noEmail": "No Email",
   "reports.widgets.class": "Class",
   "reports.widgets.totalCountText": "{count} total",
+  "reports.widgets.matchedCountText": "{matched} of {total} matched",
   "reports.widgets.statusOn": "ON",
   "reports.widgets.statusOff": "OFF",
   "reports.widgets.alertLevel": "Alert Level",

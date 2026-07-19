@@ -32,6 +32,7 @@ import { computeCustomCard as computeCustomCardShared, CustomCard } from "@/tena
 import DynamicCardBuilder from "@/tenant/features/reports/components/DynamicCardBuilder";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
+import { type TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 interface KPIItem {
@@ -152,9 +153,10 @@ function computeCustomCard(
     tests: QuestionBankTest[];
     assessment_results: QuestionBankResult[];
     hasanat_denoms?: Denomination[];
-  }
+  },
+  t: TranslationFunction
 ): KPIItem & { categories: string[] } {
-  const computedCard = computeCustomCardShared(card, collections);
+  const computedCard = computeCustomCardShared(card, collections, t);
   return {
     label: computedCard.title,
     value: String(computedCard.value),
@@ -720,7 +722,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
           return {
             label: card.title,
             value: String(aggregateValue.finalValue),
-            sub: card.fixedSubText || `${aggregateValue.totalCount} total`,
+            sub: card.fixedSubText || t('reports.widgets.totalCountText', { count: aggregateValue.totalCount }),
             icon: (ICONS[card.icon] || Users) as LucideIcon,
             color: (card.color === "emerald" ? "green" : card.color) as KPIItem["color"],
             trend: "flat" as const,
@@ -736,7 +738,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
           return {
             label: card.title,
             value: String(aggregateValue.finalValue),
-            sub: card.fixedSubText || `${aggregateValue.totalCount} total`,
+            sub: card.fixedSubText || t('reports.widgets.totalCountText', { count: aggregateValue.totalCount }),
             icon: (ICONS[card.icon] || Users) as LucideIcon,
             color: (card.color === "emerald" ? "green" : card.color) as KPIItem["color"],
             trend: "flat" as const,
@@ -752,7 +754,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
           return {
             label: card.title,
             value: String(aggregateValue.finalValue),
-            sub: card.fixedSubText || `${aggregateValue.totalCount} total`,
+            sub: card.fixedSubText || t('reports.widgets.totalCountText', { count: aggregateValue.totalCount }),
             icon: (ICONS[card.icon] || Users) as LucideIcon,
             color: (card.color === "emerald" ? "green" : card.color) as KPIItem["color"],
             trend: "flat" as const,
@@ -773,7 +775,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         questions: questionBankQuestions,
         tests: questionBankTests,
         assessment_results: questionBankResults,
-      });
+      }, t);
     });
   }, [
     customCards,

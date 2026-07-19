@@ -431,6 +431,7 @@ export default function Dashboard() {
           tests,
           assessment_results: assessmentResults,
         },
+        t,
       );
 
       // Resolve dynamic trend for standard cards based on category/id keywords
