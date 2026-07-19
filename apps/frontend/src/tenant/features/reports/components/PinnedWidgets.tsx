@@ -568,9 +568,12 @@ function CustomWidgetRenderer({
     
     if (isCompact) {
       return (
-        <button
+        <motion.button
+          whileHover={{ scale: 1.04, y: -2 }}
+          whileTap={{ scale: 0.96 }}
+          transition={{ type: "spring", stiffness: 450, damping: 20 }}
           onClick={() => onMetricClick(widget)}
-          className="w-[100px] h-[100px] p-2.5 text-center flex flex-col justify-between items-center rounded-2xl border transition-all duration-300 cursor-pointer outline-none select-none relative overflow-hidden surface-glass border-border/55 hover:border-primary/20 hover:shadow-md"
+          className="w-[100px] h-[100px] p-2.5 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden surface-glass border-border/55 hover:border-primary/20 hover:shadow-md"
           type="button"
         >
           <span className="text-[7.5px] font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
@@ -582,12 +585,17 @@ function CustomWidgetRenderer({
           <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
             {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
           </span>
-        </button>
+        </motion.button>
       );
     }
     
     return (
-      <div className="rounded-2xl border border-border/55 p-5 surface-glass hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 relative text-left flex flex-col justify-between min-h-[140px] font-sans overflow-hidden group">
+      <motion.div
+        layout
+        whileHover={{ y: -4, scale: 1.015 }}
+        transition={{ type: "spring", stiffness: 350, damping: 25 }}
+        className="rounded-2xl border border-border/55 p-5 surface-glass hover:shadow-surface-lg transition-all relative text-left flex flex-col justify-between min-h-[140px] font-sans overflow-hidden group"
+      >
         <div className={`absolute -right-8 -top-8 w-20 h-20 rounded-full ${computed.color === 'emerald' ? 'bg-success/5 blur-lg group-hover:bg-success/10' : computed.color === 'blue' ? 'bg-info/5 blur-lg group-hover:bg-info/10' : computed.color === 'violet' ? 'bg-primary/5 blur-lg group-hover:bg-primary/10' : computed.color === 'amber' ? 'bg-warning/5 blur-lg group-hover:bg-warning/10' : 'bg-destructive/5 blur-lg group-hover:bg-destructive/10'} transition-all duration-500`} />
         <div className="flex items-start justify-between">
           <div className={`w-9 h-9 rounded-lg ${colorClasses.bg} ring-4 ${colorClasses.ring} flex items-center justify-center aspect-square flex-shrink-0`}>
@@ -612,7 +620,7 @@ function CustomWidgetRenderer({
         <footer className="text-[10px] text-muted-foreground mt-3 border-t border-border/30 pt-2 truncate">
           {computed.sub}
         </footer>
-      </div>
+      </motion.div>
     );
   }
 
@@ -634,9 +642,12 @@ function CustomWidgetRenderer({
       const displayAsProgress = resolvedWidgetType === "attendance-summary";
       if (displayAsProgress) {
         return (
-          <button
+          <motion.button
+            whileHover={{ scale: 1.04, y: -2 }}
+            whileTap={{ scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 450, damping: 20 }}
             onClick={() => onMetricClick(widget)}
-            className={`w-[100px] h-[100px] p-1.5 text-center flex flex-col justify-between items-center rounded-2xl border transition-all duration-300 cursor-pointer outline-none select-none relative overflow-hidden ${
+            className={`w-[100px] h-[100px] p-1.5 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
               alertScheme 
                 ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse` 
                 : "surface-glass border-border/55 hover:border-primary/20 hover:shadow-md"
@@ -652,13 +663,16 @@ function CustomWidgetRenderer({
             <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
               {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
             </span>
-          </button>
+          </motion.button>
         );
       } else {
         return (
-          <button
+          <motion.button
+            whileHover={{ scale: 1.04, y: -2 }}
+            whileTap={{ scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 450, damping: 20 }}
             onClick={() => onMetricClick(widget)}
-            className={`w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border transition-all duration-300 cursor-pointer outline-none select-none relative overflow-hidden ${
+            className={`w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
               alertScheme 
                 ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse` 
                 : "surface-glass border-border/55 hover:border-primary/20 hover:shadow-md"
@@ -674,16 +688,19 @@ function CustomWidgetRenderer({
             <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
               {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
             </span>
-          </button>
+          </motion.button>
         );
       }
     }
 
     if (resolvedWidgetType === "kpi") {
       return (
-        <button
+        <motion.button
+          whileHover={{ scale: 1.04, y: -2 }}
+          whileTap={{ scale: 0.96 }}
+          transition={{ type: "spring", stiffness: 450, damping: 20 }}
           onClick={() => onMetricClick(widget)}
-          className={`w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border transition-all duration-300 cursor-pointer outline-none select-none relative overflow-hidden ${
+          className={`w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
             alertScheme 
               ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse` 
               : "surface-glass border-border/55 hover:border-primary/20 hover:shadow-md"
@@ -699,15 +716,18 @@ function CustomWidgetRenderer({
           <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
             {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
           </span>
-        </button>
+        </motion.button>
       );
     }
 
     if (resolvedWidgetType === "progress") {
       return (
-        <button
+        <motion.button
+          whileHover={{ scale: 1.04, y: -2 }}
+          whileTap={{ scale: 0.96 }}
+          transition={{ type: "spring", stiffness: 450, damping: 20 }}
           onClick={() => onMetricClick(widget)}
-          className={`w-[100px] h-[100px] p-1.5 text-center flex flex-col justify-between items-center rounded-2xl border transition-all duration-300 cursor-pointer outline-none select-none relative overflow-hidden ${
+          className={`w-[100px] h-[100px] p-1.5 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
             alertScheme 
               ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse` 
               : "surface-glass border-border/55 hover:border-primary/20 hover:shadow-md"
@@ -723,7 +743,7 @@ function CustomWidgetRenderer({
           <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
             {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
           </span>
-        </button>
+        </motion.button>
       );
     }
 
@@ -824,7 +844,9 @@ function CustomWidgetRenderer({
   return (
     <motion.div
       layout
-      className={`rounded-2xl border p-5 flex flex-col justify-between shadow-sm relative group hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 overflow-hidden ${
+      whileHover={{ y: -4, scale: 1.015 }}
+      transition={{ type: "spring", stiffness: 350, damping: 25 }}
+      className={`rounded-2xl border p-5 flex flex-col justify-between shadow-sm relative group hover:shadow-surface-lg transition-all overflow-hidden ${
         alertScheme 
           ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} border-[1.5px]` 
           : "surface-glass border-border/55"
@@ -1075,27 +1097,41 @@ export function DashboardWidgets({
         </div>
         
         {/* Layout Density Controls */}
-        <div className="flex items-center gap-1 border border-border/60 bg-muted/20 p-1 rounded-xl shadow-inner backdrop-blur-xs">
+        <div className="flex items-center gap-1 border border-border/60 bg-muted/20 p-1 rounded-xl shadow-inner backdrop-blur-xs relative select-none">
           <button
             onClick={() => handleToggleGridMode("comfortable")}
-            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer relative z-10 ${
               gridMode === "comfortable" 
-                ? "bg-card text-foreground shadow-sm scale-[1.02] border border-border/40" 
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/10"
+                ? "text-foreground" 
+                : "text-muted-foreground hover:text-foreground"
             }`}
             type="button"
           >
+            {gridMode === "comfortable" && (
+              <motion.div
+                layoutId="gridModeHighlight"
+                className="absolute inset-0 bg-card rounded-lg shadow-xs border border-border/40 -z-10"
+                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              />
+            )}
             {t("reports.widgets.comfortable")}
           </button>
           <button
             onClick={() => handleToggleGridMode("compact")}
-            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer relative z-10 ${
               gridMode === "compact" 
-                ? "bg-card text-foreground shadow-sm scale-[1.02] border border-border/40" 
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/10"
+                ? "text-foreground" 
+                : "text-muted-foreground hover:text-foreground"
             }`}
             type="button"
           >
+            {gridMode === "compact" && (
+              <motion.div
+                layoutId="gridModeHighlight"
+                className="absolute inset-0 bg-card rounded-lg shadow-xs border border-border/40 -z-10"
+                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              />
+            )}
             {t("reports.widgets.compact")}
           </button>
         </div>
@@ -1106,79 +1142,89 @@ export function DashboardWidgets({
           ? "flex flex-wrap gap-2.5 pt-1"
           : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pt-1"
       }>
-        {activeWidgets.map((widget) => {
-          let colSpanClass = "";
-          if (gridMode !== "compact") {
-            if (widget.widgetType === "overdue-obligations") {
-              colSpanClass = "col-span-full";
-            } else if (
-              [
-                "sessions-list",
-                "attendance-summary",
-                "fee-summary",
-                "outstanding-list",
-                "enrollment-trends",
-                "revenue-expenses",
-                "attendance-rate",
-                "hasanat-distribution"
-              ].includes(widget.widgetType || "")
-            ) {
-              colSpanClass = "lg:col-span-2 md:col-span-3 col-span-1";
+        <AnimatePresence mode="popLayout">
+          {activeWidgets.map((widget) => {
+            let colSpanClass = "";
+            if (gridMode !== "compact") {
+              if (widget.widgetType === "overdue-obligations") {
+                colSpanClass = "col-span-full";
+              } else if (
+                [
+                  "sessions-list",
+                  "attendance-summary",
+                  "fee-summary",
+                  "outstanding-list",
+                  "enrollment-trends",
+                  "revenue-expenses",
+                  "attendance-rate",
+                  "hasanat-distribution"
+                ].includes(widget.widgetType || "")
+              ) {
+                colSpanClass = "lg:col-span-2 md:col-span-3 col-span-1";
+              }
             }
-          }
-          return (
-            <div key={widget.id} className={`relative group ${colSpanClass}`}>
-              <CustomWidgetRenderer
-                widget={widget}
-                collections={collections}
-                isCompact={gridMode === "compact"}
-                isEditMode={isEditMode}
-                onSwitchToggle={handleToggleSwitchState}
-                onMetricClick={handleMetricClick}
-              />
-              
-              {/* Overlaid unpin/edit/delete action handles */}
-              <div className={`absolute top-2.5 right-2.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 z-10 transition-all ${
-                gridMode === "compact" ? "scale-75 top-0.5 right-0.5" : ""
-              }`}>
-                {isEditMode && onEditWidget && (
+            return (
+              <motion.div
+                key={widget.id}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                className={`relative group ${colSpanClass}`}
+              >
+                <CustomWidgetRenderer
+                  widget={widget}
+                  collections={collections}
+                  isCompact={gridMode === "compact"}
+                  isEditMode={isEditMode}
+                  onSwitchToggle={handleToggleSwitchState}
+                  onMetricClick={handleMetricClick}
+                />
+                
+                {/* Overlaid unpin/edit/delete action handles */}
+                <div className={`absolute top-2.5 right-2.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 z-10 transition-all ${
+                  gridMode === "compact" ? "scale-75 top-0.5 right-0.5" : ""
+                }`}>
+                  {isEditMode && onEditWidget && (
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onEditWidget(widget);
+                      }}
+                      className="p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-primary hover:text-primary-foreground text-muted-foreground transition-all cursor-pointer"
+                      title={t("reports.widgets.editWidget")}
+                      type="button"
+                    >
+                      <Pencil className="w-3 h-3" />
+                    </button>
+                  )}
+                  {isEditMode && onDeleteWidget && !widget.id.startsWith("def-") && (
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onDeleteWidget(widget.id);
+                      }}
+                      className="p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-destructive hover:text-destructive-foreground text-muted-foreground transition-all cursor-pointer"
+                      title={t("reports.widgets.deleteWidget")}
+                      type="button"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  )}
                   <button
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onEditWidget(widget);
-                    }}
-                    className="p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-primary hover:text-primary-foreground text-muted-foreground transition-all cursor-pointer"
-                    title={t("reports.widgets.editWidget")}
+                    onClick={() => handleLocalUnpin(widget.id)}
+                    className="p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all cursor-pointer"
+                    title={t("reports.widgets.unpinWidget")}
                     type="button"
                   >
-                    <Pencil className="w-3 h-3" />
+                    <PinOff className="w-3 h-3" />
                   </button>
-                )}
-                {isEditMode && onDeleteWidget && !widget.id.startsWith("def-") && (
-                  <button
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onDeleteWidget(widget.id);
-                    }}
-                    className="p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-destructive hover:text-destructive-foreground text-muted-foreground transition-all cursor-pointer"
-                    title={t("reports.widgets.deleteWidget")}
-                    type="button"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                )}
-                <button
-                  onClick={() => handleLocalUnpin(widget.id)}
-                  className="p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all cursor-pointer"
-                  title={t("reports.widgets.unpinWidget")}
-                  type="button"
-                >
-                  <PinOff className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-          );
-        })}
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
 
       {/* Drilldown modal rendering */}

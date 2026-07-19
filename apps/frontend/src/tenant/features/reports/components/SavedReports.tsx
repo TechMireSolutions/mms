@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useCallback } from "react";
 import { Bookmark, Trash2, Play, Plus, Clock, User } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { saveCollection } from "@/lib/db";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -7,6 +8,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { notify } from "@/lib/notify";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { formatDate } from "@mms/shared";
@@ -142,14 +144,13 @@ export default function SavedReports({
           </p>
         </div>
         {onApplyFilters && (
-          <button
+          <Button
             onClick={() => setSaveOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-            type="button"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider h-9 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             {t("reports.saved.saveCurrent") || "Save Current"}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -161,47 +162,55 @@ export default function SavedReports({
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {saved.map((report) => (
-            <div key={report.id} className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm flex flex-col gap-3 text-left">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h4 className="text-sm font-semibold text-foreground">{report.name}</h4>
-                  <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${CATEGORY_COLOR[report.category] || "bg-muted text-muted-foreground"}`}>
-                    {report.category}
+          <AnimatePresence mode="popLayout">
+            {saved.map((report) => (
+              <motion.div
+                key={report.id}
+                layout
+                whileHover={{ y: -4, scale: 1.015 }}
+                transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm hover:shadow-surface-lg transition-all flex flex-col gap-3 text-left group"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground">{report.name}</h4>
+                    <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${CATEGORY_COLOR[report.category] || "bg-muted text-muted-foreground"}`}>
+                      {report.category}
+                    </span>
+                  </div>
+                  <Bookmark className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                </div>
+                <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {formatLastRunTime(report.lastRun)}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <User className="w-3 h-3" />
+                    {report.createdBy}
                   </span>
                 </div>
-                <Bookmark className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-              </div>
-              <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {formatLastRunTime(report.lastRun)}
-                </span>
-                <span className="flex items-center gap-1">
-                  <User className="w-3 h-3" />
-                  {report.createdBy}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 pt-1 border-t border-border">
-                {onApplyFilters && (
+                <div className="flex items-center gap-2 pt-1 border-t border-border">
+                  {onApplyFilters && (
+                    <button
+                      onClick={() => handleRun(report)}
+                      className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                      type="button"
+                    >
+                      <Play className="w-3 h-3" /> {t("reports.saved.run") || "Run"}
+                    </button>
+                  )}
                   <button
-                    onClick={() => handleRun(report)}
-                    className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                    onClick={() => handleDelete(report.id)}
+                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors ml-auto"
                     type="button"
                   >
-                    <Play className="w-3 h-3" /> {t("reports.saved.run") || "Run"}
+                    <Trash2 className="w-3 h-3" /> {t("reports.saved.delete") || "Delete"}
                   </button>
-                )}
-                <button
-                  onClick={() => handleDelete(report.id)}
-                  className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors ml-auto"
-                  type="button"
-                >
-                  <Trash2 className="w-3 h-3" /> {t("reports.saved.delete") || "Delete"}
-                </button>
-              </div>
-            </div>
-          ))}
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       )}
 
