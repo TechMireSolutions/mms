@@ -18,6 +18,8 @@ export const DEFAULT_WIDGET_TITLE_KEYS: Partial<Record<string, AppTranslationKey
   'def-card-accountant-outstanding': 'widget.title.outstandingPayments',
   'def-card-accountant-revenue': 'widget.title.totalRevenueYtd',
   'def-card-accountant-expenses': 'widget.title.totalExpensesYtd',
+  'def-card-admin-contacts': 'widget.title.totalContacts',
+  'def-card-accountant-contacts': 'widget.title.totalContacts',
   'def-contacts-total': 'widget.title.totalContacts',
   'def-contacts-conversion': 'widget.title.activeLeadsRate',
   'def-students-kpi': 'widget.title.activeStudents',

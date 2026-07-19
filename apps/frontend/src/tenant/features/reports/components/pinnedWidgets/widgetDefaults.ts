@@ -22,6 +22,38 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         isPinnedToDashboard: true
       },
       {
+        id: "def-card-admin-contacts",
+        title: "Total Contacts",
+        category: "contacts",
+        collection: "contacts",
+        widgetType: "card",
+        operation: "count",
+        icon: "Users",
+        color: "blue",
+        subTextType: "fixed",
+        fixedSubText: "Total contacts",
+        trend: 0,
+        trendType: "manual",
+        role: "admin",
+        isPinnedToDashboard: true
+      },
+      {
+        id: "def-card-accountant-contacts",
+        title: "Total Contacts",
+        category: "contacts",
+        collection: "contacts",
+        widgetType: "card",
+        operation: "count",
+        icon: "Users",
+        color: "blue",
+        subTextType: "fixed",
+        fixedSubText: "Total contacts",
+        trend: 0,
+        trendType: "manual",
+        role: "accountant",
+        isPinnedToDashboard: true
+      },
+      {
         id: "def-contacts-whatsapp",
         title: "WhatsApp Verified Rate",
         category: "contacts",
