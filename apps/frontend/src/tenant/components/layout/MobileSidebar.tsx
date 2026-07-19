@@ -28,7 +28,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
   const [openedAt, setOpenedAt] = useState<number>(0);
 
   const settings = useGlobalSettings();
-  const { t } = useTranslation();
+  const { t, isRtl } = useTranslation();
   const enabledModules = settings.enabledModules || {};
 
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>(() => {
@@ -95,7 +95,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
       />
 
       {/* Drawer */}
-      <div className="fixed left-0 top-0 h-full w-[280px] bg-sidebar z-50 lg:hidden shadow-2xl flex flex-col">
+      <div className={`fixed top-0 h-full w-[280px] bg-sidebar z-50 lg:hidden shadow-2xl flex flex-col ${isRtl ? "right-0" : "left-0"}`}>
         <div className="h-16 flex items-center justify-between px-5 border-b border-sidebar-border flex-shrink-0">
           <div className="flex items-center gap-3">
             {branding.logoUrl ? (
@@ -166,7 +166,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2, ease: "easeInOut" }}
-                        className="overflow-hidden pl-7 space-y-1 border-l border-sidebar-border/40 ml-[21px]"
+                        className="overflow-hidden ps-7 space-y-1 border-s border-sidebar-border/40 ms-[21px]"
                       >
                         {item.subItems.map((sub) => {
                           const isSubActive = isNavPathActive(location.pathname, sub.path);

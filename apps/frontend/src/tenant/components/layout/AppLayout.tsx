@@ -9,6 +9,7 @@ import MobileSidebar from "@/tenant/components/layout/MobileSidebar";
 import { useBranding } from "@/tenant/hooks/useBranding";
 import { useSessionTimeout } from "@/tenant/hooks/useSessionTimeout";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
+import { useTranslation } from "@/hooks/useTranslation";
 
 /**
  * Main authenticated application shell layout. Orchestrates the primary sidebar,
@@ -18,6 +19,7 @@ export default function AppLayout(): React.JSX.Element {
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const branding = useBranding();
+  const { isRtl } = useTranslation();
   useSessionTimeout();
 
   return (
@@ -79,7 +81,9 @@ export default function AppLayout(): React.JSX.Element {
       {/* Main Content */}
       <main
         className={`pt-14 lg:pt-16 min-h-screen flex flex-col transition-all duration-300 ${
-          sidebarCollapsed ? "lg:pl-[72px]" : "lg:pl-[260px]"
+          isRtl
+            ? sidebarCollapsed ? "lg:pr-[72px]" : "lg:pr-[260px]"
+            : sidebarCollapsed ? "lg:pl-[72px]" : "lg:pl-[260px]"
         }`}
       >
         <div className="flex-grow p-4 md:p-6 lg:p-8">

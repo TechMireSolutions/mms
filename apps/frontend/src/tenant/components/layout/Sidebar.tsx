@@ -28,7 +28,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
   const branding = useBranding();
 
   const settings = useGlobalSettings();
-  const { t } = useTranslation();
+  const { t, isRtl } = useTranslation();
   const enabledModules = settings.enabledModules || {};
 
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>(() => {
@@ -77,7 +77,9 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-screen bg-sidebar z-40 flex flex-col transition-all duration-300 ease-in-out ${
+      className={`fixed top-0 h-screen bg-sidebar z-40 flex flex-col transition-all duration-300 ease-in-out ${
+        isRtl ? "right-0" : "left-0"
+      } ${
         collapsed ? "w-[72px]" : "w-[260px]"
       }`}
     >
