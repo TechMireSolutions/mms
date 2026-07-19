@@ -11,6 +11,7 @@ import ContactCreateModal, {
 } from '@/tenant/features/contacts/components/ContactCreateModal';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useContactById, useContactsPaginated } from '@/tenant/features/contacts/hooks/useContacts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,6 +56,7 @@ export default function ContactPicker({
   createWithQueryLabel,
   error = false,
 }: ContactPickerProps): React.JSX.Element {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -142,11 +144,14 @@ export default function ContactPicker({
               </div>
             )}
             <input
+              id="contact-picker-avatar-file-input"
+              name="contactPickerAvatarFile"
               type="file"
               ref={fileInputRef}
               accept="image/*"
               className="hidden"
               onChange={handleFileChange}
+              aria-label={t("account.changePhoto") || "Change Photo"}
             />
           </div>
           <div className="flex-1 min-w-0">

@@ -567,7 +567,16 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
         </div>
 
         
-        <input ref={fileRef} type="file" accept=".vcf,text/vcard" className="hidden" onChange={handleFile} />
+        <input
+          id="contacts-vcf-import-file-input"
+          name="contactsVcfFile"
+          ref={fileRef}
+          type="file"
+          accept=".vcf,text/vcard"
+          className="hidden"
+          onChange={handleFile}
+          aria-label={t('contacts.sync.uploadVcf') || "Upload vCard VCF File"}
+        />
         {previewList.length === 0 && !result && (
           <Button
             type="button"

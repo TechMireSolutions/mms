@@ -21,6 +21,7 @@ import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ActionButton } from "@/components/ui/ActionButton";
+import { Button } from "@/components/ui/button";
 import ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
 import ContactCards from "@/tenant/features/contacts/components/ContactCards";
 import ContactsToolbar from "@/tenant/features/contacts/components/ContactsToolbar";
@@ -371,9 +372,9 @@ function ContactsInner() {
             {t("contacts.duplicates")}
           </ActionButton>
           {canExport && (
-            <button onClick={handleExportCSV} className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-              <Download className="w-3.5 h-3.5" /> {t("common.export")}
-            </button>
+            <ActionButton variant="ghost" icon={Download} onClick={handleExportCSV}>
+              {t("common.export")}
+            </ActionButton>
           )}
           {canWrite && (
             <ActionButton variant="primary" icon={UserPlus} onClick={handleNew}>{t("contacts.addContact")}</ActionButton>
@@ -440,7 +441,17 @@ function ContactsInner() {
               {filterGender && (
                 <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="flex flex-wrap gap-1.5">
                   <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
-                    {t("contacts.genderFilter")}: {genderLabel(filterGender)} <button type="button" onClick={() => setFilterGender("")} className="hover:opacity-70" aria-label={t("contacts.clearFilters")}><X className="w-3 h-3" /></button>
+                    {t("contacts.genderFilter")}: {genderLabel(filterGender)}{" "}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      type="button"
+                      onClick={() => setFilterGender("")}
+                      className="h-4 w-4 p-0 hover:bg-transparent hover:opacity-70"
+                      aria-label={t("contacts.clearFilters")}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
                   </span>
                 </motion.div>
               )}
@@ -449,7 +460,7 @@ function ContactsInner() {
             <AnimatePresence>
               {selected.length > 0 && (
                 <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                  className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-primary/[0.05] border border-primary/20 backdrop-blur-md">
+                  className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-card/90 border border-primary/20 shadow-md backdrop-blur-md">
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-primary" />
                     <span className="text-sm font-semibold text-foreground">{t("contacts.selectedCount", { count: selected.length })}</span>
@@ -464,65 +475,76 @@ function ContactsInner() {
                       return (
                         <>
                           {bulkActions.includes("whatsapp") && !viewingDeleted && (
-                          <button
-                            type="button"
-                            disabled={!waClickable}
-                            onClick={() => setMessagingTarget({ channel: "whatsapp", contacts: waTargets })}
-                            aria-label={t("contacts.whatsappBulk", { count: waTargets.length })}
-                            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold text-primary-foreground bg-success transition-all ${
-                              waClickable ? "hover:scale-[1.02] active:scale-[0.98]" : "opacity-40 cursor-not-allowed"
-                            }`}
-                          >
-                            <MessageCircle className="w-3.5 h-3.5" /> {t("contacts.whatsappBulk", { count: waTargets.length })}
-                          </button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={!waClickable}
+                              onClick={() => setMessagingTarget({ channel: "whatsapp", contacts: waTargets })}
+                              aria-label={t("contacts.whatsappBulk", { count: waTargets.length })}
+                              className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" /> {t("contacts.whatsappBulk", { count: waTargets.length })}
+                            </Button>
                           )}
                           {bulkActions.includes("sms") && !viewingDeleted && (
-                          <button
-                            type="button"
-                            disabled={!smsClickable}
-                            onClick={() => setMessagingTarget({ channel: "sms", contacts: smsReady })}
-                            aria-label={t("contacts.smsBulk", { count: smsReady.length })}
-                            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-primary/40 bg-primary/10 text-sm font-semibold text-primary transition-all dark:border-primary/40 dark:bg-primary/20 dark:text-primary ${
-                              smsClickable ? "hover:scale-[1.02] active:scale-[0.98]" : "opacity-40 cursor-not-allowed"
-                            }`}
-                          >
-                            <MessageSquare className="w-3.5 h-3.5" /> {t("contacts.smsBulk", { count: smsReady.length })}
-                          </button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              disabled={!smsClickable}
+                              onClick={() => setMessagingTarget({ channel: "sms", contacts: smsReady })}
+                              aria-label={t("contacts.smsBulk", { count: smsReady.length })}
+                              className="gap-1.5 border-primary/40 bg-primary/10 text-primary font-semibold hover:bg-primary/20"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" /> {t("contacts.smsBulk", { count: smsReady.length })}
+                            </Button>
                           )}
                           {bulkActions.includes("export") && (
-                          <button
-                            type="button"
-                            onClick={handleBulkExport}
-                            disabled={!canExport}
-                            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted transition-all ${!canExport ? "opacity-40 cursor-not-allowed" : ""}`}
-                          >
-                            <Download className="w-3.5 h-3.5" /> {t("contacts.bulkExport")}
-                          </button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={handleBulkExport}
+                              disabled={!canExport}
+                              className="gap-1.5 font-semibold"
+                            >
+                              <Download className="w-3.5 h-3.5" /> {t("contacts.bulkExport")}
+                            </Button>
                           )}
                           {bulkActions.includes("delete") && canDelete && !viewingDeleted && (
-                            <button
+                            <Button
                               type="button"
+                              size="sm"
+                              variant="destructive"
                               onClick={requestBulkDelete}
-                              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-destructive/30 bg-destructive/10 text-sm font-semibold text-destructive hover:bg-destructive/15 transition-all"
+                              className="gap-1.5 font-semibold"
                             >
                               <Trash2 className="w-3.5 h-3.5" /> {t("contacts.bulkDelete")}
-                            </button>
+                            </Button>
                           )}
                           {viewingDeleted && canDelete && (
-                            <button
+                            <Button
                               type="button"
+                              size="sm"
+                              variant="outline"
                               onClick={requestBulkRestore}
-                              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-primary/30 bg-primary/10 text-sm font-semibold text-primary hover:bg-primary/15 transition-all"
+                              className="gap-1.5 border-primary/40 text-primary font-semibold hover:bg-primary/10"
                             >
                               <RotateCcw className="w-3.5 h-3.5" /> {t("contacts.bulkRestore")}
-                            </button>
+                            </Button>
                           )}
                         </>
                       );
                     })()}
-                    <button onClick={() => setSelected([])} className="px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelected([])}
+                      className="text-muted-foreground hover:text-foreground font-medium"
+                    >
                       {t("contacts.deselect")}
-                    </button>
+                    </Button>
                   </div>
                 </motion.div>
               )}
@@ -553,9 +575,15 @@ function ContactsInner() {
                             : t("contacts.clickAddContact")}
                       </p>
                       {hasActiveFilters && (
-                        <button type="button" onClick={clearFilters} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={clearFilters}
+                          className="gap-1.5"
+                        >
                           <RefreshCw className="w-3 h-3" /> {t("contacts.clearFilters")}
-                        </button>
+                        </Button>
                       )}
                     </div>
                   ) : (

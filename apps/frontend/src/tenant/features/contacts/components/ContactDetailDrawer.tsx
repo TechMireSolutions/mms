@@ -866,11 +866,14 @@ export default function ContactDetailDrawer({
                   </p>
                 </div>
                 <input
+                  id="contact-drawer-document-upload-input"
+                  name="contactDocumentUpload"
                   type="file"
                   ref={fileInputRef}
                   onChange={handleFileChange}
                   multiple
                   className="hidden"
+                  aria-label={t('contacts.detail.cloudStorageRepository') || "Upload Documents"}
                 />
                 <Button
                   disabled={isUploading}
