@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { 
   LayoutDashboard, Pin, X, PinOff, Trash2,
-  SlidersHorizontal, Info, Pencil, ArrowUpRight, ShieldAlert, ArrowRight, Search, EyeOff, Users
+  SlidersHorizontal, Info, Pencil, ArrowUpRight, ShieldAlert, ArrowRight, Search, EyeOff, Users,
+  ChevronLeft, ChevronRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatMoney, type AppTranslationKey } from "@mms/shared";
@@ -105,6 +106,7 @@ function WidgetDrilldownModal({
 }): React.JSX.Element {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [collections, setCollections] = useState(() => getWidgetCollections());
 
   useEffect(() => {
@@ -114,6 +116,11 @@ function WidgetDrilldownModal({
     window.addEventListener("local-database-update", handleUpdate);
     return () => window.removeEventListener("local-database-update", handleUpdate);
   }, []);
+
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    setCurrentPage(1);
+  };
 
   const students = useMemo(() => collections.students, [collections]);
   const studentNameMap = useMemo(() => {
@@ -128,6 +135,15 @@ function WidgetDrilldownModal({
       return Object.values(widgetRecord).some((fieldValue) => String(fieldValue).toLowerCase().includes(searchText));
     });
   }, [widget, collections, search]);
+
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(filteredRecords.length / 10));
+  }, [filteredRecords]);
+
+  const paginatedRecords = useMemo(() => {
+    const startIndex = (currentPage - 1) * 10;
+    return filteredRecords.slice(startIndex, startIndex + 10);
+  }, [filteredRecords, currentPage]);
 
   const handleToggleStatus = (recordId: string) => {
     try {
@@ -207,7 +223,7 @@ function WidgetDrilldownModal({
         <div className="p-4 border-b border-border/45 bg-muted/10 flex items-center justify-between gap-4">
           <SearchBar
             value={search}
-            onChange={setSearch}
+            onChange={handleSearchChange}
             placeholder={t("reports.widgets.searchRecords")}
             className="flex-1 max-w-sm"
           />
@@ -235,7 +251,7 @@ function WidgetDrilldownModal({
                   </TableRow>
                 </TableHeader>
                 <TableBody className="divide-y divide-border/60">
-                  {filteredRecords.map((recordSource, index) => {
+                  {paginatedRecords.map((recordSource, index) => {
                     const displayRecord = recordSource as unknown as WidgetRecordFields;
                     const recordId = String(displayRecord.id || index);
                     
@@ -316,6 +332,40 @@ function WidgetDrilldownModal({
             </div>
           )}
         </div>
+
+        {/* Modal Pagination Footer */}
+        {totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-border/45 bg-muted/20 flex items-center justify-end select-none text-xs gap-4">
+            <span className="text-[11px] font-bold text-muted-foreground">
+              {t("reports.widgets.foundCount", { count: filteredRecords.length })}
+            </span>
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="text-[11px] font-bold text-muted-foreground select-none">
+                {currentPage} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
+                aria-label="Next page"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );

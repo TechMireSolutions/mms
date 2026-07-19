@@ -1,36 +1,13 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-  GraduationCap, CalendarCheck, BookOpen, UserCheck,
-  DollarSign, AlertCircle, Star, TrendingUp, TrendingDown, Receipt,
-  Users, Target, ShieldCheck, Trash2, Plus, Pencil,
-  Award, Clock, Heart, Briefcase, Activity, CheckCircle2, PieChart,
-  Zap, BarChart2
+  TrendingUp, TrendingDown, Trash2, Plus, Pencil, DollarSign
 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
+import { COLOR_MAP, ICONS_LIST as ICONS } from "@/tenant/features/reports/components/pinnedWidgets/types";
 
 const MotionButton = motion.create(Button);
-
-const ICONS: Record<string, React.ElementType> = {
-  GraduationCap, CalendarCheck, BookOpen, UserCheck, DollarSign, AlertCircle, Star, TrendingUp, TrendingDown, Receipt,
-  Users, Target, ShieldCheck, Award, Clock, Heart, Briefcase, Activity, CheckCircle2, PieChart,
-  Zap, BarChart2
-};
-
-interface ColorTheme {
-  bg: string;
-  text: string;
-  ring: string;
-}
-
-const COLOR_MAP: Record<string, ColorTheme> = {
-  emerald: { bg: "bg-success/10", text: "text-success", ring: "ring-success/20" },
-  blue: { bg: "bg-info/10", text: "text-info", ring: "ring-info/20" },
-  violet: { bg: "bg-primary/10", text: "text-primary", ring: "ring-primary/20" },
-  amber: { bg: "bg-warning/10", text: "text-warning", ring: "ring-warning/20" },
-  red: { bg: "bg-destructive/10", text: "text-destructive", ring: "ring-destructive/20" },
-};
 
 const ACCENT_BAR_MAP: Record<string, string> = {
   emerald: "bg-success",
