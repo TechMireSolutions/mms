@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Shield, AlertTriangle, CheckCircle2, Lock, Phone, Mail, Send } from 'lucide-react';
 import {
   filterRbacModulesForSettings,
@@ -15,6 +15,8 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
 import { UserRoleBadge, UserStatusBadge } from '@/tenant/features/users/components/UserBadges';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
+
+import { useMessageComposerState } from '@/hooks/useMessageComposerState';
 
 const MessageComposer = React.lazy(() => import('@/components/ui/MessageComposer'));
 
@@ -67,10 +69,7 @@ export function UserDetailModal({
   const workspaceRoles = useWorkspaceRoles();
   const visibleModules = filterRbacModulesForSettings(globalSettings.enabledModules);
 
-  const [messagingTarget, setMessagingTarget] = useState<{
-    channel: 'sms' | 'whatsapp' | 'email';
-    recipient: { id: string | number; name: string; phone: string; email?: string };
-  } | null>(null);
+  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
 
   if (!user) return null;
 
@@ -101,10 +100,12 @@ export function UserDetailModal({
                   variant="ghost"
                   type="button"
                   className="h-6 w-6 rounded-lg p-0 text-muted-foreground hover:text-primary transition-colors hover:bg-muted"
-                  onClick={() => setMessagingTarget({
-                    channel: 'email',
-                    recipient: { id: user.id, name: user.name, phone: user.phone || '', email: user.email }
-                  })}
+                  onClick={() => openComposer('email', [{
+                    id: user.id,
+                    name: user.name,
+                    phone: user.phone || '',
+                    email: user.email
+                  }])}
                   title={t('users.sendEmail')}
                 >
                   <Mail className="h-3.5 w-3.5" />
@@ -130,10 +131,12 @@ export function UserDetailModal({
                       variant="ghost"
                       type="button"
                       className="h-6 w-6 rounded-lg p-0 text-muted-foreground hover:text-primary transition-colors hover:bg-muted"
-                      onClick={() => setMessagingTarget({
-                        channel: 'whatsapp',
-                        recipient: { id: user.id, name: user.name, phone: user.phone || '', email: user.email }
-                      })}
+                      onClick={() => openComposer('whatsapp', [{
+                        id: user.id,
+                        name: user.name,
+                        phone: user.phone || '',
+                        email: user.email
+                      }])}
                       title={t('contacts.detail.call')}
                     >
                       <Phone className="h-3.5 w-3.5" />
@@ -142,10 +145,12 @@ export function UserDetailModal({
                       variant="ghost"
                       type="button"
                       className="h-6 w-6 rounded-lg p-0 text-muted-foreground hover:text-primary transition-colors hover:bg-muted"
-                      onClick={() => setMessagingTarget({
-                        channel: 'sms',
-                        recipient: { id: user.id, name: user.name, phone: user.phone || '', email: user.email }
-                      })}
+                      onClick={() => openComposer('sms', [{
+                        id: user.id,
+                        name: user.name,
+                        phone: user.phone || '',
+                        email: user.email
+                      }])}
                       title={t('users.sendSms')}
                     >
                       <Send className="h-3.5 w-3.5" />
@@ -217,8 +222,8 @@ export function UserDetailModal({
         <React.Suspense fallback={null}>
           <MessageComposer
             channel={messagingTarget.channel}
-            recipients={[messagingTarget.recipient]}
-            onClose={() => setMessagingTarget(null)}
+            recipients={messagingTarget.recipients}
+            onClose={closeComposer}
           />
         </React.Suspense>
       )}

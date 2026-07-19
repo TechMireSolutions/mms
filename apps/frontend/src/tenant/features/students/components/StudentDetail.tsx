@@ -1,4 +1,4 @@
-import React, { useState, useMemo, lazy, Suspense } from "react";
+import React, { useMemo, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Edit2, MessageCircle, Phone, MessageSquare,
@@ -18,6 +18,7 @@ import { calcAge, type Student } from '@/lib/data/studentsData';
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { AVATAR_GRADIENT_ROTATION } from "@/lib/semanticTone";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
+import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 
 interface StudentDetailProps {
   student: Student;
@@ -31,10 +32,7 @@ const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
  * Detailed slide-over panel displaying student records, guardian profiles, and enrolled courses.
  */
 export default function StudentDetail({ student, onClose, onEdit }: StudentDetailProps): React.JSX.Element {
-  const [messagingTarget, setMessagingTarget] = useState<{
-    channel: "whatsapp" | "sms" | "email";
-    phone: string;
-  } | null>(null);
+  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const sessions = useSessionsCollection();
   const linkedIds = useMemo(
     () => [student.contactId, student.fatherContactId, student.motherContactId, student.guardianContactId],
@@ -173,7 +171,11 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
           {primaryPhone && (
             <button
               type="button"
-              onClick={() => setMessagingTarget({ channel: "whatsapp", phone: primaryPhone })}
+              onClick={() => openComposer("whatsapp", [{
+                id: student.id,
+                name: student.name,
+                phone: primaryPhone,
+              }])}
               className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-success/10 hover:border-success/30 transition-all text-success text-center cursor-pointer"
             >
               <MessageCircle className="w-4 h-4 mx-auto" />
@@ -183,7 +185,11 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
           {primaryPhone && (
             <button
               type="button"
-              onClick={() => setMessagingTarget({ channel: "sms", phone: primaryPhone })}
+              onClick={() => openComposer("sms", [{
+                id: student.id,
+                name: student.name,
+                phone: primaryPhone,
+              }])}
               className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-amber/10 hover:border-amber/30 transition-all text-amber-600 dark:text-amber-500 text-center cursor-pointer"
             >
               <MessageSquare className="w-4 h-4 mx-auto" />
@@ -428,12 +434,8 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
         <Suspense fallback={null}>
           <MessageComposer
             channel={messagingTarget.channel}
-            recipients={[{
-              id: student.id,
-              name: student.name,
-              phone: messagingTarget.phone,
-            }]}
-            onClose={() => setMessagingTarget(null)}
+            recipients={messagingTarget.recipients}
+            onClose={closeComposer}
           />
         </Suspense>
       )}

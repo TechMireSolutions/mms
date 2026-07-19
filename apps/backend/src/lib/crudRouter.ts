@@ -462,7 +462,8 @@ export function registerBulkPutRoute<T>(
     try {
       const updated = await saveFn(parsed.data);
       return reply.send({ [responseKey]: updated });
-    } catch {
+    } catch (error) {
+      request.log.error(error, `Failed to replace ${errorMessagePrefix}`);
       return sendDatabaseError(reply, `Failed to replace ${errorMessagePrefix}`);
     }
   });

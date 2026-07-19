@@ -10,7 +10,7 @@ import {
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Contact, ContactActivity, canViewContactField, CONTACTS_MODULE_CONTRACT } from "@mms/shared";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
-import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, calcAge } from "@mms/shared";
+import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, calcAge, getInitials } from "@mms/shared";
 import { formatDate, todayISO } from "@mms/shared";
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
@@ -744,7 +744,7 @@ export default function ContactDetailDrawer({
                             <div key={relationshipIndex} className={`group flex items-center justify-between gap-3 p-4 rounded-2xl border bg-card transition-all ${DETAIL_STYLES.networkItemCard}`}>
                                <div className="flex items-center gap-3 min-w-0">
                                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors ${DETAIL_STYLES.networkItemIcon}`}>
-                                     {target ? target.name.charAt(0) : "?"}
+                                     {target ? getInitials(target.name) : "?"}
                                   </div>
                                   <div className="min-w-0">
                                      <span className={`text-[9px] font-black uppercase tracking-widest mb-0.5 block ${DETAIL_STYLES.networkRelType}`}>{relationship.relationship}</span>

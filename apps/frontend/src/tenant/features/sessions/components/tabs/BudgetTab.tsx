@@ -7,7 +7,7 @@ import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { formatMoney, formatDate } from "@mms/shared";
+import { formatMoney, formatDate, todayISO } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 /** A single income or expense transaction entry. */
@@ -29,13 +29,13 @@ interface TransactionModalProps {
 
 function TransactionModal({ open, type, currency, onClose, onSave }: TransactionModalProps) {
   const categories = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-  const [transactionDraft, setTransactionDraft] = useState({ category: categories[0], amount: "", date: new Date().toISOString().split("T")[0], note: "" });
+  const [transactionDraft, setTransactionDraft] = useState({ category: categories[0], amount: "", date: todayISO(), note: "" });
   const updateTransactionDraft = (field: keyof typeof transactionDraft, value: string) => setTransactionDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
 
   React.useEffect(() => {
     if (open) {
       const categoryOptions = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-      setTransactionDraft({ category: categoryOptions[0], amount: "", date: new Date().toISOString().split("T")[0], note: "" });
+      setTransactionDraft({ category: categoryOptions[0], amount: "", date: todayISO(), note: "" });
     }
   }, [open, type]);
 

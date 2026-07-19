@@ -8,6 +8,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/Modal";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
+import { todayISO } from "@mms/shared";
 
 interface InvoiceFormProps {
   open: boolean;
@@ -27,10 +28,6 @@ interface InvoiceDraft {
   dueDate: string;
 }
 
-function todayIso(): string {
-  return new Date().toISOString().split("T")[0];
-}
-
 function nextInvoiceId(): string {
   const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
   return `INV-${stamp}`;
@@ -44,7 +41,7 @@ const INITIAL_DRAFT: InvoiceDraft = {
   baseFee: "",
   discountType: "",
   discountValue: "0",
-  dueDate: todayIso(),
+  dueDate: todayISO(),
 };
 
 export function InvoiceForm({

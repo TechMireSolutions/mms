@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, Phone, Send } from "lucide-react";
 import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import MessageComposer from "@/components/ui/MessageComposer";
+import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SearchBar } from "@/components/ui/SearchBar";
@@ -46,10 +47,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
   );
   const { data: students = [] } = useStudentsByIds(studentIds);
 
-  const [messagingTarget, setMessagingTarget] = useState<{
-    channel: 'sms' | 'whatsapp' | 'email';
-    recipients: { id: string | number; name: string; phone: string; email?: string }[];
-  } | null>(null);
+  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
 
   const mappedRows = useMemo(() => {
     return unpaidInvoices.map((invoice) => {
@@ -117,10 +115,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                 }))
                 .filter((r) => Boolean(r.phone));
               if (recipients.length > 0) {
-                setMessagingTarget({
-                  channel: "sms",
-                  recipients,
-                });
+                openComposer("sms", recipients);
               }
             }
           }}
@@ -210,15 +205,12 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                         className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shadow-none cursor-pointer"
                         disabled={!outstandingFee.contact}
                         onClick={() => {
-                          setMessagingTarget({
-                            channel: "whatsapp",
-                            recipients: [{
-                              id: outstandingFee.studentId,
-                              name: outstandingFee.student,
-                              phone: outstandingFee.contact,
-                              email: outstandingFee.email,
-                            }],
-                          });
+                          openComposer("whatsapp", [{
+                            id: outstandingFee.studentId,
+                            name: outstandingFee.student,
+                            phone: outstandingFee.contact,
+                            email: outstandingFee.email,
+                          }]);
                         }}
                       >
                         <Phone className="w-3.5 h-3.5" aria-hidden="true" />
@@ -230,15 +222,12 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                         className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer"
                         disabled={!outstandingFee.contact}
                         onClick={() => {
-                          setMessagingTarget({
-                            channel: "sms",
-                            recipients: [{
-                              id: outstandingFee.studentId,
-                              name: outstandingFee.student,
-                              phone: outstandingFee.contact,
-                              email: outstandingFee.email,
-                            }],
-                          });
+                          openComposer("sms", [{
+                            id: outstandingFee.studentId,
+                            name: outstandingFee.student,
+                            phone: outstandingFee.contact,
+                            email: outstandingFee.email,
+                          }]);
                         }}
                       >
                         <Send className="w-3.5 h-3.5" aria-hidden="true" />
@@ -267,7 +256,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
         <MessageComposer
           channel={messagingTarget.channel}
           recipients={messagingTarget.recipients}
-          onClose={() => setMessagingTarget(null)}
+          onClose={closeComposer}
         />
       )}
     </section>

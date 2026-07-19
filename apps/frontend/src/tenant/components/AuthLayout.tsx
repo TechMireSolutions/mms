@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from "react";
 import {
   DEFAULT_BRANDING_SETTINGS,
   type PublicBranding,
+  getInitials,
 } from "@mms/shared";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import { applyTenantEntryTheme } from "@/lib/brandingThemeCore";
@@ -122,7 +123,7 @@ export default function AuthLayout({
                   aria-label={displayName}
                 >
                   <span className="font-display text-2xl font-bold text-primary" aria-hidden>
-                    {displayName.charAt(0)}
+                    {getInitials(displayName, 1)}
                   </span>
                 </div>
               )}

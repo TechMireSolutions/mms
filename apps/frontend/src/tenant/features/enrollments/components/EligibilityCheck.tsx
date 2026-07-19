@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { getInitials } from "@mms/shared";
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { calcAge } from '@/lib/data/studentsData';
 import { runFullEligibility, suggestClass, CheckResult } from '@/lib/data/enrollmentData';
@@ -79,7 +80,7 @@ export function EligibilityCheck(): React.ReactElement {
       {student && (
         <section className="flex items-center gap-3 px-4 py-3 rounded-xl bg-muted border border-border" aria-label="Student details preview">
           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <span className="text-sm font-bold text-primary">{student.name.charAt(0)}</span>
+            <span className="text-sm font-bold text-primary">{getInitials(student.name)}</span>
           </div>
           <div>
             <div className="flex items-center gap-2">

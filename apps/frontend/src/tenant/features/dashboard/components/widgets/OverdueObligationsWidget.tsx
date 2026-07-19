@@ -10,6 +10,7 @@ import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import MessageComposer from "@/components/ui/MessageComposer";
+import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
@@ -50,10 +51,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
 
   const [expanded, setExpanded] = useState(true);
   const [remindedIds, setRemindedIds] = useState<Set<number>>(new Set());
-  const [messagingTarget, setMessagingTarget] = useState<{
-    channel: 'sms' | 'whatsapp' | 'email';
-    recipients: { id: string | number; name: string; phone: string; email?: string }[];
-  } | null>(null);
+  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
 
   const {
     searchQuery,
@@ -84,15 +82,12 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
     const student = students.find((s) => String(s.id) === String(overdueStudent.id));
     const phone = student?.phone || "";
     if (!phone) return;
-    setMessagingTarget({
-      channel: "sms",
-      recipients: [{
-        id: overdueStudent.id,
-        name: overdueStudent.name,
-        phone,
-        email: student?.email || "",
-      }],
-    });
+    openComposer("sms", [{
+      id: overdueStudent.id,
+      name: overdueStudent.name,
+      phone,
+      email: student?.email || "",
+    }]);
     setRemindedIds((prev) => {
       const next = new Set(prev);
       next.add(overdueStudent.id);
@@ -115,10 +110,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
 
     if (recipients.length === 0) return;
 
-    setMessagingTarget({
-      channel: "sms",
-      recipients,
-    });
+    openComposer("sms", recipients);
     setRemindedIds((prev) => {
       const next = new Set(prev);
       recipients.forEach((r) => next.add(Number(r.id)));
@@ -313,7 +305,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
         <MessageComposer
           channel={messagingTarget.channel}
           recipients={messagingTarget.recipients}
-          onClose={() => setMessagingTarget(null)}
+          onClose={closeComposer}
         />
       )}
     </section>

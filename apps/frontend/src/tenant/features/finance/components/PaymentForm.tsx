@@ -13,6 +13,7 @@ import { FORM_INPUT } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
+import { todayISO } from "@mms/shared";
 
 interface PaymentFormProps {
   open: boolean;
@@ -33,7 +34,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
   const [paymentDraft, setPaymentDraft] = useState(() => ({
     amount: balance,
     method: "Cash",
-    date: new Date().toISOString().split("T")[0],
+    date: todayISO(),
     receivedByUserId: authUser?.id || "",
     note: "",
   }));

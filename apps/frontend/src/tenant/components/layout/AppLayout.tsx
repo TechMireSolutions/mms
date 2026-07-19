@@ -7,6 +7,7 @@ import TopBar from "@/tenant/components/layout/TopBar";
 import TopBarActions from "@/tenant/components/layout/TopBarActions";
 import MobileSidebar from "@/tenant/components/layout/MobileSidebar";
 import { useBranding } from "@/tenant/hooks/useBranding";
+import { getInitials } from "@mms/shared";
 import { useSessionTimeout } from "@/tenant/hooks/useSessionTimeout";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -67,7 +68,7 @@ export default function AppLayout(): React.JSX.Element {
           ) : (
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
               <span className="font-display text-sm font-bold text-primary">
-                {branding.madrasaName ? branding.madrasaName.charAt(0) : "م"}
+                {branding.madrasaName ? getInitials(branding.madrasaName, 1) : "م"}
               </span>
             </div>
           )}

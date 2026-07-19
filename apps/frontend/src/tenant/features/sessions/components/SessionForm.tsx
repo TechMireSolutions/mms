@@ -12,7 +12,7 @@ import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { notify } from "@/lib/notify";
 import { Session } from '@/lib/data/sessionsData';
-import { toTitleCase, AppTranslationKey } from "@mms/shared";
+import { toTitleCase, AppTranslationKey, todayISO } from "@mms/shared";
 
 interface SessionFormProps {
   open?: boolean;
@@ -44,7 +44,7 @@ export function SessionForm({
     name: session?.name ?? "",
     type: session?.type ?? "Hifz",
     status: session?.status ?? "active",
-    startDate: session?.startDate ?? new Date().toISOString().split("T")[0],
+    startDate: session?.startDate ?? todayISO(),
     endDate: session?.endDate ?? "",
     baseFee: session?.baseFee ?? 0,
     currency: session?.currency ?? defaultCurrency,

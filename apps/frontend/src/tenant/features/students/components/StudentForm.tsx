@@ -34,6 +34,7 @@ import {
   type ValidationError,
   formatDate,
   formatDateTime,
+  todayISO,
 } from "@mms/shared";
 
 function errorMessage(error: unknown): string {
@@ -120,7 +121,7 @@ export default function StudentForm({
   );
 
   const { data: nextGrNumber } = useStudentNextGrNumber({
-    registeredDate: (studentDraft.registeredDate || new Date().toISOString()).split("T")[0],
+    registeredDate: (studentDraft.registeredDate || todayISO()).split("T")[0],
     template: settings.grNumberTemplate,
     digits: settings.grNumberDigits,
     restartAnnually: settings.grNumberRestartAnnually,

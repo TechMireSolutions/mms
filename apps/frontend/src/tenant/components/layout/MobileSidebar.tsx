@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { X, ChevronRight, LogOut } from "lucide-react";
 import { useBranding } from "@/tenant/hooks/useBranding";
+import { getInitials } from "@mms/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -109,7 +110,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
             ) : (
               <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
                 <span className="text-sidebar-primary-foreground font-display text-lg font-bold">
-                  {branding.madrasaName ? branding.madrasaName.charAt(0) : "م"}
+                  {branding.madrasaName ? getInitials(branding.madrasaName, 1) : "م"}
                 </span>
               </div>
             )}

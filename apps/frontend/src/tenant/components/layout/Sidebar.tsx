@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBranding } from "@/tenant/hooks/useBranding";
+import { getInitials } from "@mms/shared";
 
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -97,7 +98,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
           ) : (
             <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center flex-shrink-0">
               <span className="text-sidebar-primary-foreground font-display text-lg font-bold">
-                {branding.madrasaName ? branding.madrasaName.charAt(0) : "م"}
+                {branding.madrasaName ? getInitials(branding.madrasaName, 1) : "م"}
               </span>
             </div>
           )}
