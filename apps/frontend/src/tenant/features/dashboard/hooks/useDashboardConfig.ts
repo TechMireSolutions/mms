@@ -28,7 +28,7 @@ export function loadDashboardPreferences(): DashboardPreferences {
   }
 
   // Fallback and migrate from legacy keys on first load
-  const legacy: DashboardPreferences = {
+  return {
     disabledCardIds: getObject<string[]>(DASHBOARD_DISABLED_CARDS_KEY, DEFAULT_DASHBOARD_PREFERENCES.disabledCardIds),
     gridMode: getObject<'comfortable' | 'compact'>(PINNED_WIDGETS_GRID_MODE_KEY, DEFAULT_DASHBOARD_PREFERENCES.gridMode),
     enrollmentChartType: getObject<'area' | 'bar' | 'line'>(ENROLLMENT_CHART_TYPE_KEY, DEFAULT_DASHBOARD_PREFERENCES.enrollmentChartType),
@@ -41,9 +41,6 @@ export function loadDashboardPreferences(): DashboardPreferences {
     hasanatChartType: getObject<'pie' | 'bar' | 'radar'>(HASANAT_CHART_TYPE_KEY, DEFAULT_DASHBOARD_PREFERENCES.hasanatChartType),
     hasanatChartColor: getObject<string>(HASANAT_CHART_COLOR_KEY, DEFAULT_DASHBOARD_PREFERENCES.hasanatChartColor),
   };
-
-  queueMicrotask(() => saveObject(DASHBOARD_PREFERENCES_KEY, legacy));
-  return legacy;
 }
 
 export function useDashboardConfig() {
@@ -60,6 +57,12 @@ export function useDashboardConfig() {
   );
 
   useEffect(() => {
+    const unified = getObject<DashboardPreferences | null>(DASHBOARD_PREFERENCES_KEY, null);
+    if (!unified) {
+      const legacy = loadDashboardPreferences();
+      saveObject(DASHBOARD_PREFERENCES_KEY, legacy);
+    }
+
     const saved = getObject<CustomWidget[] | null>(DASHBOARD_WIDGETS_KEY, null);
     const current = getOrInitializeCustomWidgets();
     if (!saved || JSON.stringify(saved) !== JSON.stringify(current)) {

@@ -30,9 +30,9 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
   const { t } = useTranslation();
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-card border border-border rounded-xl px-3.5 py-2.5 shadow-lg text-sm">
-      <p className="text-muted-foreground text-[11px] mb-0.5 m-0">{label}</p>
-      <p className="font-bold text-foreground m-0">
+    <div className="surface-glass border border-border/55 rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-left">
+      <p className="text-muted-foreground/80 text-[10px] mb-0.5 m-0 font-medium select-none">{label}</p>
+      <p className="font-bold text-foreground m-0 tabular-nums">
         {t("dashboard.widgets.studentsCount", { count: Number(payload[0].value) })}
       </p>
     </div>
@@ -92,27 +92,28 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
   const activeColor = COLOR_MAP[colorTheme] || COLOR_MAP.brand;
 
   return (
-    <section aria-labelledby="enrollment-chart-heading" className="bg-card rounded-xl border border-border p-5">
-      <header className="flex flex-wrap items-start justify-between gap-3 mb-5">
+    <section aria-labelledby="enrollment-chart-heading" className="relative overflow-hidden rounded-2xl surface-glass p-5 shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
+      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-[2px] bg-primary/60" />
+      <header className="flex flex-wrap items-start justify-between gap-3 mb-5 pl-1.5 select-none">
         <div>
-          <h3 id="enrollment-chart-heading" className="text-sm font-semibold text-foreground m-0">
+          <h3 id="enrollment-chart-heading" className="text-sm font-bold text-foreground m-0">
             {t("widget.title.enrollmentTrends")}
           </h3>
-          <p className="text-[12px] text-muted-foreground mt-0.5 m-0">
+          <p className="text-[12px] text-muted-foreground mt-1 m-0 font-medium">
             {t("dashboard.charts.enrollment.subtitle")}
           </p>
         </div>
         
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-3 ml-auto">
           {isEditMode && (
-            <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-lg border border-border/50">
+            <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
               <Select
                 value={chartType}
                 onValueChange={(value) => {
                   updatePref("enrollmentChartType", value as "area" | "bar" | "line");
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
                   <SelectValue placeholder="Select chart type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -128,7 +129,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
                   updatePref("enrollmentChartColor", value as "emerald" | "blue" | "violet" | "amber" | "red");
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
                   <SelectValue placeholder="Select color theme" />
                 </SelectTrigger>
                 <SelectContent>
@@ -146,7 +147,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
                   updatePref("enrollmentChartPeriod", Number(value));
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
                   <SelectValue placeholder="Select period" />
                 </SelectTrigger>
                 <SelectContent>
@@ -159,7 +160,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
           )}
           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${activeColor.bg} ${activeColor.text}`} aria-label={`Growth: ${growth}%`}>
             <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
-            <span className="text-[12px] font-semibold">+{growth}%</span>
+            <span className="text-[11px] font-bold tabular-nums">+{growth}%</span>
           </div>
         </div>
       </header>

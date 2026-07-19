@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Users, MapPin, Radio, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, MapPin, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { Button } from "@/components/ui/button";
@@ -100,23 +100,23 @@ export default function SessionsTable({ title }: { title?: string }) {
   }, [filteredSessions, currentPage]);
 
   return (
-    <section aria-labelledby="sessions-table-heading" className="relative overflow-hidden group/sessions bg-card/45 backdrop-blur-sm rounded-2xl border border-border shadow-sm hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-300">
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/sessions:bg-primary" />
-      <header className="px-6 py-4 border-b border-border/40 flex items-center justify-between pl-6.5">
+    <section aria-labelledby="sessions-table-heading" className="relative overflow-hidden group/sessions rounded-2xl surface-glass shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
+      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-[2px] bg-primary/60 transition-colors group-hover/sessions:bg-primary" />
+      <header className="px-6 py-4 border-b border-border/45 flex items-center justify-between pl-6.5 select-none">
         <div className="flex items-center gap-2.5">
-          <h3 id="sessions-table-heading" className="text-sm font-semibold text-foreground m-0">
+          <h3 id="sessions-table-heading" className="text-sm font-bold text-foreground m-0">
             {title || t("dashboard.widgets.todaysSessions")}
           </h3>
-          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
             {t("dashboard.widgets.sessionsScheduled", { count: filteredSessions.length })}
           </span>
         </div>
-        <Button variant="link" className="text-[12px] font-semibold h-auto p-0">
+        <Button variant="link" className="text-[12px] font-bold h-auto p-0">
           {t("dashboard.widgets.viewAll")}
         </Button>
       </header>
 
-      <div className="p-3 px-6 border-b border-border/30 flex items-center gap-2 bg-muted/10">
+      <div className="p-3 px-6 border-b border-border/40 flex items-center gap-2 bg-muted/10">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
           <Input
@@ -128,9 +128,9 @@ export default function SessionsTable({ title }: { title?: string }) {
         </div>
       </div>
 
-      <div className="divide-y divide-border/50 min-h-[200px]">
+      <div className="divide-y divide-border/40 min-h-[200px]">
         {paginatedSessions.length === 0 ? (
-          <div className="text-center py-12 text-xs text-muted-foreground">
+          <div className="text-center py-12 text-xs text-muted-foreground select-none">
             {t("sessions.report.noData")}
           </div>
         ) : (
@@ -139,40 +139,41 @@ export default function SessionsTable({ title }: { title?: string }) {
               key={session.id}
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: sessionIndex * 0.06 }}
-              className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted/20 transition-colors"
+              transition={{ delay: sessionIndex * 0.05, duration: 0.3, ease: "easeOut" }}
+              className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted/30 transition-colors"
             >
               {/* Time */}
-              <div className="w-14 flex-shrink-0 text-center">
-                <p className="text-[13px] font-bold text-foreground m-0">{session.time}</p>
+              <div className="w-24 flex-shrink-0 text-left">
+                <p className="text-[13px] font-bold text-foreground m-0 tabular-nums">{session.time}</p>
               </div>
 
               {/* Live indicator or dot */}
               <div className="flex-shrink-0">
                 {session.status === "live" ? (
-                  <span className="flex items-center gap-1 text-[10px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full" aria-label="Session is live">
-                    <Radio className="w-2.5 h-2.5 animate-pulse" aria-hidden="true" /> {t("dashboard.widgets.live")}
+                  <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-success bg-success/10 px-2 py-0.5 rounded-full border border-success/20 select-none animate-pulse" aria-label="Session is live">
+                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-ping shrink-0" />
+                    <span>{t("dashboard.widgets.live")}</span>
                   </span>
                 ) : (
-                  <div className="w-2 h-2 rounded-full bg-border" aria-hidden="true" />
+                  <div className="w-2 h-2 rounded-full bg-border/80 ml-2" aria-hidden="true" />
                 )}
               </div>
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-foreground truncate m-0">{session.name}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{session.teacher}</p>
+                <p className="text-[13px] font-bold text-foreground truncate m-0">{session.name}</p>
+                <p className="text-[11px] text-muted-foreground/80 mt-0.5 m-0 font-medium">{session.teacher}</p>
               </div>
 
               {/* Meta */}
-              <div className="hidden sm:flex items-center gap-3 text-[11px] text-muted-foreground flex-shrink-0">
+              <div className="hidden sm:flex items-center gap-3.5 text-[11px] text-muted-foreground/75 flex-shrink-0 font-semibold select-none">
                 <span className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3" aria-hidden="true" />
+                  <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
                   <span className="sr-only">Room:</span> {session.room}
                 </span>
-                <span className="flex items-center gap-1">
-                  <Users className="w-3 h-3" aria-hidden="true" />
-                  <span className="sr-only">Students:</span> {session.students}
+                <span className="flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span className="sr-only">Students:</span> <span className="tabular-nums">{session.students}</span>
                 </span>
               </div>
             </motion.article>
@@ -181,27 +182,27 @@ export default function SessionsTable({ title }: { title?: string }) {
       </div>
 
       {totalPages > 1 && (
-        <footer className="px-5 py-3 border-t border-border flex items-center justify-end gap-1.5">
+        <footer className="px-5 py-3.5 border-t border-border/40 flex items-center justify-end gap-2 bg-muted/10 select-none">
           <Button
             variant="outline"
             size="icon"
-            className="h-6 w-6 rounded-md"
+            className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
           >
-            <ChevronLeft className="h-3 w-3" />
+            <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-[11px] font-medium text-muted-foreground select-none">
+          <span className="text-[11px] font-bold text-muted-foreground select-none">
             {currentPage} / {totalPages}
           </span>
           <Button
             variant="outline"
             size="icon"
-            className="h-6 w-6 rounded-md"
+            className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
           >
-            <ChevronRight className="h-3 w-3" />
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </footer>
       )}

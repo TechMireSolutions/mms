@@ -128,19 +128,19 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
   };
 
   return (
-    <section aria-labelledby="overdue-obligations-heading" className="relative overflow-hidden group/overdue rounded-2xl border border-destructive/30 bg-card/45 backdrop-blur-sm shadow-sm hover:-translate-y-0.5 hover:border-destructive/50 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-300">
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-destructive/50 transition-colors group-hover/overdue:bg-destructive" />
+    <section aria-labelledby="overdue-obligations-heading" className="relative overflow-hidden group/overdue rounded-2xl border border-destructive/30 bg-card/45 dark:bg-card/30 backdrop-blur-2xl shadow-sm hover:-translate-y-1 hover:border-destructive/55 hover:shadow-lg transition-all duration-300 text-left">
+      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-[2px] bg-destructive/50 transition-colors group-hover/overdue:bg-destructive" />
       {/* Header */}
-      <header className="flex items-center justify-between px-5 py-3 bg-destructive/10 border-b border-destructive/30 pl-6">
+      <header className="flex items-center justify-between px-5 py-3 bg-destructive/[0.06] border-b border-destructive/25 pl-6 select-none">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-destructive/15 flex items-center justify-center" aria-hidden="true">
-            <AlertTriangle className="w-4 h-4 text-destructive" />
+            <AlertTriangle className="w-4 h-4 text-destructive animate-pulse" />
           </div>
           <div>
             <h3 id="overdue-obligations-heading" className="text-sm font-bold text-destructive m-0">
               {title || t("dashboard.widgets.overdueObligations")}
             </h3>
-            <p className="text-xs text-destructive m-0">
+            <p className="text-[11px] text-destructive/80 font-semibold mt-0.5 m-0 uppercase tracking-wider tabular-nums">
               {t("dashboard.widgets.studentsCount", { count: filteredStudents.length })} · {formatMoney(totalOverdue, overdueStudents[0]?.currency)} {t("finance.report.outstanding")}
             </p>
           </div>
@@ -149,7 +149,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
           <Button
             variant="destructive"
             onClick={handleRemindAll}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors h-auto"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors h-auto cursor-pointer"
           >
             <Bell className="w-3 h-3" aria-hidden="true" />
             {t("dashboard.widgets.remindAll")}
@@ -159,7 +159,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
             aria-label="Toggle overdue obligations list"
-            className="h-8 w-8 p-0 rounded-lg hover:bg-destructive/15 text-destructive hover:text-destructive transition-colors shadow-none"
+            className="h-8 w-8 p-0 rounded-lg hover:bg-destructive/15 text-destructive hover:text-destructive transition-colors shadow-none cursor-pointer"
           >
             {expanded ? <ChevronUp className="w-4 h-4" aria-hidden="true" /> : <ChevronDown className="w-4 h-4" aria-hidden="true" />}
           </Button>
@@ -170,7 +170,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
       {expanded && (
         <>
           {/* Search bar */}
-          <div className="px-5 py-2.5 border-b border-border bg-card/20 flex items-center justify-between gap-4">
+          <div className="px-5 py-2.5 border-b border-border/40 bg-card/10 flex items-center justify-between gap-4">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
               <Input
@@ -186,31 +186,31 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
           <div className="overflow-x-auto">
             <Table className="w-full text-sm">
               <TableHeader>
-                <TableRow className="border-b border-border bg-muted/30 hover:bg-transparent">
-                  <TableHead scope="col" className="px-4 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide h-auto">
+                <TableRow className="border-b border-border/45 bg-muted/30 hover:bg-transparent">
+                  <TableHead scope="col" className="px-4 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                     {t("hasanat.columns.redemption.student")}
                   </TableHead>
-                  <TableHead scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide h-auto">
+                  <TableHead scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                     {t("nav.obligations")}
                   </TableHead>
-                  <TableHead scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide h-auto">
+                  <TableHead scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                     {t("finance.columns.dueDate")}
                   </TableHead>
-                  <TableHead scope="col" className="px-3 py-2.5 text-right text-[11px] font-bold text-muted-foreground uppercase tracking-wide h-auto">
+                  <TableHead scope="col" className="px-3 py-2.5 text-right text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                     {t("finance.columns.amount")}
                   </TableHead>
-                  <TableHead scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wide h-auto">
+                  <TableHead scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                     {t("hasanat.columns.distribution.status")}
                   </TableHead>
-                  <TableHead scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wide h-auto">
+                  <TableHead scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                     {t("hasanat.columns.actions")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody className="divide-y divide-border">
+              <TableBody className="divide-y divide-border/40">
                 {paginatedStudents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-xs text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-xs text-muted-foreground select-none">
                       {t("finance.report.noInvoicesMatch")}
                     </TableCell>
                   </TableRow>
@@ -223,25 +223,25 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                         <TableCell className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
                             <UserAvatar id={overdueStudent.id} name={overdueStudent.name} className="w-7 h-7 rounded-full text-[10px] font-bold" />
-                            <span className="font-medium text-foreground text-xs">{overdueStudent.name}</span>
+                            <span className="font-semibold text-foreground text-xs">{overdueStudent.name}</span>
                           </div>
                         </TableCell>
                         <TableCell className="px-3 py-2.5">
-                          <div className="flex items-center gap-1">
-                            <Scale className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
-                            <span className="text-xs text-foreground">{overdueStudent.obligationType}</span>
+                          <div className="flex items-center gap-1.5">
+                            <Scale className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
+                            <span className="text-xs text-foreground font-medium">{overdueStudent.obligationType}</span>
                           </div>
                         </TableCell>
                         <TableCell className="px-3 py-2.5">
                           <div>
-                            <p className="text-xs text-foreground m-0">{formatDate(overdueStudent.dueDate)}</p>
-                            <p className="text-[10px] text-destructive font-semibold m-0">
+                            <p className="text-xs text-foreground font-semibold m-0 tabular-nums">{formatDate(overdueStudent.dueDate)}</p>
+                            <p className="text-[10px] text-destructive font-bold mt-0.5 m-0 uppercase tracking-wide tabular-nums">
                               {t("dashboard.widgets.daysOverdue", { count: overdueStudent.daysOverdue })}
                             </p>
                           </div>
                         </TableCell>
                         <TableCell className="px-3 py-2.5 text-right">
-                          <span className="text-xs font-bold text-foreground">
+                          <span className="text-xs font-bold text-foreground tabular-nums">
                             {formatMoney(overdueStudent.amount, overdueStudent.currency)}
                           </span>
                         </TableCell>
@@ -251,15 +251,15 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                             config={{
                               critical: {
                                 label: t("dashboard.widgets.urgency.critical"),
-                                cls: "bg-destructive/15 text-destructive border-destructive/30",
+                                cls: "bg-destructive/10 text-destructive border-destructive/20 font-bold",
                               },
                               high: {
                                 label: t("dashboard.widgets.urgency.high"),
-                                cls: "bg-warning/15 text-warning border-warning/30",
+                                cls: "bg-warning/10 text-warning border-warning/20 font-bold",
                               },
                               moderate: {
                                 label: t("dashboard.widgets.urgency.moderate"),
-                                cls: "bg-warning/15 text-warning border-warning/30",
+                                cls: "bg-warning/10 text-warning border-warning/20 font-bold",
                               },
                             }}
                             size="sm"
@@ -271,9 +271,9 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                             onClick={() => handleRemind(overdueStudent)}
                             disabled={reminded}
                             aria-label={reminded ? `Reminder sent to ${overdueStudent.name}` : `Send reminder to ${overdueStudent.name}`}
-                            className={`flex items-center gap-1 mx-auto px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors h-auto shadow-none ${
+                            className={`flex items-center gap-1 mx-auto px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors h-auto shadow-none cursor-pointer ${
                               reminded
-                                ? "bg-success/10 text-success border border-success/30 cursor-default hover:bg-success/10 hover:text-success"
+                                ? "bg-success/10 text-success border border-success/35 cursor-default hover:bg-success/10 hover:text-success"
                                 : "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:text-primary"
                             }`}
                           >
@@ -289,9 +289,9 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
             </Table>
 
             {/* Footer */}
-            <footer className="px-4 py-2.5 border-t border-border flex items-center justify-between bg-muted/20">
+            <footer className="px-5 py-3.5 border-t border-border/45 flex items-center justify-between bg-muted/10 select-none">
               <div className="flex items-center gap-4">
-                <p className="text-xs text-muted-foreground m-0">
+                <p className="text-[11px] font-bold text-success/90 uppercase tracking-wider m-0">
                   {remindedIds.size > 0 && t("dashboard.widgets.remindersSent", { count: remindedIds.size })}
                 </p>
                 {totalPages > 1 && (
@@ -301,10 +301,10 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                       size="icon"
                       disabled={currentPage === 1}
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none"
+                      className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
                       aria-label="Previous page"
                     >
-                      <ChevronLeft className="w-3.5 h-3.5" />
+                      <ChevronLeft className="w-4 h-4" />
                     </Button>
                     <span className="text-[11px] font-bold text-muted-foreground select-none">
                       {currentPage} / {totalPages}
@@ -314,15 +314,15 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                       size="icon"
                       disabled={currentPage === totalPages}
                       onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                      className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none"
+                      className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
                       aria-label="Next page"
                     >
-                      <ChevronRight className="w-3.5 h-3.5" />
+                      <ChevronRight className="w-4 h-4" />
                     </Button>
                   </div>
                 )}
               </div>
-              <Link to={ROUTES.obligations} className="text-xs font-semibold text-primary hover:underline">
+              <Link to={ROUTES.obligations} className="text-xs font-bold text-primary hover:underline">
                 {t("dashboard.widgets.viewObligations")}
               </Link>
             </footer>

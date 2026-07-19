@@ -96,49 +96,49 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
   const { text: rateColor, bar: rateBarColor } = rateToneClass(rate);
 
   return (
-    <section aria-labelledby="todays-attendance-heading" className="relative overflow-hidden group/attendance rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/attendance:bg-primary" />
+    <section aria-labelledby="todays-attendance-heading" className="relative overflow-hidden group/attendance rounded-2xl surface-glass shadow-sm hover:shadow-md transition-all duration-300 text-left">
+      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-[2px] bg-primary/60 transition-colors group-hover/attendance:bg-primary" />
       {/* Header */}
-      <header className="flex items-center justify-between px-5 py-3 border-b border-border/40 bg-muted/20 pl-6.5">
+      <header className="flex items-center justify-between px-5 py-3.5 border-b border-border/45 bg-muted/10 pl-6.5 select-none">
         <div className="flex items-center gap-2">
           <UserCheck className="w-4 h-4 text-primary" />
-          <h2 id="todays-attendance-heading" className="text-sm font-bold text-foreground">
+          <h2 id="todays-attendance-heading" className="text-sm font-bold text-foreground m-0">
             {title || (isToday ? t("dashboard.widgets.todaysAttendanceSummary") : t("dashboard.widgets.latestAttendanceSummary"))}
           </h2>
           {!isToday && (
-            <span className="text-[11px] text-muted-foreground px-1.5 py-0.5 rounded-full bg-muted font-medium">{formatDate(displayDate)}</span>
+            <span className="text-[10px] text-muted-foreground px-2 py-0.5 rounded-full bg-muted font-bold border border-border/40">{formatDate(displayDate)}</span>
           )}
         </div>
-        <Link to={ROUTES.attendance} className="flex items-center gap-1 text-xs text-primary font-semibold hover:underline">
-          {t("dashboard.widgets.viewAll")} <ArrowRight className="w-3 h-3" />
+        <Link to={ROUTES.attendance} className="flex items-center gap-1 text-xs text-primary font-bold hover:underline">
+          {t("dashboard.widgets.viewAll")} <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </header>
 
-      <section className="p-4 space-y-4">
+      <section className="p-5 space-y-4">
         {displayRecords.length === 0 ? (
-          <div className="text-center py-6">
-            <Users className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-foreground">{t("dashboard.widgets.noAttendanceRecorded")}</p>
-            <Link to={ROUTES.attendance} className="text-xs text-primary font-semibold hover:underline mt-1 inline-block">
+          <div className="text-center py-8">
+            <Users className="w-9 h-9 text-muted-foreground/30 mx-auto mb-2" />
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground m-0">{t("dashboard.widgets.noAttendanceRecorded")}</p>
+            <Link to={ROUTES.attendance} className="text-xs text-primary font-bold hover:underline mt-1.5 inline-block">
               {t("dashboard.widgets.markAttendance")}
             </Link>
           </div>
         ) : (
           <>
             {/* Overall rate */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 select-none">
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs text-muted-foreground font-medium">{t("dashboard.widgets.overallRate")}</span>
-                  <span className={`text-sm font-bold ${rateColor}`}>{rate}%</span>
+                  <span className="text-xs text-muted-foreground font-semibold">{t("dashboard.widgets.overallRate")}</span>
+                  <span className={`text-sm font-bold tabular-nums ${rateColor}`}>{rate}%</span>
                 </div>
-                <div className="h-2 rounded-full bg-muted overflow-hidden">
-                  <div className={`h-full rounded-full ${rateBarColor} transition-all`} style={{ width: `${rate}%` }} />
+                <div className="h-2 rounded-full bg-muted overflow-hidden shadow-inner">
+                  <div className={`h-full rounded-full ${rateBarColor} transition-all duration-700 ease-out`} style={{ width: `${rate}%` }} />
                 </div>
               </div>
               <div className="text-right">
-                <p className={`text-2xl font-bold ${rateColor}`}>{rate}%</p>
-                <p className="text-[11px] text-muted-foreground">{t("dashboard.widgets.studentsCount", { count: stats.total })}</p>
+                <p className={`text-2xl font-black tabular-nums leading-none m-0 ${rateColor}`}>{rate}%</p>
+                <p className="text-[11px] text-muted-foreground mt-1 m-0 font-medium">{t("dashboard.widgets.studentsCount", { count: stats.total })}</p>
               </div>
             </div>
 
@@ -150,9 +150,9 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
               {statuses.map((status: AttendanceStatus) => {
                 const count = stats[status.id] || 0;
                 return (
-                  <div key={status.id} className={`rounded-xl ${status.bg} ${status.text} border ${status.border} px-2 py-2 text-center`}>
-                    <p className="text-base font-bold">{count}</p>
-                    <p className="text-[10px] font-semibold">{t(`attendance.status.${status.id}` as AppTranslationKey) || status.label}</p>
+                  <div key={status.id} className={`rounded-xl ${status.bg} ${status.text} border ${status.border} px-2 py-2.5 text-center shadow-xs transition-all duration-300 hover:scale-[1.02]`}>
+                    <p className="text-base font-black tabular-nums leading-none mb-1">{count}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider opacity-90 m-0">{t(`attendance.status.${status.id}` as AppTranslationKey) || status.label}</p>
                   </div>
                 );
               })}
@@ -160,23 +160,23 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
 
             {/* Alert if high absence */}
             {(stats.absent || 0) > 2 && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-xs font-semibold">
-                <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-                {t("dashboard.widgets.absentAlert", { count: stats.absent })}
+              <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-destructive/10 border border-destructive/25 text-destructive text-xs font-semibold select-none animate-pulse">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                <span>{t("dashboard.widgets.absentAlert", { count: stats.absent })}</span>
               </div>
             )}
 
             {/* Class breakdown */}
-            <div className="space-y-2">
-              <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("dashboard.widgets.byClass")}</h3>
+            <div className="space-y-3">
+              <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-wider select-none">{t("dashboard.widgets.byClass")}</h3>
               {classBreakdown.map((classStats) => (
                 <div key={classStats.classId} className="flex items-center gap-3">
-                  <span className="text-xs font-semibold text-foreground w-28 truncate">{classStats.name}</span>
-                  <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                    <div className={`h-full rounded-full ${rateToneClass(classStats.rate).bar}`}
+                  <span className="text-xs font-bold text-foreground w-28 truncate">{classStats.name}</span>
+                  <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden shadow-inner">
+                    <div className={`h-full rounded-full transition-all duration-700 ease-out ${rateToneClass(classStats.rate).bar}`}
                       style={{ width: `${classStats.rate}%` }} />
                   </div>
-                  <span className={`text-xs font-bold w-10 text-right ${rateToneClass(classStats.rate).text}`}>{classStats.rate}%</span>
+                  <span className={`text-xs font-bold w-10 text-right tabular-nums ${rateToneClass(classStats.rate).text}`}>{classStats.rate}%</span>
                 </div>
               ))}
             </div>

@@ -512,17 +512,17 @@ export default function Dashboard() {
     >
       <WelcomeBanner dashboardRole={dashboardRole} />
 
-      <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2">
+      <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2 select-none">
         <Button
           onClick={() => setIsEditMode(!isEditMode)}
           variant={isEditMode ? "default" : "outline"}
-          className={`flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all shadow-none ${
+          className={`flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all duration-300 rounded-xl cursor-pointer shadow-none h-9.5 ${
             isEditMode
-              ? 'shadow-md shadow-primary/20'
-              : 'bg-card/60 hover:bg-muted text-muted-foreground hover:text-foreground'
+              ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20 border-transparent hover:bg-primary/95'
+              : 'surface-glass text-muted-foreground hover:text-foreground hover:bg-muted/30 border-border/60'
           }`}
         >
-          <Settings className="w-3.5 h-3.5" />
+          <Settings className="w-4 h-4" />
           {isEditMode ? t('dashboard.exitCustomization') : t('dashboard.customizeCards')}
         </Button>
       </div>
@@ -533,12 +533,12 @@ export default function Dashboard() {
             initial={{ opacity: 0, height: 0, y: -20 }}
             animate={{ opacity: 1, height: 'auto', y: 0 }}
             exit={{ opacity: 0, height: 0, y: -20 }}
-            className="overflow-hidden mb-6"
+            className="overflow-hidden mb-2"
           >
-            <div className="space-y-6">
+            <div className="space-y-5 pb-1">
               <AnimatePresence>
                 {isWidgetBuilderOpen && (
-                  <div className="mb-6">
+                  <div className="mb-5">
                     <WidgetBuilder
                       initialCollection={defaultWidgetCollection(can)}
                       editWidgetConfig={editingWidget}
@@ -563,37 +563,39 @@ export default function Dashboard() {
                 )}
               </AnimatePresence>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-                <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-6 shadow-xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
+                <div className="rounded-2xl border border-border/60 bg-card/65 dark:bg-card/40 backdrop-blur-2xl p-6 shadow-xl">
                   <fieldset className="space-y-4 border-0 p-0 m-0">
-                    <legend className="text-sm font-bold text-foreground uppercase tracking-widest">
+                    <legend className="text-xs font-black text-primary uppercase tracking-widest leading-none mb-1">
                       {t('dashboard.metricCardsSettings')}
                     </legend>
-                    <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.metricCardsSettingsDesc')}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{t('dashboard.metricCardsSettingsDesc')}</p>
 
-                    <div className="text-xs border-b border-border/50 pb-3">
-                      <p className="font-semibold text-foreground">
+                    <div className="text-xs border-b border-border/45 pb-3">
+                      <p className="font-bold text-foreground">
                         {t('dashboard.selectedCards', { count: selectedDashboardCardCount })}
                       </p>
                     </div>
 
-                    <div className="space-y-2.5 max-h-[340px] overflow-y-auto pr-1">
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
                       {dashboardMetricCards.map((dashboardCard) => {
                         const isChecked = !disabledCardIds.includes(dashboardCard.id);
                         return (
                           <div
                             key={dashboardCard.id}
-                            className="flex items-start gap-3 p-2.5 rounded-xl border border-border/40 bg-card/20 hover:bg-muted/30 transition-colors"
+                            className="flex items-center gap-3 p-2.5 rounded-xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all select-none cursor-pointer"
+                            onClick={() => toggleCardVisibility(dashboardCard.id)}
                           >
                             <Checkbox
                               id={`card-vis-${dashboardCard.id}`}
                               checked={isChecked}
                               onCheckedChange={() => toggleCardVisibility(dashboardCard.id)}
-                              className="mt-0.5"
+                              onClick={(e) => e.stopPropagation()}
                             />
                             <label
                               htmlFor={`card-vis-${dashboardCard.id}`}
-                              className="text-xs font-semibold text-foreground leading-tight cursor-pointer select-none"
+                              className="text-xs font-bold text-foreground leading-tight cursor-pointer select-none"
+                              onClick={(e) => e.stopPropagation()}
                             >
                               {dashboardCard.title}
                             </label>
@@ -604,57 +606,59 @@ export default function Dashboard() {
                   </fieldset>
                 </div>
 
-                <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-6 shadow-xl">
+                <div className="rounded-2xl border border-border/60 bg-card/65 dark:bg-card/40 backdrop-blur-2xl p-6 shadow-xl">
                   <fieldset className="space-y-4 border-0 p-0 m-0">
-                    <legend className="text-sm font-bold text-foreground uppercase tracking-widest">
+                    <legend className="text-xs font-black text-primary uppercase tracking-widest leading-none mb-1">
                       {t('dashboard.chartsWidgetsSettings')}
                     </legend>
-                    <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.chartsWidgetsSettingsDesc')}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{t('dashboard.chartsWidgetsSettingsDesc')}</p>
 
-                    <div className="text-xs border-b border-border/50 pb-3 space-y-0.5">
-                      <p className="font-semibold text-foreground">
+                    <div className="text-xs border-b border-border/45 pb-3 space-y-0.5">
+                      <p className="font-bold text-foreground">
                         {t('dashboard.pinnedCharts', { count: pinnedDashboardWidgetCount })}
                       </p>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-[10px] text-muted-foreground/80 font-semibold">
                         {t('dashboard.totalWidgets', { count: customWidgets.length })}
                       </p>
                     </div>
 
-                    <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+                    <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
                       {customWidgets.length === 0 ? (
                         <p className="text-xs text-muted-foreground italic py-4 text-center">{t('dashboard.noWidgets')}</p>
                       ) : (
                         customWidgets.map((widget) => (
                           <div
                             key={widget.id}
-                            className="flex items-center justify-between gap-3 p-2.5 rounded-xl border border-border/40 bg-card/20 hover:bg-muted/30 transition-colors"
+                            className="flex items-center justify-between gap-3 p-2.5 rounded-xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all select-none cursor-pointer"
+                            onClick={() => toggleWidgetPin(widget.id)}
                           >
-                            <div className="flex items-start gap-3 flex-1">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
                               <Checkbox
                                 id={`widget-pin-${widget.id}`}
                                 checked={widget.isPinnedToDashboard}
                                 onCheckedChange={() => toggleWidgetPin(widget.id)}
-                                className="mt-0.5"
+                                onClick={(e) => e.stopPropagation()}
                               />
                               <label
                                 htmlFor={`widget-pin-${widget.id}`}
-                                className="space-y-0.5 cursor-pointer flex-1 select-none text-left"
+                                className="space-y-0.5 cursor-pointer flex-1 select-none text-left truncate"
+                                onClick={(e) => e.stopPropagation()}
                               >
-                                <p className="text-xs font-semibold text-foreground leading-tight">
+                                <p className="text-xs font-bold text-foreground leading-tight truncate">
                                   {resolveWidgetTitle(widget, t)}
                                 </p>
-                                <p className="text-[10px] text-muted-foreground capitalize">
+                                <p className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider capitalize truncate">
                                   {widget.collection.replace('_', ' ')}
                                 </p>
                               </label>
                             </div>
 
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                               <Button
                                 onClick={() => handleEditWidget(widget)}
                                 variant="ghost"
                                 size="icon"
-                                className="w-7 h-7 border border-border text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none"
+                                className="w-7 h-7 border border-border/60 hover:border-primary/30 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer rounded-lg"
                                 title={t('dashboard.editWidget')}
                               >
                                 <Pencil className="w-3.5 h-3.5" />
@@ -664,7 +668,7 @@ export default function Dashboard() {
                                   onClick={() => handleDeleteWidget(widget.id)}
                                   variant="ghost"
                                   size="icon"
-                                  className="w-7 h-7 border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shadow-none"
+                                  className="w-7 h-7 border border-border/60 hover:border-destructive/30 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shadow-none cursor-pointer rounded-lg"
                                   title={t('dashboard.deleteWidget')}
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -679,9 +683,9 @@ export default function Dashboard() {
                     <Button
                       variant="outline"
                       onClick={() => openWidgetBuilder('kpi', null)}
-                      className="w-full flex items-center justify-center gap-1.5 py-4 rounded-xl border border-dashed border-border hover:border-primary/50 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-primary transition-all bg-card/10 shadow-none h-auto"
+                      className="w-full flex items-center justify-center gap-1.5 py-3.5 rounded-xl border border-dashed border-border/80 hover:border-primary/50 text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-primary transition-all bg-card/10 hover:bg-primary/5 shadow-none h-auto cursor-pointer"
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="w-4 h-4" />
                       {t('dashboard.createWidget')}
                     </Button>
                   </fieldset>

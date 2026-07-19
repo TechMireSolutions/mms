@@ -103,21 +103,21 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
   const totalUnpaid = unpaidInvoices.length;
 
   return (
-    <section aria-labelledby="outstanding-fees-heading" className="relative overflow-hidden group/unpaid bg-card/45 backdrop-blur-sm rounded-2xl border border-border shadow-sm hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-300">
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-destructive/45 transition-colors group-hover/unpaid:bg-destructive" />
-      <header className="px-6 py-4 border-b border-border/40 flex items-center justify-between pl-6.5">
+    <section aria-labelledby="outstanding-fees-heading" className="relative overflow-hidden group/unpaid rounded-2xl surface-glass shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
+      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-[2px] bg-destructive/50 transition-colors group-hover/unpaid:bg-destructive" />
+      <header className="px-6 py-4 border-b border-border/45 flex items-center justify-between pl-6.5 select-none">
         <div className="flex items-center gap-2.5">
           <AlertCircle className="w-4 h-4 text-destructive" aria-hidden="true" />
-          <h3 id="outstanding-fees-heading" className="text-sm font-semibold text-foreground m-0">
+          <h3 id="outstanding-fees-heading" className="text-sm font-bold text-foreground m-0">
             {title || t("dashboard.widgets.outstandingPayments")}
           </h3>
-          <span className="text-[11px] font-semibold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full" aria-label={t("dashboard.widgets.studentsCount", { count: totalUnpaid })}>
+          <span className="text-[10px] font-bold text-destructive bg-destructive/10 border border-destructive/20 px-2 py-0.5 rounded-full uppercase tracking-wider" aria-label={t("dashboard.widgets.studentsCount", { count: totalUnpaid })}>
             {t("dashboard.widgets.studentsCount", { count: totalUnpaid })}
           </span>
         </div>
         <Button
           variant="link"
-          className="text-[12px] font-semibold h-auto p-0"
+          className="text-[12px] font-bold h-auto p-0"
           onClick={() => {
             if (filteredRows.length > 0) {
               setMessagingTarget({
@@ -136,7 +136,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
         </Button>
       </header>
 
-      <div className="p-3 px-6 border-b border-border/30 flex items-center gap-2 bg-muted/10">
+      <div className="p-3 px-6 border-b border-border/40 flex items-center gap-2 bg-muted/10">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
           <Input
@@ -151,28 +151,28 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
       <div className="overflow-x-auto">
         <Table className="w-full text-sm">
           <TableHeader>
-            <TableRow className="border-b border-border bg-muted/30 hover:bg-transparent">
-              <TableHead scope="col" className="text-left px-5 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide h-auto">
+            <TableRow className="border-b border-border/45 bg-muted/30 hover:bg-transparent">
+              <TableHead scope="col" className="text-left px-5 py-3 text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                 {t("hasanat.columns.redemption.student")}
               </TableHead>
-              <TableHead scope="col" className="text-left px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell h-auto">
+              <TableHead scope="col" className="text-left px-3 py-3 text-[11px] font-bold text-muted-foreground uppercase tracking-wider hidden sm:table-cell h-auto select-none">
                 {t("sessions.report.colClass")}
               </TableHead>
-              <TableHead scope="col" className="text-left px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide h-auto">
+              <TableHead scope="col" className="text-left px-3 py-3 text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                 {t("finance.columns.amount")}
               </TableHead>
-              <TableHead scope="col" className="text-left px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell h-auto">
+              <TableHead scope="col" className="text-left px-3 py-3 text-[11px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell h-auto select-none">
                 {t("finance.metrics.overdue")}
               </TableHead>
-              <TableHead scope="col" className="px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide text-right h-auto">
+              <TableHead scope="col" className="px-3 py-3 text-[11px] font-bold text-muted-foreground uppercase tracking-wider text-right h-auto select-none">
                 {t("hasanat.columns.actions")}
               </TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody className="divide-y divide-border/50">
+          <TableBody className="divide-y divide-border/40">
             {paginatedRows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-6 text-xs text-muted-foreground">
+                <TableCell colSpan={5} className="text-center py-8 text-xs text-muted-foreground select-none">
                   {t("finance.report.noInvoicesMatch")}
                 </TableCell>
               </TableRow>
@@ -182,18 +182,18 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                   key={outstandingFee.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: index * 0.05 }}
+                  transition={{ delay: index * 0.04, duration: 0.25 }}
                   className="hover:bg-muted/20 transition-colors"
                 >
                   <TableCell className="px-5 py-3">
                     <div className="flex items-center gap-2.5">
                       <UserAvatar id={outstandingFee.studentId} name={outstandingFee.student} className="w-7 h-7 rounded-full text-[10px] font-bold" />
-                      <span className="text-[13px] font-medium text-foreground">{outstandingFee.student}</span>
+                      <span className="text-[13px] font-semibold text-foreground">{outstandingFee.student}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="px-3 py-3 text-[12px] text-muted-foreground hidden sm:table-cell">{outstandingFee.class}</TableCell>
+                  <TableCell className="px-3 py-3 text-[12px] text-muted-foreground/80 font-medium hidden sm:table-cell">{outstandingFee.class}</TableCell>
                   <TableCell className="px-3 py-3">
-                    <span className="text-[13px] font-bold text-destructive">{formatCurrency(outstandingFee.amount)}</span>
+                    <span className="text-[13px] font-bold text-destructive tabular-nums">{formatCurrency(outstandingFee.amount)}</span>
                   </TableCell>
                   <TableCell className="px-3 py-3 hidden md:table-cell">
                     <StatusBadge
@@ -201,11 +201,11 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                       config={{
                         overdue: {
                           label: t("dashboard.widgets.overdueStatus", { count: outstandingFee.months }),
-                          cls: "bg-destructive/10 text-destructive border-destructive/20",
+                          cls: "bg-destructive/10 text-destructive border-destructive/20 font-bold",
                         },
                         warning: {
                           label: t("dashboard.widgets.overdueStatus", { count: outstandingFee.months }),
-                          cls: "bg-warning/10 text-warning border-warning/20",
+                          cls: "bg-warning/10 text-warning border-warning/20 font-bold",
                         },
                       }}
                       size="sm"
@@ -217,7 +217,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                         variant="ghost"
                         aria-label={`${t("contacts.detail.call")} ${outstandingFee.student}`}
                         title={t("contacts.detail.call")}
-                        className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-none"
+                        className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shadow-none cursor-pointer"
                         onClick={() => {
                           setMessagingTarget({
                             channel: "whatsapp",
@@ -236,7 +236,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                         variant="ghost"
                         aria-label={`${t("dashboard.widgets.sendReminder")} ${outstandingFee.student}`}
                         title={t("dashboard.widgets.sendReminder")}
-                        className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none"
+                        className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer"
                         onClick={() => {
                           setMessagingTarget({
                             channel: "sms",
@@ -260,8 +260,8 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
         </Table>
       </div>
 
-      <footer className="px-5 py-3 border-t border-border flex items-center justify-between">
-        <Button variant="link" className="text-xs font-medium h-auto p-0">
+      <footer className="px-5 py-3.5 border-t border-border/45 flex items-center justify-between bg-muted/10 select-none">
+        <Button variant="link" className="text-xs font-bold h-auto p-0">
           {t("dashboard.widgets.viewAllOutstanding")}
         </Button>
         {totalPages > 1 && (
@@ -269,23 +269,23 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
             <Button
               variant="outline"
               size="icon"
-              className="h-6 w-6 rounded-md"
+              className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
             >
-              <ChevronLeft className="h-3 w-3" />
+              <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-[11px] font-medium text-muted-foreground select-none">
+            <span className="text-[11px] font-bold text-muted-foreground select-none">
               {currentPage} / {totalPages}
             </span>
             <Button
               variant="outline"
               size="icon"
-              className="h-6 w-6 rounded-md"
+              className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
             >
-              <ChevronRight className="h-3 w-3" />
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         )}

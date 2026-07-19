@@ -112,27 +112,28 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
   };
 
   return (
-    <section aria-labelledby="attendance-chart-heading" className="bg-card rounded-xl border border-border p-5">
-      <header className="flex flex-wrap items-start justify-between gap-3 mb-5">
+    <section aria-labelledby="attendance-chart-heading" className="relative overflow-hidden rounded-2xl surface-glass p-5 shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
+      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-[2px] bg-primary/60" />
+      <header className="flex flex-wrap items-start justify-between gap-3 mb-5 pl-1.5 select-none">
         <div>
-          <h3 id="attendance-chart-heading" className="text-sm font-semibold text-foreground m-0">
+          <h3 id="attendance-chart-heading" className="text-sm font-bold text-foreground m-0">
             {t("widget.title.attendanceRate")}
           </h3>
-          <p className="text-[12px] text-muted-foreground mt-0.5 m-0">
+          <p className="text-[12px] text-muted-foreground mt-1 m-0 font-medium">
             {t("dashboard.charts.attendance.subtitle")}
           </p>
         </div>
         
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-3 ml-auto">
           {isEditMode && (
-            <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-lg border border-border/50">
+            <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
               <Select
                 value={chartType}
                 onValueChange={(value) => {
                   updatePref("attendanceChartType", value as "bar" | "line" | "area");
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
                   <SelectValue placeholder="Select chart type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -148,7 +149,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
                   updatePref("attendanceChartColor", value);
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
                   <SelectValue placeholder="Select color theme" />
                 </SelectTrigger>
                 <SelectContent>
@@ -163,8 +164,8 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
             </div>
           )}
           <div className="text-right select-none">
-            <p className="text-lg font-bold text-foreground m-0">{avg}%</p>
-            <p className="text-[11px] text-muted-foreground m-0">{t("dashboard.charts.attendance.weeklyAvg")}</p>
+            <p className="text-lg font-black text-foreground m-0 tabular-nums">{avg}%</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5 m-0 font-medium">{t("dashboard.charts.attendance.weeklyAvg")}</p>
           </div>
         </div>
       </header>
@@ -281,27 +282,28 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
   }, [distributions, denominations, colorTheme, HASANAT_THEMES, t]);
 
   return (
-    <section aria-labelledby="hasanat-chart-heading" className="bg-card rounded-xl border border-border p-5">
-      <header className="flex flex-wrap items-start justify-between gap-3 mb-4">
+    <section aria-labelledby="hasanat-chart-heading" className="relative overflow-hidden rounded-2xl surface-glass p-5 shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
+      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-[2px] bg-warning/60" />
+      <header className="flex flex-wrap items-start justify-between gap-3 mb-4 pl-1.5 select-none">
         <div>
-          <h3 id="hasanat-chart-heading" className="text-sm font-semibold text-foreground m-0">
+          <h3 id="hasanat-chart-heading" className="text-sm font-bold text-foreground m-0">
             {t("widget.title.hasanatDistribution")}
           </h3>
-          <p className="text-[12px] text-muted-foreground mt-0.5 m-0">
+          <p className="text-[12px] text-muted-foreground mt-1 m-0 font-medium">
             {t("dashboard.charts.hasanat.subtitle")}
           </p>
         </div>
         
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-3 ml-auto">
           {isEditMode && (
-            <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-lg border border-border/50">
+            <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
               <Select
                 value={chartType}
                 onValueChange={(value) => {
                   updatePref("hasanatChartType", value as "pie" | "bar" | "radar");
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
                   <SelectValue placeholder="Select chart type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -317,7 +319,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
                   updatePref("hasanatChartColor", value);
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
                   <SelectValue placeholder="Select color theme" />
                 </SelectTrigger>
                 <SelectContent>
@@ -329,7 +331,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
               </Select>
             </div>
           )}
-          <p className="text-lg font-bold text-foreground m-0 select-none">{total.toLocaleString()}</p>
+          <p className="text-lg font-black text-foreground m-0 select-none tabular-nums">{total.toLocaleString()}</p>
         </div>
       </header>
 

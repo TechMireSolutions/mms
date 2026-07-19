@@ -450,8 +450,9 @@ export function useContactMutations() {
   };
 }
 
-export function useContactColumnPrefs() {
+export function useContactColumnPrefs(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
+  const enabled = options?.enabled ?? true;
   return useQuery({
     queryKey: CONTACT_COLUMN_PREFERENCES_QUERY_KEY,
     queryFn: async () => {
@@ -460,7 +461,7 @@ export function useContactColumnPrefs() {
       );
       return preferencesResponse.preferences ?? preferencesResponse.prefs ?? [];
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && enabled,
     staleTime: 60_000,
   });
 }

@@ -36,17 +36,17 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
   const { formatCurrency } = useFinanceCurrency();
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-card border border-border rounded-xl px-4 py-3 shadow-lg text-sm space-y-1.5">
-      <p className="text-muted-foreground text-[11px] font-medium m-0">{label}</p>
+    <div className="surface-glass border border-border/55 rounded-xl px-4 py-3 shadow-lg text-xs space-y-1.5 text-left select-none">
+      <p className="text-muted-foreground/80 text-[10px] font-bold m-0">{label}</p>
       {payload.map((payloadEntry: TooltipPayloadEntry) => (
         <div key={payloadEntry.dataKey as string | number} className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full" style={{ background: payloadEntry.color }} aria-hidden="true" />
-          <span className="text-muted-foreground text-xs capitalize">
+          <div className="w-2 h-2 rounded-full shrink-0" style={{ background: payloadEntry.color }} aria-hidden="true" />
+          <span className="text-muted-foreground/85 text-xs capitalize">
             {payloadEntry.dataKey === "revenue"
               ? t("accounting.dashboard.revenue")
               : t("accounting.dashboard.expenses")}
           </span>
-          <span className="font-semibold text-foreground ml-auto">
+          <span className="font-bold text-foreground ml-auto tabular-nums">
             {formatCurrency(Number(payloadEntry.value))}
           </span>
         </div>
@@ -140,27 +140,28 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
   }, [formatCurrency]);
 
   return (
-    <section aria-labelledby="revenue-chart-heading" className="bg-card rounded-xl border border-border p-5">
-      <header className="flex flex-wrap items-start justify-between gap-3 mb-5">
+    <section aria-labelledby="revenue-chart-heading" className="relative overflow-hidden rounded-2xl surface-glass p-5 shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
+      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-[2px] bg-primary/60" />
+      <header className="flex flex-wrap items-start justify-between gap-3 mb-5 pl-1.5 select-none">
         <div>
-          <h3 id="revenue-chart-heading" className="text-sm font-semibold text-foreground m-0">
+          <h3 id="revenue-chart-heading" className="text-sm font-bold text-foreground m-0">
             {t("widget.title.revenueExpenses")}
           </h3>
-          <p className="text-[12px] text-muted-foreground mt-0.5 m-0">
+          <p className="text-[12px] text-muted-foreground mt-1 m-0 font-medium">
             {t("dashboard.charts.revenue.subtitle")}
           </p>
         </div>
         
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-3 ml-auto">
           {isEditMode && (
-            <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-lg border border-border/50">
+            <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
               <Select
                 value={chartType}
                 onValueChange={(chartTypeValue) => {
                   updatePref("revenueChartType", chartTypeValue as "bar" | "line" | "area");
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
                   <SelectValue placeholder="Select chart type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -175,7 +176,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
                   updatePref("revenueChartColor", selectedColorTheme);
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
                   <SelectValue placeholder="Select color theme" />
                 </SelectTrigger>
                 <SelectContent>
@@ -189,14 +190,14 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
               </Select>
             </div>
           )}
-          <div className="flex gap-1 bg-muted rounded-lg p-0.5">
+          <div className="flex gap-1 bg-muted/65 rounded-lg p-0.5 border border-border/50">
             {(["6m", "10m"] as const).map((periodOption) => (
               <Button
                 key={periodOption}
                 variant="ghost"
                 onClick={() => setPeriod(periodOption)}
                 aria-pressed={period === periodOption}
-                className={`text-[11px] font-medium px-2.5 py-1 h-auto rounded-md transition-all shadow-none ${
+                className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 h-auto rounded-md transition-all shadow-none cursor-pointer ${
                   period === periodOption ? "bg-card text-foreground hover:bg-card hover:text-foreground" : "text-muted-foreground hover:bg-transparent hover:text-muted-foreground"
                 }`}
               >

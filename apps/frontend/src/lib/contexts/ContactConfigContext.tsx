@@ -129,11 +129,34 @@ const ContactConfigContext = createContext<ContactConfigContextType | null>(null
 export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const settings = useGlobalSettings();
   const { user } = useAuth();
-  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useContactColumnPrefs();
+  const [queryEnabled, setQueryEnabled] = useState(false);
+  useEffect(() => {
+    setQueryEnabled(Boolean(user?.id));
+  }, [user?.id]);
+
+  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useContactColumnPrefs({
+    enabled: queryEnabled,
+  });
   const { mutate: saveColumnPrefs } = useContactColumnPrefsMutation();
   const migratedLocalColumnPrefs = useRef(false);
+  const lastUserIdRef = useRef<string | number | undefined>(user?.id);
   const [fieldConfig, setFieldConfigState] = useState<FieldConfig>(() => loadFieldConfig());
-  const [userColumnOverlay, setUserColumnOverlay] = useState<ContactColumnPreference[] | null>(null);
+  const [localUserColumnOverlay, setLocalUserColumnOverlay] = useState<ContactColumnPreference[] | null>(null);
+
+  const userColumnOverlay = useMemo(() => {
+    if (localUserColumnOverlay) {
+      return localUserColumnOverlay;
+    }
+    if (columnPrefsLoaded && serverColumnPrefs && serverColumnPrefs.length > 0) {
+      return serverColumnPrefs;
+    }
+    const userId = user?.id ? String(user.id) : "";
+    if (userId) {
+      return loadModuleColumnPreferences("contacts", userId);
+    }
+    return null;
+  }, [localUserColumnOverlay, columnPrefsLoaded, serverColumnPrefs, user?.id]);
+
   const [prefs, setPrefsState] = useState<ContactPreferences>(() => ({
     ...DEFAULT_PREFERENCES,
     ...loadPreferences(),
@@ -200,19 +223,17 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     );
   }, [contactConfigDefaults, user?.id]);
 
-  useEffect(() => {
-    const templatesKey = contactWhatsappTemplatesKey(user?.id);
-    const loaded = getCollection<WhatsAppTemplate>(templatesKey, contactConfigDefaults.whatsappTemplates);
-    setWhatsappTemplatesState(loaded);
-  }, [contactConfigDefaults.whatsappTemplates, user?.id]);
 
   useEffect(() => {
-    reloadContactConfigFromDatabaseCache();
-  }, [reloadContactConfigFromDatabaseCache]);
+    if (lastUserIdRef.current !== user?.id) {
+      lastUserIdRef.current = user?.id;
+      setTimeout(reloadContactConfigFromDatabaseCache, 0);
+    }
+  }, [reloadContactConfigFromDatabaseCache, user?.id]);
 
   useEffect(() => {
     const handleLocalDatabaseUpdate = () => {
-      queueMicrotask(reloadContactConfigFromDatabaseCache);
+      setTimeout(reloadContactConfigFromDatabaseCache, 0);
     };
     window.addEventListener("local-database-update", handleLocalDatabaseUpdate);
     return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
@@ -220,31 +241,25 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!user?.id) {
-      setUserColumnOverlay(null);
+      setTimeout(() => {
+        setLocalUserColumnOverlay(null);
+      }, 0);
       migratedLocalColumnPrefs.current = false;
       return;
     }
+    if (!columnPrefsLoaded) return;
+
     const userId = String(user.id);
-    if (!columnPrefsLoaded) {
-      setUserColumnOverlay(loadModuleColumnPreferences("contacts", userId));
-      return;
-    }
     if (serverColumnPrefs && serverColumnPrefs.length > 0) {
-      setUserColumnOverlay(serverColumnPrefs);
       saveModuleColumnPreferenceList("contacts", userId, serverColumnPrefs);
       return;
     }
-    const local = loadModuleColumnPreferences("contacts", userId);
 
-    if (local?.length) {
-      setUserColumnOverlay(local);
-      if (!migratedLocalColumnPrefs.current) {
-        migratedLocalColumnPrefs.current = true;
-        saveColumnPrefs(local);
-      }
-      return;
+    const local = loadModuleColumnPreferences("contacts", userId);
+    if (local?.length && !migratedLocalColumnPrefs.current) {
+      migratedLocalColumnPrefs.current = true;
+      saveColumnPrefs(local);
     }
-    setUserColumnOverlay(null);
   }, [user?.id, columnPrefsLoaded, serverColumnPrefs, saveColumnPrefs]);
 
   // ── Cross-tab sync via storage events ────────────────────────────────────
@@ -389,7 +404,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     if (!userId) return;
     saveModuleColumnRegistry("contacts", userId, columnRegistry);
     const preferences: ContactColumnPreference[] = columnRegistry.map(({ key, enabled, order }) => ({ key, enabled, order }));
-    setUserColumnOverlay(preferences);
+    setLocalUserColumnOverlay(preferences);
     saveColumnPrefs(preferences);
   }, [user?.id, saveColumnPrefs]);
 

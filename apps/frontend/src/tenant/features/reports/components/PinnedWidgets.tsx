@@ -185,10 +185,10 @@ function WidgetDrilldownModal({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ type: "spring", duration: 0.35, bounce: 0.15 }}
-        className="w-full max-w-2xl bg-card border border-border rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] text-left"
+        className="w-full max-w-2xl bg-card dark:bg-card/90 border border-border/60 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] text-left"
       >
         {/* Modal Header */}
-        <div className="p-6 border-b border-border bg-muted/20 flex items-center justify-between">
+        <div className="p-6 border-b border-border/45 bg-muted/20 flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-[10px] text-primary uppercase font-black tracking-widest block">{t("reports.widgets.drilldownTitle")}</span>
             <h3 className="text-base font-black text-foreground">{t("reports.widgets.records", { title: widget.title })}</h3>
@@ -204,7 +204,7 @@ function WidgetDrilldownModal({
         </div>
 
         {/* Modal Search Bar */}
-        <div className="p-4 border-b border-border bg-card flex items-center justify-between gap-4">
+        <div className="p-4 border-b border-border/45 bg-muted/10 flex items-center justify-between gap-4">
           <SearchBar
             value={search}
             onChange={setSearch}
@@ -519,7 +519,7 @@ function CustomWidgetRenderer({
       return (
         <button
           onClick={() => onMetricClick(widget)}
-          className={`w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border transition-all cursor-pointer outline-none select-none relative overflow-hidden bg-card/50 backdrop-blur-sm border-border/80 hover:border-muted-foreground/30 hover:bg-card/75`}
+          className="w-[100px] h-[100px] p-2.5 text-center flex flex-col justify-between items-center rounded-2xl border transition-all duration-300 cursor-pointer outline-none select-none relative overflow-hidden surface-glass border-border/55 hover:border-primary/20 hover:shadow-md"
           type="button"
         >
           <span className="text-[7.5px] font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
@@ -536,7 +536,7 @@ function CustomWidgetRenderer({
     }
     
     return (
-      <div className="bg-card rounded-2xl border border-border p-5 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-300 relative text-left flex flex-col justify-between min-h-[140px] font-sans overflow-hidden group">
+      <div className="rounded-2xl border border-border/55 p-5 surface-glass hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 relative text-left flex flex-col justify-between min-h-[140px] font-sans overflow-hidden group">
         <div className={`absolute -right-8 -top-8 w-20 h-20 rounded-full ${computed.color === 'emerald' ? 'bg-success/5 blur-lg group-hover:bg-success/10' : computed.color === 'blue' ? 'bg-info/5 blur-lg group-hover:bg-info/10' : computed.color === 'violet' ? 'bg-primary/5 blur-lg group-hover:bg-primary/10' : computed.color === 'amber' ? 'bg-warning/5 blur-lg group-hover:bg-warning/10' : 'bg-destructive/5 blur-lg group-hover:bg-destructive/10'} transition-all duration-500`} />
         <div className="flex items-start justify-between">
           <div className={`w-9 h-9 rounded-lg ${colorClasses.bg} ring-4 ${colorClasses.ring} flex items-center justify-center aspect-square flex-shrink-0`}>
@@ -585,10 +585,10 @@ function CustomWidgetRenderer({
         return (
           <button
             onClick={() => onMetricClick(widget)}
-            className={`w-[100px] h-[100px] p-1.5 text-center flex flex-col justify-between items-center rounded-2xl border transition-all cursor-pointer outline-none select-none relative overflow-hidden ${
+            className={`w-[100px] h-[100px] p-1.5 text-center flex flex-col justify-between items-center rounded-2xl border transition-all duration-300 cursor-pointer outline-none select-none relative overflow-hidden ${
               alertScheme 
                 ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse` 
-                : "bg-card/50 backdrop-blur-sm border-border/80 hover:border-muted-foreground/30 hover:bg-card/75"
+                : "surface-glass border-border/55 hover:border-primary/20 hover:shadow-md"
             }`}
             type="button"
           >
@@ -607,10 +607,10 @@ function CustomWidgetRenderer({
         return (
           <button
             onClick={() => onMetricClick(widget)}
-            className={`w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border transition-all cursor-pointer outline-none select-none relative overflow-hidden ${
+            className={`w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border transition-all duration-300 cursor-pointer outline-none select-none relative overflow-hidden ${
               alertScheme 
                 ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse` 
-                : "bg-card/50 backdrop-blur-sm border-border/80 hover:border-muted-foreground/30 hover:bg-card/75"
+                : "surface-glass border-border/55 hover:border-primary/20 hover:shadow-md"
             }`}
             type="button"
           >
@@ -632,10 +632,10 @@ function CustomWidgetRenderer({
       return (
         <button
           onClick={() => onMetricClick(widget)}
-          className={`w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border transition-all cursor-pointer outline-none select-none relative overflow-hidden ${
+          className={`w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border transition-all duration-300 cursor-pointer outline-none select-none relative overflow-hidden ${
             alertScheme 
               ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse` 
-              : "bg-card/50 backdrop-blur-sm border-border/80 hover:border-muted-foreground/30 hover:bg-card/75"
+              : "surface-glass border-border/55 hover:border-primary/20 hover:shadow-md"
           }`}
           type="button"
         >
@@ -656,10 +656,10 @@ function CustomWidgetRenderer({
       return (
         <button
           onClick={() => onMetricClick(widget)}
-          className={`w-[100px] h-[100px] p-1.5 text-center flex flex-col justify-between items-center rounded-2xl border transition-all cursor-pointer outline-none select-none relative overflow-hidden ${
+          className={`w-[100px] h-[100px] p-1.5 text-center flex flex-col justify-between items-center rounded-2xl border transition-all duration-300 cursor-pointer outline-none select-none relative overflow-hidden ${
             alertScheme 
               ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse` 
-              : "bg-card/50 backdrop-blur-sm border-border/80 hover:border-muted-foreground/30 hover:bg-card/75"
+              : "surface-glass border-border/55 hover:border-primary/20 hover:shadow-md"
           }`}
           type="button"
         >
@@ -679,7 +679,7 @@ function CustomWidgetRenderer({
     if (resolvedWidgetType === "switch") {
       return (
         <div
-          className="w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border bg-card/50 backdrop-blur-sm border-border/80 overflow-hidden relative"
+          className="w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border surface-glass border-border/55 overflow-hidden relative transition-all duration-300 hover:border-primary/20 hover:shadow-md"
         >
           <span className="text-[7.5px] font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
             {widget.title}
@@ -773,10 +773,10 @@ function CustomWidgetRenderer({
   return (
     <motion.div
       layout
-      className={`rounded-3xl border p-5 flex flex-col justify-between shadow-sm relative group hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-300 overflow-hidden ${
+      className={`rounded-2xl border p-5 flex flex-col justify-between shadow-sm relative group hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 overflow-hidden ${
         alertScheme 
           ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} border-[1.5px]` 
-          : "bg-card/50 backdrop-blur-md border-border/60"
+          : "surface-glass border-border/55"
       }`}
     >
       <div className={`absolute -right-8 -top-8 w-24 h-24 rounded-full ${widget.color === 'emerald' ? 'bg-success/5 blur-xl group-hover:bg-success/10' : widget.color === 'blue' ? 'bg-info/5 blur-xl group-hover:bg-info/10' : widget.color === 'violet' ? 'bg-primary/5 blur-xl group-hover:bg-primary/10' : widget.color === 'amber' ? 'bg-warning/5 blur-xl group-hover:bg-warning/10' : 'bg-destructive/5 blur-xl group-hover:bg-destructive/10'} transition-all duration-500`} />
@@ -1267,14 +1267,14 @@ export default function PinnedWidgets({ category }: { category: string }): React
   return (
     <div className="space-y-4 font-sans text-left">
       {/* Pinned widgets controls header banner */}
-      <div className="flex items-center justify-between bg-card/45 backdrop-blur-xl border border-border/50 p-4 rounded-3xl shadow-sm">
+      <div className="flex items-center justify-between p-4 rounded-2xl surface-glass shadow-sm border-border/55 select-none">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
             <LayoutDashboard className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm font-black text-foreground leading-none tracking-tight">{t("reports.widgets.title")}</h3>
-            <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-[0.2em] font-sans">{t("reports.widgets.subtitle")}</p>
+            <h3 className="text-sm font-bold text-foreground leading-none tracking-tight">{t("reports.widgets.title")}</h3>
+            <p className="text-[10px] text-muted-foreground mt-1 uppercase font-semibold tracking-wider font-sans">{t("reports.widgets.subtitle")}</p>
           </div>
         </div>
         
@@ -1290,7 +1290,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
           className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer ${
             isBuilderOpen 
               ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
-              : "border-border bg-card/50 backdrop-blur-md text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
+              : "border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground hover:bg-muted/30"
           }`}
           type="button"
         >
@@ -1301,7 +1301,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
 
       {/* Module checkboxes visibility parameters togglers */}
       {showControls && (
-        <div className="bg-card/45 backdrop-blur-xl border border-border/50 p-5 rounded-2xl space-y-4 shadow-sm">
+        <div className="p-5 rounded-2xl space-y-4 surface-glass border-border/55 shadow-sm select-none">
           <div>
             <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">{t("reports.widgets.controlsTitle")}</h4>
             <p className="text-[9px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">{t("reports.widgets.controlsSubtitle")}</p>
@@ -1309,7 +1309,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {category === "students" && (
               <>
-                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/20 hover:bg-card/40 transition-colors cursor-pointer select-none">
+                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={!disabledCardIds.includes("students")}
@@ -1321,7 +1321,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     <p className="text-[10px] text-muted-foreground">{t("reports.widgets.studentsCardDesc")}</p>
                   </div>
                 </label>
-                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/20 hover:bg-card/40 transition-colors cursor-pointer select-none">
+                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={!!sectionSettings.enrollmentChart}
@@ -1338,7 +1338,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
 
             {category === "sessions" && (
               <>
-                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/20 hover:bg-card/40 transition-colors cursor-pointer select-none">
+                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={!disabledCardIds.includes("sessions")}
@@ -1350,7 +1350,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     <p className="text-[10px] text-muted-foreground">{t("reports.widgets.sessionsCardDesc")}</p>
                   </div>
                 </label>
-                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/20 hover:bg-card/40 transition-colors cursor-pointer select-none">
+                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={!disabledCardIds.includes("classes")}
@@ -1362,7 +1362,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     <p className="text-[10px] text-muted-foreground">{t("reports.widgets.classesCardDesc")}</p>
                   </div>
                 </label>
-                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/20 hover:bg-card/40 transition-colors cursor-pointer select-none">
+                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={!!sectionSettings.sessionsTable}
@@ -1379,7 +1379,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
 
             {category === "attendance" && (
               <>
-                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/20 hover:bg-card/40 transition-colors cursor-pointer select-none">
+                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={!disabledCardIds.includes("attendance")}
@@ -1391,7 +1391,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     <p className="text-[10px] text-muted-foreground">{t("reports.widgets.attendanceCardDesc")}</p>
                   </div>
                 </label>
-                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/20 hover:bg-card/40 transition-colors cursor-pointer select-none">
+                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={!!sectionSettings.attendanceChart}
@@ -1408,7 +1408,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
 
             {(category === "financial" || category === "accounting") && (
               <>
-                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/20 hover:bg-card/40 transition-colors cursor-pointer select-none">
+                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={!disabledCardIds.includes("fees")}
@@ -1420,7 +1420,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     <p className="text-[10px] text-muted-foreground">{t("reports.widgets.feeCardDesc")}</p>
                   </div>
                 </label>
-                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/20 hover:bg-card/40 transition-colors cursor-pointer select-none">
+                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={!disabledCardIds.includes("outstanding")}
@@ -1432,7 +1432,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                     <p className="text-[10px] text-muted-foreground">{t("reports.widgets.outstandingInvoicesCardDesc")}</p>
                   </div>
                 </label>
-                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border bg-card/20 hover:bg-card/40 transition-colors cursor-pointer select-none">
+                <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={!!sectionSettings.revenueChart}

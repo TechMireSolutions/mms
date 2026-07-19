@@ -72,47 +72,54 @@ export default function WelcomeBanner({ dashboardRole }: WelcomeBannerProps): Re
 
   return (
     <motion.header
-      initial={{ opacity: 0, y: -10 }}
+      initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45 }}
-      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/75 p-6 md:p-7 text-primary-foreground"
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/95 to-primary/80 p-6 md:p-8 text-primary-foreground shadow-lg shadow-primary/10"
     >
-      <div className="absolute -top-24 -right-16 w-72 h-72 rounded-full border border-white/[0.07]" aria-hidden="true" />
-      <div className="absolute -top-12 -right-4 w-48 h-48 rounded-full border border-white/[0.05]" aria-hidden="true" />
+      {/* Glow effects & Islamic pattern */}
+      <div className="absolute inset-0 islamic-pattern opacity-[0.06] mix-blend-overlay pointer-events-none" aria-hidden="true" />
+      <div className="absolute -top-24 -right-16 w-80 h-80 rounded-full bg-secondary/15 blur-3xl opacity-70 pointer-events-none" aria-hidden="true" />
+      <div className="absolute -bottom-20 -left-16 w-72 h-72 rounded-full bg-warning/10 blur-3xl opacity-50 pointer-events-none" aria-hidden="true" />
 
-      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
-            <span className="text-[11px] font-semibold text-white/60 uppercase tracking-wider">
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="w-3.5 h-3.5 text-warning animate-pulse" aria-hidden="true" />
+            <span className="text-[10px] font-black text-white/70 uppercase tracking-widest">
               {t(BADGE_BY_ROLE[dashboardRole])}
             </span>
           </div>
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight m-0">
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-black tracking-tight m-0 text-white">
             {userName ? t('dashboard.greeting.personal', { name: userName }) : t(GREETING_BY_ROLE[dashboardRole])}
           </h1>
-          <p className="text-sm text-white/65 mt-1 max-w-lg mb-0">{subtitle}</p>
+          <p className="text-xs md:text-sm text-white/75 mt-2 max-w-lg mb-0 font-medium leading-relaxed">{subtitle}</p>
         </div>
 
-        <div className="flex-shrink-0 flex items-center gap-2 self-start sm:self-auto flex-wrap">
-          {/* Box 1: Weekday (Warning/Gold-tint frost) */}
+        <div className="flex-shrink-0 flex items-center gap-3 self-start lg:self-auto flex-wrap">
+          {/* Box 1: Weekday */}
           <div
-            className="bg-warning/20 backdrop-blur-sm border border-warning/30 rounded-xl px-4 py-2.5"
+            className="bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 transition-all duration-300 flex items-center gap-2 shadow-sm"
           >
-            <span className="text-[12px] font-bold text-white whitespace-nowrap">{dayName}</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" aria-hidden="true" />
+            <span className="text-[12px] font-bold text-white whitespace-nowrap tracking-wide">{dayName}</span>
           </div>
-          {/* Box 2: Gregorian Date (Info/Blue-tint frost) */}
+          
+          {/* Box 2: Gregorian Date */}
           <div
-            className="bg-info/20 backdrop-blur-sm border border-info/30 rounded-xl px-4 py-2.5"
+            className="bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 transition-all duration-300 flex items-center gap-2 shadow-sm"
           >
-            <span className="text-[12px] font-bold text-white whitespace-nowrap">{gregDate}</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-info" aria-hidden="true" />
+            <span className="text-[12px] font-bold text-white whitespace-nowrap tracking-wide">{gregDate}</span>
           </div>
-          {/* Box 3: Hijri Date (Secondary/Emerald-tint frost) */}
+          
+          {/* Box 3: Hijri Date */}
           {hijriDate && (
             <div
-              className="bg-secondary/20 backdrop-blur-sm border border-secondary/30 rounded-xl px-4 py-2.5"
+              className="bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 transition-all duration-300 flex items-center gap-2 shadow-sm"
             >
-              <span className="text-[12px] font-bold text-white whitespace-nowrap">{hijriDate}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-success" aria-hidden="true" />
+              <span className="text-[12px] font-bold text-white whitespace-nowrap tracking-wide">{hijriDate}</span>
             </div>
           )}
         </div>
@@ -120,3 +127,4 @@ export default function WelcomeBanner({ dashboardRole }: WelcomeBannerProps): Re
     </motion.header>
   );
 }
+
