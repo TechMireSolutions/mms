@@ -11,7 +11,7 @@ import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import MessageComposer from "@/components/ui/MessageComposer";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { Input } from "@/components/ui/input";
+import { SearchBar } from "@/components/ui/SearchBar";
 import {
   Table,
   TableHeader,
@@ -55,8 +55,8 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
     setCurrentPage(1);
   };
 
@@ -128,8 +128,8 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
   };
 
   return (
-    <section aria-labelledby="overdue-obligations-heading" className="relative overflow-hidden group/overdue rounded-2xl border border-destructive/30 surface-glass shadow-sm hover:-translate-y-1 hover:border-destructive/55 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-[2px] bg-destructive/50 transition-colors group-hover/overdue:bg-destructive" />
+    <section aria-labelledby="overdue-obligations-heading" className="relative overflow-hidden group rounded-2xl border border-destructive/30 surface-glass shadow-sm hover:-translate-y-1 hover:border-destructive/55 hover:shadow-surface-lg transition-all duration-300 text-left">
+      <div className="absolute left-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] bg-destructive/60 group-hover:bg-destructive transition-colors duration-300" />
       {/* Header */}
       <header className="flex items-center justify-between px-5 py-3 bg-destructive/[0.06] border-b border-destructive/25 pl-6.5 select-none">
         <div className="flex items-center gap-2.5">
@@ -170,39 +170,35 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
       {expanded && (
         <>
           {/* Search bar */}
-          <div className="px-5 py-2.5 border-b border-border/40 bg-card/10 flex items-center justify-between gap-4">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder={t("contacts.searchPlaceholder") || "Search student or obligation..."}
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="pl-8 text-xs h-8.5 rounded-lg border-border/60 focus-visible:ring-1 focus-visible:ring-ring bg-background/50"
-              />
-            </div>
+          <div className="p-3 px-6 border-b border-border/40 flex items-center gap-2 bg-muted/10">
+            <SearchBar
+              placeholder={t("contacts.searchPlaceholder") || "Search student or obligation..."}
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="flex-1 max-w-sm"
+            />
           </div>
 
           <div className="overflow-x-auto">
             <Table className="w-full text-sm">
               <TableHeader>
                 <TableRow className="border-b border-border/45 bg-muted/30 hover:bg-transparent">
-                  <TableHead scope="col" className="px-4 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                  <TableHead scope="col" className="px-5 py-3 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                     {t("hasanat.columns.redemption.student")}
                   </TableHead>
-                  <TableHead scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                  <TableHead scope="col" className="px-3 py-3 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                     {t("nav.obligations")}
                   </TableHead>
-                  <TableHead scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                  <TableHead scope="col" className="px-3 py-3 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                     {t("finance.columns.dueDate")}
                   </TableHead>
-                  <TableHead scope="col" className="px-3 py-2.5 text-right text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                  <TableHead scope="col" className="px-3 py-3 text-right text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                     {t("finance.columns.amount")}
                   </TableHead>
-                  <TableHead scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                  <TableHead scope="col" className="px-3 py-3 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                     {t("hasanat.columns.distribution.status")}
                   </TableHead>
-                  <TableHead scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                  <TableHead scope="col" className="px-3 py-3 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                     {t("hasanat.columns.actions")}
                   </TableHead>
                 </TableRow>
@@ -220,19 +216,19 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                     const urgencyStatus = overdueStudent.daysOverdue >= 30 ? "critical" : overdueStudent.daysOverdue >= 14 ? "high" : "moderate";
                     return (
                       <TableRow key={overdueStudent.id} className="hover:bg-muted/20 transition-colors">
-                        <TableCell className="px-4 py-2.5">
+                        <TableCell className="px-5 py-3">
                           <div className="flex items-center gap-2">
                             <UserAvatar id={overdueStudent.id} name={overdueStudent.name} className="w-7 h-7 rounded-full text-[10px] font-bold" />
                             <span className="font-semibold text-foreground text-xs">{overdueStudent.name}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="px-3 py-2.5">
+                        <TableCell className="px-3 py-3">
                           <div className="flex items-center gap-1.5">
                             <Scale className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
                             <span className="text-xs text-foreground font-medium">{overdueStudent.obligationType}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="px-3 py-2.5">
+                        <TableCell className="px-3 py-3">
                           <div>
                             <p className="text-xs text-foreground font-semibold m-0 tabular-nums">{formatDate(overdueStudent.dueDate)}</p>
                             <p className="text-[10px] text-destructive font-bold mt-0.5 m-0 uppercase tracking-wide tabular-nums">
@@ -240,12 +236,12 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                             </p>
                           </div>
                         </TableCell>
-                        <TableCell className="px-3 py-2.5 text-right">
+                        <TableCell className="px-3 py-3 text-right">
                           <span className="text-xs font-bold text-foreground tabular-nums">
                             {formatMoney(overdueStudent.amount, overdueStudent.currency)}
                           </span>
                         </TableCell>
-                        <TableCell className="px-3 py-2.5 text-center">
+                        <TableCell className="px-3 py-3 text-center">
                           <StatusBadge
                             status={urgencyStatus}
                             config={{
@@ -265,7 +261,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                             size="sm"
                           />
                         </TableCell>
-                        <TableCell className="px-3 py-2.5 text-center">
+                        <TableCell className="px-3 py-3 text-center">
                           <Button
                             variant="ghost"
                             onClick={() => handleRemind(overdueStudent)}

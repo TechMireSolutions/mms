@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Input } from "@/components/ui/input";
+import { SearchBar } from "@/components/ui/SearchBar";
 
 export interface UpcomingSessionItem {
   id: number;
@@ -39,8 +39,8 @@ export default function SessionsTable({ title }: { title?: string }) {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
     setCurrentPage(1);
   };
 
@@ -100,8 +100,8 @@ export default function SessionsTable({ title }: { title?: string }) {
   }, [filteredSessions, currentPage]);
 
   return (
-    <section aria-labelledby="sessions-table-heading" className="relative overflow-hidden group/sessions rounded-2xl surface-glass shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-[2px] bg-primary/60 transition-colors group-hover/sessions:bg-primary" />
+    <section aria-labelledby="sessions-table-heading" className="relative overflow-hidden group rounded-2xl surface-glass shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
+      <div className="absolute left-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] bg-primary/60 group-hover:bg-primary transition-colors duration-300" />
       <header className="px-6 py-4 border-b border-border/45 flex items-center justify-between pl-6.5 select-none">
         <div className="flex items-center gap-2.5">
           <h3 id="sessions-table-heading" className="text-sm font-bold text-foreground m-0">
@@ -117,15 +117,12 @@ export default function SessionsTable({ title }: { title?: string }) {
       </header>
 
       <div className="p-3 px-6 border-b border-border/40 flex items-center gap-2 bg-muted/10">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-          <Input
-            placeholder={t("contacts.searchPlaceholder") || "Search class, teacher or room..."}
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="pl-8 text-xs h-8.5 rounded-lg border-border/60 focus-visible:ring-1 focus-visible:ring-ring bg-background/50"
-          />
-        </div>
+        <SearchBar
+          placeholder={t("contacts.searchPlaceholder") || "Search class, teacher or room..."}
+          value={searchQuery}
+          onChange={handleSearchChange}
+          className="flex-1"
+        />
       </div>
 
       <div className="divide-y divide-border/40 min-h-[200px]">

@@ -37,8 +37,8 @@ interface HasanatPoint {
 const AttTooltip = ({ active = false, payload = [], label = "" }: Partial<TooltipContentProps>) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-card border border-border rounded-xl px-3.5 py-2.5 shadow-lg text-sm">
-      <p className="text-muted-foreground text-[11px] m-0">{label}</p>
+    <div className="surface-glass rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-left">
+      <p className="text-muted-foreground text-[10px] m-0">{label}</p>
       <p className="font-bold text-foreground m-0">{payload[0].value}%</p>
     </div>
   );
@@ -47,8 +47,8 @@ const AttTooltip = ({ active = false, payload = [], label = "" }: Partial<Toolti
 const HasanatTooltip = ({ active = false, payload = [] }: Partial<TooltipContentProps>) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-card border border-border rounded-xl px-3.5 py-2.5 shadow-lg text-sm">
-      <p className="text-muted-foreground text-[11px] m-0">{payload[0].name}</p>
+    <div className="surface-glass rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-left">
+      <p className="text-muted-foreground text-[10px] m-0">{payload[0].name}</p>
       <p className="font-bold text-foreground m-0">{payload[0].value?.toLocaleString()} pts</p>
     </div>
   );
@@ -112,8 +112,8 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
   };
 
   return (
-    <section aria-labelledby="attendance-chart-heading" className="relative overflow-hidden rounded-2xl surface-glass p-5 shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-[2px] bg-primary/60" />
+    <section aria-labelledby="attendance-chart-heading" className="relative overflow-hidden group rounded-2xl surface-glass p-5 shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
+      <div className="absolute left-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] bg-primary/60 group-hover:bg-primary transition-colors duration-300" />
       <header className="flex flex-wrap items-start justify-between gap-3 mb-5 pl-1.5 select-none">
         <div>
           <h3 id="attendance-chart-heading" className="text-sm font-bold text-foreground m-0">
@@ -282,8 +282,8 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
   }, [distributions, denominations, colorTheme, HASANAT_THEMES, t]);
 
   return (
-    <section aria-labelledby="hasanat-chart-heading" className="relative overflow-hidden rounded-2xl surface-glass p-5 shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-[2px] bg-warning/60" />
+    <section aria-labelledby="hasanat-chart-heading" className="relative overflow-hidden group rounded-2xl surface-glass p-5 shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
+      <div className="absolute left-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] bg-warning/60 group-hover:bg-warning transition-colors duration-300" />
       <header className="flex flex-wrap items-start justify-between gap-3 mb-4 pl-1.5 select-none">
         <div>
           <h3 id="hasanat-chart-heading" className="text-sm font-bold text-foreground m-0">

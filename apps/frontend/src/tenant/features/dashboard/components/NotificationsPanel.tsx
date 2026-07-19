@@ -24,11 +24,11 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
 
   return (
     <section aria-labelledby="notifications-heading" className="relative overflow-hidden group rounded-2xl surface-glass shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-[2px] bg-warning/60 transition-colors group-hover:bg-warning" />
+      <div className="absolute left-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] bg-warning/60 group-hover:bg-warning transition-colors duration-300" />
       <header className="px-5 py-4 border-b border-border/45 flex items-center justify-between gap-2 select-none pl-6.5">
         <div className="flex items-center gap-2.5 min-w-0">
           <Bell className={`w-4 h-4 text-warning/70 group-hover:text-warning transition-colors shrink-0 ${urgent > 0 ? "animate-pulse" : ""}`} aria-hidden="true" />
-          <h3 id="notifications-heading" className="text-xs font-bold text-foreground uppercase tracking-wider m-0 truncate">
+          <h3 id="notifications-heading" className="text-sm font-bold text-foreground m-0 truncate">
             {t('notifications.title')}
           </h3>
           {urgent > 0 && (

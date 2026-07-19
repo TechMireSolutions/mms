@@ -30,7 +30,7 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
   const { t } = useTranslation();
   if (!active || !payload?.length) return null;
   return (
-    <div className="surface-glass border border-border/55 rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-left">
+    <div className="surface-glass rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-left">
       <p className="text-muted-foreground/80 text-[10px] mb-0.5 m-0 font-medium select-none">{label}</p>
       <p className="font-bold text-foreground m-0 tabular-nums">
         {t("dashboard.widgets.studentsCount", { count: Number(payload[0].value) })}
@@ -92,8 +92,8 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
   const activeColor = COLOR_MAP[colorTheme] || COLOR_MAP.brand;
 
   return (
-    <section aria-labelledby="enrollment-chart-heading" className="relative overflow-hidden rounded-2xl surface-glass p-5 shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-[2px] bg-primary/60" />
+    <section aria-labelledby="enrollment-chart-heading" className="relative overflow-hidden group rounded-2xl surface-glass p-5 shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
+      <div className="absolute left-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] bg-primary/60 group-hover:bg-primary transition-colors duration-300" />
       <header className="flex flex-wrap items-start justify-between gap-3 mb-5 pl-1.5 select-none">
         <div>
           <h3 id="enrollment-chart-heading" className="text-sm font-bold text-foreground m-0">

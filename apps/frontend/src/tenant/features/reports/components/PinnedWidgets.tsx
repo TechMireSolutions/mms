@@ -421,6 +421,14 @@ function ProgressRing({
   );
 }
 
+const ACCENT_BAR_MAP: Record<string, string> = {
+  emerald: "bg-success",
+  blue: "bg-info",
+  violet: "bg-primary",
+  amber: "bg-warning",
+  red: "bg-destructive",
+};
+
 /**
  * Render interface resolving dynamic card visualizations.
  */
@@ -573,7 +581,7 @@ function CustomWidgetRenderer({
           whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 450, damping: 20 }}
           onClick={() => onMetricClick(widget)}
-          className="w-[100px] h-[100px] p-2.5 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden surface-glass border-border/55 hover:border-primary/20 hover:shadow-md"
+          className="w-[100px] h-[100px] p-2.5 text-center flex flex-col justify-between items-center rounded-2xl cursor-pointer outline-none select-none relative overflow-hidden surface-glass hover:border-primary/20 hover:shadow-md"
           type="button"
         >
           <span className="text-[7.5px] font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
@@ -594,8 +602,9 @@ function CustomWidgetRenderer({
         layout
         whileHover={{ y: -4, scale: 1.015 }}
         transition={{ type: "spring", stiffness: 350, damping: 25 }}
-        className="rounded-2xl border border-border/55 p-5 surface-glass hover:shadow-surface-lg transition-all relative text-left flex flex-col justify-between min-h-[140px] font-sans overflow-hidden group"
+        className="rounded-2xl surface-glass p-5 hover:shadow-surface-lg transition-all relative text-left flex flex-col justify-between min-h-[140px] font-sans overflow-hidden group"
       >
+        <div className={`absolute left-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] ${ACCENT_BAR_MAP[computed.color || "violet"] || "bg-primary"}/60 group-hover:${ACCENT_BAR_MAP[computed.color || "violet"] || "bg-primary"} transition-colors duration-300`} />
         <div className={`absolute -right-8 -top-8 w-20 h-20 rounded-full ${computed.color === 'emerald' ? 'bg-success/5 blur-lg group-hover:bg-success/10' : computed.color === 'blue' ? 'bg-info/5 blur-lg group-hover:bg-info/10' : computed.color === 'violet' ? 'bg-primary/5 blur-lg group-hover:bg-primary/10' : computed.color === 'amber' ? 'bg-warning/5 blur-lg group-hover:bg-warning/10' : 'bg-destructive/5 blur-lg group-hover:bg-destructive/10'} transition-all duration-500`} />
         <div className="flex items-start justify-between">
           <div className={`w-9 h-9 rounded-lg ${colorClasses.bg} ring-4 ${colorClasses.ring} flex items-center justify-center aspect-square flex-shrink-0`}>
@@ -650,7 +659,7 @@ function CustomWidgetRenderer({
             className={`w-[100px] h-[100px] p-1.5 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
               alertScheme 
                 ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse` 
-                : "surface-glass border-border/55 hover:border-primary/20 hover:shadow-md"
+                : "surface-glass hover:border-primary/20 hover:shadow-md"
             }`}
             type="button"
           >
@@ -675,7 +684,7 @@ function CustomWidgetRenderer({
             className={`w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
               alertScheme 
                 ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse` 
-                : "surface-glass border-border/55 hover:border-primary/20 hover:shadow-md"
+                : "surface-glass hover:border-primary/20 hover:shadow-md"
             }`}
             type="button"
           >
@@ -703,7 +712,7 @@ function CustomWidgetRenderer({
           className={`w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
             alertScheme 
               ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse` 
-              : "surface-glass border-border/55 hover:border-primary/20 hover:shadow-md"
+              : "surface-glass hover:border-primary/20 hover:shadow-md"
           }`}
           type="button"
         >
@@ -730,7 +739,7 @@ function CustomWidgetRenderer({
           className={`w-[100px] h-[100px] p-1.5 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
             alertScheme 
               ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse` 
-              : "surface-glass border-border/55 hover:border-primary/20 hover:shadow-md"
+              : "surface-glass hover:border-primary/20 hover:shadow-md"
           }`}
           type="button"
         >
@@ -750,7 +759,7 @@ function CustomWidgetRenderer({
     if (resolvedWidgetType === "switch") {
       return (
         <div
-          className="w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border surface-glass border-border/55 overflow-hidden relative transition-all duration-300 hover:border-primary/20 hover:shadow-md"
+          className="w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl surface-glass overflow-hidden relative transition-all duration-300 hover:border-primary/20 hover:shadow-md"
         >
           <span className="text-[7.5px] font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
             {resolveWidgetTitle(widget, t)}
@@ -846,12 +855,21 @@ function CustomWidgetRenderer({
       layout
       whileHover={{ y: -4, scale: 1.015 }}
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
-      className={`rounded-2xl border p-5 flex flex-col justify-between shadow-sm relative group hover:shadow-surface-lg transition-all overflow-hidden ${
+      className={`rounded-2xl p-5 flex flex-col justify-between shadow-sm relative group hover:shadow-surface-lg transition-all overflow-hidden ${
         alertScheme 
           ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} border-[1.5px]` 
-          : "surface-glass border-border/55"
+          : "surface-glass"
       }`}
     >
+      <div className={`absolute left-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] ${
+        isAlert
+          ? "bg-destructive"
+          : ACCENT_BAR_MAP[widget.color || "violet"] || "bg-primary"
+      }/60 group-hover:${
+        isAlert
+          ? "bg-destructive"
+          : ACCENT_BAR_MAP[widget.color || "violet"] || "bg-primary"
+      } transition-colors duration-300`} />
       <div className={`absolute -right-8 -top-8 w-24 h-24 rounded-full ${widget.color === 'emerald' ? 'bg-success/5 blur-xl group-hover:bg-success/10' : widget.color === 'blue' ? 'bg-info/5 blur-xl group-hover:bg-info/10' : widget.color === 'violet' ? 'bg-primary/5 blur-xl group-hover:bg-primary/10' : widget.color === 'amber' ? 'bg-warning/5 blur-xl group-hover:bg-warning/10' : 'bg-destructive/5 blur-xl group-hover:bg-destructive/10'} transition-all duration-500`} />
       {/* Widget Card Header */}
       <div className="flex items-center justify-between">
@@ -1372,7 +1390,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
   return (
     <div className="space-y-4 font-sans text-left">
       {/* Pinned widgets controls header banner */}
-      <div className="flex items-center justify-between p-4 rounded-2xl surface-glass shadow-sm border-border/55 select-none">
+      <div className="flex items-center justify-between p-4 rounded-2xl surface-glass shadow-sm select-none">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
             <LayoutDashboard className="w-5 h-5" />
@@ -1406,7 +1424,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
 
       {/* Module checkboxes visibility parameters togglers */}
       {showControls && (
-        <div className="p-5 rounded-2xl space-y-4 surface-glass border-border/55 shadow-sm select-none">
+        <div className="p-5 rounded-2xl space-y-4 surface-glass shadow-sm select-none">
           <div>
             <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">{t("reports.widgets.controlsTitle")}</h4>
             <p className="text-[9px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">{t("reports.widgets.controlsSubtitle")}</p>

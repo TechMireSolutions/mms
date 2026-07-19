@@ -10,7 +10,7 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 import MessageComposer from "@/components/ui/MessageComposer";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { Input } from "@/components/ui/input";
+import { SearchBar } from "@/components/ui/SearchBar";
 import {
   Table,
   TableHeader,
@@ -53,8 +53,8 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
     setCurrentPage(1);
   };
 
@@ -103,8 +103,8 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
   const totalUnpaid = unpaidInvoices.length;
 
   return (
-    <section aria-labelledby="outstanding-fees-heading" className="relative overflow-hidden group/unpaid rounded-2xl surface-glass shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-[2px] bg-destructive/50 transition-colors group-hover/unpaid:bg-destructive" />
+    <section aria-labelledby="outstanding-fees-heading" className="relative overflow-hidden group rounded-2xl surface-glass shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
+      <div className="absolute left-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] bg-destructive/60 group-hover:bg-destructive transition-colors duration-300" />
       <header className="px-6 py-4 border-b border-border/45 flex items-center justify-between pl-6.5 select-none">
         <div className="flex items-center gap-2.5">
           <AlertCircle className="w-4 h-4 text-destructive" aria-hidden="true" />
@@ -137,15 +137,12 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
       </header>
 
       <div className="p-3 px-6 border-b border-border/40 flex items-center gap-2 bg-muted/10">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-          <Input
-            placeholder={t("contacts.searchPlaceholder") || "Search student or class..."}
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="pl-8 text-xs h-8.5 rounded-lg border-border/60 focus-visible:ring-1 focus-visible:ring-ring bg-background/50"
-          />
-        </div>
+        <SearchBar
+          placeholder={t("contacts.searchPlaceholder") || "Search student or class..."}
+          value={searchQuery}
+          onChange={handleSearchChange}
+          className="flex-1"
+        />
       </div>
       
       <div className="overflow-x-auto">
