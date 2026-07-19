@@ -22,21 +22,31 @@ export interface SessionLike extends Record<string, unknown> {
 }
 
 export function normalizeSessionClasses(classes: SessionClassLike[]): SessionClassLike[] {
-  return classes.map((cls) => normalizeIdLinkedName(cls, 'teacherId', 'teacherName'));
+  if (!classes || !Array.isArray(classes)) return [];
+  return classes.map((cls) => {
+    if (!cls || typeof cls !== "object") return cls;
+    return normalizeIdLinkedName(cls, 'teacherId', 'teacherName');
+  });
 }
 
 export function hydrateSessionClasses(
   classes: SessionClassLike[],
   teachers: NamedEntity[],
 ): SessionClassLike[] {
-  return classes.map((cls) => ({
-    ...cls,
-    teacherName: resolveEntityName(cls.teacherId, teachers) || cls.teacherName,
-  }));
+  if (!classes || !Array.isArray(classes)) return [];
+  return classes.map((cls) => {
+    if (!cls || typeof cls !== "object") return cls;
+    return {
+      ...cls,
+      teacherName: resolveEntityName(cls.teacherId, teachers) || cls.teacherName,
+    };
+  });
 }
 
 export function normalizeSessionsCollection(sessions: SessionLike[]): SessionLike[] {
+  if (!sessions || !Array.isArray(sessions)) return [];
   return sessions.map((session) => {
+    if (!session || typeof session !== "object") return session;
     if (!Array.isArray(session.classes)) return session;
     return { ...session, classes: normalizeSessionClasses(session.classes) };
   });
@@ -46,7 +56,9 @@ export function hydrateSessionsCollection(
   sessions: SessionLike[],
   teachers: NamedEntity[],
 ): SessionLike[] {
+  if (!sessions || !Array.isArray(sessions)) return [];
   return sessions.map((session) => {
+    if (!session || typeof session !== "object") return session;
     if (!Array.isArray(session.classes)) return session;
     return { ...session, classes: hydrateSessionClasses(session.classes, teachers) };
   });
@@ -57,7 +69,11 @@ export function normalizeStudentLinkedRows<T extends Record<string, unknown>>(
   idField = 'studentId',
   nameField = 'studentName',
 ): T[] {
-  return rows.map((row) => normalizeIdLinkedName(row, idField, nameField));
+  if (!rows || !Array.isArray(rows)) return [];
+  return rows.map((row) => {
+    if (!row || typeof row !== "object") return row;
+    return normalizeIdLinkedName(row, idField, nameField);
+  });
 }
 
 export function hydrateStudentLinkedRows<T extends Record<string, unknown>>(
@@ -66,13 +82,18 @@ export function hydrateStudentLinkedRows<T extends Record<string, unknown>>(
   idField = 'studentId',
   nameField = 'studentName',
 ): T[] {
-  return rows.map((row) => ({
-    ...row,
-    [nameField]: resolveEntityName(row[idField] as string | number, students) || row[nameField],
-  }));
+  if (!rows || !Array.isArray(rows)) return [];
+  return rows.map((row) => {
+    if (!row || typeof row !== "object") return row;
+    return {
+      ...row,
+      [nameField]: resolveEntityName(row[idField] as string | number, students) || row[nameField],
+    };
+  });
 }
 
 export function stripWorkspaceUserProfileFields<T extends Record<string, unknown>>(user: T): T {
+  if (!user || typeof user !== "object") return user;
   return normalizeContactLinkedRecord(user);
 }
 
@@ -80,6 +101,7 @@ export function hydrateWorkspaceUserProfile<T extends Record<string, unknown>>(
   user: T,
   contacts: ContactLike[],
 ): T {
+  if (!user || typeof user !== "object") return user;
   const hydrated = hydrateContactProfile(user, contacts);
   const name = String(hydrated.name ?? '');
   if (name && !hydrated.avatarInitials) {
@@ -92,6 +114,7 @@ export function hydrateWorkspaceUserProfile<T extends Record<string, unknown>>(
 }
 
 export function normalizeActivityLog<T extends Record<string, unknown>>(log: T): T {
+  if (!log || typeof log !== "object") return log;
   return normalizeIdLinkedName(log, 'userId', 'userName');
 }
 
@@ -99,6 +122,7 @@ export function hydrateActivityLog<T extends Record<string, unknown>>(
   log: T,
   users: NamedEntity[],
 ): T {
+  if (!log || typeof log !== "object") return log;
   return {
     ...log,
     userName: resolveEntityName(log.userId as string | number, users) || log.userName,
@@ -113,6 +137,7 @@ export interface HasanatDistributionLike extends Record<string, unknown> {
 }
 
 export function normalizeHasanatDistribution<T extends HasanatDistributionLike>(row: T): T {
+  if (!row || typeof row !== "object") return row;
   if (row.recipientStudentId) {
     return normalizeIdLinkedName(row, 'recipientStudentId', 'recipientName');
   }
@@ -127,6 +152,7 @@ export function hydrateHasanatDistribution<T extends HasanatDistributionLike>(
   students: NamedEntity[],
   teachers: NamedEntity[],
 ): T {
+  if (!row || typeof row !== "object") return row;
   if (row.recipientStudentId) {
     return {
       ...row,
@@ -143,6 +169,7 @@ export function hydrateHasanatDistribution<T extends HasanatDistributionLike>(
 }
 
 export function normalizeHasanatRedemption<T extends Record<string, unknown>>(row: T): T {
+  if (!row || typeof row !== "object") return row;
   return normalizeIdLinkedName(row, 'distributionId', 'studentName');
 }
 
@@ -150,7 +177,9 @@ export function hydrateHasanatRedemption<T extends Record<string, unknown>>(
   row: T,
   distributions: HasanatDistributionLike[],
 ): T {
-  const distribution = distributions.find((d) => String(d.id) === String(row.distributionId));
+  if (!row || typeof row !== "object") return row;
+  const list = Array.isArray(distributions) ? distributions : [];
+  const distribution = list.find((d) => String(d.id) === String(row.distributionId));
   const recipientName = distribution?.recipientName
     ?? (distribution?.recipientStudentId
       ? resolveEntityName(distribution.recipientStudentId, [])
@@ -162,6 +191,7 @@ export function hydrateHasanatRedemption<T extends Record<string, unknown>>(
 }
 
 export function normalizeAssessmentResult<T extends Record<string, unknown>>(row: T): T {
+  if (!row || typeof row !== "object") return row;
   return normalizeIdLinkedName(row, 'studentId', 'studentName');
 }
 
@@ -169,6 +199,7 @@ export function hydrateAssessmentResult<T extends Record<string, unknown>>(
   row: T,
   students: NamedEntity[],
 ): T {
+  if (!row || typeof row !== "object") return row;
   return {
     ...row,
     studentName: resolveEntityName(row.studentId as string | number, students) || row.studentName,
@@ -176,6 +207,7 @@ export function hydrateAssessmentResult<T extends Record<string, unknown>>(
 }
 
 export function normalizeHasanatPayout<T extends Record<string, unknown>>(row: T): T {
+  if (!row || typeof row !== "object") return row;
   return normalizeIdLinkedName(row, 'studentId', 'studentName');
 }
 
@@ -183,6 +215,7 @@ export function hydrateHasanatPayout<T extends Record<string, unknown>>(
   row: T,
   students: NamedEntity[],
 ): T {
+  if (!row || typeof row !== "object") return row;
   return {
     ...row,
     studentName: resolveEntityName(row.studentId as string | number, students) || row.studentName,
@@ -195,6 +228,7 @@ export function normalizeUserActorField<T extends Record<string, unknown>>(
   userIdField: string,
   labelField: string,
 ): T {
+  if (!row || typeof row !== "object") return row;
   return normalizeIdLinkedName(row, userIdField, labelField);
 }
 
@@ -205,6 +239,7 @@ export function hydrateUserActorField<T extends Record<string, unknown>>(
   labelField: string,
   users: NamedEntity[],
 ): T {
+  if (!row || typeof row !== "object") return row;
   return {
     ...row,
     [labelField]: resolveEntityName(row[userIdField] as string | number, users) || row[labelField],

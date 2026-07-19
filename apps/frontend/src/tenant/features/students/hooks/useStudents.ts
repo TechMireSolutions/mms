@@ -246,7 +246,7 @@ export function useStudentsWidgetAggregates(
           body: JSON.stringify({ widgets: studentQueries }),
         },
       );
-      return aggregateResponse.results;
+      return aggregateResponse?.results ?? {};
     },
     enabled: isAuthenticated && enabled && studentQueries.length > 0,
     staleTime: 30_000,

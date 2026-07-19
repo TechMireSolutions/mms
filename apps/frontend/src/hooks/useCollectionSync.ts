@@ -35,7 +35,8 @@ export function useCollectionSync<T, R = Record<string, T[]>>({
     queryKey,
     queryFn: async () => {
       const response = await apiJson<R>(apiPath);
-      const data = (responseKey ? response[responseKey] : response) as unknown as T[];
+      const rawData = responseKey && response ? response[responseKey] : response;
+      const data = (Array.isArray(rawData) ? rawData : []) as unknown as T[];
       saveCollection(collectionName, data);
       return getCollection<T>(collectionName, data);
     },

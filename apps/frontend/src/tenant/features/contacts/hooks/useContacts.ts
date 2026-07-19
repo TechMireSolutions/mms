@@ -163,7 +163,7 @@ export function useContactsWidgetAggregates(
           body: JSON.stringify({ widgets: contactQueries }),
         },
       );
-      return aggregateResponse.results;
+      return aggregateResponse?.results ?? {};
     },
     enabled: isAuthenticated && enabled && contactQueries.length > 0,
     staleTime: 30_000,

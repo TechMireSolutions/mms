@@ -29,7 +29,7 @@ export function useServerMetrics<T>({
     queryFn: async () => {
       const queryString = extraParam ? `?date=${encodeURIComponent(extraParam)}` : '';
       const response = await apiJson<{ metrics: T }>(`${apiPath}/metrics${queryString}`);
-      return response.metrics;
+      return response?.metrics ?? ({} as T);
     },
     enabled: isAuthenticated && enabled,
     staleTime: 30_000,

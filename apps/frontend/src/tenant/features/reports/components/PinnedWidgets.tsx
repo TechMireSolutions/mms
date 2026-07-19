@@ -36,6 +36,16 @@ import {
   ICONS_LIST,
 } from "@/tenant/features/reports/components/pinnedWidgets/types";
 import { FORM_INPUT_BUILDER, FORM_LABEL } from "@/components/ui/formStyles";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
+import { SearchBar } from "@/components/ui/SearchBar";
 import {
   getWidgetCollections,
   getFilteredRecords,
@@ -183,26 +193,25 @@ function WidgetDrilldownModal({
             <span className="text-[10px] text-primary uppercase font-black tracking-widest block">{t("reports.widgets.drilldownTitle")}</span>
             <h3 className="text-base font-black text-foreground">{t("reports.widgets.records", { title: widget.title })}</h3>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="p-2 rounded-full border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer"
-            type="button"
+            className="w-8 h-8 rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-none"
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
 
         {/* Modal Search Bar */}
-        <div className="p-4 border-b border-border bg-card flex items-center gap-2">
-          <Search className="w-4 h-4 text-muted-foreground" />
-          <input
-            type="text"
+        <div className="p-4 border-b border-border bg-card flex items-center justify-between gap-4">
+          <SearchBar
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={setSearch}
             placeholder={t("reports.widgets.searchRecords")}
-            className="flex-1 text-xs bg-transparent border-none outline-none text-foreground placeholder-muted-foreground font-semibold"
+            className="flex-1 max-w-sm"
           />
-          <span className="text-[10px] text-muted-foreground font-bold px-2 py-0.5 bg-muted rounded-full border border-border">
+          <span className="text-[10px] text-muted-foreground font-bold px-2 py-1.5 bg-muted rounded-full border border-border flex-shrink-0">
             {t("reports.widgets.foundCount", { count: filteredRecords.length })}
           </span>
         </div>
@@ -216,16 +225,16 @@ function WidgetDrilldownModal({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-border text-muted-foreground uppercase font-black text-[9px] tracking-wider text-left">
-                    <th className="pb-3">{t("reports.widgets.refName")}</th>
-                    <th className="pb-3">{t("reports.widgets.primaryInfo")}</th>
-                    <th className="pb-3">{t("reports.widgets.currentStatus")}</th>
-                    <th className="pb-3 text-right">{t("reports.widgets.microAction")}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60">
+              <Table className="w-full text-xs">
+                <TableHeader>
+                  <TableRow className="border-b border-border text-muted-foreground uppercase font-black text-[9px] tracking-wider text-left hover:bg-transparent">
+                    <TableHead className="pb-3 text-muted-foreground h-auto">{t("reports.widgets.refName")}</TableHead>
+                    <TableHead className="pb-3 text-muted-foreground h-auto">{t("reports.widgets.primaryInfo")}</TableHead>
+                    <TableHead className="pb-3 text-muted-foreground h-auto">{t("reports.widgets.currentStatus")}</TableHead>
+                    <TableHead className="pb-3 text-right text-muted-foreground h-auto">{t("reports.widgets.microAction")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y divide-border/60">
                   {filteredRecords.map((recordSource, index) => {
                     const displayRecord = recordSource as unknown as WidgetRecordFields;
                     const recordId = String(displayRecord.id || index);
@@ -264,12 +273,12 @@ function WidgetDrilldownModal({
                       name = String(displayRecord.name || "");
                       detailText = t("reports.widgets.roomText", { type: displayRecord.type || "Hifz", room: displayRecord.room || "N/A" });
                     }
-
+ 
                     return (
-                      <tr key={recordId} className="hover:bg-muted/10">
-                        <td className="py-3.5 pr-2 font-bold text-foreground max-w-[180px] truncate">{name}</td>
-                        <td className="py-3.5 text-muted-foreground font-semibold">{detailText}</td>
-                        <td className="py-3.5">
+                      <TableRow key={recordId} className="hover:bg-muted/10">
+                        <TableCell className="py-3.5 pr-2 font-bold text-foreground max-w-[180px] truncate">{name}</TableCell>
+                        <TableCell className="py-3.5 text-muted-foreground font-semibold">{detailText}</TableCell>
+                        <TableCell className="py-3.5">
                           <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${
                             ["active", "paid", "present", "customer"].includes(status.toLowerCase())
                               ? "bg-success/10 text-success border-success/20"
@@ -279,31 +288,31 @@ function WidgetDrilldownModal({
                           }`}>
                             {t(`reports.status.${status.toLowerCase()}` as AppTranslationKey) || status}
                           </span>
-                        </td>
-                        <td className="py-3.5 text-right">
+                        </TableCell>
+                        <TableCell className="py-3.5 text-right">
                           {widget.collection === "hasanat_distributions" ? (
-                            <button
+                            <Button
                               onClick={() => handleDeleteDist(recordId)}
-                              className="p-1 rounded bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all cursor-pointer font-bold uppercase tracking-wider text-[9px]"
-                              type="button"
+                              variant="destructive"
+                              className="h-6 px-2.5 rounded text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all cursor-pointer font-bold uppercase tracking-wider text-[9px] shadow-none"
                             >
                               {t("reports.widgets.delete")}
-                            </button>
+                            </Button>
                           ) : hasAction ? (
-                            <button
+                            <Button
                               onClick={() => handleToggleStatus(recordId)}
-                              className="px-2.5 py-1 rounded bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all cursor-pointer font-bold uppercase tracking-wider text-[9px]"
-                              type="button"
+                              variant="secondary"
+                              className="h-6 px-2.5 rounded bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border-transparent hover:border-transparent transition-all cursor-pointer font-bold uppercase tracking-wider text-[9px] shadow-none"
                             >
                               {t("reports.widgets.toggleStatus")}
-                            </button>
+                            </Button>
                           ) : null}
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           )}
         </div>

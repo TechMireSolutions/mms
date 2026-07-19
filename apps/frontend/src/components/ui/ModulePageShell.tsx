@@ -5,7 +5,7 @@ interface ModulePageShellProps {
   seoTitle: string;
   seoDescription: string;
   headerIcon?: PageHeaderProps["icon"];
-  headerTitle: string;
+  headerTitle?: string;
   headerSubtitle?: string;
   headerActions?: PageHeaderProps["actions"];
   metricsStrip?: React.ReactNode;
@@ -31,12 +31,14 @@ export function ModulePageShell({
     <div className="max-w-7xl mx-auto space-y-5">
       <title>{seoTitle}</title>
       <meta name="description" content={seoDescription} />
-      <PageHeader
-        icon={headerIcon}
-        title={headerTitle}
-        subtitle={headerSubtitle}
-        actions={headerActions}
-      />
+      {headerTitle && (
+        <PageHeader
+          icon={headerIcon}
+          title={headerTitle}
+          subtitle={headerSubtitle}
+          actions={headerActions}
+        />
+      )}
       {metricsStrip}
       {children}
     </div>

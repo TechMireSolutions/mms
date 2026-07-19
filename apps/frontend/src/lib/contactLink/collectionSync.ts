@@ -50,6 +50,7 @@ function withUserActor(
 }
 
 export function normalizeCollectionRows(key: string, rows: Row[]): Row[] {
+  if (!rows || !Array.isArray(rows)) return [];
   switch (key) {
     case 'students':
       return rows.map((row) => normalizeStoredStudent(row));
@@ -106,6 +107,7 @@ export function hydrateCollectionRows(
     distributions: Row[];
   },
 ): Row[] {
+  if (!rows || !Array.isArray(rows)) return [];
   const contacts = context.contacts;
   const students = asNamed(context.students);
   const teachers = asNamed(context.teachers);

@@ -28,6 +28,9 @@ import { useDashboardConfig } from '@/tenant/features/dashboard/hooks/useDashboa
 import { resolveWidgetTitle } from '@/lib/dashboardWidgets';
 import { buildDashboardNotifications } from '@/lib/buildDashboardNotifications';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
+import { ModulePageShell } from '@/components/ui/ModulePageShell';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 function getLocalDateString(d: Date): string {
@@ -345,7 +348,7 @@ export default function Dashboard() {
             id: widget.id,
             title: resolveWidgetTitle(widget, t),
             value: String(aggregateValue.finalValue),
-            sub: widget.fixedSubText || `${contactsTotal} total`,
+            sub: widget.fixedSubText || t('reports.widgets.totalCountText', { count: contactsTotal }),
             icon: widget.icon || 'Users',
             color: widget.color || 'blue',
             trend: contactTrend,
@@ -367,7 +370,7 @@ export default function Dashboard() {
             id: widget.id,
             title: resolveWidgetTitle(widget, t),
             value: String(aggregateValue.finalValue),
-            sub: widget.fixedSubText || `${studentsTotal} total`,
+            sub: widget.fixedSubText || t('reports.widgets.totalCountText', { count: studentsTotal }),
             icon: widget.icon || 'GraduationCap',
             color: widget.color || 'emerald',
             trend: studentTrend,
@@ -389,7 +392,7 @@ export default function Dashboard() {
             id: widget.id,
             title: resolveWidgetTitle(widget, t),
             value: String(aggregateValue.finalValue),
-            sub: widget.fixedSubText || `${teachersTotal} total`,
+            sub: widget.fixedSubText || t('reports.widgets.totalCountText', { count: teachersTotal }),
             icon: widget.icon || 'School',
             color: widget.color || 'blue',
             trend: teacherTrend,
@@ -502,25 +505,25 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      <title>MMS - {t('dashboard.title')}</title>
-      <meta name="description" content={t('dashboard.metaDescription')} />
-
+    <ModulePageShell
+      seoTitle={`MMS - ${t('dashboard.title')}`}
+      seoDescription={t('dashboard.metaDescription')}
+    >
       <WelcomeBanner dashboardRole={dashboardRole} />
 
       <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2">
-        <button
+        <Button
           onClick={() => setIsEditMode(!isEditMode)}
-          className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+          variant={isEditMode ? "default" : "outline"}
+          className={`flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all shadow-none ${
             isEditMode
-              ? 'border-primary bg-primary text-primary-foreground shadow-md shadow-primary/20'
-              : 'border-border bg-card/60 hover:bg-muted text-muted-foreground hover:text-foreground'
+              ? 'shadow-md shadow-primary/20'
+              : 'bg-card/60 hover:bg-muted text-muted-foreground hover:text-foreground'
           }`}
-          type="button"
         >
           <Settings className="w-3.5 h-3.5" />
           {isEditMode ? t('dashboard.exitCustomization') : t('dashboard.customizeCards')}
-        </button>
+        </Button>
       </div>
 
       <AnimatePresence>
@@ -577,18 +580,23 @@ export default function Dashboard() {
                       {dashboardMetricCards.map((dashboardCard) => {
                         const isChecked = !disabledCardIds.includes(dashboardCard.id);
                         return (
-                          <label
+                          <div
                             key={dashboardCard.id}
-                            className="flex items-start gap-3 p-2.5 rounded-xl border border-border/40 bg-card/20 hover:bg-muted/30 transition-colors cursor-pointer"
+                            className="flex items-start gap-3 p-2.5 rounded-xl border border-border/40 bg-card/20 hover:bg-muted/30 transition-colors"
                           >
-                            <input
-                              type="checkbox"
+                            <Checkbox
+                              id={`card-vis-${dashboardCard.id}`}
                               checked={isChecked}
-                              onChange={() => toggleCardVisibility(dashboardCard.id)}
-                              className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                              onCheckedChange={() => toggleCardVisibility(dashboardCard.id)}
+                              className="mt-0.5"
                             />
-                            <p className="text-xs font-semibold text-foreground leading-tight">{dashboardCard.title}</p>
-                          </label>
+                            <label
+                              htmlFor={`card-vis-${dashboardCard.id}`}
+                              className="text-xs font-semibold text-foreground leading-tight cursor-pointer select-none"
+                            >
+                              {dashboardCard.title}
+                            </label>
+                          </div>
                         );
                       })}
                     </div>
@@ -620,41 +628,46 @@ export default function Dashboard() {
                             key={widget.id}
                             className="flex items-center justify-between gap-3 p-2.5 rounded-xl border border-border/40 bg-card/20 hover:bg-muted/30 transition-colors"
                           >
-                            <label className="flex items-start gap-3 cursor-pointer flex-1 select-none">
-                              <input
-                                type="checkbox"
+                            <div className="flex items-start gap-3 flex-1">
+                              <Checkbox
+                                id={`widget-pin-${widget.id}`}
                                 checked={widget.isPinnedToDashboard}
-                                onChange={() => toggleWidgetPin(widget.id)}
-                                className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                                onCheckedChange={() => toggleWidgetPin(widget.id)}
+                                className="mt-0.5"
                               />
-                              <div className="space-y-0.5">
+                              <label
+                                htmlFor={`widget-pin-${widget.id}`}
+                                className="space-y-0.5 cursor-pointer flex-1 select-none text-left"
+                              >
                                 <p className="text-xs font-semibold text-foreground leading-tight">
                                   {resolveWidgetTitle(widget, t)}
                                 </p>
                                 <p className="text-[10px] text-muted-foreground capitalize">
                                   {widget.collection.replace('_', ' ')}
                                 </p>
-                              </div>
-                            </label>
+                              </label>
+                            </div>
 
                             <div className="flex items-center gap-1.5">
-                              <button
+                              <Button
                                 onClick={() => handleEditWidget(widget)}
-                                className="p-1 rounded border border-border text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                                variant="ghost"
+                                size="icon"
+                                className="w-7 h-7 border border-border text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none"
                                 title={t('dashboard.editWidget')}
-                                type="button"
                               >
                                 <Pencil className="w-3.5 h-3.5" />
-                              </button>
+                              </Button>
                               {!widget.id.startsWith('def-') && (
-                                <button
+                                <Button
                                   onClick={() => handleDeleteWidget(widget.id)}
-                                  className="p-1 rounded border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="w-7 h-7 border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shadow-none"
                                   title={t('dashboard.deleteWidget')}
-                                  type="button"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                                </Button>
                               )}
                             </div>
                           </div>
@@ -662,14 +675,14 @@ export default function Dashboard() {
                       )}
                     </div>
 
-                    <button
+                    <Button
+                      variant="outline"
                       onClick={() => openWidgetBuilder('kpi', null)}
-                      className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-border hover:border-primary/50 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-primary transition-all bg-card/10 cursor-pointer"
-                      type="button"
+                      className="w-full flex items-center justify-center gap-1.5 py-4 rounded-xl border border-dashed border-border hover:border-primary/50 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-primary transition-all bg-card/10 shadow-none h-auto"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       {t('dashboard.createWidget')}
-                    </button>
+                    </Button>
                   </fieldset>
                 </div>
               </div>
@@ -725,6 +738,6 @@ export default function Dashboard() {
           </ErrorBoundary>
         </motion.div>
       </AnimatePresence>
-    </div>
+    </ModulePageShell>
   );
 }

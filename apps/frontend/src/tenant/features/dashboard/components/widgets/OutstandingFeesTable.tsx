@@ -11,6 +11,16 @@ import MessageComposer from "@/components/ui/MessageComposer";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
+
+const MotionTableRow = motion.create(TableRow);
 
 /**
  * OutstandingFeesTable Component
@@ -139,53 +149,53 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
       </div>
       
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/30">
-              <th scope="col" className="text-left px-5 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+        <Table className="w-full text-sm">
+          <TableHeader>
+            <TableRow className="border-b border-border bg-muted/30 hover:bg-transparent">
+              <TableHead scope="col" className="text-left px-5 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide h-auto">
                 {t("hasanat.columns.redemption.student")}
-              </th>
-              <th scope="col" className="text-left px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">
+              </TableHead>
+              <TableHead scope="col" className="text-left px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell h-auto">
                 {t("sessions.report.colClass")}
-              </th>
-              <th scope="col" className="text-left px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+              </TableHead>
+              <TableHead scope="col" className="text-left px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide h-auto">
                 {t("finance.columns.amount")}
-              </th>
-              <th scope="col" className="text-left px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">
+              </TableHead>
+              <TableHead scope="col" className="text-left px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell h-auto">
                 {t("finance.metrics.overdue")}
-              </th>
-              <th scope="col" className="px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide text-right">
+              </TableHead>
+              <TableHead scope="col" className="px-3 py-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide text-right h-auto">
                 {t("hasanat.columns.actions")}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border/50">
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border/50">
             {paginatedRows.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="text-center py-6 text-xs text-muted-foreground">
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-6 text-xs text-muted-foreground">
                   {t("finance.report.noInvoicesMatch")}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               paginatedRows.map((outstandingFee, index) => (
-                <motion.tr
+                <MotionTableRow
                   key={outstandingFee.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: index * 0.05 }}
                   className="hover:bg-muted/20 transition-colors"
                 >
-                  <td className="px-5 py-3">
+                  <TableCell className="px-5 py-3">
                     <div className="flex items-center gap-2.5">
                       <UserAvatar id={outstandingFee.studentId} name={outstandingFee.student} className="w-7 h-7 rounded-full text-[10px] font-bold" />
                       <span className="text-[13px] font-medium text-foreground">{outstandingFee.student}</span>
                     </div>
-                  </td>
-                  <td className="px-3 py-3 text-[12px] text-muted-foreground hidden sm:table-cell">{outstandingFee.class}</td>
-                  <td className="px-3 py-3">
+                  </TableCell>
+                  <TableCell className="px-3 py-3 text-[12px] text-muted-foreground hidden sm:table-cell">{outstandingFee.class}</TableCell>
+                  <TableCell className="px-3 py-3">
                     <span className="text-[13px] font-bold text-destructive">{formatCurrency(outstandingFee.amount)}</span>
-                  </td>
-                  <td className="px-3 py-3 hidden md:table-cell">
+                  </TableCell>
+                  <TableCell className="px-3 py-3 hidden md:table-cell">
                     <StatusBadge
                       status={outstandingFee.months >= 3 ? "overdue" : "warning"}
                       config={{
@@ -200,8 +210,8 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                       }}
                       size="sm"
                     />
-                  </td>
-                  <td className="px-3 py-3 text-right">
+                  </TableCell>
+                  <TableCell className="px-3 py-3 text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <Button
                         variant="ghost"
@@ -242,12 +252,12 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                         <Send className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
                     </div>
-                  </td>
-                </motion.tr>
+                  </TableCell>
+                </MotionTableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       <footer className="px-5 py-3 border-t border-border flex items-center justify-between">

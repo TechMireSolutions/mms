@@ -208,7 +208,7 @@ export function useTeachersWidgetAggregates(
           body: JSON.stringify({ widgets: teacherQueries }),
         },
       );
-      return aggregateResponse.results;
+      return aggregateResponse?.results ?? {};
     },
     enabled: isAuthenticated && enabled && teacherQueries.length > 0,
     staleTime: 30_000,

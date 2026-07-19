@@ -3,7 +3,7 @@ import { apiFetch, apiJson } from '@/lib/apiClient';
 
 export async function fetchBackgroundJobs(): Promise<BackgroundJobRecord[]> {
   const jobsResponse = await apiJson<{ jobs: BackgroundJobRecord[] }>(BACKGROUND_JOBS_API_PATH);
-  return jobsResponse.jobs;
+  return jobsResponse?.jobs ?? [];
 }
 
 export async function upsertBackgroundJobRemote(job: BackgroundJobRecord): Promise<BackgroundJobRecord> {

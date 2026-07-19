@@ -12,6 +12,14 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 import MessageComposer from "@/components/ui/MessageComposer";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 
 export interface OverdueStudent {
   id: number;
@@ -176,68 +184,68 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+            <Table className="w-full text-sm">
+              <TableHeader>
+                <TableRow className="border-b border-border bg-muted/30 hover:bg-transparent">
+                  <TableHead scope="col" className="px-4 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide h-auto">
                     {t("hasanat.columns.redemption.student")}
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                  </TableHead>
+                  <TableHead scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide h-auto">
                     {t("nav.obligations")}
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                  </TableHead>
+                  <TableHead scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide h-auto">
                     {t("finance.columns.dueDate")}
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                  </TableHead>
+                  <TableHead scope="col" className="px-3 py-2.5 text-right text-[11px] font-bold text-muted-foreground uppercase tracking-wide h-auto">
                     {t("finance.columns.amount")}
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                  </TableHead>
+                  <TableHead scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wide h-auto">
                     {t("hasanat.columns.distribution.status")}
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                  </TableHead>
+                  <TableHead scope="col" className="px-3 py-2.5 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wide h-auto">
                     {t("hasanat.columns.actions")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border">
                 {paginatedStudents.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="text-center py-8 text-xs text-muted-foreground">
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-xs text-muted-foreground">
                       {t("finance.report.noInvoicesMatch")}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   paginatedStudents.map((overdueStudent) => {
                     const reminded = remindedIds.has(overdueStudent.id);
                     const urgencyStatus = overdueStudent.daysOverdue >= 30 ? "critical" : overdueStudent.daysOverdue >= 14 ? "high" : "moderate";
                     return (
-                      <tr key={overdueStudent.id} className="hover:bg-muted/20 transition-colors">
-                        <td className="px-4 py-2.5">
+                      <TableRow key={overdueStudent.id} className="hover:bg-muted/20 transition-colors">
+                        <TableCell className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
                             <UserAvatar id={overdueStudent.id} name={overdueStudent.name} className="w-7 h-7 rounded-full text-[10px] font-bold" />
                             <span className="font-medium text-foreground text-xs">{overdueStudent.name}</span>
                           </div>
-                        </td>
-                        <td className="px-3 py-2.5">
+                        </TableCell>
+                        <TableCell className="px-3 py-2.5">
                           <div className="flex items-center gap-1">
                             <Scale className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
                             <span className="text-xs text-foreground">{overdueStudent.obligationType}</span>
                           </div>
-                        </td>
-                        <td className="px-3 py-2.5">
+                        </TableCell>
+                        <TableCell className="px-3 py-2.5">
                           <div>
                             <p className="text-xs text-foreground m-0">{formatDate(overdueStudent.dueDate)}</p>
                             <p className="text-[10px] text-destructive font-semibold m-0">
                               {t("dashboard.widgets.daysOverdue", { count: overdueStudent.daysOverdue })}
                             </p>
                           </div>
-                        </td>
-                        <td className="px-3 py-2.5 text-right">
+                        </TableCell>
+                        <TableCell className="px-3 py-2.5 text-right">
                           <span className="text-xs font-bold text-foreground">
                             {formatMoney(overdueStudent.amount, overdueStudent.currency)}
                           </span>
-                        </td>
-                        <td className="px-3 py-2.5 text-center">
+                        </TableCell>
+                        <TableCell className="px-3 py-2.5 text-center">
                           <StatusBadge
                             status={urgencyStatus}
                             config={{
@@ -256,8 +264,8 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                             }}
                             size="sm"
                           />
-                        </td>
-                        <td className="px-3 py-2.5 text-center">
+                        </TableCell>
+                        <TableCell className="px-3 py-2.5 text-center">
                           <Button
                             variant="ghost"
                             onClick={() => handleRemind(overdueStudent)}
@@ -272,13 +280,13 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                             <Bell className="w-2.5 h-2.5" aria-hidden="true" />
                             {reminded ? t("dashboard.widgets.sent") : t("dashboard.widgets.remind")}
                           </Button>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     );
                   })
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
 
             {/* Footer */}
             <footer className="px-4 py-2.5 border-t border-border flex items-center justify-between bg-muted/20">
