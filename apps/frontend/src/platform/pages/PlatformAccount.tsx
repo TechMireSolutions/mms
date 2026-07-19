@@ -98,7 +98,7 @@ export default function PlatformAccount(): React.JSX.Element {
       setPasswordError(
         passwordKey === "platform.setupPasswordTooShort"
           ? t(passwordKey, { min: String(PLATFORM_MIN_PASSWORD_LENGTH) })
-          : t(passwordKey),
+          : t(passwordKey as any),
       );
       return;
     }

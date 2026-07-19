@@ -121,7 +121,7 @@ export default function ContactsDataBanner({
         role="alert"
       >
         <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-        <span>{t('contacts.sync.failed', { count: failureCount })}</span>
+        <span>{t('contacts.sync.failed')}</span>
       </div>,
     );
   }

@@ -17,6 +17,7 @@ import {
   type TenantDatabaseSnapshot,
   applyTitleCaseRecursive,
   type TabDefinition,
+  registerSettingsProvider,
 } from "@mms/shared";
 import { getAppDomain } from "@/lib/config/tenantConfig";
 import {
@@ -570,6 +571,16 @@ export function getEffectiveGlobalSettings(): GlobalSettings {
     ...(globalSettingsPreview ?? {}),
   });
 }
+
+// Register settings provider for shared formatters to be settings/preview-aware.
+registerSettingsProvider(() => {
+  const settings = getEffectiveGlobalSettings();
+  return {
+    dateFormat: settings.dateFormat,
+    timezone: settings.timezone,
+    language: settings.language,
+  };
+});
 
 /** Persists merged global settings and dispatches `local-database-update`. */
 export function saveGlobalSettings(globalSettings: GlobalSettings): void {

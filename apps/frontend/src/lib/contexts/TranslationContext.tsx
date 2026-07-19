@@ -3,12 +3,29 @@ import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useLocation } from 'react-router-dom';
 import { useTenant } from '@/lib/contexts/TenantContext';
 import { isEntryPath } from '@/lib/config/routes';
-import { translateAppParams, registerLanguagePack, type AppTranslationKey } from '@mms/shared';
+import {
+  translateAppParams,
+  registerLanguagePack,
+  getLanguageDirection,
+  isRtlLanguage,
+  applyDocumentLanguage,
+  type AppTranslationKey,
+  type TranslationArgs,
+  type AppLanguageCode,
+} from '@mms/shared';
+import { ensureLocaleFontsLoaded } from '@/lib/localeFonts';
+
+export type TranslationFunction = <K extends AppTranslationKey>(
+  key: K,
+  ...args: TranslationArgs<K>
+) => string;
 
 interface TranslationContextType {
   language: string;
-  t: (key: AppTranslationKey, params?: Record<string, string | number>) => string;
+  t: TranslationFunction;
   isLoading: boolean;
+  dir: 'ltr' | 'rtl';
+  isRtl: boolean;
 }
 
 export const TranslationContext = createContext<TranslationContextType | null>(null);
@@ -20,11 +37,19 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
 
   const language = isEntryPath(pathname, { isApex }) ? "en" : settings.language;
   const [loadedLanguages, setLoadedLanguages] = useState<Record<string, boolean>>({ en: true });
+  const [activeLanguage, setActiveLanguage] = useState<AppLanguageCode>("en");
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (loadedLanguages[language]) return;
+  const isLanguageLoaded = !!loadedLanguages[language];
+  const hasLoadedAnyLanguage = Object.values(loadedLanguages).some(Boolean);
 
+  useEffect(() => {
+    if (isLanguageLoaded) {
+      setActiveLanguage(language);
+      return;
+    }
+
+    let active = true;
     setIsLoading(true);
     let promise: Promise<void>;
 
@@ -37,8 +62,16 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
         registerLanguagePack('ur', translationModule.APP_TRANSLATIONS_UR);
       });
     } else if (language === 'fa') {
-      promise = import('@mms/shared/translations/fa').then((translationModule) => {
-        registerLanguagePack('fa', translationModule.APP_TRANSLATIONS_FA);
+      // Farsi overrides are merged on top of Arabic translations
+      promise = Promise.all([
+        import('@mms/shared/translations/ar'),
+        import('@mms/shared/translations/fa'),
+      ]).then(([arModule, faModule]) => {
+        registerLanguagePack('ar', arModule.APP_TRANSLATIONS_AR);
+        registerLanguagePack('fa', {
+          ...arModule.APP_TRANSLATIONS_AR,
+          ...faModule.APP_TRANSLATIONS_FA,
+        });
       });
     } else {
       setIsLoading(false);
@@ -47,30 +80,58 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
 
     promise
       .then(() => {
+        if (!active) return;
         setLoadedLanguages((currentLoadedLanguages) => ({ ...currentLoadedLanguages, [language]: true }));
+        setActiveLanguage(language);
         setIsLoading(false);
       })
       .catch((translationError) => {
+        if (!active) return;
         console.error(`Failed to load translation for ${language}:`, translationError);
         setIsLoading(false);
       });
-  }, [language, loadedLanguages]);
 
-  // Stable t() reference: re-created only when (a) the language changes or
-  // (b) this language's pack transitions from unloaded → loaded. Using the
-  // boolean value avoids a new function reference on every unrelated state tick.
-  const packLoaded = loadedLanguages[language] ?? false;
+    return () => {
+      active = false;
+    };
+  }, [language, isLanguageLoaded]);
+
+  useEffect(() => {
+    // Sync document attributes (lang, dir, fonts) whenever activeLanguage changes
+    applyDocumentLanguage(activeLanguage);
+    ensureLocaleFontsLoaded(activeLanguage);
+  }, [activeLanguage]);
+
   const t = React.useCallback(
-    (key: AppTranslationKey, params?: Record<string, string | number>) => {
-      return translateAppParams(key, language, params);
+    <K extends AppTranslationKey>(key: K, ...args: TranslationArgs<K>) => {
+      return translateAppParams(key, activeLanguage, ...args);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [language, packLoaded], // stable: only changes on language switch or first pack load
+    [activeLanguage],
   );
 
+  if (!isLanguageLoaded && !hasLoadedAnyLanguage) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="relative h-12 w-12">
+            <div className="absolute inset-0 rounded-full border-4 border-muted/30" />
+            <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          </div>
+          <p className="text-sm font-medium text-muted-foreground animate-pulse">
+            Loading translations...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const dir = getLanguageDirection(activeLanguage);
+  const isRtl = isRtlLanguage(activeLanguage);
+
   return (
-    <TranslationContext.Provider value={{ language, t, isLoading }}>
+    <TranslationContext.Provider value={{ language: activeLanguage, t, isLoading, dir, isRtl }}>
       {children}
     </TranslationContext.Provider>
   );
 }
+

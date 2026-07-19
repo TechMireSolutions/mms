@@ -26,6 +26,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | [mms-code-review](mms-code-review/SKILL.md) | PR / change review against MMS standards |
 | [mms-ops-deploy](mms-ops-deploy/SKILL.md) | Hetzner deploy, Apache isolation, PORT 5002, GitHub Actions |
 | [mms-linux-compatibility](mms-linux-compatibility/SKILL.md) | Enforce and check Linux/Ubuntu VPS compatibility (casing, line endings, permissions, PM2) |
+| [mms-settings-i18n](mms-settings-i18n/SKILL.md) | App settings (/settings), settings preview drafts, sidebar navigation, and localization/i18n standards (en/ar/ur/fa) |
 
 ## Rules vs skills
 

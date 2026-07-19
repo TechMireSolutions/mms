@@ -212,9 +212,9 @@ export function ExportToolbar({
   return (
     <div className="flex items-center justify-between gap-3 flex-wrap py-2 text-left relative">
       <p className="text-xs text-muted-foreground">
-        {t("reports.export.title").split("{name}")[0]}
+        {t("reports.export.title", { name: "{name}" }).split("{name}")[0]}
         <span className="font-semibold text-foreground">{title}</span>
-        {t("reports.export.title").split("{name}")[1]}
+        {t("reports.export.title", { name: "{name}" }).split("{name}")[1]}
       </p>
       
       <div className="flex items-center gap-2">

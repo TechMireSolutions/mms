@@ -1,6 +1,5 @@
 import { useContext } from "react";
-import { type AppTranslationKey } from "@mms/shared";
-import { TranslationContext } from "@/lib/contexts/TranslationContext";
+import { TranslationContext, type TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 /**
  * Reactive app-wide UI translations from global language preference.
@@ -8,7 +7,10 @@ import { TranslationContext } from "@/lib/contexts/TranslationContext";
  */
 export function useTranslation(): {
   language: string;
-  t: (key: AppTranslationKey, params?: Record<string, string | number>) => string;
+  t: TranslationFunction;
+  isLoading: boolean;
+  dir: 'ltr' | 'rtl';
+  isRtl: boolean;
 } {
   const context = useContext(TranslationContext);
   if (!context) {
@@ -17,6 +19,9 @@ export function useTranslation(): {
   return {
     language: context.language,
     t: context.t,
+    isLoading: context.isLoading,
+    dir: context.dir,
+    isRtl: context.isRtl,
   };
 }
 

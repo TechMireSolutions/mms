@@ -239,6 +239,24 @@
         "s3 upload",
         "fastify"
       ]
+    },
+    {
+      "name": "mms-settings-i18n",
+      "path": "skills/mms-settings-i18n",
+      "keywords": [
+        "i18n",
+        "translation",
+        "settings",
+        "locale",
+        "rtl",
+        "ltr",
+        "direction",
+        "navigation",
+        "typography",
+        "logical properties",
+        "formatting",
+        "preview"
+      ]
     }
   ],
   "rules": {

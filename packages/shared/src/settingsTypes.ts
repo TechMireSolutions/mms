@@ -1343,10 +1343,29 @@ interface StoredGlobalSettings {
   language: AppLanguageCode;
 }
 
+let settingsProvider: (() => StoredGlobalSettings) | null = null;
+
+
+/**
+ * Registers an external settings provider to override `getStoredGlobalSettings` calls.
+ * This is primarily used in the frontend to inject reactive/preview settings.
+ */
+export function registerSettingsProvider(provider: () => StoredGlobalSettings): void {
+  settingsProvider = provider;
+}
+
 /**
  * Retrieves the global settings from localStorage (safe for server rendering).
  */
 function getStoredGlobalSettings(): StoredGlobalSettings {
+  if (settingsProvider) {
+    try {
+      return settingsProvider();
+    } catch {
+      // Fallback if the provider fails
+    }
+  }
+
   let dateFormat = "DD/MM/YYYY";
   let timezone = "UTC";
   let language: AppLanguageCode = "en";
@@ -1382,6 +1401,7 @@ function getStoredGlobalSettings(): StoredGlobalSettings {
 
   return { dateFormat, timezone, language };
 }
+
 
 /**
  * Formats a Date object or date string according to the active global date format.

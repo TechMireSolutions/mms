@@ -75,7 +75,7 @@ export default function PlatformAdmins(): React.JSX.Element {
       setSubmitError(
         passwordKey === "platform.setupPasswordTooShort"
           ? t(passwordKey, { min: String(PLATFORM_MIN_PASSWORD_LENGTH) })
-          : t(passwordKey),
+          : t(passwordKey as any),
       );
       return;
     }

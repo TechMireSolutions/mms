@@ -74,6 +74,7 @@ Engineering layout & naming (file-scoped): `mms-structure.md`, `mms-naming.md`.
 | `mms-reports-export` | Analytics & export |
 | `mms-migration-fixes` | Tech debt fixes |
 | `mms-code-review` | PR review |
+| `mms-settings-i18n` | Settings panels, sidebar/dropdown navigation registry, settings previews/drafts, and localization/i18n standards (en/ar/ur/fa) |
 
 Index: [.agent/skills/README.md](.agent/skills/README.md)
 

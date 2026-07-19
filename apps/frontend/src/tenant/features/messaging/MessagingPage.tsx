@@ -551,7 +551,7 @@ export default function MessagingPage(): React.JSX.Element {
                 <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
                   <Plus className="w-4 h-4 text-primary" /> {t('messaging.createPreset')}
                 </h4>
-                <p className="text-xs text-muted-foreground">{t('messaging.createPresetDesc')}</p>
+                <p className="text-xs text-muted-foreground">{t('messaging.createPresetDesc', { name: '{name}' })}</p>
               </div>
 
               <form onSubmit={handleCreateTemplate} className="space-y-3">

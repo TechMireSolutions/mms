@@ -75,7 +75,7 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
       setError(
         passwordKey === "platform.setupPasswordTooShort"
           ? t(passwordKey, { min: String(PLATFORM_MIN_PASSWORD_LENGTH) })
-          : t(passwordKey),
+          : t(passwordKey as any),
       );
       return;
     }

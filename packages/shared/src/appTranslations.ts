@@ -1,9 +1,35 @@
 import { APP_TRANSLATIONS_EN } from "./appTranslationsEn.js";
-import { normalizeAppLanguage, type AppLanguageCode } from "./languageUtils.js";
+import { normalizeAppLanguage, type AppLanguageCode, getIntlLocaleForLanguage } from "./languageUtils.js";
 import { normalizeModuleTierTabId } from "./moduleTierTabs.js";
+
+export { APP_TRANSLATIONS_EN };
 
 /** App-wide UI string keys (navigation, settings shell, auth, module tiers). */
 export type AppTranslationKey = keyof typeof APP_TRANSLATIONS_EN;
+
+/** Dynamic sub-blocks to ignore in ICU plural selects. */
+export type ExcludedPlaceholders =
+  | "records" | "months" | "reminders" | "students" | "cards" | "Months"
+  | "count, select, one {record"
+  | "count, select, one {month"
+  | "count, select, one {reminder"
+  | "count, select, one {student"
+  | "count, select, one {card"
+  | "count, select, one {Month";
+
+/** Extracts all dynamic placeholder names (wrapped in curly braces) from a string literal type. */
+export type ExtractPlaceholders<S extends string> =
+  S extends `${string}{${infer P}}${infer R}`
+    ? (P extends ExcludedPlaceholders ? never : P) | ExtractPlaceholders<R>
+    : never;
+
+/** Strict parameter arguments map based on translation key. */
+export type TranslationArgs<K extends AppTranslationKey> =
+  [AppTranslationKey] extends [K]
+    ? [params?: Record<string, string | number>]
+    : ExtractPlaceholders<typeof APP_TRANSLATIONS_EN[K]> extends never
+      ? [params?: never]
+      : [params: Record<ExtractPlaceholders<typeof APP_TRANSLATIONS_EN[K]>, string | number>];
 
 // Global runtime cache for loaded translation packs.
 // English is statically loaded by default.
@@ -20,19 +46,43 @@ export function registerLanguagePack(lang: string, dict: Record<string, string>)
 export function translateApp(key: AppTranslationKey, language: string): string {
   const lang = normalizeAppLanguage(language);
   const dict = TRANSLATION_CACHE[lang] || TRANSLATION_CACHE.en;
-  return dict[key] ?? TRANSLATION_CACHE.en[key] ?? key;
+  if (dict[key] !== undefined) {
+    return dict[key];
+  }
+  if (lang === "fa" && TRANSLATION_CACHE.ar?.[key] !== undefined) {
+    return TRANSLATION_CACHE.ar[key];
+  }
+  return TRANSLATION_CACHE.en[key] ?? key;
 }
 
-/** Like `translateApp` with `{param}` placeholder substitution. */
-export function translateAppParams(
-  key: AppTranslationKey,
+const ICU_SELECT_REGEX = /\{(\w+),\s*select,\s*one\s*\{([^}]+)\}\s*other\s*\{([^}]+)\}\}/g;
+
+/** Like `translateApp` with `{param}` placeholder substitution (strictly type-safe). */
+export function translateAppParams<K extends AppTranslationKey>(
+  key: K,
   language: string,
-  params?: Record<string, string | number>
+  ...args: TranslationArgs<K>
 ): string {
+  const params = args[0] as Record<string, string | number> | undefined;
   let text = translateApp(key, language);
   if (!params) return text;
+  
+  // Format simple ICU plural select formatting: {count, select, one {record} other {records}}
+  text = text.replace(ICU_SELECT_REGEX, (match, varName, singular, plural) => {
+    const val = Number(params[varName]);
+    return val === 1 ? singular : plural;
+  });
+
   for (const [name, value] of Object.entries(params)) {
-    text = text.replaceAll(`{${name}}`, String(value));
+    let formattedValue = String(value);
+    if (typeof value === "number") {
+      const lowerName = name.toLowerCase();
+      if (!lowerName.endsWith("id") && !lowerName.endsWith("code")) {
+        const locale = getIntlLocaleForLanguage(language);
+        formattedValue = new Intl.NumberFormat(locale).format(value);
+      }
+    }
+    text = text.replaceAll(`{${name}}`, formattedValue);
   }
   return text;
 }
