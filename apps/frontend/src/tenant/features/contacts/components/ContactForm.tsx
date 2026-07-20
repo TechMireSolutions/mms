@@ -808,64 +808,6 @@ export default function ContactForm({
           </Field>
         </SectionCard>
       )}
-
-      <SectionCard
-        title={t("contacts.form.communicationPreferences") || "Communication Preferences"}
-        icon={Mail}
-        accentColor="primary"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field
-            label={t("contacts.form.preferredLanguage") || "Preferred Language"}
-            id="preferredLanguage"
-          >
-            <EditableSelect
-              options={["en", "ur", "ar", "fa"]}
-              value={contactDraft.preferredLanguage || "en"}
-              onChange={(val) => updateDraft({ preferredLanguage: val as 'en' | 'ur' | 'ar' | 'fa' })}
-              placeholder="Select Language"
-              className="w-full"
-            />
-          </Field>
-
-          <Field
-            label={t("contacts.form.preferredContactMethod") || "Preferred Contact Method"}
-            id="preferredContactMethod"
-          >
-            <EditableSelect
-              options={["whatsapp", "sms", "email", "phone_call"]}
-              value={contactDraft.preferredContactMethod || "whatsapp"}
-              onChange={(val) => updateDraft({ preferredContactMethod: val as 'whatsapp' | 'sms' | 'email' | 'phone_call' })}
-              placeholder="Select Method"
-              className="w-full"
-            />
-          </Field>
-        </div>
-
-        <div className="mt-4">
-          <label
-            htmlFor="doNotContact"
-            className={cn(
-              "flex items-center gap-3 py-3 px-4.5 rounded-xl border select-none cursor-pointer transition-all duration-300",
-              contactDraft.doNotContact
-                ? "bg-rose-500/10 border-rose-500/45 shadow-sm"
-                : "bg-muted/5 border-border/80 hover:bg-muted/10 hover:border-border",
-            )}
-          >
-            <Checkbox
-              id="doNotContact"
-              checked={!!contactDraft.doNotContact}
-              onCheckedChange={(checked) => updateDraft({ doNotContact: !!checked })}
-              className="data-[state=checked]:bg-rose-600 data-[state=checked]:text-white"
-            />
-            <div className="flex-1 flex items-center justify-between">
-              <span className="text-xs font-semibold text-foreground">
-                {t("contacts.form.doNotContact") || "Opt out of automated bulk messaging (Do Not Contact)"}
-              </span>
-            </div>
-          </label>
-        </div>
-      </SectionCard>
     </div>
   );
 
