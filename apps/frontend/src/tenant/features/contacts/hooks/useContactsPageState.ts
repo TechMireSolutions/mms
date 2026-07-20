@@ -3,6 +3,7 @@ import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import type { AppTranslationKey, Contact, PhoneNumber } from "@mms/shared";
 import {
   parsePhoneNumber,
+  getPrimaryPhone,
   resolveModuleTierTab,
   contactMatchesSearch,
   filterActiveContacts,
@@ -291,7 +292,18 @@ export function useContactsPageState({
     (contactDraft: Contact) => {
       if (!canWrite) return;
       const isCreatingContact = !editContact;
-      const payload = editContact ? { ...editContact, ...contactDraft } : contactDraft;
+      const primaryPhoneStr = getPrimaryPhone(contactDraft);
+      const payload: Contact = editContact
+        ? {
+            ...editContact,
+            ...contactDraft,
+            phones: contactDraft.phones || [],
+            phone: primaryPhoneStr || undefined,
+          }
+        : {
+            ...contactDraft,
+            phone: primaryPhoneStr || undefined,
+          };
       void saveContact(payload, isCreatingContact)
         .then(() => {
           setShowForm(false);
