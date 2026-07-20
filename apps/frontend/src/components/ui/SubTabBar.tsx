@@ -8,6 +8,7 @@ export interface SubTab<K extends string = string> {
   label: string;
   description?: string;
   icon?: React.ComponentType<{ className?: string }>;
+  badge?: number | string;
 }
 
 interface SubTabBarProps<K extends string> {

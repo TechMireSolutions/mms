@@ -303,6 +303,8 @@ export default function ContactForm({
   // Re-sync draft when editing another contact or re-opening modal
   React.useEffect(() => {
     if (!open) return;
+    localIdMap.current.clear();
+    setTab("basic");
     setContactDraft(
       normalizeContactForEdit(contact, initialDraft, defaultCity, defaultProvince, defaultCountry),
     );
@@ -310,11 +312,31 @@ export default function ContactForm({
   }, [open, contact, initialDraft, defaultCity, defaultProvince, defaultCountry]);
 
   const visibleTabs = useMemo(() => {
+    const phoneCount = (contactDraft.phones || []).filter(p => (p.number || "").trim()).length;
+    const emailCount = (contactDraft.emails || []).filter(e => (e.address || "").trim()).length;
+    const addressCount = (contactDraft.addresses || []).filter(a => (a.line1 || a.city || "").trim()).length;
+    const socialCount = (contactDraft.socials || []).filter(s => (s.url || "").trim()).length;
+    const emergencyCount = (contactDraft.emergencyContacts || []).filter(e => e.contactId).length;
+
+    const countMap: Record<string, number> = {
+      phones: phoneCount,
+      emails: emailCount,
+      addresses: addressCount,
+      socials: socialCount,
+      emergency: emergencyCount,
+    };
+
     return CONTACT_TABS.filter((tabItem) => {
       if (tabItem.key === "basic") return true;
       return enabledTabIds.has(tabItem.key);
+    }).map((tabItem) => {
+      const count = countMap[tabItem.key];
+      return {
+        ...tabItem,
+        badge: count && count > 0 ? count : undefined,
+      };
     });
-  }, [enabledTabIds]);
+  }, [enabledTabIds, contactDraft.phones, contactDraft.emails, contactDraft.addresses, contactDraft.socials, contactDraft.emergencyContacts]);
 
   const isFieldEnabled = useCallback(
     (tabId: string, fieldId: string) => {
@@ -574,6 +596,57 @@ export default function ContactForm({
               </div>
             </Field>
           )}
+
+          {/* Primary Phone shortcut on Basic Info tab */}
+          <Field
+            label={t("contacts.form.primaryPhone") || "Primary Phone"}
+            error={getListItemError("phones", "number", 0)}
+            id="primaryPhone"
+          >
+            <div className="relative flex items-center group/input">
+              <Phone className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+              <Input
+                type="tel"
+                id="primaryPhone"
+                name="primaryPhone"
+                value={getPhoneDisplayValue(contactDraft.phones?.[0] || { label: "Mobile", number: "", countryCode: "+92" })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const phones = [...(contactDraft.phones || [{ label: "Mobile", number: "", countryCode: "+92" }])];
+                  phones[0] = { ...phones[0], number: val };
+                  updateDraft({ phones });
+                }}
+                onBlur={() => handlePhoneBlur(0)}
+                placeholder={t("contacts.form.phoneNumberPlaceholder")}
+                className="pl-10"
+              />
+            </div>
+          </Field>
+
+          {/* Primary Email shortcut on Basic Info tab */}
+          <Field
+            label={t("contacts.form.primaryEmail") || "Primary Email"}
+            error={getListItemError("emails", "address", 0)}
+            id="primaryEmail"
+          >
+            <div className="relative flex items-center group/input">
+              <Mail className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+              <Input
+                type="email"
+                id="primaryEmail"
+                name="primaryEmail"
+                value={contactDraft.emails?.[0]?.address || ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const emails = [...(contactDraft.emails || [{ label: "Personal", address: "" }])];
+                  emails[0] = { ...emails[0], address: val };
+                  updateDraft({ emails });
+                }}
+                placeholder={t("contacts.form.emailPlaceholder") || "name@domain.com"}
+                className="pl-10"
+              />
+            </div>
+          </Field>
 
           {isFieldEnabled("basic", "gender") && (
             <Field

@@ -343,6 +343,16 @@ export function FormModal<K extends string = string>({
                 >
                   {Icon && <Icon className="w-3.5 h-3.5 flex-shrink-0" />}
                   <span>{tab.label}</span>
+                  {tab.badge !== undefined && (
+                    <span className={cn(
+                      "ms-auto inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-extrabold transition-colors",
+                      active
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
+                    )}>
+                      {tab.badge}
+                    </span>
+                  )}
                 </TabsPrimitive.Trigger>
               );
             })}
