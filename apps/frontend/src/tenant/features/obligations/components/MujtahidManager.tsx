@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Plus, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
+import { Card } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
@@ -86,8 +87,7 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
           const mujtahidReps = reps.filter((representative) => representative.mujtahid_id === mujtahid.id);
           const isOpen = expanded[mujtahid.id];
           return (
-            <article key={mujtahid.id} className="relative overflow-hidden group/mujtahid rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-300">
-              <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/mujtahid:bg-primary" />
+            <Card key={mujtahid.id} accentColor="primary" className="group/mujtahid">
               <header className="flex items-center justify-between px-5 py-3 pl-5.5">
                 <Button type="button" onClick={() => setExpanded((expandedById) => ({ ...expandedById, [mujtahid.id]: !expandedById[mujtahid.id] }))}
                   aria-expanded={isOpen}
@@ -140,7 +140,7 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
                   )}
                 </div>
               )}
-            </article>
+            </Card>
           );
         })}
       </section>

@@ -766,7 +766,7 @@ export default function ContactDetailDrawer({
                         >
                           <Icon className="w-2.5 h-2.5 text-muted-foreground group-hover:text-primary" />
                         </div>
-                        <div className="bg-card rounded-2xl border border-border/50 p-4 shadow-xs group-hover:border-primary/20 transition-all">
+                        <Card className="p-4 shadow-xs hover:border-primary/20 group-hover:border-primary/20">
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                               {ACTIVITY_TYPE_I18N[act.type] ? t(ACTIVITY_TYPE_I18N[act.type]) : act.type}
@@ -775,7 +775,7 @@ export default function ContactDetailDrawer({
                           </div>
                           <p className="text-xs text-foreground font-medium leading-relaxed">{act.content}</p>
                           {act.by && <span className="block mt-2 text-[9px] font-bold text-primary italic">— {act.by}</span>}
-                        </div>
+                        </Card>
                       </motion.div>
                     );
                   })
@@ -806,7 +806,7 @@ export default function ContactDetailDrawer({
                   c.relationships.map((relationship, relationshipIndex) => {
                     const target = allContacts.find((contact) => String(contact.id) === String(relationship.contactId));
                     return (
-                      <div key={relationshipIndex} className={`group flex items-center justify-between gap-3 p-4 rounded-2xl border bg-card transition-all ${DETAIL_STYLES.networkItemCard}`}>
+                      <Card key={relationshipIndex} className={`flex items-center justify-between gap-3 p-4 ${DETAIL_STYLES.networkItemCard}`}>
                         <div className="flex items-center gap-3 min-w-0">
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors ${DETAIL_STYLES.networkItemIcon}`}>
                             {target ? getInitials(target.name) : "?"}
@@ -827,7 +827,7 @@ export default function ContactDetailDrawer({
                             <Search className="w-4 h-4" />
                           </Button>
                         )}
-                      </div>
+                      </Card>
                     );
                   })
                 )}
@@ -896,7 +896,7 @@ export default function ContactDetailDrawer({
                   </div>
                 ) : (
                   c.attachments.map((file) => (
-                    <div key={file.id} className="flex items-center justify-between p-4 rounded-2xl border border-border/60 bg-card hover:border-primary/20 transition-all">
+                    <Card key={file.id} className="flex items-center justify-between p-4 hover:border-primary/20 transition-all">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="p-2 rounded-lg bg-muted text-muted-foreground">
                           <FileText className="w-5 h-5" />
@@ -937,7 +937,7 @@ export default function ContactDetailDrawer({
                           </Button>
                         )}
                       </div>
-                    </div>
+                    </Card>
                   ))
                 )}
               </div>

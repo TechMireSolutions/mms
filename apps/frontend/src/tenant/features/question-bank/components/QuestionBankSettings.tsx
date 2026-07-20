@@ -105,7 +105,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
       <SettingsCallout>{t('questionBank.settingsNote')}</SettingsCallout>
 
       {showPrefs && (
-        <Card accentColor="primary" className="space-y-4 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 shadow-sm hover:shadow-md">
+        <Card accentColor="primary" className="space-y-4 p-5">
           <div className="flex items-center gap-2 border-b border-border/40 pb-2 pl-1">
             <Library className="h-3.5 w-3.5 text-primary" aria-hidden />
             <h3 className="text-sm font-bold text-foreground">{t('questionBank.settingsPrefsTitle')}</h3>

@@ -12,6 +12,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 
 import { StatCard } from "@/components/ui/StatCard";
+import { Card } from "@/components/ui/card";
 
 interface AccountingDashboardProps {
   accounts: Account[];
@@ -105,8 +106,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
       >
 
         {/* Monthly Revenue vs Expenses */}
-        <div className="relative overflow-hidden group/revenue lg:col-span-2 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 shadow-sm hover:shadow-md transition-all duration-300">
-          <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/revenue:bg-primary" />
+        <Card accentColor="primary" className="lg:col-span-2 p-5 pl-6.5">
           <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">{t("accounting.dashboard.revenueVsExpenses")}</h3>
           {monthlyData.length === 0 ? (
             <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">{t("accounting.dashboard.noPostedData")}</div>
@@ -124,11 +124,10 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
               </SafeResponsiveContainer>
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Expense Breakdown Pie */}
-        <div className="relative overflow-hidden group/expense rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 shadow-sm hover:shadow-md transition-all duration-300">
-          <div className="absolute start-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/expense:bg-indigo-500" />
+        <Card accentColor="indigo" className="p-5 pl-6.5">
           <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">{t("accounting.dashboard.expenseBreakdown")}</h3>
           {expenseBreakdown.length === 0 ? (
             <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">{t("accounting.dashboard.noExpenseData")}</div>
@@ -158,7 +157,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
               </div>
             </>
           )}
-        </div>
+        </Card>
       </motion.div>
 
       {/* Balance Sheet summary + Recent Entries */}
@@ -170,8 +169,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
       >
 
         {/* Balance Sheet snapshot */}
-        <div className="relative overflow-hidden group/snapshot rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 shadow-sm hover:shadow-md transition-all duration-300">
-          <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/snapshot:bg-primary" />
+        <Card accentColor="primary" className="p-5 pl-6.5">
           <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">{t("accounting.dashboard.balanceSheetSnapshot")}</h3>
           <div className="space-y-3">
             {bsData.map((balanceSheetItem) => {
@@ -197,11 +195,10 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
               : <><AlertCircle className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.dashboard.difference", { amount: formatCurrency(Math.abs(assets - (liabilities + equity))) })}</>
             }
           </div>
-        </div>
+        </Card>
 
         {/* Recent Entries */}
-        <div className="relative overflow-hidden group/entries rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 shadow-sm hover:shadow-md transition-all duration-300">
-          <div className="absolute start-0 top-0 bottom-0 w-1 bg-amber-500/45 transition-colors group-hover/entries:bg-amber-500" />
+        <Card accentColor="warning" className="p-5 pl-6.5">
           <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">{t("accounting.dashboard.recentEntries")}</h3>
           <div className="space-y-2">
             {recentEntries.map((journalEntry) => {
@@ -226,7 +223,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
               );
             })}
           </div>
-        </div>
+        </Card>
       </motion.div>
     </section>
   );

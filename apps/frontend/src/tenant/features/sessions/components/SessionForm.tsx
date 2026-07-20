@@ -6,6 +6,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FORM_INPUT } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
@@ -130,8 +131,7 @@ export function SessionForm({
 
   const renderBasic = () => (
     <div className="space-y-4 text-left">
-      <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
-        <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+      <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm text-left">
         <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
           <Calendar className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
           <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Session Details</h3>
@@ -196,14 +196,13 @@ export function SessionForm({
             className="min-h-[80px]"
           />
         </Field>
-      </section>
+      </Card>
     </div>
   );
 
   const renderFinancial = () => (
     <div className="space-y-4 text-left">
-      <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
-        <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+      <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm text-left">
         <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
           <DollarSign className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
           <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Financial Settings</h3>
@@ -228,7 +227,7 @@ export function SessionForm({
             options={CURRENCIES}
           />
         </Field>
-      </section>
+      </Card>
     </div>
   );
 

@@ -18,6 +18,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { Card } from "@/components/ui/card";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
@@ -332,8 +333,7 @@ export function JournalEntries({
                     const amount = entry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
                     const isMoneyIn = (entry.tags || []).some((tag) => ["Fees","Donation","Capital"].includes(tag)) || ["fee_collection","donation","rent_income","other_income"].includes(entry.transaction_type || "");
                     return (
-                      <article key={entry.id} className="relative overflow-hidden group/entry flex items-center gap-4 px-5 py-3 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm hover:bg-muted/20 transition-all duration-300">
-                        <div className={`absolute start-0 top-0 bottom-0 w-1 ${isMoneyIn ? "bg-success/45 group-hover/entry:bg-success" : "bg-destructive/45 group-hover/entry:bg-destructive"} transition-colors duration-300`} />
+                      <Card key={entry.id} accentColor={isMoneyIn ? "success" : "destructive"} className="flex items-center gap-4 px-5 py-3 hover:bg-muted/20 transition-all duration-300">
                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ml-1 ${isMoneyIn ? "bg-success/15" : "bg-destructive/15"}`} aria-hidden="true">
                           {isMoneyIn ? <TrendingUp className="w-4 h-4 text-success" /> : <TrendingUp className="w-4 h-4 text-destructive rotate-180" />}
                         </div>
@@ -355,7 +355,7 @@ export function JournalEntries({
                           </div>
                           <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />
                         </div>
-                      </article>
+                      </Card>
                     );
                   })}
                 </div>

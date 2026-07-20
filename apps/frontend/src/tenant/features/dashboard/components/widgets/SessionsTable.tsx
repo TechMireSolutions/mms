@@ -3,6 +3,7 @@ import { Users, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { Button } from "@/components/ui/button";
+import { WidgetCard } from "@/components/ui/WidgetCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { SimplePagination } from "@/components/ui/SimplePagination";
@@ -87,8 +88,7 @@ export default function SessionsTable({ title }: { title?: string }) {
   });
 
   return (
-    <section aria-labelledby="sessions-table-heading" className="relative overflow-hidden group rounded-2xl surface-glass shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute start-0 top-0 bottom-0 w-[3.5px] rounded-e-[2px] bg-primary/60 group-hover:bg-primary transition-colors duration-300" />
+    <WidgetCard ariaLabelledby="sessions-table-heading" accentColor="primary">
       <header className="px-6 py-4 border-b border-border/45 flex items-center justify-between ps-6.5 select-none">
 
         <div className="flex items-center gap-2.5">
@@ -175,6 +175,6 @@ export default function SessionsTable({ title }: { title?: string }) {
           />
         </footer>
       )}
-    </section>
+    </WidgetCard>
   );
 }

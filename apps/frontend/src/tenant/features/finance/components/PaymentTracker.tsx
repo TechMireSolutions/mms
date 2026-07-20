@@ -53,7 +53,7 @@ export function PaymentTracker({
     <section aria-label={t("finance.payments")} className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" aria-label={t("finance.paymentsByMethod")}>
         {Object.entries(paymentsByMethod).map(([method, amount]) => (
-          <Card key={method} className="rounded-xl border border-border/80 bg-card/45 backdrop-blur-sm p-3 shadow-sm hover:shadow-md transition-all">
+          <Card key={method} className="p-3">
             <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full border", PAYMENT_METHOD_BADGE[method] || PAYMENT_METHOD_BADGE.Other)}>{method}</span>
             <p className="text-[15px] font-bold text-foreground mt-2 m-0">{formatCurrency(amount)}</p>
             <p className="text-[10px] text-muted-foreground m-0">
@@ -63,7 +63,7 @@ export function PaymentTracker({
         ))}
       </div>
 
-      <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
+      <Card accentColor="primary" className="p-0 overflow-hidden">
         <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center justify-between gap-3 pl-6.5">
           <div className="flex items-center gap-2 min-w-0">
             <CreditCard className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />

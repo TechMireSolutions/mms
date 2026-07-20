@@ -9,6 +9,7 @@ import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { Card } from "@/components/ui/card";
 import { todayISO } from "@mms/shared";
 
 interface AddBatchModalProps {
@@ -151,7 +152,7 @@ export function StockManager({ batches, denoms, onUpdate }: StockManagerProps) {
         const pct = totalStock > 0 ? Math.round((totalRemaining / totalStock) * 100) : 0;
 
         return (
-          <article key={den.id} className="relative overflow-hidden group/stock-card rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 pl-5.5">
+          <Card key={den.id} className="pl-5.5">
             <div className="absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300" style={{ backgroundColor: den.color }} />
             {/* Den header */}
             <header className="px-4 py-3 flex items-center gap-3 border-b border-border/40 bg-muted/20 pl-4">
@@ -189,7 +190,7 @@ export function StockManager({ batches, denoms, onUpdate }: StockManagerProps) {
                 );
               })}
             </div>
-          </article>
+          </Card>
         );
       })}
 

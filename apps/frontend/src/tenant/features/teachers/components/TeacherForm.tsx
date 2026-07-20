@@ -7,6 +7,7 @@ import ContactPicker from "@/tenant/features/contacts/components/contactLink/Con
 import { Field } from "@/components/ui/FormPrimitives";
 import { FORM_INPUT } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactById } from "@/tenant/features/contacts/hooks/useContacts";
@@ -133,8 +134,7 @@ export function TeacherForm({
 
   const renderBasic = () => (
     <div className="space-y-4 text-start">
-      <section className="relative z-20 overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
-        <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+      <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm z-20">
         <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
           <User className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
           <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("teachers.field.contact") || "Contact"}</h3>
@@ -152,10 +152,9 @@ export function TeacherForm({
         {errors.contactId && (
           <p className="text-[10px] text-destructive mt-1 font-medium">{errors.contactId}</p>
         )}
-      </section>
+      </Card>
 
-      <section className="relative z-10 overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4.5 shadow-sm hover:shadow-md transition-all duration-300">
-        <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+      <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4.5 shadow-sm z-10">
         <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
           <School className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
           <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Details</h3>
@@ -179,14 +178,13 @@ export function TeacherForm({
             />
           </div>
         </Field>
-      </section>
+      </Card>
     </div>
   );
 
   const renderEmployment = () => (
     <div className="space-y-4 text-start">
-      <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
-        <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-indigo-500/60 transition-colors group-hover:bg-indigo-500" />
+      <Card accentColor="indigo" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm">
         <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
           <Briefcase className="w-4 h-4 text-indigo-500/70 group-hover:text-indigo-500 transition-colors" />
           <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Employment Details</h3>
@@ -231,7 +229,7 @@ export function TeacherForm({
             className="min-h-[80px]"
           />
         </Field>
-      </section>
+      </Card>
     </div>
   );
 

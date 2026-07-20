@@ -7,6 +7,7 @@ import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { Card } from "@/components/ui/card";
 
 export type DistributionType = "Income" | "Liability";
 
@@ -103,8 +104,7 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
           const isComplete = Math.abs(total - 100) < 0.01;
 
           return (
-            <article key={wakalaType.id} className="relative overflow-hidden group/wakala rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-300">
-              <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/wakala:bg-primary" />
+            <Card key={wakalaType.id} accentColor="primary" className="group/wakala">
               {/* Header */}
               <header className="flex items-start justify-between px-5 py-3 border-b border-border/40 pl-5.5">
                 <div>
@@ -189,7 +189,7 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
                   </Button>
                 </div>
               </div>
-            </article>
+            </Card>
           );
         })}
       </section>

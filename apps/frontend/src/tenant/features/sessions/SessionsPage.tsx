@@ -37,7 +37,10 @@ type SessionStatus = string;
 type SessionType = string;
 
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { Card } from "@/components/ui/card";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+
+const MotionCard = motion.create(Card);
 
 const TYPE_COLORS: Record<string, string> = {
   "Hifz":            "bg-success/15 text-success",
@@ -60,20 +63,20 @@ function SessionCard({ session, onClick, statusConfig }: SessionCardProps) {
 
   const formatSessionDate = (date: string | undefined) => formatDate(date, true);
 
-  const stripeColor = session.status === "active"
-    ? "bg-success/45 group-hover:bg-success"
+  const accentColor = session.status === "active"
+    ? "success" as const
     : session.status === "upcoming"
-    ? "bg-info/45 group-hover:bg-info"
-    : "bg-muted-foreground/35 group-hover:bg-muted-foreground";
+    ? "info" as const
+    : undefined;
 
   return (
-    <motion.button
+    <MotionCard
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={onClick}
-      className="relative overflow-hidden text-start w-full rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 ps-6.5 hover:shadow-md hover:border-primary/40 transition-all duration-300 group"
+      accentColor={accentColor}
+      className="text-start w-full p-5 ps-6.5 hover:border-primary/40 group cursor-pointer"
     >
-      <div className={`absolute start-0 top-0 bottom-0 w-1 ${stripeColor} transition-colors duration-300`} />
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0 pe-3">
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -119,7 +122,7 @@ function SessionCard({ session, onClick, statusConfig }: SessionCardProps) {
           <p className="text-[10px] text-muted-foreground mt-1">{capacityPercent}% capacity used · {session.classes?.length ?? 0} class{session.classes?.length !== 1 ? "es" : ""}</p>
         </div>
       )}
-    </motion.button>
+    </MotionCard>
   );
 }
 

@@ -6,6 +6,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { Card } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/useTranslation";
 
 import { useAccountingCurrency } from "@/hooks/useCurrency";
@@ -122,8 +123,7 @@ export function GeneralLedger({ accounts, entries }: GeneralLedgerProps) {
 
       {selectedAccount && activeAccount && (
         <>
-          <article className="relative overflow-hidden group/ledger flex flex-wrap items-start gap-4 px-6 py-4.5 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
-            <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/ledger:bg-primary" />
+          <Card accentColor="primary" className="flex flex-wrap items-start gap-4 px-6 py-4.5">
             <div className="flex-1 min-w-0 ml-1">
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-mono text-xs font-bold text-muted-foreground">{activeAccount.code}</span>
@@ -153,7 +153,7 @@ export function GeneralLedger({ accounts, entries }: GeneralLedgerProps) {
                 </p>
               </div>
             </div>
-          </article>
+          </Card>
 
           <div className="flex justify-end">
             <Button 

@@ -7,6 +7,7 @@ import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/Modal";
+import { Card } from "@/components/ui/card";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { todayISO } from "@mms/shared";
 
@@ -119,8 +120,7 @@ export function InvoiceForm({
       }
     >
       <div className="space-y-5 text-left">
-        <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 shadow-sm hover:shadow-md transition-all duration-300">
-          <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+        <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 shadow-sm">
           <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
             <ReceiptText className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
             <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Invoice Information</h3>
@@ -250,10 +250,9 @@ export function InvoiceForm({
               </div>
             </div>
           </div>
-        </section>
+        </Card>
 
-        <section className="relative overflow-hidden group rounded-2xl border border-border/85 bg-card/45 backdrop-blur-sm p-5 px-6 shadow-sm hover:shadow-md transition-all duration-300">
-          <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+        <Card accentColor="primary" className="p-5 px-6 shadow-sm">
           <div className="grid grid-cols-3 gap-3 text-sm">
             <div>
               <p className="m-0 text-[10px] font-bold uppercase text-muted-foreground">Base Fee</p>
@@ -268,7 +267,7 @@ export function InvoiceForm({
               <p className="m-0 mt-0.5 font-extrabold text-primary text-sm">{formatCurrency(finalAmt)}</p>
             </div>
           </div>
-        </section>
+        </Card>
       </div>
     </Modal>
   );

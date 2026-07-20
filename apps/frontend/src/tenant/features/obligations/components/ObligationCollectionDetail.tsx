@@ -4,6 +4,7 @@ import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType
 import { DEFAULT_CURRENCIES, formatMoney, formatDate } from '@mms/shared';
 import { useMergedObligationContacts, useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { Modal } from "@/components/ui/Modal";
+import { Card } from "@/components/ui/card";
 import { InvoiceTemplateEditor } from "@/tenant/features/obligations/components/invoice/InvoiceTemplateEditor";
 import { Button } from "@/components/ui/button";
 
@@ -98,8 +99,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
         </header>
 
         {/* Main details */}
-        <section aria-label="Main Collection Details" className="relative overflow-hidden group/details rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-300 divide-y divide-border px-5.5 pb-2.5">
-          <div className="absolute start-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/details:bg-indigo-500" />
+        <Card accentColor="indigo" className="divide-y divide-border px-5.5 pb-2.5">
           <Row label="Sender" value={sender?.name} />
           {reference && <Row label="Reference" value={reference?.name} />}
           <Row label="Obligation Type" value={obType?.name} />
@@ -110,14 +110,13 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
           <Row label="Payment Mode" value={selectedCollection.payment_mode} />
           <Row label="Received By" value={user?.name} />
           <Row label="Created" value={formatDate(selectedCollection.created_at)} />
-        </section>
+        </Card>
 
         {/* Distribution breakdown */}
         {dists.length > 0 && (
           <section aria-label="Distribution Breakdown">
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 m-0">Distribution Breakdown</h4>
-            <div className="relative overflow-hidden group/dists rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-300">
-              <div className="absolute start-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/dists:bg-emerald-500" />
+            <Card accentColor="emerald" className="p-0 overflow-hidden">
               <table className="w-full text-sm">
                 <caption className="sr-only">Distribution breakdown for collection {selectedCollection.receipt_no}</caption>
                 <thead className="bg-muted/60 border-b border-border">
@@ -145,7 +144,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
                   ))}
                 </tbody>
               </table>
-            </div>
+            </Card>
           </section>
         )}
 

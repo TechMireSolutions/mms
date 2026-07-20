@@ -1,5 +1,6 @@
 import React, { useMemo, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Edit2, MessageCircle, Phone, MessageSquare,
   Calendar, User, Clock, BookOpen, GraduationCap, Sparkles
@@ -262,8 +263,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                 if (field.key === "fatherLink") {
                   if (!fatherContact && !student.fatherName) return null;
                   return (
-                    <div key="fatherLink" className="relative overflow-hidden group/row flex items-center justify-between gap-3 p-3 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-200">
-                      <div className="absolute start-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/row:bg-indigo-500" />
+                    <Card key="fatherLink" accentColor="indigo" className="p-3">
                       <div className="flex items-center gap-3 min-w-0 text-start ms-1">
                         <div className="w-8 h-8 rounded-lg bg-info/10 text-info flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                           FA
@@ -282,15 +282,14 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                           <Phone className="w-3.5 h-3.5" />
                         </a>
                       )}
-                    </div>
+                    </Card>
                   );
                 }
 
                 if (field.key === "motherLink") {
                   if (!motherContact && !student.motherName) return null;
                   return (
-                    <div key="motherLink" className="relative overflow-hidden group/row flex items-center justify-between gap-3 p-3 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-200">
-                      <div className="absolute start-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/row:bg-indigo-500" />
+                    <Card key="motherLink" accentColor="indigo" className="p-3">
                       <div className="flex items-center gap-3 min-w-0 text-start ms-1">
                         <div className="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                           MO
@@ -309,15 +308,14 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                           <Phone className="w-3.5 h-3.5" />
                         </a>
                       )}
-                    </div>
+                    </Card>
                   );
                 }
 
                 if (field.key === "guardianLink") {
                   if (!guardianContact && !student.guardianName) return null;
                   return (
-                    <div key="guardianLink" className="relative overflow-hidden group/row flex items-center justify-between gap-3 p-3 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-200">
-                      <div className="absolute start-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/row:bg-indigo-500" />
+                    <Card key="guardianLink" accentColor="indigo" className="p-3">
                       <div className="flex items-center gap-3 min-w-0 text-start ms-1">
                         <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                           GU
@@ -336,7 +334,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                           <Phone className="w-3.5 h-3.5" />
                         </a>
                       )}
-                    </div>
+                    </Card>
                   );
                 }
 
@@ -383,11 +381,11 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
           ) : (
             <div className="space-y-2.5">
               {enrolledSessionDetails.map((session) => (
-                <div
+                <Card
                   key={session.id}
-                  className="relative overflow-hidden group/session p-3.5 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm space-y-2 hover:border-primary/20 hover:shadow-md transition-all duration-300"
+                  accentColor="primary"
+                  className="p-3.5 space-y-2"
                 >
-                  <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/session:bg-primary" />
                   <div className="flex items-center justify-between ms-1">
                     <span className="bg-primary/5 text-primary border border-primary/10 text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase">
                       {session.type}
@@ -410,7 +408,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                   ) : (
                     <p className="text-[10px] text-muted-foreground italic ms-1">No classes configured for this session</p>
                   )}
-                </div>
+                </Card>
               ))}
             </div>
           )}
@@ -420,18 +418,16 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
         <div className="space-y-3">
           <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">Engagement & Analytics</h4>
           <div className="grid grid-cols-2 gap-3">
-            <div className="relative overflow-hidden group/metric p-3.5 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm text-center hover:shadow-md transition-all duration-300">
-              <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/metric:bg-primary" />
+            <Card accentColor="primary" className="p-3.5 text-center">
               <span className="block text-[8px] font-black uppercase tracking-wider text-muted-foreground mb-1">Attendance Rate</span>
               <p className="text-lg font-black text-success">94.8%</p>
               <span className="text-[9px] text-muted-foreground">Last 30 days</span>
-            </div>
-            <div className="relative overflow-hidden group/metric p-3.5 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm text-center hover:shadow-md transition-all duration-300">
-              <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/metric:bg-primary" />
+            </Card>
+            <Card accentColor="primary" className="p-3.5 text-center">
               <span className="block text-[8px] font-black uppercase tracking-wider text-muted-foreground mb-1">Conduct Rating</span>
               <p className="text-lg font-black text-primary">Excellent</p>
               <span className="text-[9px] text-muted-foreground">Term Review</span>
-            </div>
+            </Card>
           </div>
         </div>
       </DetailDrawerShell>

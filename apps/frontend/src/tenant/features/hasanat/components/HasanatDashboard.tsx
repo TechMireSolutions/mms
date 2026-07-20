@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { Card } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/StatCard";
 import { motion } from "framer-motion";
 import { Star, Package, Gift, RotateCcw, TrendingUp, Layers } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
@@ -75,45 +76,17 @@ export function HasanatDashboard({
     <div className="space-y-5">
       {/* Stat cards */}
       <section aria-label="Hasanat Dashboard Statistics" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          const stripeColors = {
-            primary: "bg-primary/60 group-hover:bg-primary",
-            success: "bg-success/60 group-hover:bg-success",
-            warning: "bg-warning/60 group-hover:bg-warning",
-            indigo: "bg-indigo-500/60 group-hover:bg-indigo-500",
-            info: "bg-info/60 group-hover:bg-info",
-            rose: "bg-rose-500/60 group-hover:bg-rose-500",
-          };
-          const ringClasses = {
-            primary: "ring-primary/20",
-            success: "ring-success/20",
-            warning: "ring-warning/20",
-            indigo: "ring-indigo-500/20",
-            info: "ring-info/20",
-            rose: "ring-rose-500/20",
-          };
-          return (
-            <motion.article
-              key={stat.label}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05, duration: 0.35, ease: "easeOut" }}
-              className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4.5 md:p-5 px-5.5 hover:shadow-md transition-all duration-300 text-left flex flex-col justify-between"
-            >
-              <div className={`absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300 ${stripeColors[stat.accent]}`} />
-              <header className="flex items-start justify-between mb-3 select-none">
-                <div className={`w-9 h-9 rounded-lg ${stat.bg} ring-4 ${ringClasses[stat.accent]} flex items-center justify-center aspect-square flex-shrink-0`} aria-hidden="true">
-                  <Icon className={`w-4.5 h-4.5 ${stat.color}`} style={{ width: 18, height: 18 }} />
-                </div>
-              </header>
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide m-0">{stat.label}</p>
-                <p className="text-xl font-bold text-foreground mt-1 m-0">{stat.value}</p>
-              </div>
-            </motion.article>
-          );
-        })}
+        {stats.map((stat, index) => (
+          <StatCard
+            key={stat.label}
+            icon={stat.icon}
+            label={stat.label}
+            value={stat.value}
+            accent={stat.accent}
+            delayIndex={index}
+            variant="compact"
+          />
+        ))}
       </section>
 
       {/* Charts row */}

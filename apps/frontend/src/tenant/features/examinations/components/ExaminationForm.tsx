@@ -6,6 +6,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/FormPrimitives";
 
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
@@ -113,8 +114,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
       saveDisabled={!valid}
     >
       <div className="space-y-5 text-left">
-        <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
-          <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+        <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm">
           <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
             <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
             <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Exam Parameters</h3>
@@ -259,7 +259,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
               </Field>
             </div>
           </div>
-        </section>
+        </Card>
       </div>
     </FormModal>
   );

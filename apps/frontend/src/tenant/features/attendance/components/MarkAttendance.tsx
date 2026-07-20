@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
+
+const MotionCard = motion.create(Card);
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -246,9 +248,8 @@ function GeoTag({ geo, onRequest }: { geo: GeoData | "loading" | null; onRequest
 function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-      className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-6 text-center space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
-      <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover:bg-primary" />
+    <MotionCard initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+      accentColor="primary" className="p-6 text-center space-y-4 shadow-sm">
       <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
         <Scan className="w-8 h-8 text-primary" aria-hidden="true" />
       </div>
@@ -266,7 +267,7 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
         </div>
       </div>
       <Button onClick={onClose} variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground transition-colors h-auto py-1">{t("attendance.mark.dismiss")}</Button>
-    </motion.div>
+    </MotionCard>
   );
 }
 

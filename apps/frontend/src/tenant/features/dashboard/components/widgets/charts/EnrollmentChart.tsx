@@ -5,6 +5,7 @@ import {
   Tooltip, TooltipContentProps
 } from "recharts";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
+import { WidgetCard } from "@/components/ui/WidgetCard";
 import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import { TrendingUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -81,8 +82,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
   const activeColor = COLOR_MAP[colorTheme] || COLOR_MAP.brand;
 
   return (
-    <section aria-labelledby="enrollment-chart-heading" className="relative overflow-hidden group rounded-2xl surface-glass p-5 shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute start-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] bg-primary/60 group-hover:bg-primary transition-colors duration-300" />
+    <WidgetCard ariaLabelledby="enrollment-chart-heading" accentColor="primary" className="p-5">
       <header className="flex flex-wrap items-start justify-between gap-3 mb-5 pl-1.5 select-none">
         <div>
           <h3 id="enrollment-chart-heading" className="text-sm font-bold text-foreground m-0">
@@ -202,6 +202,6 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
           )}
         </ComposedChart>
       </SafeResponsiveContainer>
-    </section>
+    </WidgetCard>
   );
 }

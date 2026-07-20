@@ -14,6 +14,7 @@ import { FORM_LABEL, FORM_ERROR } from "@/components/ui/formStyles";
 import { calculateKeyedUnitsCompleteness } from "@/lib/formCompleteness";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { Card } from "@/components/ui/card";
 
 interface FormState {
   receipt_no: string;
@@ -165,8 +166,8 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
           </div>
         </header>
 
-        <fieldset className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
-          <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+        <Card accentColor="primary" className="p-0">
+          <fieldset className="p-5.5 px-6.5 pb-6 space-y-4 border-0 m-0 text-left">
           <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
             <Receipt className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
             <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Collection Metadata</h3>
@@ -188,10 +189,11 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
               />
             )}
           </div>
-        </fieldset>
+          </fieldset>
+        </Card>
 
-        <fieldset className="relative z-20 overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
-          <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-purple-500/60 transition-colors group-hover:bg-purple-500" />
+        <Card accentColor="primary" className="p-0 z-20">
+          <fieldset className="p-5.5 px-6.5 pb-6 space-y-4 border-0 m-0 text-left">
           <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
             <Users className="w-4 h-4 text-purple-500/70 group-hover:text-purple-500 transition-colors" />
             <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Sender Details</h3>
@@ -215,10 +217,11 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
               />
             )}
           </div>
-        </fieldset>
+          </fieldset>
+        </Card>
 
-        <fieldset className="relative z-10 overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
-          <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+        <Card accentColor="primary" className="p-0 z-10">
+          <fieldset className="p-5.5 px-6.5 pb-6 space-y-4 border-0 m-0 text-left">
           <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
             <Coins className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
             <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Financial Value</h3>
@@ -247,10 +250,11 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
               />
             )}
           </div>
-        </fieldset>
+          </fieldset>
+        </Card>
 
-        <fieldset className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
-          <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+        <Card accentColor="primary" className="p-0">
+          <fieldset className="p-5.5 px-6.5 pb-6 space-y-4 border-0 m-0 text-left">
           <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
             <User className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
             <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Islamic Jurisprudence / Wakala</h3>
@@ -301,7 +305,8 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
               />
             )}
           </div>
-        </fieldset>
+          </fieldset>
+        </Card>
       </div>
     </FormModal>
   );

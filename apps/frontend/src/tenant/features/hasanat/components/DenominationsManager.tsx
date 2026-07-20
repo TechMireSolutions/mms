@@ -8,6 +8,9 @@ import { DEFAULT_DENOMINATION_COLOR, getDenominationPresetColors } from "@/lib/d
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Card } from "@/components/ui/card";
+
+const MotionCard = motion.create(Card);
 
 const EMPTY: Denomination = { id: "", name: "", points: 100, color: DEFAULT_DENOMINATION_COLOR, description: "", icon: "⭐", active: true };
 const PRESET_ICONS = ["⭐", "🌟", "✨", "💎", "👑", "🏆", "🎖️", "📿"];
@@ -151,12 +154,12 @@ export function DenominationsManager({ denoms, onUpdate }: DenominationsManagerP
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {denoms.map((denomination, index) => (
-          <motion.article
+          <MotionCard
             key={denomination.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.06 }}
-            className={`relative overflow-hidden rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4 pl-5.5 group transition-all duration-300 shadow-sm hover:shadow-md ${!denomination.active ? "opacity-60" : ""}`}
+            className={`p-4 pl-5.5 group ${!denomination.active ? "opacity-60" : ""}`}
           >
             <div className="absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300" style={{ backgroundColor: denomination.active ? denomination.color : "#6b7280" }} />
             {/* Card visual */}
@@ -187,7 +190,7 @@ export function DenominationsManager({ denoms, onUpdate }: DenominationsManagerP
                 </Button>
               </div>
             </footer>
-          </motion.article>
+          </MotionCard>
         ))}
       </div>
 
