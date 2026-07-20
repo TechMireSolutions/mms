@@ -17,13 +17,17 @@ async function main() {
   await client.connect();
 
   try {
-    console.log('Dropping all tables and the drizzle schema...');
-    await client.query('DROP TABLE IF EXISTS public.tenant_users CASCADE');
-    await client.query('DROP TABLE IF EXISTS public.platform_users CASCADE');
-    await client.query('DROP TABLE IF EXISTS public.auth_artifacts CASCADE');
-    await client.query('DROP TABLE IF EXISTS public.collections CASCADE');
-    await client.query('DROP TABLE IF EXISTS public.objects CASCADE');
-    await client.query('DROP TABLE IF EXISTS public.data_migrations CASCADE');
+    console.log('Dropping all tables in public schema dynamically...');
+    await client.query(`
+      DO $$ DECLARE
+          r RECORD;
+      BEGIN
+          FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+              EXECUTE 'DROP TABLE IF EXISTS public.' || quote_ident(r.tablename) || ' CASCADE';
+          END LOOP;
+      END $$;
+    `);
+    console.log('Dropping drizzle schema if exists...');
     await client.query('DROP SCHEMA IF EXISTS drizzle CASCADE');
     console.log('Database hard reset complete. Next backend startup will rebuild and seed.');
   } catch (err) {
