@@ -83,7 +83,7 @@ export function ModuleCommandMetricCard({
 
   const content = (
     <>
-      <div className={`absolute inset-inline-start-0 top-0 bottom-0 w-1 transition-colors duration-300 ${theme.stripe}`} />
+      <div className={`absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300 ${theme.stripe}`} />
       <div className={`w-8 h-8 rounded-lg ${theme.iconBg} ring-4 ${theme.ring} flex items-center justify-center flex-shrink-0 ms-0.5`} aria-hidden="true">
         <Icon className={`w-4 h-4 ${theme.iconText}`} />
       </div>

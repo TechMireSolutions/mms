@@ -739,7 +739,7 @@ export default function ContactDetailDrawer({
               </div>
 
               <div className="space-y-6 relative ps-3">
-                <div className="absolute inset-inline-start-[3px] top-0 bottom-0 w-0.5 bg-border/50" />
+                <div className="absolute start-[3px] top-0 bottom-0 w-0.5 bg-border/50" />
                 {(!combinedActivities || combinedActivities.length === 0) ? (
                   <div className="flex flex-col items-center justify-center py-20 text-muted-foreground opacity-30">
                     <History className="w-12 h-12 mb-2" />
@@ -757,7 +757,7 @@ export default function ContactDetailDrawer({
                         className="relative ps-6 group"
                       >
                         <div
-                          className="absolute inset-inline-start-0 top-1.5 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center z-10 group-hover:border-primary transition-colors"
+                          className="absolute start-0 top-1.5 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center z-10 group-hover:border-primary transition-colors"
                           style={{ insetInlineStart: '-15.5px' }}
                         >
                           <Icon className="w-2.5 h-2.5 text-muted-foreground group-hover:text-primary" />

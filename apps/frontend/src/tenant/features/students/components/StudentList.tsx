@@ -320,7 +320,7 @@ export default function StudentList({
                       onCheckedChange={() => handleSelectOne(studentCard.id)}
                     />
                   </div>
-                  <div className="absolute top-3 inset-inline-end-3">
+                  <div className="absolute top-3 end-3">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" aria-label="Student actions" className="h-7 w-7 p-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">

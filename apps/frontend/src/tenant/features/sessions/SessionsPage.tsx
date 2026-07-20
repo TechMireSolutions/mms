@@ -74,7 +74,7 @@ function SessionCard({ session, onClick, statusConfig }: SessionCardProps) {
       onClick={onClick}
       className="relative overflow-hidden text-start w-full rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 ps-6.5 hover:shadow-md hover:border-primary/40 transition-all duration-300 group"
     >
-      <div className={`absolute inset-inline-start-0 top-0 bottom-0 w-1 ${stripeColor} transition-colors duration-300`} />
+      <div className={`absolute start-0 top-0 bottom-0 w-1 ${stripeColor} transition-colors duration-300`} />
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0 pe-3">
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">

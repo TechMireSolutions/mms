@@ -170,7 +170,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
         <form className="space-y-5" onSubmit={(event) => event.preventDefault()}>
           {/* Header fields */}
           <fieldset className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
-            <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+            <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
             <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
               <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
               <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("accounting.journal.form.entryDetails")}</h3>
@@ -217,7 +217,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
 
           {/* Tags */}
           <fieldset className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
-            <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1.5 bg-indigo-500/60 transition-colors group-hover:bg-indigo-500" />
+            <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-indigo-500/60 transition-colors group-hover:bg-indigo-500" />
             <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-3">
               <Tag className="w-4 h-4 text-indigo-500/70 group-hover:text-indigo-500 transition-colors" />
               <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("accounting.journal.form.tagsTitle")}</h3>
@@ -240,7 +240,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
 
           {/* Lines */}
           <fieldset className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 border-0 m-0">
-            <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+            <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
             <div className="flex items-center justify-between pb-1.5 border-b border-border/40 mb-2">
               <div className="flex items-center gap-2.5">
                 <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />

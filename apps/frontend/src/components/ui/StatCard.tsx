@@ -161,16 +161,16 @@ export function StatCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: delayIndex * 0.04, duration: 0.3, ease: "easeOut" }}
       className={cn(
-        "relative overflow-hidden group flex items-center justify-between rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4 pl-5.5 shadow-sm hover:shadow-md transition-all duration-300 text-left min-h-[82px] w-full",
+        "relative overflow-hidden group flex items-center justify-between rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4 ps-5.5 shadow-sm hover:shadow-md transition-all duration-300 text-start min-h-[82px] w-full",
         onClick && "cursor-pointer hover:border-primary/40 hover:bg-card/75",
         className
       )}
     >
-      <div className={cn("absolute inset-inline-start-0 top-0 bottom-0 w-1 transition-colors duration-300", theme.stripe)} />
+      <div className={cn("absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300", theme.stripe)} />
       
       <div className="flex items-center gap-3.5 min-w-0">
         {Icon && (
-          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ml-0.5 shadow-sm ring-4", theme.iconBg, theme.ring)}>
+          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ms-0.5 shadow-sm ring-4", theme.iconBg, theme.ring)}>
             <Icon className={cn("w-5 h-5", theme.iconText)} />
           </div>
         )}
@@ -192,7 +192,7 @@ export function StatCard({
       {trend !== undefined && (
         <span
           className={cn(
-            "flex items-center gap-0.5 text-[11px] font-bold self-start ml-2 shrink-0 select-none",
+            "flex items-center gap-0.5 text-[11px] font-bold self-start ms-2 shrink-0 select-none",
             trend >= 0 ? "text-success" : "text-destructive"
           )}
           aria-label={trend >= 0 ? "Positive trend" : "Negative trend"}

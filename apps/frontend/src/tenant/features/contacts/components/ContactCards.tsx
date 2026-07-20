@@ -266,7 +266,7 @@ export default function ContactCards({
             >
               <div 
                 aria-hidden="true"
-                className={`absolute inset-inline-start-0 top-0 bottom-0 w-1.5 ${
+                className={`absolute start-0 top-0 bottom-0 w-1.5 ${
                   isSelected
                     ? "bg-primary/70 group-hover:bg-primary"
                     : contact.gender?.toLowerCase() === "male"

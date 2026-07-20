@@ -690,7 +690,7 @@ export default function ContactForm({
                   transition={{ duration: 0.15 }}
                   className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
                 >
-                  <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+                  <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
                   <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
                     <div className="flex items-center gap-2.5">
                       <Phone className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
@@ -810,7 +810,7 @@ export default function ContactForm({
                   transition={{ duration: 0.15 }}
                   className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
                 >
-                  <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1.5 bg-amber-500/60 transition-colors group-hover:bg-amber-500" />
+                  <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-amber-500/60 transition-colors group-hover:bg-amber-500" />
                   <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
                     <div className="flex items-center gap-2.5">
                       <Mail className="w-4 h-4 text-amber-500/70 group-hover:text-amber-500 transition-colors" />
@@ -924,7 +924,7 @@ export default function ContactForm({
                   transition={{ duration: 0.15 }}
                   className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
                 >
-                  <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1.5 bg-emerald-500/60 transition-colors group-hover:bg-emerald-500" />
+                  <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-emerald-500/60 transition-colors group-hover:bg-emerald-500" />
                   <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
                     <div className="flex items-center gap-2.5">
                       <MapPin className="w-4 h-4 text-emerald-500/70 group-hover:text-emerald-500 transition-colors" />
@@ -1061,7 +1061,7 @@ export default function ContactForm({
                   transition={{ duration: 0.15 }}
                   className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
                 >
-                  <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1.5 bg-indigo-500/60 transition-colors group-hover:bg-indigo-500" />
+                  <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-indigo-500/60 transition-colors group-hover:bg-indigo-500" />
                   <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
                     <div className="flex items-center gap-2.5">
                       <Share2 className="w-4 h-4 text-indigo-500/70 group-hover:text-indigo-500 transition-colors" />
@@ -1193,7 +1193,7 @@ export default function ContactForm({
                   style={{ zIndex: 100 - idx }}
                   className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
                 >
-                  <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1.5 bg-rose-500/60 transition-colors group-hover:bg-rose-500" />
+                  <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-rose-500/60 transition-colors group-hover:bg-rose-500" />
                   <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
                     <div className="flex items-center gap-2.5">
                       <Heart className="w-4 h-4 text-rose-500/70 group-hover:text-rose-500 transition-colors" />

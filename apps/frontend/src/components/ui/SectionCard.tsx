@@ -44,7 +44,7 @@ export function SectionCard({
       className
     )}>
       {accentColor && (
-        <div className={cn("absolute inset-inline-start-0 top-0 bottom-0 w-1 rounded-l-2xl transition-colors duration-300", stripeColors[accentColor])} />
+        <div className={cn("absolute start-0 top-0 bottom-0 w-1 rounded-l-2xl transition-colors duration-300", stripeColors[accentColor])} />
       )}
       {hasHeader && (
         <div className={cn("flex items-center justify-between px-5 py-3.5 border-b border-border/40 bg-muted/20 rounded-t-2xl", accentColor && "ps-6.5")}>

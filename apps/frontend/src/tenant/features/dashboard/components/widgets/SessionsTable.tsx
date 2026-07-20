@@ -88,7 +88,7 @@ export default function SessionsTable({ title }: { title?: string }) {
 
   return (
     <section aria-labelledby="sessions-table-heading" className="relative overflow-hidden group rounded-2xl surface-glass shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute inset-inline-start-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] bg-primary/60 group-hover:bg-primary transition-colors duration-300" />
+      <div className="absolute start-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] bg-primary/60 group-hover:bg-primary transition-colors duration-300" />
       <header className="px-6 py-4 border-b border-border/45 flex items-center justify-between pl-6.5 select-none">
         <div className="flex items-center gap-2.5">
           <h3 id="sessions-table-heading" className="text-sm font-bold text-foreground m-0">

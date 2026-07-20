@@ -30,7 +30,7 @@ const Card = React.forwardRef<
       {...props}
     >
       {accentColor && (
-        <div className={cn("absolute inset-inline-start-0 top-0 bottom-0 w-1 transition-colors duration-300", stripeColors[accentColor])} />
+        <div className={cn("absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300", stripeColors[accentColor])} />
       )}
       {props.children}
     </div>

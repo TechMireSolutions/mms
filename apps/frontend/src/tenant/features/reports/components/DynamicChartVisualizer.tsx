@@ -986,7 +986,7 @@ export default function DynamicChartVisualizer({
               {/* Exports button group */}
               <div className="flex items-center gap-1.5 relative">
                 {showPdfSettings && (
-                  <div className="absolute inset-inline-end-0 bottom-full mb-2 bg-card border border-border rounded-2xl p-4 shadow-xl z-50 flex flex-col gap-3.5 min-w-[200px] backdrop-blur-xl">
+                  <div className="absolute end-0 bottom-full mb-2 bg-card border border-border rounded-2xl p-4 shadow-xl z-50 flex flex-col gap-3.5 min-w-[200px] backdrop-blur-xl">
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.visualizer.pdfOrientation")}</label>
                       <div className="flex gap-1 p-1 bg-muted rounded-xl">

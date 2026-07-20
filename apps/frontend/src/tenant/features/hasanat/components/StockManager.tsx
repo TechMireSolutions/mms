@@ -152,7 +152,7 @@ export function StockManager({ batches, denoms, onUpdate }: StockManagerProps) {
 
         return (
           <article key={den.id} className="relative overflow-hidden group/stock-card rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 pl-5.5">
-            <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 transition-colors duration-300" style={{ backgroundColor: den.color }} />
+            <div className="absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300" style={{ backgroundColor: den.color }} />
             {/* Den header */}
             <header className="px-4 py-3 flex items-center gap-3 border-b border-border/40 bg-muted/20 pl-4">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg" style={{ background: den.color }} aria-hidden="true">

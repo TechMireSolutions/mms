@@ -227,7 +227,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
               {isActive && (
                 <motion.div
                   layoutId="sidebar-indicator"
-                  className="absolute inset-inline-start-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-sidebar-primary rounded-r-full"
+                  className="absolute start-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-sidebar-primary rounded-r-full"
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
               )}

@@ -102,7 +102,7 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
 
           {/* Lines table */}
           <section aria-label="Entry Lines" className="relative overflow-hidden group/lines rounded-xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-300">
-            <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-primary/60 transition-colors group-hover/lines:bg-primary" />
+            <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/60 transition-colors group-hover/lines:bg-primary" />
             <table className="w-full text-sm">
               <caption className="sr-only">Line items for journal entry {entry.ref}</caption>
               <thead className="bg-muted/60 border-b border-border/40">
