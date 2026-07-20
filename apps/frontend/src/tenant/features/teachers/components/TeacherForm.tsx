@@ -50,6 +50,20 @@ export function TeacherForm({
     notes: teacher?.notes ?? "",
   }));
 
+  // Re-sync draft when editing another teacher record
+  useEffect(() => {
+    setTeacherDraft({
+      contactId: teacher?.contactId ?? "",
+      employeeId: teacher?.employeeId ?? "",
+      specialization: teacher?.specialization ?? "General",
+      status: teacher?.status ?? "active",
+      joinDate: teacher?.joinDate ?? todayISO(),
+      qualification: teacher?.qualification ?? "",
+      notes: teacher?.notes ?? "",
+    });
+    setErrors({});
+  }, [teacher]);
+
   const updateDraft = (patch: Partial<Teacher>) => {
     setTeacherDraft((prev) => ({ ...prev, ...patch }));
   };

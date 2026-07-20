@@ -86,14 +86,17 @@ function useDomFormProgress(open: boolean, active: boolean): DomProgressResult {
       const container = ref.current;
       if (!container) return;
 
-      const inputs = Array.from(container.querySelectorAll('input, select, textarea')) as (HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)[];
+      const inputs = Array.from(
+        container.querySelectorAll('input, select, textarea, [role="combobox"], [role="checkbox"]'),
+      ) as HTMLElement[];
+
       if (inputs.length === 0) {
         setProgress(undefined);
         setLabel(undefined);
         return;
       }
 
-      const targetInputs = inputs.filter(el => {
+      const targetInputs = inputs.filter((el) => {
         const type = el.getAttribute('type');
         if (type === 'submit' || type === 'button' || type === 'hidden') return false;
         return el.offsetParent !== null;
@@ -105,14 +108,33 @@ function useDomFormProgress(open: boolean, active: boolean): DomProgressResult {
         return;
       }
 
-      const requiredInputs = targetInputs.filter(el => el.required || el.getAttribute('aria-required') === 'true' || el.classList.contains('required'));
+      const requiredInputs = targetInputs.filter(
+        (el) =>
+          (el as HTMLInputElement).required ||
+          el.getAttribute('aria-required') === 'true' ||
+          el.classList.contains('required'),
+      );
       const sourceList = requiredInputs.length > 0 ? requiredInputs : targetInputs;
 
-      const filledCount = sourceList.filter(el => {
-        if (el.type === 'checkbox' || el.type === 'radio') {
-          return (el as HTMLInputElement).checked;
+      const filledCount = sourceList.filter((el) => {
+        if (el.tagName === 'INPUT') {
+          const inputEl = el as HTMLInputElement;
+          if (inputEl.type === 'checkbox' || inputEl.type === 'radio') {
+            return inputEl.checked;
+          }
+          return inputEl.value.trim() !== '';
         }
-        return el.value.trim() !== '';
+        if (el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+          return (el as HTMLSelectElement | HTMLTextAreaElement).value.trim() !== '';
+        }
+        if (el.getAttribute('role') === 'checkbox') {
+          return el.getAttribute('aria-checked') === 'true';
+        }
+        if (el.getAttribute('role') === 'combobox') {
+          const text = el.textContent?.trim() || '';
+          return text !== '' && !text.toLowerCase().includes('select');
+        }
+        return false;
       }).length;
 
       const percentage = Math.round((filledCount / sourceList.length) * 100);
@@ -259,6 +281,37 @@ export function FormModal<K extends string = string>({
   const resolvedCancelLabel = cancelLabel ?? t('common.cancel');
   const resolvedSaveLabel = saveLabel ?? t('common.save');
 
+  // Cmd/Ctrl+Enter form submission shortcut
+  React.useEffect(() => {
+    if (!open || saving || saveDisabled || saved || !onSave) return;
+
+    const handleShortcut = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        onSave();
+      }
+    };
+
+    window.addEventListener('keydown', handleShortcut);
+    return () => window.removeEventListener('keydown', handleShortcut);
+  }, [open, saving, saveDisabled, saved, onSave]);
+
+  // Auto-focus first interactive element when switching tabs
+  const tabContentRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (!open || !hasTabs || !activeTab) return;
+    const timer = setTimeout(() => {
+      if (!tabContentRef.current) return;
+      const firstInput = tabContentRef.current.querySelector<HTMLElement>(
+        'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), [role="combobox"]:not([aria-disabled="true"])',
+      );
+      if (firstInput && document.activeElement !== firstInput) {
+        firstInput.focus({ preventScroll: true });
+      }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [open, hasTabs, activeTab]);
+
   const body = (
     <div ref={containerRef} lang={lang} dir={dir} className="h-full">
       <FormErrorBanner errors={errors} />
@@ -282,7 +335,7 @@ export function FormModal<K extends string = string>({
                   key={tab.key}
                   value={tab.key}
                   className={cn(
-                    "flex items-center gap-2 rounded-lg px-3.5 py-2.5 text-xs font-semibold transition-all whitespace-nowrap md:w-full justify-start cursor-pointer",
+                    "flex items-center gap-2 rounded-lg px-3.5 py-2.5 text-xs font-semibold transition-all whitespace-nowrap md:w-full justify-start cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
                     active
                       ? "bg-card text-foreground shadow-sm border border-border/80"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -295,7 +348,7 @@ export function FormModal<K extends string = string>({
             })}
           </TabsPrimitive.List>
           
-          <div className="flex-1 min-w-0 overflow-y-auto">
+          <div ref={tabContentRef} className="flex-1 min-w-0 overflow-y-auto">
             <AnimatePresence mode="wait">
               <motion.div
                 key={String(activeTab)}

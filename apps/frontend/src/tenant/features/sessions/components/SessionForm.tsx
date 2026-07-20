@@ -58,6 +58,27 @@ export function SessionForm({
     tabarruk: session?.tabarruk ?? [],
   }));
 
+  // Re-sync draft when editing another session record
+  React.useEffect(() => {
+    setSessionDraft({
+      name: session?.name ?? "",
+      type: session?.type ?? "Hifz",
+      status: session?.status ?? "active",
+      startDate: session?.startDate ?? todayISO(),
+      endDate: session?.endDate ?? "",
+      baseFee: session?.baseFee ?? 0,
+      currency: session?.currency ?? defaultCurrency,
+      description: session?.description ?? "",
+      classes: session?.classes ?? [],
+      timetable: session?.timetable ?? [],
+      discounts: session?.discounts ?? [],
+      budget: session?.budget ?? { totalRevenue: 0, collected: 0, expenses: [], incomes: [] },
+      events: session?.events ?? [],
+      tabarruk: session?.tabarruk ?? [],
+    });
+    setErrors({});
+  }, [session, defaultCurrency]);
+
   const updateDraft = (patch: Partial<Session>) => {
     setSessionDraft((prev) => ({ ...prev, ...patch }));
   };

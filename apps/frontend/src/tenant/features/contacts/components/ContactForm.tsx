@@ -222,6 +222,64 @@ export default function ContactForm({
     return initial;
   });
 
+  // Re-sync draft when editing another contact or re-opening modal
+  React.useEffect(() => {
+    if (!open) return;
+    const initial: Partial<Contact> = {
+      firstName: "",
+      lastName: "",
+      name: "",
+      gender: "",
+      dob: "",
+      cnic: "",
+      isSyed: false,
+      notes: "",
+      phones: [],
+      emails: [],
+      addresses: [],
+      socials: [],
+      emergencyContacts: [],
+      relationships: [],
+      ...initialDraft,
+      ...contact,
+    };
+
+    if (initial.phones) {
+      initial.phones = initial.phones.map((phone) => {
+        if (phone.countryCode) return phone;
+        const parsed = parsePhoneEntry(phone);
+        return { ...phone, countryCode: parsed.countryCode, number: parsed.number };
+      });
+    }
+
+    if (!initial.phones || initial.phones.length === 0) {
+      initial.phones = [{ label: "Mobile", number: "", countryCode: "+92" }];
+    }
+    if (!initial.emails || initial.emails.length === 0) {
+      initial.emails = [{ label: "Personal", address: "" }];
+    }
+    if (!initial.addresses || initial.addresses.length === 0) {
+      initial.addresses = [
+        {
+          label: "Home",
+          line1: "",
+          city: defaultCity,
+          state: defaultProvince,
+          country: defaultCountry,
+        },
+      ];
+    }
+    if (!initial.socials || initial.socials.length === 0) {
+      initial.socials = [{ platform: "WhatsApp", url: "" }];
+    }
+    if (!initial.emergencyContacts || initial.emergencyContacts.length === 0) {
+      initial.emergencyContacts = [{ relationship: "Father", contactId: "" }];
+    }
+
+    setContactDraft(initial);
+    setValidationErrors([]);
+  }, [open, contact, initialDraft, defaultCity, defaultProvince, defaultCountry]);
+
   const visibleTabs = useMemo(() => {
     return CONTACT_TABS.filter((tabItem) => {
       if (tabItem.key === "basic") return true;

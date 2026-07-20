@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { BookOpen, HelpCircle, Tag } from 'lucide-react';
 import { FormModal } from '@/components/ui/FormModal';
 import { CategorySelector } from "@/tenant/features/question-bank/components/CategorySelector";
@@ -76,6 +76,23 @@ export function QuestionForm({
       sourceCitations: question?.sourceCitations ? [...question.sourceCitations] : [],
     };
   });
+
+  // Re-sync draft when editing another question record
+  useEffect(() => {
+    if (!open) return;
+    const defaultLang = normalizeAppLanguage(language);
+    setQuestionDraft({
+      categoryIds: question?.categoryIds ?? [],
+      type: question?.type ?? 'mcq',
+      difficulty: (question?.difficulty as QuestionDifficulty) ?? 'easy',
+      questionLanguage: (question?.questionLanguage as AppLanguageCode) ?? defaultLang,
+      text: question?.text ?? '',
+      options: question?.options ? [...question.options] : ['', '', '', ''],
+      answer: question?.answer ?? '',
+      sourceCitations: question?.sourceCitations ? [...question.sourceCitations] : [],
+    });
+    setErrors({});
+  }, [open, question, language]);
 
   const updateDraft = (patch: Partial<typeof questionDraft>) => {
     setQuestionDraft((prev) => ({ ...prev, ...patch }));

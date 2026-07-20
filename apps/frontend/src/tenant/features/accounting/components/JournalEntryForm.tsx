@@ -68,6 +68,30 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Re-sync draft when editing another journal entry record
+  React.useEffect(() => {
+    setForm(
+      initial
+        ? {
+            ...initial,
+            lines: initial.lines.map((entryLine) => ({ ...entryLine, debit: entryLine.debit || "", credit: entryLine.credit || "" }))
+          }
+        : {
+            id: "",
+            ref: "",
+            date: todayISO(),
+            description: "",
+            status: "draft",
+            tags: [],
+            attachments: [],
+            fiscal_year: activeFiscalYear,
+            lines: [EMPTY_LINE(), EMPTY_LINE()],
+            created_by: "Admin"
+          }
+    );
+    setErrors({});
+  }, [initial, activeFiscalYear]);
+
   const totalDebit = form.lines.reduce((sum, journalLine) => sum + (Number(journalLine.debit) || 0), 0);
   const totalCredit = form.lines.reduce((sum, journalLine) => sum + (Number(journalLine.credit) || 0), 0);
   const isBalanced  = Math.abs(totalDebit - totalCredit) < 0.01 && totalDebit > 0;

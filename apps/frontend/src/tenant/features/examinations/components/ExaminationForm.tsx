@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { BookOpen, Trophy, CheckCircle2, Clock } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,13 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
   const [examDraft, setExamDraft] = useState<Omit<Exam, "id">>(() => {
     return exam ? { ...exam } : { ...EMPTY };
   });
+
+  // Re-sync draft when editing another exam record
+  useEffect(() => {
+    if (!open) return;
+    setExamDraft(exam ? { ...exam } : { ...EMPTY });
+    setErrors({});
+  }, [open, exam]);
 
   const updateDraft = (patch: Partial<typeof examDraft>) => {
     setExamDraft((prev) => ({ ...prev, ...patch }));

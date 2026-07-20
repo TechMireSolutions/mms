@@ -84,6 +84,28 @@ export default function StudentForm({
     notes: student?.notes ?? "",
   }));
 
+  // Re-sync draft when editing another student record
+  useEffect(() => {
+    setStudentDraft({
+      contactId: student?.contactId ?? "",
+      fatherContactId: student?.fatherContactId ?? null,
+      motherContactId: student?.motherContactId ?? null,
+      guardianContactId: student?.guardianContactId ?? null,
+      fatherName: student?.fatherName ?? "",
+      motherName: student?.motherName ?? "",
+      guardianName: student?.guardianName ?? "",
+      status: student?.status ?? "active",
+      grNumber: student?.grNumber ?? "",
+      registeredDate: student?.registeredDate ?? new Date().toISOString(),
+      discountType: student?.discountType ?? "",
+      discountPct: student?.discountPct ?? 0,
+      registrationType: student?.registrationType ?? "",
+      notes: student?.notes ?? "",
+    });
+    setValidationErrors([]);
+    setManualError("");
+  }, [student]);
+
   const updateDraft = (patch: Partial<Student>) => {
     setStudentDraft((prev) => ({ ...prev, ...patch }));
   };
