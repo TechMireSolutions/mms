@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "@/hooks/useTranslation";
+import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "@/components/ui/formStyles";
 export const INPUT = FORM_INPUT;
@@ -63,13 +64,15 @@ interface EditableSelectProps {
   onUpdateOptions?: (options: string[]) => void;
   placeholder?: string;
   className?: string;
+  id?: string;
+  name?: string;
 }
 
-const formatOptionLabel = (option: string): string => {
-  if (option === "male") return "Male";
-  if (option === "female") return "Female";
-  if (option === "other") return "Other";
-  if (option === "unspecified") return "Unspecified";
+const formatOptionLabel = (option: string, t: TranslationFunction): string => {
+  if (option === "male") return t("contacts.gender.male") || "Male";
+  if (option === "female") return t("contacts.gender.female") || "Female";
+  if (option === "other") return t("contacts.gender.other") || "Other";
+  if (option === "unspecified") return t("contacts.gender.unspecified") || "Unspecified";
   return option;
 };
 
@@ -80,6 +83,8 @@ export function EditableSelect({
   onUpdateOptions,
   placeholder,
   className = "w-28",
+  id,
+  name,
 }: EditableSelectProps): React.JSX.Element {
   const { t } = useTranslation();
   const resolvedPlaceholder = placeholder ?? t("contacts.form.selectOption");
@@ -88,6 +93,9 @@ export function EditableSelect({
   const [customValue, setCustomValue] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const customInputId = React.useId();
+  const fallbackId = React.useId();
+  const resolvedId = id || fallbackId;
+  const resolvedName = name || fallbackId;
 
   const handleAdd = () => {
     if (!onUpdateOptions) return;
@@ -133,13 +141,15 @@ export function EditableSelect({
     >
       <PopoverTrigger
         type="button"
+        id={resolvedId}
+        name={resolvedName}
         aria-label={resolvedPlaceholder}
         className={cn(
           "min-h-[44px] flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm rounded-lg border border-border bg-background text-foreground hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all text-left",
           className
         )}
       >
-        <span className="truncate">{formatOptionLabel(value) || resolvedPlaceholder}</span>
+        <span className="truncate">{formatOptionLabel(value, t) || resolvedPlaceholder}</span>
         <ChevronDown className={`w-4 h-4 flex-shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </PopoverTrigger>
 
@@ -182,7 +192,7 @@ export function EditableSelect({
               >
                 <span className="truncate flex items-center gap-2">
                   <Check className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? "opacity-100" : "opacity-0"}`} />
-                  <span className="truncate">{formatOptionLabel(option)}</span>
+                  <span className="truncate">{formatOptionLabel(option, t)}</span>
                 </span>
                 {canEditOptions ? (
                   <Button

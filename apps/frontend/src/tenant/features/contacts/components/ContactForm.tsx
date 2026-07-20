@@ -416,10 +416,11 @@ export default function ContactForm({
       const count = countMap[tabItem.key];
       return {
         ...tabItem,
+        label: t(`contacts.tabs.${tabItem.key}`) || tabItem.label,
         badge: count && count > 0 ? count : undefined,
       };
     });
-  }, [contactDraft.phones, contactDraft.emails, contactDraft.addresses, contactDraft.socials, contactDraft.emergencyContacts]);
+  }, [contactDraft.phones, contactDraft.emails, contactDraft.addresses, contactDraft.socials, contactDraft.emergencyContacts, t]);
 
   const isFieldEnabled = useCallback(
     (tabId: string, fieldId: string) => {
@@ -752,6 +753,8 @@ export default function ContactForm({
               id="dob"
             >
               <DatePicker
+                id="dob"
+                name="dob"
                 value={contactDraft.dob || undefined}
                 onChange={(dateStr) => updateDraft({ dob: dateStr })}
               />
@@ -892,6 +895,7 @@ export default function ContactForm({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
+                  style={{ zIndex: 100 - idx }}
                   className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
                 >
                   <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
@@ -910,6 +914,8 @@ export default function ContactForm({
                         value={phone.label || "Mobile"}
                         onChange={(val) => updatePhone(idx, { label: val })}
                         className={TYPE_SELECT_WIDTH}
+                        id={`phone-label-${idx}`}
+                        name={`phone-label-${idx}`}
                       />
                     </div>
                     <CardRemoveButton
@@ -924,11 +930,15 @@ export default function ContactForm({
                       value={phone.countryCode || "+92"}
                       onChange={(val) => updatePhone(idx, { countryCode: val })}
                       className="w-[90px] shrink-0"
+                      id={`phone-country-${idx}`}
+                      name={`phone-country-${idx}`}
                     />
                     <div className="relative flex items-center group/input flex-1 min-w-0">
                       <Phone className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                       <Input
                         type="tel"
+                        id={`phone-number-${idx}`}
+                        name={`phone-number-${idx}`}
                         value={phone.number || ""}
                         onChange={(e) => {
                           const val = e.target.value;
@@ -1018,6 +1028,7 @@ export default function ContactForm({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
+                  style={{ zIndex: 100 - idx }}
                   className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
                 >
                   <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-amber-500/60 transition-colors group-hover:bg-amber-500" />
@@ -1036,6 +1047,8 @@ export default function ContactForm({
                         value={email.label || "Personal"}
                         onChange={(val) => updateEmail(idx, { label: val })}
                         className={TYPE_SELECT_WIDTH}
+                        id={`email-label-${idx}`}
+                        name={`email-label-${idx}`}
                       />
                     </div>
                     <CardRemoveButton
@@ -1048,6 +1061,8 @@ export default function ContactForm({
                     <Mail className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                     <Input
                       type="email"
+                      id={`email-address-${idx}`}
+                      name={`email-address-${idx}`}
                       value={email.address || ""}
                       onChange={(e) =>
                         updateEmail(idx, { address: e.target.value })
@@ -1139,6 +1154,7 @@ export default function ContactForm({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
+                  style={{ zIndex: 100 - idx }}
                   className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
                 >
                   <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-emerald-500/60 transition-colors group-hover:bg-emerald-500" />
@@ -1157,6 +1173,8 @@ export default function ContactForm({
                         value={addr.label || "Home"}
                         onChange={(val) => updateAddress(idx, { label: val })}
                         className={TYPE_SELECT_WIDTH}
+                        id={`address-label-${idx}`}
+                        name={`address-label-${idx}`}
                       />
                     </div>
                     <CardRemoveButton
@@ -1170,6 +1188,8 @@ export default function ContactForm({
                       <div className="relative flex items-center group/input">
                         <MapPin className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                         <Input
+                          id={`address-line1-${idx}`}
+                          name={`address-line1-${idx}`}
                           value={addr.line1 || ""}
                           onChange={(e) =>
                             updateAddress(idx, { line1: e.target.value })
@@ -1191,6 +1211,8 @@ export default function ContactForm({
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       <div>
                         <Input
+                          id={`address-city-${idx}`}
+                          name={`address-city-${idx}`}
                           value={addr.city || ""}
                           onChange={(e) =>
                             updateAddress(idx, { city: e.target.value })
@@ -1208,6 +1230,8 @@ export default function ContactForm({
                         )}
                       </div>
                       <Input
+                        id={`address-state-${idx}`}
+                        name={`address-state-${idx}`}
                         value={addr.state || ""}
                         onChange={(e) =>
                           updateAddress(idx, { state: e.target.value })
@@ -1215,6 +1239,8 @@ export default function ContactForm({
                         placeholder={t("contacts.reportFields.state")}
                       />
                       <Input
+                        id={`address-country-${idx}`}
+                        name={`address-country-${idx}`}
                         value={addr.country || ""}
                         onChange={(e) =>
                           updateAddress(idx, { country: e.target.value })
@@ -1283,6 +1309,7 @@ export default function ContactForm({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
+                  style={{ zIndex: 100 - idx }}
                   className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
                 >
                   <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-indigo-500/60 transition-colors group-hover:bg-indigo-500" />
@@ -1309,6 +1336,8 @@ export default function ContactForm({
                         value={soc.platform || "WhatsApp"}
                         onChange={(val) => updateSocial(idx, { platform: val })}
                         className={TYPE_SELECT_WIDTH}
+                        id={`social-platform-${idx}`}
+                        name={`social-platform-${idx}`}
                       />
                     </div>
                     <CardRemoveButton
@@ -1320,6 +1349,8 @@ export default function ContactForm({
                   <div className="relative flex items-center group/input">
                     <Share2 className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                     <Input
+                      id={`social-url-${idx}`}
+                      name={`social-url-${idx}`}
                       value={soc.url || ""}
                       onChange={(e) =>
                         updateSocial(idx, { url: e.target.value })
@@ -1451,6 +1482,8 @@ export default function ContactForm({
                       allowCreate={false}
                       searchPlaceholder={t("contacts.form.searchByName")}
                       emptyTitle={t("contacts.form.noContactsFound")}
+                      id={`emergency-contact-${idx}`}
+                      name={`emergency-contact-${idx}`}
                     />
                     {pickerError && (
                       <p className="text-[10px] text-destructive mt-0.5 font-medium">
@@ -1458,7 +1491,7 @@ export default function ContactForm({
                       </p>
                     )}
 
-                    <Field label={t("contacts.form.relationshipType")}>
+                    <Field label={t("contacts.form.relationshipType")} id={`emergency-relationship-${idx}`}>
                       <EditableSelect
                         options={
                           relationshipOptions.length > 0
@@ -1470,6 +1503,8 @@ export default function ContactForm({
                           updateEmergency(idx, { relationship: val })
                         }
                         className="w-full"
+                        id={`emergency-relationship-${idx}`}
+                        name={`emergency-relationship-${idx}`}
                       />
                     </Field>
                   </div>

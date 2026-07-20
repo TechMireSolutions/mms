@@ -36,6 +36,8 @@ export interface ContactPickerProps {
   createLabel?: string;
   createWithQueryLabel?: (query: string) => string;
   error?: boolean;
+  id?: string;
+  name?: string;
 }
 
 export default function ContactPicker({
@@ -55,6 +57,8 @@ export default function ContactPicker({
   createLabel = 'Create New Contact',
   createWithQueryLabel,
   error = false,
+  id,
+  name,
 }: ContactPickerProps): React.JSX.Element {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
@@ -63,6 +67,9 @@ export default function ContactPicker({
   const [createQuery, setCreateQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const serverMode = contacts === undefined;
+  const fallbackId = React.useId();
+  const resolvedId = id || fallbackId;
+  const resolvedName = name || fallbackId;
 
   const debouncedQuery = useDebounce(query, 250);
   const { data: searchPage, isFetching: isSearching } = useContactsPaginated({
@@ -187,6 +194,7 @@ export default function ContactPicker({
             <X className="w-4 h-4" />
           </Button>
         </div>
+        <input type="hidden" id={resolvedId} name={resolvedName} value={value ?? ""} />
       </div>
     );
   }
@@ -197,6 +205,8 @@ export default function ContactPicker({
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/75 pointer-events-none" />
         <Input
+          id={resolvedId}
+          name={resolvedName}
           className={cn("pl-9.5 pr-8.5", error && "border-destructive focus-visible:ring-destructive")}
           placeholder={searchPlaceholder ?? `Search ${label.toLowerCase()}…`}
           value={query}
