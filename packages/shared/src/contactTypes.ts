@@ -364,6 +364,8 @@ export const REMOVED_FORM_FIELD_KEYS: readonly string[] = [
   "notes",
   "occupation",
   "communicationPreference",
+  "preferredLanguage",
+  "preferredContactMethod",
   "phone",
   "email"
 ];
