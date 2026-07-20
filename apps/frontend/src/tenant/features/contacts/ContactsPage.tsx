@@ -30,6 +30,7 @@ import ContactsDataBanner from "@/tenant/features/contacts/components/ContactsDa
 import ContactsSyncConflictPanel from "@/tenant/features/contacts/components/ContactsSyncConflictPanel";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { TableSkeleton } from "@/components/ui/LoadingState";
 import { startContactsDuplicateScan } from "@/lib/backgroundJobs/startServerContactsCsvExport";
 import { collectLinkedContactIds, mergeContactLinkDirectory } from "@/lib/contacts/contactLinkIds";
 import { notify } from "@/lib/notify";
@@ -57,36 +58,6 @@ function LazyFallback(): React.JSX.Element {
     </div>
   );
 }
-
-function TableSkeleton({ rows = 6, cols = 5 }) {
-  return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-border bg-muted/30">
-            <th className="w-10 px-4 py-3"><div className="w-4 h-4 rounded bg-muted animate-pulse" /></th>
-            {Array.from({ length: cols }).map((_, i) => <th key={i} className="px-4 py-3"><div className="h-3 w-20 rounded bg-muted animate-pulse" /></th>)}
-            <th className="w-16 px-4 py-3" />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border/50">
-          {Array.from({ length: rows }).map((_, r) => (
-            <tr key={r}>
-              <td className="px-4 py-3"><div className="w-4 h-4 rounded bg-muted animate-pulse" /></td>
-              {Array.from({ length: cols }).map((_, c) => (
-                <td key={c} className="px-4 py-3">
-                  <div className="h-3 rounded bg-muted animate-pulse" style={{ width: `${50 + (c * 17 + r * 11) % 40}%` }} />
-                </td>
-              ))}
-              <td className="px-4 py-3"><div className="w-6 h-6 rounded-lg bg-muted animate-pulse" /></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 interface SettingsPanelProps {
   contacts: Contact[];
   onImport: (list: Contact[]) => void;

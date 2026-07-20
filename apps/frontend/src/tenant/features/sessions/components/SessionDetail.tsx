@@ -5,6 +5,7 @@ import {
   Calendar, Gift, Edit2,
 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatMoney, SESSIONS_MODULE_CONTRACT, formatDate } from "@mms/shared";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -28,12 +29,6 @@ const TABS = [
   { key: "tabarruk",  label: "Tabarruk",  icon: Gift },
 ] as const;
 
-const STATUS_CONFIG: Record<string, string> = {
-  active:    "bg-success/10 text-success border-success/20",
-  upcoming:  "bg-info/10 text-info border-info/20",
-  completed: "bg-muted text-muted-foreground border-border",
-  cancelled: "bg-destructive/10 text-destructive border-destructive/20",
-};
 
 const TAB_COMPONENTS: Record<string, React.ElementType> = {
   classes:   ClassesTab,
@@ -82,9 +77,7 @@ export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDet
       size="lg"
       headerExtra={
         <div className="flex items-center gap-2 flex-wrap mb-1 mt-1">
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${STATUS_CONFIG[session.status] || STATUS_CONFIG.active}`}>
-            {session.status?.toUpperCase()}
-          </span>
+          <StatusBadge status={session.status} />
           <span className="text-[11px] text-muted-foreground">{session.type}</span>
         </div>
       }

@@ -12,7 +12,7 @@ import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/us
 import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
-import type { AppTranslationKey } from "@mms/shared";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 import RevenueChart from "@/tenant/features/dashboard/components/widgets/charts/RevenueChart";
 import FeeCollectionSummary from "@/tenant/features/dashboard/components/widgets/FeeCollectionSummary";
@@ -41,13 +41,6 @@ interface FinancialReportProps {
 import { formatMonthYear, formatDate, getCollectedAmountForInvoice, getOutstandingAmountForInvoice } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 
-const STATUS_COLOR: Record<InvoiceStatus, string> = {
-  paid:      "bg-success/10 text-success",
-  pending:   "bg-warning/10 text-warning",
-  overdue:   "bg-destructive/10 text-destructive",
-  partial:   "bg-info/10 text-info",
-  cancelled: "bg-muted text-muted-foreground",
-};
 
 /**
  * Renders the financial reports and charts including revenue trends,
@@ -245,9 +238,16 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
                   <td className="px-3 py-2.5 font-semibold text-foreground">{formatCurrency(inv.finalAmt)}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{formatDate(inv.dueDate)}</td>
                   <td className="px-3 py-2.5">
-                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${STATUS_COLOR[inv.status as InvoiceStatus] ?? "bg-muted text-muted-foreground"}`}>
-                      {t(`finance.invoiceStatus.${inv.status as InvoiceStatus}` as AppTranslationKey)}
-                    </span>
+                    <StatusBadge
+                      status={inv.status}
+                      config={{
+                        paid: { label: t("finance.invoiceStatus.paid"), cls: "bg-success/10 text-success border-success/20" },
+                        pending: { label: t("finance.invoiceStatus.pending"), cls: "bg-warning/10 text-warning border-warning/20" },
+                        overdue: { label: t("finance.invoiceStatus.overdue"), cls: "bg-destructive/10 text-destructive border-destructive/20" },
+                        partial: { label: t("finance.invoiceStatus.partial"), cls: "bg-info/10 text-info border-info/20" },
+                        cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: "bg-muted text-muted-foreground border-border" },
+                      }}
+                    />
                   </td>
                 </tr>
               ))}

@@ -14,6 +14,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Card } from "@/components/ui/card";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 import EnrollmentChart from "@/tenant/features/dashboard/components/widgets/charts/EnrollmentChart";
 
@@ -55,13 +56,6 @@ interface StudentReportProps {
   onEditVisual?: (config: unknown) => void;
 }
 
-const STATUS_COLOR: Record<string, string> = {
-  active:    "bg-success/10 text-success",
-  inactive:  "bg-muted text-muted-foreground",
-  suspended: "bg-warning/10 text-warning",
-  completed: "bg-info/10 text-info",
-  dropped:   "bg-destructive/10 text-destructive",
-};
 
 function mapStudentRow(student: Student): ReportStudent {
   let age = 0;
@@ -230,9 +224,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
                       <td className="px-3 py-2.5 text-muted-foreground">{student.age}</td>
                       <td className="px-3 py-2.5 text-muted-foreground">{student.registered}</td>
                       <td className="px-3 py-2.5">
-                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${STATUS_COLOR[student.status] ?? "bg-muted text-muted-foreground"}`}>
-                          {student.status}
-                        </span>
+                        <StatusBadge status={student.status} />
                       </td>
                     </tr>
                   ))}
@@ -293,9 +285,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
                     <td className="px-3 py-2.5 text-muted-foreground">{enrollment.class}</td>
                     <td className="px-3 py-2.5 text-muted-foreground">{enrollment.enrolled}</td>
                     <td className="px-3 py-2.5">
-                      <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${STATUS_COLOR[enrollment.status] ?? "bg-muted text-muted-foreground"}`}>
-                        {enrollment.status}
-                      </span>
+                      <StatusBadge status={enrollment.status} />
                     </td>
                   </tr>
                 ))}

@@ -29,6 +29,7 @@ import { useTeacherColumnLayout } from '@/tenant/features/teachers/hooks/useTeac
 import { ModuleColumnCustomizer } from '@/components/ui/ModuleColumnCustomizer';
 import { TeachersCommandMetrics } from "@/tenant/features/teachers/components/TeachersCommandMetrics";
 import { ListPagination } from "@/components/ui/ListPagination";
+import { TableSkeleton } from "@/components/ui/LoadingState";
 import { useTeacherConfig } from '@/hooks/useStandardModuleConfig';
 import { notify } from '@/lib/notify';
 
@@ -288,7 +289,7 @@ export default function Teachers(): React.JSX.Element {
 
               <ErrorBoundary>
                 {isWorkPageLoading ? (
-                  <p className="text-sm text-muted-foreground px-1">{t('teachers.loading')}</p>
+                  <TableSkeleton rows={6} cols={columnRegistry.length} />
                 ) : (
                   <>
                     <TeacherList

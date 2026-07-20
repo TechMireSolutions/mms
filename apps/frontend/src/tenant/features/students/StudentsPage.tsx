@@ -34,6 +34,7 @@ import { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStud
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { StudentsCommandMetrics } from "@/tenant/features/students/components/StudentsCommandMetrics";
 import { ListPagination } from "@/components/ui/ListPagination";
+import { TableSkeleton } from "@/components/ui/LoadingState";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 
 const STUDENTS_GR_MIGRATION_KEY = "mms_students_gr_migration_v1";
@@ -347,7 +348,7 @@ export default function Students() {
 
             <ErrorBoundary>
               {isWorkPageLoading ? (
-                <p className="text-sm text-muted-foreground px-1">{t("common.loading")}</p>
+                <TableSkeleton rows={6} cols={columnRegistry.length} />
               ) : (
                 <>
                   <StudentList
