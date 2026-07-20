@@ -7,6 +7,8 @@ import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { toTitleCase } from "@mms/shared";
+
 
 const TYPE_CONFIG: Record<string, { color: string, dot: string }> = {
   class:      { color: "bg-success/15 text-success border-success/30", dot: "bg-success" },
@@ -104,7 +106,8 @@ function AddActivityModal({ open, onClose, onSave }: AddActivityModalProps) {
               id="activity-type"
               value={activityDraft.type || "class"}
               onChange={(value) => updateActivityDraft("type", value as TimetableItem["type"])}
-              options={ACTIVITY_TYPES.map((activityType) => ({ value: activityType, label: activityType.charAt(0).toUpperCase() + activityType.slice(1) }))}
+              options={ACTIVITY_TYPES.map((activityType) => ({ value: activityType, label: toTitleCase(activityType) }))}
+
               className="w-full"
             />
           </div>

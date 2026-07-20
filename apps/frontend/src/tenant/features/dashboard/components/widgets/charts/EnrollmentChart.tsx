@@ -121,7 +121,8 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
           </p>
         </div>
         
-        <div className="flex items-center gap-3 ml-auto">
+        <div className="flex items-center gap-3 ms-auto">
+
           {isEditMode && (
             <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
               <Select

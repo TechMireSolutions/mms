@@ -5,8 +5,10 @@ import {
   type TeachersWidgetAggregateResult,
   type Contact,
   formatMoney,
+  formatNumber,
   matchesWidgetFilter,
 } from "@mms/shared";
+
 import { queryClientInstance } from "@/lib/queryClient";
 import {
   CONTACTS_METRICS_QUERY_KEY,
@@ -78,8 +80,9 @@ function formatGenericWidgetValue(
   } else if (widget.collection === "finance_invoices" && widget.operation !== "count") {
     formattedValue = formatMoney(aggregate.value);
   } else {
-    formattedValue = aggregate.value.toLocaleString();
+    formattedValue = formatNumber(aggregate.value);
   }
+
 
   let isAlert = false;
   if (widget.thresholdEnabled && widget.thresholdValue !== undefined) {

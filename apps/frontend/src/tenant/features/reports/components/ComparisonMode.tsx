@@ -10,7 +10,9 @@ import {
 } from "recharts";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useTranslation } from "@/hooks/useTranslation";
+import { formatNumber } from "@/lib/utils";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
+
 import { useContactsReportAnalytics } from '@/tenant/features/contacts/hooks/useContacts';
 
 import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
@@ -577,7 +579,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
                     if (key === "attendancePct" || key === "passRatePct") {
                       return `${val}%`;
                     }
-                    return val.toLocaleString();
+                    return formatNumber(val);
                   };
 
                   const formatDiff = (d: number, key?: string) => {
@@ -588,8 +590,9 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
                     if (key === "attendancePct" || key === "passRatePct") {
                       return `${sign}${d}%`;
                     }
-                    return `${sign}${d.toLocaleString()}`;
+                    return `${sign}${formatNumber(d)}`;
                   };
+
 
                   return (
                     <tr key={row.metric} className="hover:bg-muted/30 transition-colors">

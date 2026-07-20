@@ -7,6 +7,8 @@ import {
   Plus, Trash2, ShieldCheck, Receipt, CalendarCheck, MessageCircle
 } from "lucide-react";
 import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
+import { formatNumber } from "@/lib/utils";
+
 import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/tenant/features/examinations/hooks/useExaminationsApi";
 import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/features/hasanat/hooks/useHasanatApi";
 import {
@@ -375,9 +377,10 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
       );
       return sum + (distribution.quantity || 1) * points;
     }, 0);
-    const hasanatVal = totalHasanat.toLocaleString();
+    const hasanatVal = formatNumber(totalHasanat);
 
     // 6. Pass Rate
+
     let passesCount = 0;
     let totalResultsCount = 0;
     examResults.forEach((examResult) => {

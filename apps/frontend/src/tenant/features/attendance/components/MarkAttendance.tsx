@@ -48,6 +48,8 @@ export interface AttendanceRow {
   timeOut: string;
   notes: string;
   [key: string]: any;
+
+
 }
 
 export interface OfflinePayload {
@@ -387,6 +389,8 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
   }, [rows]);
 
   const setRow = (studentId: string, key: string, value: any) => {
+
+
     const before = rows.find((row) => row.studentId === studentId);
     setRows((previousRows) => previousRows.map((row) => row.studentId === studentId ? { ...row, [key]: value } : row));
     // Audit

@@ -7,8 +7,9 @@ import ContactsSavedReports from "@/tenant/features/contacts/components/Contacts
 import type { ContactsWorkDrillDown } from "@mms/shared";
 
 interface ContactReportProps {
-  onEditVisual?: (config: any) => void;
+  onEditVisual?: (config: unknown) => void;
 }
+
 
 /** Contacts CRM Report sub-tab layout. */
 export default function ContactReport(props: ContactReportProps): React.JSX.Element {

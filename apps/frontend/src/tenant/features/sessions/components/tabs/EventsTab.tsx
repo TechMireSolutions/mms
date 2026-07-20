@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { formatDate } from "@/lib/db";
+import { toTitleCase } from "@mms/shared";
+
 
 const TYPE_COLORS: Record<string, string> = {
   ceremony:   "bg-warning/10 text-warning border-warning/20",
@@ -76,7 +78,8 @@ function EventModal({ open, event, onClose, onSave }: EventModalProps) {
               id="event-type"
               value={eventDraft.type || "meeting"}
               onChange={(value) => updateEventDraft("type", value as SessionEvent["type"])}
-              options={EVENT_TYPES.map((eventType) => ({ value: eventType, label: eventType.charAt(0).toUpperCase() + eventType.slice(1) }))}
+              options={EVENT_TYPES.map((eventType) => ({ value: eventType, label: toTitleCase(eventType) }))}
+
               className="w-full"
             />
           </div>

@@ -90,8 +90,9 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
 
   return (
     <section aria-labelledby="outstanding-fees-heading" className="relative overflow-hidden group rounded-2xl surface-glass shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute start-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] bg-destructive/60 group-hover:bg-destructive transition-colors duration-300" />
-      <header className="px-6 py-4 border-b border-border/45 flex items-center justify-between pl-6.5 select-none">
+      <div className="absolute start-0 top-0 bottom-0 w-[3.5px] rounded-e-[2px] bg-destructive/60 group-hover:bg-destructive transition-colors duration-300" />
+      <header className="px-6 py-4 border-b border-border/45 flex items-center justify-between ps-6.5 select-none">
+
         <div className="flex items-center gap-2.5">
           <AlertCircle className="w-4 h-4 text-destructive" aria-hidden="true" />
           <h3 id="outstanding-fees-heading" className="text-sm font-bold text-foreground m-0">

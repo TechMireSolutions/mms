@@ -32,6 +32,8 @@ import { BackgroundJobsTray } from "@/components/ui/BackgroundJobsTray";
 
 import { useDashboardData } from "@/tenant/features/dashboard/hooks/useDashboardData";
 import { resolveDashboardRole } from "@/lib/dashboardRole";
+import { getInitials } from "@mms/shared";
+
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { buildDashboardNotifications } from "@/lib/buildDashboardNotifications";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
@@ -49,9 +51,8 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
   const { user, logout } = useAuth();
   const { t } = useTranslation();
 
-  const initials = user?.name
-    ? user.name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()
-    : "AK";
+  const initials = getInitials(user?.name, 2) || "AK";
+
 
   const { can } = usePermissions();
   const { formatCurrency } = useFinanceCurrency();

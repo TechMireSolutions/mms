@@ -3,7 +3,8 @@ import { Download, FileSpreadsheet, FileText, Printer, Settings as SettingsIcon 
 import { useTranslation } from "@/hooks/useTranslation";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@mms/shared";
+import { formatDate, todayISO } from "@mms/shared";
+
 
 export interface ExportColumn {
   header: string;
@@ -115,7 +116,7 @@ export function ExportToolbar({
 
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
-      XLSX.writeFile(workbook, `${resolvedFilename}_${new Date().toISOString().split('T')[0]}.xlsx`);
+      XLSX.writeFile(workbook, `${resolvedFilename}_${todayISO()}.xlsx`);
     } catch {
       // Fallback to local CSV download if xlsx chunk fails to load
       downloadExcelFallback(finalColumns, finalRows, resolvedFilename);
@@ -173,8 +174,9 @@ export function ExportToolbar({
       styles: { fontSize: resolvedOrientation === "l" || resolvedOrientation === "landscape" ? 8 : 10 },
     });
 
-    doc.save(`${resolvedFilename}_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`${resolvedFilename}_${todayISO()}.pdf`);
   };
+
 
   if (resolvedVariant === "compact") {
     return (

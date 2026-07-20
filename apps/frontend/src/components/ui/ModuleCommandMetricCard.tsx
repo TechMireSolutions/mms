@@ -1,5 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { formatNumber } from '@/lib/utils';
+
 
 export interface ModuleCommandMetricCardProps {
   icon: React.ComponentType<{ className?: string }>;
@@ -89,7 +91,8 @@ export function ModuleCommandMetricCard({
       </div>
       <div className="min-w-0">
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide truncate">{label}</p>
-        <p className="text-lg font-bold text-foreground leading-tight tabular-nums">{typeof value === 'number' ? value.toLocaleString() : value}</p>
+        <p className="text-lg font-bold text-foreground leading-tight tabular-nums">{formatNumber(value)}</p>
+
       </div>
     </>
   );

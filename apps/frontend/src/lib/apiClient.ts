@@ -123,11 +123,13 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
             );
           })
           .map((columnPreference: any, index: number) => {
+
             const enabled = typeof columnPreference.enabled === 'boolean'
               ? columnPreference.enabled
               : columnPreference.enabled === 'true' || columnPreference.enabled === 1 || columnPreference.enabled === '1';
             const rawOrder = typeof columnPreference.order === 'number'
               ? columnPreference.order
+
               : parseFloat(String(columnPreference.order));
             const floored = Math.floor(rawOrder);
             const order = Number.isSafeInteger(floored) && floored >= 0 ? floored : index;

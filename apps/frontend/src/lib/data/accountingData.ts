@@ -23,8 +23,10 @@ import {
   type JournalEntry,
   type FiscalYear,
   type AccountingSettings,
-  DEFAULT_ACCOUNTING_SETTINGS as DEFAULT_SETTINGS
+  DEFAULT_ACCOUNTING_SETTINGS as DEFAULT_SETTINGS,
+  todayISO,
 } from "@mms/shared";
+
 
 export type { Account, JournalLine, JournalEntry, FiscalYear, AccountingSettings };
 export { DEFAULT_SETTINGS };
@@ -96,8 +98,9 @@ export function createReversalEntry(entry: JournalEntry, allEntries: JournalEntr
   }));
   return {
     id: `je_${Math.random().toString(36).substring(2, 9)}`,
-    date: new Date().toISOString().split("T")[0],
+    date: todayISO(),
     ref: nextRef,
+
     description: `Reversal of Entry ${entry.ref}: ${entry.description}`,
     status: "draft",
     created_by: "System",

@@ -62,9 +62,8 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
 
   if (!open) return null;
 
-  const initials = user?.name
-    ? user.name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()
-    : "AK";
+  const initials = getInitials(user?.name, 2) || "AK";
+
 
   const visibleMenuItems = NAV_ITEMS.map(item => {
     if (item.subItems) {

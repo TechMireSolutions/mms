@@ -5,6 +5,8 @@ import {
   getFlatFieldsConfig,
   type ModuleFieldDef,
 } from "@mms/shared";
+
+
 import { getObject, saveObject } from "@/lib/db";
 import { useLiveObject } from "@/hooks/useLiveObject";
 
@@ -15,8 +17,9 @@ export interface ModuleSettingsShape {
   formTabs?: any[];
   enabledTabs?: string[];
   requiredTabs?: string[];
-  [key: string]: any; // Allow other settings properties
+  [key: string]: any;
 }
+
 
 export interface UseModuleConfigOptions<T extends ModuleSettingsShape> {
   settingsObjectKey: string;
@@ -24,6 +27,8 @@ export interface UseModuleConfigOptions<T extends ModuleSettingsShape> {
   defaultFieldDefs: ModuleFieldDef[];
   normalizeFn?: (settings: any) => T;
 }
+
+
 
 export function useModuleConfig<T extends ModuleSettingsShape>({
   settingsObjectKey,

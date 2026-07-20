@@ -1,4 +1,5 @@
-import { type Contact, formatMoney, type AppTranslationKey, matchesWidgetFilter } from "@mms/shared";
+import { type Contact, formatMoney, formatNumber, type AppTranslationKey, matchesWidgetFilter } from "@mms/shared";
+
 import { getObject } from "@/lib/db";
 import { type Student } from '@/lib/data/studentsData';
 import { type Teacher } from '@/lib/data/teachersData';
@@ -397,8 +398,9 @@ export function computeCustomCard(
     ) {
       finalValue = formatMoney(finalValue);
     } else {
-      finalValue = finalValue.toLocaleString();
+      finalValue = formatNumber(finalValue);
     }
+
   }
 
   let subText = "";

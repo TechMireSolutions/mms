@@ -44,7 +44,7 @@ export function SectionCard({
       className
     )}>
       {accentColor && (
-        <div className={cn("absolute start-0 top-0 bottom-0 w-1 rounded-l-2xl transition-colors duration-300", stripeColors[accentColor])} />
+        <div className={cn("absolute start-0 top-0 bottom-0 w-1 rounded-s-2xl transition-colors duration-300", stripeColors[accentColor])} />
       )}
       {hasHeader && (
         <div className={cn("flex items-center justify-between px-5 py-3.5 border-b border-border/40 bg-muted/20 rounded-t-2xl", accentColor && "ps-6.5")}>
@@ -62,7 +62,8 @@ export function SectionCard({
           {actions && <div className="flex items-center gap-2">{actions}</div>}
         </div>
       )}
-      <div className={cn(padding ? "px-5 py-4" : undefined, accentColor && "pl-6.5")}>{children}</div>
+      <div className={cn(padding ? "px-5 py-4" : undefined, accentColor && "ps-6.5")}>{children}</div>
+
     </div>
   );
 }

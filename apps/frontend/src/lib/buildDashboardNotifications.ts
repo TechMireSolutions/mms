@@ -1,7 +1,8 @@
-import { type AppTranslationKey, formatMoney } from '@mms/shared';
+import { type AppTranslationKey, formatMoney, todayISO } from '@mms/shared';
 import type { DashboardRole } from '@/lib/dashboardRole';
 import type { Invoice } from '@/lib/data/financeData';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
+
 
 export interface DashboardNotificationItem {
   id: string;
@@ -32,8 +33,9 @@ function countOpenInvoices(invoices: Invoice[]): number {
 }
 
 function todayAttendanceRate(attendanceRecords: AttendanceRecord[]): number | null {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayISO();
   let attendanceRecordsForDay = attendanceRecords.filter((attendanceRecord) => attendanceRecord.date === today);
+
   if (attendanceRecordsForDay.length === 0) {
     const attendanceDates = [...new Set(attendanceRecords.map((attendanceRecord) => attendanceRecord.date))]
       .sort()

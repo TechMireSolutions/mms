@@ -23,7 +23,8 @@ import StudentList from "@/tenant/features/students/components/StudentList";
 import StudentForm from "@/tenant/features/students/components/StudentForm";
 import StudentsSettingsPanel from "@/tenant/features/students/components/StudentsSettings";
 import { Student } from '@/lib/data/studentsData';
-import { type Student as SharedStudent, type StudentsSettings, STUDENTS_MODULE_CONTRACT } from "@mms/shared";
+import { type Student as SharedStudent, type StudentsSettings, STUDENTS_MODULE_CONTRACT, todayISO } from "@mms/shared";
+
 
 import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
@@ -57,7 +58,8 @@ function applyGrNumberMigration(
   const migratedStudents = rawStudents.map((studentRecord, studentIndex) => {
     if (!studentRecord.grNumber) {
       didMigrate = true;
-      const registeredDate = (studentRecord.registeredDate as string | undefined) || new Date().toISOString().split("T")[0];
+      const registeredDate = (studentRecord.registeredDate as string | undefined) || todayISO();
+
       const year = registeredDate ? new Date(registeredDate).getFullYear() : new Date().getFullYear();
 
       let nextSeq = 1;

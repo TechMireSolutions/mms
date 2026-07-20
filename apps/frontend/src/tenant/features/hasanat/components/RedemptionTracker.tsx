@@ -11,6 +11,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useUsersCollection } from "@/tenant/features/users/hooks/useUsersApi";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { formatDate, todayISO, type SystemUser } from "@mms/shared";
+import { formatNumber } from "@/lib/utils";
+
 import { useHasanatRedemptionsCollection, useHasanatMutations } from "@/tenant/features/hasanat/hooks/useHasanatApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -168,8 +170,9 @@ export function RedemptionTracker({
         <div className="flex items-center gap-2">
           <Star className="w-4 h-4 text-warning" aria-hidden="true" />
           <h2 className="text-sm font-semibold text-foreground m-0">
-            {t("hasanat.redemptionsSummary", { count: redemptions.length, points: totalPoints.toLocaleString() })}
+            {t("hasanat.redemptionsSummary", { count: redemptions.length, points: formatNumber(totalPoints) })}
           </h2>
+
         </div>
         <div className="flex items-center gap-2">
           {columnCustomizer && (

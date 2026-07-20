@@ -62,6 +62,8 @@ interface Step6ConfirmationProps {
   onNotesChange: (notes: string) => void;
   customFieldValues: Record<string, any>;
   onCustomFieldChange: (id: string, value: any) => void;
+
+
 }
 
 /**

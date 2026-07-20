@@ -14,6 +14,8 @@ import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hoo
 import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/features/hasanat/hooks/useHasanatApi";
 import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
 import { getDenominationPoints } from "@mms/shared";
+import { formatNumber } from "@/lib/utils";
+
 import {
   Select,
   SelectContent,
@@ -48,7 +50,8 @@ const HasanatTooltip = ({ active = false, payload = [] }: Partial<TooltipContent
   return (
     <div className="surface-glass rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-left">
       <p className="text-muted-foreground text-[10px] m-0">{payload[0].name}</p>
-      <p className="font-bold text-foreground m-0">{payload[0].value?.toLocaleString()} pts</p>
+      <p className="font-bold text-foreground m-0">{formatNumber(payload[0].value)} pts</p>
+
     </div>
   );
 };
@@ -330,7 +333,8 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
               </Select>
             </div>
           )}
-          <p className="text-lg font-black text-foreground m-0 select-none tabular-nums">{total.toLocaleString()}</p>
+          <p className="text-lg font-black text-foreground m-0 select-none tabular-nums">{formatNumber(total)}</p>
+
         </div>
       </header>
 

@@ -11,17 +11,19 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { notify } from "@/lib/notify";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { formatDate } from "@mms/shared";
+import { formatDate, todayISO } from "@mms/shared";
+
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 
 export interface SavedReportItem {
   id: string;
   name: string;
   category: string;
-  filters: Record<string, any>;
+  filters: Record<string, unknown>;
   lastRun: string;
   createdBy: string;
 }
+
 
 const CATEGORY_COLOR: Record<string, string> = {
   financial:  "bg-success/10 text-success",
@@ -73,7 +75,7 @@ export default function SavedReports({
         name: trimmedName,
         category,
         filters,
-        lastRun: new Date().toISOString().split("T")[0],
+        lastRun: todayISO(),
         createdBy: user?.name || "System",
       };
 
@@ -99,9 +101,10 @@ export default function SavedReports({
         // Update last run time
         const updated = allSaved.map((r) =>
           r.id === report.id
-            ? { ...r, lastRun: new Date().toISOString().split("T")[0] }
+            ? { ...r, lastRun: todayISO() }
             : r
         );
+
         saveCollection("reports_saved_reports", updated);
         notify.success(
           t("contacts.savedReports.runSuccess") || `Running report: ${report.name}`

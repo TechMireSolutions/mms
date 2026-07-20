@@ -32,7 +32,9 @@ import {
   translateApp,
   validatePasswordPolicy,
   getInitials,
+  todayISO,
 } from "@mms/shared";
+
 import ContactPicker from '@/tenant/features/contacts/components/contactLink/ContactPicker';
 import { getGlobalSettings } from "@/lib/db";
 import { useUsersConfig } from "@/hooks/useStandardModuleConfig";
@@ -323,9 +325,10 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
           {form.temporaryRole && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden mt-2">
               <DatePicker value={form.roleExpiry || ""}
-                min={new Date().toISOString().split("T")[0]}
+                min={todayISO()}
                 onChange={(val) => setForm((f) => ({ ...f, roleExpiry: val }))}
                 className={FORM_INPUT} />
+
             </motion.div>
           )}
         </AnimatePresence>
@@ -597,8 +600,9 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
       temporaryPassword: form.setupMethod === "password" ? form.password : undefined,
       twoFactorEnabled: form.twoFactorEnabled,
       lastLogin: "",
-      createdDate: new Date().toISOString().split("T")[0],
+      createdDate: todayISO(),
       failedLoginAttempts: 0,
+
       activeSessions: 0,
       avatarInitials: getInitials(form.name),
       ...Object.fromEntries(

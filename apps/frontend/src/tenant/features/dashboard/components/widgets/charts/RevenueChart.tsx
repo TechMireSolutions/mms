@@ -46,7 +46,8 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
               ? t("accounting.dashboard.revenue")
               : t("accounting.dashboard.expenses")}
           </span>
-          <span className="font-bold text-foreground ml-auto tabular-nums">
+          <span className="font-bold text-foreground ms-auto tabular-nums">
+
             {formatCurrency(Number(payloadEntry.value))}
           </span>
         </div>
@@ -175,7 +176,8 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
           </p>
         </div>
         
-        <div className="flex items-center gap-3 ml-auto">
+        <div className="flex items-center gap-3 ms-auto">
+
           {isEditMode && (
             <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
               <Select

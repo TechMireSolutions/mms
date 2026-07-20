@@ -12,6 +12,8 @@ import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getDenominationPoints } from "@mms/shared";
+import { formatNumber } from "@/lib/utils";
+
 
 /** Active filter state passed down from the parent report view. */
 import { HasanatChart } from "@/tenant/features/dashboard/components/widgets/charts/AttendanceChart";
@@ -161,9 +163,9 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard icon={Star}         label={t("hasanat.report.totalDistributed")} value={totalDistributed.toLocaleString()} color="primary" />
-        <StatCard icon={Gift}         label={t("hasanat.report.totalRedeemed")}    value={totalRedeemed.toLocaleString()}    color="green"   />
-        <StatCard icon={TrendingDown} label={t("hasanat.report.balance")}           value={totalBalance.toLocaleString()}     color="amber"   />
+        <StatCard icon={Star}         label={t("hasanat.report.totalDistributed")} value={formatNumber(totalDistributed)} color="primary" />
+        <StatCard icon={Gift}         label={t("hasanat.report.totalRedeemed")}    value={formatNumber(totalRedeemed)}    color="green"   />
+        <StatCard icon={TrendingDown} label={t("hasanat.report.balance")}           value={formatNumber(totalBalance)}     color="amber"   />
         <StatCard icon={Users}        label={t("hasanat.report.redemptionRate")}   value={`${redemptionRate}%`}             color="blue"    />
       </div>
 
@@ -200,7 +202,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
                     <Cell key={index} fill={PIE_COLORS[index]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => value !== undefined ? Number(value).toLocaleString() : ""} />
+                <Tooltip formatter={(value) => value !== undefined ? formatNumber(value) : ""} />
               </PieChart>
             </SafeResponsiveContainer>
             <div className="space-y-3">
@@ -209,7 +211,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
                   <div className="w-3 h-3 rounded-sm" style={{ background: PIE_COLORS[index] }} />
                   <div>
                     <p className="text-xs text-muted-foreground">{slice.name}</p>
-                    <p className="text-sm font-bold text-foreground">{slice.value.toLocaleString()}</p>
+                    <p className="text-sm font-bold text-foreground">{formatNumber(slice.value)}</p>
                   </div>
                 </div>
               ))}
@@ -217,6 +219,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
           </div>
         </div>
       </div>
+
 
       <ExportToolbar 
         title={t("hasanat.report.distributionTitle")} 

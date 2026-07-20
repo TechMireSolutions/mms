@@ -1,2 +1,4 @@
-export type { Teacher } from '@mms/shared';
-export const TEACHERS: any[] = [];
+import type { Teacher } from '@mms/shared';
+export type { Teacher };
+export const TEACHERS: Teacher[] = [];
+

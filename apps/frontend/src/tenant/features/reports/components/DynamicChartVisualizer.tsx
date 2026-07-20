@@ -19,10 +19,14 @@ import {
   isColorblindSafeChartPalette,
   formatDateTime,
   getDenominationPoints,
+  todayISO,
   type AppTranslationKey,
 } from "@mms/shared";
+
 import { useTranslation } from "@/hooks/useTranslation";
 import { getBrandingChartPalette } from "@/lib/brandingChartPalette";
+import { formatNumber } from "@/lib/utils";
+
 import { getCollection, getObject, saveObject } from "@/lib/db";
 import { METADATA_FIELDS, VisualizerConfig, type ReportCollection, getFieldLabel, getCollectionLabel } from "@/tenant/features/reports/components/reportMetadata";
 
@@ -440,7 +444,8 @@ export default function DynamicChartVisualizer({
       const worksheet = XLSX.utils.json_to_sheet(sheetData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Analytics");
-      XLSX.writeFile(workbook, `${title.replace(/\s+/g, "_")}_${new Date().toISOString().split('T')[0]}.xlsx`);
+      XLSX.writeFile(workbook, `${title.replace(/\s+/g, "_")}_${todayISO()}.xlsx`);
+
     } catch (error) {
       console.error("Failed to export Excel spreadsheet", error);
     }
@@ -515,7 +520,8 @@ export default function DynamicChartVisualizer({
       // Render tabular data
       autoTable(doc, {
         head: [["Grouping Key (X-Axis)", `Aggregated Value (${operation.toUpperCase()})`, "Record Count"]],
-        body: processedData.map((row) => [row.name, row.value.toLocaleString(), row.count]),
+        body: processedData.map((row) => [row.name, formatNumber(row.value), row.count]),
+
         startY: chartHeight + 48,
         styles: { fontSize: pdfOrientation === "l" ? 9 : 10 },
         headStyles: { fillColor: [16, 185, 129] }, // emerald theme color
@@ -1081,13 +1087,13 @@ export default function DynamicChartVisualizer({
               <div className="p-3 border border-border bg-card/30 rounded-2xl flex flex-col justify-between">
                 <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.totalAggregated")}</span>
                 <span className="text-sm font-black text-foreground mt-1 leading-none">
-                  {totalValue.toLocaleString()}
+                  {formatNumber(totalValue)}
                 </span>
               </div>
               <div className="p-3 border border-border bg-card/30 rounded-2xl flex flex-col justify-between">
                 <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.avgPerGroup")}</span>
                 <span className="text-sm font-black text-foreground mt-1 leading-none">
-                  {avgGroupValue.toLocaleString()}
+                  {formatNumber(avgGroupValue)}
                 </span>
               </div>
               <div className="p-3 border border-border bg-card/30 rounded-2xl flex flex-col justify-between">
@@ -1134,7 +1140,7 @@ export default function DynamicChartVisualizer({
                         {processedData.map((processedRow, index) => (
                           <tr key={index} className="hover:bg-muted/20">
                             <td className="px-4 py-2.5 text-foreground font-semibold">{processedRow.name}</td>
-                            <td className="px-4 py-2.5 text-primary font-bold">{processedRow.value.toLocaleString()}</td>
+                            <td className="px-4 py-2.5 text-primary font-bold">{formatNumber(processedRow.value)}</td>
                             <td className="px-4 py-2.5 text-muted-foreground">{processedRow.count}</td>
                           </tr>
                         ))}
@@ -1143,6 +1149,7 @@ export default function DynamicChartVisualizer({
                   </div>
                 </motion.div>
               )}
+
             </AnimatePresence>
           </div>
 

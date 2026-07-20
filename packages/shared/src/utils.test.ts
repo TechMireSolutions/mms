@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { parsePhoneNumber, normalizeToE164, mergeContacts, applyTitleCaseRecursive, formatMoney } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber } from "./utils.js";
 import type { Contact } from "./contactTypes.js";
+
 
 describe("parsePhoneNumber", () => {
   it("parses E.164 with space separator", () => {
@@ -210,6 +211,25 @@ describe("formatMoney", () => {
     }
   });
 });
+
+describe("formatNumber", () => {
+  it("formats standard numbers and numeric strings", () => {
+    expect(formatNumber(1234)).toBe("1,234");
+    expect(formatNumber("56789")).toBe("56,789");
+    expect(formatNumber(0)).toBe("0");
+  });
+
+  it("handles null, undefined, and NaN gracefully", () => {
+    expect(formatNumber(null)).toBe("0");
+    expect(formatNumber(undefined)).toBe("0");
+    expect(formatNumber("invalid")).toBe("0");
+  });
+
+  it("respects custom Intl options", () => {
+    expect(formatNumber(12.3456, { maximumFractionDigits: 2 })).toBe("12.35");
+  });
+});
+
 
 
 

@@ -19,8 +19,11 @@ const LOWERCASE_WORDS = new Set([
  * @param value - The string to convert.
  * @returns The title-cased string, or the original value if it is not a string.
  */
+export function toTitleCase(value: string): string;
+export function toTitleCase(value: unknown): unknown;
 export function toTitleCase(value: unknown): unknown {
   if (typeof value !== "string") return value;
+  if (!value) return "";
   return value
     .trim()
     .split(/\s+/)
@@ -32,6 +35,7 @@ export function toTitleCase(value: unknown): unknown {
     })
     .join(" ");
 }
+
 
 const SYSTEM_EXCLUDED_KEYS = new Set([
   "id",
@@ -820,6 +824,27 @@ export function formatMoney(
 
   return `${prefix} ${formattedNum}`;
 }
+
+/**
+ * Formats a numeric value or count string safely using locale settings.
+ * @param value - The numeric or string value to format.
+ * @param options - Custom Intl.NumberFormatOptions options.
+ * @returns The formatted string, or "0" if null/undefined/NaN.
+ */
+export function formatNumber(
+  value: number | string | readonly (string | number)[] | null | undefined,
+  options?: Intl.NumberFormatOptions
+): string {
+  if (value === null || value === undefined) return "0";
+  if (Array.isArray(value)) {
+    return value.map((v) => formatNumber(v, options)).join(", ");
+  }
+  const numeric = typeof value === "number" ? value : parseFloat(String(value));
+  if (isNaN(numeric)) return "0";
+  return numeric.toLocaleString(undefined, options);
+}
+
+
 
 /**
  * Validates the submitted blueprint ID against the current settings/config version (Rule 16.3 / CS-6).
