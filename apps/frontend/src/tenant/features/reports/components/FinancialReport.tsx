@@ -19,9 +19,6 @@ import FeeCollectionSummary from "@/tenant/features/dashboard/components/widgets
 import OutstandingFeesTable from "@/tenant/features/dashboard/components/widgets/OutstandingFeesTable";
 import OverdueObligationsWidget from "@/tenant/features/dashboard/components/widgets/OverdueObligationsWidget";
 
-/** Invoice status values supported by the financial report. */
-type InvoiceStatus = "paid" | "pending" | "overdue" | "partial" | "cancelled";
-
 /** Active filter state passed down from the parent report view. */
 interface FinancialReportFilters {
   /** Invoice status to filter by, or "all" for no filter. */

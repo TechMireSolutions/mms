@@ -302,7 +302,10 @@ export async function getObject(key: string): Promise<unknown | null> {
     const rows = await activeDb().select().from(schema.objects).where(eq(schema.objects.key, storageKey));
     const row = rows[0];
     if (!row) return null;
-    // Deprecated database-level hydration for custom tabs (handled by client REST calls)
+    const tenant = getRequestTenant();
+    if (tenant) {
+      return await _hydrateObjectData(key, row.data, tenant);
+    }
     return row.data;
   } catch (error) {
     console.error(`Error getting object "${key}":`, error);
@@ -371,8 +374,7 @@ export async function getAllData(): Promise<{ collections: Record<string, unknow
 
       if (tenant) {
         if (!parsed || parsed.subdomain !== tenant) continue;
-        // Deprecated database-level hydration for custom tabs (handled by client REST calls)
-        objects[parsed.logicalKey] = row.data;
+        objects[parsed.logicalKey] = await _hydrateObjectData(parsed.logicalKey, row.data, tenant);
       } else if (!parsed) {
         objects[row.key] = row.data;
       }

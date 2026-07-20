@@ -99,7 +99,7 @@ export default function WelcomeBanner({ dashboardRole }: WelcomeBannerProps): Re
         <div className="flex-shrink-0 flex items-center gap-3 self-start lg:self-auto flex-wrap">
           {/* Box 1: Weekday */}
           <div
-            className="bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 transition-all duration-300 flex items-center gap-2 shadow-sm"
+            className="bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.15)] backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 transition-all duration-300 flex items-center gap-2 shadow-sm"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" aria-hidden="true" />
             <span className="text-[12px] font-bold text-white whitespace-nowrap tracking-wide">{dayName}</span>
@@ -107,7 +107,7 @@ export default function WelcomeBanner({ dashboardRole }: WelcomeBannerProps): Re
           
           {/* Box 2: Gregorian Date */}
           <div
-            className="bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 transition-all duration-300 flex items-center gap-2 shadow-sm"
+            className="bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.15)] backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 transition-all duration-300 flex items-center gap-2 shadow-sm"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-info" aria-hidden="true" />
             <span className="text-[12px] font-bold text-white whitespace-nowrap tracking-wide">{gregDate}</span>
@@ -116,7 +116,7 @@ export default function WelcomeBanner({ dashboardRole }: WelcomeBannerProps): Re
           {/* Box 3: Hijri Date */}
           {hijriDate && (
             <div
-              className="bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 transition-all duration-300 flex items-center gap-2 shadow-sm"
+              className="bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.15)] backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 transition-all duration-300 flex items-center gap-2 shadow-sm"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-success" aria-hidden="true" />
               <span className="text-[12px] font-bold text-white whitespace-nowrap tracking-wide">{hijriDate}</span>

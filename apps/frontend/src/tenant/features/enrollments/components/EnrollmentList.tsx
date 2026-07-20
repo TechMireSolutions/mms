@@ -61,7 +61,6 @@ export function EnrollmentList({
     handleSearchChange,
     paginatedItems: paginatedEnrollments,
     filteredItems: filtered,
-    totalPages,
   } = useLocalPagination({
     items: baseFiltered,
     pageSize: PAGE_SIZE,

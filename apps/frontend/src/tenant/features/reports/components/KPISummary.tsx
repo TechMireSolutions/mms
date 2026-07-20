@@ -793,6 +793,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
     questionBankQuestions,
     questionBankTests,
     questionBankResults,
+    t,
   ]);
 
   // Merge standard and custom possible cards, preventing duplicates if standard label is overridden

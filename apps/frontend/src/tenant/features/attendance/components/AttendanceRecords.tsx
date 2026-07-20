@@ -76,7 +76,6 @@ export function AttendanceRecords({
     handleSearchChange,
     paginatedItems: paginatedRecords,
     filteredItems: filtered,
-    totalPages,
   } = useLocalPagination({
     items: baseFiltered,
     pageSize: PAGE_SIZE,
