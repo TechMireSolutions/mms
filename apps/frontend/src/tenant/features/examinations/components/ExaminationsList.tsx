@@ -9,7 +9,7 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Exam } from '@/lib/data/examinationData';
-import { formatDate } from "@/lib/db";
+import { formatDate } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";

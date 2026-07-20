@@ -1,16 +1,16 @@
 import React, { useState, useMemo } from "react";
-import { formatDate } from "@/lib/utils";
+import {
+  DEFAULT_CURRENCIES,
+  ACCOUNTING_TAB_REGISTRY,
+  INITIAL_ACCOUNTING_FIELD_SEED,
+  type AppTranslationKey,
+  formatDate
+} from "@mms/shared";
 import {
   DollarSign, Calendar, Plus, Pencil, Trash2,
   CheckCircle2, Lock, Clock, Save, BookOpen
 } from "lucide-react";
 import { Account, FiscalYear } from '@/lib/data/accountingData';
-import {
-  DEFAULT_CURRENCIES,
-  ACCOUNTING_TAB_REGISTRY,
-  INITIAL_ACCOUNTING_FIELD_SEED,
-  type AppTranslationKey
-} from "@mms/shared";
 import { useAccountingConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { DatePicker } from "@/components/ui/DatePicker";

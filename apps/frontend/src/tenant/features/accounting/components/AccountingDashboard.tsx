@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
-import { formatDate, formatMonthName } from "@/lib/utils";
+import { formatDate, formatMonthName } from "@mms/shared";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import {
   TrendingUp, TrendingDown, Scale, DollarSign, AlertCircle, CheckCircle2, Clock,

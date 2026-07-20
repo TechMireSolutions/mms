@@ -21,10 +21,9 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { calcAge, type Student } from '@/lib/data/studentsData';
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
-import { formatDate } from "@/lib/db";
+import { type AppTranslationKey, type FieldDefinition, toTitleCase, formatDate } from "@mms/shared";
 import { runCsvDownloadJob } from '@/lib/backgroundJobs/runCsvDownloadJob';
 import { useTranslation } from '@/hooks/useTranslation';
-import { type AppTranslationKey, type FieldDefinition, toTitleCase } from "@mms/shared";
 import StudentDetail from "@/tenant/features/students/components/StudentDetail";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 

@@ -10,8 +10,7 @@ import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useUsersCollection } from "@/tenant/features/users/hooks/useUsersApi";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { formatDate, todayISO, type SystemUser } from "@mms/shared";
-import { formatNumber } from "@/lib/utils";
+import { formatDate, todayISO, type SystemUser, formatNumber } from "@mms/shared";
 
 import { useHasanatRedemptionsCollection, useHasanatMutations } from "@/tenant/features/hasanat/hooks/useHasanatApi";
 import { Button } from "@/components/ui/button";

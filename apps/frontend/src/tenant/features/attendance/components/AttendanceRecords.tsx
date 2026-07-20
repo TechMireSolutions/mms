@@ -10,7 +10,7 @@ import { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { ATTENDANCE_MODULE_CONTRACT } from "@mms/shared";
+import { ATTENDANCE_MODULE_CONTRACT, type AppTranslationKey, formatDate } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { Input } from "@/components/ui/input";
@@ -19,8 +19,7 @@ import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { getAttendanceStatusInfo } from "@/lib/data/attendanceData";
 import { StatusToggle } from "@/tenant/features/attendance/components/StatusToggle";
 import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
-import { type AppTranslationKey } from "@mms/shared";
-import { formatDate } from "@/lib/db";
+
 
 const PAGE_SIZE = 15;
 

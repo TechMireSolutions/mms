@@ -12,8 +12,7 @@ import { Button } from "@/components/ui/button";
  * @param date - Date string to format.
  * @returns Formatted date.
  */
-import { formatDate } from "@/lib/utils";
-import { formatMoney } from "@mms/shared";
+import { formatDate, formatMoney } from "@mms/shared";
 
 
 interface Step2SelectSessionProps {

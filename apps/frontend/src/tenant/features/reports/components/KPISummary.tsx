@@ -7,7 +7,6 @@ import {
   Plus, Trash2, ShieldCheck, Receipt, CalendarCheck, MessageCircle
 } from "lucide-react";
 import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
-import { formatNumber } from "@/lib/utils";
 
 import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/tenant/features/examinations/hooks/useExaminationsApi";
 import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/features/hasanat/hooks/useHasanatApi";
@@ -22,7 +21,7 @@ import { useStudentsMetrics, useStudentsWidgetAggregates } from "@/tenant/featur
 import { useTeachersMetrics, useTeachersWidgetAggregates } from "@/tenant/features/teachers/hooks/useTeachers";
 import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
-import { type Contact, type AppTranslationKey } from "@mms/shared";
+import { type Contact, type AppTranslationKey, formatNumber } from "@mms/shared";
 import { type AttendanceRecord } from '@/lib/data/attendanceData';
 import { type Invoice } from '@/lib/data/financeData';
 import { type Student } from '@/lib/data/studentsData';

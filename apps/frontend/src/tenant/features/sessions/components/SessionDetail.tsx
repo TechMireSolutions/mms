@@ -5,8 +5,7 @@ import {
   Calendar, Gift, Edit2,
 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
-import { formatDate } from "@/lib/db";
-import { formatMoney, SESSIONS_MODULE_CONTRACT } from "@mms/shared";
+import { formatMoney, SESSIONS_MODULE_CONTRACT, formatDate } from "@mms/shared";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 

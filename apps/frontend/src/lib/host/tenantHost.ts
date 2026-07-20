@@ -1,4 +1,4 @@
-import { parseTenantFromHost } from '@mms/shared/tenantUtils';
+import { parseTenantFromHost } from '@mms/shared';
 import { getAppDomain } from '@/lib/config/tenantConfig';
 
 /** True when the browser host is a madrasa subdomain (not platform apex). */

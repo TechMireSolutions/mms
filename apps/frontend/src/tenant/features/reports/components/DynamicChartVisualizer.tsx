@@ -21,11 +21,11 @@ import {
   getDenominationPoints,
   todayISO,
   type AppTranslationKey,
+  formatNumber,
 } from "@mms/shared";
 
 import { useTranslation } from "@/hooks/useTranslation";
 import { getBrandingChartPalette } from "@/lib/brandingChartPalette";
-import { formatNumber } from "@/lib/utils";
 
 import { getCollection, getObject, saveObject } from "@/lib/db";
 import { METADATA_FIELDS, VisualizerConfig, type ReportCollection, getFieldLabel, getCollectionLabel } from "@/tenant/features/reports/components/reportMetadata";

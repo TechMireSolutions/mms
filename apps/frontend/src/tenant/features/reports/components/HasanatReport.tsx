@@ -11,8 +11,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
-import { getDenominationPoints } from "@mms/shared";
-import { formatNumber } from "@/lib/utils";
+import { getDenominationPoints, formatNumber } from "@mms/shared";
 
 
 /** Active filter state passed down from the parent report view. */

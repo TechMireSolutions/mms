@@ -22,8 +22,7 @@ import { FORM_SELECT_MINI } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
-import { getRecentMonthsList } from "@/lib/utils";
-import { getCollectedAmountForInvoice } from "@mms/shared";
+import { getCollectedAmountForInvoice, getRecentMonthsList } from "@mms/shared";
 
 interface RevenuePoint {
   month: string;

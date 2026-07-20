@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense } from "react";
-import { isApexHost } from "@mms/shared/tenantUtils";
+import { isApexHost } from "@mms/shared";
 import { SETTINGS_PREVIEW_EVENT } from "@/lib/settingsPreview";
 import { getAppDomain } from "@/lib/config/tenantConfig";
 import { useAuth } from '@/lib/contexts/AuthContext';

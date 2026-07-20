@@ -10,7 +10,6 @@ import {
 } from "recharts";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatNumber } from "@/lib/utils";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
 
 import { useContactsReportAnalytics } from '@/tenant/features/contacts/hooks/useContacts';
@@ -26,8 +25,7 @@ import type { AttendanceRecord } from "@/lib/data/attendanceData";
 import type { Invoice } from "@/lib/data/financeData";
 import type { Distribution, Denomination } from "@/lib/data/hasanatData";
 import type { Exam, ExamResult } from "@/lib/data/examinationData";
-import { getDenominationPoints, getCollectedAmountForInvoice, type AppTranslationKey } from "@mms/shared";
-import { formatDate } from "@/lib/db";
+import { getDenominationPoints, getCollectedAmountForInvoice, type AppTranslationKey, formatDate, formatNumber } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 interface ComparisonDataItem {

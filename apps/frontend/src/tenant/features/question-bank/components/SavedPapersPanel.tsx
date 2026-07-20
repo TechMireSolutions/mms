@@ -2,8 +2,7 @@ import React from "react";
 import { FileText } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
-import type { QuestionBankTest } from "@mms/shared";
-import { formatDate } from "@/lib/db";
+import { type QuestionBankTest, formatDate } from "@mms/shared";
 
 interface SavedPapersPanelProps {
   activePaperId: string | null;

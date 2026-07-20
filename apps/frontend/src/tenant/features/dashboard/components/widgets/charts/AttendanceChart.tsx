@@ -14,8 +14,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
 import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/features/hasanat/hooks/useHasanatApi";
 import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
-import { getDenominationPoints } from "@mms/shared";
-import { formatNumber } from "@/lib/utils";
+import { getDenominationPoints, formatNumber } from "@mms/shared";
 
 import {
   Select,

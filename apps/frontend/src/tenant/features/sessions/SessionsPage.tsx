@@ -23,17 +23,15 @@ import { SessionDetail } from "@/tenant/features/sessions/components/SessionDeta
 import { SessionsSettings } from "@/tenant/features/sessions/components/SessionsSettings";
 import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { toTitleCase } from "@mms/shared";
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { SESSION_TYPES, Session } from '@/lib/data/sessionsData';
-import { formatDate } from "@/lib/db";
 import { useSessionsCollection, useSessionMutations } from "@/tenant/features/sessions/hooks/useSessions";
 import { useSessionColumnLayout } from "@/tenant/features/sessions/hooks/useSessionColumnLayout";
 import { useSessionConfig } from "@/hooks/useStandardModuleConfig";
 import { SessionsCommandMetrics } from "@/tenant/features/sessions/components/SessionsCommandMetrics";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { type AppTranslationKey, formatMoney, SESSIONS_MODULE_CONTRACT } from "@mms/shared";
+import { type AppTranslationKey, formatMoney, SESSIONS_MODULE_CONTRACT, toTitleCase, formatDate } from "@mms/shared";
 
 type SessionStatus = string;
 type SessionType = string;

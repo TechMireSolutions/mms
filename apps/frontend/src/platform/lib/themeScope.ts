@@ -5,8 +5,8 @@ import {
   mergeGlobalSettings,
   type BrandingSettings,
   type GlobalSettings,
+  isApexHost,
 } from '@mms/shared';
-import { isApexHost } from '@mms/shared/tenantUtils';
 import { getAppDomain } from '@/lib/config/tenantConfig';
 
 /**
