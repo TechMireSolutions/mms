@@ -314,8 +314,10 @@ export async function saveObject(key: string, data: unknown): Promise<void> {
   try {
     const storageKey = resolveObjectStorageKey(key);
     const tenant = getRequestTenant();
-    const processedData = applyTitleCaseRecursive(data);
-    // Deprecated database-level custom tabs extraction (handled by client REST calls)
+    let processedData = applyTitleCaseRecursive(data);
+    if (tenant) {
+      processedData = await _saveCustomTabsForObject(key, processedData, tenant);
+    }
     await activeDb().insert(schema.objects)
       .values({ key: storageKey, data: processedData })
       .onConflictDoUpdate({
@@ -610,6 +612,10 @@ async function _saveCustomTabsForObject(key: string, data: unknown, tenant: stri
   if (!moduleId || !data || typeof data !== 'object') return data;
 
   const dataObj = data as Record<string, unknown>;
+  if (!('formTabs' in dataObj)) {
+    return data;
+  }
+
   const formTabs = dataObj.formTabs;
   const cleanedData = { ...dataObj };
   delete cleanedData.formTabs;
