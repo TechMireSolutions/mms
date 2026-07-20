@@ -684,60 +684,6 @@ export default function ContactForm({
             </Field>
           )}
 
-          <Field
-            label={t("contacts.reportFields.phone")}
-            id="primaryPhone"
-          >
-            <div className="relative flex items-center group/input">
-              <Phone className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-              <Input
-                id="primaryPhone"
-                name="primaryPhone"
-                type="tel"
-                value={(contactDraft.phones || [])[0]?.number || ""}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  const current = [...(contactDraft.phones || [])];
-                  if (current.length === 0) {
-                    current.push({ label: "Mobile", number: val, countryCode: "+92", isPrimary: true });
-                  } else {
-                    current[0] = { ...current[0], number: val };
-                  }
-                  updateDraft({ phones: current });
-                }}
-                placeholder={t("contacts.form.phoneNumberPlaceholder")}
-                className="pl-10"
-              />
-            </div>
-          </Field>
-
-          <Field
-            label={t("contacts.reportFields.email")}
-            id="primaryEmail"
-          >
-            <div className="relative flex items-center group/input">
-              <Mail className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-              <Input
-                id="primaryEmail"
-                name="primaryEmail"
-                type="email"
-                value={(contactDraft.emails || [])[0]?.address || ""}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  const current = [...(contactDraft.emails || [])];
-                  if (current.length === 0) {
-                    current.push({ label: "Personal", address: val, isPrimary: true });
-                  } else {
-                    current[0] = { ...current[0], address: val };
-                  }
-                  updateDraft({ emails: current });
-                }}
-                placeholder="e.g. name@domain.com"
-                className="pl-10"
-              />
-            </div>
-          </Field>
-
           {isFieldEnabled("basic", "gender") && (
             <Field
               label={t("contacts.reportFields.gender")}
