@@ -416,7 +416,10 @@ export function getPrimaryPhone(contact: Partial<Contact>): string | null {
  * @returns Primary email address or null.
  */
 export function getPrimaryEmail(contact: Partial<Contact>): string | null {
-  const emailObj = (contact.emails || [])[0];
+  const emails = contact.emails || [];
+  const emailObj = emails.find((e) => e.isPrimary && (e.address || "").trim().length > 0)
+    || emails.find((e) => (e.address || "").trim().length > 0)
+    || emails[0];
   if (emailObj && (emailObj.address || "").trim().length > 0) {
     return emailObj.address.trim();
   }

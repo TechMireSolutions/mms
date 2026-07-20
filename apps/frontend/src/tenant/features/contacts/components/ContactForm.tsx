@@ -35,6 +35,7 @@ import {
   normalizeToE164,
   parsePhoneNumber,
   getPrimaryPhone,
+  getPrimaryEmail,
   getInitials,
   getDisplayName,
   Contact,
@@ -67,13 +68,7 @@ const parsePhoneEntry = (phone: PhoneNumber) => {
   return parsePhoneNumber(e164, phone.countryCode || "+92", [...SUPPORTED_DIAL_CODES]);
 };
 
-const getPhoneDisplayValue = (phone: PhoneNumber): string => {
-  const code = (phone.countryCode || "").trim();
-  const num = (phone.number || "").trim();
-  if (!code) return num;
-  if (num.startsWith("+") || num.startsWith(code) || num.startsWith("00")) return num;
-  return `${code} ${num}`.trim();
-};
+
 
 const cleanContactDraft = (draft: Partial<Contact>): Partial<Contact> => {
   const result = { ...draft };
@@ -551,10 +546,43 @@ export default function ContactForm({
 
       const finalized = applyTitleCaseToContact(contactRaw) as Contact;
       const primaryPhoneStr = getPrimaryPhone(finalized);
+      const primaryEmailStr = getPrimaryEmail(finalized);
+      const firstAddr = finalized.addresses?.[0];
+
       if (primaryPhoneStr) {
         (finalized as Record<string, unknown>).phone = primaryPhoneStr;
       } else {
         delete (finalized as Record<string, unknown>).phone;
+      }
+
+      if (primaryEmailStr) {
+        (finalized as Record<string, unknown>).email = primaryEmailStr;
+      } else {
+        delete (finalized as Record<string, unknown>).email;
+      }
+
+      if (firstAddr?.line1) {
+        (finalized as Record<string, unknown>).line1 = firstAddr.line1;
+      } else {
+        delete (finalized as Record<string, unknown>).line1;
+      }
+
+      if (firstAddr?.city) {
+        (finalized as Record<string, unknown>).city = firstAddr.city;
+      } else {
+        delete (finalized as Record<string, unknown>).city;
+      }
+
+      if (firstAddr?.state) {
+        (finalized as Record<string, unknown>).state = firstAddr.state;
+      } else {
+        delete (finalized as Record<string, unknown>).state;
+      }
+
+      if (firstAddr?.country) {
+        (finalized as Record<string, unknown>).country = firstAddr.country;
+      } else {
+        delete (finalized as Record<string, unknown>).country;
       }
 
       onSave(finalized);
@@ -890,41 +918,40 @@ export default function ContactForm({
                     />
                   </div>
 
-                  <div className="relative flex items-center group/input w-full">
-                    <Phone className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                    <Input
-                      type="tel"
-                      value={getPhoneDisplayValue(phone)}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        const trimmed = val.trim();
-                        if (
-                          trimmed.startsWith("+") ||
-                          trimmed.startsWith("00")
-                        ) {
-                          if (trimmed.length > 6) {
-                            const parsed = parsePhoneNumber(
-                              val,
-                              phone.countryCode || "+92",
-                              ["+92", "+1", "+44"],
-                            );
+                  <div className="flex items-center gap-2 w-full">
+                    <EditableSelect
+                      options={["+92", "+1", "+44", "+966", "+971"]}
+                      value={phone.countryCode || "+92"}
+                      onChange={(val) => updatePhone(idx, { countryCode: val })}
+                      className="w-[90px] shrink-0"
+                    />
+                    <div className="relative flex items-center group/input flex-1 min-w-0">
+                      <Phone className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                      <Input
+                        type="tel"
+                        value={phone.number || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const trimmed = val.trim();
+                          if (trimmed.startsWith("+") || trimmed.startsWith("00")) {
+                            const parsed = parsePhoneNumber(val, phone.countryCode || "+92", ["+92", "+1", "+44", "+966", "+971"]);
                             updatePhone(idx, {
                               countryCode: parsed.countryCode,
                               number: parsed.number,
                             });
                             return;
                           }
-                        }
-                        updatePhone(idx, { number: val });
-                      }}
-                      onBlur={() => handlePhoneBlur(idx)}
-                      placeholder={t("contacts.form.phoneNumberPlaceholder")}
-                      className={cn(
-                        "pl-10",
-                        numError &&
-                          "border-destructive focus-visible:ring-destructive",
-                      )}
-                    />
+                          updatePhone(idx, { number: val });
+                        }}
+                        onBlur={() => handlePhoneBlur(idx)}
+                        placeholder={t("contacts.form.phoneNumberPlaceholder") || "0300 1234567"}
+                        className={cn(
+                          "pl-10",
+                          numError &&
+                            "border-destructive focus-visible:ring-destructive",
+                        )}
+                      />
+                    </div>
                   </div>
                   {numError && (
                     <p className="text-[10px] text-destructive mt-1 font-medium">

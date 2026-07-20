@@ -4,6 +4,7 @@ import type { AppTranslationKey, Contact, PhoneNumber } from "@mms/shared";
 import {
   parsePhoneNumber,
   getPrimaryPhone,
+  getPrimaryEmail,
   resolveModuleTierTab,
   contactMatchesSearch,
   filterActiveContacts,
@@ -293,16 +294,33 @@ export function useContactsPageState({
       if (!canWrite) return;
       const isCreatingContact = !editContact;
       const primaryPhoneStr = getPrimaryPhone(contactDraft);
+      const primaryEmailStr = getPrimaryEmail(contactDraft);
+      const firstAddr = contactDraft.addresses?.[0];
+
       const payload: Contact = editContact
         ? {
             ...editContact,
             ...contactDraft,
             phones: contactDraft.phones || [],
             phone: primaryPhoneStr || undefined,
+            emails: contactDraft.emails || [],
+            email: primaryEmailStr || undefined,
+            addresses: contactDraft.addresses || [],
+            line1: firstAddr?.line1 || undefined,
+            city: firstAddr?.city || undefined,
+            state: firstAddr?.state || undefined,
+            country: firstAddr?.country || undefined,
+            socials: contactDraft.socials || [],
+            emergencyContacts: contactDraft.emergencyContacts || [],
           }
         : {
             ...contactDraft,
             phone: primaryPhoneStr || undefined,
+            email: primaryEmailStr || undefined,
+            line1: firstAddr?.line1 || undefined,
+            city: firstAddr?.city || undefined,
+            state: firstAddr?.state || undefined,
+            country: firstAddr?.country || undefined,
           };
       void saveContact(payload, isCreatingContact)
         .then(() => {
