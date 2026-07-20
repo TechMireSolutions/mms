@@ -116,7 +116,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
                 <BarChart data={monthlyData} barGap={4}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(tickValue) => tickValue >= 1000 ? `${(tickValue / 1000).toFixed(0)}k` : tickValue} />
+                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(tickValue) => tickValue === 0 ? formatCurrency(0) : (tickValue >= 1000 || tickValue <= -1000) ? `${formatCurrency(Math.round(tickValue / 1000))}k` : formatCurrency(tickValue)} />
                   <Tooltip formatter={(tooltipValue) => tooltipValue !== undefined ? formatCurrency(Number(tooltipValue)) : ""} />
                   <Bar dataKey="revenue"  name={t("accounting.dashboard.revenue")}  fill={primary} radius={[4, 4, 0, 0]} />
                   <Bar dataKey="expenses" name={t("accounting.dashboard.expenses")} fill={secondary} radius={[4, 4, 0, 0]} />

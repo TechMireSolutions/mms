@@ -35,11 +35,7 @@ interface AuditLogProps {
   filters: Partial<AttendanceFilterState>;
 }
 
-function formatTimestamp(timestamp?: string | number): string {
-  if (timestamp === undefined) return "—";
-  const date = typeof timestamp === "number" ? new Date(timestamp) : timestamp;
-  return formatDateTime(date);
-}
+
 
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
@@ -174,7 +170,7 @@ export function AuditLog({ filters }: AuditLogProps) {
                 const actionLabel = ACTION_LABELS[entry.action] || { labelKey: entry.action as AppTranslationKey, color: "bg-muted text-muted-foreground border-border" };
                 return (
                   <tr key={index} className="hover:bg-muted/20 transition-colors">
-                    <td className="px-3 py-2.5 text-[11px] font-mono text-muted-foreground whitespace-nowrap">{formatTimestamp(entry.ts)}</td>
+                    <td className="px-3 py-2.5 text-[11px] font-mono text-muted-foreground whitespace-nowrap">{formatDateTime(entry.ts)}</td>
                     <td className="px-3 py-2.5">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border ${actionLabel.color}`}>{t(actionLabel.labelKey as AppTranslationKey)}</span>
                     </td>

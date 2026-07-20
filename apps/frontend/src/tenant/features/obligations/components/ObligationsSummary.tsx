@@ -314,7 +314,7 @@ export function ObligationsSummary({
             <SafeResponsiveContainer height={200}>
               <BarChart data={typeBreakdown} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
+                <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => v === 0 ? formatCurrency(0) : `${formatCurrency(Math.round(v / 1000))}k`} />
                 <Tooltip formatter={(v) => v !== undefined ? formatCurrency(Number(v)) : ""} />
                 <Bar dataKey="total" radius={[6,6,0,0]}>
                   {typeBreakdown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
@@ -330,7 +330,7 @@ export function ObligationsSummary({
               <SafeResponsiveContainer height={200}>
                 <BarChart data={monthlyTrend} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                   <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
+                  <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => v === 0 ? formatCurrency(0) : `${formatCurrency(Math.round(v / 1000))}k`} />
                   <Tooltip formatter={(v) => v !== undefined ? formatCurrency(Number(v)) : ""} />
                   <Bar dataKey="total" fill={primary} radius={[6,6,0,0]} />
                 </BarChart>

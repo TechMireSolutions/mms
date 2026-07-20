@@ -1412,12 +1412,12 @@ function getStoredGlobalSettings(): StoredGlobalSettings {
  * @returns {string} The formatted date string.
  */
 export function formatDate(
-  date: string | Date | null | undefined,
+  date: string | Date | number | null | undefined,
   dateFormatOrShowMonthName?: string | boolean,
   showMonthName = false
 ): string {
   if (!date) return "—";
-  const parsedDate = typeof date === "string" ? new Date(date) : date;
+  const parsedDate = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   if (isNaN(parsedDate.getTime())) return "—";
 
   const stored = getStoredGlobalSettings();
@@ -1465,11 +1465,11 @@ export function formatDate(
  * @returns {string} The formatted date and time string.
  */
 export function formatDateTime(
-  date: string | Date | null | undefined,
+  date: string | Date | number | null | undefined,
   showMonthName = true
 ): string {
   if (!date) return "—";
-  const parsedDate = typeof date === "string" ? new Date(date) : date;
+  const parsedDate = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   if (isNaN(parsedDate.getTime())) return "—";
 
   const datePart = formatDate(date, showMonthName);
@@ -1495,11 +1495,11 @@ export function formatDateTime(
  * @returns {string} The formatted month and year string.
  */
 export function formatMonthYear(
-  date: string | Date | null | undefined,
+  date: string | Date | number | null | undefined,
   monthStyle: "numeric" | "2-digit" | "long" | "short" | "narrow" = "short"
 ): string {
   if (!date) return "—";
-  const parsedDate = typeof date === "string" ? new Date(date) : date;
+  const parsedDate = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   if (isNaN(parsedDate.getTime())) return "—";
 
   const stored = getStoredGlobalSettings();
@@ -1520,9 +1520,9 @@ export function formatMonthYear(
  * @param {string | Date | null | undefined} date - The date to format.
  * @returns {string} The formatted month name.
  */
-export function formatMonthName(date: string | Date | null | undefined): string {
+export function formatMonthName(date: string | Date | number | null | undefined): string {
   if (!date) return "—";
-  const parsedDate = typeof date === "string" ? new Date(date) : date;
+  const parsedDate = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
   if (isNaN(parsedDate.getTime())) return "—";
 
   const stored = getStoredGlobalSettings();

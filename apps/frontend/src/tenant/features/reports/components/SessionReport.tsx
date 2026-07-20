@@ -9,7 +9,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
-import { getIntlLocaleForLanguage } from '@mms/shared';
+import { formatMonthName } from '@mms/shared';
 import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -72,8 +72,7 @@ function utilisationColour(rate: number): string {
  * @returns The SessionReport component.
  */
 export default function SessionReport({ filters }: SessionReportProps): React.JSX.Element {
-  const { t, language } = useTranslation();
-  const locale = getIntlLocaleForLanguage(language);
+  const { t } = useTranslation();
   const sessions = useSessionsCollection();
   const enrollments = useEnrollmentsCollection();
 
@@ -106,20 +105,19 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
       }
     });
 
-    const monthFormatter = new Intl.DateTimeFormat(locale, { month: "short" });
     const trends: EnrollmentTrendItem[] = [];
     for (let i = 0; i < 12; i++) {
       if (counts[i] !== undefined) {
-        const monthName = monthFormatter.format(new Date(2023, i, 15));
+        const monthName = formatMonthName(new Date(2023, i, 15));
         trends.push({ month: monthName, students: counts[i] });
       }
     }
     if (trends.length === 0) {
-      const currentMonthName = monthFormatter.format(new Date());
+      const currentMonthName = formatMonthName(new Date());
       return [{ month: currentMonthName, students: enrollments.length }];
     }
     return trends;
-  }, [enrollments, locale]);
+  }, [enrollments]);
 
   const sessionCapacityData = useMemo<SessionCapacityItem[]>(() => {
     let filteredSessionCapacity = sessionCapacity;

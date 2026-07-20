@@ -144,7 +144,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 11 }} tickFormatter={(value: number) => `${value / 1000}k`} />
+            <YAxis tick={{ fontSize: 11 }} tickFormatter={(value: number) => value === 0 ? formatCurrency(0) : `${formatCurrency(Math.round(value / 1000))}k`} />
             <Tooltip formatter={(value) => value !== undefined ? formatCurrency(Number(value)) : ""} />
             <Area type="monotone" dataKey="collected"   stroke="hsl(var(--primary))" fill="url(#colorCollected)" strokeWidth={2} name={t("finance.report.collected")}   />
             <Area type="monotone" dataKey="outstanding" stroke={palette.charts[0]} fill="transparent" strokeWidth={2} strokeDasharray="4 2" name={t("finance.report.outstandingLabel")} />

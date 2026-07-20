@@ -6,35 +6,9 @@ import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { Users, DollarSign, TrendingUp, BookOpen } from "lucide-react";
 import { ENROLLMENT_STATUSES, Enrollment } from '@/lib/data/enrollmentData';
 import { formatMoney } from "@mms/shared";
+import { StatCard } from "@/components/ui/StatCard";
 
-interface KPIProps {
-  icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
-  label: string;
-  value: React.ReactNode;
-  sub?: string;
-  color?: string;
-}
 
-/**
- * Single KPI card helper.
- *
- * @returns Component layout.
- */
-function KPI({ icon: Icon, label, value, sub, color = "bg-primary/10 text-primary" }: KPIProps): React.ReactElement {
-  return (
-    <Card className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4 ps-5.5 flex items-start gap-3 shadow-sm hover:shadow-md transition-all duration-300">
-      <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover:bg-primary" />
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color} ms-1`}>
-        <Icon className="w-4 h-4" aria-hidden="true" />
-      </div>
-      <div>
-        <p className="text-xl font-bold text-foreground leading-tight">{value}</p>
-        <p className="text-xs font-semibold text-foreground mt-0.5">{label}</p>
-        {sub && <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>}
-      </div>
-    </Card>
-  );
-}
 
 interface EnrollmentReportsProps {
   enrollments: Enrollment[];
@@ -91,12 +65,11 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
 
   return (
     <section className="space-y-6" aria-label="Enrollment Reports Summary">
-      {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KPI icon={Users}      label="Total Enrollments" value={total}    sub={`${confirmed} confirmed`} />
-        <KPI icon={TrendingUp} label="Confirmed"          value={confirmed} sub={`${pending} pending`}   color="bg-success/10 text-success" />
-        <KPI icon={BookOpen}   label="Cancelled"          value={cancelled} sub="This period"            color="bg-destructive/10 text-destructive" />
-        <KPI icon={DollarSign} label="Revenue Due"        value={formatMoney(totalFees)} sub={`Paid: ${formatMoney(paidFees)}`} color="bg-warning/10 text-warning" />
+        <StatCard icon={Users}      label="Total Enrollments" value={total}    sub={`${confirmed} confirmed`} accent="primary" />
+        <StatCard icon={TrendingUp} label="Confirmed"          value={confirmed} sub={`${pending} pending`}   accent="success" />
+        <StatCard icon={BookOpen}   label="Cancelled"          value={cancelled} sub="This period"            accent="destructive" />
+        <StatCard icon={DollarSign} label="Revenue Due"        value={formatMoney(totalFees)} sub={`Paid: ${formatMoney(paidFees)}`} accent="warning" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
