@@ -320,26 +320,26 @@ export default function StudentList({
                       onCheckedChange={() => handleSelectOne(studentCard.id)}
                     />
                   </div>
-                  <div className="absolute top-3 right-3">
+                  <div className="absolute top-3 inset-inline-end-3">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 p-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                        <Button variant="ghost" size="icon" aria-label="Student actions" className="h-7 w-7 p-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                           <MoreHorizontal className="w-3.5 h-3.5" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-40">
                         <DropdownMenuItem onClick={() => setViewStudent(studentCard)}>
-                          <Eye className="w-3.5 h-3.5 mr-2" /> View profile
+                          <Eye className="w-3.5 h-3.5 me-2" /> View profile
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onEdit(studentCard)}>
-                          <Edit2 className="w-3.5 h-3.5 mr-2" /> Edit student
+                          <Edit2 className="w-3.5 h-3.5 me-2" /> Edit student
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           onClick={() => onDelete(studentCard.id)}
                           className="text-destructive focus:text-destructive"
                         >
-                          <Trash2 className="w-3.5 h-3.5 mr-2" /> Remove
+                          <Trash2 className="w-3.5 h-3.5 me-2" /> Remove
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -618,23 +618,23 @@ export default function StudentList({
                         <td className="px-4 py-3">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100">
+                              <Button variant="ghost" size="icon" aria-label="Student actions" className="h-8 w-8 p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100">
                                 <MoreHorizontal className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-44">
                               <DropdownMenuItem onClick={() => setViewStudent(studentRow)}>
-                                <Eye className="w-3.5 h-3.5 mr-2" /> View profile
+                                <Eye className="w-3.5 h-3.5 me-2" /> View profile
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => onEdit(studentRow)}>
-                                <Edit2 className="w-3.5 h-3.5 mr-2" /> Edit student
+                                <Edit2 className="w-3.5 h-3.5 me-2" /> Edit student
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => onDelete(studentRow.id)}
                                 className="text-destructive focus:text-destructive"
                               >
-                                <Trash2 className="w-3.5 h-3.5 mr-2" /> Remove
+                                <Trash2 className="w-3.5 h-3.5 me-2" /> Remove
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>

@@ -382,7 +382,7 @@ export default function StudentForm({
                   value={studentDraft.grNumber || ""}
                   onChange={(event) => updateDraft({ grNumber: event.target.value })}
                   placeholder={t("students.form.grNumberPlaceholder") || "Enter GR Number"}
-                  className={`${FORM_INPUT} pl-10`}
+                  className={`${FORM_INPUT} ps-10`}
                 />
               </div>
             </Field>

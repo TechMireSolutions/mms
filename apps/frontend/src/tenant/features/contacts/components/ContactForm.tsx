@@ -690,7 +690,7 @@ export default function ContactForm({
                   transition={{ duration: 0.15 }}
                   className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
                 >
-                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+                  <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
                   <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
                     <div className="flex items-center gap-2.5">
                       <Phone className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />

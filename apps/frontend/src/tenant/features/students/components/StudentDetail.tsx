@@ -122,6 +122,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
             onClick={() => onEdit(student)}
             className="h-8 w-8 p-1.5 rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
             title="Edit Student"
+            aria-label="Edit Student"
           >
             <Edit2 className="w-4 h-4" />
           </Button>
@@ -160,13 +161,16 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
         {/* Quick communication */}
         <div className="grid grid-cols-3 gap-2">
           {primaryPhone && (
-            <a
-              href={`tel:${primaryPhone.replace(/[^\d+]/g, "")}`}
-              className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-info/10 hover:border-info/30 transition-all text-info text-center"
+            <Button
+              variant="ghost"
+              asChild
+              className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-info/10 hover:border-info/30 transition-all text-info text-center shadow-none"
             >
-              <Phone className="w-4 h-4 mx-auto" />
-              <span className="text-[10px] font-bold">Call</span>
-            </a>
+              <a href={`tel:${primaryPhone.replace(/[^\d+]/g, "")}`}>
+                <Phone className="w-4 h-4 mx-auto" />
+                <span className="text-[10px] font-bold">Call</span>
+              </a>
+            </Button>
           )}
           {primaryPhone && (
             <Button
@@ -203,7 +207,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
         {/* Ordered Attributes & Connections list */}
         {sortedEnabledFields.some((field) => field.key === "fatherLink" ? (fatherContact || student.fatherName) : field.key === "motherLink" ? (motherContact || student.motherName) : field.key === "guardianLink" ? (guardianContact || student.guardianName) : true) && (
           <div className="space-y-4">
-            <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Student Details</h4>
+            <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">Student Details</h4>
             <div className="space-y-2.5">
               {sortedEnabledFields.map((field) => {
                 if (field.key === "gender") {
@@ -213,7 +217,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                       <div className="p-2 rounded-lg bg-muted text-muted-foreground ms-1">
                         <User className="w-3.5 h-3.5" />
                       </div>
-                      <div className="flex-1 min-w-0 text-left">
+                      <div className="flex-1 min-w-0 text-start">
                         <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">Gender</span>
                         <span className="text-xs font-semibold text-foreground capitalize">{student.gender || "Not specified"}</span>
                       </div>
@@ -224,11 +228,11 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                 if (field.key === "dob") {
                   return (
                     <div key="dob" className="relative overflow-hidden group/row flex items-center gap-3 p-3 bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-200">
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/row:bg-primary" />
-                      <div className="p-2 rounded-lg bg-muted text-muted-foreground ml-1">
+                      <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/row:bg-primary" />
+                      <div className="p-2 rounded-lg bg-muted text-muted-foreground ms-1">
                         <Calendar className="w-3.5 h-3.5" />
                       </div>
-                      <div className="flex-1 min-w-0 text-left">
+                      <div className="flex-1 min-w-0 text-start">
                         <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">DOB & Age</span>
                         <span className="text-xs font-semibold text-foreground">
                           {student.dob ? formatDate(student.dob, true) : "—"} {age ? `(${age} yrs)` : ""}
@@ -241,11 +245,11 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                 if (field.key === "registeredDate") {
                   return (
                     <div key="registeredDate" className="relative overflow-hidden group/row flex items-center gap-3 p-3 bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-200">
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/row:bg-primary" />
-                      <div className="p-2 rounded-lg bg-muted text-muted-foreground ml-1">
+                      <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/row:bg-primary" />
+                      <div className="p-2 rounded-lg bg-muted text-muted-foreground ms-1">
                         <Clock className="w-3.5 h-3.5" />
                       </div>
-                      <div className="flex-1 min-w-0 text-left">
+                      <div className="flex-1 min-w-0 text-start">
                         <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">Registered Date</span>
                         <span className="text-xs font-semibold text-foreground">
                           {student.registeredDate ? formatDateTime(student.registeredDate, true) : "—"}
@@ -273,7 +277,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                       {fatherPhone && (
                         <a
                           href={`tel:${fatherPhone.replace(/[^\d+]/g, "")}`}
-                          className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors mr-1"
+                          className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors me-1"
                         >
                           <Phone className="w-3.5 h-3.5" />
                         </a>
@@ -300,7 +304,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                       {motherPhone && (
                         <a
                           href={`tel:${motherPhone.replace(/[^\d+]/g, "")}`}
-                          className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors mr-1"
+                          className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors me-1"
                         >
                           <Phone className="w-3.5 h-3.5" />
                         </a>
@@ -327,7 +331,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                       {guardianPhone && (
                         <a
                           href={`tel:${guardianPhone.replace(/[^\d+]/g, "")}`}
-                          className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors mr-1"
+                          className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors me-1"
                         >
                           <Phone className="w-3.5 h-3.5" />
                         </a>
@@ -349,11 +353,11 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
 
                   return (
                     <div key={field.key} className="relative overflow-hidden group/row flex items-center gap-3 p-3 bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-200">
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/row:bg-primary" />
-                      <div className="p-2 rounded-lg bg-muted text-muted-foreground ml-1">
+                      <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/row:bg-primary" />
+                      <div className="p-2 rounded-lg bg-muted text-muted-foreground ms-1">
                         <Sparkles className="w-3.5 h-3.5" />
                       </div>
-                      <div className="flex-1 min-w-0 text-left">
+                      <div className="flex-1 min-w-0 text-start">
                         <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">{field.label}</span>
                         <span className="text-xs font-semibold text-foreground">{displayVal}</span>
                       </div>
@@ -369,7 +373,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
 
         {/* Sessions details */}
         <div className="space-y-3">
-          <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Enrolled Sessions ({enrolledSessionDetails.length})</h4>
+          <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">Enrolled Sessions ({enrolledSessionDetails.length})</h4>
           {enrolledSessionDetails.length === 0 ? (
             <div className="p-6 rounded-2xl border border-dashed border-border bg-muted/10 text-center">
               <BookOpen className="w-8 h-8 mx-auto text-muted-foreground/30 mb-2" />
@@ -383,8 +387,8 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                   key={session.id}
                   className="relative overflow-hidden group/session p-3.5 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm space-y-2 hover:border-primary/20 hover:shadow-md transition-all duration-300"
                 >
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/session:bg-primary" />
-                  <div className="flex items-center justify-between ml-1">
+                  <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/session:bg-primary" />
+                  <div className="flex items-center justify-between ms-1">
                     <span className="bg-primary/5 text-primary border border-primary/10 text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase">
                       {session.type}
                     </span>
@@ -392,9 +396,9 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                       Fee: {session.currency} {session.baseFee}
                     </span>
                   </div>
-                  <h5 className="text-xs font-bold text-foreground ml-1">{session.name}</h5>
+                  <h5 className="text-xs font-bold text-foreground ms-1">{session.name}</h5>
                   {session.classes && session.classes.length > 0 ? (
-                    <div className="text-[10px] text-muted-foreground space-y-1 bg-muted/40 p-2 rounded-lg ml-1">
+                    <div className="text-[10px] text-muted-foreground space-y-1 bg-muted/40 p-2 rounded-lg ms-1">
                       <p className="font-semibold uppercase tracking-wider text-[8px] text-muted-foreground/80">Class Assignments</p>
                       {session.classes.map((sessionClass: { id: string; name?: string; teacherName?: string; room?: string; schedule?: string }) => (
                         <div key={sessionClass.id} className="flex justify-between gap-1.5">
@@ -404,7 +408,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                       ))}
                     </div>
                   ) : (
-                    <p className="text-[10px] text-muted-foreground italic ml-1">No classes configured for this session</p>
+                    <p className="text-[10px] text-muted-foreground italic ms-1">No classes configured for this session</p>
                   )}
                 </div>
               ))}
@@ -414,16 +418,16 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
 
         {/* Attendance Performance Grid */}
         <div className="space-y-3">
-          <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Engagement & Analytics</h4>
+          <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">Engagement & Analytics</h4>
           <div className="grid grid-cols-2 gap-3">
             <div className="relative overflow-hidden group/metric p-3.5 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm text-center hover:shadow-md transition-all duration-300">
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/metric:bg-primary" />
+              <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/metric:bg-primary" />
               <span className="block text-[8px] font-black uppercase tracking-wider text-muted-foreground mb-1">Attendance Rate</span>
               <p className="text-lg font-black text-success">94.8%</p>
               <span className="text-[9px] text-muted-foreground">Last 30 days</span>
             </div>
             <div className="relative overflow-hidden group/metric p-3.5 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm text-center hover:shadow-md transition-all duration-300">
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/metric:bg-primary" />
+              <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/metric:bg-primary" />
               <span className="block text-[8px] font-black uppercase tracking-wider text-muted-foreground mb-1">Conduct Rating</span>
               <p className="text-lg font-black text-primary">Excellent</p>
               <span className="text-[9px] text-muted-foreground">Term Review</span>
