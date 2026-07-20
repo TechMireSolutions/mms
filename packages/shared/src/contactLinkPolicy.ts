@@ -88,8 +88,8 @@ export function hydrateContactProfile<T extends Record<string, unknown>>(
     name: contact.name ?? record.name,
     gender: contact.gender ?? record.gender,
     dob: contact.dob ?? record.dob,
-    phone: contact.phone ?? contact.phones?.[0]?.number ?? record.phone,
-    email: contact.email ?? contact.emails?.[0]?.address ?? record.email,
+    phone: contact.phones?.[0]?.number ?? record.phone,
+    email: contact.emails?.[0]?.address ?? record.email,
     city: contact.city ?? record.city,
   };
 }

@@ -101,11 +101,11 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
   const colorIdx = student.id.charCodeAt(student.id.length - 1) % AVATAR_GRADIENT_ROTATION.length;
   const avatarGradient = AVATAR_GRADIENT_ROTATION[colorIdx];
 
-  const primaryPhone = studentContact?.phone || studentContact?.phones?.[0]?.number || student.phone;
+  const primaryPhone = studentContact?.phones?.[0]?.number || student.phone;
 
-  const fatherPhone = fatherContact?.phone || fatherContact?.phones?.[0]?.number;
-  const motherPhone = motherContact?.phone || motherContact?.phones?.[0]?.number;
-  const guardianPhone = guardianContact?.phone || guardianContact?.phones?.[0]?.number;
+  const fatherPhone = fatherContact?.phones?.[0]?.number;
+  const motherPhone = motherContact?.phones?.[0]?.number;
+  const guardianPhone = guardianContact?.phones?.[0]?.number;
 
   return (
     <>

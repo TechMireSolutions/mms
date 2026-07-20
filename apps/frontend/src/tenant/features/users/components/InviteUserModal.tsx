@@ -61,8 +61,8 @@ export function InviteUserModal({
     const contact = selectedContact;
     if (!contact) return;
     const name = toTitleCase(contact.name.trim()) as string;
-    const email = ((contact.email as string | undefined) || contact.emails?.[0]?.address || '').trim().toLowerCase();
-    const phone = ((contact.phone as string | undefined) || contact.phones?.[0]?.number || '').trim();
+    const email = (contact.emails?.[0]?.address || '').trim().toLowerCase();
+    const phone = (contact.phones?.[0]?.number || '').trim();
     const user: SystemUser = {
       id: `u${Date.now()}`,
       contactId: contact.id,

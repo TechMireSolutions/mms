@@ -31,11 +31,11 @@ const getLabelForField = (field: string, t: (key: AppTranslationKey) => string):
 
 const getValueForField = (field: string, contact: Contact, emptyDash: string): string => {
   if (field === "phone") {
-    const ph = (contact.phones || [])[0] || (contact.phone ? { number: contact.phone } : null);
+    const ph = (contact.phones || [])[0];
     return ph ? (ph.countryCode ? `${ph.countryCode} ${ph.number}` : ph.number) : emptyDash;
   }
   if (field === "email") {
-    return (contact.emails || [])[0]?.address || contact.email || emptyDash;
+    return (contact.emails || [])[0]?.address || emptyDash;
   }
   const fieldValue = contact[field as keyof Contact];
   return (fieldValue as string) || emptyDash;

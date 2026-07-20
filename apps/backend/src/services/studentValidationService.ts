@@ -46,8 +46,8 @@ async function hydrateStudentValidationSubject(
     name: studentRecord.name ?? contact.name,
     gender: studentRecord.gender ?? contact.gender,
     dob: studentRecord.dob ?? contact.dob,
-    phone: studentRecord.phone ?? contact.phone ?? contact.phones?.[0]?.number,
-    email: studentRecord.email ?? contact.email ?? contact.emails?.[0]?.address,
+    phone: studentRecord.phone ?? contact.phones?.[0]?.number,
+    email: studentRecord.email ?? contact.emails?.[0]?.address,
     city: studentRecord.city ?? contact.city,
   };
 }

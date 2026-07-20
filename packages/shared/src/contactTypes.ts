@@ -124,8 +124,6 @@ export interface Contact {
   addresses?: Address[];
   socials?: SocialLink[];
   emergencyContacts?: EmergencyContact[];
-  phone?: string;
-  email?: string;
   relationships?: ContactRelationship[];
   activities?: ContactActivity[];
   attachments?: ContactAttachment[];
@@ -365,7 +363,9 @@ export const REMOVED_FORM_FIELD_KEYS: readonly string[] = [
   "rating",
   "notes",
   "occupation",
-  "communicationPreference"
+  "communicationPreference",
+  "phone",
+  "email"
 ];
 
 export const DEFAULT_PAGE_TABS: TabDefinition[] = [

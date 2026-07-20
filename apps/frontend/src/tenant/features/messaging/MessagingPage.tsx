@@ -21,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getCollection, saveCollection } from '@/lib/db';
 import { useContactsCollection } from '@/tenant/features/contacts/hooks/useContacts';
-import { getDisplayName, getPrimaryPhone, formatDate, type Message } from '@mms/shared';
+import { getDisplayName, getPrimaryPhone, getPrimaryEmail, formatDate, type Message } from '@mms/shared';
 import MessageComposer, { type MessagingRecipient, type MessageTemplate } from '@/components/ui/MessageComposer';
 import { notify } from '@/lib/notify';
 import { FORM_LABEL, FORM_INPUT, FORM_TEXTAREA } from '@/components/ui/formStyles';
@@ -134,7 +134,7 @@ export default function MessagingPage(): React.JSX.Element {
   const filteredContacts = useMemo(() => {
     return allContacts.filter((c) => {
       const nameMatch = getDisplayName(c).toLowerCase().includes(searchContact.toLowerCase());
-      const hasContactInfo = Boolean(getPrimaryPhone(c)) || Boolean(c.email?.trim());
+      const hasContactInfo = Boolean(getPrimaryPhone(c)) || Boolean(getPrimaryEmail(c));
       const genderMatch = genderFilter === 'all' || (c.gender || 'unspecified').toLowerCase() === genderFilter;
       return nameMatch && hasContactInfo && genderMatch;
     });
@@ -182,7 +182,7 @@ export default function MessagingPage(): React.JSX.Element {
         id: c.id,
         name: getDisplayName(c),
         phone: getPrimaryPhone(c) || '',
-        email: c.email || '',
+        email: getPrimaryEmail(c) || '',
       }));
   }, [allContacts, selectedRecipients]);
 
@@ -331,7 +331,7 @@ export default function MessagingPage(): React.JSX.Element {
                           </td>
                           <td className="px-4 py-2 font-medium text-foreground">{getDisplayName(c)}</td>
                           <td className="px-4 py-2 font-mono text-muted-foreground">{phone || '-'}</td>
-                          <td className="px-4 py-2 text-muted-foreground">{c.email || '-'}</td>
+                          <td className="px-4 py-2 text-muted-foreground">{getPrimaryEmail(c) || '-'}</td>
                         </tr>
                       );
                     })}

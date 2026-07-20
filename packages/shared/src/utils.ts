@@ -395,7 +395,7 @@ export function normalizeToE164(countryCode: string, number: string): string {
  * @returns The formatted primary phone number or null.
  */
 export function getPrimaryPhone(contact: Partial<Contact>): string | null {
-  const phone = (contact.phones || [])[0] || (contact.phone ? { number: contact.phone as string } : null);
+  const phone = (contact.phones || [])[0];
   if (!phone) return null;
   const code = phone.countryCode ? phone.countryCode.trim() : "";
   const phoneNumber = phone.number ? phone.number.trim() : "";
@@ -410,7 +410,7 @@ export function getPrimaryPhone(contact: Partial<Contact>): string | null {
  * @returns Primary email address or null.
  */
 export function getPrimaryEmail(contact: Partial<Contact>): string | null {
-  return (contact.emails || [])[0]?.address || (contact.email as string) || null;
+  return (contact.emails || [])[0]?.address || null;
 }
 
 /**
@@ -470,9 +470,6 @@ export const normalizePhoneForComparison = (phoneNumber: unknown): string => {
 
 export const getPhoneNumbers = (contact: Contact): string[] => {
   const phoneNumbers: string[] = [];
-  if (contact.phone) {
-    phoneNumbers.push(normalizePhoneForComparison(contact.phone));
-  }
   if (contact.phones) {
     contact.phones.forEach((phone) => {
       if (phone.number) {
@@ -485,9 +482,6 @@ export const getPhoneNumbers = (contact: Contact): string[] => {
 
 export const getEmails = (contact: Contact): string[] => {
   const emails: string[] = [];
-  if (contact.email) {
-    emails.push(normalizeEmail(contact.email));
-  }
   if (contact.emails) {
     contact.emails.forEach((email) => {
       if (email.address) {

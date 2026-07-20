@@ -251,29 +251,19 @@ const normalizeContactForEdit = (
     lastName = parts.slice(1).join(" ");
   }
 
-  // 2. Phones resolution (array of strings or objects, plus scalar phone)
+  // 2. Phones resolution (array of strings or objects)
   let phones: PhoneNumber[] = Array.isArray(merged.phones)
     ? merged.phones.map((item, idx) => normalizePhoneItem(item, idx))
     : [];
-
-  const scalarPhone = typeof merged.phone === "string" ? merged.phone.trim() : "";
-  if (scalarPhone && !phones.some((p) => (p.number || "").trim() === scalarPhone)) {
-    phones.unshift(normalizePhoneItem(scalarPhone, 0));
-  }
 
   if (phones.length === 0) {
     phones = [{ label: "Mobile", number: "", countryCode: "+92", isPrimary: true }];
   }
 
-  // 3. Emails resolution (array of strings or objects, plus scalar email)
+  // 3. Emails resolution (array of strings or objects)
   let emails: EmailAddress[] = Array.isArray(merged.emails)
     ? merged.emails.map((item, idx) => normalizeEmailItem(item, idx))
     : [];
-
-  const scalarEmail = typeof merged.email === "string" ? merged.email.trim() : "";
-  if (scalarEmail && !emails.some((e) => (e.address || "").trim().toLowerCase() === scalarEmail.toLowerCase())) {
-    emails.unshift(normalizeEmailItem(scalarEmail, 0));
-  }
 
   if (emails.length === 0) {
     emails = [{ label: "Personal", address: "", isPrimary: true }];
@@ -684,56 +674,7 @@ export default function ContactForm({
             </Field>
           )}
 
-          {/* Primary Phone shortcut on Basic Info tab */}
-          <Field
-            label={t("contacts.form.primaryPhone") || "Primary Phone"}
-            error={getListItemError("phones", "number", 0)}
-            id="primaryPhone"
-          >
-            <div className="relative flex items-center group/input">
-              <Phone className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-              <Input
-                type="tel"
-                id="primaryPhone"
-                name="primaryPhone"
-                value={getPhoneDisplayValue(contactDraft.phones?.[0] || { label: "Mobile", number: "", countryCode: "+92" })}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  const phones = [...(contactDraft.phones || [{ label: "Mobile", number: "", countryCode: "+92" }])];
-                  phones[0] = { ...phones[0], number: val };
-                  updateDraft({ phones });
-                }}
-                onBlur={() => handlePhoneBlur(0)}
-                placeholder={t("contacts.form.phoneNumberPlaceholder")}
-                className="pl-10"
-              />
-            </div>
-          </Field>
-
-          {/* Primary Email shortcut on Basic Info tab */}
-          <Field
-            label={t("contacts.form.primaryEmail") || "Primary Email"}
-            error={getListItemError("emails", "address", 0)}
-            id="primaryEmail"
-          >
-            <div className="relative flex items-center group/input">
-              <Mail className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-              <Input
-                type="email"
-                id="primaryEmail"
-                name="primaryEmail"
-                value={contactDraft.emails?.[0]?.address || ""}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  const emails = [...(contactDraft.emails || [{ label: "Personal", address: "" }])];
-                  emails[0] = { ...emails[0], address: val };
-                  updateDraft({ emails });
-                }}
-                placeholder={t("contacts.form.emailPlaceholder") || "name@domain.com"}
-                className="pl-10"
-              />
-            </div>
-          </Field>
+          {/* Removed Primary Phone and Primary Email shortcuts from Basic Info tab in favor of dedicated Phones and Emails tabs */}
 
           {isFieldEnabled("basic", "gender") && (
             <Field

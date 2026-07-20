@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserPlus, AlertTriangle, MessageCircle, MessageSquare, Download, Users, UserX, RefreshCw, X, Loader2, Trash2, RotateCcw } from "lucide-react";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { getPrimaryPhone, hasWhatsApp, Contact, CONTACTS_MODULE_CONTRACT, resolveModuleTierTab, getDisplayName } from "@mms/shared";
+import { getPrimaryEmail, getPrimaryPhone, hasWhatsApp, Contact, CONTACTS_MODULE_CONTRACT, resolveModuleTierTab, getDisplayName } from "@mms/shared";
 import type { AppTranslationKey } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
@@ -670,7 +670,7 @@ function ContactsInner() {
                 id: c.id,
                 name: getDisplayName(c),
                 phone: getPrimaryPhone(c) || "",
-                email: c.email || "",
+                email: getPrimaryEmail(c) || "",
               }))}
               onClose={() => setMessagingTarget(null)}
             />

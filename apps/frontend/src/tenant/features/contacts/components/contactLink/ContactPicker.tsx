@@ -83,7 +83,7 @@ export default function ContactPicker({
   const directory = serverMode ? (searchPage?.contacts ?? []) : contacts;
 
   const matches = directory.filter((contact) => {
-    const contactPhone = (contact.phone as string | undefined) || contact.phones?.[0]?.number || '';
+    const contactPhone = contact.phones?.[0]?.number || '';
     if (normalizedExcludeIds.includes(String(contact.id))) return false;
     if (hasPhone && (!contactPhone || String(contactPhone).trim().length === 0)) return false;
     if (serverMode) return true;
@@ -233,7 +233,7 @@ export default function ContactPicker({
               {matches.map((contact) => {
                 const contactInitials = getInitials(contact.name);
                 const contactGradient = genderAvatarGradient(contact.gender ?? '');
-                const contactPhone = (contact.phone as string | undefined) || contact.phones?.[0]?.number;
+                const contactPhone = contact.phones?.[0]?.number;
                 const contactCity = contact.city as string | undefined;
                 const contactTag = contact.tag as string | undefined;
 

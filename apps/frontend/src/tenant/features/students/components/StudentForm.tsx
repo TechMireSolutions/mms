@@ -205,7 +205,7 @@ export default function StudentForm({
 
     setSaving(true);
     try {
-      const email = linkedContact?.emails?.[0]?.address || linkedContact?.email || "";
+      const email = linkedContact?.emails?.[0]?.address || "";
       const duplicateReason = await checkStudentRegistrationDuplicate({
         excludeId: student?.id ? String(student.id) : undefined,
         contactId: String(studentDraft.contactId),

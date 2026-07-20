@@ -224,8 +224,8 @@ function Step1({ form, setForm, errors }: Step1Props): JSX.Element {
       setForm((previousForm) => ({ ...previousForm, contactId: null, name: "", email: "", phone: "" }));
       return;
     }
-    const primaryEmail = contact.emails?.[0]?.address || (contact.email as string | undefined) || "";
-    const primaryPhone = contact.phones?.[0]?.number || (contact.phone as string | undefined) || "";
+    const primaryEmail = contact.emails?.[0]?.address || "";
+    const primaryPhone = contact.phones?.[0]?.number || "";
     setForm((previousForm) => ({
       ...previousForm,
       contactId: contact.id,

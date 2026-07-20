@@ -28,7 +28,7 @@ export function filterContactsForQuery(contacts: Contact[], query: ContactsListQ
   }
   if (query.hasPhone) {
     rows = rows.filter((contact) => {
-      const contactPhone = contact.phone || contact.phones?.[0]?.number;
+      const contactPhone = contact.phones?.[0]?.number;
       return contactPhone != null && String(contactPhone).trim().length > 0;
     });
   }

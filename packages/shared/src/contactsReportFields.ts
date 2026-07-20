@@ -1,7 +1,7 @@
 import type { Contact, FieldDefinition, TabDefinition } from './contactTypes.js';
 import { INITIAL_FIELD_SEED } from './contactTypes.js';
 import { canViewContactField, canViewContactTab } from './contactFieldAccess.js';
-import { getPrimaryPhone } from './utils.js';
+import { getPrimaryEmail, getPrimaryPhone } from './utils.js';
 
 export const CONTACTS_REPORT_FIELD_IDS = [
   'fullName',
@@ -142,12 +142,10 @@ export function getContactReportCellValue(
       return contact.isSyed ? labels.yes : labels.no;
 
     case 'phone': {
-      const phones = contact.phones;
-      return getPrimaryPhone(contact) || (phones?.[0]?.number ?? String(contact.phone || '—'));
+      return getPrimaryPhone(contact) || '—';
     }
     case 'email': {
-      const emails = contact.emails;
-      return emails?.[0]?.address || String(contact.email || '—');
+      return getPrimaryEmail(contact) || '—';
     }
     case 'streetAddress': {
       const addresses = contact.addresses;
