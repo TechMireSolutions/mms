@@ -1,8 +1,9 @@
 import React, { useMemo } from "react";
-import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { motion } from "framer-motion";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   RadarChart, PolarGrid, PolarAngleAxis, Radar, LineChart, Line,
 } from "recharts";
 import { AlertTriangle, Trophy } from "lucide-react";
@@ -196,10 +197,9 @@ export function PerformanceAnalytics({
       )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card accentColor="primary" className="p-5 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm" aria-label={t("questionBank.analytics.classTrend")}>
-          <h3 className="mb-4 text-[13px] font-bold text-foreground">{t("questionBank.analytics.classTrend")}</h3>
+        <SectionCard accentColor="primary" title={t("questionBank.analytics.classTrend")}>
           <div className="h-[180px]" aria-hidden>
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
+            <SafeResponsiveContainer width="100%" height="100%">
               <LineChart data={trendData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="name" tick={{ fontSize: 10 }} />
@@ -210,15 +210,14 @@ export function PerformanceAnalytics({
                 />
                 <Line type="monotone" dataKey="avg" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4, fill: "hsl(var(--primary))" }} />
               </LineChart>
-            </ResponsiveContainer>
+            </SafeResponsiveContainer>
           </div>
-        </Card>
+        </SectionCard>
 
-        <Card accentColor="indigo" className="p-5 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm" aria-label={t("questionBank.analytics.categoryAccuracy")}>
-          <h3 className="mb-4 text-[13px] font-bold text-foreground">{t("questionBank.analytics.categoryAccuracy")}</h3>
+        <SectionCard accentColor="indigo" title={t("questionBank.analytics.categoryAccuracy")}>
           {radarData.length >= 3 ? (
             <div className="h-[180px]" aria-hidden>
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
+              <SafeResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData}>
                   <PolarGrid stroke="hsl(var(--border))" />
                   <PolarAngleAxis dataKey="subject" tick={{ fontSize: 9 }} />
@@ -228,21 +227,20 @@ export function PerformanceAnalytics({
                     contentStyle={{ fontSize: 11, borderRadius: 8 }}
                   />
                 </RadarChart>
-              </ResponsiveContainer>
+              </SafeResponsiveContainer>
             </div>
           ) : (
             <div className="flex h-[180px] items-center justify-center text-sm text-muted-foreground" role="status">
               {t("questionBank.analytics.radarInsufficient")}
             </div>
           )}
-        </Card>
+        </SectionCard>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card accentColor="success" className="p-5 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm" aria-label={t("questionBank.analytics.studentPerformance")}>
-          <h3 className="mb-4 text-[13px] font-bold text-foreground">{t("questionBank.analytics.studentPerformance")}</h3>
+        <SectionCard accentColor="success" title={t("questionBank.analytics.studentPerformance")}>
           <div className="h-[180px]" aria-hidden>
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
+            <SafeResponsiveContainer width="100%" height="100%">
               <BarChart data={studentStats} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
                 <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
@@ -253,14 +251,13 @@ export function PerformanceAnalytics({
                 />
                 <Bar dataKey="avg" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
               </BarChart>
-            </ResponsiveContainer>
+            </SafeResponsiveContainer>
           </div>
-        </Card>
+        </SectionCard>
 
-        <Card accentColor="warning" className="p-5 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm" aria-label={t("questionBank.analytics.difficultyBreakdown")}>
-          <h3 className="mb-4 text-[13px] font-bold text-foreground">{t("questionBank.analytics.difficultyBreakdown")}</h3>
+        <SectionCard accentColor="warning" title={t("questionBank.analytics.difficultyBreakdown")}>
           <div className="h-[180px]" aria-hidden>
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
+            <SafeResponsiveContainer width="100%" height="100%">
               <BarChart data={diffData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
@@ -271,15 +268,12 @@ export function PerformanceAnalytics({
                 />
                 <Bar dataKey="accuracy" radius={[4, 4, 0, 0]} fill="hsl(var(--chart-1))" />
               </BarChart>
-            </ResponsiveContainer>
+            </SafeResponsiveContainer>
           </div>
-        </Card>
+        </SectionCard>
       </div>
 
-      <Card accentColor="info" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm" aria-label={t("questionBank.analytics.categoryBreakdown")}>
-        <div className="border-b border-border/40 px-4 py-3 bg-muted/20 pl-6.5">
-          <h3 className="text-[13px] font-bold text-foreground">{t("questionBank.analytics.categoryBreakdown")}</h3>
-        </div>
+      <SectionCard accentColor="info" title={t("questionBank.analytics.categoryBreakdown")} padding={false}>
         <div className="divide-y divide-border/50 pl-6.5" role="list">
           {catPerformance.sort((a, b) => a.accuracy - b.accuracy).map((categoryResult) => (
             <div key={categoryResult.name} className="flex items-center gap-4 px-4 py-3" role="listitem">
@@ -314,14 +308,10 @@ export function PerformanceAnalytics({
             </div>
           ))}
         </div>
-      </Card>
+      </SectionCard>
 
       {studentStats.length > 0 && (
-        <Card accentColor="emerald" className="p-5 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm" aria-label={t("questionBank.analytics.studentLeaderboard")}>
-          <div className="mb-4 flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-warning" aria-hidden />
-            <h3 className="text-[13px] font-bold text-foreground">{t("questionBank.analytics.studentLeaderboard")}</h3>
-          </div>
+        <SectionCard accentColor="emerald" title={t("questionBank.analytics.studentLeaderboard")} icon={Trophy}>
           <div className="space-y-2.5" role="list">
             {studentStats.map((studentStat, studentIndex) => (
               <div key={studentStat.name} className="flex items-center gap-3" role="listitem">
@@ -341,7 +331,7 @@ export function PerformanceAnalytics({
               </div>
             ))}
           </div>
-        </Card>
+        </SectionCard>
       )}
     </div>
   );

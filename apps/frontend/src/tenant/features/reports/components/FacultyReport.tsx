@@ -3,6 +3,8 @@ import { GraduationCap, BookOpen, Users, Clock } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
+import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { useTeachersByIds } from '@/tenant/features/teachers/hooks/useTeachers';
@@ -91,8 +93,7 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
       </div>
 
       {/* Chart */}
-      <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
-        <p className="text-sm font-semibold text-foreground mb-3">{t("teachers.report.workloadOverview")}</p>
+      <SectionCard title={t("teachers.report.workloadOverview")}>
         <SafeResponsiveContainer width="100%" height={200}>
           <BarChart data={facultyWorkload} barSize={28} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -103,7 +104,7 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
             <Bar dataKey="hoursPerWeek"  fill="hsl(var(--chart-2))"  name={t("teachers.report.hoursWeekLabel")} radius={[0, 4, 4, 0]} />
           </BarChart>
         </SafeResponsiveContainer>
-      </div>
+      </SectionCard>
 
       {/* Table */}
       <ExportToolbar 
@@ -117,7 +118,7 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
           t("teachers.report.colHoursWeek"),
         ]}
       />
-      <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
+      <Card className="overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr>
@@ -154,7 +155,7 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
             ))}
           </tbody>
         </table>
-      </div>
+        </Card>
     </div>
   );
 }

@@ -3,6 +3,8 @@ import { BookOpen, Trophy, TrendingUp, Star } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
+import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/tenant/features/examinations/hooks/useExaminationsApi";
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
@@ -169,8 +171,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
 
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
-          <p className="text-sm font-semibold text-foreground mb-3">{t("examinations.report.marksDistribution")}</p>
+        <SectionCard title={t("examinations.report.marksDistribution")}>
           <SafeResponsiveContainer width="100%" height={180}>
             <BarChart data={academicResultsData} barSize={28}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -180,10 +181,9 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
               <Bar dataKey="marks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name={t("examinations.report.marksLabel")} />
             </BarChart>
           </SafeResponsiveContainer>
-        </div>
+        </SectionCard>
 
-        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
-          <p className="text-sm font-semibold text-foreground mb-3">{t("examinations.report.classComparison")}</p>
+        <SectionCard title={t("examinations.report.classComparison")}>
           {classRankings.length > 0 ? (
             <SafeResponsiveContainer width="100%" height={180}>
               <BarChart data={classRankings} barSize={32} layout="vertical">
@@ -198,7 +198,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
           ) : (
             <EmptyState icon={BookOpen} title={t("examinations.report.noClassData")} compact />
           )}
-        </div>
+        </SectionCard>
       </div>
 
       {/* Class Rankings */}
@@ -208,7 +208,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {classRankings.map((classRanking, index) => (
-            <div key={classRanking.class} className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
+            <Card key={classRanking.class} className="p-5">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-semibold text-foreground">{classRanking.class}</p>
                 <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
@@ -224,7 +224,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
               <p className="text-xs text-muted-foreground">
                 {t("examinations.report.passRate")}: <span className="font-semibold text-success">{classRanking.passRate}%</span>
               </p>
-            </div>
+            </Card>
           ))}
         </div>
       )}
@@ -244,7 +244,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
       {academicResultsData.length === 0 ? (
         <EmptyState icon={BookOpen} title={t("examinations.report.noResultsFound")} compact />
       ) : (
-        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
+        <Card className="overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
@@ -282,7 +282,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
               ))}
             </tbody>
           </table>
-        </div>
+        </Card>
       )}
     </div>
   );

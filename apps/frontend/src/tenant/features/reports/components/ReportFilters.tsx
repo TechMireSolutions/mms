@@ -5,6 +5,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { Card } from "@/components/ui/card";
 import type { AppTranslationKey } from "@mms/shared";
 
 const STATUSES: string[] = ["all", "active", "inactive", "completed"];
@@ -76,7 +77,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
   };
 
   return (
-    <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl shadow-sm overflow-hidden">
+    <Card className="overflow-hidden">
       {/* Header */}
       <button
         onClick={() => setOpen((isOpen) => !isOpen)}
@@ -203,6 +204,6 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </Card>
   );
 }

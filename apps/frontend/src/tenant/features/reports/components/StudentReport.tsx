@@ -13,6 +13,7 @@ import {
 import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Card } from "@/components/ui/card";
 
 import EnrollmentChart from "@/tenant/features/dashboard/components/widgets/charts/EnrollmentChart";
 
@@ -269,7 +270,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
         enrollments.length === 0 ? (
           <EmptyState icon={Users} title={t("students.report.noEnrollmentsFound")} compact />
         ) : (
-          <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl overflow-hidden shadow-sm mt-4">
+          <Card className="overflow-hidden mt-4">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border/50">
                 <tr>
@@ -300,7 +301,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
                 ))}
               </tbody>
             </table>
-          </div>
+          </Card>
         )
       )}
 

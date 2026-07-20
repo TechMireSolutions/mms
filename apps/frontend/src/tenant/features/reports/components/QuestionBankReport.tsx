@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { BarChart2, ClipboardList, FileCheck2, Target, Users } from "lucide-react";
 import type {
   QuestionBankQuestion,
@@ -91,13 +92,7 @@ export default function QuestionBankReport(): React.JSX.Element {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <section
-          className="rounded-2xl border border-border/50 bg-card/40 p-5 shadow-sm backdrop-blur-xl"
-          aria-label={t("questionBank.analytics.difficultyBreakdown")}
-        >
-          <h3 className="mb-4 text-sm font-semibold text-foreground">
-            {t("questionBank.analytics.difficultyBreakdown")}
-          </h3>
+        <SectionCard title={t("questionBank.analytics.difficultyBreakdown")}>
           {difficultyData.some((item) => item.questions > 0 || item.tests > 0) ? (
             <div className="h-[180px]" aria-hidden>
               <SafeResponsiveContainer width="100%" height={180}>
@@ -114,15 +109,9 @@ export default function QuestionBankReport(): React.JSX.Element {
           ) : (
             <EmptyState icon={BarChart2} title={t("questionBank.report.noDifficultyData")} compact />
           )}
-        </section>
+        </SectionCard>
 
-        <section
-          className="rounded-2xl border border-border/50 bg-card/40 p-5 shadow-sm backdrop-blur-xl"
-          aria-label={t("questionBank.analytics.categoryBreakdown")}
-        >
-          <h3 className="mb-4 text-sm font-semibold text-foreground">
-            {t("questionBank.analytics.categoryBreakdown")}
-          </h3>
+        <SectionCard title={t("questionBank.analytics.categoryBreakdown")}>
           {categoryData.some((item) => item.questions > 0) ? (
             <div className="h-[180px]" aria-hidden>
               <SafeResponsiveContainer width="100%" height={180}>
@@ -138,7 +127,7 @@ export default function QuestionBankReport(): React.JSX.Element {
           ) : (
             <EmptyState icon={BarChart2} title={t("questionBank.report.noCategoryData")} compact />
           )}
-        </section>
+        </SectionCard>
       </div>
     </div>
   );

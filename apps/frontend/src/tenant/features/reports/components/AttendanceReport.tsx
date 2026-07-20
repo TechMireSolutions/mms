@@ -1,6 +1,8 @@
 import React, { useMemo } from "react";
 import { UserCheck, Users, AlertTriangle, Award } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
@@ -159,8 +161,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
 
       {/* Chart */}
       {summary.length > 0 && (
-        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
-          <p className="text-sm font-semibold text-foreground mb-3">{t("attendance.report.rateByClass")}</p>
+        <SectionCard title={t("attendance.report.rateByClass")}>
           <SafeResponsiveContainer width="100%" height={180}>
             <BarChart data={summary} barSize={36}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -170,7 +171,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
               <Bar dataKey="avgRate" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
             </BarChart>
           </SafeResponsiveContainer>
-        </div>
+        </SectionCard>
       )}
 
       {/* Class Summary Table */}
@@ -188,7 +189,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
       {summary.length === 0 ? (
         <EmptyState icon={UserCheck} title={t("attendance.report.noData")} description={t("attendance.report.adjustFilters")} compact />
       ) : (
-        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl overflow-hidden shadow-sm">
+        <Card className="overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
@@ -219,7 +220,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
               ))}
             </tbody>
           </table>
-        </div>
+        </Card>
       )}
 
       {/* Student Attendance */}
@@ -242,7 +243,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
       {studentAttendanceRows.length === 0 ? (
         <EmptyState icon={Users} title={t("attendance.report.noStudentRecords")} compact />
       ) : (
-        <div className="rounded-xl border border-border overflow-hidden">
+        <Card className="overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
@@ -273,7 +274,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
               ))}
             </tbody>
           </table>
-        </div>
+        </Card>
       )}
 
       {/* Dashboard widgets preview */}

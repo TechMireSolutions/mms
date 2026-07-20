@@ -8,6 +8,7 @@ import {
   Loader2, Trash2
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
+import { Card } from "@/components/ui/card";
 import { Contact, ContactActivity, canViewContactField, CONTACTS_MODULE_CONTRACT } from "@mms/shared";
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, calcAge, getInitials } from "@mms/shared";
@@ -64,8 +65,7 @@ const DETAIL_STYLES = {
   liveIntelText: "text-success",
 } as const;
 
-const COLLECTION_CONTAINER_CLASS =
-  "relative overflow-hidden bg-card/60 backdrop-blur-xs rounded-2xl border border-border/80 shadow-xs hover:shadow-md transition-all duration-300 divide-y divide-border/50";
+const COLLECTION_CONTAINER_CLASS = "divide-y divide-border/50";
 
 
 interface ContactDetailDrawerProps {
@@ -93,7 +93,7 @@ function FieldGroupCard({ group, fields, formatValue }: FieldGroupCardProps): Re
   return (
     <div className="space-y-2">
       <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">{group}</h4>
-      <div className={COLLECTION_CONTAINER_CLASS}>
+      <Card className={COLLECTION_CONTAINER_CLASS}>
         {validFields.map(({ field, val }) => {
           const Icon = ICON_MAP[field.key] || Tag;
           return (
@@ -110,7 +110,7 @@ function FieldGroupCard({ group, fields, formatValue }: FieldGroupCardProps): Re
             </div>
           );
         })}
-      </div>
+      </Card>
     </div>
   );
 }
@@ -515,7 +515,7 @@ export default function ContactDetailDrawer({
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">
                       {t('contacts.form.phonesLabel')}
                     </h4>
-                    <div className={COLLECTION_CONTAINER_CLASS}>
+                    <Card className={COLLECTION_CONTAINER_CLASS}>
                       {c.phones.map((phone, phoneIndex) => {
                         const rawPhone = String(phone.number || "");
                         const copyKey = `phone-${phoneIndex}`;
@@ -552,7 +552,7 @@ export default function ContactDetailDrawer({
                           </div>
                         );
                       })}
-                    </div>
+                    </Card>
                   </div>
                 )}
 
@@ -562,7 +562,7 @@ export default function ContactDetailDrawer({
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">
                       {t('contacts.form.emailsLabel')}
                     </h4>
-                    <div className={COLLECTION_CONTAINER_CLASS}>
+                    <Card className={COLLECTION_CONTAINER_CLASS}>
                       {c.emails.map((email, emailIndex) => {
                         const rawEmail = String(email.address || "");
                         const copyKey = `email-${emailIndex}`;
@@ -599,7 +599,7 @@ export default function ContactDetailDrawer({
                           </div>
                         );
                       })}
-                    </div>
+                    </Card>
                   </div>
                 )}
 
@@ -609,7 +609,7 @@ export default function ContactDetailDrawer({
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">
                       {t('contacts.detail.addresses')}
                     </h4>
-                    <div className={COLLECTION_CONTAINER_CLASS}>
+                    <Card className={COLLECTION_CONTAINER_CLASS}>
                       {c.addresses.map((address, addressIndex) => {
                         const fullAddr = [address.line1, address.city, address.state, address.country]
                           .filter(Boolean)
@@ -638,7 +638,7 @@ export default function ContactDetailDrawer({
                           </div>
                         );
                       })}
-                    </div>
+                    </Card>
                   </div>
                 )}
 
@@ -648,7 +648,7 @@ export default function ContactDetailDrawer({
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">
                       {t('contacts.detail.socials')}
                     </h4>
-                    <div className={COLLECTION_CONTAINER_CLASS}>
+                    <Card className={COLLECTION_CONTAINER_CLASS}>
                       {c.socials.map((social, socialIndex) => {
                         const handle = String(social.url || "");
                         const url = handle.startsWith("http") ? handle : `https://${handle}`;
@@ -674,7 +674,7 @@ export default function ContactDetailDrawer({
                           </div>
                         );
                       })}
-                    </div>
+                    </Card>
                   </div>
                 )}
 
@@ -684,7 +684,7 @@ export default function ContactDetailDrawer({
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">
                       {t('contacts.detail.emergency')}
                     </h4>
-                    <div className={COLLECTION_CONTAINER_CLASS}>
+                    <Card className={COLLECTION_CONTAINER_CLASS}>
                       {c.emergencyContacts.map((emergencyContact, emergencyContactIndex) => {
                         const target = allContacts.find((contact) => String(contact.id) === String(emergencyContact.contactId));
                         return (
@@ -712,7 +712,7 @@ export default function ContactDetailDrawer({
                           </div>
                         );
                       })}
-                    </div>
+                    </Card>
                   </div>
                 )}
               </div>

@@ -9,11 +9,14 @@ import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { notify } from "@/lib/notify";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { formatDate, todayISO } from "@mms/shared";
 
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
+
+const MotionCard = motion.create(Card);
 
 export interface SavedReportItem {
   id: string;
@@ -167,12 +170,12 @@ export default function SavedReports({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <AnimatePresence mode="popLayout">
             {saved.map((report) => (
-              <motion.div
+              <MotionCard
                 key={report.id}
                 layout
                 whileHover={{ y: -4, scale: 1.015 }}
                 transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm hover:shadow-surface-lg transition-all flex flex-col gap-3 text-left group"
+                className="flex flex-col gap-3 text-left group cursor-pointer hover:shadow-surface-lg p-5"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -211,7 +214,7 @@ export default function SavedReports({
                     <Trash2 className="w-3 h-3" /> {t("reports.saved.delete") || "Delete"}
                   </button>
                 </div>
-              </motion.div>
+              </MotionCard>
             ))}
           </AnimatePresence>
         </div>

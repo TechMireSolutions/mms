@@ -4,6 +4,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   LineChart, Line,
 } from "recharts";
+import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
@@ -155,8 +157,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
-          <p className="text-sm font-semibold text-foreground mb-3">{t("sessions.report.capacityByClass")}</p>
+        <SectionCard title={t("sessions.report.capacityByClass")}>
           <SafeResponsiveContainer width="100%" height={180}>
             <BarChart data={capacityChartData} barSize={28}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -167,10 +168,9 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
               <Bar dataKey="available" fill="hsl(var(--muted))"   stackId="a" name={t("sessions.report.availableLabel")} radius={[4, 4, 0, 0]} />
             </BarChart>
           </SafeResponsiveContainer>
-        </div>
+        </SectionCard>
 
-        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
-          <p className="text-sm font-semibold text-foreground mb-3">{t("sessions.report.enrollmentTrend")}</p>
+        <SectionCard title={t("sessions.report.enrollmentTrend")}>
           <SafeResponsiveContainer width="100%" height={180}>
             <LineChart data={enrollmentTrends}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -180,7 +180,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
               <Line type="monotone" dataKey="students" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} name={t("sessions.report.studentsLabel")} />
             </LineChart>
           </SafeResponsiveContainer>
-        </div>
+        </SectionCard>
       </div>
 
       {/* Table */}
@@ -199,7 +199,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
       {sessionCapacityData.length === 0 ? (
         <EmptyState icon={CalendarCheck} title={t("sessions.report.noData")} compact />
       ) : (
-        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
+        <Card className="overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
@@ -242,7 +242,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
               ))}
             </tbody>
           </table>
-        </div>
+        </Card>
       )}
 
       {/* Dashboard widgets preview */}

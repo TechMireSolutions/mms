@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 
 import { useTranslation } from "@/hooks/useTranslation";
+import { Card } from "@/components/ui/card";
 import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
 import ReportFilters from "@/tenant/features/reports/components/ReportFilters";
 import ComparisonMode from "@/tenant/features/reports/components/ComparisonMode";
@@ -195,9 +196,9 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
       </div>
 
       {/* Report Content - 2026 Glassmorphism */}
-      <div className="bg-card/60 backdrop-blur-xl rounded-2xl border border-border/50 overflow-hidden shadow-xl ring-1 ring-black/[0.03]">
+      <Card className="overflow-hidden shadow-xl ring-1 ring-black/[0.03]">
         {renderReport()}
-      </div>
+      </Card>
     </div>
   );
 }

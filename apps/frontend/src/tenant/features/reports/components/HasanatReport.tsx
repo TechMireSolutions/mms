@@ -5,6 +5,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   PieChart, Pie, Cell,
 } from "recharts";
+import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/features/hasanat/hooks/useHasanatApi";
 import { StatCard } from "@/components/ui/StatCard";
@@ -170,41 +172,40 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
-          <p className="text-sm font-semibold text-foreground mb-3">{t("hasanat.report.distributionByFaculty")}</p>
+        <SectionCard title={t("hasanat.report.distributionByFaculty")}>
           <SafeResponsiveContainer width="100%" height={180}>
             <BarChart data={facultyChartData} barSize={22}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="faculty" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="distributed" fill="hsl(var(--primary))"  name={t("hasanat.report.distributed")} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="redeemed"    fill="hsl(var(--chart-2))"  name={t("hasanat.report.redeemed")}    radius={[4, 4, 0, 0]} />
+              <Bar dataKey="distributed" fill="hsl(var(--primary))" name={t("hasanat.report.distributed")} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="redeemed"    fill="hsl(var(--chart-2))" name={t("hasanat.report.redeemed")}    radius={[4, 4, 0, 0]} />
             </BarChart>
           </SafeResponsiveContainer>
-        </div>
+        </SectionCard>
 
-        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm">
-          <p className="text-sm font-semibold text-foreground mb-3">{t("hasanat.report.redeemedVsBalance")}</p>
-          <div className="flex items-center gap-4">
+        <SectionCard title={t("hasanat.report.redeemedVsBalance")}>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <SafeResponsiveContainer width="60%" height={160}>
               <PieChart>
                 <Pie
                   data={redemptionPieData}
-                  dataKey="value"
                   cx="50%"
                   cy="50%"
-                  innerRadius={45}
-                  outerRadius={72}
+                  innerRadius={35}
+                  outerRadius={65}
+                  paddingAngle={3}
+                  dataKey="value"
                 >
                   {redemptionPieData.map((_, index) => (
-                    <Cell key={index} fill={PIE_COLORS[index]} />
+                    <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => value !== undefined ? formatNumber(value) : ""} />
+                <Tooltip />
               </PieChart>
             </SafeResponsiveContainer>
-            <div className="space-y-3">
+            <div className="space-y-3 w-full sm:w-[35%] shrink-0">
               {redemptionPieData.map((slice, index) => (
                 <div key={slice.name} className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-sm" style={{ background: PIE_COLORS[index] }} />
@@ -216,7 +217,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
               ))}
             </div>
           </div>
-        </div>
+        </SectionCard>
       </div>
 
 
@@ -235,7 +236,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
       {distribution.length === 0 ? (
         <EmptyState icon={Star} title={t("hasanat.report.noData")} compact />
       ) : (
-        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
+        <Card className="overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
@@ -268,7 +269,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
               ))}
             </tbody>
           </table>
-        </div>
+        </Card>
       )}
 
       {/* Dashboard widgets preview */}

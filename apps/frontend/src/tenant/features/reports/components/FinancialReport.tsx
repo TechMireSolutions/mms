@@ -4,6 +4,8 @@ import { DollarSign, TrendingUp, AlertCircle, Tag } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, Legend,
 } from "recharts";
+import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
@@ -138,8 +140,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
       </div>
 
       {/* Revenue trend */}
-      <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
-        <p className="text-sm font-semibold text-foreground mb-3">{t("finance.report.chartTitle")}</p>
+      <SectionCard title={t("finance.report.chartTitle")}>
         <SafeResponsiveContainer width="100%" height={200}>
           <AreaChart data={monthlyFeeCollection}>
             <defs>
@@ -156,12 +157,11 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
             <Area type="monotone" dataKey="outstanding" stroke={palette.charts[0]} fill="transparent" strokeWidth={2} strokeDasharray="4 2" name={t("finance.report.outstandingLabel")} />
           </AreaChart>
         </SafeResponsiveContainer>
-      </div>
+      </SectionCard>
 
       {/* Two-column: collection table + discount pie */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
-          <p className="text-sm font-semibold text-foreground mb-3">{t("finance.report.collectionRateTitle")}</p>
+        <SectionCard title={t("finance.report.collectionRateTitle")}>
           <div className="space-y-2">
             {monthlyFeeCollection.map((monthTotals) => (
               <div key={monthTotals.month} className="flex items-center gap-3">
@@ -173,10 +173,9 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
               </div>
             ))}
           </div>
-        </div>
+        </SectionCard>
 
-        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl p-5 shadow-sm">
-          <p className="text-sm font-semibold text-foreground mb-3">{t("finance.report.discountDistributionTitle")}</p>
+        <SectionCard title={t("finance.report.discountDistributionTitle")}>
           <SafeResponsiveContainer width="100%" height={180}>
             <PieChart>
               <Pie
@@ -197,7 +196,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
               <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
             </PieChart>
           </SafeResponsiveContainer>
-        </div>
+        </SectionCard>
       </div>
 
       <ExportToolbar 
@@ -217,7 +216,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
       {invoices.length === 0 ? (
         <EmptyState icon={DollarSign} title={t("finance.report.noInvoicesMatch")} compact />
       ) : (
-        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-2xl overflow-hidden shadow-sm">
+        <Card className="overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
@@ -254,7 +253,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
               ))}
             </tbody>
           </table>
-        </div>
+        </Card>
       )}
 
       {/* Dashboard widgets preview */}
