@@ -483,12 +483,18 @@ export default function ContactForm({
   };
 
   const handlePhoneBlur = (index: number) => {
-    const phone = (contactDraft.phones || [])[index];
-    if (!phone || !phone.number) return;
-    const parsed = parsePhoneEntry(phone);
-    const updatedPhones = [...(contactDraft.phones || [])];
-    updatedPhones[index] = { ...phone, countryCode: parsed.countryCode, number: parsed.number };
-    updateDraft({ phones: updatedPhones });
+    setContactDraft((prev) => {
+      const currentPhones = prev.phones || [];
+      const phone = currentPhones[index];
+      if (!phone || !phone.number) return prev;
+      const parsed = parsePhoneEntry(phone);
+      const updatedPhones = [...currentPhones];
+      updatedPhones[index] = { ...phone, countryCode: parsed.countryCode, number: parsed.number };
+      return {
+        ...prev,
+        phones: updatedPhones,
+      };
+    });
   };
 
   const handleSave = () => {
@@ -853,24 +859,32 @@ export default function ContactForm({
 
   const renderPhones = () => {
     const phones = contactDraft.phones || [];
-    const addPhone = () =>
-      updateDraft({
-        phones: [...phones, { label: "Mobile", number: "", countryCode: "+92" }],
-      });
+    const addPhone = () => {
+      setContactDraft((prev) => ({
+        ...prev,
+        phones: [...(prev.phones || []), { label: "Mobile", number: "", countryCode: "+92" }],
+      }));
+    };
     const removePhone = (idx: number) => {
-      // Shift map entries down after removal so stable keys follow items
-      const newLen = phones.length - 1;
-      for (let i = idx; i < newLen; i++) {
-        const next = localIdMap.current.get(`phones:${i + 1}`);
-        if (next !== undefined) localIdMap.current.set(`phones:${i}`, next);
-      }
-      localIdMap.current.delete(`phones:${newLen}`);
-      updateDraft({ phones: phones.filter((_, i) => i !== idx) });
+      setContactDraft((prev) => {
+        const currentPhones = prev.phones || [];
+        const newLen = currentPhones.length - 1;
+        for (let i = idx; i < newLen; i++) {
+          const next = localIdMap.current.get(`phones:${i + 1}`);
+          if (next !== undefined) localIdMap.current.set(`phones:${i}`, next);
+        }
+        localIdMap.current.delete(`phones:${newLen}`);
+        return {
+          ...prev,
+          phones: currentPhones.filter((_, i) => i !== idx),
+        };
+      });
     };
     const updatePhone = (idx: number, patch: Partial<PhoneNumber>) => {
-      updateDraft({
-        phones: phones.map((p, i) => (i === idx ? { ...p, ...patch } : p)),
-      });
+      setContactDraft((prev) => ({
+        ...prev,
+        phones: (prev.phones || []).map((p, i) => (i === idx ? { ...p, ...patch } : p)),
+      }));
     };
 
     return (
@@ -989,21 +1003,32 @@ export default function ContactForm({
 
   const renderEmails = () => {
     const emails = contactDraft.emails || [];
-    const addEmail = () =>
-      updateDraft({ emails: [...emails, { label: "Personal", address: "" }] });
+    const addEmail = () => {
+      setContactDraft((prev) => ({
+        ...prev,
+        emails: [...(prev.emails || []), { label: "Personal", address: "" }],
+      }));
+    };
     const removeEmail = (idx: number) => {
-      const newLen = emails.length - 1;
-      for (let i = idx; i < newLen; i++) {
-        const next = localIdMap.current.get(`emails:${i + 1}`);
-        if (next !== undefined) localIdMap.current.set(`emails:${i}`, next);
-      }
-      localIdMap.current.delete(`emails:${newLen}`);
-      updateDraft({ emails: emails.filter((_, i) => i !== idx) });
+      setContactDraft((prev) => {
+        const currentEmails = prev.emails || [];
+        const newLen = currentEmails.length - 1;
+        for (let i = idx; i < newLen; i++) {
+          const next = localIdMap.current.get(`emails:${i + 1}`);
+          if (next !== undefined) localIdMap.current.set(`emails:${i}`, next);
+        }
+        localIdMap.current.delete(`emails:${newLen}`);
+        return {
+          ...prev,
+          emails: currentEmails.filter((_, i) => i !== idx),
+        };
+      });
     };
     const updateEmail = (idx: number, patch: Partial<EmailAddress>) => {
-      updateDraft({
-        emails: emails.map((e, i) => (i === idx ? { ...e, ...patch } : e)),
-      });
+      setContactDraft((prev) => ({
+        ...prev,
+        emails: (prev.emails || []).map((e, i) => (i === idx ? { ...e, ...patch } : e)),
+      }));
     };
 
     return (
@@ -1101,10 +1126,11 @@ export default function ContactForm({
 
   const renderAddresses = () => {
     const addresses = contactDraft.addresses || [];
-    const addAddress = () =>
-      updateDraft({
+    const addAddress = () => {
+      setContactDraft((prev) => ({
+        ...prev,
         addresses: [
-          ...addresses,
+          ...(prev.addresses || []),
           {
             label: "Home",
             line1: "",
@@ -1113,22 +1139,28 @@ export default function ContactForm({
             country: defaultCountry,
           },
         ],
-      });
+      }));
+    };
     const removeAddress = (idx: number) => {
-      const newLen = addresses.length - 1;
-      for (let i = idx; i < newLen; i++) {
-        const next = localIdMap.current.get(`addresses:${i + 1}`);
-        if (next !== undefined) localIdMap.current.set(`addresses:${i}`, next);
-      }
-      localIdMap.current.delete(`addresses:${newLen}`);
-      updateDraft({ addresses: addresses.filter((_, i) => i !== idx) });
+      setContactDraft((prev) => {
+        const currentAddresses = prev.addresses || [];
+        const newLen = currentAddresses.length - 1;
+        for (let i = idx; i < newLen; i++) {
+          const next = localIdMap.current.get(`addresses:${i + 1}`);
+          if (next !== undefined) localIdMap.current.set(`addresses:${i}`, next);
+        }
+        localIdMap.current.delete(`addresses:${newLen}`);
+        return {
+          ...prev,
+          addresses: currentAddresses.filter((_, i) => i !== idx),
+        };
+      });
     };
     const updateAddress = (idx: number, patch: Partial<Address>) => {
-      updateDraft({
-        addresses: addresses.map((a, i) =>
-          i === idx ? { ...a, ...patch } : a,
-        ),
-      });
+      setContactDraft((prev) => ({
+        ...prev,
+        addresses: (prev.addresses || []).map((a, i) => (i === idx ? { ...a, ...patch } : a)),
+      }));
     };
 
     return (
@@ -1270,21 +1302,32 @@ export default function ContactForm({
 
   const renderSocials = () => {
     const socials = contactDraft.socials || [];
-    const addSocial = () =>
-      updateDraft({ socials: [...socials, { platform: "WhatsApp", url: "" }] });
+    const addSocial = () => {
+      setContactDraft((prev) => ({
+        ...prev,
+        socials: [...(prev.socials || []), { platform: "WhatsApp", url: "" }],
+      }));
+    };
     const removeSocial = (idx: number) => {
-      const newLen = socials.length - 1;
-      for (let i = idx; i < newLen; i++) {
-        const next = localIdMap.current.get(`socials:${i + 1}`);
-        if (next !== undefined) localIdMap.current.set(`socials:${i}`, next);
-      }
-      localIdMap.current.delete(`socials:${newLen}`);
-      updateDraft({ socials: socials.filter((_, i) => i !== idx) });
+      setContactDraft((prev) => {
+        const currentSocials = prev.socials || [];
+        const newLen = currentSocials.length - 1;
+        for (let i = idx; i < newLen; i++) {
+          const next = localIdMap.current.get(`socials:${i + 1}`);
+          if (next !== undefined) localIdMap.current.set(`socials:${i}`, next);
+        }
+        localIdMap.current.delete(`socials:${newLen}`);
+        return {
+          ...prev,
+          socials: currentSocials.filter((_, i) => i !== idx),
+        };
+      });
     };
     const updateSocial = (idx: number, patch: Partial<SocialLink>) => {
-      updateDraft({
-        socials: socials.map((s, i) => (i === idx ? { ...s, ...patch } : s)),
-      });
+      setContactDraft((prev) => ({
+        ...prev,
+        socials: (prev.socials || []).map((s, i) => (i === idx ? { ...s, ...patch } : s)),
+      }));
     };
 
     return (
@@ -1389,30 +1432,37 @@ export default function ContactForm({
 
   const renderEmergency = () => {
     const emergencyContacts = contactDraft.emergencyContacts || [];
-    const addEmergency = () =>
-      updateDraft({
+    const addEmergency = () => {
+      setContactDraft((prev) => ({
+        ...prev,
         emergencyContacts: [
-          ...emergencyContacts,
+          ...(prev.emergencyContacts || []),
           { relationship: "Father", contactId: "" },
         ],
-      });
+      }));
+    };
     const removeEmergency = (idx: number) => {
-      const newLen = emergencyContacts.length - 1;
-      for (let i = idx; i < newLen; i++) {
-        const next = localIdMap.current.get(`emergency:${i + 1}`);
-        if (next !== undefined) localIdMap.current.set(`emergency:${i}`, next);
-      }
-      localIdMap.current.delete(`emergency:${newLen}`);
-      updateDraft({
-        emergencyContacts: emergencyContacts.filter((_, i) => i !== idx),
+      setContactDraft((prev) => {
+        const currentEmergency = prev.emergencyContacts || [];
+        const newLen = currentEmergency.length - 1;
+        for (let i = idx; i < newLen; i++) {
+          const next = localIdMap.current.get(`emergency:${i + 1}`);
+          if (next !== undefined) localIdMap.current.set(`emergency:${i}`, next);
+        }
+        localIdMap.current.delete(`emergency:${newLen}`);
+        return {
+          ...prev,
+          emergencyContacts: currentEmergency.filter((_, i) => i !== idx),
+        };
       });
     };
     const updateEmergency = (idx: number, patch: Partial<EmergencyContact>) => {
-      updateDraft({
-        emergencyContacts: emergencyContacts.map((em, i) =>
+      setContactDraft((prev) => ({
+        ...prev,
+        emergencyContacts: (prev.emergencyContacts || []).map((em, i) =>
           i === idx ? { ...em, ...patch } : em,
         ),
-      });
+      }));
     };
     const excludeIds = (idx: number): (string | number)[] => {
       const linked = emergencyContacts
