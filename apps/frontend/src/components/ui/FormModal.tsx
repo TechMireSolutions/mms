@@ -331,13 +331,16 @@ export function FormModal<K extends string = string>({
               const active = activeTab === tab.key;
               const Icon = tab.icon;
               return (
-                <TabsPrimitive.Trigger
+                <button
+                  type="button"
                   key={tab.key}
-                  value={tab.key}
+                  onClick={() => onTabChange(tab.key)}
+                  aria-selected={active}
+                  role="tab"
                   className={cn(
                     "flex items-center gap-2 rounded-lg px-3.5 py-2.5 text-xs font-semibold transition-all whitespace-nowrap md:w-full justify-start cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
                     active
-                      ? "bg-card text-foreground shadow-sm border border-border/80"
+                      ? "bg-card text-foreground shadow-sm border border-border/80 font-bold"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )}
                 >
@@ -353,7 +356,7 @@ export function FormModal<K extends string = string>({
                       {tab.badge}
                     </span>
                   )}
-                </TabsPrimitive.Trigger>
+                </button>
               );
             })}
           </TabsPrimitive.List>

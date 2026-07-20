@@ -10,6 +10,7 @@ import {
   Camera,
   FileText,
   Star,
+  Eye,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FormModal } from "@/components/ui/FormModal";
@@ -111,6 +112,7 @@ interface ContactFormProps {
 }
 
 const CONTACT_TABS = [
+  { key: "all", label: "All Sections", icon: Eye },
   { key: "basic", label: "Basic Info", icon: User },
   { key: "phones", label: "Phones", icon: Phone },
   { key: "emails", label: "Emails", icon: Mail },
@@ -318,7 +320,10 @@ export default function ContactForm({
     const socialCount = (contactDraft.socials || []).filter(s => (s.url || "").trim()).length;
     const emergencyCount = (contactDraft.emergencyContacts || []).filter(e => e.contactId).length;
 
+    const totalCount = phoneCount + emailCount + addressCount + socialCount + emergencyCount;
+
     const countMap: Record<string, number> = {
+      all: totalCount,
       phones: phoneCount,
       emails: emailCount,
       addresses: addressCount,
@@ -326,17 +331,14 @@ export default function ContactForm({
       emergency: emergencyCount,
     };
 
-    return CONTACT_TABS.filter((tabItem) => {
-      if (tabItem.key === "basic") return true;
-      return enabledTabIds.has(tabItem.key);
-    }).map((tabItem) => {
+    return CONTACT_TABS.map((tabItem) => {
       const count = countMap[tabItem.key];
       return {
         ...tabItem,
         badge: count && count > 0 ? count : undefined,
       };
     });
-  }, [enabledTabIds, contactDraft.phones, contactDraft.emails, contactDraft.addresses, contactDraft.socials, contactDraft.emergencyContacts]);
+  }, [contactDraft.phones, contactDraft.emails, contactDraft.addresses, contactDraft.socials, contactDraft.emergencyContacts]);
 
   const isFieldEnabled = useCallback(
     (tabId: string, fieldId: string) => {
@@ -1422,6 +1424,27 @@ export default function ContactForm({
 
   const renderActiveTabContent = () => {
     switch (tab) {
+      case "all":
+        return (
+          <div className="space-y-6 text-left">
+            {renderBasic()}
+            <SectionCard title={t("contacts.form.phonesLabel") || "Phone Numbers"} icon={Phone} accentColor="primary">
+              {renderPhones()}
+            </SectionCard>
+            <SectionCard title={t("contacts.form.emailsLabel") || "Email Addresses"} icon={Mail} accentColor="amber">
+              {renderEmails()}
+            </SectionCard>
+            <SectionCard title={t("contacts.detail.addresses") || "Addresses"} icon={MapPin} accentColor="emerald">
+              {renderAddresses()}
+            </SectionCard>
+            <SectionCard title={t("contacts.detail.socials") || "Social Links"} icon={Share2} accentColor="indigo">
+              {renderSocials()}
+            </SectionCard>
+            <SectionCard title={t("contacts.detail.emergency") || "Emergency Contacts"} icon={Heart} accentColor="rose">
+              {renderEmergency()}
+            </SectionCard>
+          </div>
+        );
       case "basic":
         return renderBasic();
       case "phones":
@@ -1435,7 +1458,7 @@ export default function ContactForm({
       case "emergency":
         return renderEmergency();
       default:
-        return null;
+        return renderBasic();
     }
   };
 
