@@ -307,10 +307,10 @@ export default function ContactDetailDrawer({
     return acc;
   }, {});
 
-  const formatFieldValue = (field: { key: string; type: string }): string | null => {
-    const fieldValue = c[field.key];
+  const formatFieldValue = React.useCallback((field: { key: string; type: string }): string | null => {
+    const fieldValue = (c as Record<string, unknown>)[field.key];
     if (fieldValue === undefined || fieldValue === null || fieldValue === "" || fieldValue === false) return null;
-    if (Array.isArray(fieldValue)) return fieldValue.length ? fieldValue.join(", ") : null;
+    if (Array.isArray(fieldValue)) return fieldValue.length ? (fieldValue as unknown[]).join(", ") : null;
     if (field.key === "dob") {
       try {
         const yrsLabel = t('contacts.detail.yearsOld');
@@ -320,7 +320,7 @@ export default function ContactDetailDrawer({
       }
     }
     return String(fieldValue);
-  };
+  }, [c, age, t]);
 
   const primaryPhone = enabledTabIds.has("phones") ? getPrimaryPhone(c) : null;
   const primaryEmail = enabledTabIds.has("emails") ? getPrimaryEmail(c) : null;
@@ -520,7 +520,7 @@ export default function ContactDetailDrawer({
                         const rawPhone = String(phone.number || "");
                         const copyKey = `phone-${phoneIndex}`;
                         return (
-                          <div key={phoneIndex} className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
+                          <div key={`phone-${phone.number}-${phoneIndex}`} className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
                             <div className="min-w-0">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
@@ -534,7 +534,7 @@ export default function ContactDetailDrawer({
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  aria-label="Copy phone"
+                                  aria-label={t('contacts.detail.copyPhone')}
                                   onClick={() => copyToClipboard(rawPhone, copyKey)}
                                   className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
                                 >
@@ -542,7 +542,7 @@ export default function ContactDetailDrawer({
                                 </Button>
                                 <a
                                   href={`tel:${rawPhone.replace(/[^\d+]/g, "")}`}
-                                  aria-label={`Call ${rawPhone}`}
+                                  aria-label={t('contacts.detail.callPhone', { phone: rawPhone })}
                                   className="h-8 w-8 rounded-lg flex items-center justify-center text-info hover:bg-info/10 transition-colors"
                                 >
                                   <Phone className="w-3.5 h-3.5" />
@@ -567,7 +567,7 @@ export default function ContactDetailDrawer({
                         const rawEmail = String(email.address || "");
                         const copyKey = `email-${emailIndex}`;
                         return (
-                          <div key={emailIndex} className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
+                          <div key={`email-${email.address}-${emailIndex}`} className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
                             <div className="min-w-0">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
@@ -581,7 +581,7 @@ export default function ContactDetailDrawer({
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  aria-label="Copy email"
+                                  aria-label={t('contacts.detail.copyEmail')}
                                   onClick={() => copyToClipboard(rawEmail, copyKey)}
                                   className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
                                 >
@@ -589,7 +589,7 @@ export default function ContactDetailDrawer({
                                 </Button>
                                 <a
                                   href={`mailto:${rawEmail}`}
-                                  aria-label={`Email ${rawEmail}`}
+                                  aria-label={t('contacts.detail.emailContact', { email: rawEmail })}
                                   className="h-8 w-8 rounded-lg flex items-center justify-center text-secondary hover:bg-secondary/10 transition-colors"
                                 >
                                   <Mail className="w-3.5 h-3.5" />
@@ -629,7 +629,7 @@ export default function ContactDetailDrawer({
                                 href={`https://maps.google.com/?q=${encodeURIComponent(fullAddr)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                aria-label={`Open address in maps`}
+                                aria-label={t('contacts.detail.openInMaps')}
                                 className="h-8 w-8 rounded-lg flex items-center justify-center text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
                               >
                                 <MapPin className="w-3.5 h-3.5" />
@@ -656,7 +656,7 @@ export default function ContactDetailDrawer({
                           <div key={socialIndex} className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
                             <div className="min-w-0">
                               <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase inline-block mb-1">
-                                {social.platform || socialPlatforms[0] || "Social"}
+                                {social.platform || socialPlatforms[0] || t('contacts.detail.socialFallback')}
                               </span>
                               <span className="font-semibold text-xs text-foreground block truncate">{handle || "—"}</span>
                             </div>
@@ -665,7 +665,7 @@ export default function ContactDetailDrawer({
                                 href={url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                aria-label={`Visit social profile`}
+                                aria-label={t('contacts.detail.visitSocialProfile')}
                                 className="h-8 w-8 rounded-lg flex items-center justify-center text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
                               >
                                 <ExternalLink className="w-3.5 h-3.5" />

@@ -151,7 +151,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
             variant="ghost"
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
-            aria-label="Toggle overdue obligations list"
+            aria-label={t("dashboard.widgets.toggleOverdueList")}
             className="h-8 w-8 p-0 rounded-lg hover:bg-destructive/15 text-destructive hover:text-destructive transition-colors shadow-none cursor-pointer"
           >
             {expanded ? <ChevronUp className="w-4 h-4" aria-hidden="true" /> : <ChevronDown className="w-4 h-4" aria-hidden="true" />}
@@ -165,7 +165,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
           {/* Search bar */}
           <div className="p-3 px-6 border-b border-border/40 flex items-center gap-2 bg-muted/10">
             <SearchBar
-              placeholder={t("contacts.searchPlaceholder") || "Search student or obligation..."}
+              placeholder={t("contacts.searchPlaceholder")}
               value={searchQuery}
               onChange={handleSearchChange}
               className="flex-1 max-w-sm"
@@ -263,7 +263,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                                 variant="ghost"
                                 onClick={() => handleRemind(overdueStudent)}
                                 disabled={reminded || !hasPhone}
-                                aria-label={reminded ? `Reminder sent to ${overdueStudent.name}` : `Send reminder to ${overdueStudent.name}`}
+                                aria-label={reminded ? t("dashboard.widgets.reminderSentTo", { name: overdueStudent.name }) : t("dashboard.widgets.sendReminderTo", { name: overdueStudent.name })}
                                 className={`flex items-center gap-1 mx-auto px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors h-auto shadow-none cursor-pointer ${
                                   reminded
                                     ? "bg-success/10 text-success border border-success/35 cursor-default hover:bg-success/10 hover:text-success"

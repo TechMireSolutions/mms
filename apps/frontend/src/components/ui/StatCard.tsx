@@ -3,48 +3,35 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, ArrowDownRight, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@mms/shared";
+import { useTranslation } from "@/hooks/useTranslation";
+
+type AccentColor =
+  | "primary"
+  | "success"
+  | "warning"
+  | "destructive"
+  | "info"
+  | "indigo"
+  | "rose"
+  | "teal"
+  | "purple"
+  | "muted"
+  | "green"
+  | "emerald"
+  | "amber"
+  | "red"
+  | "blue"
+  | "violet"
+  | string;
 
 export interface StatCardProps {
   label: string;
   value: string | number;
   sub?: string | null;
   icon?: LucideIcon | React.ComponentType<{ className?: string; style?: React.CSSProperties }> | null;
-  accent?:
-    | "primary"
-    | "success"
-    | "warning"
-    | "destructive"
-    | "info"
-    | "indigo"
-    | "rose"
-    | "teal"
-    | "purple"
-    | "muted"
-    | "green"
-    | "emerald"
-    | "amber"
-    | "red"
-    | "blue"
-    | "violet"
-    | string;
-  color?:
-    | "primary"
-    | "success"
-    | "warning"
-    | "destructive"
-    | "info"
-    | "indigo"
-    | "rose"
-    | "teal"
-    | "purple"
-    | "muted"
-    | "green"
-    | "emerald"
-    | "amber"
-    | "red"
-    | "blue"
-    | "violet"
-    | string;
+  accent?: AccentColor;
+  /** @deprecated Use `accent` instead */
+  color?: AccentColor;
   trend?: number;
   delayIndex?: number;
   onClick?: () => void;
@@ -152,6 +139,7 @@ export function StatCard({
   className,
   variant = "default",
 }: StatCardProps): React.JSX.Element {
+  const { t } = useTranslation();
   const theme = resolveAccent(accent || color);
   const Comp = onClick ? motion.button : motion.div;
   const buttonProps = onClick ? { type: "button" as const } : {};
@@ -212,7 +200,7 @@ export function StatCard({
       
       <div className="flex items-center gap-3.5 min-w-0">
         {Icon && (
-          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ms-0.5 shadow-sm ring-4", theme.iconBg, theme.ring)}>
+          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ms-0.5 shadow-sm ring-4", theme.iconBg, theme.ring)} aria-hidden="true">
             <Icon className={cn("w-5 h-5", theme.iconText)} />
           </div>
         )}
@@ -237,7 +225,7 @@ export function StatCard({
             "flex items-center gap-0.5 text-[11px] font-bold self-start ms-2 shrink-0 select-none",
             trend >= 0 ? "text-success" : "text-destructive"
           )}
-          aria-label={trend >= 0 ? "Positive trend" : "Negative trend"}
+          aria-label={trend >= 0 ? t("ui.statCard.positiveTrend") : t("ui.statCard.negativeTrend")}
         >
           {trend >= 0 ? (
             <ArrowUpRight className="w-3 h-3" aria-hidden="true" />

@@ -68,7 +68,7 @@ export default function ContactCreateModal({
   if (!open) return null;
 
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<span role="status" className="sr-only">{t("common.loading") || "Loading…"}</span>}>
       <ContactForm
         key={`create-${initialName}-${createDefaults?.gender ?? ""}`}
         open

@@ -167,7 +167,7 @@ export function ExportToolbar({
 
   if (resolvedVariant === "compact") {
     return (
-      <div className="flex items-center gap-1.5" role="toolbar" aria-label="Export tools">
+      <div className="flex items-center gap-1.5" role="toolbar" aria-label={t("reports.export.tools")}>
         <div className="flex rounded-lg border border-border overflow-hidden text-[11px] font-bold">
           <Button
             type="button"
@@ -175,7 +175,8 @@ export function ExportToolbar({
             onClick={() => setCompactFormat("excel")}
             className={`flex items-center gap-1 h-auto px-2.5 py-1.5 rounded-none shadow-none font-bold transition-colors ${compactFormat === "excel" ? "bg-success text-success-foreground hover:bg-success/90" : "bg-card text-muted-foreground hover:bg-muted"}`}
           >
-            <FileSpreadsheet className="w-3 h-3" aria-hidden="true" /> Excel
+            <FileSpreadsheet className="w-3 h-3" aria-hidden="true" />
+            {t("reports.export.excel")}
           </Button>
           <Button
             type="button"
@@ -183,16 +184,18 @@ export function ExportToolbar({
             onClick={() => setCompactFormat("pdf")}
             className={`flex items-center gap-1 h-auto px-2.5 py-1.5 rounded-none shadow-none border-l border-border font-bold transition-colors ${compactFormat === "pdf" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "bg-card text-muted-foreground hover:bg-muted"}`}
           >
-            <FileText className="w-3 h-3" aria-hidden="true" /> PDF
+            <FileText className="w-3 h-3" aria-hidden="true" />
+            {t("reports.export.pdf")}
           </Button>
         </div>
         <Button
           type="button"
-          aria-label={`Export as ${compactFormat === "excel" ? "Excel" : "PDF"}`}
+          aria-label={t("reports.export.exportAs", { format: compactFormat === "excel" ? t("reports.export.excel") : t("reports.export.pdf") })}
           onClick={compactFormat === "excel" ? handleExcelExport : handlePdfExport}
           className="flex items-center gap-1.5 h-auto px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-[11px] font-bold hover:bg-primary/90 transition-colors"
         >
-          <Download className="w-3 h-3" aria-hidden="true" /> Export
+          <Download className="w-3 h-3" aria-hidden="true" />
+          {t("reports.export.download")}
         </Button>
       </div>
     );
@@ -210,9 +213,10 @@ export function ExportToolbar({
         {showPdfSettings && (
           <div className="absolute end-0 bottom-full mb-2 bg-card border border-border rounded-xl p-3 shadow-xl z-50 flex flex-col gap-3 min-w-[200px]">
              <div className="space-y-1.5">
-               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.export.orientation")}</label>
+               <label htmlFor="export-orientation" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.export.orientation")}</label>
                <div className="flex gap-1 p-1 bg-muted rounded-lg">
                  <button 
+                  id="export-orientation"
                   onClick={() => setOrientation("p")}
                   className={`flex-1 px-2 py-1 rounded-md text-[10px] font-bold transition-all ${orientation === "p" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                  >
@@ -227,8 +231,9 @@ export function ExportToolbar({
                </div>
              </div>
              <div className="space-y-1.5">
-               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.export.pageSize")}</label>
+               <label htmlFor="export-page-size" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.export.pageSize")}</label>
                <select 
+                id="export-page-size"
                 value={formatSize}
                 onChange={(event) => setFormatSize(event.target.value)}
                 className="w-full text-xs rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20"

@@ -55,6 +55,17 @@ import {
 import { FORM_CARD } from "@/components/ui/formStyles";
 import { SectionCard } from "@/components/ui/SectionCard";
 
+const SUPPORTED_DIAL_CODES = ["+92", "+1", "+44"] as const;
+
+const parsePhoneEntry = (phone: PhoneNumber) => {
+  const trimmed = (phone.number || "").trim();
+  if (trimmed.startsWith("+") || trimmed.startsWith("00")) {
+    return parsePhoneNumber(trimmed, phone.countryCode || "+92", [...SUPPORTED_DIAL_CODES]);
+  }
+  const e164 = normalizeToE164(phone.countryCode || "+92", phone.number);
+  return parsePhoneNumber(e164, phone.countryCode || "+92", [...SUPPORTED_DIAL_CODES]);
+};
+
 const getPhoneDisplayValue = (phone: PhoneNumber): string => {
   const code = (phone.countryCode || "").trim();
   const num = (phone.number || "").trim();
@@ -67,33 +78,21 @@ const cleanContactDraft = (draft: Partial<Contact>): Partial<Contact> => {
   const result = { ...draft };
 
   if (Array.isArray(result.phones)) {
-    result.phones = result.phones.filter((phone) => {
-      return (phone.number || "").trim().length > 0;
-    });
+    result.phones = result.phones.filter((phone) => (phone.number || "").trim().length > 0);
   }
-
   if (Array.isArray(result.emails)) {
-    result.emails = result.emails.filter((email) => {
-      return (email.address || "").trim().length > 0;
-    });
+    result.emails = result.emails.filter((email) => (email.address || "").trim().length > 0);
   }
-
   if (Array.isArray(result.addresses)) {
-    result.addresses = result.addresses.filter((address) => {
-      return (address.line1 || "").trim().length > 0;
-    });
+    result.addresses = result.addresses.filter((address) => (address.line1 || "").trim().length > 0);
   }
-
   if (Array.isArray(result.socials)) {
-    result.socials = result.socials.filter((social) => {
-      return (social.url || "").trim().length > 0;
-    });
+    result.socials = result.socials.filter((social) => (social.url || "").trim().length > 0);
   }
-
   if (Array.isArray(result.emergencyContacts)) {
-    result.emergencyContacts = result.emergencyContacts.filter((em) => {
-      return em.contactId != null && String(em.contactId).trim().length > 0;
-    });
+    result.emergencyContacts = result.emergencyContacts.filter(
+      (em) => em.contactId != null && String(em.contactId).trim().length > 0,
+    );
   }
 
   return result;
@@ -155,6 +154,17 @@ export default function ContactForm({
   );
   const [cropSrc, setCropSrc] = useState<string | null>(null);
 
+  const localIdMap = React.useRef<Map<string, string>>(new Map());
+
+  /** Returns a stable UUID for a given list slot. Survives re-renders. */
+  const getLocalId = (tab: string, idx: number): string => {
+    const key = `${tab}:${idx}`;
+    if (!localIdMap.current.has(key)) {
+      localIdMap.current.set(key, crypto.randomUUID());
+    }
+    return localIdMap.current.get(key)!;
+  };
+
   const [contactDraft, setContactDraft] = useState<Partial<Contact>>(() => {
     const initial: Partial<Contact> = {
       firstName: "",
@@ -175,20 +185,12 @@ export default function ContactForm({
       ...contact,
     };
 
-    // Format phones to ensure they are normalized properly at init
+    // Normalize phones at init
     if (initial.phones) {
       initial.phones = initial.phones.map((phone) => {
         if (phone.countryCode) return phone;
-        const parsed = parsePhoneNumber(phone.number || "", "+92", [
-          "+92",
-          "+1",
-          "+44",
-        ]);
-        return {
-          ...phone,
-          countryCode: parsed.countryCode,
-          number: parsed.number,
-        };
+        const parsed = parsePhoneEntry(phone);
+        return { ...phone, countryCode: parsed.countryCode, number: parsed.number };
       });
     }
 
@@ -290,30 +292,9 @@ export default function ContactForm({
   const handlePhoneBlur = (index: number) => {
     const phone = (contactDraft.phones || [])[index];
     if (!phone || !phone.number) return;
-
-    let parsed;
-    const trimmedNumber = phone.number.trim();
-    if (trimmedNumber.startsWith("+") || trimmedNumber.startsWith("00")) {
-      parsed = parsePhoneNumber(trimmedNumber, phone.countryCode || "+92", [
-        "+92",
-        "+1",
-        "+44",
-      ]);
-    } else {
-      const e164 = normalizeToE164(phone.countryCode || "+92", phone.number);
-      parsed = parsePhoneNumber(e164, phone.countryCode || "+92", [
-        "+92",
-        "+1",
-        "+44",
-      ]);
-    }
-
+    const parsed = parsePhoneEntry(phone);
     const updatedPhones = [...(contactDraft.phones || [])];
-    updatedPhones[index] = {
-      ...phone,
-      countryCode: parsed.countryCode,
-      number: parsed.number,
-    };
+    updatedPhones[index] = { ...phone, countryCode: parsed.countryCode, number: parsed.number };
     updateDraft({ phones: updatedPhones });
   };
 
@@ -355,30 +336,8 @@ export default function ContactForm({
       const lastName = toTitleCase((cleanedDraft.lastName || "").trim());
 
       const normalizedPhones = (cleanedDraft.phones || []).map((phone) => {
-        const trimmedNumber = (phone.number || "").trim();
-        let parsed;
-        if (trimmedNumber.startsWith("+") || trimmedNumber.startsWith("00")) {
-          parsed = parsePhoneNumber(trimmedNumber, phone.countryCode || "+92", [
-            "+92",
-            "+1",
-            "+44",
-          ]);
-        } else {
-          const e164 = normalizeToE164(
-            phone.countryCode || "+92",
-            phone.number,
-          );
-          parsed = parsePhoneNumber(e164, phone.countryCode || "+92", [
-            "+92",
-            "+1",
-            "+44",
-          ]);
-        }
-        return {
-          ...phone,
-          countryCode: parsed.countryCode,
-          number: parsed.number,
-        };
+        const parsed = parsePhoneEntry(phone);
+        return { ...phone, countryCode: parsed.countryCode, number: parsed.number };
       });
 
       const contactRaw: Contact = {
@@ -498,6 +457,8 @@ export default function ContactForm({
               <div className="relative flex items-center group/input">
                 <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
+                  id="firstName"
+                  name="firstName"
                   value={contactDraft.firstName || ""}
                   onChange={(e) => updateDraft({ firstName: e.target.value })}
                   placeholder={t("contacts.reportFields.firstName")}
@@ -516,6 +477,8 @@ export default function ContactForm({
               <div className="relative flex items-center group/input">
                 <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
+                  id="lastName"
+                  name="lastName"
                   value={contactDraft.lastName || ""}
                   onChange={(e) => updateDraft({ lastName: e.target.value })}
                   placeholder={t("contacts.reportFields.lastName")}
@@ -573,6 +536,8 @@ export default function ContactForm({
               <div className="relative flex items-center group/input">
                 <FileText className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
+                  id="cnic"
+                  name="cnic"
                   value={contactDraft.cnic || ""}
                   onChange={(e) => {
                     const formatted = formatCnic(e.target.value);
@@ -627,19 +592,21 @@ export default function ContactForm({
 
       {isFieldEnabled("basic", "notes") && (
         <SectionCard
-          title={t("teachers.field.notes") || "Notes"}
+          title={t("contacts.form.notes") || "Notes"}
           icon={FileText}
           accentColor="amber"
         >
           <Field
-            label={t("teachers.field.notes")}
+            label={t("contacts.form.notes")}
             id="notes"
             error={getFieldError("notes")}
           >
             <Textarea
+              id="notes"
+              name="notes"
               value={(contactDraft.notes as string) || ""}
               onChange={(e) => updateDraft({ notes: e.target.value })}
-              placeholder={t("teachers.field.notes")}
+              placeholder={t("contacts.form.notesPlaceholder") || "Add notes about this contact"}
               className="min-h-[88px] resize-y"
             />
           </Field>
@@ -652,13 +619,18 @@ export default function ContactForm({
     const phones = contactDraft.phones || [];
     const addPhone = () =>
       updateDraft({
-        phones: [
-          ...phones,
-          { label: "Mobile", number: "", countryCode: "+92" },
-        ],
+        phones: [...phones, { label: "Mobile", number: "", countryCode: "+92" }],
       });
-    const removePhone = (idx: number) =>
+    const removePhone = (idx: number) => {
+      // Shift map entries down after removal so stable keys follow items
+      const newLen = phones.length - 1;
+      for (let i = idx; i < newLen; i++) {
+        const next = localIdMap.current.get(`phones:${i + 1}`);
+        if (next !== undefined) localIdMap.current.set(`phones:${i}`, next);
+      }
+      localIdMap.current.delete(`phones:${newLen}`);
       updateDraft({ phones: phones.filter((_, i) => i !== idx) });
+    };
     const updatePhone = (idx: number, patch: Partial<PhoneNumber>) => {
       updateDraft({
         phones: phones.map((p, i) => (i === idx ? { ...p, ...patch } : p)),
@@ -682,7 +654,7 @@ export default function ContactForm({
               const numError = getListItemError("phones", "number", idx);
               return (
                 <motion.div
-                  key={idx}
+                  key={getLocalId("phones", idx)}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
@@ -709,7 +681,7 @@ export default function ContactForm({
                     </div>
                     <CardRemoveButton
                       onClick={() => removePhone(idx)}
-                      label="Remove Phone"
+                      label={t("contacts.form.removePhoneNumber", { index: idx + 1 })}
                     />
                   </div>
 
@@ -777,8 +749,15 @@ export default function ContactForm({
     const emails = contactDraft.emails || [];
     const addEmail = () =>
       updateDraft({ emails: [...emails, { label: "Personal", address: "" }] });
-    const removeEmail = (idx: number) =>
+    const removeEmail = (idx: number) => {
+      const newLen = emails.length - 1;
+      for (let i = idx; i < newLen; i++) {
+        const next = localIdMap.current.get(`emails:${i + 1}`);
+        if (next !== undefined) localIdMap.current.set(`emails:${i}`, next);
+      }
+      localIdMap.current.delete(`emails:${newLen}`);
       updateDraft({ emails: emails.filter((_, i) => i !== idx) });
+    };
     const updateEmail = (idx: number, patch: Partial<EmailAddress>) => {
       updateDraft({
         emails: emails.map((e, i) => (i === idx ? { ...e, ...patch } : e)),
@@ -802,7 +781,7 @@ export default function ContactForm({
               const emailError = getListItemError("emails", "address", idx);
               return (
                 <motion.div
-                  key={idx}
+                  key={getLocalId("emails", idx)}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
@@ -829,7 +808,7 @@ export default function ContactForm({
                     </div>
                     <CardRemoveButton
                       onClick={() => removeEmail(idx)}
-                      label="Remove Email"
+                      label={t("contacts.form.removeEmailAddress", { index: idx + 1 })}
                     />
                   </div>
 
@@ -888,8 +867,15 @@ export default function ContactForm({
           },
         ],
       });
-    const removeAddress = (idx: number) =>
+    const removeAddress = (idx: number) => {
+      const newLen = addresses.length - 1;
+      for (let i = idx; i < newLen; i++) {
+        const next = localIdMap.current.get(`addresses:${i + 1}`);
+        if (next !== undefined) localIdMap.current.set(`addresses:${i}`, next);
+      }
+      localIdMap.current.delete(`addresses:${newLen}`);
       updateDraft({ addresses: addresses.filter((_, i) => i !== idx) });
+    };
     const updateAddress = (idx: number, patch: Partial<Address>) => {
       updateDraft({
         addresses: addresses.map((a, i) =>
@@ -916,7 +902,7 @@ export default function ContactForm({
               const cityError = getListItemError("addresses", "city", idx);
               return (
                 <motion.div
-                  key={idx}
+                  key={getLocalId("addresses", idx)}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
@@ -943,7 +929,7 @@ export default function ContactForm({
                     </div>
                     <CardRemoveButton
                       onClick={() => removeAddress(idx)}
-                      label="Remove Address"
+                      label={t("contacts.form.removeAddress", { index: idx + 1 })}
                     />
                   </div>
 
@@ -1028,8 +1014,15 @@ export default function ContactForm({
     const socials = contactDraft.socials || [];
     const addSocial = () =>
       updateDraft({ socials: [...socials, { platform: "WhatsApp", url: "" }] });
-    const removeSocial = (idx: number) =>
+    const removeSocial = (idx: number) => {
+      const newLen = socials.length - 1;
+      for (let i = idx; i < newLen; i++) {
+        const next = localIdMap.current.get(`socials:${i + 1}`);
+        if (next !== undefined) localIdMap.current.set(`socials:${i}`, next);
+      }
+      localIdMap.current.delete(`socials:${newLen}`);
       updateDraft({ socials: socials.filter((_, i) => i !== idx) });
+    };
     const updateSocial = (idx: number, patch: Partial<SocialLink>) => {
       updateDraft({
         socials: socials.map((s, i) => (i === idx ? { ...s, ...patch } : s)),
@@ -1053,7 +1046,7 @@ export default function ContactForm({
               const urlError = getListItemError("socials", "url", idx);
               return (
                 <motion.div
-                  key={idx}
+                  key={getLocalId("socials", idx)}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
@@ -1088,7 +1081,7 @@ export default function ContactForm({
                     </div>
                     <CardRemoveButton
                       onClick={() => removeSocial(idx)}
-                      label="Remove Social"
+                      label={t("contacts.form.removeSocialLink", { index: idx + 1 })}
                     />
                   </div>
 
@@ -1099,7 +1092,7 @@ export default function ContactForm({
                       onChange={(e) =>
                         updateSocial(idx, { url: e.target.value })
                       }
-                      placeholder="Username, Handle or Link URL"
+                      placeholder={t("contacts.form.socialHandlePlaceholder") || "Username, handle or link URL"}
                       className={cn(
                         "pl-10",
                         urlError &&
@@ -1140,10 +1133,17 @@ export default function ContactForm({
           { relationship: "Father", contactId: "" },
         ],
       });
-    const removeEmergency = (idx: number) =>
+    const removeEmergency = (idx: number) => {
+      const newLen = emergencyContacts.length - 1;
+      for (let i = idx; i < newLen; i++) {
+        const next = localIdMap.current.get(`emergency:${i + 1}`);
+        if (next !== undefined) localIdMap.current.set(`emergency:${i}`, next);
+      }
+      localIdMap.current.delete(`emergency:${newLen}`);
       updateDraft({
         emergencyContacts: emergencyContacts.filter((_, i) => i !== idx),
       });
+    };
     const updateEmergency = (idx: number, patch: Partial<EmergencyContact>) => {
       updateDraft({
         emergencyContacts: emergencyContacts.map((em, i) =>
@@ -1184,7 +1184,7 @@ export default function ContactForm({
 
               return (
                 <motion.div
-                  key={idx}
+                  key={getLocalId("emergency", idx)}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
@@ -1202,7 +1202,7 @@ export default function ContactForm({
                     </div>
                     <CardRemoveButton
                       onClick={() => removeEmergency(idx)}
-                      label="Remove Emergency Contact"
+                      label={t("contacts.form.removeEmergencyContact", { index: idx + 1 })}
                     />
                   </div>
 
