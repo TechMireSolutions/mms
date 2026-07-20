@@ -357,7 +357,6 @@ export default function ContactForm({
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
   const {
-    enabledTabIds,
     isTabFieldEnabled,
     fields,
     phoneLabels,

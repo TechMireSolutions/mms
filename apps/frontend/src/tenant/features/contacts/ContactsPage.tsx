@@ -577,6 +577,7 @@ function ContactsInner() {
                           columns={tableColumns}
                           onSelectAll={handleSelectAll}
                           allSelected={workContacts.length > 0 && selected.length === workContacts.length}
+                          onUpdateContact={handleUpdateContact}
                         />
                       </div>
                       <div className="hidden lg:block space-y-2">
