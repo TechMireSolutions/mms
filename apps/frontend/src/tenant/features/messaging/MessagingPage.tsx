@@ -5,8 +5,9 @@ import {
   Trash2, User, Clock, Plus, Tag, Filter, Check, Mail, BarChart2
 } from 'lucide-react';
 import { 
-  PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip 
+  PieChart, Pie, Cell, Legend, Tooltip 
 } from 'recharts';
+import { SafeResponsiveContainer } from '@/components/ui/SafeResponsiveContainer';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
@@ -513,7 +514,7 @@ export default function MessagingPage(): React.JSX.Element {
 
               {chartData.length > 0 ? (
                 <div className="h-[240px] w-full flex items-center justify-center">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <SafeResponsiveContainer height={240}>
                     <PieChart>
                       <Pie
                         data={chartData}
@@ -531,7 +532,7 @@ export default function MessagingPage(): React.JSX.Element {
                       <Tooltip />
                       <Legend />
                     </PieChart>
-                  </ResponsiveContainer>
+                  </SafeResponsiveContainer>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-[240px] text-muted-foreground">
