@@ -10,7 +10,6 @@ import {
   Camera,
   FileText,
   Star,
-  Eye,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FormModal } from "@/components/ui/FormModal";
@@ -112,7 +111,6 @@ interface ContactFormProps {
 }
 
 const CONTACT_TABS = [
-  { key: "all", label: "All Sections", icon: Eye },
   { key: "basic", label: "Basic Info", icon: User },
   { key: "phones", label: "Phones", icon: Phone },
   { key: "emails", label: "Emails", icon: Mail },
@@ -122,6 +120,91 @@ const CONTACT_TABS = [
 ] as const;
 
 type TabKey = (typeof CONTACT_TABS)[number]["key"];
+
+const normalizePhoneItem = (item: unknown): PhoneNumber => {
+  if (!item) return { label: "Mobile", number: "", countryCode: "+92" };
+  if (typeof item === "string") {
+    const parsed = parsePhoneEntry({ label: "Mobile", number: item, countryCode: "+92" });
+    return { label: "Mobile", number: parsed.number || item, countryCode: parsed.countryCode || "+92" };
+  }
+  if (typeof item === "object") {
+    const obj = item as Record<string, unknown>;
+    const rawNum = String(obj.number || obj.phone || obj.value || obj.num || "").trim();
+    const label = String(obj.label || obj.type || "Mobile").trim();
+    const countryCode = String(obj.countryCode || obj.code || "+92").trim();
+    const parsed = parsePhoneEntry({ label, number: rawNum, countryCode });
+    return {
+      label: label || "Mobile",
+      number: parsed.number || rawNum,
+      countryCode: countryCode || parsed.countryCode || "+92",
+    };
+  }
+  return { label: "Mobile", number: "", countryCode: "+92" };
+};
+
+const normalizeEmailItem = (item: unknown): EmailAddress => {
+  if (!item) return { label: "Personal", address: "" };
+  if (typeof item === "string") {
+    return { label: "Personal", address: item.trim() };
+  }
+  if (typeof item === "object") {
+    const obj = item as Record<string, unknown>;
+    const address = String(obj.address || obj.email || obj.value || "").trim();
+    const label = String(obj.label || obj.type || "Personal").trim();
+    return { label: label || "Personal", address };
+  }
+  return { label: "Personal", address: "" };
+};
+
+const normalizeAddressItem = (
+  item: unknown,
+  defaultCity: string,
+  defaultProvince: string,
+  defaultCountry: string,
+): Address => {
+  if (!item) return { label: "Home", line1: "", city: defaultCity, state: defaultProvince, country: defaultCountry };
+  if (typeof item === "string") {
+    return { label: "Home", line1: item.trim(), city: defaultCity, state: defaultProvince, country: defaultCountry };
+  }
+  if (typeof item === "object") {
+    const obj = item as Record<string, unknown>;
+    const line1 = String(obj.line1 || obj.address || obj.street || obj.value || "").trim();
+    const city = String(obj.city || defaultCity).trim();
+    const state = String(obj.state || obj.province || defaultProvince).trim();
+    const country = String(obj.country || defaultCountry).trim();
+    const label = String(obj.label || obj.type || "Home").trim();
+    return { label: label || "Home", line1, city, state, country };
+  }
+  return { label: "Home", line1: "", city: defaultCity, state: defaultProvince, country: defaultCountry };
+};
+
+const normalizeSocialItem = (item: unknown): SocialLink => {
+  if (!item) return { platform: "WhatsApp", url: "" };
+  if (typeof item === "string") {
+    return { platform: "WhatsApp", url: item.trim() };
+  }
+  if (typeof item === "object") {
+    const obj = item as Record<string, unknown>;
+    const url = String(obj.url || obj.link || obj.value || "").trim();
+    const platform = String(obj.platform || obj.type || "WhatsApp").trim();
+    return { platform: platform || "WhatsApp", url };
+  }
+  return { platform: "WhatsApp", url: "" };
+};
+
+const normalizeEmergencyItem = (item: unknown): EmergencyContact => {
+  if (!item) return { relationship: "Father", contactId: "" };
+  if (typeof item === "string" || typeof item === "number") {
+    return { relationship: "Father", contactId: String(item) };
+  }
+  if (typeof item === "object") {
+    const obj = item as Record<string, unknown>;
+    const contactId = String(obj.contactId || obj.id || obj.targetId || "").trim();
+    const relationship = String(obj.relationship || obj.relation || obj.type || "Father").trim();
+    return { relationship: relationship || "Father", contactId };
+  }
+  return { relationship: "Father", contactId: "" };
+};
 
 const normalizeContactForEdit = (
   raw: Partial<Contact> | undefined,
@@ -160,47 +243,37 @@ const normalizeContactForEdit = (
     lastName = parts.slice(1).join(" ");
   }
 
-  // 2. Phones resolution (convert scalar phone -> phones array if empty)
-  let phones: PhoneNumber[] = Array.isArray(merged.phones) && merged.phones.length > 0
-    ? merged.phones.map((p) => ({ ...p }))
+  // 2. Phones resolution (array of strings or objects, plus scalar phone)
+  let phones: PhoneNumber[] = Array.isArray(merged.phones)
+    ? merged.phones.map(normalizePhoneItem)
     : [];
 
   const scalarPhone = typeof merged.phone === "string" ? merged.phone.trim() : "";
   if (scalarPhone && !phones.some((p) => (p.number || "").trim() === scalarPhone)) {
-    const parsed = parsePhoneEntry({ label: "Mobile", number: scalarPhone, countryCode: "+92" });
-    phones.unshift({
-      label: "Mobile",
-      number: parsed.number || scalarPhone,
-      countryCode: parsed.countryCode || "+92",
-    });
+    phones.unshift(normalizePhoneItem(scalarPhone));
   }
 
   if (phones.length === 0) {
     phones = [{ label: "Mobile", number: "", countryCode: "+92" }];
-  } else {
-    phones = phones.map((p) => {
-      const parsed = parsePhoneEntry(p);
-      return { ...p, countryCode: p.countryCode || parsed.countryCode || "+92", number: p.number || parsed.number };
-    });
   }
 
-  // 3. Emails resolution (convert scalar email -> emails array if empty)
-  let emails: EmailAddress[] = Array.isArray(merged.emails) && merged.emails.length > 0
-    ? merged.emails.map((e) => ({ ...e }))
+  // 3. Emails resolution (array of strings or objects, plus scalar email)
+  let emails: EmailAddress[] = Array.isArray(merged.emails)
+    ? merged.emails.map(normalizeEmailItem)
     : [];
 
   const scalarEmail = typeof merged.email === "string" ? merged.email.trim() : "";
   if (scalarEmail && !emails.some((e) => (e.address || "").trim().toLowerCase() === scalarEmail.toLowerCase())) {
-    emails.unshift({ label: "Personal", address: scalarEmail });
+    emails.unshift(normalizeEmailItem(scalarEmail));
   }
 
   if (emails.length === 0) {
     emails = [{ label: "Personal", address: "" }];
   }
 
-  // 4. Addresses resolution (convert scalar address fields -> addresses array if empty)
-  let addresses: Address[] = Array.isArray(merged.addresses) && merged.addresses.length > 0
-    ? merged.addresses.map((a) => ({ ...a }))
+  // 4. Addresses resolution (array of strings or objects, plus scalar address fields)
+  let addresses: Address[] = Array.isArray(merged.addresses)
+    ? merged.addresses.map((item) => normalizeAddressItem(item, defaultCity, defaultProvince, defaultCountry))
     : [];
 
   const scalarLine1 = (merged.line1 as string || merged.address as string || "").trim();
@@ -232,14 +305,22 @@ const normalizeContactForEdit = (
     ];
   }
 
-  // 5. Socials & Emergency Contacts
-  const socials: SocialLink[] = Array.isArray(merged.socials) && merged.socials.length > 0
-    ? merged.socials.map((s) => ({ ...s }))
-    : [{ platform: "WhatsApp", url: "" }];
+  // 5. Socials & Emergency Contacts (array of strings or objects)
+  let socials: SocialLink[] = Array.isArray(merged.socials)
+    ? merged.socials.map(normalizeSocialItem)
+    : [];
 
-  const emergencyContacts: EmergencyContact[] = Array.isArray(merged.emergencyContacts) && merged.emergencyContacts.length > 0
-    ? merged.emergencyContacts.map((ec) => ({ ...ec }))
-    : [{ relationship: "Father", contactId: "" }];
+  if (socials.length === 0) {
+    socials = [{ platform: "WhatsApp", url: "" }];
+  }
+
+  let emergencyContacts: EmergencyContact[] = Array.isArray(merged.emergencyContacts)
+    ? merged.emergencyContacts.map(normalizeEmergencyItem)
+    : [];
+
+  if (emergencyContacts.length === 0) {
+    emergencyContacts = [{ relationship: "Father", contactId: "" }];
+  }
 
   return {
     ...merged,
@@ -320,10 +401,7 @@ export default function ContactForm({
     const socialCount = (contactDraft.socials || []).filter(s => (s.url || "").trim()).length;
     const emergencyCount = (contactDraft.emergencyContacts || []).filter(e => e.contactId).length;
 
-    const totalCount = phoneCount + emailCount + addressCount + socialCount + emergencyCount;
-
     const countMap: Record<string, number> = {
-      all: totalCount,
       phones: phoneCount,
       emails: emailCount,
       addresses: addressCount,
@@ -1424,27 +1502,6 @@ export default function ContactForm({
 
   const renderActiveTabContent = () => {
     switch (tab) {
-      case "all":
-        return (
-          <div className="space-y-6 text-left">
-            {renderBasic()}
-            <SectionCard title={t("contacts.form.phonesLabel") || "Phone Numbers"} icon={Phone} accentColor="primary">
-              {renderPhones()}
-            </SectionCard>
-            <SectionCard title={t("contacts.form.emailsLabel") || "Email Addresses"} icon={Mail} accentColor="amber">
-              {renderEmails()}
-            </SectionCard>
-            <SectionCard title={t("contacts.detail.addresses") || "Addresses"} icon={MapPin} accentColor="emerald">
-              {renderAddresses()}
-            </SectionCard>
-            <SectionCard title={t("contacts.detail.socials") || "Social Links"} icon={Share2} accentColor="indigo">
-              {renderSocials()}
-            </SectionCard>
-            <SectionCard title={t("contacts.detail.emergency") || "Emergency Contacts"} icon={Heart} accentColor="rose">
-              {renderEmergency()}
-            </SectionCard>
-          </div>
-        );
       case "basic":
         return renderBasic();
       case "phones":
