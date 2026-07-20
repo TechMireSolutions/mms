@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { WidgetCard } from "@/components/ui/WidgetCard";
 import { UserCheck, Users, AlertTriangle, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/lib/config/routes";
@@ -95,8 +96,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
   const { text: rateColor, bar: rateBarColor } = rateToneClass(rate);
 
   return (
-    <section aria-labelledby="todays-attendance-heading" className="relative overflow-hidden group rounded-2xl surface-glass shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute start-0 top-0 bottom-0 w-[3.5px] rounded-e-[2px] bg-primary/60 group-hover:bg-primary transition-colors duration-300" />
+    <WidgetCard ariaLabelledby="todays-attendance-heading" accentColor="primary">
       {/* Header */}
       <header className="flex items-center justify-between px-5 py-3.5 border-b border-border/45 bg-muted/10 ps-6.5 select-none">
 
@@ -183,6 +183,6 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
           </>
         )}
       </section>
-    </section>
+    </WidgetCard>
   );
 }

@@ -23,6 +23,7 @@ import { isApiError } from "@/lib/apiClient";
 import { queryClientInstance } from "@/lib/queryClient";
 import { CONTACTS_GOOGLE_SYNC_QUERY_KEY } from "@/tenant/features/contacts/hooks/useContacts";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
+import { triggerFileDownload } from "@/lib/download";
 
 /**
  * Parses a raw vCard (.vcf) formatted string into an array of normalized contact objects.
@@ -539,10 +540,8 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
 
   const handleExport = (): void => {
     const vcf = contacts.map(toVCard).join("\r\n");
-    const downloadLink = document.createElement("a");
-    downloadLink.href = URL.createObjectURL(new Blob([vcf], { type: "text/vcard" }));
-    downloadLink.download = "madrasa-contacts.vcf";
-    downloadLink.click();
+    const blob = new Blob([vcf], { type: "text/vcard" });
+    triggerFileDownload(blob, "madrasa-contacts.vcf");
   };
 
   return (

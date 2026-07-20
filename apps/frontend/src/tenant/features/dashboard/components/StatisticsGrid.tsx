@@ -6,16 +6,9 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { COLOR_MAP, ICONS_LIST as ICONS } from "@/tenant/features/reports/components/pinnedWidgets/types";
+import { WidgetCard } from "@/components/ui/WidgetCard";
 
-const MotionButton = motion.create(Button);
-
-const ACCENT_BAR_MAP: Record<string, string> = {
-  emerald: "bg-success",
-  blue: "bg-info",
-  violet: "bg-primary",
-  amber: "bg-warning",
-  red: "bg-destructive",
-};
+const MotionWidgetCard = motion.create(WidgetCard);
 
 export interface StatItem {
   id: string;
@@ -109,16 +102,24 @@ export default function StatsGrid({
         const hasPositiveTrend = statItem.trend >= 0;
         const isCustomCard = customCardIds.includes(statItem.id);
 
+        const accent = {
+          emerald: "success" as const,
+          blue: "info" as const,
+          violet: "primary" as const,
+          amber: "warning" as const,
+          red: "destructive" as const,
+        }[statItem.color] || "primary" as const;
+
         return (
-          <motion.article
+          <MotionWidgetCard
             key={statItem.id}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: statIndex * 0.05, duration: 0.35, ease: "easeOut" }}
-            className="relative overflow-hidden group rounded-2xl surface-glass p-4.5 md:p-5 px-5.5 hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left flex flex-col justify-between"
+            accentColor={accent}
+            className="p-4.5 md:p-5 px-5.5 flex flex-col justify-between"
           >
             <div className={`absolute -right-8 -top-8 w-24 h-24 rounded-full ${statItem.color === 'emerald' ? 'bg-success/5 blur-xl group-hover:bg-success/10' : statItem.color === 'blue' ? 'bg-info/5 blur-xl group-hover:bg-info/10' : statItem.color === 'violet' ? 'bg-primary/5 blur-xl group-hover:bg-primary/10' : statItem.color === 'amber' ? 'bg-warning/5 blur-xl group-hover:bg-warning/10' : 'bg-destructive/5 blur-xl group-hover:bg-destructive/10'} transition-all duration-500`} />
-            <div className={`absolute start-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] ${ACCENT_BAR_MAP[statItem.color] || "bg-success"}/60 group-hover:${ACCENT_BAR_MAP[statItem.color] || "bg-success"} transition-colors duration-300`} />
             
             <header className="flex items-start justify-between mb-3 select-none">
               <div
@@ -203,17 +204,14 @@ export default function StatsGrid({
             <footer className="text-[11px] text-muted-foreground mt-3 border-t border-border/30 pt-2 m-0 truncate">
               {statItem.sub}
             </footer>
-          </motion.article>
+          </MotionWidgetCard>
         );
       })}
 
       {isEditMode && onAddCardClick && (
-        <MotionButton
+        <Button
           variant="outline"
           onClick={onAddCardClick}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: statItems.length * 0.05, duration: 0.35, ease: "easeOut" }}
           className="border border-dashed border-border rounded-xl p-4 md:p-5 flex flex-col items-center justify-center gap-2 hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all duration-300 group text-muted-foreground min-h-[115px] h-auto"
         >
           <div className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
@@ -222,7 +220,7 @@ export default function StatsGrid({
           <span className="text-xs font-bold group-hover:text-primary transition-colors">
             {t("dashboard.addMetricCard")}
           </span>
-        </MotionButton>
+        </Button>
       )}
     </section>
   );

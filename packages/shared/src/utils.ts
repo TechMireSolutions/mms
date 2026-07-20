@@ -932,3 +932,16 @@ export function getDenominationPoints(
 
   return 50; // Default fallback
 }
+
+/**
+ * Formats a local Date object into a YYYY-MM-DD ISO format string.
+ * @param date - The Date object to format.
+ * @returns The formatted ISO date string.
+ */
+export function formatDateToIso(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+

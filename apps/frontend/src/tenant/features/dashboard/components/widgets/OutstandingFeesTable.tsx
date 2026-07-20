@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { WidgetCard } from "@/components/ui/WidgetCard";
 import { motion } from "framer-motion";
 import { AlertCircle, Phone, Send } from "lucide-react";
 import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
@@ -90,8 +91,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
   const totalUnpaid = unpaidInvoices.length;
 
   return (
-    <section aria-labelledby="outstanding-fees-heading" className="relative overflow-hidden group rounded-2xl surface-glass shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute start-0 top-0 bottom-0 w-[3.5px] rounded-e-[2px] bg-destructive/60 group-hover:bg-destructive transition-colors duration-300" />
+    <WidgetCard ariaLabelledby="outstanding-fees-heading" accentColor="destructive">
       <header className="px-6 py-4 border-b border-border/45 flex items-center justify-between ps-6.5 select-none">
 
         <div className="flex items-center gap-2.5">
@@ -261,6 +261,6 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
           onClose={closeComposer}
         />
       )}
-    </section>
+    </WidgetCard>
   );
 }

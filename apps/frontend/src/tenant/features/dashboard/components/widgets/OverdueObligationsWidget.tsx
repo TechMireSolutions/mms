@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { WidgetCard } from "@/components/ui/WidgetCard";
 import { AlertTriangle, ChevronDown, ChevronUp, Bell, Scale } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
@@ -120,8 +121,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
   };
 
   return (
-    <section aria-labelledby="overdue-obligations-heading" className="relative overflow-hidden group rounded-2xl border border-destructive/30 surface-glass shadow-sm hover:-translate-y-1 hover:border-destructive/55 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute start-0 top-0 bottom-0 w-[3.5px] rounded-e-[2px] bg-destructive/60 group-hover:bg-destructive transition-colors duration-300" />
+    <WidgetCard ariaLabelledby="overdue-obligations-heading" accentColor="destructive">
       {/* Header */}
       <header className="flex items-center justify-between px-5 py-3 bg-destructive/[0.06] border-b border-destructive/25 ps-6.5 select-none">
 
@@ -310,6 +310,6 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
           onClose={closeComposer}
         />
       )}
-    </section>
+    </WidgetCard>
   );
 }

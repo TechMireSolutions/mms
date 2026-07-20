@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parsePhoneNumber, normalizeToE164, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso } from "./utils.js";
 import type { Contact } from "./contactTypes.js";
 
 
@@ -229,6 +229,17 @@ describe("formatNumber", () => {
     expect(formatNumber(12.3456, { maximumFractionDigits: 2 })).toBe("12.35");
   });
 });
+
+describe("formatDateToIso", () => {
+  it("formats standard date to YYYY-MM-DD", () => {
+    const date1 = new Date(2026, 0, 5); // Jan 5, 2026
+    expect(formatDateToIso(date1)).toBe("2026-01-05");
+
+    const date2 = new Date(2026, 11, 25); // Dec 25, 2026
+    expect(formatDateToIso(date2)).toBe("2026-12-25");
+  });
+});
+
 
 
 

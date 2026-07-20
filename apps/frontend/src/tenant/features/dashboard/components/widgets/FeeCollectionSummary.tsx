@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { WidgetCard } from "@/components/ui/WidgetCard";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -135,8 +136,7 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
   const isPositiveTrend = changePct >= 0;
 
   return (
-    <section aria-labelledby="fee-collection-heading" className="relative overflow-hidden group rounded-2xl surface-glass shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute start-0 top-0 bottom-0 w-[3.5px] rounded-e-[2px] bg-primary/60 group-hover:bg-primary transition-colors duration-300" />
+    <WidgetCard ariaLabelledby="fee-collection-heading" accentColor="primary">
       <header className="flex items-center justify-between px-5 py-3.5 border-b border-border/45 bg-muted/10 ps-6.5 select-none">
 
         <div className="flex-1 min-w-0">
@@ -201,6 +201,6 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
           })}
         </div>
       </section>
-    </section>
+    </WidgetCard>
   );
 }

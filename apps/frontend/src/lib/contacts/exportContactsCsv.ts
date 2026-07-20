@@ -5,6 +5,7 @@ import {
   type ContactExportColumn,
   type ContactExportLabels,
 } from "@mms/shared";
+import { triggerFileDownload } from "@/lib/download";
 
 export type { ContactExportColumn, ContactExportLabels };
 
@@ -16,15 +17,8 @@ export function downloadContactsCsv(
   filename: string,
 ): void {
   const csv = buildCsvContent(buildContactsExportRows(contacts, columns, labels));
-  triggerCsvDownload(csv, filename);
-}
-
-function triggerCsvDownload(csv: string, filename: string): void {
-  const anchor = document.createElement("a");
-  anchor.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(anchor.href);
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  triggerFileDownload(blob, filename);
 }
 
 function yieldToMain(): Promise<void> {
@@ -59,5 +53,6 @@ export async function downloadContactsCsvChunked(
     await yieldToMain();
   }
 
-  triggerCsvDownload(buildCsvContent(rows), filename);
+  const blob = new Blob([buildCsvContent(rows)], { type: "text/csv;charset=utf-8;" });
+  triggerFileDownload(blob, filename);
 }

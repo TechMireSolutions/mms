@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Pencil, Trash2, Plus } from 'lucide-react';
-import type { Permission } from '@mms/shared';
+import { type Permission, formatDateToIso } from '@mms/shared';
 import type { Invoice } from '@/lib/data/financeData';
 import type { Distribution } from '@/lib/data/hasanatData';
 import type { Session } from '@/lib/data/sessionsData';
@@ -33,12 +33,6 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 
 
-function getLocalDateString(d: Date): string {
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
 
 function getAttendanceRateForDate(records: AttendanceRecord[], dateStr: string): number | null {
   const dayRecords = records.filter((r) => r.date === dateStr);
@@ -91,11 +85,11 @@ function getHasanatPointsInPeriod(
   let sum = 0;
   const startD = new Date();
   startD.setDate(startD.getDate() - daysStart);
-  const startTime = getLocalDateString(startD);
+  const startTime = formatDateToIso(startD);
 
   const endD = new Date();
   endD.setDate(endD.getDate() - daysEnd);
-  const endTime = getLocalDateString(endD);
+  const endTime = formatDateToIso(endD);
 
   distributions.forEach((d) => {
     if (!d.issuedDate) return;
@@ -110,11 +104,11 @@ function getHasanatPointsInPeriod(
 function getSessionsInPeriod(sessions: Session[], daysStart: number, daysEnd: number): number {
   const startD = new Date();
   startD.setDate(startD.getDate() - daysStart);
-  const startTime = getLocalDateString(startD);
+  const startTime = formatDateToIso(startD);
 
   const endD = new Date();
   endD.setDate(endD.getDate() - daysEnd);
-  const endTime = getLocalDateString(endD);
+  const endTime = formatDateToIso(endD);
 
   return sessions.filter((s) => {
     if (!s.startDate) return false;

@@ -1,5 +1,6 @@
 import { BACKGROUND_JOBS_API_PATH, type BackgroundJobRecord } from '@mms/shared';
 import { apiFetch, apiJson } from '@/lib/apiClient';
+import { triggerFileDownload } from '@/lib/download';
 
 export async function fetchBackgroundJobs(): Promise<BackgroundJobRecord[]> {
   const jobsResponse = await apiJson<{ jobs: BackgroundJobRecord[] }>(BACKGROUND_JOBS_API_PATH);
@@ -42,12 +43,5 @@ export async function downloadBackgroundJobArtifact(
     response.headers.get('Content-Disposition'),
     fallbackFilename,
   );
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  triggerFileDownload(blob, filename);
 }

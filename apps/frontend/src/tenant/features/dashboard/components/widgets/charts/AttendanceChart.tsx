@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { WidgetCard } from "@/components/ui/WidgetCard";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/lib/config/routes";
 import { useBrandedDashboardChartColors } from "@/tenant/features/dashboard/hooks/useBrandedDashboardChartColors";
@@ -115,8 +116,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
   };
 
   return (
-    <section aria-labelledby="attendance-chart-heading" className="relative overflow-hidden group rounded-2xl surface-glass p-5 shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute start-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] bg-primary/60 group-hover:bg-primary transition-colors duration-300" />
+    <WidgetCard ariaLabelledby="attendance-chart-heading" accentColor="primary" className="p-5">
       <header className="flex flex-wrap items-start justify-between gap-3 mb-5 pl-1.5 select-none">
         <div>
           <h3 id="attendance-chart-heading" className="text-sm font-bold text-foreground m-0">
@@ -230,7 +230,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
           )}
         </ComposedChart>
       </SafeResponsiveContainer>
-    </section>
+    </WidgetCard>
   );
 }
 
@@ -285,8 +285,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
   }, [distributions, denominations, colorTheme, HASANAT_THEMES, t]);
 
   return (
-    <section aria-labelledby="hasanat-chart-heading" className="relative overflow-hidden group rounded-2xl surface-glass p-5 shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute start-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] bg-warning/60 group-hover:bg-warning transition-colors duration-300" />
+    <WidgetCard ariaLabelledby="hasanat-chart-heading" accentColor="warning" className="p-5">
       <header className="flex flex-wrap items-start justify-between gap-3 mb-4 pl-1.5 select-none">
         <div>
           <h3 id="hasanat-chart-heading" className="text-sm font-bold text-foreground m-0">
@@ -415,6 +414,6 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
           })}
         </div>
       </div>
-    </section>
+    </WidgetCard>
   );
 }

@@ -1,4 +1,5 @@
 import React from "react";
+import { WidgetCard } from "@/components/ui/WidgetCard";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { QUICK_ACTION_ROUTE_KEYS } from "@/lib/config/navConfig";
@@ -70,8 +71,7 @@ export default function QuickActionsPanel({ dashboardRole }: QuickActionsPanelPr
   if (actions.length === 0) return null;
 
   return (
-    <section aria-labelledby="quick-actions-panel-heading" className="relative overflow-hidden group rounded-2xl surface-glass p-5 px-6 pb-6 shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute start-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] bg-primary/60 group-hover:bg-primary transition-colors duration-300" />
+    <WidgetCard ariaLabelledby="quick-actions-panel-heading" accentColor="primary" className="p-5 px-6 pb-6">
       <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4.5 select-none">
         <Sparkles className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
         <h3 id="quick-actions-panel-heading" className="text-sm font-bold text-foreground m-0">
@@ -115,6 +115,6 @@ export default function QuickActionsPanel({ dashboardRole }: QuickActionsPanelPr
           );
         })}
       </div>
-    </section>
+    </WidgetCard>
   );
 }

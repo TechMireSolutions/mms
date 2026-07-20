@@ -4,6 +4,7 @@ import { Bell, AlertTriangle, Calendar, User, DollarSign, X } from 'lucide-react
 import { useTranslation } from '@/hooks/useTranslation';
 import type { DashboardNotificationItem } from '@/lib/buildDashboardNotifications';
 import { Button } from '@/components/ui/button';
+import { WidgetCard } from '@/components/ui/WidgetCard';
 
 interface NotificationsPanelProps {
   items: DashboardNotificationItem[];
@@ -23,8 +24,7 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
   const urgent = visible.filter((n) => n.urgent).length;
 
   return (
-    <section aria-labelledby="notifications-heading" className="relative overflow-hidden group rounded-2xl surface-glass shadow-sm hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute start-0 top-0 bottom-0 w-[3.5px] rounded-e-[2px] bg-warning/60 group-hover:bg-warning transition-colors duration-300" />
+    <WidgetCard ariaLabelledby="notifications-heading" accentColor="warning">
       <header className="px-5 py-4 border-b border-border/45 flex items-center justify-between gap-2 select-none ps-6.5">
 
         <div className="flex items-center gap-2.5 min-w-0">
@@ -112,6 +112,6 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
           )}
         </AnimatePresence>
       </div>
-    </section>
+    </WidgetCard>
   );
 }
