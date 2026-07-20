@@ -1,15 +1,12 @@
 import React from 'react';
-import {
-  ModuleCommandMetricCard,
-  type ModuleCommandMetricCardProps,
-} from '@/components/ui/ModuleCommandMetricCard';
+import { StatCard, type StatCardProps } from '@/components/ui/StatCard';
 
 interface MetricItem {
-  icon: ModuleCommandMetricCardProps['icon'];
+  icon?: StatCardProps['icon'];
   label: string;
   value: string | number;
-  accent?: ModuleCommandMetricCardProps['accent'];
-  onClick?: ModuleCommandMetricCardProps['onClick'];
+  accent?: StatCardProps['accent'];
+  onClick?: StatCardProps['onClick'];
 }
 
 interface ModuleCommandMetricsGridProps {
@@ -37,7 +34,7 @@ export function ModuleCommandMetricsGrid({ items }: ModuleCommandMetricsGridProp
   return (
     <div className={`grid ${gridColsClass} gap-2`}>
       {items.map((item, index) => (
-        <ModuleCommandMetricCard
+        <StatCard
           key={item.label}
           icon={item.icon}
           label={item.label}
@@ -45,6 +42,7 @@ export function ModuleCommandMetricsGrid({ items }: ModuleCommandMetricsGridProp
           accent={item.accent}
           delayIndex={index}
           onClick={item.onClick}
+          variant="compact"
         />
       ))}
     </div>

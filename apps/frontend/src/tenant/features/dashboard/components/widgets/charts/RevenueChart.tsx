@@ -17,10 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FORM_SELECT_MINI } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
-import { formatMonthName } from "@mms/shared";
+import { getRecentMonthsList } from "@/lib/utils";
 
 interface RevenuePoint {
   month: string;
@@ -78,20 +79,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
     updatePref,
   } = useDashboardConfig();
 
-  const months = useMemo((): { key: string; label: string }[] => {
-    const list: { key: string; label: string }[] = [];
-    const now = new Date();
-    for (let i = 9; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const year = d.getFullYear();
-      const monthIndex = d.getMonth();
-      const monthNum = String(monthIndex + 1).padStart(2, "0");
-      const key = `${year}-${monthNum}`;
-      const label = formatMonthName(d);
-      list.push({ key, label });
-    }
-    return list;
-  }, []);
+  const months = useMemo((): { key: string; label: string }[] => getRecentMonthsList(10), []);
 
   const revenueData: RevenuePoint[] = useMemo(() => {
     const postedEntries = entries.filter((journalEntry) => journalEntry.status === "posted");
@@ -170,7 +158,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
                   updatePref("revenueChartType", chartTypeValue as "bar" | "line" | "area");
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className={FORM_SELECT_MINI}>
                   <SelectValue placeholder="Select chart type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -185,7 +173,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
                   updatePref("revenueChartColor", selectedColorTheme);
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className={FORM_SELECT_MINI}>
                   <SelectValue placeholder="Select color theme" />
                 </SelectTrigger>
                 <SelectContent>

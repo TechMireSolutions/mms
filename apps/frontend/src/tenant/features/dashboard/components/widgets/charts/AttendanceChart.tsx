@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FORM_SELECT_MINI } from "@/components/ui/formStyles";
 
 interface AttendancePoint {
   day: string;
@@ -135,7 +136,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
                   updatePref("attendanceChartType", value as "bar" | "line" | "area");
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className={FORM_SELECT_MINI}>
                   <SelectValue placeholder="Select chart type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -151,7 +152,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
                   updatePref("attendanceChartColor", value);
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className={FORM_SELECT_MINI}>
                   <SelectValue placeholder="Select color theme" />
                 </SelectTrigger>
                 <SelectContent>

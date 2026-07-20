@@ -9,7 +9,7 @@ import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/us
 import { TrendingUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
-import { formatMonthName } from "@mms/shared";
+import { getRecentMonthsList } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FORM_SELECT_MINI } from "@/components/ui/formStyles";
 
 interface EnrollmentPoint {
   month: string;
@@ -57,20 +58,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
     updatePref,
   } = useDashboardConfig();
 
-  const months = useMemo(() => {
-    const list: { key: string; label: string }[] = [];
-    const now = new Date();
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const year = d.getFullYear();
-      const monthIndex = d.getMonth();
-      const monthNum = String(monthIndex + 1).padStart(2, "0");
-      const key = `${year}-${monthNum}`;
-      const label = formatMonthName(d);
-      list.push({ key, label });
-    }
-    return list;
-  }, []);
+  const months = useMemo(() => getRecentMonthsList(12), []);
 
   const activeMonths = months.slice(-monthsCount);
 
@@ -115,7 +103,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
                   updatePref("enrollmentChartType", value as "area" | "bar" | "line");
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className={FORM_SELECT_MINI}>
                   <SelectValue placeholder="Select chart type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -131,7 +119,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
                   updatePref("enrollmentChartColor", value as "emerald" | "blue" | "violet" | "amber" | "red");
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className={FORM_SELECT_MINI}>
                   <SelectValue placeholder="Select color theme" />
                 </SelectTrigger>
                 <SelectContent>
@@ -149,7 +137,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
                   updatePref("enrollmentChartPeriod", Number(value));
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className={FORM_SELECT_MINI}>
                   <SelectValue placeholder="Select period" />
                 </SelectTrigger>
                 <SelectContent>

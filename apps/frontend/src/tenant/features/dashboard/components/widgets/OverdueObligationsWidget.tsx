@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { AlertTriangle, ChevronDown, ChevronUp, Bell, Scale } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { ROUTES } from "@/lib/config/routes";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -239,15 +240,15 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                             config={{
                               critical: {
                                 label: t("dashboard.widgets.urgency.critical"),
-                                cls: "bg-destructive/10 text-destructive border-destructive/20 font-bold",
+                                cls: SEMANTIC_BADGE.destructive,
                               },
                               high: {
                                 label: t("dashboard.widgets.urgency.high"),
-                                cls: "bg-warning/10 text-warning border-warning/20 font-bold",
+                                cls: SEMANTIC_BADGE.warning,
                               },
                               moderate: {
                                 label: t("dashboard.widgets.urgency.moderate"),
-                                cls: "bg-warning/10 text-warning border-warning/20 font-bold",
+                                cls: SEMANTIC_BADGE.warning,
                               },
                             }}
                             size="sm"

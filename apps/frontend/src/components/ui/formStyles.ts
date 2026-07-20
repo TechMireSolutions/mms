@@ -34,3 +34,8 @@ export const FORM_CHECKBOX =
 /** Unified form card container style — matching the centralized Card component. */
 export const FORM_CARD =
   'relative overflow-hidden group group/card rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300';
+
+/** Ultra-compact select trigger style (primarily for dashboard widget chart filters) */
+export const FORM_SELECT_MINI =
+  'h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none';
+

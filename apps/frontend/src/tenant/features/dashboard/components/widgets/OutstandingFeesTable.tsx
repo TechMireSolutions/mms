@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, Phone, Send } from "lucide-react";
 import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { Button } from "@/components/ui/button";
@@ -187,11 +188,11 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                       config={{
                         overdue: {
                           label: t("dashboard.widgets.overdueStatus", { count: outstandingFee.months }),
-                          cls: "bg-destructive/10 text-destructive border-destructive/20 font-bold",
+                          cls: SEMANTIC_BADGE.destructive,
                         },
                         warning: {
                           label: t("dashboard.widgets.overdueStatus", { count: outstandingFee.months }),
-                          cls: "bg-warning/10 text-warning border-warning/20 font-bold",
+                          cls: SEMANTIC_BADGE.warning,
                         },
                       }}
                       size="sm"

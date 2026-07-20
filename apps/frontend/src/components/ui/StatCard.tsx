@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { ArrowUpRight, ArrowDownRight, type LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatNumber } from "@/lib/utils";
 
 export interface StatCardProps {
   label: string;
@@ -48,6 +48,7 @@ export interface StatCardProps {
   delayIndex?: number;
   onClick?: () => void;
   className?: string;
+  variant?: "default" | "compact";
 }
 
 const ACCENT_MAP: Record<
@@ -148,10 +149,50 @@ export function StatCard({
   delayIndex = 0,
   onClick,
   className,
+  variant = "default",
 }: StatCardProps): React.JSX.Element {
   const theme = resolveAccent(accent || color);
   const Comp = onClick ? motion.button : motion.div;
   const buttonProps = onClick ? { type: "button" as const } : {};
+  const isCompact = variant === "compact";
+
+  if (isCompact) {
+    const formattedValue = typeof value === "number" ? formatNumber(value) : value;
+    return (
+      <Comp
+        {...buttonProps}
+        onClick={onClick}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: delayIndex * 0.04, duration: 0.3, ease: "easeOut" }}
+        className={cn(
+          "relative overflow-hidden group flex items-center gap-3 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm px-4 py-3 ps-5.5 shadow-sm transition-all duration-300 text-start min-h-[44px] w-full",
+          onClick && "cursor-pointer hover:shadow-md hover:border-primary/40 hover:bg-card/75",
+          className
+        )}
+      >
+        <div className={cn("absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300", theme.stripe)} />
+        {Icon && (
+          <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ms-0.5 shadow-sm ring-4", theme.iconBg, theme.ring)} aria-hidden="true">
+            <Icon className={cn("w-4 h-4", theme.iconText)} />
+          </div>
+        )}
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide truncate">
+            {label}
+          </p>
+          <p className="text-lg font-bold text-foreground leading-tight tabular-nums">
+            {formattedValue}
+          </p>
+          {sub && (
+            <p className="text-[10px] font-semibold text-muted-foreground mt-1 opacity-70 truncate">
+              {sub}
+            </p>
+          )}
+        </div>
+      </Comp>
+    );
+  }
 
   return (
     <Comp
@@ -208,3 +249,4 @@ export function StatCard({
     </Comp>
   );
 }
+

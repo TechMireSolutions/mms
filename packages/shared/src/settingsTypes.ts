@@ -2078,3 +2078,24 @@ export const DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = {
   hasanatChartColor: "mixed",
 };
 
+/**
+ * Generates a list of recent months ending with the current month.
+ * @param {number} count - Number of months to generate.
+ * @returns {Array<{ key: string; label: string }>} Recent months list.
+ */
+export function getRecentMonthsList(count: number): { key: string; label: string }[] {
+  const list: { key: string; label: string }[] = [];
+  const now = new Date();
+  for (let i = count - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const year = d.getFullYear();
+    const monthIndex = d.getMonth();
+    const monthNum = String(monthIndex + 1).padStart(2, "0");
+    const key = `${year}-${monthNum}`;
+    const label = formatMonthName(d);
+    list.push({ key, label });
+  }
+  return list;
+}
+
+
