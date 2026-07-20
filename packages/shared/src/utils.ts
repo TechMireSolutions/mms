@@ -395,7 +395,10 @@ export function normalizeToE164(countryCode: string, number: string): string {
  * @returns The formatted primary phone number or null.
  */
 export function getPrimaryPhone(contact: Partial<Contact>): string | null {
-  const phone = (contact.phones || [])[0];
+  const phones = contact.phones || [];
+  const phone = phones.find((p) => p.isPrimary && (p.number || "").trim().length > 0)
+    || phones.find((p) => (p.number || "").trim().length > 0)
+    || phones[0];
   if (phone && (phone.number || "").trim().length > 0) {
     const code = phone.countryCode ? phone.countryCode.trim() : "";
     const phoneNumber = phone.number ? phone.number.trim() : "";

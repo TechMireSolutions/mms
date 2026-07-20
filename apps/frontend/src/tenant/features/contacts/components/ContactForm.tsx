@@ -748,6 +748,48 @@ export default function ContactForm({
             </Field>
           )}
 
+          {isFieldEnabled("phones", "phone") && (
+            <Field
+              label={t("contacts.reportFields.phone") || "Primary Phone"}
+              id="primaryPhone"
+              error={getFieldError("phones")}
+            >
+              <div className="relative flex items-center group/input">
+                <Phone className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Input
+                  id="primaryPhone"
+                  name="primaryPhone"
+                  type="tel"
+                  value={
+                    contactDraft.phones?.[0]
+                      ? getPhoneDisplayValue(contactDraft.phones[0])
+                      : ""
+                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const phones = [...(contactDraft.phones || [])];
+                    const primaryPhoneObj = phones[0] || { label: "Mobile", number: "", countryCode: "+92", isPrimary: true };
+
+                    const trimmed = val.trim();
+                    if (trimmed.startsWith("+") || trimmed.startsWith("00")) {
+                      if (trimmed.length > 6) {
+                        const parsed = parsePhoneNumber(val, primaryPhoneObj.countryCode || "+92", ["+92", "+1", "+44"]);
+                        phones[0] = { ...primaryPhoneObj, countryCode: parsed.countryCode, number: parsed.number, isPrimary: true };
+                        updateDraft({ phones });
+                        return;
+                      }
+                    }
+                    phones[0] = { ...primaryPhoneObj, number: val, isPrimary: true };
+                    updateDraft({ phones });
+                  }}
+                  onBlur={() => handlePhoneBlur(0)}
+                  placeholder={t("contacts.form.phoneNumberPlaceholder") || "0300 1234567"}
+                  className="pl-10"
+                />
+              </div>
+            </Field>
+          )}
+
           {isFieldEnabled("basic", "isSyed") && (
             <div className="flex flex-col justify-end min-h-[44px]">
               <label

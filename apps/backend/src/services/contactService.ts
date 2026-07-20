@@ -157,8 +157,15 @@ export async function getContactById(id: string, includeDeleted = false): Promis
 }
 
 export async function normalizeContactPhones(contact: Contact): Promise<Contact> {
-  if (!contact.phones?.length) {
-    return contact;
+  let phones = contact.phones;
+  const scalarPhone = typeof (contact as Record<string, unknown>).phone === 'string' ? String((contact as Record<string, unknown>).phone).trim() : '';
+
+  if ((!phones || !phones.length) && scalarPhone) {
+    phones = [{ label: 'Mobile', number: scalarPhone, countryCode: '+92', isPrimary: true }];
+  }
+
+  if (!phones?.length) {
+    return { ...contact, phones: phones || [] };
   }
   const { defaultPhoneCountryCode } = await loadContactRuntimeDefaults();
   const countryCodes = (await fetchCollection('countryCodes')) || [];
@@ -168,7 +175,7 @@ export async function normalizeContactPhones(contact: Contact): Promise<Contact>
 
   return {
     ...contact,
-    phones: contact.phones.map((phone) => {
+    phones: phones.map((phone) => {
       const fallbackCode = phone.countryCode || defaultPhoneCountryCode;
       const trimmedNumber = (phone.number || "").trim();
       let parsed;

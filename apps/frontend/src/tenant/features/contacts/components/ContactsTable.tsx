@@ -194,19 +194,27 @@ export default function ContactsTable({
             </div>
           </td>
         );
-      case "phone":
+      case "phone": {
+        const primaryPhone = getPrimaryPhone(contact);
+        const firstPhoneObj = (contact.phones || []).find((p) => (p.number || "").trim().length > 0) || contact.phones?.[0];
+        const countryCode = firstPhoneObj?.countryCode || (primaryPhone?.startsWith("+") ? primaryPhone.split(" ")[0] : "+92");
+        const rawNumber = firstPhoneObj?.number || (primaryPhone ? primaryPhone.replace(countryCode, "").trim() : "");
+        const formattedNumber = rawNumber ? (rawNumber.replace(/(\d{3})(\d{7})/, '$1 $2') || rawNumber) : primaryPhone;
+
         return (
           <td key="phone" className="px-4 py-3">
             <div className="flex items-center gap-2 group/phone">
-              {contact.phones?.[0] && (
+              {primaryPhone ? (
                 <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted/40 border border-border/60">
-                  <span className="text-[11px] font-semibold text-muted-foreground">{contact.phones[0].countryCode}</span>
+                  {countryCode && <span className="text-[11px] font-semibold text-muted-foreground">{countryCode}</span>}
                   <span className="text-[12px] font-mono text-foreground font-medium tracking-wide">
-                    {contact.phones[0].number?.replace(/(\d{3})(\d{7})/, '$1 $2') || contact.phones[0].number}
+                    {formattedNumber}
                   </span>
                 </div>
+              ) : (
+                <span className="text-[13px] text-muted-foreground">{t('contacts.table.emptyDash')}</span>
               )}
-              <CopyBtn text={getPrimaryPhone(contact) || ""} />
+              <CopyBtn text={primaryPhone || ""} />
               <Button
                 disabled={!hasWhatsApp(contact)}
                 onClick={(e) => {
@@ -227,6 +235,7 @@ export default function ContactsTable({
             </div>
           </td>
         );
+      }
       case "email":
         return (
           <td key="email" className="px-4 py-3">

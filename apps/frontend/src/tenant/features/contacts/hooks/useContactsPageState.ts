@@ -90,21 +90,33 @@ export function useContactsPageState({
         activities: [],
         ...contact,
       } as Contact;
-      if (base.phones && Array.isArray(base.phones)) {
-        return {
-          ...base,
-          phones: base.phones.map((phone: PhoneNumber) => {
-            if (phone.countryCode) return phone;
-            const parsed = parsePhoneNumber(phone.number, defaultCode, Object.values(countryCodesMap));
-            return {
-              ...phone,
-              countryCode: parsed.countryCode,
-              number: parsed.number,
-            };
-          }),
-        };
+
+      let phones = Array.isArray(base.phones) ? base.phones : [];
+      const scalarPhone = typeof (base as Record<string, unknown>).phone === 'string'
+        ? String((base as Record<string, unknown>).phone).trim()
+        : '';
+
+      if (scalarPhone && !phones.some((p) => (p.number || '').trim())) {
+        const parsed = parsePhoneNumber(scalarPhone, defaultCode, Object.values(countryCodesMap));
+        phones = [{ label: 'Mobile', number: parsed.number || scalarPhone, countryCode: parsed.countryCode || defaultCode, isPrimary: true }, ...phones];
       }
-      return base;
+
+      if (phones.length > 0) {
+        phones = phones.map((phone: PhoneNumber) => {
+          if (phone.countryCode && phone.number) return phone;
+          const parsed = parsePhoneNumber(phone.number, phone.countryCode || defaultCode, Object.values(countryCodesMap));
+          return {
+            ...phone,
+            countryCode: parsed.countryCode || defaultCode,
+            number: parsed.number || phone.number,
+          };
+        });
+      }
+
+      return {
+        ...base,
+        phones,
+      };
     });
   }, [rawContacts, showDeletedArchives, prefs?.defaultCountry, countryCodesMap]);
 
@@ -223,8 +235,10 @@ export function useContactsPageState({
       let av: string | number = "";
       let bv: string | number = "";
 
-      av = typeof a[sortField] === "number" ? (a[sortField] as number) : String(a[sortField] || "").toLowerCase();
-      bv = typeof b[sortField] === "number" ? (b[sortField] as number) : String(b[sortField] || "").toLowerCase();
+      const recA = a as Record<string, unknown>;
+      const recB = b as Record<string, unknown>;
+      av = typeof recA[sortField] === "number" ? (recA[sortField] as number) : String(recA[sortField] || "").toLowerCase();
+      bv = typeof recB[sortField] === "number" ? (recB[sortField] as number) : String(recB[sortField] || "").toLowerCase();
 
       if (typeof av === "number" && typeof bv === "number") {
         return sortDir === "asc" ? av - bv : bv - av;
