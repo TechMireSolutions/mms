@@ -251,19 +251,29 @@ const normalizeContactForEdit = (
     lastName = parts.slice(1).join(" ");
   }
 
-  // 2. Phones resolution (array of strings or objects)
+  // 2. Phones resolution (array of strings or objects, plus legacy scalar phone)
   let phones: PhoneNumber[] = Array.isArray(merged.phones)
     ? merged.phones.map((item, idx) => normalizePhoneItem(item, idx))
     : [];
+
+  const scalarPhone = typeof (merged as Record<string, unknown>).phone === "string" ? String((merged as Record<string, unknown>).phone).trim() : "";
+  if (scalarPhone && !phones.some((p) => (p.number || "").trim() === scalarPhone)) {
+    phones.unshift(normalizePhoneItem(scalarPhone, 0));
+  }
 
   if (phones.length === 0) {
     phones = [{ label: "Mobile", number: "", countryCode: "+92", isPrimary: true }];
   }
 
-  // 3. Emails resolution (array of strings or objects)
+  // 3. Emails resolution (array of strings or objects, plus legacy scalar email)
   let emails: EmailAddress[] = Array.isArray(merged.emails)
     ? merged.emails.map((item, idx) => normalizeEmailItem(item, idx))
     : [];
+
+  const scalarEmail = typeof (merged as Record<string, unknown>).email === "string" ? String((merged as Record<string, unknown>).email).trim() : "";
+  if (scalarEmail && !emails.some((e) => (e.address || "").trim().toLowerCase() === scalarEmail.toLowerCase())) {
+    emails.unshift(normalizeEmailItem(scalarEmail, 0));
+  }
 
   if (emails.length === 0) {
     emails = [{ label: "Personal", address: "", isPrimary: true }];
@@ -674,7 +684,59 @@ export default function ContactForm({
             </Field>
           )}
 
-          {/* Removed Primary Phone and Primary Email shortcuts from Basic Info tab in favor of dedicated Phones and Emails tabs */}
+          <Field
+            label={t("contacts.reportFields.phone")}
+            id="primaryPhone"
+          >
+            <div className="relative flex items-center group/input">
+              <Phone className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+              <Input
+                id="primaryPhone"
+                name="primaryPhone"
+                type="tel"
+                value={(contactDraft.phones || [])[0]?.number || ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const current = [...(contactDraft.phones || [])];
+                  if (current.length === 0) {
+                    current.push({ label: "Mobile", number: val, countryCode: "+92", isPrimary: true });
+                  } else {
+                    current[0] = { ...current[0], number: val };
+                  }
+                  updateDraft({ phones: current });
+                }}
+                placeholder={t("contacts.form.phoneNumberPlaceholder")}
+                className="pl-10"
+              />
+            </div>
+          </Field>
+
+          <Field
+            label={t("contacts.reportFields.email")}
+            id="primaryEmail"
+          >
+            <div className="relative flex items-center group/input">
+              <Mail className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+              <Input
+                id="primaryEmail"
+                name="primaryEmail"
+                type="email"
+                value={(contactDraft.emails || [])[0]?.address || ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const current = [...(contactDraft.emails || [])];
+                  if (current.length === 0) {
+                    current.push({ label: "Personal", address: val, isPrimary: true });
+                  } else {
+                    current[0] = { ...current[0], address: val };
+                  }
+                  updateDraft({ emails: current });
+                }}
+                placeholder="e.g. name@domain.com"
+                className="pl-10"
+              />
+            </div>
+          </Field>
 
           {isFieldEnabled("basic", "gender") && (
             <Field

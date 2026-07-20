@@ -396,12 +396,15 @@ export function normalizeToE164(countryCode: string, number: string): string {
  */
 export function getPrimaryPhone(contact: Partial<Contact>): string | null {
   const phone = (contact.phones || [])[0];
-  if (!phone) return null;
-  const code = phone.countryCode ? phone.countryCode.trim() : "";
-  const phoneNumber = phone.number ? phone.number.trim() : "";
-  if (!code) return phoneNumber || null;
-  if (phoneNumber.startsWith("+") || phoneNumber.startsWith(code)) return phoneNumber;
-  return `${code} ${phoneNumber}`.trim() || null;
+  if (phone && (phone.number || "").trim().length > 0) {
+    const code = phone.countryCode ? phone.countryCode.trim() : "";
+    const phoneNumber = phone.number ? phone.number.trim() : "";
+    if (!code) return phoneNumber || null;
+    if (phoneNumber.startsWith("+") || phoneNumber.startsWith(code)) return phoneNumber;
+    return `${code} ${phoneNumber}`.trim() || null;
+  }
+  const scalarPhone = (contact as Record<string, unknown>).phone;
+  return typeof scalarPhone === "string" && scalarPhone.trim().length > 0 ? scalarPhone.trim() : null;
 }
 
 /**
@@ -410,7 +413,12 @@ export function getPrimaryPhone(contact: Partial<Contact>): string | null {
  * @returns Primary email address or null.
  */
 export function getPrimaryEmail(contact: Partial<Contact>): string | null {
-  return (contact.emails || [])[0]?.address || null;
+  const emailObj = (contact.emails || [])[0];
+  if (emailObj && (emailObj.address || "").trim().length > 0) {
+    return emailObj.address.trim();
+  }
+  const scalarEmail = (contact as Record<string, unknown>).email;
+  return typeof scalarEmail === "string" && scalarEmail.trim().length > 0 ? scalarEmail.trim() : null;
 }
 
 /**
