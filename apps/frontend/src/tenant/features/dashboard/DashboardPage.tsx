@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Pencil, Trash2, Plus } from 'lucide-react';
-import { type Permission, formatDateToIso } from '@mms/shared';
-import type { Invoice } from '@/lib/data/financeData';
+import { type Permission, formatDateToIso, getCollectedAmountForMonth, getOutstandingAmountForMonth } from '@mms/shared';
 import type { Distribution } from '@/lib/data/hasanatData';
 import type { Session } from '@/lib/data/sessionsData';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
@@ -39,41 +38,6 @@ function getAttendanceRateForDate(records: AttendanceRecord[], dateStr: string):
   if (dayRecords.length === 0) return null;
   const present = dayRecords.filter((r) => r.status === "present" || r.status === "late").length;
   return (present / dayRecords.length) * 100;
-}
-
-function getCollectedAmountForMonth(invoices: Invoice[], year: number, month: number): number {
-  let sum = 0;
-  invoices.forEach((inv) => {
-    if (!inv || inv.status === "cancelled") return;
-    const dateStr = inv.paidDate || inv.dueDate || "";
-    if (!dateStr) return;
-    const invYear = Number(dateStr.slice(0, 4));
-    const invMonth = Number(dateStr.slice(5, 7)) - 1;
-    if (invYear === year && invMonth === month) {
-      if (inv.status === "paid") {
-        sum += inv.finalAmt;
-      } else if (inv.status === "partial") {
-        sum += inv.paidAmt || 0;
-      }
-    }
-  });
-  return sum;
-}
-
-function getOutstandingAmountForMonth(invoices: Invoice[], year: number, month: number): number {
-  let sum = 0;
-  invoices.forEach((inv) => {
-    if (!inv || inv.status === "cancelled" || inv.status === "paid") return;
-    const dateStr = inv.dueDate || "";
-    if (!dateStr) return;
-    const invYear = Number(dateStr.slice(0, 4));
-    const invMonth = Number(dateStr.slice(5, 7)) - 1;
-    if (invYear === year && invMonth === month) {
-      const outstanding = inv.status === "partial" ? (inv.finalAmt - (inv.paidAmt || 0)) : inv.finalAmt;
-      sum += outstanding;
-    }
-  });
-  return sum;
 }
 
 function getHasanatPointsInPeriod(

@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import { KPI_TONE } from "@/lib/semanticTone";
 
 export interface SectionCardProps {
   title?: React.ReactNode;
@@ -31,11 +32,15 @@ export function SectionCard({
       {hasHeader && (
         <div className={cn("flex items-center justify-between px-5 py-3.5 border-b border-border/40 bg-muted/20 rounded-t-2xl", accentColor && "ps-6.5")}>
           <div className="flex items-center gap-2.5">
-            {Icon && (
-              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10">
-                <Icon className="h-3.5 w-3.5 text-primary" />
-              </div>
-            )}
+            {Icon && (() => {
+              const resolvedAccent = accentColor === "emerald" ? "success" : accentColor === "rose" ? "destructive" : accentColor === "amber" ? "warning" : accentColor === "indigo" ? "primary" : accentColor;
+              const tone = KPI_TONE[resolvedAccent as keyof typeof KPI_TONE] || KPI_TONE.primary;
+              return (
+                <div className={cn("flex h-6 w-6 items-center justify-center rounded-lg", tone.bg)}>
+                  <Icon className={cn("h-3.5 w-3.5", tone.text)} />
+                </div>
+              );
+            })()}
             <div>
               {title && <h3 className="text-[13px] font-bold text-foreground">{title}</h3>}
               {subtitle && <p className="text-[11px] text-muted-foreground">{subtitle}</p>}

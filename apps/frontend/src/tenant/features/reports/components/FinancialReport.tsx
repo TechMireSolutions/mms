@@ -36,7 +36,7 @@ interface FinancialReportProps {
   onEditVisual?: (config: unknown) => void;
 }
 
-import { formatMonthYear, formatDate } from "@mms/shared";
+import { formatMonthYear, formatDate, getCollectedAmountForInvoice, getOutstandingAmountForInvoice } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 const STATUS_COLOR: Record<InvoiceStatus, string> = {
@@ -76,15 +76,8 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
       if (!monthlyTotals[monthLabel]) monthlyTotals[monthLabel] = { collected: 0, outstanding: 0, total: 0 };
       
       monthlyTotals[monthLabel].total += invoice.finalAmt;
-      if (invoice.status === "paid") {
-        monthlyTotals[monthLabel].collected += invoice.finalAmt;
-      } else if (invoice.status === "partial") {
-        const paidAmount = invoice.paidAmt !== undefined ? invoice.paidAmt : Math.round(invoice.finalAmt / 2);
-        monthlyTotals[monthLabel].collected += paidAmount;
-        monthlyTotals[monthLabel].outstanding += (invoice.finalAmt - paidAmount);
-      } else if (invoice.status !== "cancelled") {
-        monthlyTotals[monthLabel].outstanding += invoice.finalAmt;
-      }
+      monthlyTotals[monthLabel].collected += getCollectedAmountForInvoice(invoice);
+      monthlyTotals[monthLabel].outstanding += getOutstandingAmountForInvoice(invoice);
     });
 
     return Object.entries(monthlyTotals).map(([month, monthTotals]) => ({

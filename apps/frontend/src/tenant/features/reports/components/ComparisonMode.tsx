@@ -26,7 +26,7 @@ import type { AttendanceRecord } from "@/lib/data/attendanceData";
 import type { Invoice } from "@/lib/data/financeData";
 import type { Distribution, Denomination } from "@/lib/data/hasanatData";
 import type { Exam, ExamResult } from "@/lib/data/examinationData";
-import { getDenominationPoints, type AppTranslationKey } from "@mms/shared";
+import { getDenominationPoints, getCollectedAmountForInvoice, type AppTranslationKey } from "@mms/shared";
 import { formatDate } from "@/lib/db";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 
@@ -87,11 +87,7 @@ function computeDynamicSessionComparison(
     const sessionInvoices = financeInvoices.filter((invoice) => invoice.session === sessionId || invoice.session === sessionName);
     let feeCollected = 0;
     sessionInvoices.forEach((invoice) => {
-      if (invoice.status === "paid") {
-        feeCollected += invoice.finalAmt;
-      } else if (invoice.status === "partial") {
-        feeCollected += invoice.paidAmt !== undefined ? invoice.paidAmt : Math.round(invoice.finalAmt / 2);
-      }
+      feeCollected += getCollectedAmountForInvoice(invoice);
     });
 
     const sessionExams = exams.filter((exam) => exam.classIds && exam.classIds.some((classId: string) => classIds.has(classId)));
@@ -164,12 +160,7 @@ function computeDynamicDateRangeComparison(
 
   if (lowerCat === "financial") {
     financeInvoices.forEach((invoice) => {
-      let paid = 0;
-      if (invoice.status === "paid") {
-        paid = invoice.finalAmt;
-      } else if (invoice.status === "partial") {
-        paid = invoice.paidAmt !== undefined ? invoice.paidAmt : Math.round(invoice.finalAmt / 2);
-      }
+      const paid = getCollectedAmountForInvoice(invoice);
 
       if (inRange(invoice.dueDate, rangeA.from, rangeA.to)) {
         const monthIndex = getMonthIndex(invoice.dueDate);

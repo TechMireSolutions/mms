@@ -396,14 +396,6 @@ function ProgressRing({
   );
 }
 
-const ACCENT_BAR_MAP: Record<string, string> = {
-  emerald: "bg-success",
-  blue: "bg-info",
-  violet: "bg-primary",
-  amber: "bg-warning",
-  red: "bg-destructive",
-};
-
 /**
  * Render interface resolving dynamic card visualizations.
  */
@@ -579,8 +571,8 @@ function CustomWidgetRenderer({
         transition={{ type: "spring", stiffness: 350, damping: 25 }}
         className="rounded-2xl surface-glass p-5 hover:shadow-surface-lg transition-all relative text-left flex flex-col justify-between min-h-[140px] font-sans overflow-hidden group"
       >
-        <div className={`absolute start-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] ${ACCENT_BAR_MAP[computed.color || "violet"] || "bg-primary"}/60 group-hover:${ACCENT_BAR_MAP[computed.color || "violet"] || "bg-primary"} transition-colors duration-300`} />
-        <div className={`absolute -right-8 -top-8 w-20 h-20 rounded-full ${computed.color === 'emerald' ? 'bg-success/5 blur-lg group-hover:bg-success/10' : computed.color === 'blue' ? 'bg-info/5 blur-lg group-hover:bg-info/10' : computed.color === 'violet' ? 'bg-primary/5 blur-lg group-hover:bg-primary/10' : computed.color === 'amber' ? 'bg-warning/5 blur-lg group-hover:bg-warning/10' : 'bg-destructive/5 blur-lg group-hover:bg-destructive/10'} transition-all duration-500`} />
+        <div className={`absolute start-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] ${colorClasses.bar}/60 group-hover:${colorClasses.bar} transition-colors duration-300`} />
+        <div className={`absolute -right-8 -top-8 w-20 h-20 rounded-full ${colorClasses.glow} transition-all duration-500`} />
         <div className="flex items-start justify-between">
           <div className={`w-9 h-9 rounded-lg ${colorClasses.bg} ring-4 ${colorClasses.ring} flex items-center justify-center aspect-square flex-shrink-0`}>
             <Icon className={`w-4.5 h-4.5 ${colorClasses.text}`} style={{ width: 18, height: 18 }} />
@@ -825,6 +817,8 @@ function CustomWidgetRenderer({
     );
   }
 
+  const colorTheme = COLOR_MAP[widget.color || ""] || COLOR_MAP.emerald;
+
   return (
     <motion.div
       layout
@@ -839,13 +833,13 @@ function CustomWidgetRenderer({
       <div className={`absolute start-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] ${
         isAlert
           ? "bg-destructive"
-          : ACCENT_BAR_MAP[widget.color || "violet"] || "bg-primary"
+          : colorTheme.bar
       }/60 group-hover:${
         isAlert
           ? "bg-destructive"
-          : ACCENT_BAR_MAP[widget.color || "violet"] || "bg-primary"
+          : colorTheme.bar
       } transition-colors duration-300`} />
-      <div className={`absolute -right-8 -top-8 w-24 h-24 rounded-full ${widget.color === 'emerald' ? 'bg-success/5 blur-xl group-hover:bg-success/10' : widget.color === 'blue' ? 'bg-info/5 blur-xl group-hover:bg-info/10' : widget.color === 'violet' ? 'bg-primary/5 blur-xl group-hover:bg-primary/10' : widget.color === 'amber' ? 'bg-warning/5 blur-xl group-hover:bg-warning/10' : 'bg-destructive/5 blur-xl group-hover:bg-destructive/10'} transition-all duration-500`} />
+      <div className={`absolute -right-8 -top-8 w-24 h-24 rounded-full ${colorTheme.glow} transition-all duration-500`} />
       {/* Widget Card Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-0.5 text-left">

@@ -119,7 +119,7 @@ export default function StatsGrid({
             accentColor={accent}
             className="p-4.5 md:p-5 px-5.5 flex flex-col justify-between"
           >
-            <div className={`absolute -right-8 -top-8 w-24 h-24 rounded-full ${statItem.color === 'emerald' ? 'bg-success/5 blur-xl group-hover:bg-success/10' : statItem.color === 'blue' ? 'bg-info/5 blur-xl group-hover:bg-info/10' : statItem.color === 'violet' ? 'bg-primary/5 blur-xl group-hover:bg-primary/10' : statItem.color === 'amber' ? 'bg-warning/5 blur-xl group-hover:bg-warning/10' : 'bg-destructive/5 blur-xl group-hover:bg-destructive/10'} transition-all duration-500`} />
+            <div className={`absolute -right-8 -top-8 w-24 h-24 rounded-full ${colorTheme.glow} transition-all duration-500`} />
             
             <header className="flex items-start justify-between mb-3 select-none">
               <div

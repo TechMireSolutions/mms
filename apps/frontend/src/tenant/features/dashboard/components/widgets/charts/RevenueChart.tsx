@@ -23,6 +23,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
 import { getRecentMonthsList } from "@/lib/utils";
+import { getCollectedAmountForInvoice } from "@mms/shared";
 
 interface RevenuePoint {
   month: string;
@@ -110,11 +111,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
           if (!invoice || invoice.status === "cancelled") return;
           const invoiceMonth = (invoice.paidDate || invoice.dueDate || "").slice(0, 7);
           if (invoiceMonth === monthDefinition.key) {
-            if (invoice.status === "paid") {
-              revenue += Number(invoice.finalAmt || 0);
-            } else if (invoice.status === "partial") {
-              revenue += Number(invoice.paidAmt || 0);
-            }
+            revenue += getCollectedAmountForInvoice(invoice);
           }
         });
         expenses = invoices.length > 0 ? Math.round(revenue * 0.6) : 0;

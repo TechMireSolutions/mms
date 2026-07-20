@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { motion } from "framer-motion";
+import { getOutstandingAmountForInvoice } from "@mms/shared";
 import { AlertCircle, Phone, Send } from "lucide-react";
 import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -55,7 +56,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
     return unpaidInvoices.map((invoice) => {
       const student = students.find((studentOption) => String(studentOption.id) === String(invoice.studentId));
       const contact = student?.phone || "";
-      const amount = invoice.status === "partial" ? (invoice.finalAmt - (invoice.paidAmt || 0)) : invoice.finalAmt;
+      const amount = getOutstandingAmountForInvoice(invoice);
 
       const due = new Date(invoice.dueDate);
       const now = new Date();

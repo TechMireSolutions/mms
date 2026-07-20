@@ -73,12 +73,12 @@ const ALERT_COLOR_MAP: Record<string, { bg: string; text: string; border: string
   }
 };
 
-const COLOR_MAP: Record<string, { bg: string; text: string; ring: string }> = {
-  emerald: { bg: "bg-success/10", text: "text-success", ring: "ring-success/20" },
-  blue:    { bg: "bg-info/10",    text: "text-info",    ring: "ring-info/20"    },
-  violet:  { bg: "bg-primary/10",  text: "text-primary",  ring: "ring-primary/20"  },
-  amber:   { bg: "bg-warning/10",   text: "text-warning",   ring: "ring-warning/20"   },
-  red:     { bg: "bg-destructive/10",     text: "text-destructive",     ring: "ring-destructive/20"     },
+const COLOR_MAP: Record<string, { bg: string; text: string; ring: string; glow: string; bar: string }> = {
+  emerald: { bg: "bg-success/10", text: "text-success", ring: "ring-success/20", glow: "bg-success/5 blur-xl group-hover:bg-success/10", bar: "bg-success" },
+  blue:    { bg: "bg-info/10",    text: "text-info",    ring: "ring-info/20",    glow: "bg-info/5 blur-xl group-hover:bg-info/10",       bar: "bg-info"    },
+  violet:  { bg: "bg-primary/10",  text: "text-primary",  ring: "ring-primary/20",  glow: "bg-primary/5 blur-xl group-hover:bg-primary/10",  bar: "bg-primary" },
+  amber:   { bg: "bg-warning/10",   text: "text-warning",   ring: "ring-warning/20",   glow: "bg-warning/5 blur-xl group-hover:bg-warning/10",   bar: "bg-warning" },
+  red:     { bg: "bg-destructive/10",     text: "text-destructive",     ring: "ring-destructive/20",     glow: "bg-destructive/5 blur-xl group-hover:bg-destructive/10", bar: "bg-destructive" },
 };
 
 const ICONS_LIST: Record<string, React.ElementType> = {

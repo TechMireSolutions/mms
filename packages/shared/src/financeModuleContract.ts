@@ -74,3 +74,85 @@ export const FINANCE_MODULE_CONTRACT = {
 
 export type FinanceModuleTier = (typeof FINANCE_MODULE_CONTRACT.tiers)[number];
 
+/**
+ * Calculates the collected amount for a single invoice.
+ * Handles "paid" (returns finalAmt) and "partial" (returns paidAmt or 50% default fallback).
+ *
+ * @param invoice - The invoice record.
+ * @returns The collected amount.
+ */
+export function getCollectedAmountForInvoice(invoice: Invoice): number {
+  if (invoice.status === "paid") {
+    return invoice.finalAmt;
+  }
+  if (invoice.status === "partial") {
+    return invoice.paidAmt !== undefined ? invoice.paidAmt : Math.round(invoice.finalAmt / 2);
+  }
+  return 0;
+}
+
+/**
+ * Calculates the outstanding amount for a single invoice.
+ * Handles unpaid/uncollected balances for pending, partial, or overdue invoices.
+ *
+ * @param invoice - The invoice record.
+ * @returns The outstanding amount.
+ */
+export function getOutstandingAmountForInvoice(invoice: Invoice): number {
+  if (invoice.status === "cancelled" || invoice.status === "paid") {
+    return 0;
+  }
+  if (invoice.status === "partial") {
+    const paid = invoice.paidAmt !== undefined ? invoice.paidAmt : Math.round(invoice.finalAmt / 2);
+    return Math.max(0, invoice.finalAmt - paid);
+  }
+  return invoice.finalAmt;
+}
+
+/**
+ * Calculates the total collected amount from invoices for a specific month and year.
+ *
+ * @param invoices - The list of invoices to aggregate.
+ * @param year - The year (e.g. 2026).
+ * @param month - The month index (0-11, e.g. 0 for January).
+ * @returns The total collected amount.
+ */
+export function getCollectedAmountForMonth(invoices: Invoice[], year: number, month: number): number {
+  let sum = 0;
+  invoices.forEach((inv) => {
+    if (!inv || inv.status === "cancelled") return;
+    const dateStr = inv.paidDate || inv.dueDate || "";
+    if (!dateStr) return;
+    const invYear = Number(dateStr.slice(0, 4));
+    const invMonth = Number(dateStr.slice(5, 7)) - 1;
+    if (invYear === year && invMonth === month) {
+      sum += getCollectedAmountForInvoice(inv);
+    }
+  });
+  return sum;
+}
+
+/**
+ * Calculates the total outstanding amount from invoices for a specific month and year.
+ *
+ * @param invoices - The list of invoices to aggregate.
+ * @param year - The year (e.g. 2026).
+ * @param month - The month index (0-11, e.g. 0 for January).
+ * @returns The total outstanding amount.
+ */
+export function getOutstandingAmountForMonth(invoices: Invoice[], year: number, month: number): number {
+  let sum = 0;
+  invoices.forEach((inv) => {
+    if (!inv || inv.status === "cancelled" || inv.status === "paid") return;
+    const dateStr = inv.dueDate || "";
+    if (!dateStr) return;
+    const invYear = Number(dateStr.slice(0, 4));
+    const invMonth = Number(dateStr.slice(5, 7)) - 1;
+    if (invYear === year && invMonth === month) {
+      sum += getOutstandingAmountForInvoice(inv);
+    }
+  });
+  return sum;
+}
+
+
