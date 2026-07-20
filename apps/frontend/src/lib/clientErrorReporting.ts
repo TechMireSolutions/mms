@@ -7,9 +7,6 @@ import { isApiError } from '@/lib/apiClient';
 export function initErrorReporting(): void {
   const dsn = (import.meta.env.VITE_SENTRY_DSN as string | undefined) || (window as unknown as { _MMS_SENTRY_DSN?: string })._MMS_SENTRY_DSN;
   if (!dsn) {
-    if (import.meta.env.DEV) {
-      console.info('[MMS] Sentry DSN not found. Client error reporting running in console-only mode.');
-    }
     return;
   }
 
