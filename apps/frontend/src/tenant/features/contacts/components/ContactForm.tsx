@@ -121,6 +121,137 @@ const CONTACT_TABS = [
 
 type TabKey = (typeof CONTACT_TABS)[number]["key"];
 
+const normalizeContactForEdit = (
+  raw: Partial<Contact> | undefined,
+  initialDraft: Partial<Contact> | undefined,
+  defaultCity: string,
+  defaultProvince: string,
+  defaultCountry: string,
+): Partial<Contact> => {
+  const merged: Partial<Contact> = {
+    firstName: "",
+    lastName: "",
+    name: "",
+    gender: "",
+    dob: "",
+    cnic: "",
+    isSyed: false,
+    notes: "",
+    phones: [],
+    emails: [],
+    addresses: [],
+    socials: [],
+    emergencyContacts: [],
+    relationships: [],
+    ...initialDraft,
+    ...raw,
+  };
+
+  // 1. First Name / Last Name resolution from name if unpopulated
+  let firstName = (merged.firstName || "").trim();
+  let lastName = (merged.lastName || "").trim();
+  const fullName = (merged.name || "").trim();
+
+  if (!firstName && fullName) {
+    const parts = fullName.split(" ").filter(Boolean);
+    firstName = parts[0] || "";
+    lastName = parts.slice(1).join(" ");
+  }
+
+  // 2. Phones resolution (convert scalar phone -> phones array if empty)
+  let phones: PhoneNumber[] = Array.isArray(merged.phones) && merged.phones.length > 0
+    ? merged.phones.map((p) => ({ ...p }))
+    : [];
+
+  const scalarPhone = typeof merged.phone === "string" ? merged.phone.trim() : "";
+  if (scalarPhone && !phones.some((p) => (p.number || "").trim() === scalarPhone)) {
+    const parsed = parsePhoneEntry({ label: "Mobile", number: scalarPhone, countryCode: "+92" });
+    phones.unshift({
+      label: "Mobile",
+      number: parsed.number || scalarPhone,
+      countryCode: parsed.countryCode || "+92",
+    });
+  }
+
+  if (phones.length === 0) {
+    phones = [{ label: "Mobile", number: "", countryCode: "+92" }];
+  } else {
+    phones = phones.map((p) => {
+      const parsed = parsePhoneEntry(p);
+      return { ...p, countryCode: p.countryCode || parsed.countryCode || "+92", number: p.number || parsed.number };
+    });
+  }
+
+  // 3. Emails resolution (convert scalar email -> emails array if empty)
+  let emails: EmailAddress[] = Array.isArray(merged.emails) && merged.emails.length > 0
+    ? merged.emails.map((e) => ({ ...e }))
+    : [];
+
+  const scalarEmail = typeof merged.email === "string" ? merged.email.trim() : "";
+  if (scalarEmail && !emails.some((e) => (e.address || "").trim().toLowerCase() === scalarEmail.toLowerCase())) {
+    emails.unshift({ label: "Personal", address: scalarEmail });
+  }
+
+  if (emails.length === 0) {
+    emails = [{ label: "Personal", address: "" }];
+  }
+
+  // 4. Addresses resolution (convert scalar address fields -> addresses array if empty)
+  let addresses: Address[] = Array.isArray(merged.addresses) && merged.addresses.length > 0
+    ? merged.addresses.map((a) => ({ ...a }))
+    : [];
+
+  const scalarLine1 = (merged.line1 as string || merged.address as string || "").trim();
+  const scalarCity = (merged.city as string || "").trim();
+  const scalarState = (merged.state as string || "").trim();
+  const scalarCountry = (merged.country as string || "").trim();
+
+  if ((scalarLine1 || scalarCity || scalarState || scalarCountry) && addresses.length === 0) {
+    addresses = [
+      {
+        label: "Home",
+        line1: scalarLine1,
+        city: scalarCity || defaultCity,
+        state: scalarState || defaultProvince,
+        country: scalarCountry || defaultCountry,
+      },
+    ];
+  }
+
+  if (addresses.length === 0) {
+    addresses = [
+      {
+        label: "Home",
+        line1: "",
+        city: defaultCity,
+        state: defaultProvince,
+        country: defaultCountry,
+      },
+    ];
+  }
+
+  // 5. Socials & Emergency Contacts
+  const socials: SocialLink[] = Array.isArray(merged.socials) && merged.socials.length > 0
+    ? merged.socials.map((s) => ({ ...s }))
+    : [{ platform: "WhatsApp", url: "" }];
+
+  const emergencyContacts: EmergencyContact[] = Array.isArray(merged.emergencyContacts) && merged.emergencyContacts.length > 0
+    ? merged.emergencyContacts.map((ec) => ({ ...ec }))
+    : [{ relationship: "Father", contactId: "" }];
+
+  return {
+    ...merged,
+    firstName,
+    lastName,
+    name: fullName || [firstName, lastName].filter(Boolean).join(" "),
+    phones,
+    emails,
+    addresses,
+    socials,
+    emergencyContacts,
+  };
+};
+
 export default function ContactForm({
   open = true,
   contact,
@@ -165,118 +296,16 @@ export default function ContactForm({
     return localIdMap.current.get(key)!;
   };
 
-  const [contactDraft, setContactDraft] = useState<Partial<Contact>>(() => {
-    const initial: Partial<Contact> = {
-      firstName: "",
-      lastName: "",
-      name: "",
-      gender: "",
-      dob: "",
-      cnic: "",
-      isSyed: false,
-      notes: "",
-      phones: [],
-      emails: [],
-      addresses: [],
-      socials: [],
-      emergencyContacts: [],
-      relationships: [],
-      ...initialDraft,
-      ...contact,
-    };
-
-    // Normalize phones at init
-    if (initial.phones) {
-      initial.phones = initial.phones.map((phone) => {
-        if (phone.countryCode) return phone;
-        const parsed = parsePhoneEntry(phone);
-        return { ...phone, countryCode: parsed.countryCode, number: parsed.number };
-      });
-    }
-
-    // Auto-populate 1 empty row for lists if they are empty
-    if (!initial.phones || initial.phones.length === 0) {
-      initial.phones = [{ label: "Mobile", number: "", countryCode: "+92" }];
-    }
-    if (!initial.emails || initial.emails.length === 0) {
-      initial.emails = [{ label: "Personal", address: "" }];
-    }
-    if (!initial.addresses || initial.addresses.length === 0) {
-      initial.addresses = [
-        {
-          label: "Home",
-          line1: "",
-          city: defaultCity,
-          state: defaultProvince,
-          country: defaultCountry,
-        },
-      ];
-    }
-    if (!initial.socials || initial.socials.length === 0) {
-      initial.socials = [{ platform: "WhatsApp", url: "" }];
-    }
-    if (!initial.emergencyContacts || initial.emergencyContacts.length === 0) {
-      initial.emergencyContacts = [{ relationship: "Father", contactId: "" }];
-    }
-
-    return initial;
-  });
+  const [contactDraft, setContactDraft] = useState<Partial<Contact>>(() =>
+    normalizeContactForEdit(contact, initialDraft, defaultCity, defaultProvince, defaultCountry),
+  );
 
   // Re-sync draft when editing another contact or re-opening modal
   React.useEffect(() => {
     if (!open) return;
-    const initial: Partial<Contact> = {
-      firstName: "",
-      lastName: "",
-      name: "",
-      gender: "",
-      dob: "",
-      cnic: "",
-      isSyed: false,
-      notes: "",
-      phones: [],
-      emails: [],
-      addresses: [],
-      socials: [],
-      emergencyContacts: [],
-      relationships: [],
-      ...initialDraft,
-      ...contact,
-    };
-
-    if (initial.phones) {
-      initial.phones = initial.phones.map((phone) => {
-        if (phone.countryCode) return phone;
-        const parsed = parsePhoneEntry(phone);
-        return { ...phone, countryCode: parsed.countryCode, number: parsed.number };
-      });
-    }
-
-    if (!initial.phones || initial.phones.length === 0) {
-      initial.phones = [{ label: "Mobile", number: "", countryCode: "+92" }];
-    }
-    if (!initial.emails || initial.emails.length === 0) {
-      initial.emails = [{ label: "Personal", address: "" }];
-    }
-    if (!initial.addresses || initial.addresses.length === 0) {
-      initial.addresses = [
-        {
-          label: "Home",
-          line1: "",
-          city: defaultCity,
-          state: defaultProvince,
-          country: defaultCountry,
-        },
-      ];
-    }
-    if (!initial.socials || initial.socials.length === 0) {
-      initial.socials = [{ platform: "WhatsApp", url: "" }];
-    }
-    if (!initial.emergencyContacts || initial.emergencyContacts.length === 0) {
-      initial.emergencyContacts = [{ relationship: "Father", contactId: "" }];
-    }
-
-    setContactDraft(initial);
+    setContactDraft(
+      normalizeContactForEdit(contact, initialDraft, defaultCity, defaultProvince, defaultCountry),
+    );
     setValidationErrors([]);
   }, [open, contact, initialDraft, defaultCity, defaultProvince, defaultCountry]);
 
