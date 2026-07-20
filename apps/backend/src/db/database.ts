@@ -457,13 +457,15 @@ export async function resetTenantData(): Promise<void> {
 export async function resetDatabase(): Promise<void> {
   try {
     const db = activeDb();
-    await db.execute(sql`DROP TABLE IF EXISTS tenant_users CASCADE;`);
-    await db.execute(sql`DROP TABLE IF EXISTS platform_users CASCADE;`);
-    await db.execute(sql`DROP TABLE IF EXISTS auth_artifacts CASCADE;`);
-    await db.execute(sql`DROP TABLE IF EXISTS collections CASCADE;`);
-    await db.execute(sql`DROP TABLE IF EXISTS objects CASCADE;`);
-    await db.execute(sql`DROP TABLE IF EXISTS data_migrations CASCADE;`);
-    await db.execute(sql`DROP TABLE IF EXISTS __drizzle_migrations CASCADE;`);
+    await db.execute(sql`
+      DO $$ DECLARE
+          r RECORD;
+      BEGIN
+          FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+              EXECUTE 'DROP TABLE IF EXISTS public.' || quote_ident(r.tablename) || ' CASCADE';
+          END LOOP;
+      END $$;
+    `);
     await db.execute(sql`DROP SCHEMA IF EXISTS drizzle CASCADE;`);
     await initDb();
   } catch (error) {
