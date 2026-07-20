@@ -9,6 +9,7 @@ import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { Modal } from "@/components/ui/Modal";
+import { ActionButton } from "@/components/ui/ActionButton";
 import ExamsList from "@/tenant/features/examinations/components/ExamsList";
 import ExamForm from "@/tenant/features/examinations/components/ExamForm";
 import { EnterMarks } from "@/tenant/features/examinations/components/EnterMarks";
@@ -91,14 +92,13 @@ export default function Examinations(): React.JSX.Element {
       headerTitle={t("nav.examinations")}
       headerSubtitle={t("page.examinations.subtitle")}
       headerActions={
-        <button
-          type="button"
+        <ActionButton
+          variant="ghost"
+          icon={PenTool}
           onClick={() => setShowMarksModal(true)}
-          className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
         >
-          <PenTool className="h-3.5 w-3.5" />
           {t("examinations.marks")}
-        </button>
+        </ActionButton>
       }
       metricsStrip={
         <ExaminationsCommandMetrics total={exams.length} shown={filteredCount} />

@@ -333,7 +333,7 @@ export function JournalEntries({
                     const isMoneyIn = (entry.tags || []).some((tag) => ["Fees","Donation","Capital"].includes(tag)) || ["fee_collection","donation","rent_income","other_income"].includes(entry.transaction_type || "");
                     return (
                       <article key={entry.id} className="relative overflow-hidden group/entry flex items-center gap-4 px-5 py-3 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm hover:bg-muted/20 transition-all duration-300">
-                        <div className={`absolute left-0 top-0 bottom-0 w-1 ${isMoneyIn ? "bg-success/45 group-hover/entry:bg-success" : "bg-destructive/45 group-hover/entry:bg-destructive"} transition-colors duration-300`} />
+                        <div className={`absolute inset-inline-start-0 top-0 bottom-0 w-1 ${isMoneyIn ? "bg-success/45 group-hover/entry:bg-success" : "bg-destructive/45 group-hover/entry:bg-destructive"} transition-colors duration-300`} />
                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ml-1 ${isMoneyIn ? "bg-success/15" : "bg-destructive/15"}`} aria-hidden="true">
                           {isMoneyIn ? <TrendingUp className="w-4 h-4 text-success" /> : <TrendingUp className="w-4 h-4 text-destructive rotate-180" />}
                         </div>

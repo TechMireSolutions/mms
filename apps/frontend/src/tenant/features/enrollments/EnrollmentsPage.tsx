@@ -18,6 +18,7 @@ import { EnrollmentsSettings } from "@/tenant/features/enrollments/components/En
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Modal } from "@/components/ui/Modal";
+import { ActionButton } from "@/components/ui/ActionButton";
 import { Enrollment } from '@/lib/data/enrollmentData';
 import { useEnrollmentsCollection, useEnrollmentMutations } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import { useStudentMutations, type StudentRecord } from "@/tenant/features/students/hooks/useStudents";
@@ -140,10 +141,13 @@ export default function EnrollmentsPage() {
       headerActions={
         <div className="flex items-center gap-2">
           {canWriteEnrollments && (
-            <button onClick={() => { setTab("work"); setShowWizard(true); }}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
-              <Plus className="w-3.5 h-3.5" /> {t("enrollments.new")}
-            </button>
+            <ActionButton
+              variant="primary"
+              icon={Plus}
+              onClick={() => { setTab("work"); setShowWizard(true); }}
+            >
+              {t("enrollments.new")}
+            </ActionButton>
           )}
         </div>
       }

@@ -104,7 +104,7 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
 
           return (
             <article key={wakalaType.id} className="relative overflow-hidden group/wakala rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-300">
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/wakala:bg-primary" />
+              <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/wakala:bg-primary" />
               {/* Header */}
               <header className="flex items-start justify-between px-5 py-3 border-b border-border/40 pl-5.5">
                 <div>

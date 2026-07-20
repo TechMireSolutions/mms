@@ -219,7 +219,7 @@ export function ExportToolbar({
       
       <div className="flex items-center gap-2">
         {showPdfSettings && (
-          <div className="absolute right-0 bottom-full mb-2 bg-card border border-border rounded-xl p-3 shadow-xl z-50 flex flex-col gap-3 min-w-[200px]">
+          <div className="absolute inset-inline-end-0 bottom-full mb-2 bg-card border border-border rounded-xl p-3 shadow-xl z-50 flex flex-col gap-3 min-w-[200px]">
              <div className="space-y-1.5">
                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.export.orientation")}</label>
                <div className="flex gap-1 p-1 bg-muted rounded-lg">

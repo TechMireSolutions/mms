@@ -117,7 +117,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
       <div className="space-y-5 text-left">
         {invoice && (
           <article className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 px-6 space-y-2 shadow-sm hover:shadow-md transition-all duration-300">
-            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+            <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h4 className="text-[14px] font-bold text-foreground m-0">{invoice.studentName}</h4>
@@ -132,7 +132,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
         )}
 
         <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
+          <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
           <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
             <Coins className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
             <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("finance.paymentDetails")}</h3>
@@ -143,9 +143,11 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
               <Field label={`${t("finance.columns.amount")} (${activeCurrency.code}) *`} error={errors.amount}>
                 <div className="relative flex items-center group/input">
                   <DollarSign className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                  <input
+                  <Input
+                    id="payment-amount-input"
+                    name="amount"
                     type="number"
-                    className={`${FORM_INPUT} pl-10`}
+                    className="pl-10"
                     value={paymentDraft.amount || ""}
                     onChange={(event) => updateDraft({ amount: event.target.value === "" ? 0 : Number(event.target.value) })}
                     max={balance}

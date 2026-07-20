@@ -22,9 +22,9 @@ interface KPIProps {
  */
 function KPI({ icon: Icon, label, value, sub, color = "bg-primary/10 text-primary" }: KPIProps): React.ReactElement {
   return (
-    <Card className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4 pl-5.5 flex items-start gap-3 shadow-sm hover:shadow-md transition-all duration-300">
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover:bg-primary" />
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color} ml-1`}>
+    <Card className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4 ps-5.5 flex items-start gap-3 shadow-sm hover:shadow-md transition-all duration-300">
+      <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover:bg-primary" />
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color} ms-1`}>
         <Icon className="w-4 h-4" aria-hidden="true" />
       </div>
       <div>

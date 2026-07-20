@@ -185,7 +185,7 @@ export function TeacherForm({
   const renderEmployment = () => (
     <div className="space-y-4 text-left">
       <section className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5.5 px-6.5 pb-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
-        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500/60 transition-colors group-hover:bg-indigo-500" />
+        <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1.5 bg-indigo-500/60 transition-colors group-hover:bg-indigo-500" />
         <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
           <Briefcase className="w-4 h-4 text-indigo-500/70 group-hover:text-indigo-500 transition-colors" />
           <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Employment Details</h3>

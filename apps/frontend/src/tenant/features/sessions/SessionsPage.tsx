@@ -12,6 +12,7 @@ import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs
 import { SearchBar } from "@/components/ui/SearchBar";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { ActionButton } from "@/components/ui/ActionButton";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
@@ -71,11 +72,11 @@ function SessionCard({ session, onClick, statusConfig }: SessionCardProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={onClick}
-      className="relative overflow-hidden text-left w-full rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 pl-6.5 hover:shadow-md hover:border-primary/40 transition-all duration-300 group"
+      className="relative overflow-hidden text-start w-full rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-5 ps-6.5 hover:shadow-md hover:border-primary/40 transition-all duration-300 group"
     >
-      <div className={`absolute left-0 top-0 bottom-0 w-1 ${stripeColor} transition-colors duration-300`} />
+      <div className={`absolute inset-inline-start-0 top-0 bottom-0 w-1 ${stripeColor} transition-colors duration-300`} />
       <div className="flex items-start justify-between mb-3">
-        <div className="flex-1 min-w-0 pr-3">
+        <div className="flex-1 min-w-0 pe-3">
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${TYPE_COLORS[session.type as SessionType] ?? "bg-muted text-muted-foreground"}`}>
               {session.type}
@@ -255,10 +256,14 @@ export default function Sessions() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${filterStatus.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-foreground hover:bg-muted"}`}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className={`flex items-center gap-2 px-3.5 min-h-[44px] rounded-xl border text-sm font-medium transition-colors ${filterStatus.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-foreground hover:bg-muted"}`}
+                  >
                     <Filter className="w-3.5 h-3.5" /> Status {filterStatus.length > 0 && <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">{filterStatus.length}</span>}
                     <ChevronDown className="w-3 h-3" />
-                  </button>
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
                   <DropdownMenuLabel className="text-xs">Status</DropdownMenuLabel>
@@ -273,10 +278,14 @@ export default function Sessions() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${filterType.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-foreground hover:bg-muted"}`}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className={`flex items-center gap-2 px-3.5 min-h-[44px] rounded-xl border text-sm font-medium transition-colors ${filterType.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-foreground hover:bg-muted"}`}
+                  >
                     <BookOpen className="w-3.5 h-3.5" /> Type {filterType.length > 0 && <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">{filterType.length}</span>}
                     <ChevronDown className="w-3 h-3" />
-                  </button>
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-44">
                   <DropdownMenuLabel className="text-xs">Type</DropdownMenuLabel>

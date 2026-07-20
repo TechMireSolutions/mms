@@ -11,6 +11,7 @@ import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { useIsAdminViewer } from "@/tenant/hooks/useViewerRole";
@@ -76,22 +77,23 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
         <>
           {/* Timing */}
           <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
-            <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 pl-6.5">
+            <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 ps-6.5">
               <Clock className="w-4 h-4 text-primary" />
               <h2 className="text-sm font-bold text-foreground m-0">Timing Rules</h2>
             </header>
-            <div className="px-4 pl-6.5 pb-2">
+            <div className="px-4 ps-6.5 pb-2">
               <SettingRow label="Late Threshold" sub="Students arriving after this many minutes are marked Late">
                 <div className="flex items-center gap-2">
                   <label htmlFor="setting-late-threshold" className="sr-only">Late Threshold Minutes</label>
-                  <input 
+                  <Input 
                     id="setting-late-threshold"
+                    name="lateThresholdMins"
                     type="number" 
                     min={1} 
                     max={60} 
                     value={settingsDraft.lateThresholdMins || ""}
                     onChange={(event) => upd("lateThresholdMins", Number(event.target.value))}
-                    className="w-16 text-sm text-center rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20" 
+                    className="w-16 text-sm text-center" 
                   />
                   <span className="text-xs text-muted-foreground">min</span>
                 </div>
@@ -99,14 +101,15 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
               <SettingRow label="Auto-Absent After" sub="Mark student absent if not arrived after this threshold">
                 <div className="flex items-center gap-2">
                   <label htmlFor="setting-auto-absent" className="sr-only">Auto Absent Minutes</label>
-                  <input 
+                  <Input 
                     id="setting-auto-absent"
+                    name="autoAbsentAfterMins"
                     type="number" 
                     min={10} 
                     max={120} 
                     value={settingsDraft.autoAbsentAfterMins || ""}
                     onChange={(event) => upd("autoAbsentAfterMins", Number(event.target.value))}
-                    className="w-16 text-sm text-center rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20" 
+                    className="w-16 text-sm text-center" 
                   />
                   <span className="text-xs text-muted-foreground">min</span>
                 </div>
@@ -119,11 +122,11 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
 
           {/* QR */}
           <Card accentColor="indigo" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
-            <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 pl-6.5">
+            <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 ps-6.5">
               <QrCode className="w-4 h-4 text-primary" />
               <h2 className="text-sm font-bold text-foreground m-0">QR Attendance</h2>
             </header>
-            <div className="px-4 pl-6.5 pb-2">
+            <div className="px-4 ps-6.5 pb-2">
               <SettingRow label="Enable QR Attendance" sub="Allow teachers to scan student QR codes to mark attendance">
                 <Switch checked={settingsDraft.qrEnabled} onCheckedChange={(value) => upd("qrEnabled", value)} />
               </SettingRow>
@@ -132,22 +135,23 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
 
           {/* Alerts */}
           <Card accentColor="warning" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
-            <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 pl-6.5">
+            <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 ps-6.5">
               <Bell className="w-4 h-4 text-primary" />
               <h2 className="text-sm font-bold text-foreground m-0">Alerts & Notifications</h2>
             </header>
-            <div className="px-4 pl-6.5 pb-2">
+            <div className="px-4 ps-6.5 pb-2">
               <SettingRow label="Low Attendance Threshold" sub="Trigger alert when student attendance drops below this %">
                 <div className="flex items-center gap-2">
                   <label htmlFor="setting-low-attendance" className="sr-only">Low Attendance Threshold Percentage</label>
-                  <input 
+                  <Input 
                     id="setting-low-attendance"
+                    name="lowAttendanceThreshold"
                     type="number" 
                     min={50} 
                     max={100} 
                     value={settingsDraft.lowAttendanceThreshold || ""}
                     onChange={(event) => upd("lowAttendanceThreshold", Number(event.target.value))}
-                    className="w-16 text-sm text-center rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20" 
+                    className="w-16 text-sm text-center" 
                   />
                   <span className="text-xs text-muted-foreground">%</span>
                 </div>

@@ -14,6 +14,7 @@ import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs
 import { SearchBar } from '@/components/ui/SearchBar';
 import { FilterChips } from '@/components/ui/FilterChips';
 import { ActionButton } from '@/components/ui/ActionButton';
+import { Button } from '@/components/ui/button';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { TeacherList } from "@/tenant/features/teachers/components/TeacherList";
 import { TeacherForm } from "@/tenant/features/teachers/components/TeacherForm";
@@ -201,9 +202,10 @@ export default function Teachers(): React.JSX.Element {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button
+                    <Button
                       type="button"
-                      className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                      variant="ghost"
+                      className={`flex items-center gap-2 px-3.5 min-h-[44px] rounded-xl border text-sm font-medium transition-colors ${
                         filterStatus.length > 0
                           ? 'border-primary/30 bg-primary/5 text-primary'
                           : 'border-border bg-card text-foreground hover:bg-muted'
@@ -217,7 +219,7 @@ export default function Teachers(): React.JSX.Element {
                         </span>
                       )}
                       <ChevronDown className="w-3 h-3" />
-                    </button>
+                    </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-44">
                     <DropdownMenuLabel className="text-xs">{t('teachers.filter.status')}</DropdownMenuLabel>
@@ -236,9 +238,10 @@ export default function Teachers(): React.JSX.Element {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button
+                    <Button
                       type="button"
-                      className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                      variant="ghost"
+                      className={`flex items-center gap-2 px-3.5 min-h-[44px] rounded-xl border text-sm font-medium transition-colors ${
                         filterSpecialization
                           ? 'border-primary/30 bg-primary/5 text-primary'
                           : 'border-border bg-card text-foreground hover:bg-muted'
@@ -246,7 +249,7 @@ export default function Teachers(): React.JSX.Element {
                     >
                       {filterSpecialization || t('teachers.filter.specialization')}
                       <ChevronDown className="w-3 h-3" />
-                    </button>
+                    </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuCheckboxItem

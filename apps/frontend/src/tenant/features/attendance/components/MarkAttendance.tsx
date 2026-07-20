@@ -246,7 +246,7 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
   return (
     <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
       className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-6 text-center space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover:bg-primary" />
+      <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover:bg-primary" />
       <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
         <Scan className="w-8 h-8 text-primary" aria-hidden="true" />
       </div>

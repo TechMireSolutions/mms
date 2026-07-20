@@ -158,7 +158,7 @@ export function DenominationsManager({ denoms, onUpdate }: DenominationsManagerP
             transition={{ delay: index * 0.06 }}
             className={`relative overflow-hidden rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4 pl-5.5 group transition-all duration-300 shadow-sm hover:shadow-md ${!denomination.active ? "opacity-60" : ""}`}
           >
-            <div className="absolute left-0 top-0 bottom-0 w-1 transition-colors duration-300" style={{ backgroundColor: denomination.active ? denomination.color : "#6b7280" }} />
+            <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 transition-colors duration-300" style={{ backgroundColor: denomination.active ? denomination.color : "#6b7280" }} />
             {/* Card visual */}
             <header className="relative mb-3 h-16 rounded-xl flex items-center gap-3 px-4 text-white shadow-md overflow-hidden" style={{ background: `linear-gradient(135deg, ${denomination.color}, ${denomination.color}99)` }}>
               <span className="text-3xl" aria-hidden="true">{denomination.icon}</span>

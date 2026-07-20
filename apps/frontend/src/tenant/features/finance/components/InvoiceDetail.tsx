@@ -89,7 +89,7 @@ export function InvoiceDetail({ invoice, onClose, onRecord }: InvoiceDetailProps
 
         {/* Fee breakdown */}
         <article className="relative overflow-hidden group/breakdown rounded-xl border border-border bg-card/45 backdrop-blur-xs shadow-sm">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/60" />
+          <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-primary/60" />
           <header className="px-4 py-2 bg-muted/30 border-b border-border pl-5">
             <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide m-0">Fee Breakdown</h4>
           </header>

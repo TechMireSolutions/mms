@@ -120,7 +120,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
 
   return (
     <section aria-labelledby="overdue-obligations-heading" className="relative overflow-hidden group rounded-2xl border border-destructive/30 surface-glass shadow-sm hover:-translate-y-1 hover:border-destructive/55 hover:shadow-surface-lg transition-all duration-300 text-left">
-      <div className="absolute left-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] bg-destructive/60 group-hover:bg-destructive transition-colors duration-300" />
+      <div className="absolute inset-inline-start-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] bg-destructive/60 group-hover:bg-destructive transition-colors duration-300" />
       {/* Header */}
       <header className="flex items-center justify-between px-5 py-3 bg-destructive/[0.06] border-b border-destructive/25 pl-6.5 select-none">
         <div className="flex items-center gap-2.5">

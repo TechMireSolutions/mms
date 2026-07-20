@@ -78,13 +78,13 @@ export function ModuleCommandMetricCard({
 }: ModuleCommandMetricCardProps): React.JSX.Element {
   const theme = ACCENT_MAP[accent] || ACCENT_MAP.primary;
   const baseClass =
-    'relative overflow-hidden group/metric flex items-center gap-3 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm px-4 py-3 pl-5.5 min-h-[44px] w-full text-left transition-all duration-300 shadow-sm';
+    'relative overflow-hidden group/metric flex items-center gap-3 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm px-4 py-3 ps-5.5 min-h-[44px] w-full text-start transition-all duration-300 shadow-sm';
   const interactiveClass = onClick ? ' cursor-pointer hover:shadow-md hover:border-primary/40 hover:bg-card/75' : '';
 
   const content = (
     <>
-      <div className={`absolute left-0 top-0 bottom-0 w-1 transition-colors duration-300 ${theme.stripe}`} />
-      <div className={`w-8 h-8 rounded-lg ${theme.iconBg} ring-4 ${theme.ring} flex items-center justify-center flex-shrink-0 ml-0.5`} aria-hidden="true">
+      <div className={`absolute inset-inline-start-0 top-0 bottom-0 w-1 transition-colors duration-300 ${theme.stripe}`} />
+      <div className={`w-8 h-8 rounded-lg ${theme.iconBg} ring-4 ${theme.ring} flex items-center justify-center flex-shrink-0 ms-0.5`} aria-hidden="true">
         <Icon className={`w-4 h-4 ${theme.iconText}`} />
       </div>
       <div className="min-w-0">

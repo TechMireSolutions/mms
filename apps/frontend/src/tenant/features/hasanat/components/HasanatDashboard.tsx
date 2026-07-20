@@ -101,7 +101,7 @@ export function HasanatDashboard({
               transition={{ delay: index * 0.05, duration: 0.35, ease: "easeOut" }}
               className="relative overflow-hidden group rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4.5 md:p-5 px-5.5 hover:shadow-md transition-all duration-300 text-left flex flex-col justify-between"
             >
-              <div className={`absolute left-0 top-0 bottom-0 w-1 transition-colors duration-300 ${stripeColors[stat.accent]}`} />
+              <div className={`absolute inset-inline-start-0 top-0 bottom-0 w-1 transition-colors duration-300 ${stripeColors[stat.accent]}`} />
               <header className="flex items-start justify-between mb-3 select-none">
                 <div className={`w-9 h-9 rounded-lg ${stat.bg} ring-4 ${ringClasses[stat.accent]} flex items-center justify-center aspect-square flex-shrink-0`} aria-hidden="true">
                   <Icon className={`w-4.5 h-4.5 ${stat.color}`} style={{ width: 18, height: 18 }} />

@@ -169,32 +169,34 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
             </a>
           )}
           {primaryPhone && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => openComposer("whatsapp", [{
                 id: student.id,
                 name: student.name,
                 phone: primaryPhone,
               }])}
-              className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-success/10 hover:border-success/30 transition-all text-success text-center cursor-pointer"
+              className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-success/10 hover:border-success/30 transition-all text-success text-center cursor-pointer shadow-none"
             >
               <MessageCircle className="w-4 h-4 mx-auto" />
               <span className="text-[10px] font-bold">WhatsApp</span>
-            </button>
+            </Button>
           )}
           {primaryPhone && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => openComposer("sms", [{
                 id: student.id,
                 name: student.name,
                 phone: primaryPhone,
               }])}
-              className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-amber/10 hover:border-amber/30 transition-all text-amber-600 dark:text-amber-500 text-center cursor-pointer"
+              className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-amber-500/10 hover:border-amber-500/30 transition-all text-amber-600 dark:text-amber-500 text-center cursor-pointer shadow-none"
             >
               <MessageSquare className="w-4 h-4 mx-auto" />
               <span className="text-[10px] font-bold">SMS</span>
-            </button>
+            </Button>
           )}
         </div>
 
@@ -207,8 +209,8 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                 if (field.key === "gender") {
                   return (
                     <div key="gender" className="relative overflow-hidden group/row flex items-center gap-3 p-3 bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-200">
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/row:bg-primary" />
-                      <div className="p-2 rounded-lg bg-muted text-muted-foreground ml-1">
+                      <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/row:bg-primary" />
+                      <div className="p-2 rounded-lg bg-muted text-muted-foreground ms-1">
                         <User className="w-3.5 h-3.5" />
                       </div>
                       <div className="flex-1 min-w-0 text-left">
@@ -257,8 +259,8 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                   if (!fatherContact && !student.fatherName) return null;
                   return (
                     <div key="fatherLink" className="relative overflow-hidden group/row flex items-center justify-between gap-3 p-3 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-200">
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/row:bg-indigo-500" />
-                      <div className="flex items-center gap-3 min-w-0 text-left ml-1">
+                      <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/row:bg-indigo-500" />
+                      <div className="flex items-center gap-3 min-w-0 text-start ms-1">
                         <div className="w-8 h-8 rounded-lg bg-info/10 text-info flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                           FA
                         </div>
@@ -284,8 +286,8 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                   if (!motherContact && !student.motherName) return null;
                   return (
                     <div key="motherLink" className="relative overflow-hidden group/row flex items-center justify-between gap-3 p-3 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-200">
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/row:bg-indigo-500" />
-                      <div className="flex items-center gap-3 min-w-0 text-left ml-1">
+                      <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/row:bg-indigo-500" />
+                      <div className="flex items-center gap-3 min-w-0 text-start ms-1">
                         <div className="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                           MO
                         </div>
@@ -311,8 +313,8 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                   if (!guardianContact && !student.guardianName) return null;
                   return (
                     <div key="guardianLink" className="relative overflow-hidden group/row flex items-center justify-between gap-3 p-3 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-200">
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/row:bg-indigo-500" />
-                      <div className="flex items-center gap-3 min-w-0 text-left ml-1">
+                      <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/row:bg-indigo-500" />
+                      <div className="flex items-center gap-3 min-w-0 text-start ms-1">
                         <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                           GU
                         </div>

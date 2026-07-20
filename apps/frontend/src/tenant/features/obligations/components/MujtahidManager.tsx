@@ -87,7 +87,7 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
           const isOpen = expanded[mujtahid.id];
           return (
             <article key={mujtahid.id} className="relative overflow-hidden group/mujtahid rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-300">
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/mujtahid:bg-primary" />
+              <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/mujtahid:bg-primary" />
               <header className="flex items-center justify-between px-5 py-3 pl-5.5">
                 <Button type="button" onClick={() => setExpanded((expandedById) => ({ ...expandedById, [mujtahid.id]: !expandedById[mujtahid.id] }))}
                   aria-expanded={isOpen}

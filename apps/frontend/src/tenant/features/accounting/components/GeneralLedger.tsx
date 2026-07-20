@@ -123,7 +123,7 @@ export function GeneralLedger({ accounts, entries }: GeneralLedgerProps) {
       {selectedAccount && activeAccount && (
         <>
           <article className="relative overflow-hidden group/ledger flex flex-wrap items-start gap-4 px-6 py-4.5 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
-            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/ledger:bg-primary" />
+            <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/ledger:bg-primary" />
             <div className="flex-1 min-w-0 ml-1">
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-mono text-xs font-bold text-muted-foreground">{activeAccount.code}</span>

@@ -166,7 +166,7 @@ export function StatCard({
         className
       )}
     >
-      <div className={cn("absolute left-0 top-0 bottom-0 w-1 transition-colors duration-300", theme.stripe)} />
+      <div className={cn("absolute inset-inline-start-0 top-0 bottom-0 w-1 transition-colors duration-300", theme.stripe)} />
       
       <div className="flex items-center gap-3.5 min-w-0">
         {Icon && (

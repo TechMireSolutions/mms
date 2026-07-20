@@ -85,7 +85,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
       <div className="space-y-5">
         {/* Receipt header */}
         <header className="relative overflow-hidden group rounded-2xl border border-primary/25 bg-primary/5 backdrop-blur-sm p-4 px-5.5 flex items-center gap-3.5 shadow-sm transition-all duration-300">
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary/70" />
+          <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1.5 bg-primary/70" />
           <Receipt className="w-5 h-5 text-primary" aria-hidden="true" />
           <div>
             <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide m-0">Receipt No.</h3>
@@ -99,7 +99,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
 
         {/* Main details */}
         <section aria-label="Main Collection Details" className="relative overflow-hidden group/details rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-300 divide-y divide-border px-5.5 pb-2.5">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/details:bg-indigo-500" />
+          <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/details:bg-indigo-500" />
           <Row label="Sender" value={sender?.name} />
           {reference && <Row label="Reference" value={reference?.name} />}
           <Row label="Obligation Type" value={obType?.name} />
@@ -117,7 +117,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
           <section aria-label="Distribution Breakdown">
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 m-0">Distribution Breakdown</h4>
             <div className="relative overflow-hidden group/dists rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm hover:shadow-md transition-all duration-300">
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/dists:bg-emerald-500" />
+              <div className="absolute inset-inline-start-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/dists:bg-emerald-500" />
               <table className="w-full text-sm">
                 <caption className="sr-only">Distribution breakdown for collection {selectedCollection.receipt_no}</caption>
                 <thead className="bg-muted/60 border-b border-border">

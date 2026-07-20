@@ -16,6 +16,7 @@ import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs
 import { SearchBar } from "@/components/ui/SearchBar";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { ActionButton } from "@/components/ui/ActionButton";
+import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 import StudentList from "@/tenant/features/students/components/StudentList";
@@ -254,8 +255,10 @@ export default function Students() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button
-                    className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className={`flex items-center gap-2 px-3.5 min-h-[44px] rounded-xl border text-sm font-medium transition-colors ${
                       studentFilterStatus.length > 0
                         ? "border-primary/30 bg-primary/5 text-primary"
                         : "border-border bg-card text-foreground hover:bg-muted"
@@ -268,7 +271,7 @@ export default function Students() {
                       </span>
                     )}
                     <ChevronDown className="w-3 h-3" />
-                  </button>
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
                   <DropdownMenuLabel className="text-xs">Filter by status</DropdownMenuLabel>
@@ -287,8 +290,10 @@ export default function Students() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button
-                    className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className={`flex items-center gap-2 px-3.5 min-h-[44px] rounded-xl border text-sm font-medium transition-colors ${
                       studentFilterGender
                         ? "border-primary/30 bg-primary/5 text-primary"
                         : "border-border bg-card text-foreground hover:bg-muted"
@@ -299,7 +304,7 @@ export default function Students() {
                       ? studentFilterGender.charAt(0).toUpperCase() + studentFilterGender.slice(1)
                       : t("students.gender")}
                     <ChevronDown className="w-3 h-3" />
-                  </button>
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-36">
                   {["", ...genderFilters].map((genderFilter) => (
