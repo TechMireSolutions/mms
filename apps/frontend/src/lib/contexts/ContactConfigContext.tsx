@@ -568,7 +568,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   }, [fieldConfig.columnRegistry, fields, enabledTabIds, isTabFieldEnabled, user?.role]);
 
   const columnRegistry = useMemo(
-    () => applyModuleColumnOverlay(tenantColumnRegistry, userColumnOverlay as any) as ColumnRegistryEntry[],
+    () => applyModuleColumnOverlay(tenantColumnRegistry, userColumnOverlay) as ColumnRegistryEntry[],
     [tenantColumnRegistry, userColumnOverlay],
   );
   const availableColumns = useMemo(() => {

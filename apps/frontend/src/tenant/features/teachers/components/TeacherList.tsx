@@ -9,7 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { formatDate } from '@/lib/db';
-import { DEFAULT_TEACHERS_SETTINGS, type AppTranslationKey } from '@mms/shared';
+import { DEFAULT_TEACHERS_SETTINGS, type AppTranslationKey, toTitleCase } from '@mms/shared';
 import { useTeacherConfig } from '@/hooks/useStandardModuleConfig';
 import type { Teacher } from '@/lib/data/teachersData';
 import { Button } from '@/components/ui/button';
@@ -59,7 +59,7 @@ export function TeacherList({
     for (const statusValue of statusValues) {
       const translationKey = `teachers.status.${statusValue}` as AppTranslationKey;
       const translated = t(translationKey);
-      const label = translated === translationKey ? statusValue.charAt(0).toUpperCase() + statusValue.slice(1) : translated;
+      const label = translated === translationKey ? toTitleCase(statusValue) : translated;
       
       let cls: string = SEMANTIC_BADGE.muted;
       if (statusValue === 'active') cls = SEMANTIC_BADGE.success;

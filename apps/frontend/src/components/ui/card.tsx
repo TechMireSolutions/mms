@@ -2,23 +2,14 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+import { CARD_STRIPE_COLORS } from "@/lib/semanticTone"
+
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & {
     accentColor?: "primary" | "success" | "warning" | "destructive" | "info" | "emerald" | "indigo" | "rose" | "amber"
   }
 >(({ className, accentColor, ...props }, ref) => {
-  const stripeColors = {
-    primary: "bg-primary/45 group-hover/card:bg-primary",
-    success: "bg-success/45 group-hover/card:bg-success",
-    warning: "bg-warning/45 group-hover/card:bg-warning",
-    destructive: "bg-destructive/45 group-hover/card:bg-destructive",
-    info: "bg-info/45 group-hover/card:bg-info",
-    emerald: "bg-success/45 group-hover/card:bg-success",
-    indigo: "bg-primary/45 group-hover/card:bg-primary",
-    rose: "bg-destructive/45 group-hover/card:bg-destructive",
-    amber: "bg-warning/45 group-hover/card:bg-warning",
-  }
 
   return (
     <div
@@ -30,7 +21,7 @@ const Card = React.forwardRef<
       {...props}
     >
       {accentColor && (
-        <div className={cn("absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300", stripeColors[accentColor])} />
+        <div className={cn("absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300", CARD_STRIPE_COLORS[accentColor])} />
       )}
       {props.children}
     </div>

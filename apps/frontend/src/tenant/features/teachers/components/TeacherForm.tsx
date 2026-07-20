@@ -19,6 +19,7 @@ import {
   TEACHER_SPECIALIZATION_VALUES,
   AppTranslationKey,
   todayISO,
+  toTitleCase,
 } from "@mms/shared";
 
 export interface TeacherFormProps {
@@ -209,7 +210,7 @@ export function TeacherForm({
             options={TEACHER_STATUS_VALUES.map((status) => {
               const translationKey = `teachers.status.${status}` as AppTranslationKey;
               const translated = t(translationKey);
-              const label = translated === translationKey ? status.charAt(0).toUpperCase() + status.slice(1) : translated;
+              const label = translated === translationKey ? toTitleCase(status) : translated;
               return { value: status, label };
             })}
           />

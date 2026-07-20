@@ -20,7 +20,7 @@ import { TeacherList } from "@/tenant/features/teachers/components/TeacherList";
 import { TeacherForm } from "@/tenant/features/teachers/components/TeacherForm";
 import { TeachersSettings as TeachersSettingsPanel } from "@/tenant/features/teachers/components/TeachersSettings";
 import type { Teacher } from '@/lib/data/teachersData';
-import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES, TEACHERS_MODULE_CONTRACT, type AppTranslationKey } from '@mms/shared';
+import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES, TEACHERS_MODULE_CONTRACT, type AppTranslationKey, toTitleCase } from '@mms/shared';
 import ModuleReports from '@/tenant/features/reports/components/ModuleReports';
 import KPISummary from '@/tenant/features/reports/components/KPISummary';
 import { useTeacherCount } from '@/tenant/features/teachers/hooks/useTeacherCount';
@@ -35,7 +35,7 @@ import { notify } from '@/lib/notify';
 function teacherStatusLabel(t: (key: AppTranslationKey) => string, status: string): string {
   const key = `teachers.status.${status}` as AppTranslationKey;
   const translatedStatus = t(key);
-  return translatedStatus === key ? status.charAt(0).toUpperCase() + status.slice(1) : translatedStatus;
+  return translatedStatus === key ? toTitleCase(status) : translatedStatus;
 }
 
 /**

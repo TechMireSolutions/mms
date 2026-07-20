@@ -155,7 +155,7 @@ export function useLiveCollectionsAndObjects(
           apiFetch(`/api/db/collections/${conf.dbKey}`)
             .then(async (res) => {
               if (res.ok) {
-                const fetched = (await res.json()) as any[];
+                const fetched = (await res.json()) as unknown[];
                 saveCollectionCacheOnly(conf.dbKey, fetched);
               }
             })

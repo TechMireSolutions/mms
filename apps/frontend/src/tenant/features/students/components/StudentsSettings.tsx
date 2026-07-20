@@ -37,7 +37,7 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
     saveSettings(undefined, {
       version: 2,
       columnRegistry: settings.columnRegistry || DEFAULT_STUDENT_COLUMN_REGISTRY,
-    } as any);
+    });
   };
 
   const showFields = mode === "fields";

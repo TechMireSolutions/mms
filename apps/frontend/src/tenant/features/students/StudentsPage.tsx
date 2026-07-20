@@ -23,7 +23,7 @@ import StudentList from "@/tenant/features/students/components/StudentList";
 import StudentForm from "@/tenant/features/students/components/StudentForm";
 import StudentsSettingsPanel from "@/tenant/features/students/components/StudentsSettings";
 import { Student } from '@/lib/data/studentsData';
-import { type Student as SharedStudent, type StudentsSettings, STUDENTS_MODULE_CONTRACT, todayISO } from "@mms/shared";
+import { type Student as SharedStudent, type StudentsSettings, STUDENTS_MODULE_CONTRACT, todayISO, toTitleCase } from "@mms/shared";
 
 
 import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
@@ -284,7 +284,7 @@ export default function Students() {
                       checked={studentFilterStatus.includes(status)}
                       onCheckedChange={() => toggleStudentStatus(status)}
                     >
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                      {toTitleCase(status)}
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuContent>
@@ -303,7 +303,7 @@ export default function Students() {
                   >
                     <Users className="w-3.5 h-3.5" />
                     {studentFilterGender
-                      ? studentFilterGender.charAt(0).toUpperCase() + studentFilterGender.slice(1)
+                      ? toTitleCase(studentFilterGender)
                       : t("students.gender")}
                     <ChevronDown className="w-3 h-3" />
                   </Button>
@@ -315,7 +315,7 @@ export default function Students() {
                        checked={studentFilterGender === genderFilter}
                        onCheckedChange={() => setStudentFilterGender(genderFilter)}
                      >
-                       {genderFilter ? genderFilter.charAt(0).toUpperCase() + genderFilter.slice(1) : t("students.allGenders")}
+                       {genderFilter ? toTitleCase(genderFilter) : t("students.allGenders")}
                      </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuContent>

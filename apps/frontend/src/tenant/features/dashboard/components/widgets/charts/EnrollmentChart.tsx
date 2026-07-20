@@ -9,6 +9,7 @@ import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/us
 import { TrendingUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
+import { formatMonthName } from "@mms/shared";
 import {
   Select,
   SelectContent,
@@ -59,34 +60,17 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
   const months = useMemo(() => {
     const list: { key: string; label: string }[] = [];
     const now = new Date();
-    const monthKeys = [
-      "january",
-      "february",
-      "march",
-      "april",
-      "may",
-      "june",
-      "july",
-      "august",
-      "september",
-      "october",
-      "november",
-      "december"
-    ];
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const year = d.getFullYear();
       const monthIndex = d.getMonth();
       const monthNum = String(monthIndex + 1).padStart(2, "0");
       const key = `${year}-${monthNum}`;
-
-      const transKey = `accounting.settings.months.${monthKeys[monthIndex]}` as any;
-      const fullLabel = t(transKey);
-      const label = fullLabel.slice(0, 3);
+      const label = formatMonthName(d);
       list.push({ key, label });
     }
     return list;
-  }, [t]);
+  }, []);
 
   const activeMonths = months.slice(-monthsCount);
 

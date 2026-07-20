@@ -11,7 +11,7 @@ import {
   RefreshCw,
   ShieldCheck,
 } from "lucide-react";
-import type { PlatformPasswordForgotResult } from "@mms/shared";
+import { type PlatformPasswordForgotResult, type AppTranslationKey } from "@mms/shared";
 import {
   PLATFORM_MIN_PASSWORD_LENGTH,
   validatePlatformSetupEmail,
@@ -103,7 +103,7 @@ export default function PlatformForgotPassword(): React.JSX.Element {
       setError(
         passwordKey === "platform.setupPasswordTooShort"
           ? t(passwordKey, { min: String(PLATFORM_MIN_PASSWORD_LENGTH) })
-          : t(passwordKey as any),
+          : t(passwordKey as AppTranslationKey),
       );
       return;
     }

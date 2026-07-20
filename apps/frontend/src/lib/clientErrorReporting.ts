@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/react';
+import { isApiError } from '@/lib/apiClient';
 
 /**
  * Initializes client-side error reporting using Sentry if the DSN is configured.
@@ -45,8 +46,8 @@ export function reportClientError(error: unknown, context?: Record<string, unkno
   }
 
   Sentry.withScope((scope) => {
-    if (error && typeof error === 'object' && 'requestId' in error && (error as any).requestId) {
-      scope.setExtra('requestId', (error as any).requestId);
+    if (isApiError(error) && error.requestId) {
+      scope.setExtra('requestId', error.requestId);
     }
 
     if (context) {

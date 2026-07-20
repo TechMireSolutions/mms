@@ -35,6 +35,7 @@ import {
   normalizeToE164,
   parsePhoneNumber,
   getInitials,
+  getDisplayName,
   Contact,
   PhoneNumber,
   EmailAddress,
@@ -440,10 +441,7 @@ export default function ContactForm({
                   />
                 ) : (
                   <span className="text-2xl font-bold text-primary select-none">
-                    {getInitials(
-                      contactDraft.name ||
-                        `${contactDraft.firstName || ""} ${contactDraft.lastName || ""}`.trim(),
-                    )}
+                    {getInitials(getDisplayName(contactDraft))}
                   </span>
                 )}
 
@@ -534,7 +532,7 @@ export default function ContactForm({
             >
               {lockGender ? (
                 <div className="flex h-10 w-full items-center rounded-xl border border-border bg-muted/40 px-3.5 text-xs text-muted-foreground select-none font-semibold">
-                  {(contactDraft.gender || "unspecified").charAt(0).toUpperCase() + (contactDraft.gender || "unspecified").slice(1)}
+                  {toTitleCase(contactDraft.gender || "unspecified")}
                 </div>
               ) : (
                 <EditableSelect

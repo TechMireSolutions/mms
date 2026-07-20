@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import ColumnCustomizer from "@/tenant/features/contacts/components/ColumnCustomizer";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import { toTitleCase } from "@mms/shared";
 
 interface ContactsToolbarProps {
   search: string;
@@ -107,7 +108,7 @@ export default function ContactsToolbar({
                 onCheckedChange={() => onGenderChange(genderOption)}
                 className="text-sm"
               >
-                {genderOption ? genderOption.charAt(0).toUpperCase() + genderOption.slice(1) : t("contacts.allGenders")}
+                {genderOption ? toTitleCase(genderOption) : t("contacts.allGenders")}
               </DropdownMenuCheckboxItem>
             ))}
 

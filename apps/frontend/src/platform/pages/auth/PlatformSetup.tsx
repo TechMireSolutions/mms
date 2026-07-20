@@ -9,7 +9,7 @@ import {
   ShieldCheck,
   User,
 } from "lucide-react";
-import type { PlatformSetupRegisterResult } from "@mms/shared";
+import { type PlatformSetupRegisterResult, type AppTranslationKey } from "@mms/shared";
 import {
   PLATFORM_MIN_PASSWORD_LENGTH,
   maskEmail,
@@ -75,7 +75,7 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
       setError(
         passwordKey === "platform.setupPasswordTooShort"
           ? t(passwordKey, { min: String(PLATFORM_MIN_PASSWORD_LENGTH) })
-          : t(passwordKey as any),
+          : t(passwordKey as AppTranslationKey),
       );
       return;
     }

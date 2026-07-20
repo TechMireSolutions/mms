@@ -3,6 +3,7 @@ import { Save, Calendar } from "lucide-react";
 import {
   SESSIONS_TAB_REGISTRY,
   INITIAL_SESSIONS_FIELD_SEED,
+  formatMonthName,
 } from "@mms/shared";
 import { useSessionConfig } from "@/hooks/useStandardModuleConfig";
 import { SESSION_TYPES } from "@/lib/data/sessionsData";
@@ -90,9 +91,9 @@ export function SessionsSettings({ mode }: SessionsSettingsProps): React.JSX.Ele
                 value={settingsDraft.sessionStart}
                 onChange={(value) => upd("sessionStart", value)}
                 options={["january", "february", "march", "april", "may", "june",
-                  "july", "august", "september", "october", "november", "december"].map((month) => ({
+                  "july", "august", "september", "october", "november", "december"].map((month, idx) => ({
                     value: month,
-                    label: month.charAt(0).toUpperCase() + month.slice(1)
+                    label: formatMonthName(new Date(2000, idx, 1))
                   }))}
                 className="w-full"
               />

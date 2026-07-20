@@ -3,7 +3,7 @@ import { clear2FAState, mark2FAVerified, setPendingChallengeId } from '@/lib/two
 import { type User, type Workspace } from '@mms/shared';
 import { appNavigate } from '@/lib/routing/appNavigate';
 import { ROUTES } from '@/lib/config/routes';
-import { apiFetch, apiJson } from '@/lib/apiClient';
+import { apiFetch, apiJson, isApiError } from '@/lib/apiClient';
 import { isCurrentHostApex } from '@/lib/config/tenantConfig';
 import { getWorkspaceLocalStoragePrefix } from '@/lib/db';
 import { parseAuthError, type AuthError } from '@/lib/authErrors';
@@ -104,7 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       setUser(null);
       setIsAuthenticated(false);
-      if (error && typeof error === 'object' && 'status' in error && (error as any).status === 401) {
+      if (isApiError(error) && error.status === 401) {
         localStorage.removeItem('mms_user');
       }
     } finally {

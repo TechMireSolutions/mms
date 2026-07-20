@@ -14,6 +14,7 @@ import {
   validatePlatformSetupName,
   validatePlatformSetupPassword,
   formatDate,
+  type AppTranslationKey,
 } from "@mms/shared";
 import { PlatformPageShell, PlatformLogoMark } from "@/platform/components/PlatformPageShell";
 import { Button } from "@/components/ui/button";
@@ -75,7 +76,7 @@ export default function PlatformAdmins(): React.JSX.Element {
       setSubmitError(
         passwordKey === "platform.setupPasswordTooShort"
           ? t(passwordKey, { min: String(PLATFORM_MIN_PASSWORD_LENGTH) })
-          : t(passwordKey as any),
+          : t(passwordKey as AppTranslationKey),
       );
       return;
     }

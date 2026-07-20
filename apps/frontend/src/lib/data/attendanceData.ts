@@ -1,6 +1,7 @@
 import {
   type AttendanceModuleSettings as AttendanceSettings,
-  DEFAULT_ATTENDANCE_SETTINGS as DEFAULT_ATT_SETTINGS
+  DEFAULT_ATTENDANCE_SETTINGS as DEFAULT_ATT_SETTINGS,
+  toTitleCase,
 } from "@mms/shared";
 
 export type { AttendanceSettings };
@@ -52,7 +53,7 @@ export function getAttendanceStatusInfo(status: string, customStatuses?: Attenda
   if (found) return found;
   return {
     id: status,
-    label: status.charAt(0).toUpperCase() + status.slice(1),
+    label: toTitleCase(status),
     short: status.charAt(0).toUpperCase(),
     color: "slate",
     bg: "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200",

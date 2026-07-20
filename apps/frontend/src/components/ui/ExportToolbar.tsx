@@ -3,7 +3,7 @@ import { Download, FileSpreadsheet, FileText, Printer, Settings as SettingsIcon 
 import { useTranslation } from "@/hooks/useTranslation";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { Button } from "@/components/ui/button";
-import { formatDate, todayISO } from "@mms/shared";
+import { formatDate, todayISO, buildCsvContent } from "@mms/shared";
 
 
 export interface ExportColumn {
@@ -27,19 +27,10 @@ export interface ExportToolbarProps {
   variant?: "default" | "compact";
 }
 
-function toCSV(columns: ExportColumn[], rows: Record<string, unknown>[]): string {
-  const header = columns.map((column) => `"${column.header}"`).join(",");
-  const body = rows.map((row) =>
-    columns.map((column) => {
-      const cellValue = row[column.key] ?? "";
-      return `"${String(cellValue).replace(/"/g, '""')}"`;
-    }).join(",")
-  );
-  return [header, ...body].join("\r\n");
-}
-
 function downloadExcelFallback(columns: ExportColumn[], rows: Record<string, unknown>[], filename: string) {
-  const csv = toCSV(columns, rows);
+  const csvHeaders = columns.map((col) => col.header);
+  const csvData = rows.map((row) => columns.map((col) => row[col.key]));
+  const csv = buildCsvContent([csvHeaders, ...csvData]);
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

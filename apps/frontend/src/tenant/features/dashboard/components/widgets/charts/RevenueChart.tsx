@@ -20,6 +20,7 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
+import { formatMonthName } from "@mms/shared";
 
 interface RevenuePoint {
   month: string;
@@ -80,34 +81,17 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
   const months = useMemo((): { key: string; label: string }[] => {
     const list: { key: string; label: string }[] = [];
     const now = new Date();
-    const monthKeys = [
-      "january",
-      "february",
-      "march",
-      "april",
-      "may",
-      "june",
-      "july",
-      "august",
-      "september",
-      "october",
-      "november",
-      "december"
-    ];
     for (let i = 9; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const year = d.getFullYear();
       const monthIndex = d.getMonth();
       const monthNum = String(monthIndex + 1).padStart(2, "0");
       const key = `${year}-${monthNum}`;
-
-      const transKey = `accounting.settings.months.${monthKeys[monthIndex]}` as any;
-      const fullLabel = t(transKey);
-      const label = fullLabel.slice(0, 3);
+      const label = formatMonthName(d);
       list.push({ key, label });
     }
     return list;
-  }, [t]);
+  }, []);
 
   const revenueData: RevenuePoint[] = useMemo(() => {
     const postedEntries = entries.filter((journalEntry) => journalEntry.status === "posted");

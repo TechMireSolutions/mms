@@ -3,7 +3,7 @@ import { Save, Users } from "lucide-react";
 import {
   FieldConfig, ContactPreferences, TabDefinition,
   CONFIG_VERSION,
-  toTitleCase as sharedToTitleCase,
+  toTitleCase,
   DEFAULT_COLUMN_REGISTRY,
   getContactFieldRemovalIssues,
   DEFAULT_FORM_TABS,
@@ -21,8 +21,6 @@ import { ToggleRow } from "@/components/ui/ToggleRow";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { FORM_LABEL } from "@/components/ui/formStyles";
-
-const toTitleCase = (value: string): string => sharedToTitleCase(value) as string;
 
 interface ContactsSetupPanelProps {
   config: FieldConfig;

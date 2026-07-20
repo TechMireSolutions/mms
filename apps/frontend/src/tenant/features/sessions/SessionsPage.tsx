@@ -23,6 +23,7 @@ import { SessionDetail } from "@/tenant/features/sessions/components/SessionDeta
 import { SessionsSettings } from "@/tenant/features/sessions/components/SessionsSettings";
 import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { toTitleCase } from "@mms/shared";
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { SESSION_TYPES, Session } from '@/lib/data/sessionsData';
 import { formatDate } from "@/lib/db";
@@ -205,7 +206,7 @@ export default function Sessions() {
     for (const statusOption of statusOptions) {
       const translationKey = `sessions.status.${statusOption}` as AppTranslationKey;
       const translated = t(translationKey);
-      sessionStatusLabelsByValue[statusOption] = translated === translationKey ? statusOption.charAt(0).toUpperCase() + statusOption.slice(1) : translated;
+      sessionStatusLabelsByValue[statusOption] = translated === translationKey ? toTitleCase(statusOption) : translated;
     }
     return sessionStatusLabelsByValue;
   }, [statusOptions, t]);

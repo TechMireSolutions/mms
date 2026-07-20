@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Modal } from "@/components/ui/Modal";
 import { CoreFieldEditorList } from "@/components/ui/CoreFieldEditorList";
 import { CustomFieldsBuilder, type CustomFieldConfig } from "@/components/ui/CustomFieldsBuilder";
-import { type FieldDefinition, type TabDefinition } from "@mms/shared";
+import { type FieldDefinition, type TabDefinition, toTitleCase } from "@mms/shared";
 
 interface UseFieldsEditorResult {
   formTabs: TabDefinition[];
@@ -133,7 +133,7 @@ export function ModuleFieldsSetup({
       <div className="space-y-3">
         {editor.formTabs.map((tab) => {
           const tabId = tab.key;
-          const tabLabel = tab.label.charAt(0).toUpperCase() + tab.label.slice(1);
+          const tabLabel = toTitleCase(tab.label);
           const tabDesc = tab.description || (tab.isSystem === false ? t("contacts.setup.customTabDescription") || "Custom user-defined tab" : "");
           const tabDefs = editor.tabFields[tabId] || [];
           const enabledSet = editor.tabFieldEnabled[tabId] || new Set();

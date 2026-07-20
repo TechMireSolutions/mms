@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { formatDate as sharedFormatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import {
   DollarSign, Calendar, Plus, Pencil, Trash2,
   CheckCircle2, Lock, Clock, Save, BookOpen
@@ -216,7 +216,7 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
   };
 
   const activeCurrency = currencies.find((currencyOption) => currencyOption.code === settingsDraft.currency);
-  const formatDate   = (dateValue: string) => sharedFormatDate(dateValue);
+
 
   const showPrefs = mode === "preferences";
   const showFields = mode === "fields";

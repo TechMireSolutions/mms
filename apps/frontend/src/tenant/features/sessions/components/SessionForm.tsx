@@ -165,7 +165,7 @@ export function SessionForm({
               options={SESSION_STATUSES.map((statusOption) => {
                 const translationKey = `sessions.status.${statusOption}` as AppTranslationKey;
                 const translated = t(translationKey);
-                const label = translated === translationKey ? statusOption.charAt(0).toUpperCase() + statusOption.slice(1) : translated;
+                const label = translated === translationKey ? toTitleCase(statusOption) : translated;
                 return { value: statusOption, label };
               })}
             />

@@ -8,6 +8,7 @@ import {
   filterActiveContacts,
   isContactDeleted,
   CONTACTS_MODULE_CONTRACT,
+  toTitleCase,
 } from "@mms/shared";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -207,7 +208,7 @@ export function useContactsPageState({
     (gender: string) => {
       const key = `contacts.gender.${gender.toLowerCase()}` as AppTranslationKey;
       const translated = t(key);
-      return translated === key ? gender.charAt(0).toUpperCase() + gender.slice(1) : translated;
+      return translated === key ? toTitleCase(gender) : translated;
     },
     [t],
   );

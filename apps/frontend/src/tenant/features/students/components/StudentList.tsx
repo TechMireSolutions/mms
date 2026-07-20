@@ -24,7 +24,7 @@ import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessi
 import { formatDate } from "@/lib/db";
 import { runCsvDownloadJob } from '@/lib/backgroundJobs/runCsvDownloadJob';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { AppTranslationKey, FieldDefinition } from "@mms/shared";
+import { type AppTranslationKey, type FieldDefinition, toTitleCase } from "@mms/shared";
 import StudentDetail from "@/tenant/features/students/components/StudentDetail";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 
@@ -682,7 +682,7 @@ export default function StudentList({
               const statusKey = `students.form.status.${status}` as AppTranslationKey;
               const translatedStatus = t(statusKey);
               const displayStatus = translatedStatus === statusKey
-                 ? (status.charAt(0).toUpperCase() + status.slice(1))
+                ? toTitleCase(status)
                 : translatedStatus;
               return (
                 <Button

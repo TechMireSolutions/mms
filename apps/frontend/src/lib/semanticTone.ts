@@ -165,3 +165,16 @@ export const OBLIGATION_TYPE_BADGE: Record<string, string> = {
   Income: SEMANTIC_BADGE.success,
   Liability: SEMANTIC_BADGE.destructive,
 };
+
+/** Card left-border accent stripe colors (globle1). */
+export const CARD_STRIPE_COLORS = {
+  primary: "bg-primary/45 group-hover/card:bg-primary",
+  success: "bg-success/45 group-hover/card:bg-success",
+  warning: "bg-warning/45 group-hover/card:bg-warning",
+  destructive: "bg-destructive/45 group-hover/card:bg-destructive",
+  info: "bg-info/45 group-hover/card:bg-info",
+  emerald: "bg-success/45 group-hover/card:bg-success",
+  indigo: "bg-primary/45 group-hover/card:bg-primary",
+  rose: "bg-destructive/45 group-hover/card:bg-destructive",
+  amber: "bg-warning/45 group-hover/card:bg-warning",
+} as const;
