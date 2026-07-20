@@ -23,15 +23,29 @@ export interface WhatsAppProvider {
   verifyPhoneNumber(phoneNumber: string): Promise<WhatsAppVerificationResult>;
 }
 
+export type RelationshipType = 
+  | 'father'
+  | 'mother'
+  | 'guardian'
+  | 'child'
+  | 'spouse'
+  | 'sibling'
+  | 'colleague'
+  | 'other';
+
 export interface PhoneNumber {
   label: string;
   number: string;
   countryCode?: string;
+  isPrimary?: boolean;
+  whatsappStatus?: 'REGISTERED' | 'NOT_REGISTERED' | 'UNCHECKED' | 'FAILED';
 }
 
 export interface EmailAddress {
   label: string;
   address: string;
+  isPrimary?: boolean;
+  isVerified?: boolean;
 }
 
 export interface Address {
@@ -40,6 +54,7 @@ export interface Address {
   state?: string;
   country?: string;
   label?: string;
+  isPrimary?: boolean;
 }
 
 export interface SocialLink {
@@ -59,7 +74,8 @@ export interface EmergencyContact {
 
 export interface ContactRelationship {
   contactId: string | number;
-  relationship?: string;
+  relationship?: RelationshipType | string;
+  notes?: string;
 }
 
 export interface ContactActivity {
@@ -92,9 +108,17 @@ export interface Contact {
   avatar?: string | null;
   createdAt?: string;
   updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
   deletedAt?: string;
   deletedBy?: string;
   deletionReason?: string;
+
+  // Communication & Preference Extensions
+  preferredLanguage?: 'en' | 'ur' | 'ar' | 'fa';
+  preferredContactMethod?: 'whatsapp' | 'sms' | 'email' | 'phone_call';
+  doNotContact?: boolean;
+
   phones?: PhoneNumber[];
   emails?: EmailAddress[];
   addresses?: Address[];

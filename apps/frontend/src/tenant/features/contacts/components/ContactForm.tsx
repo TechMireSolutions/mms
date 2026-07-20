@@ -121,39 +121,45 @@ const CONTACT_TABS = [
 
 type TabKey = (typeof CONTACT_TABS)[number]["key"];
 
-const normalizePhoneItem = (item: unknown): PhoneNumber => {
-  if (!item) return { label: "Mobile", number: "", countryCode: "+92" };
+const normalizePhoneItem = (item: unknown, index: number): PhoneNumber => {
+  if (!item) return { label: "Mobile", number: "", countryCode: "+92", isPrimary: index === 0 };
   if (typeof item === "string") {
     const parsed = parsePhoneEntry({ label: "Mobile", number: item, countryCode: "+92" });
-    return { label: "Mobile", number: parsed.number || item, countryCode: parsed.countryCode || "+92" };
+    return { label: "Mobile", number: parsed.number || item, countryCode: parsed.countryCode || "+92", isPrimary: index === 0 };
   }
   if (typeof item === "object") {
     const obj = item as Record<string, unknown>;
     const rawNum = String(obj.number || obj.phone || obj.value || obj.num || "").trim();
     const label = String(obj.label || obj.type || "Mobile").trim();
     const countryCode = String(obj.countryCode || obj.code || "+92").trim();
+    const isPrimary = typeof obj.isPrimary === "boolean" ? obj.isPrimary : index === 0;
+    const whatsappStatus = obj.whatsappStatus as PhoneNumber["whatsappStatus"];
     const parsed = parsePhoneEntry({ label, number: rawNum, countryCode });
     return {
       label: label || "Mobile",
       number: parsed.number || rawNum,
       countryCode: countryCode || parsed.countryCode || "+92",
+      isPrimary,
+      whatsappStatus,
     };
   }
-  return { label: "Mobile", number: "", countryCode: "+92" };
+  return { label: "Mobile", number: "", countryCode: "+92", isPrimary: index === 0 };
 };
 
-const normalizeEmailItem = (item: unknown): EmailAddress => {
-  if (!item) return { label: "Personal", address: "" };
+const normalizeEmailItem = (item: unknown, index: number): EmailAddress => {
+  if (!item) return { label: "Personal", address: "", isPrimary: index === 0 };
   if (typeof item === "string") {
-    return { label: "Personal", address: item.trim() };
+    return { label: "Personal", address: item.trim(), isPrimary: index === 0 };
   }
   if (typeof item === "object") {
     const obj = item as Record<string, unknown>;
     const address = String(obj.address || obj.email || obj.value || "").trim();
     const label = String(obj.label || obj.type || "Personal").trim();
-    return { label: label || "Personal", address };
+    const isPrimary = typeof obj.isPrimary === "boolean" ? obj.isPrimary : index === 0;
+    const isVerified = typeof obj.isVerified === "boolean" ? obj.isVerified : undefined;
+    return { label: label || "Personal", address, isPrimary, isVerified };
   }
-  return { label: "Personal", address: "" };
+  return { label: "Personal", address: "", isPrimary: index === 0 };
 };
 
 const normalizeAddressItem = (
@@ -161,10 +167,11 @@ const normalizeAddressItem = (
   defaultCity: string,
   defaultProvince: string,
   defaultCountry: string,
+  index: number,
 ): Address => {
-  if (!item) return { label: "Home", line1: "", city: defaultCity, state: defaultProvince, country: defaultCountry };
+  if (!item) return { label: "Home", line1: "", city: defaultCity, state: defaultProvince, country: defaultCountry, isPrimary: index === 0 };
   if (typeof item === "string") {
-    return { label: "Home", line1: item.trim(), city: defaultCity, state: defaultProvince, country: defaultCountry };
+    return { label: "Home", line1: item.trim(), city: defaultCity, state: defaultProvince, country: defaultCountry, isPrimary: index === 0 };
   }
   if (typeof item === "object") {
     const obj = item as Record<string, unknown>;
@@ -173,9 +180,10 @@ const normalizeAddressItem = (
     const state = String(obj.state || obj.province || defaultProvince).trim();
     const country = String(obj.country || defaultCountry).trim();
     const label = String(obj.label || obj.type || "Home").trim();
-    return { label: label || "Home", line1, city, state, country };
+    const isPrimary = typeof obj.isPrimary === "boolean" ? obj.isPrimary : index === 0;
+    return { label: label || "Home", line1, city, state, country, isPrimary };
   }
-  return { label: "Home", line1: "", city: defaultCity, state: defaultProvince, country: defaultCountry };
+  return { label: "Home", line1: "", city: defaultCity, state: defaultProvince, country: defaultCountry, isPrimary: index === 0 };
 };
 
 const normalizeSocialItem = (item: unknown): SocialLink => {
@@ -245,35 +253,35 @@ const normalizeContactForEdit = (
 
   // 2. Phones resolution (array of strings or objects, plus scalar phone)
   let phones: PhoneNumber[] = Array.isArray(merged.phones)
-    ? merged.phones.map(normalizePhoneItem)
+    ? merged.phones.map((item, idx) => normalizePhoneItem(item, idx))
     : [];
 
   const scalarPhone = typeof merged.phone === "string" ? merged.phone.trim() : "";
   if (scalarPhone && !phones.some((p) => (p.number || "").trim() === scalarPhone)) {
-    phones.unshift(normalizePhoneItem(scalarPhone));
+    phones.unshift(normalizePhoneItem(scalarPhone, 0));
   }
 
   if (phones.length === 0) {
-    phones = [{ label: "Mobile", number: "", countryCode: "+92" }];
+    phones = [{ label: "Mobile", number: "", countryCode: "+92", isPrimary: true }];
   }
 
   // 3. Emails resolution (array of strings or objects, plus scalar email)
   let emails: EmailAddress[] = Array.isArray(merged.emails)
-    ? merged.emails.map(normalizeEmailItem)
+    ? merged.emails.map((item, idx) => normalizeEmailItem(item, idx))
     : [];
 
   const scalarEmail = typeof merged.email === "string" ? merged.email.trim() : "";
   if (scalarEmail && !emails.some((e) => (e.address || "").trim().toLowerCase() === scalarEmail.toLowerCase())) {
-    emails.unshift(normalizeEmailItem(scalarEmail));
+    emails.unshift(normalizeEmailItem(scalarEmail, 0));
   }
 
   if (emails.length === 0) {
-    emails = [{ label: "Personal", address: "" }];
+    emails = [{ label: "Personal", address: "", isPrimary: true }];
   }
 
   // 4. Addresses resolution (array of strings or objects, plus scalar address fields)
   let addresses: Address[] = Array.isArray(merged.addresses)
-    ? merged.addresses.map((item) => normalizeAddressItem(item, defaultCity, defaultProvince, defaultCountry))
+    ? merged.addresses.map((item, idx) => normalizeAddressItem(item, defaultCity, defaultProvince, defaultCountry, idx))
     : [];
 
   const scalarLine1 = (merged.line1 as string || merged.address as string || "").trim();
@@ -852,6 +860,64 @@ export default function ContactForm({
           </Field>
         </SectionCard>
       )}
+
+      <SectionCard
+        title={t("contacts.form.communicationPreferences") || "Communication Preferences"}
+        icon={Mail}
+        accentColor="primary"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field
+            label={t("contacts.form.preferredLanguage") || "Preferred Language"}
+            id="preferredLanguage"
+          >
+            <EditableSelect
+              options={["en", "ur", "ar", "fa"]}
+              value={contactDraft.preferredLanguage || "en"}
+              onChange={(val) => updateDraft({ preferredLanguage: val as 'en' | 'ur' | 'ar' | 'fa' })}
+              placeholder="Select Language"
+              className="w-full"
+            />
+          </Field>
+
+          <Field
+            label={t("contacts.form.preferredContactMethod") || "Preferred Contact Method"}
+            id="preferredContactMethod"
+          >
+            <EditableSelect
+              options={["whatsapp", "sms", "email", "phone_call"]}
+              value={contactDraft.preferredContactMethod || "whatsapp"}
+              onChange={(val) => updateDraft({ preferredContactMethod: val as 'whatsapp' | 'sms' | 'email' | 'phone_call' })}
+              placeholder="Select Method"
+              className="w-full"
+            />
+          </Field>
+        </div>
+
+        <div className="mt-4">
+          <label
+            htmlFor="doNotContact"
+            className={cn(
+              "flex items-center gap-3 py-3 px-4.5 rounded-xl border select-none cursor-pointer transition-all duration-300",
+              contactDraft.doNotContact
+                ? "bg-rose-500/10 border-rose-500/45 shadow-sm"
+                : "bg-muted/5 border-border/80 hover:bg-muted/10 hover:border-border",
+            )}
+          >
+            <Checkbox
+              id="doNotContact"
+              checked={!!contactDraft.doNotContact}
+              onCheckedChange={(checked) => updateDraft({ doNotContact: !!checked })}
+              className="data-[state=checked]:bg-rose-600 data-[state=checked]:text-white"
+            />
+            <div className="flex-1 flex items-center justify-between">
+              <span className="text-xs font-semibold text-foreground">
+                {t("contacts.form.doNotContact") || "Opt out of automated bulk messaging (Do Not Contact)"}
+              </span>
+            </div>
+          </label>
+        </div>
+      </SectionCard>
     </div>
   );
 
