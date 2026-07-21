@@ -7,7 +7,6 @@ import { platformSettings } from '../../db/schema.js';
 const GLOBAL_SETTINGS_ID = 'global';
 
 let cachedPlatformSettings: PlatformSettings = { ...DEFAULT_PLATFORM_SETTINGS };
-let isInitialized = false;
 
 /**
  * Initializes the in-memory platform settings cache from PostgreSQL on server startup.
@@ -63,7 +62,6 @@ export async function initPlatformSettings(): Promise<PlatformSettings> {
     console.warn('Failed to initialize platform settings from database; using defaults:', error);
   }
 
-  isInitialized = true;
   return cachedPlatformSettings;
 }
 
