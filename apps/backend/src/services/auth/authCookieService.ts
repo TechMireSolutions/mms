@@ -30,8 +30,20 @@ export function setAuthCookies(
   refreshToken: string,
 ): void {
   const base = secureCookieBase();
-  reply.setCookie(ACCESS_COOKIE, accessToken, { ...base, maxAge: ACCESS_TTL_SEC });
-  reply.setCookie(REFRESH_COOKIE, refreshToken, { ...base, maxAge: REFRESH_TTL_SEC });
+  reply.setCookie(ACCESS_COOKIE, accessToken, {
+    path: '/',
+    httpOnly: true,
+    secure: base.secure,
+    sameSite: 'lax',
+    maxAge: ACCESS_TTL_SEC,
+  });
+  reply.setCookie(REFRESH_COOKIE, refreshToken, {
+    path: '/',
+    httpOnly: true,
+    secure: base.secure,
+    sameSite: 'lax',
+    maxAge: REFRESH_TTL_SEC,
+  });
 }
 
 export function clearAuthCookies(reply: FastifyReply): void {
