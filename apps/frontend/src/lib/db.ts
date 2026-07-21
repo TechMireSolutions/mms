@@ -196,11 +196,11 @@ export interface ServerSyncResult {
   status?: number;
 }
 
-async function syncToServer(url: string, body: unknown): Promise<ServerSyncResult> {
+async function syncToServer(url: string, body: unknown, method: string = "POST"): Promise<ServerSyncResult> {
   try {
     setSyncStatus('syncing');
     const response = await apiFetch(url, {
-      method: "POST",
+      method,
       headers: getHeaders(),
       body: JSON.stringify(body)
     });
@@ -735,7 +735,7 @@ export function saveObject<T>(key: string, objectValue: T): void {
         void syncToServer('/api/custom-tabs/bulk', {
           moduleId,
           tabs: tabsForBulk,
-        });
+        }, "PUT");
       }
     } else {
       void syncToServer(`/api/db/objects/${key}`, processed);

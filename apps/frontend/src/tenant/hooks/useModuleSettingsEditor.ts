@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { type TabDefinition } from "@mms/shared";
 import { type ModuleSettingsShape } from "@/hooks/useModuleConfig";
 import { useModuleFieldsEditor } from "./useModuleFieldsEditor";
@@ -46,6 +46,9 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     initialRequiredTabs: Array.from(new Set(settings.requiredTabs || defaultRequiredTabs)),
   });
 
+  const resetRef = useRef(fieldsEditor.resetAllState);
+  resetRef.current = fieldsEditor.resetAllState;
+
   // Keep fields state synced when settings load or change
   useEffect(() => {
     if (!settings) return;
@@ -60,13 +63,13 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
       enabled: tab.key === "basic" ? true : (settings.enabledTabs || defaultEnabledTabs).includes(tab.key),
     }));
 
-    fieldsEditor.resetAllState(
+    resetRef.current(
       updatedTabs,
       settings.fields || {},
       settings.enabledTabs || defaultEnabledTabs,
       settings.requiredTabs || defaultRequiredTabs
     );
-  }, [settings, fieldsEditor, tabRegistry, defaultEnabledTabs, defaultRequiredTabs]);
+  }, [settings, tabRegistry, defaultEnabledTabs, defaultRequiredTabs]);
 
   const saveSettings = useCallback((preferencesDraft?: Partial<T>, additionalFields?: Partial<T>) => {
     const updatedFormTabs = fieldsEditor.formTabs.map((tab) => ({

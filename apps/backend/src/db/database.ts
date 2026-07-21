@@ -110,12 +110,6 @@ export async function initDb(): Promise<void> {
     _rootDb = drizzle(pool, { schema });
     setDb(_rootDb);
 
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS collections (name text PRIMARY KEY NOT NULL, data jsonb NOT NULL, updated_at timestamp DEFAULT now() NOT NULL);
-      CREATE TABLE IF NOT EXISTS objects (key text PRIMARY KEY NOT NULL, data jsonb NOT NULL, updated_at timestamp DEFAULT now() NOT NULL);
-      CREATE TABLE IF NOT EXISTS data_migrations (id text PRIMARY KEY NOT NULL, applied_at timestamp DEFAULT now() NOT NULL);
-    `);
-
     // Run Drizzle migrations dynamically on start
     const backendRoot = resolveBackendRoot();
     const srcMigrations = join(backendRoot, 'src/db/migrations_drizzle');
