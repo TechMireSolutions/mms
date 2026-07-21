@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { hashRefreshToken } from '../services/auth/authCookieService.js';
+import {
+  hashOtpCode,
+  hashRefreshToken,
+  verifyOtpCode,
+} from '../services/auth/authCookieService.js';
 
 const mockFindRefreshTokenByHash = vi.fn();
 
@@ -57,5 +61,15 @@ describe('validateRefreshToken', () => {
       },
       artifactId: 'a1',
     });
+  });
+});
+
+describe('verifyOtpCode', () => {
+  it('rejects the former development shortcut code when it does not match the hash', () => {
+    expect(verifyOtpCode('123456', hashOtpCode('654321'))).toBe(false);
+  });
+
+  it('accepts only the code represented by the stored hash', () => {
+    expect(verifyOtpCode('654321', hashOtpCode('654321'))).toBe(true);
   });
 });

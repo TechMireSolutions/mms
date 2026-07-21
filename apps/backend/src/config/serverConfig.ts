@@ -2,7 +2,7 @@ export interface ServerConfig {
   isProd: boolean;
   jwtSecret: string;
   databaseUrl: string;
-  trustProxy: boolean;
+  trustProxy: boolean | string[];
   logLevel: string;
   allowedOrigin: string;
   bodyLimit: number;
@@ -41,11 +41,21 @@ export function loadServerConfig(): ServerConfig {
     }
   }
 
+  const trustProxyValue = process.env.TRUST_PROXY?.trim();
+  if (trustProxyValue === 'true') {
+    throw new Error(
+      'TRUST_PROXY=true is unsafe. Set TRUST_PROXY to a comma-separated list of trusted proxy IPs or CIDR ranges.',
+    );
+  }
+  const trustedProxies = trustProxyValue && trustProxyValue !== 'false'
+    ? trustProxyValue.split(',').map((entry) => entry.trim()).filter(Boolean)
+    : [];
+
   return {
     isProd,
     jwtSecret,
     databaseUrl,
-    trustProxy: process.env.TRUST_PROXY === 'false' ? false : true,
+    trustProxy: trustedProxies.length > 0 ? trustedProxies : false,
     logLevel: process.env.LOG_LEVEL || 'info',
     allowedOrigin: process.env.ALLOWED_ORIGIN || 'http://localhost:5173',
     bodyLimit: Number(process.env.REQUEST_BODY_LIMIT_BYTES) || 1024 * 1024,

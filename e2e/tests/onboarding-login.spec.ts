@@ -38,6 +38,8 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
   });
 
   test('should setup platform, onboard a new madrasa, force the first password change, and log in to the new tenant dashboard', async ({ page }) => {
+    const browserFailures: string[] = [];
+
     // Add console log listeners to capture errors in the page
     page.on('console', msg => {
       if (msg.type() === 'error' || msg.text().includes('error')) {
@@ -47,7 +49,18 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
       }
     });
     page.on('pageerror', err => {
+      browserFailures.push(`Unhandled browser exception: ${err.message}`);
       console.log(`[BROWSER UNHANDLED EXCEPTION] ${err.message}`);
+    });
+    page.on('requestfailed', request => {
+      const failure = request.failure()?.errorText ?? 'unknown network error';
+      if (failure === 'net::ERR_ABORTED') return;
+      browserFailures.push(`Request failed: ${request.method()} ${request.url()} (${failure})`);
+    });
+    page.on('response', response => {
+      if (response.status() >= 500) {
+        browserFailures.push(`HTTP ${response.status()}: ${response.request().method()} ${response.url()}`);
+      }
     });
 
     // 1. Navigate to the platform apex landing page
@@ -310,5 +323,7 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     // 21. Assert submitted success badge is visible
     await page.waitForSelector('text=Submitted >> visible=true');
     console.log('Attendance successfully marked and submitted.');
+
+    expect(browserFailures, browserFailures.join('\n')).toEqual([]);
   });
 });
