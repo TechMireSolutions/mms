@@ -30,6 +30,8 @@ read_env_var() {
   local value="${line#*=}"
   value="${value%\"}"
   value="${value#\"}"
+  # Strip carriage returns and leading/trailing whitespace
+  value="$(echo -n "$value" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
   echo "$value"
 }
 
@@ -101,7 +103,7 @@ run_priv a2enmod proxy proxy_http headers ssl rewrite 2>/dev/null || true
 run_priv apache2ctl configtest
 run_priv systemctl reload apache2
 if [[ -f /etc/apache2/sites-enabled/000-mmsv2.conf ]] \
-  && grep -q "ServerAlias \\*\\.${APP_DOMAIN}" /etc/apache2/sites-enabled/000-mmsv2.conf 2>/dev/null; then
+  && grep -F -q "ServerAlias *.${APP_DOMAIN}" /etc/apache2/sites-enabled/000-mmsv2.conf 2>/dev/null; then
   echo "MMS vhost enabled — ${APP_DOMAIN} and *.${APP_DOMAIN} → :${BACKEND_PORT}"
 else
   echo "WARNING: 000-mmsv2.conf missing ServerAlias *.${APP_DOMAIN} on :443"

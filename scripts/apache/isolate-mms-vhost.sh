@@ -27,6 +27,8 @@ read_env_var() {
   local value="${line#*=}"
   value="${value%\"}"
   value="${value#\"}"
+  # Strip carriage returns and leading/trailing whitespace
+  value="$(echo -n "$value" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
   echo "$value"
 }
 
@@ -59,7 +61,7 @@ STRIPPED=false
 
 for conf in /etc/apache2/sites-enabled/*; do
   [[ -f "$conf" ]] || continue
-  if grep -q "$APP_DOMAIN" "$conf" 2>/dev/null; then
+  if grep -F -q "$APP_DOMAIN" "$conf" 2>/dev/null; then
     echo "MMS vhost (keep): ${conf}"
     continue
   fi
@@ -84,7 +86,7 @@ fi
 if [[ -n "$APP_DOMAIN" ]]; then
   for conf in /etc/apache2/sites-enabled/*; do
     [[ -f "$conf" ]] || continue
-    if grep -q "$APP_DOMAIN" "$conf" 2>/dev/null; then
+    if grep -F -q "$APP_DOMAIN" "$conf" 2>/dev/null; then
       continue
     fi
     if grep -qE 'ServerAlias[[:space:]]+\*' "$conf" 2>/dev/null \

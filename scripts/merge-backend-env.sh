@@ -35,6 +35,9 @@ write_env_var() {
     return 0
   fi
 
+  # Strip carriage returns and leading/trailing whitespace
+  value="$(echo -n "$value" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+
   local tmp="${ENV_FILE}.tmp.$$"
   if [[ -f "$ENV_FILE" ]]; then
     grep -v "^${key}=" "$ENV_FILE" >"$tmp" 2>/dev/null || : >"$tmp"

@@ -35,6 +35,8 @@ read_env_var() {
   local value="${line#*=}"
   value="${value%\"}"
   value="${value#\"}"
+  # Strip carriage returns and leading/trailing whitespace
+  value="$(echo -n "$value" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
   echo "$value"
 }
 
@@ -94,8 +96,7 @@ for candidate in /etc/apache2/sites-enabled/000-mmsv2.conf /etc/apache2/sites-en
   fi
 done
 if [[ -n "$VHOST" ]]; then
-  if grep -q "ServerAlias \\*\\.${APP_DOMAIN}" "$VHOST" 2>/dev/null \
-    || grep -q "ServerAlias \*\.${APP_DOMAIN}" "$VHOST" 2>/dev/null; then
+  if grep -F -q "ServerAlias *.${APP_DOMAIN}" "$VHOST" 2>/dev/null; then
     ok "$(basename "$VHOST") has ServerAlias *.${APP_DOMAIN}"
   else
     fail "$(basename "$VHOST") missing ServerAlias *.${APP_DOMAIN} — run: bash scripts/apache/install-mms-vhost.sh ${ENV_FILE}"

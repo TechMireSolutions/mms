@@ -26,6 +26,8 @@ read_env_var() {
   local value="${line#*=}"
   value="${value%\"}"
   value="${value#\"}"
+  # Strip carriage returns and leading/trailing whitespace
+  value="$(echo -n "$value" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
   echo "$value"
 }
 
@@ -69,7 +71,7 @@ patch_proxy_in_file() {
 should_patch_file() {
   local conf="$1"
   # Only patch vhosts for MMS_APP_DOMAIN — never other sites (aabtaab.com, darulquran.pk, …).
-  if [[ -n "$APP_DOMAIN" ]] && grep -q "$APP_DOMAIN" "$conf" 2>/dev/null; then
+  if [[ -n "$APP_DOMAIN" ]] && grep -F -q "$APP_DOMAIN" "$conf" 2>/dev/null; then
     return 0
   fi
   return 1

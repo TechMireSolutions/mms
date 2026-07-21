@@ -29,6 +29,8 @@ read_env_var() {
   local value="${line#*=}"
   value="${value%\"}"
   value="${value#\"}"
+  # Strip carriage returns and leading/trailing whitespace
+  value="$(echo -n "$value" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
   echo "$value"
 }
 
