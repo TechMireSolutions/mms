@@ -302,7 +302,7 @@ export function Field({ label, required = false, hint = undefined, error = undef
   const enhancedChildren = React.Children.map(children, injectIdAndName);
 
   return (
-    <div id={id} data-field-key={id}>
+    <div id={id ? `${id}-container` : undefined} data-field-key={id}>
       <label htmlFor={resolvedId} className={LABEL}>
         {label}
         {required && <span className="text-destructive ms-0.5" aria-hidden="true">*</span>}
