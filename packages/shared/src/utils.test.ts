@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parsePhoneNumber, normalizeToE164, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage } from "./utils.js";
 import type { Contact } from "./contactTypes.js";
 
 
@@ -239,6 +239,20 @@ describe("formatDateToIso", () => {
     expect(formatDateToIso(date2)).toBe("2026-12-25");
   });
 });
+
+describe("calcPercentage", () => {
+  it("calculates percentage correctly and rounds to nearest integer", () => {
+    expect(calcPercentage(25, 100)).toBe(25);
+    expect(calcPercentage(1, 3)).toBe(33);
+    expect(calcPercentage(2, 3)).toBe(67);
+  });
+
+  it("handles zero and negative total safely without divide-by-zero", () => {
+    expect(calcPercentage(10, 0)).toBe(0);
+    expect(calcPercentage(10, -5)).toBe(0);
+  });
+});
+
 
 
 

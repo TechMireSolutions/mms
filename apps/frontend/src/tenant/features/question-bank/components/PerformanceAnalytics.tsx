@@ -19,13 +19,10 @@ import {
   QUESTION_ACCURACY_WEAK_THRESHOLD,
   questionAccuracyBarClass,
   questionAccuracyTextClass,
+  calcPercentage as pct,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";
-
-function pct(obtained: number, total: number): number {
-  return total > 0 ? Math.round((obtained / total) * 100) : 0;
-}
 
 function sumScores(scores: Record<string, number>): number {
   return Object.values(scores).reduce((sum, value) => sum + value, 0);

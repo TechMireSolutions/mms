@@ -8,14 +8,11 @@ import {
   type QuestionBankResult,
   type QuestionBankTest,
   getInitials,
+  calcPercentage as pct,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
-
-function pct(obtained: number, total: number): number {
-  return total > 0 ? Math.round((obtained / total) * 100) : 0;
-}
 
 function sumScores(scores: Record<string, number>): number {
   return Object.values(scores).reduce((sum, value) => sum + value, 0);

@@ -108,4 +108,5 @@ export * from './contactValidation.js';
 export { buildDynamicStudentSchema, formatStudentZodIssues } from './studentValidation.js';
 export * from './sessionTypes.js';
 
-export { DEFAULT_CURRENCIES } from './utils.js';
+export * from './utils.js';
+

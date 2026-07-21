@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
-import { initDb } from './db/database.js';
-import { getDb } from './db/dbClient.js';
-import { sessions, enrollments, students, contacts } from './db/schema.js';
+import { initDb } from '../db/database.js';
+import { getDb } from '../db/dbClient.js';
+import { sessions, enrollments, students, contacts } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 
 async function main() {

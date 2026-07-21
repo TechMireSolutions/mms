@@ -29,7 +29,7 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     console.log('Resetting platform users database state...');
     const backendDir = path.resolve(__dirname, '../../apps/backend');
     try {
-      const output = execSync('npx tsx src/reset-platform-users.ts', { cwd: backendDir, encoding: 'utf8' });
+      const output = execSync('npx tsx src/scripts/reset-platform-users.ts', { cwd: backendDir, encoding: 'utf8' });
       console.log(output);
     } catch (err: any) {
       console.error('Failed to reset platform users:', err.stdout || err.stderr || err.message);
@@ -283,7 +283,7 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     console.log('Seeding session, class, and enrollment for student...');
     const backendDir = path.resolve(__dirname, '../../apps/backend');
     try {
-      const output = execSync(`npx tsx src/seed-test-class.ts ${subdomain}`, { cwd: backendDir, encoding: 'utf8' });
+      const output = execSync(`npx tsx src/scripts/seed-test-class.ts ${subdomain}`, { cwd: backendDir, encoding: 'utf8' });
       console.log(output);
     } catch (err: any) {
       console.error('Failed to seed class/enrollment:', err.stdout || err.stderr || err.message);

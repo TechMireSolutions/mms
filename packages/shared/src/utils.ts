@@ -967,4 +967,16 @@ export function formatCnic(value: string): string {
   return `${digits.slice(0, 5)} ${digits.slice(5, 12)} ${digits.slice(12)}`;
 }
 
+/**
+ * Safely calculates a rounded percentage integer (0-100) given a numerator and denominator.
+ * @param value - The numerator value.
+ * @param total - The denominator total value.
+ * @returns The rounded percentage integer (0-100), or 0 if total <= 0.
+ */
+export function calcPercentage(value: number, total: number): number {
+  if (!total || total <= 0) return 0;
+  return Math.round((value / total) * 100);
+}
+
+
 
