@@ -363,6 +363,8 @@ export default function ContactForm({
     genders,
   } = useContactConfig();
   const validate = useContactValidation();
+  const formInstanceId = contact?.id || "new";
+
 
   const [tab, setTab] = useState<TabKey>("basic");
   const [saving, setSaving] = useState(false);
@@ -690,12 +692,12 @@ export default function ContactForm({
               label={t("contacts.reportFields.firstName")}
               required
               error={getFieldError("firstName")}
-              id="firstName"
+              id={`cf-${formInstanceId}-firstName`}
             >
               <div className="relative flex items-center group/input">
                 <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
-                  id="firstName"
+                  id={`cf-${formInstanceId}-firstName`}
                   name="firstName"
                   value={contactDraft.firstName || ""}
                   onChange={(e) => updateDraft({ firstName: e.target.value })}
@@ -710,12 +712,12 @@ export default function ContactForm({
             <Field
               label={t("contacts.reportFields.lastName")}
               error={getFieldError("lastName")}
-              id="lastName"
+              id={`cf-${formInstanceId}-lastName`}
             >
               <div className="relative flex items-center group/input">
                 <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
-                  id="lastName"
+                  id={`cf-${formInstanceId}-lastName`}
                   name="lastName"
                   value={contactDraft.lastName || ""}
                   onChange={(e) => updateDraft({ lastName: e.target.value })}
@@ -730,7 +732,7 @@ export default function ContactForm({
             <Field
               label={t("contacts.reportFields.gender")}
               error={getFieldError("gender")}
-              id="gender"
+              id={`cf-${formInstanceId}-gender`}
             >
               {lockGender ? (
                 <div className="flex h-10 w-full items-center rounded-xl border border-border bg-muted/40 px-3.5 text-xs text-muted-foreground select-none font-semibold">
@@ -738,6 +740,7 @@ export default function ContactForm({
                 </div>
               ) : (
                 <EditableSelect
+                  id={`cf-${formInstanceId}-gender`}
                   options={
                     genders.length > 0
                       ? genders
@@ -756,10 +759,10 @@ export default function ContactForm({
             <Field
               label={t("contacts.reportFields.dob")}
               error={getFieldError("dob")}
-              id="dob"
+              id={`cf-${formInstanceId}-dob`}
             >
               <DatePicker
-                id="dob"
+                id={`cf-${formInstanceId}-dob`}
                 name="dob"
                 value={contactDraft.dob || undefined}
                 onChange={(dateStr) => updateDraft({ dob: dateStr })}
@@ -770,13 +773,13 @@ export default function ContactForm({
           {isFieldEnabled("basic", "cnic") && (
             <Field
               label={t("contacts.form.cnic") || "CNIC"}
-              id="cnic"
+              id={`cf-${formInstanceId}-cnic`}
               error={getFieldError("cnic")}
             >
               <div className="relative flex items-center group/input">
                 <FileText className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
-                  id="cnic"
+                  id={`cf-${formInstanceId}-cnic`}
                   name="cnic"
                   value={contactDraft.cnic || ""}
                   onChange={(e) => {
@@ -840,11 +843,11 @@ export default function ContactForm({
         >
           <Field
             label={t("contacts.form.notes")}
-            id="notes"
+            id={`cf-${formInstanceId}-notes`}
             error={getFieldError("notes")}
           >
             <Textarea
-              id="notes"
+              id={`cf-${formInstanceId}-notes`}
               name="notes"
               value={(contactDraft.notes as string) || ""}
               onChange={(e) => updateDraft({ notes: e.target.value })}

@@ -6,6 +6,8 @@ export interface SearchBarProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  id?: string;
+  name?: string;
 }
 
 /**
@@ -19,12 +21,20 @@ export function SearchBar({
   onChange,
   placeholder = "Search…",
   className = "",
+  id,
+  name,
 }: SearchBarProps): React.ReactElement {
+  const fallbackId = React.useId();
+  const resolvedId = id || `search-input-${fallbackId.replace(/:/g, "")}`;
+  const resolvedName = name || `searchQuery-${fallbackId.replace(/:/g, "")}`;
+
   return (
     <div className={`relative ${className}`}>
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
       <input
         type="text"
+        id={resolvedId}
+        name={resolvedName}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}

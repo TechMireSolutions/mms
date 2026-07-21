@@ -68,6 +68,10 @@ export function RegistryPersonSelect({
     ? t('registryPerson.selectStudent')
     : t('registryPerson.selectTeacher');
 
+  const fallbackId = React.useId();
+  const searchInputId = `person-search-${fallbackId.replace(/:/g, "")}`;
+  const searchInputName = `personSearchQuery-${fallbackId.replace(/:/g, "")}`;
+
   return (
     <div className="space-y-1.5">
       <label htmlFor={id} className={FORM_LABEL}>
@@ -75,6 +79,8 @@ export function RegistryPersonSelect({
       </label>
       <input
         type="search"
+        id={searchInputId}
+        name={searchInputName}
         value={search}
         onChange={(event) => setSearch(event.target.value)}
         placeholder={t('registryPerson.searchPlaceholder')}

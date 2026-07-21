@@ -261,10 +261,12 @@ interface FieldProps {
  */
 export function Field({ label, required = false, hint = undefined, error = undefined, id, children }: FieldProps): React.JSX.Element {
   const fallbackId = React.useId();
+  const instanceIdSuffix = React.useId().replace(/:/g, "");
   const slugified = label
     ? label.toLowerCase().replace(/[^\w\s-]/g, "").trim().replace(/[-\s]+/g, "-")
     : "";
-  const resolvedId = id || slugified || fallbackId;
+  const baseId = id || slugified || fallbackId;
+  const resolvedId = `${baseId}-${instanceIdSuffix}`;
   const errorId = `${resolvedId}-error`;
   const hintId = `${resolvedId}-hint`;
   const describedBy = error ? errorId : (hint ? hintId : undefined);
@@ -282,7 +284,7 @@ export function Field({ label, required = false, hint = undefined, error = undef
     if (isInputLike) {
       return React.cloneElement(element, {
         id: props.id || resolvedId,
-        name: props.name || resolvedId,
+        name: props.name || baseId,
         'aria-invalid': props['aria-invalid'] ?? Boolean(error),
         'aria-describedby': props['aria-describedby'] || describedBy,
       });
