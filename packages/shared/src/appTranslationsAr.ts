@@ -425,6 +425,13 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "platform.noAdmins": "لم يتم إضافة مسؤولين آخرين بعد.",
   "platform.createAdminPending": "جاري إضافة المسؤول...",
   "platform.profileRole": "الدور",
+  "platform.profileDestroyDatabase": "إعادة ضبط قاعدة البيانات",
+  "platform.profileDestroyDatabaseDesc": "يمسح تمامًا جميع بيانات قاعدة البيانات، وينفذ عمليات الترحيل الجديدة، ويعيد التنشيط. هذا الإجراء لا يمكن التراجع عنه.",
+  "platform.profileDestroyDatabaseButton": "إعادة ضبط قاعدة البيانات بالكامل",
+  "platform.profileDestroyDatabaseTitle": "إعادة ضبط قاعدة البيانات بالكامل؟",
+  "platform.profileDestroyDatabaseConfirm": "إعادة ضبط قاعدة البيانات",
+  "platform.profileDestroyDatabasePrompt": "لتأكيد الإجراء، يرجى كتابة \"RESET_ALL_DATABASE_DATA\" أدناه:",
+  "platform.profileDestroyDatabaseSuccess": "تم إعادة ضبط قاعدة البيانات بنجاح. تمت استعادة كافة مساحات العمل والمستخدمين إلى بذورها الافتراضية.",
 
   "account.title": "ملفي الشخصي",
   "account.subtitle": "تحديث بيانات الاتصال وبريد تسجيل الدخول",

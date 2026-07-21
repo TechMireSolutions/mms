@@ -21,6 +21,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FORM_INPUT, FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 import { apiJson, ApiError } from "@/lib/apiClient";
 import { mapPlatformAuthError } from "@/platform/lib/platformAuthErrors";
 import { ROUTES } from "@/lib/config/routes";
@@ -42,6 +52,8 @@ export default function PlatformAccount(): React.JSX.Element {
   } = usePlatformAuth();
   const { data: profile, isLoading: loadingProfile, isError: profileError } = usePlatformProfile();
   const updateName = useUpdatePlatformProfileName();
+  const isSuperUser = platformUser?.role === "super_user";
+
 
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
@@ -51,6 +63,33 @@ export default function PlatformAccount(): React.JSX.Element {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [resetPending, setResetPending] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+
+  const handleResetDatabase = async (): Promise<void> => {
+    if (confirmText !== "RESET_ALL_DATABASE_DATA") return;
+    setResetPending(true);
+    setResetError(null);
+    try {
+      await apiJson("/api/platform/settings/reset-database", {
+        method: "POST",
+        body: JSON.stringify({ confirm: confirmText }),
+      });
+      notify.success(t("platform.profileDestroyDatabaseSuccess"));
+      setResetDialogOpen(false);
+      setConfirmText("");
+    } catch (error) {
+      setResetError(
+        error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"),
+      );
+    } finally {
+      setResetPending(false);
+    }
+  };
+
 
   useEffect(() => {
     if (profile?.name) {
@@ -281,6 +320,79 @@ export default function PlatformAccount(): React.JSX.Element {
               </p>
               </form>
             </Card>
+
+            {isSuperUser && (
+              <>
+                <Card accentColor="destructive" className="p-5 pl-6.5 space-y-4 text-left">
+                  <h2 className="text-sm font-semibold text-foreground ml-0.5">{t("platform.profileDestroyDatabase")}</h2>
+                  <p className="text-xs text-muted-foreground ml-0.5">
+                    {t("platform.profileDestroyDatabaseDesc")}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="w-full"
+                    onClick={() => {
+                      setResetError(null);
+                      setConfirmText("");
+                      setResetDialogOpen(true);
+                    }}
+                  >
+                    {t("platform.profileDestroyDatabaseButton")}
+                  </Button>
+                </Card>
+
+                <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-destructive">{t("platform.profileDestroyDatabaseTitle")}</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {t("platform.profileDestroyDatabaseDesc")}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="space-y-3 my-2 text-left">
+                      <p className="text-xs text-muted-foreground">
+                        {t("platform.profileDestroyDatabasePrompt")}
+                      </p>
+                      <input
+                        type="text"
+                        value={confirmText}
+                        onChange={(event) => {
+                          setConfirmText(event.target.value);
+                          if (resetError) setResetError(null);
+                        }}
+                        placeholder="RESET_ALL_DATABASE_DATA"
+                        className={FORM_INPUT}
+                        disabled={resetPending}
+                      />
+                      {resetError ? (
+                        <p className="text-xs text-destructive" role="alert">
+                          {resetError}
+                        </p>
+                      ) : null}
+                    </div>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel disabled={resetPending}>{t("common.cancel")}</AlertDialogCancel>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        disabled={resetPending || confirmText !== "RESET_ALL_DATABASE_DATA"}
+                        onClick={handleResetDatabase}
+                      >
+                        {resetPending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />
+                            {t("platform.profileDestroyDatabaseConfirm")}
+                          </>
+                        ) : (
+                          t("platform.profileDestroyDatabaseConfirm")
+                        )}
+                      </Button>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            )}
           </>
         ) : (
           <p className="text-sm text-destructive text-center" role="alert">

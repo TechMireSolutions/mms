@@ -425,6 +425,13 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "platform.noAdmins": "ابھی تک کوئی اور منتظم شامل نہیں کیا گیا۔",
   "platform.createAdminPending": "منتظم شامل کیا جا رہا ہے...",
   "platform.profileRole": "کردار",
+  "platform.profileDestroyDatabase": "ڈیٹا بیس ری سیٹ کریں",
+  "platform.profileDestroyDatabaseDesc": "ڈیٹا بیس کا تمام ڈیٹا مکمل طور پر حذف کریں، نئے سرے سے مائگریشن چلائیں، اور دوبارہ بیج ڈالیں۔ یہ عمل واپس نہیں لیا جا سکتا۔",
+  "platform.profileDestroyDatabaseButton": "ڈیٹا بیس کو مکمل طور پر ری سیٹ کریں",
+  "platform.profileDestroyDatabaseTitle": "ڈیٹا بیس کو مکمل طور پر ری سیٹ کریں؟",
+  "platform.profileDestroyDatabaseConfirm": "ڈیٹا بیس ری سیٹ کریں",
+  "platform.profileDestroyDatabasePrompt": "تصدیق کے لیے، براہ کرم نیچے \"RESET_ALL_DATABASE_DATA\" لکھیں:",
+  "platform.profileDestroyDatabaseSuccess": "ڈیٹا بیس کامیابی سے ری سیٹ ہو گیا۔ تمام فائلیں اور صارف پہلے سے طے شدہ حالت میں واپس آ گئے۔",
 
   "account.title": "میرا پروفائل",
   "account.subtitle": "رابطہ کی تفصیلات اور سائن ان ای میل اپ ڈیٹ کریں",

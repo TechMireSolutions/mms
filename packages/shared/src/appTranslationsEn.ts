@@ -423,6 +423,13 @@ export const APP_TRANSLATIONS_EN = {
   "platform.noAdmins": "No other administrators added yet.",
   "platform.createAdminPending": "Adding administrator...",
   "platform.profileRole": "Role",
+  "platform.profileDestroyDatabase": "Reset Database",
+  "platform.profileDestroyDatabaseDesc": "Completely wipes all database data, executes fresh migrations, and re-seeds. This cannot be undone.",
+  "platform.profileDestroyDatabaseButton": "Reset Database Completely",
+  "platform.profileDestroyDatabaseTitle": "Reset database completely?",
+  "platform.profileDestroyDatabaseConfirm": "Reset Database",
+  "platform.profileDestroyDatabasePrompt": "To confirm, please type \"RESET_ALL_DATABASE_DATA\" below:",
+  "platform.profileDestroyDatabaseSuccess": "Database reset successfully. All workspaces, users, and contacts have been restored to default seeds.",
 
   "account.title": "My profile",
   "account.subtitle": "Update your contact details and sign-in email",
