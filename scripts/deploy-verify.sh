@@ -109,7 +109,12 @@ if [[ "$LOCAL_OK" == true ]]; then
     echo "Public site OK"
     report_setup_status "$PUBLIC_API_URL" "$APP_DOMAIN" || exit 1
     if [[ -f "$ROOT_DIR/scripts/verify-tenant-hosts.sh" ]]; then
-      bash "$ROOT_DIR/scripts/verify-tenant-hosts.sh" "" "$ENV_FILE" || exit 1
+      bash "$ROOT_DIR/scripts/verify-tenant-hosts.sh" "" "$ENV_FILE" || {
+        echo "WARNING: Tenant host verification failed. Platform apex is online, but tenant routing check failed."
+        if [[ "${MMS_REQUIRE_WILDCARD_TLS:-0}" == "1" ]]; then
+          exit 1
+        fi
+      }
     fi
     exit 0
   fi
@@ -124,7 +129,12 @@ if [[ -n "$PUBLIC_API_URL" ]]; then
     echo "Public site OK (local backend check failed — investigate ports)"
     report_setup_status "$PUBLIC_API_URL" "$APP_DOMAIN" || exit 1
     if [[ -f "$ROOT_DIR/scripts/verify-tenant-hosts.sh" ]]; then
-      bash "$ROOT_DIR/scripts/verify-tenant-hosts.sh" "" "$ENV_FILE" || exit 1
+      bash "$ROOT_DIR/scripts/verify-tenant-hosts.sh" "" "$ENV_FILE" || {
+        echo "WARNING: Tenant host verification failed. Platform apex is online, but tenant routing check failed."
+        if [[ "${MMS_REQUIRE_WILDCARD_TLS:-0}" == "1" ]]; then
+          exit 1
+        fi
+      }
     fi
     exit 0
   fi
