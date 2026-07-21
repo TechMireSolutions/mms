@@ -45,7 +45,7 @@ export function loadServerConfig(): ServerConfig {
     isProd,
     jwtSecret,
     databaseUrl,
-    trustProxy: process.env.TRUST_PROXY === 'true' || isProd,
+    trustProxy: process.env.TRUST_PROXY === 'false' ? false : true,
     logLevel: process.env.LOG_LEVEL || 'info',
     allowedOrigin: process.env.ALLOWED_ORIGIN || 'http://localhost:5173',
     bodyLimit: Number(process.env.REQUEST_BODY_LIMIT_BYTES) || 1024 * 1024,
