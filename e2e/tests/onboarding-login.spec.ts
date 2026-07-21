@@ -223,19 +223,19 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
 
     // 14. Create a new Contact
     await page.click('button:has-text("Add Contact")');
-    await page.waitForSelector('#firstName input');
+    await page.waitForSelector('input[name="firstName"]');
     
     // Fill first name and last name
-    await page.fill('#firstName input', 'Jane');
-    await page.fill('#lastName input', 'Doe');
+    await page.fill('input[name="firstName"]', 'Jane');
+    await page.fill('input[name="lastName"]', 'Doe');
 
     // Fill gender
-    await page.click('#gender button');
+    await page.click('#cf-new-gender');
     await page.click('role=option[name="Female"]');
 
     // Fill date of birth and trigger blur
-    await page.fill('#dob input[type="text"]', '15/05/2015');
-    await page.locator('#dob input[type="text"]').blur();
+    await page.fill('input[name="dob"]', '15/05/2015');
+    await page.locator('input[name="dob"]').blur();
 
     await page.click('button:has-text("Save")');
     
@@ -250,10 +250,10 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     // Create Father Contact (John Doe)
     console.log('Creating contact John Doe...');
     await page.click('button:has-text("Add Contact")');
-    await page.waitForSelector('#firstName input');
-    await page.fill('#firstName input', 'John');
-    await page.fill('#lastName input', 'Doe');
-    await page.click('#gender button');
+    await page.waitForSelector('input[name="firstName"]');
+    await page.fill('input[name="firstName"]', 'John');
+    await page.fill('input[name="lastName"]', 'Doe');
+    await page.click('#cf-new-gender');
     await page.click('role=option[name="Male"]');
     await waitForToastOverlayToClear(page, 'before saving John Doe');
     await page.click('button:has-text("Save")');
