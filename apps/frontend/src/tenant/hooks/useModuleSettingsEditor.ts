@@ -63,13 +63,41 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
       enabled: tab.key === "basic" ? true : (settings.enabledTabs || defaultEnabledTabs).includes(tab.key),
     }));
 
-    resetRef.current(
-      updatedTabs,
-      settings.fields || {},
-      settings.enabledTabs || defaultEnabledTabs,
-      settings.requiredTabs || defaultRequiredTabs
-    );
-  }, [settings, tabRegistry, defaultEnabledTabs, defaultRequiredTabs]);
+    // Perform structural checks to break potential infinite update loop
+    const currentTabsStr = JSON.stringify(fieldsEditor.formTabs);
+    const newTabsStr = JSON.stringify(updatedTabs);
+    const currentFieldsStr = JSON.stringify(fieldsEditor.tabFields);
+    const newFieldsStr = JSON.stringify(settings.fields || {});
+    
+    const currentEnabledStr = Array.from(fieldsEditor.enabledTabs).sort().join(',');
+    const newEnabledStr = Array.from(new Set(settings.enabledTabs || defaultEnabledTabs)).sort().join(',');
+    
+    const currentRequiredStr = Array.from(fieldsEditor.requiredTabs).sort().join(',');
+    const newRequiredStr = Array.from(new Set(settings.requiredTabs || defaultRequiredTabs)).sort().join(',');
+
+    if (
+      currentTabsStr !== newTabsStr ||
+      currentFieldsStr !== newFieldsStr ||
+      currentEnabledStr !== newEnabledStr ||
+      currentRequiredStr !== newRequiredStr
+    ) {
+      resetRef.current(
+        updatedTabs,
+        settings.fields || {},
+        settings.enabledTabs || defaultEnabledTabs,
+        settings.requiredTabs || defaultRequiredTabs
+      );
+    }
+  }, [
+    settings,
+    tabRegistry,
+    defaultEnabledTabs,
+    defaultRequiredTabs,
+    fieldsEditor.formTabs,
+    fieldsEditor.tabFields,
+    fieldsEditor.enabledTabs,
+    fieldsEditor.requiredTabs,
+  ]);
 
   const saveSettings = useCallback((preferencesDraft?: Partial<T>, additionalFields?: Partial<T>) => {
     const updatedFormTabs = fieldsEditor.formTabs.map((tab) => ({
