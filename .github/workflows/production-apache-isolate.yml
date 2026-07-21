@@ -43,7 +43,7 @@ jobs:
           fi
 
       - name: Apply Apache isolation on server
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.3
         env:
           PLATFORM_APP_URL: ${{ secrets.PLATFORM_APP_URL }}
           PLATFORM_RESEND_API_KEY: ${{ secrets.PLATFORM_RESEND_API_KEY }}
