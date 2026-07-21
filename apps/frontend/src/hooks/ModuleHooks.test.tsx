@@ -25,7 +25,7 @@ describe('ModuleHooks', () => {
           items,
           pageSize: 2,
         });
-        return <div>{pageResult.pageItems.length}</div>;
+        return <div>{pageResult.paginatedItems.length}</div>;
       }
 
       const element = <TestPaginationComponent />;

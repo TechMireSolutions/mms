@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint-and-typecheck:
     runs-on: ubuntu-latest
@@ -14,15 +21,20 @@ jobs:
       JWT_SECRET: 'e2e-test-jwt-secret-key-at-least-32-chars-long'
       DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/mms'
     steps:
-      - uses: actions/checkout@v7
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v6
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 26
+          node-version: 24
+          cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Start PostgreSQL and Setup Database
         run: |
@@ -31,16 +43,27 @@ jobs:
           sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
           sudo -u postgres psql -c "CREATE DATABASE mms;"
 
-      - run: pnpm typecheck
+      - name: Run Typecheck
+        run: pnpm typecheck
+
+      - name: Cache Playwright Browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('e2e/package.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
 
       - name: Install Playwright Browsers
         run: pnpm --filter e2e-tests exec playwright install chromium
 
-      - run: pnpm test
+      - name: Run Test Suite
+        run: pnpm test
 
-      - run: pnpm lint
+      - name: Lint Frontend
+        run: pnpm lint
         working-directory: apps/frontend
 
-      - run: pnpm lint
+      - name: Lint Backend
+        run: pnpm lint
         working-directory: apps/backend
-

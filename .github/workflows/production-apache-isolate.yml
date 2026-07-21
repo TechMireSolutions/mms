@@ -9,6 +9,9 @@ on:
         default: mmsv2.aabtaab.com
         type: string
 
+permissions:
+  contents: read
+
 concurrency:
   group: mms-production-apache-isolate
   cancel-in-progress: false

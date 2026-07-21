@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { buildDynamicStudentSchema, formatStudentZodIssues } from '../studentValidation.js';
-import type { StudentsSettings } from '../settingsTypes.js';
+import { DEFAULT_STUDENTS_SETTINGS, type StudentsSettings } from '../settingsTypes.js';
 import type { FieldDefinition } from '../contactTypes.js';
 
 describe('studentValidation', () => {
   const mockSettings: StudentsSettings = {
+    ...DEFAULT_STUDENTS_SETTINGS,
     requireGuardian: true,
-    autoGenerateGrNumber: false,
-    grNumberPrefix: 'GR',
     formTabs: [
       { key: 'basic', label: 'Basic Info', enabled: true, order: 1 },
       { key: 'guardian', label: 'Guardian Info', enabled: true, order: 2 },
