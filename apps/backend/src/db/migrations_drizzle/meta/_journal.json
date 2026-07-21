@@ -162,6 +162,20 @@
       "when": 1784180400000,
       "tag": "0022_contacts_students_composite_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1784644845908,
+      "tag": "0023_platform_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1784645195443,
+      "tag": "0024_multitenant_rls_composite_keys",
+      "breakpoints": true
     }
   ]
 }

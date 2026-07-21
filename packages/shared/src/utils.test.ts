@@ -247,11 +247,14 @@ describe("calcPercentage", () => {
     expect(calcPercentage(2, 3)).toBe(67);
   });
 
-  it("handles zero and negative total safely without divide-by-zero", () => {
+  it("handles zero, NaN, and negative total safely without divide-by-zero", () => {
     expect(calcPercentage(10, 0)).toBe(0);
     expect(calcPercentage(10, -5)).toBe(0);
+    expect(calcPercentage(0, 100)).toBe(0);
+    expect(Number.isNaN(calcPercentage(NaN, 100))).toBe(true);
   });
 });
+
 
 
 

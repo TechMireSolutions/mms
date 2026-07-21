@@ -100,7 +100,7 @@ async function main() {
     workspaceSubdomain: subdomain,
     customData: enrollmentData,
   }).onConflictDoUpdate({
-    target: enrollments.id,
+    target: [enrollments.workspaceSubdomain, enrollments.id],
     set: { customData: enrollmentData, workspaceSubdomain: subdomain },
   });
 

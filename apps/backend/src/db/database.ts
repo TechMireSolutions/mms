@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { existsSync } from 'node:fs';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import pg from 'pg';
@@ -54,6 +55,7 @@ import { runMigration032 } from './migrations/032_migrate_question_bank_to_table
 import { runMigration033 } from './migrations/033_migrate_logs_to_tables.js';
 import { deleteAuthArtifactsForWorkspace, purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
+import { initPlatformSettings } from '../services/platform/platformSettingsService.js';
 import { setDb } from './dbClient.js';
 
 // ---------------------------------------------------------------------------
@@ -90,6 +92,11 @@ function getRootDb(): DbClient {
   return _rootDb;
 }
 
+export function getPool(): pg.Pool {
+  if (!pool) throw new Error('Database pool not initialized');
+  return pool;
+}
+
 export async function initDb(): Promise<void> {
   try {
     const config = loadServerConfig();
@@ -103,8 +110,17 @@ export async function initDb(): Promise<void> {
     _rootDb = drizzle(pool, { schema });
     setDb(_rootDb);
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS collections (name text PRIMARY KEY NOT NULL, data jsonb NOT NULL, updated_at timestamp DEFAULT now() NOT NULL);
+      CREATE TABLE IF NOT EXISTS objects (key text PRIMARY KEY NOT NULL, data jsonb NOT NULL, updated_at timestamp DEFAULT now() NOT NULL);
+      CREATE TABLE IF NOT EXISTS data_migrations (id text PRIMARY KEY NOT NULL, applied_at timestamp DEFAULT now() NOT NULL);
+    `);
+
     // Run Drizzle migrations dynamically on start
-    const migrationsFolder = join(resolveBackendRoot(), 'src/db/migrations_drizzle');
+    const backendRoot = resolveBackendRoot();
+    const srcMigrations = join(backendRoot, 'src/db/migrations_drizzle');
+    const distMigrations = join(backendRoot, 'dist/db/migrations_drizzle');
+    const migrationsFolder = existsSync(srcMigrations) ? srcMigrations : distMigrations;
     await migrate(_rootDb, { migrationsFolder });
 
     // Run pending data migrations — failures are fatal and halt startup
@@ -147,6 +163,7 @@ export async function initDb(): Promise<void> {
     const migrationLockClient = await pool.connect();
     try {
       await migrationLockClient.query('select pg_advisory_lock($1::integer)', [DATA_MIGRATION_LOCK_KEY]);
+      await migrationLockClient.query('CREATE TABLE IF NOT EXISTS data_migrations (id text PRIMARY KEY, applied_at timestamp default now() NOT NULL);');
 
       const applied = await _rootDb.select().from(schema.dataMigrations);
       const appliedSet = new Set(applied.map((m) => m.id));
@@ -165,6 +182,7 @@ export async function initDb(): Promise<void> {
     }
     await purgeExpiredAuthArtifacts();
     await ensurePlatformSuperUserFromEnv();
+    await initPlatformSettings();
 
     const results = await _rootDb.select({ count: sql<number>`count(*)` }).from(schema.collections);
     const count = Number(results[0]?.count ?? 0);
