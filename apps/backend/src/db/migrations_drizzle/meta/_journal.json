@@ -176,6 +176,13 @@
       "when": 1784645195443,
       "tag": "0024_multitenant_rls_composite_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1784712151711,
+      "tag": "0025_motionless_speed",
+      "breakpoints": true
     }
   ]
 }

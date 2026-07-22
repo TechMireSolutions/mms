@@ -179,6 +179,16 @@ export async function initDb(): Promise<void> {
     await ensurePlatformSuperUserFromEnv();
     await initPlatformSettings();
 
+    // Ensure the default "demo" workspace exists to prevent foreign key violations in test suites
+    await _rootDb.insert(schema.workspaces).values({
+      id: 'ws-demo',
+      subdomain: 'demo',
+      madrasaName: 'Demo Madrasa',
+      tagline: 'Demo Madrasa Tagline',
+      country: 'US',
+      enabled: true,
+    }).onConflictDoNothing();
+
     const results = await _rootDb.select({ count: sql<number>`count(*)` }).from(schema.collections);
     const count = Number(results[0]?.count ?? 0);
 
@@ -195,6 +205,15 @@ export async function initDb(): Promise<void> {
 export async function seedDatabase(): Promise<void> {
   try {
     await runInTransaction(async () => {
+      await activeDb().insert(schema.workspaces).values({
+        id: 'ws-demo',
+        subdomain: 'demo',
+        madrasaName: 'Demo Madrasa',
+        tagline: 'Demo Madrasa Tagline',
+        country: 'US',
+        enabled: true,
+      }).onConflictDoNothing();
+
       for (const [name, collectionItems] of Object.entries(await getMinimalCollectionsForSeed())) {
         await saveCollection(name, collectionItems as unknown[]);
       }

@@ -9,34 +9,28 @@ import {
   isValidSubdomain,
   isWorkspaceEnabled,
   toPublicBranding,
-  WORKSPACES_COLLECTION,
 } from '@mms/shared';
 import {
-  getCollection,
-  getCollectionForUpdate,
-  saveCollection,
   getObject,
   purgeTenantDataBySubdomain,
   runInTransaction,
 } from '../db/database.js';
 import { getRequestTenant, runWithTenant } from '../lib/tenantContext.js';
+import { getDb } from '../db/dbClient.js';
+import { workspaces as workspacesTable } from '../db/schema.js';
+import { eq } from 'drizzle-orm';
 
 async function listWorkspaces(): Promise<Workspace[]> {
-  const raw = await getCollection(WORKSPACES_COLLECTION);
-  if (!Array.isArray(raw)) return [];
-  return raw as Workspace[];
-}
-
-async function mutateWorkspaceRegistry<T>(
-  mutator: (workspaces: Workspace[]) => Promise<T>,
-): Promise<T> {
-  return runInTransaction(async () => {
-    const raw = await getCollectionForUpdate(WORKSPACES_COLLECTION);
-    const workspaces = Array.isArray(raw) ? (raw as Workspace[]) : [];
-    const result = await mutator(workspaces);
-    await saveCollection(WORKSPACES_COLLECTION, workspaces);
-    return result;
-  });
+  const rows = await getDb().select().from(workspacesTable);
+  return rows.map((ws) => ({
+    id: ws.id,
+    subdomain: ws.subdomain,
+    madrasaName: ws.madrasaName,
+    tagline: ws.tagline ?? undefined,
+    country: ws.country ?? undefined,
+    enabled: ws.enabled,
+    createdAt: ws.createdAt.toISOString(),
+  }));
 }
 
 /** Public branding for a workspace subdomain (login shell, registry cards). */
@@ -93,13 +87,12 @@ export async function listPlatformWorkspaces(): Promise<PlatformWorkspaceRow[]> 
 /** Permanently removes a workspace registry entry and all tenant-scoped data. */
 export async function deleteWorkspace(subdomain: string): Promise<Workspace | null> {
   const normalized = normalizeSubdomainInput(subdomain);
-  return mutateWorkspaceRegistry(async (workspaces) => {
-    const index = workspaces.findIndex((ws) => ws.subdomain === normalized);
-    if (index === -1) return null;
-    const removed = workspaces[index];
+  return runInTransaction(async () => {
+    const ws = await getWorkspaceBySubdomain(normalized);
+    if (!ws) return null;
     await purgeTenantDataBySubdomain(normalized);
-    workspaces.splice(index, 1);
-    return removed;
+    await getDb().delete(workspacesTable).where(eq(workspacesTable.subdomain, normalized));
+    return ws;
   });
 }
 
@@ -108,11 +101,13 @@ export async function setWorkspaceEnabled(
   enabled: boolean,
 ): Promise<Workspace | null> {
   const normalized = normalizeSubdomainInput(subdomain);
-  return mutateWorkspaceRegistry(async (workspaces) => {
-    const index = workspaces.findIndex((ws) => ws.subdomain === normalized);
-    if (index === -1) return null;
-    workspaces[index] = { ...workspaces[index], enabled };
-    return workspaces[index];
+  return runInTransaction(async () => {
+    const ws = await getWorkspaceBySubdomain(normalized);
+    if (!ws) return null;
+    await getDb().update(workspacesTable)
+      .set({ enabled })
+      .where(eq(workspacesTable.subdomain, normalized));
+    return { ...ws, enabled };
   });
 }
 
@@ -132,8 +127,18 @@ export async function assertWorkspaceActive(subdomain: string): Promise<Workspac
 
 export async function getWorkspaceBySubdomain(subdomain: string): Promise<Workspace | null> {
   const normalized = normalizeSubdomainInput(subdomain);
-  const workspaces = await listWorkspaces();
-  return workspaces.find((ws) => ws.subdomain === normalized) ?? null;
+  const rows = await getDb().select().from(workspacesTable).where(eq(workspacesTable.subdomain, normalized));
+  const ws = rows[0];
+  if (!ws) return null;
+  return {
+    id: ws.id,
+    subdomain: ws.subdomain,
+    madrasaName: ws.madrasaName,
+    tagline: ws.tagline ?? undefined,
+    country: ws.country ?? undefined,
+    enabled: ws.enabled,
+    createdAt: ws.createdAt.toISOString(),
+  };
 }
 
 /** Resolves workspace for the active request tenant only — never falls back on apex. */
@@ -169,16 +174,12 @@ export async function syncWorkspaceFromBranding(
   branding: Pick<BrandingSettings, 'madrasaName' | 'tagline'>,
 ): Promise<void> {
   const normalized = normalizeSubdomainInput(subdomain);
-  await mutateWorkspaceRegistry(async (workspaces) => {
-    const index = workspaces.findIndex((ws) => ws.subdomain === normalized);
-    if (index === -1) return;
-    const current = workspaces[index];
-    workspaces[index] = {
-      ...current,
-      madrasaName: branding.madrasaName.trim() || current.madrasaName,
-      tagline: branding.tagline?.trim() || current.tagline,
-    };
-  });
+  await getDb().update(workspacesTable)
+    .set({
+      madrasaName: branding.madrasaName.trim(),
+      tagline: branding.tagline?.trim() || null,
+    })
+    .where(eq(workspacesTable.subdomain, normalized));
 }
 
 export async function createWorkspace(workspaceInput: {
@@ -187,31 +188,38 @@ export async function createWorkspace(workspaceInput: {
   tagline?: string;
   country?: string;
 }): Promise<Workspace> {
-  return mutateWorkspaceRegistry(async (workspaces) => {
-    const subdomain = normalizeSubdomainInput(workspaceInput.subdomain);
-    if (!isValidSubdomain(subdomain)) {
-      throw Object.assign(new Error('Invalid subdomain. Use 2–63 lowercase letters, numbers, and hyphens.'), {
-        statusCode: 400,
-      });
-    }
+  const subdomain = normalizeSubdomainInput(workspaceInput.subdomain);
+  if (!isValidSubdomain(subdomain)) {
+    throw Object.assign(new Error('Invalid subdomain. Use 2–63 lowercase letters, numbers, and hyphens.'), {
+      statusCode: 400,
+    });
+  }
 
-    if (workspaces.some((ws) => ws.subdomain === subdomain)) {
+  return runInTransaction(async () => {
+    const existing = await getWorkspaceBySubdomain(subdomain);
+    if (existing) {
       throw Object.assign(new Error('This workspace subdomain is already taken.'), {
         statusCode: 409,
       });
     }
 
-    const workspace: Workspace = {
-      id: randomBytes(8).toString('hex'),
+    const id = randomBytes(8).toString('hex');
+    const newWs = {
+      id,
       subdomain,
       madrasaName: workspaceInput.madrasaName,
-      tagline: workspaceInput.tagline,
-      country: workspaceInput.country,
-      createdAt: new Date().toISOString(),
+      tagline: workspaceInput.tagline || null,
+      country: workspaceInput.country || null,
       enabled: true,
     };
 
-    workspaces.push(workspace);
-    return workspace;
+    await getDb().insert(workspacesTable).values(newWs);
+
+    return {
+      ...newWs,
+      tagline: newWs.tagline ?? undefined,
+      country: newWs.country ?? undefined,
+      createdAt: new Date().toISOString(),
+    };
   });
 }

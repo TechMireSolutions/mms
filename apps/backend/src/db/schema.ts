@@ -24,6 +24,20 @@ export const authArtifacts = pgTable('auth_artifacts', {
   index('auth_artifacts_kind_expires_idx').on(table.kind, table.expiresAt),
 ]);
 
+/** Apex workspaces registry — not tenant-scoped. */
+export const workspaces = pgTable('workspaces', {
+  id: text('id').primaryKey(),
+  subdomain: text('subdomain').notNull().unique(),
+  madrasaName: text('madrasa_name').notNull(),
+  tagline: text('tagline'),
+  country: text('country'),
+  enabled: boolean('enabled').notNull().default(true),
+  createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('workspaces_subdomain_idx').on(table.subdomain),
+]);
+
 /** Apex platform super-users — not tenant-scoped. */
 export const platformUsers = pgTable('platform_users', {
   id: text('id').primaryKey(),
@@ -50,7 +64,7 @@ export const platformSettings = pgTable('platform_settings', {
 /** Madrasa workspace auth users — isolated per subdomain. */
 export const tenantUsers = pgTable('tenant_users', {
   id: text('id').primaryKey(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   loginEmail: text('login_email').notNull(),
   passwordHash: text('password_hash').notNull(),
   name: text('name').notNull().default(''),
@@ -79,7 +93,7 @@ export const dataMigrations = pgTable('data_migrations', {
 
 export const contacts = pgTable('contacts', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   deletedAt: timestamp('deleted_at', { mode: 'date' }),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
@@ -92,7 +106,7 @@ export const contacts = pgTable('contacts', {
 
 export const students = pgTable('students', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   deletedAt: timestamp('deleted_at', { mode: 'date' }),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
@@ -105,7 +119,7 @@ export const students = pgTable('students', {
 
 export const teachers = pgTable('teachers', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   deletedAt: timestamp('deleted_at', { mode: 'date' }),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
@@ -118,7 +132,7 @@ export const teachers = pgTable('teachers', {
 
 export const sessions = pgTable('sessions', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   deletedAt: timestamp('deleted_at', { mode: 'date' }),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
@@ -131,7 +145,7 @@ export const sessions = pgTable('sessions', {
 
 export const attendance = pgTable('attendance', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -142,7 +156,7 @@ export const attendance = pgTable('attendance', {
 
 export const enrollments = pgTable('enrollments', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -153,7 +167,7 @@ export const enrollments = pgTable('enrollments', {
 
 export const obligationTypes = pgTable('obligation_types', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -164,7 +178,7 @@ export const obligationTypes = pgTable('obligation_types', {
 
 export const mujtahids = pgTable('mujtahids', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -175,7 +189,7 @@ export const mujtahids = pgTable('mujtahids', {
 
 export const mujtahidReps = pgTable('mujtahid_reps', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -186,7 +200,7 @@ export const mujtahidReps = pgTable('mujtahid_reps', {
 
 export const wakalaTypes = pgTable('wakala_types', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -197,7 +211,7 @@ export const wakalaTypes = pgTable('wakala_types', {
 
 export const obligationDistributions = pgTable('obligation_distributions', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -208,7 +222,7 @@ export const obligationDistributions = pgTable('obligation_distributions', {
 
 export const obligationCollections = pgTable('obligation_collections', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -219,7 +233,7 @@ export const obligationCollections = pgTable('obligation_collections', {
 
 export const financeInvoices = pgTable('finance_invoices', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -230,7 +244,7 @@ export const financeInvoices = pgTable('finance_invoices', {
 
 export const financePayments = pgTable('finance_payments', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -241,7 +255,7 @@ export const financePayments = pgTable('finance_payments', {
 
 export const exams = pgTable('exams', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -252,7 +266,7 @@ export const exams = pgTable('exams', {
 
 export const examResults = pgTable('exam_results', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -263,7 +277,7 @@ export const examResults = pgTable('exam_results', {
 
 export const hasanatDenoms = pgTable('hasanat_denoms', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -274,7 +288,7 @@ export const hasanatDenoms = pgTable('hasanat_denoms', {
 
 export const hasanatBatches = pgTable('hasanat_batches', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -285,7 +299,7 @@ export const hasanatBatches = pgTable('hasanat_batches', {
 
 export const hasanatDistributions = pgTable('hasanat_distributions', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -296,7 +310,7 @@ export const hasanatDistributions = pgTable('hasanat_distributions', {
 
 export const hasanatRedemptions = pgTable('hasanat_redemptions', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -307,7 +321,7 @@ export const hasanatRedemptions = pgTable('hasanat_redemptions', {
 
 export const accountingAccounts = pgTable('accounting_accounts', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -318,7 +332,7 @@ export const accountingAccounts = pgTable('accounting_accounts', {
 
 export const accountingEntries = pgTable('accounting_entries', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -329,7 +343,7 @@ export const accountingEntries = pgTable('accounting_entries', {
 
 export const accountingFiscalYears = pgTable('accounting_fiscal_years', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -340,7 +354,7 @@ export const accountingFiscalYears = pgTable('accounting_fiscal_years', {
 
 export const questions = pgTable('questions', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -351,7 +365,7 @@ export const questions = pgTable('questions', {
 
 export const tests = pgTable('tests', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -362,7 +376,7 @@ export const tests = pgTable('tests', {
 
 export const assessmentResults = pgTable('assessment_results', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -373,7 +387,7 @@ export const assessmentResults = pgTable('assessment_results', {
 
 export const userActivityLogs = pgTable('user_activity_logs', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -384,7 +398,7 @@ export const userActivityLogs = pgTable('user_activity_logs', {
 
 export const auditLogEntries = pgTable('audit_log_entries', {
   id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -434,7 +448,7 @@ export const auditLogs = pgTable('audit_logs', {
 
 export const customTabs = pgTable('custom_tabs', {
   id: text('id').primaryKey(), // e.g. subdomain:moduleId:key
-  workspaceSubdomain: text('workspace_subdomain').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   moduleId: text('module_id').notNull(),
   key: text('key').notNull(),
   label: text('label').notNull(),
