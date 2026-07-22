@@ -9,68 +9,28 @@ import {
   mergeBrandingSettings,
   mergeGlobalSettings,
   formatDate,
-  parseTenantFromHost,
   tenantLocalStoragePrefix,
   validateWorkspaceBackupJson,
   buildWorkspaceBackupEnvelope,
   buildStorageKeysFromSnapshot,
+  parseStorageKeysToSnapshot,
   type TenantDatabaseSnapshot,
   applyTitleCaseRecursive,
-  type TabDefinition,
   registerSettingsProvider,
+  encryptWorkspaceBackup,
+  type BackupCredentials,
+  type WorkspaceBackupStats,
+  type WorkspaceBackupEnvelope,
 } from "@mms/shared";
-import { getAppDomain } from "@/lib/config/tenantConfig";
+import { getCurrentSubdomain } from "@/lib/config/tenantConfig";
 import {
   hydrateCollectionRows,
   normalizeCollectionRows,
 } from "@/lib/contactLink/collectionSync";
 import type { ContactLike } from "@mms/shared";
 
-interface CustomTab {
-  id?: string;
-  moduleId: string;
-  key: string;
-  label: string;
-  icon?: string | null;
-  enabled: boolean;
-  sortOrder: number;
-  permissions?: string[] | null;
-  description?: string | null;
-  color?: string | null;
-  isSystem: boolean;
-}
 
-const MODULE_TO_CONFIG_KEY: Record<string, string> = {
-  contacts: 'contact_field_config',
-  students: 'students_settings',
-  teachers: 'teachers_settings',
-  users: 'users_settings',
-  attendance: 'attendance_settings',
-  sessions: 'sessions_settings',
-  enrollments: 'enrollments_settings',
-  finance: 'finance_settings',
-  obligations: 'obligations_settings',
-  accounting: 'accounting_settings',
-  hasanat: 'hasanat_settings',
-  examinations: 'examinations_settings',
-  'question-bank': 'question_bank_settings',
-};
-
-const CONFIG_KEY_TO_MODULE: Record<string, string> = {
-  contact_field_config: 'contacts',
-  students_settings: 'students',
-  teachers_settings: 'teachers',
-  users_settings: 'users',
-  attendance_settings: 'attendance',
-  sessions_settings: 'sessions',
-  enrollments_settings: 'enrollments',
-  finance_settings: 'finance',
-  obligations_settings: 'obligations',
-  accounting_settings: 'accounting',
-  hasanat_settings: 'hasanat',
-  examinations_settings: 'examinations',
-  question_bank_settings: 'question-bank',
-};
+// Replaced local key mapping configs with imports from @mms/shared (DRY)
 
 const LINK_MANAGED_COLLECTIONS = new Set([
   "students",
@@ -142,8 +102,7 @@ function normalizeLinkedCollection<T>(key: string, rows: T[]): T[] {
 
 /** Active workspace localStorage key prefix (`mms_` on apex, `mms_t:{slug}:` on tenant). */
 export function getWorkspaceLocalStoragePrefix(): string {
-  if (typeof window === "undefined") return "mms_";
-  const subdomain = parseTenantFromHost(window.location.hostname, getAppDomain());
+  const subdomain = getCurrentSubdomain();
   return subdomain ? tenantLocalStoragePrefix(subdomain) : "mms_";
 }
 
@@ -249,20 +208,39 @@ function dispatchLocalDatabaseUpdate(): void {
 }
 
 /**
+ * Safely writes a key-value pair to localStorage, handling quota exceptions.
+ */
+function safeSetItem(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch (err) {
+    console.warn(`LocalStorage quota exceeded for key "${key}", skipping local cache write.`, err);
+  }
+}
+
+/**
+ * Removes all keys starting with the specified prefix from localStorage.
+ */
+function clearByPrefix(prefix: string): void {
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(prefix)) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach((k) => localStorage.removeItem(k));
+}
+
+
+/**
  * Writes a server snapshot into the scoped localStorage cache.
  */
 export function applySnapshotToLocalCache(snapshot: TenantDatabaseSnapshot): void {
-  if (snapshot.collections) {
-    for (const [name, list] of Object.entries(snapshot.collections)) {
-      if (!Array.isArray(list)) continue;
-      localStorage.setItem(scopedStorageKey(name), JSON.stringify(list));
-    }
-  }
-
-  if (snapshot.objects) {
-    for (const [key, obj] of Object.entries(snapshot.objects)) {
-      localStorage.setItem(scopedStorageKey(key), JSON.stringify(obj));
-    }
+  const prefix = getStoragePrefix();
+  const keys = buildStorageKeysFromSnapshot(snapshot, prefix);
+  for (const [key, value] of Object.entries(keys)) {
+    safeSetItem(key, value);
   }
 
   dispatchLocalDatabaseUpdate();
@@ -277,45 +255,6 @@ export function applySnapshotToLocalCache(snapshot: TenantDatabaseSnapshot): voi
 export async function syncDatabase(): Promise<void> {
   try {
     const tenantSnapshot = await fetchTenantSnapshot();
-    
-    try {
-      const tabsRes = await apiFetch("/api/custom-tabs");
-      if (tabsRes.ok) {
-        const { tabs } = (await tabsRes.json()) as { tabs: CustomTab[] };
-        const grouped: Record<string, TabDefinition[]> = {};
-        for (const tab of tabs) {
-          if (!grouped[tab.moduleId]) {
-            grouped[tab.moduleId] = [];
-          }
-          grouped[tab.moduleId].push({
-            key: tab.key,
-            label: tab.label,
-            icon: tab.icon ?? undefined,
-            enabled: tab.enabled,
-            order: tab.sortOrder,
-            permissions: tab.permissions ?? undefined,
-            description: tab.description ?? undefined,
-            color: tab.color ?? undefined,
-            isSystem: tab.isSystem,
-          });
-        }
-        if (tenantSnapshot.objects) {
-          for (const [moduleId, formTabs] of Object.entries(grouped)) {
-            const configKey = MODULE_TO_CONFIG_KEY[moduleId];
-            if (configKey) {
-              const currentObj = (tenantSnapshot.objects[configKey] || {}) as Record<string, unknown>;
-              tenantSnapshot.objects[configKey] = {
-                ...currentObj,
-                formTabs,
-              };
-            }
-          }
-        }
-      }
-    } catch (tabError) {
-      console.warn("Failed to sync custom tabs from server:", tabError);
-    }
-
     applySnapshotToLocalCache(tenantSnapshot);
   } catch (error) {
     console.error("Failed to sync database with backend:", error);
@@ -332,10 +271,7 @@ export async function exportTenantBackup(): Promise<string> {
 
   const prefix = getStoragePrefix();
   const keys = buildStorageKeysFromSnapshot(snapshot, prefix);
-  const subdomain =
-    typeof window !== "undefined"
-      ? parseTenantFromHost(window.location.hostname, getAppDomain())
-      : null;
+  const subdomain = getCurrentSubdomain();
 
   return buildWorkspaceBackupEnvelope(keys, { subdomain, dataSource: "server" });
 }
@@ -392,14 +328,6 @@ const BUSINESS_COLLECTIONS = new Set([
 ]);
 
 /**
- * Returns true if the collection key is a syncable business collection.
- * Includes user-scoped template keys.
- */
-export function isBusinessCollection(key: string): boolean {
-  return BUSINESS_COLLECTIONS.has(key) || key.startsWith("whatsappTemplates_u:") || key.startsWith("messages_u:");
-}
-
-/**
  * Checks if a collection key exists in local storage.
  *
  * @param {string} key - The collection key.
@@ -430,7 +358,7 @@ export function saveCollectionCacheOnly<T>(key: string, collectionItems: T[]): v
     }
     dataToSave = normalizeLinkedCollection(key, dataToSave);
     dataToSave = applyTitleCaseRecursive(dataToSave) as T[];
-    localStorage.setItem(scopedStorageKey(key), JSON.stringify(dataToSave));
+    safeSetItem(scopedStorageKey(key), JSON.stringify(dataToSave));
     dispatchLocalDatabaseUpdate();
   } catch (error) {
     console.error(`Error saving collection "${key}" to local cache:`, error);
@@ -445,7 +373,7 @@ export function saveCollectionCacheOnly<T>(key: string, collectionItems: T[]): v
  * @param {T[]} defaultData - Fallback data used if the collection does not exist.
  * @returns {T[]} The loaded collection.
  */
-export function getCollection<T = any>(key: string, defaultData: T[] = [] as T[]): T[] {
+export function getCollection<T = unknown>(key: string, defaultData: T[] = [] as T[]): T[] {
   try {
     const saved = localStorage.getItem(scopedStorageKey(key));
     if (saved !== null && saved !== "undefined") {
@@ -475,7 +403,7 @@ export function getCollection<T = any>(key: string, defaultData: T[] = [] as T[]
       dataToSave = validateSessions(defaultData) as unknown as T[];
     }
     dataToSave = normalizeLinkedCollection(key, dataToSave);
-    localStorage.setItem(scopedStorageKey(key), JSON.stringify(dataToSave));
+    safeSetItem(scopedStorageKey(key), JSON.stringify(dataToSave));
 
     // Defer so reads during render (e.g. useLiveCollection init) don't update other components synchronously
     queueMicrotask(() => {
@@ -510,7 +438,7 @@ export function saveCollection<T>(key: string, collectionItems: T[]): void {
     }
     dataToSave = normalizeLinkedCollection(key, dataToSave);
     dataToSave = applyTitleCaseRecursive(dataToSave) as T[];
-    localStorage.setItem(scopedStorageKey(key), JSON.stringify(dataToSave));
+    safeSetItem(scopedStorageKey(key), JSON.stringify(dataToSave));
     dispatchLocalDatabaseUpdate();
 
     // Sync to backend asynchronously
@@ -538,7 +466,7 @@ export function getObject<T>(key: string, defaultData: T): T {
         console.warn(`Failed to parse cached object "${key}", resetting to default.`);
       }
     }
-    localStorage.setItem(scopedStorageKey(key), JSON.stringify(defaultData));
+    safeSetItem(scopedStorageKey(key), JSON.stringify(defaultData));
 
     return defaultData;
   } catch (error) {
@@ -657,7 +585,7 @@ function shouldSkipTitleCase(key: string): boolean {
 
 function writeObjectLocal<T>(key: string, objectValue: T): T {
   const processed = shouldSkipTitleCase(key) ? objectValue : (applyTitleCaseRecursive(objectValue) as T);
-  localStorage.setItem(scopedStorageKey(key), JSON.stringify(processed));
+  safeSetItem(scopedStorageKey(key), JSON.stringify(processed));
   dispatchLocalDatabaseUpdate();
   return processed;
 }
@@ -713,62 +641,9 @@ export function cachePublicBranding(partial: PublicBranding): void {
 export function saveObject<T>(key: string, objectValue: T): void {
   try {
     const processed = writeObjectLocal(key, objectValue);
-    const moduleId = CONFIG_KEY_TO_MODULE[key];
-    if (moduleId && objectValue && typeof objectValue === 'object' && 'formTabs' in objectValue) {
-      const { formTabs, ...cleaned } = processed as unknown as { formTabs?: unknown } & Record<string, unknown>;
-      
-      void syncToServer(`/api/db/objects/${key}`, cleaned);
-      
-      if (Array.isArray(formTabs)) {
-        const tabsForBulk = (formTabs as TabDefinition[]).map((tab, idx: number) => ({
-          key: tab.key,
-          label: tab.label,
-          icon: tab.icon || null,
-          enabled: tab.enabled !== false,
-          sortOrder: tab.order ?? idx,
-          permissions: tab.permissions || null,
-          description: tab.description || null,
-          color: tab.color || null,
-          isSystem: tab.isSystem === true,
-        }));
-        
-        void syncToServer('/api/custom-tabs/bulk', {
-          moduleId,
-          tabs: tabsForBulk,
-        }, "PUT");
-      }
-    } else {
-      void syncToServer(`/api/db/objects/${key}`, processed);
-    }
+    void syncToServer(`/api/db/objects/${key}`, processed);
   } catch (error) {
     console.error(`Error writing object "${key}" to database:`, error);
-  }
-}
-
-/**
- * Exports scoped localStorage only (cache — may be incomplete vs PostgreSQL).
- */
-export function exportLocalDatabaseCache(): string {
-  try {
-    const prefix = getStoragePrefix();
-    const scopedLocalStorageEntries: Record<string, string> = {};
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(prefix)) {
-        const storedValue = localStorage.getItem(key);
-        if (storedValue !== null) {
-          scopedLocalStorageEntries[key] = storedValue;
-        }
-      }
-    }
-    const subdomain =
-      typeof window !== "undefined"
-        ? parseTenantFromHost(window.location.hostname, getAppDomain())
-        : null;
-    return buildWorkspaceBackupEnvelope(scopedLocalStorageEntries, { subdomain, dataSource: "local" });
-  } catch (error) {
-    console.error("Error exporting database:", error);
-    throw error;
   }
 }
 
@@ -787,41 +662,41 @@ export async function importDatabase(jsonString: string): Promise<void> {
       throw new Error(validated.errorKey);
     }
 
-    const keysToRemove: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(prefix)) {
-        keysToRemove.push(key);
-      }
-    }
-    keysToRemove.forEach((k) => localStorage.removeItem(k));
+    const { collections, objects } = parseStorageKeysToSnapshot(validated.data, prefix);
 
-    const collections: Record<string, unknown[]> = {};
-    const objects: Record<string, unknown> = {};
-
-    for (const [key, value] of Object.entries(validated.data)) {
-      localStorage.setItem(key, value);
-
-      const parsedVal = JSON.parse(value) as unknown;
-      const logicalKey = key.slice(prefix.length);
-      if (Array.isArray(parsedVal)) {
-        collections[logicalKey] = parsedVal;
-      } else {
-        objects[logicalKey] = parsedVal;
-      }
-    }
-
-    dispatchLocalDatabaseUpdate();
-
-    // Pushes backup bulk sync to backend
+    // Pushes backup bulk sync to backend first. If this fails, the local cache remains untouched.
     const result = await syncToServer("/api/db/sync", { collections, objects });
     if (!result.ok) {
       throw new Error("backup.serverRestoreFailed");
     }
+
+    // Clear old client cache only after backend success
+    clearByPrefix(prefix);
+
+    // Populate new client cache
+    for (const [key, value] of Object.entries(validated.data)) {
+      safeSetItem(key, value);
+    }
+
+    dispatchLocalDatabaseUpdate();
   } catch (error) {
     console.error("Error importing database:", error);
     throw error;
   }
+}
+
+/**
+ * Exports a full tenant backup from the server (PostgreSQL) and encrypts it using admin credentials.
+ */
+export async function exportEncryptedTenantBackup(
+  credentials: BackupCredentials,
+  tenantLabel: string,
+): Promise<{ encrypted: string; stats: WorkspaceBackupStats }> {
+  const plaintext = await exportTenantBackup();
+  const envelope = JSON.parse(plaintext) as WorkspaceBackupEnvelope;
+  const subdomain = getCurrentSubdomain();
+  const encrypted = await encryptWorkspaceBackup(plaintext, credentials, { subdomain, tenantLabel });
+  return { encrypted, stats: envelope.stats };
 }
 
 /**

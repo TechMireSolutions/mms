@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle2, Clock, HardDriveDownload, RefreshCw, AlertTriangle } from 'lucide-react';
-import { BACKUP_HISTORY_MAX, formatDate, type WorkspaceBackupRecord } from '@mms/shared';
+import { BACKUP_HISTORY_MAX, formatDateTime, type WorkspaceBackupRecord } from '@mms/shared';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Button } from '@/components/ui/button';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
@@ -88,7 +88,7 @@ export default function BackupHistorySection({
                 </div>
 
                 <div className="flex items-center gap-4 shrink-0">
-                  <span className="text-xs font-medium text-muted-foreground/70">{formatDate(backup.date)}</span>
+                  <span className="text-xs font-medium text-muted-foreground/70">{formatDateTime(backup.date)}</span>
                   
                   <div className="flex items-center gap-2">
                     <Button
@@ -98,9 +98,7 @@ export default function BackupHistorySection({
                       onClick={() => onRestore(backup)}
                       disabled={restoreId !== null || !backup.data}
                       className={`min-h-[32px] px-3 font-semibold text-xs transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
-                        isRestoringThis 
-                          ? 'border-primary/30 text-primary bg-primary/5' 
-                          : 'border-border bg-card text-foreground hover:bg-muted'
+                        isRestoringThis ? 'border-primary/30 text-primary bg-primary/5' : ''
                       }`}
                     >
                       {isRestoringThis ? (
@@ -120,7 +118,7 @@ export default function BackupHistorySection({
                       onClick={() => onDownload(backup)}
                       aria-label={t('backup.download')}
                       disabled={restoreId !== null}
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200 rounded-lg"
+                      className="h-8 w-8 text-muted-foreground"
                     >
                       <HardDriveDownload className="h-4 w-4 transition-transform duration-300 group-hover/item:translate-y-0.5" aria-hidden />
                     </Button>

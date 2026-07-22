@@ -1,4 +1,4 @@
-import { isServerOnlyObjectKey } from '@mms/shared';
+import { isServerOnlyObjectKey, type TenantDatabaseSnapshot } from '@mms/shared';
 import {
   getCollection as dbGetCollection,
   saveCollection as dbSaveCollection,
@@ -9,17 +9,12 @@ import {
   runInTransaction
 } from '../db/database.js';
 
-export interface SyncPayload {
-  collections?: Record<string, unknown[]>;
-  objects?: Record<string, unknown>;
-}
-
 /**
  * Retrieves a snapshot of all database collections and objects.
  *
- * @returns {Promise<{ collections: Record<string, unknown[]>; objects: Record<string, unknown> }>} The full database sync snapshot.
+ * @returns {Promise<TenantDatabaseSnapshot>} The full database sync snapshot.
  */
-export async function fetchDatabaseSnapshot(): Promise<{ collections: Record<string, unknown[]>; objects: Record<string, unknown> }> {
+export async function fetchDatabaseSnapshot(): Promise<TenantDatabaseSnapshot> {
   return await dbGetAllData();
 }
 
@@ -27,10 +22,10 @@ export async function fetchDatabaseSnapshot(): Promise<{ collections: Record<str
  * Performs a synchronized batch write of collections and objects.
  * Uses a single database transaction block to guarantee atomicity and speed up bulk inserts.
  *
- * @param {SyncPayload} payload - The sync collections and objects.
+ * @param {TenantDatabaseSnapshot} payload - The sync collections and objects.
  * @returns {Promise<void>}
  */
-export async function synchronizeData(payload: SyncPayload): Promise<void> {
+export async function synchronizeData(payload: TenantDatabaseSnapshot): Promise<void> {
   const { collections, objects } = payload;
   
   await runInTransaction(async () => {

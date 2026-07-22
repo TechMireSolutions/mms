@@ -6,6 +6,13 @@ import {
   extractBackupRawKeys,
   summarizeWorkspaceBackup,
   validateWorkspaceBackupJson,
+  isBackupErrorKey,
+  createBackupHistoryEntry,
+  findRestrictedKeyInSnapshot,
+  parseStorageKeysToSnapshot,
+  SETTINGS_KEY_TO_MODULE,
+  MODULE_TO_SETTINGS_KEY,
+  validateAndNormalizeSnapshot,
 } from './backupTypes.js';
 
 const PREFIX = 'mms_t:demo:';
@@ -178,4 +185,237 @@ describe('backupTypes', () => {
       ]);
     }
   });
+
+  it('rejects backup with users collection but no admin user', () => {
+    const backupDataNoAdmin = JSON.stringify({
+      format: BACKUP_FORMAT_ID,
+      version: 1,
+      exportedAt: '2026-06-23T00:00:00Z',
+      subdomain: 'demo',
+      stats: { keyCount: 1, collectionCount: 1, objectCount: 0, byteSize: 100 },
+      keys: {
+        'mms_t:demo:users': '[{"id":"1","name":"A","role":"teacher"},{"id":"2","name":"B","role":"assistant_teacher"}]',
+      },
+    });
+    const res = validateWorkspaceBackupJson(backupDataNoAdmin, PREFIX);
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.errorKey).toBe('backup.missingAdminUser');
+    }
+  });
+
+  it('accepts backup with users collection containing at least one admin user', () => {
+    const backupDataWithAdmin = JSON.stringify({
+      format: BACKUP_FORMAT_ID,
+      version: 1,
+      exportedAt: '2026-06-23T00:00:00Z',
+      subdomain: 'demo',
+      stats: { keyCount: 1, collectionCount: 1, objectCount: 0, byteSize: 100 },
+      keys: {
+        'mms_t:demo:users': '[{"id":"1","name":"A","role":"teacher"},{"id":"2","name":"B","role":"admin"}]',
+      },
+    });
+    const res = validateWorkspaceBackupJson(backupDataWithAdmin, PREFIX);
+    expect(res.ok).toBe(true);
+  });
+
+  describe('isBackupErrorKey', () => {
+    it('returns true if string starts with backup.', () => {
+      expect(isBackupErrorKey('backup.invalidFormat')).toBe(true);
+      expect(isBackupErrorKey('backup.restoreFailed')).toBe(true);
+    });
+
+    it('returns false if string does not start with backup.', () => {
+      expect(isBackupErrorKey('settings.backupResetToast')).toBe(false);
+      expect(isBackupErrorKey('some random error')).toBe(false);
+    });
+  });
+
+  describe('createBackupHistoryEntry', () => {
+    it('creates a workspace backup record entry successfully', () => {
+      const now = new Date('2026-06-23T12:00:00.000Z');
+      const stats = { keyCount: 5, collectionCount: 3, objectCount: 2, byteSize: 1000 };
+      const meta = {
+        fileName: 'backup.json',
+        encrypted: false,
+        adminEmail: 'admin@madrasa.app',
+        maxInlineBytes: 500,
+      };
+
+      const entry = createBackupHistoryEntry('test-data', now, 'Test Backup', stats, meta);
+
+      expect(entry.id).toMatch(/^b\d+$/);
+      expect(entry.name).toBe('Test Backup');
+      expect(entry.date).toBe('2026-06-23T12:00:00.000Z');
+      expect(entry.size).toBe('9 B');
+      expect(entry.status).toBe('success');
+      expect(entry.data).toBe('test-data');
+      expect(entry.keyCount).toBe(5);
+      expect(entry.collectionCount).toBe(3);
+      expect(entry.objectCount).toBe(2);
+      expect(entry.fileName).toBe('backup.json');
+      expect(entry.encrypted).toBe(false);
+      expect(entry.adminEmail).toBe('admin@madrasa.app');
+    });
+
+    it('omits data if it exceeds maxInlineBytes limit', () => {
+      const now = new Date();
+      const stats = { keyCount: 1, collectionCount: 0, objectCount: 1, byteSize: 10 };
+      const meta = {
+        fileName: 'backup.json',
+        encrypted: true,
+        adminEmail: 'admin@madrasa.app',
+        maxInlineBytes: 5,
+      };
+
+      const entry = createBackupHistoryEntry('long-test-data', now, 'Test Backup', stats, meta);
+      expect(entry.data).toBeUndefined();
+    });
+  });
+
+  describe('findRestrictedKeyInSnapshot', () => {
+    it('returns null if there are no restricted keys', () => {
+      const snapshot = {
+        collections: {
+          students: [{ id: '1' }],
+        },
+        objects: {
+          branding: { madrasaName: 'Test' },
+        },
+      };
+      expect(findRestrictedKeyInSnapshot(snapshot)).toBeNull();
+    });
+
+    it('identifies restricted collection key', () => {
+      const snapshot = {
+        collections: {
+          workspaces: [{ id: '1' }],
+        },
+      };
+      expect(findRestrictedKeyInSnapshot(snapshot)).toBe('workspaces');
+    });
+
+    it('identifies restricted object key', () => {
+      const snapshot = {
+        objects: {
+          platform_super_users: {},
+        },
+      };
+      expect(findRestrictedKeyInSnapshot(snapshot)).toBe('platform_super_users');
+    });
+  });
+
+  describe('parseStorageKeysToSnapshot', () => {
+    it('parses flat prefixed keys into snapshots of collections and objects', () => {
+      const keys = {
+        [`${PREFIX}students`]: '[{"id":"1","name":"A"}]',
+        [`${PREFIX}branding`]: '{"madrasaName":"Test"}',
+        'mms_t:other:students': '[]', // mismatch prefix
+        'random_key': 'value',
+      };
+      const snapshot = parseStorageKeysToSnapshot(keys, PREFIX);
+      expect(snapshot.collections).toEqual({
+        students: [{ id: '1', name: 'A' }],
+      });
+      expect(snapshot.objects).toEqual({
+        branding: { madrasaName: 'Test' },
+      });
+    });
+
+    it('handles non-JSON or plain string values as objects', () => {
+      const keys = {
+        [`${PREFIX}plain`]: 'plain_text_value',
+      };
+      const snapshot = parseStorageKeysToSnapshot(keys, PREFIX);
+      expect(snapshot.objects).toEqual({
+        plain: 'plain_text_value',
+      });
+      expect(snapshot.collections).toEqual({});
+    });
+  });
+
+  describe('validateAndNormalizeSnapshot', () => {
+    it('succeeds for valid snapshots', () => {
+      const snapshot = {
+        collections: {
+          students: [{ id: '1', name: 'A' }],
+        },
+        objects: {
+          branding: { madrasaName: 'Test' },
+        },
+      };
+      const result = validateAndNormalizeSnapshot(snapshot);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data.collections?.students).toEqual([{ id: '1', name: 'A' }]);
+      }
+    });
+
+    it('rejects prototype pollution in snapshot collections/objects', () => {
+      const badSnapshot = JSON.parse(
+        '{"collections": {"students": [{"id": "1", "__proto__": {"polluted": true}}]}}'
+      );
+      expect(validateAndNormalizeSnapshot(badSnapshot).ok).toBe(false);
+    });
+
+    it('rejects restricted keys in snapshot', () => {
+      const badSnapshot = {
+        collections: {
+          workspaces: [],
+        },
+      };
+      expect(validateAndNormalizeSnapshot(badSnapshot).ok).toBe(false);
+    });
+
+    it('deduplicates collection items by id', () => {
+      const snapshot = {
+        collections: {
+          students: [
+            { id: '1', name: 'A' },
+            { id: '2', name: 'B' },
+            { id: '1', name: 'Dup' },
+          ],
+        },
+      };
+      const result = validateAndNormalizeSnapshot(snapshot);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data.collections?.students).toEqual([
+          { id: '1', name: 'A' },
+          { id: '2', name: 'B' },
+        ]);
+      }
+    });
+
+    it('rejects users restore without admin user', () => {
+      const snapshot = {
+        collections: {
+          users: [
+            { id: '1', role: 'teacher' },
+          ],
+        },
+      };
+      expect(validateAndNormalizeSnapshot(snapshot).ok).toBe(false);
+    });
+  });
+
+  describe('settings mappings', () => {
+    it('correctly maps settings keys to module IDs', () => {
+      expect(SETTINGS_KEY_TO_MODULE.contact_field_config).toBe('contacts');
+      expect(SETTINGS_KEY_TO_MODULE.enrollments_settings).toBe('enrollments');
+      expect(SETTINGS_KEY_TO_MODULE.examinations_settings).toBe('examinations');
+      expect(SETTINGS_KEY_TO_MODULE.question_bank_settings).toBe('questionBank');
+    });
+
+    it('correctly maps module IDs to settings keys with singular and plural compatibility', () => {
+      expect(MODULE_TO_SETTINGS_KEY.contacts).toBe('contact_field_config');
+      expect(MODULE_TO_SETTINGS_KEY.enrollments).toBe('enrollments_settings');
+      expect(MODULE_TO_SETTINGS_KEY.enrollment).toBe('enrollments_settings');
+      expect(MODULE_TO_SETTINGS_KEY.examinations).toBe('examinations_settings');
+      expect(MODULE_TO_SETTINGS_KEY.examination).toBe('examinations_settings');
+      expect(MODULE_TO_SETTINGS_KEY['question-bank']).toBe('question_bank_settings');
+      expect(MODULE_TO_SETTINGS_KEY.questionBank).toBe('question_bank_settings');
+    });
+  });
 });
+

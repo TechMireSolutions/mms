@@ -23,7 +23,13 @@ import {
   TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
 } from "@/tenant/features/teachers/hooks/useTeachers";
 import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
-import type { Denomination } from "@/lib/data/hasanatData";
+import type { Denomination, Distribution } from "@/lib/data/hasanatData";
+import type { Student } from "@/lib/data/studentsData";
+import type { Teacher } from "@/lib/data/teachersData";
+import type { Session } from "@/lib/data/sessionsData";
+import type { Invoice } from "@/lib/data/financeData";
+import type { AttendanceRecord } from "@/lib/data/attendanceData";
+import type { QuestionBankQuestion, QuestionBankTest, QuestionBankResult } from "@mms/shared";
 
 function readContactsWidgetAggregate(widgetId: string): ContactsWidgetAggregateResult | undefined {
   const queries = queryClientInstance.getQueriesData<Record<string, ContactsWidgetAggregateResult>>({
@@ -111,16 +117,16 @@ function formatGenericWidgetValue(
 
 export function getWidgetCollections() {
   const contacts: Contact[] = [];
-  const students: Record<string, unknown>[] = [];
-  const teachers: Record<string, unknown>[] = [];
-  const invoices = getCollection("finance_invoices");
-  const attendance = getCollection("attendance_records");
-  const distributions = getCollection("hasanat_distributions");
-  const denominations = getCollection("hasanat_denoms");
-  const sessions = getCollection("sessions");
-  const questions = getCollection("questions");
-  const tests = getCollection("tests");
-  const assessmentResults = getCollection("assessment_results");
+  const students: Student[] = [];
+  const teachers: Teacher[] = [];
+  const invoices = getCollection<Invoice>("finance_invoices");
+  const attendance = getCollection<AttendanceRecord>("attendance_records");
+  const distributions = getCollection<Distribution>("hasanat_distributions");
+  const denominations = getCollection<Denomination>("hasanat_denoms");
+  const sessions = getCollection<Session>("sessions");
+  const questions = getCollection<QuestionBankQuestion>("questions");
+  const tests = getCollection<QuestionBankTest>("tests");
+  const assessmentResults = getCollection<QuestionBankResult>("assessment_results");
 
   return {
     students,

@@ -1,6 +1,6 @@
-/** Max JSON body for bulk sync upload (default 10 MiB). Override via `MMS_SYNC_MAX_BODY_BYTES`. */
+/** Max JSON body for bulk sync upload (default 50 MiB). Override via `MMS_SYNC_MAX_BODY_BYTES`. */
 export const SYNC_MAX_BODY_BYTES =
-  Number(process.env.MMS_SYNC_MAX_BODY_BYTES) || 10 * 1024 * 1024;
+  Number(process.env.MMS_SYNC_MAX_BODY_BYTES) || 50 * 1024 * 1024;
 
 /** Wall-clock cap for bulk sync processing (default 2 min). Override via `MMS_SYNC_REQUEST_TIMEOUT_MS`. */
 export const SYNC_REQUEST_TIMEOUT_MS =

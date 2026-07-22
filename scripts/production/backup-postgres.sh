@@ -8,24 +8,7 @@ ENV_FILE="${MMS_DEPLOY_ENV:-${ROOT_DIR}/apps/backend/.env}"
 BACKUP_DIR="${MMS_BACKUP_DIR:-${ROOT_DIR}/.backups/postgres}"
 RETENTION_DAYS="${MMS_BACKUP_RETENTION_DAYS:-14}"
 
-read_env_var() {
-  local key="$1"
-  local default="${2:-}"
-  if [[ ! -f "$ENV_FILE" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local line
-  line="$(grep -E "^${key}=" "$ENV_FILE" 2>/dev/null | tail -1 || true)"
-  if [[ -z "$line" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local value="${line#*=}"
-  value="${value%\"}"
-  value="${value#\"}"
-  echo "$value"
-}
+source "${ROOT_DIR}/scripts/lib/read-env.sh"
 
 DATABASE_URL="$(read_env_var DATABASE_URL 'postgres://postgres:postgres@localhost:5432/mms')"
 mkdir -p "$BACKUP_DIR"

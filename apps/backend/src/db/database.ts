@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import pg from 'pg';
-import { sql, eq, like, and } from 'drizzle-orm';
+import { sql, eq, like, and, or } from 'drizzle-orm';
 import { join } from 'path';
 import { loadServerConfig } from '../config/serverConfig.js';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
@@ -18,6 +18,7 @@ import {
   parseTenantScopedStorageKey,
   isServerOnlyObjectKey,
   applyTitleCaseRecursive,
+  SETTINGS_KEY_TO_MODULE,
 } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { runMigration001 } from './migrations/001_migrate_notification_settings.js';
@@ -561,22 +562,6 @@ export async function runInTransaction<T>(cb: () => Promise<T>): Promise<T> {
   });
 }
 
-const CONFIG_KEY_TO_MODULE: Record<string, string> = {
-  'contact_field_config': 'contacts',
-  'students_settings': 'students',
-  'teachers_settings': 'teachers',
-  'sessions_settings': 'sessions',
-  'attendance_settings': 'attendance',
-  'enrollments_settings': 'enrollment',
-  'finance_settings': 'finance',
-  'obligations_settings': 'obligations',
-  'accounting_settings': 'accounting',
-  'hasanat_settings': 'hasanat',
-  'examinations_settings': 'examination',
-  'question_bank_settings': 'questionBank',
-  'users_settings': 'users',
-};
-
 interface CustomTabInput {
   key: string;
   label: string;
@@ -590,7 +575,7 @@ interface CustomTabInput {
 }
 
 async function _hydrateObjectData(key: string, data: unknown, tenant: string): Promise<unknown> {
-  const moduleId = CONFIG_KEY_TO_MODULE[key];
+  const moduleId = SETTINGS_KEY_TO_MODULE[key];
   if (!moduleId || !data || typeof data !== 'object') return data;
 
   const dataObj = data as Record<string, unknown>;
@@ -601,7 +586,13 @@ async function _hydrateObjectData(key: string, data: unknown, tenant: string): P
     .where(
       and(
         eq(schema.customTabs.workspaceSubdomain, tenant),
-        eq(schema.customTabs.moduleId, moduleId)
+        or(
+          eq(schema.customTabs.moduleId, moduleId),
+          // fallback checks for legacy singular / kebab-case names
+          moduleId === 'enrollments' ? eq(schema.customTabs.moduleId, 'enrollment') : sql`false`,
+          moduleId === 'examinations' ? eq(schema.customTabs.moduleId, 'examination') : sql`false`,
+          moduleId === 'questionBank' ? eq(schema.customTabs.moduleId, 'question-bank') : sql`false`
+        )
       )
     )
     .orderBy(schema.customTabs.sortOrder);
@@ -622,7 +613,7 @@ async function _hydrateObjectData(key: string, data: unknown, tenant: string): P
 }
 
 async function _saveCustomTabsForObject(key: string, data: unknown, tenant: string): Promise<unknown> {
-  const moduleId = CONFIG_KEY_TO_MODULE[key];
+  const moduleId = SETTINGS_KEY_TO_MODULE[key];
   if (!moduleId || !data || typeof data !== 'object') return data;
 
   const dataObj = data as Record<string, unknown>;
@@ -639,7 +630,12 @@ async function _saveCustomTabsForObject(key: string, data: unknown, tenant: stri
     .where(
       and(
         eq(schema.customTabs.workspaceSubdomain, tenant),
-        eq(schema.customTabs.moduleId, moduleId)
+        or(
+          eq(schema.customTabs.moduleId, moduleId),
+          moduleId === 'enrollments' ? eq(schema.customTabs.moduleId, 'enrollment') : sql`false`,
+          moduleId === 'examinations' ? eq(schema.customTabs.moduleId, 'examination') : sql`false`,
+          moduleId === 'questionBank' ? eq(schema.customTabs.moduleId, 'question-bank') : sql`false`
+        )
       )
     );
 

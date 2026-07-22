@@ -1466,6 +1466,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "backup.clearHistory": "بیک اپ کی تاریخ صاف کریں",
   "backup.historyCount": "{count} میں سے {max} محفوظ ایکسپورٹ",
   "backup.invalidFormat": "یہ فائل درست MMS ورک سپیس بیک اپ نہیں ہے۔",
+  "backup.missingAdminUser": "بیک اپ میں کوئی ایڈمنسٹریٹر صارف موجود نہیں ہے۔ اسے بحال کرنے سے آپ لاک آؤٹ ہو سکتے ہیں۔",
   "backup.securityViolation": "سیکورٹی آڈٹ ناکام ہو گیا۔ بیک اپ میں غیر معتبر کیز یا غیر قانونی ڈیٹا پایا گیا ہے۔",
   "backup.emptyBackup": "بیک اپ فائل میں کوئی ڈیٹا نہیں۔",
   "backup.noData": "بیک اپ ڈیٹا نہیں",
@@ -1500,6 +1501,9 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "backup.tipVerify": "بحالی کے بعد اہم ریکارڈز چیک کریں اور کام جاری کرنے سے پہلے سنک مکمل ہونے دیں۔",
   "backup.tipHistoryLimit": "بڑے ایکسپورٹ ڈاؤن لوڈ ہو سکتے ہیں مگر ڈیوائس کی تاریخ میں ڈیٹا محفوظ نہیں ہوتا۔",
   "backup.metadataOnly": "صرف میٹا ڈیٹا — بحالی کے لیے JSON فائل دوبارہ ڈاؤن لوڈ یا اپ لوڈ کریں۔",
+  "backup.badgeStudentsAndTeachers": "طلبہ اور اساتذہ",
+  "backup.badgeFinanceAndFees": "فنانس اور فیسیں",
+  "backup.badgeCrmContacts": "سی آر ایم رابطے",
 
   "finance.invoices": "انوائسز",
   "finance.payments": "ادائیگیاں",

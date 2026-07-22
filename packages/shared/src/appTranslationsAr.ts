@@ -1466,6 +1466,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "backup.clearHistory": "مسح سجل النسخ",
   "backup.historyCount": "{count} من {max} تصديرات محفوظة",
   "backup.invalidFormat": "الملف ليس نسخة MMS صالحة.",
+  "backup.missingAdminUser": "الملف الاحتياطي لا يحتوي على أي مستخدم بصلاحية مسؤول. استعادة هذا قد تؤدي إلى قفل حسابك.",
   "backup.securityViolation": "فشل فحص الأمان. يحتوي ملف النسخة الاحتياطية على مفاتيح غير صالحة أو بيانات غير مسموح بها.",
   "backup.emptyBackup": "ملف النسخة لا يحتوي بيانات.",
   "backup.noData": "لا توجد بيانات نسخة",
@@ -1500,6 +1501,9 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "backup.tipVerify": "بعد الاستعادة، تحقق من السجلات واترك المزامنة تكتمل قبل متابعة العمل.",
   "backup.tipHistoryLimit": "قد تُنزَّل النسخ الكبيرة دون حفظ البيانات داخل سجل الجهاز.",
   "backup.metadataOnly": "بيانات وصفية فقط — أعد التنزيل أو ارفع ملف JSON للاستعادة.",
+  "backup.badgeStudentsAndTeachers": "الطلاب والمعلمون",
+  "backup.badgeFinanceAndFees": "المالية والرسوم",
+  "backup.badgeCrmContacts": "جهات اتصال إدارة علاقات العملاء",
 
   "finance.invoices": "الفواتير",
   "finance.payments": "المدفوعات",

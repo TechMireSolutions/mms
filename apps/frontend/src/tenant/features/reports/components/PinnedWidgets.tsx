@@ -455,8 +455,11 @@ function CustomWidgetRenderer({
     const recordId = widget.switchRecordId;
     const targetField = widget.switchField || "status";
     if (!collectionName || !recordId) return false;
-    const collectionRecords = collections[collectionName] || [];
-    const matchedRecord = collectionRecords.find((candidate: { id?: unknown }) => String(candidate.id) === String(recordId));
+    const collectionRecords = (collections[collectionName] || []) as unknown[];
+    const matchedRecord = collectionRecords.find((candidate) => {
+      const record = candidate as Record<string, unknown>;
+      return record && String(record.id) === String(recordId);
+    });
     if (!matchedRecord) return false;
     const fieldValue = (matchedRecord as Record<string, unknown>)[targetField];
     return String(fieldValue) === "active" || String(fieldValue) === "paid" || !!fieldValue;

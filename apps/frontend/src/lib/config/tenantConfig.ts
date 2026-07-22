@@ -4,6 +4,7 @@ import {
   isApexHost,
   resolveAppDomainForRequest,
   type TenantUrlOptions,
+  parseTenantFromHost,
 } from "@mms/shared";
 import { env } from "@/lib/config/env";
 
@@ -39,3 +40,12 @@ export function isCurrentHostApex(): boolean {
   }
   return isApexHost(window.location.hostname.toLowerCase(), getAppDomain());
 }
+
+/** Resolves the active tenant subdomain from the current browser hostname. */
+export function getCurrentSubdomain(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return parseTenantFromHost(window.location.hostname, getAppDomain());
+}
+

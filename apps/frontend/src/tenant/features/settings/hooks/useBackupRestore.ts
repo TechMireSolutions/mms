@@ -4,26 +4,28 @@ import {
   BACKUP_HISTORY_MAX_BYTES,
   BACKUP_UPLOAD_MAX_BYTES,
   buildBackupFileName,
-  computeBackupStats,
   decryptWorkspaceBackup,
   DEFAULT_BACKUP_HISTORY,
-  encryptWorkspaceBackup,
-  extractBackupRawKeys,
   formatBackupSize,
   isEncryptedBackupPayload,
+  parseEncryptedBackupFile,
   summarizeWorkspaceBackup,
   type WorkspaceBackupRecord,
+  isBackupErrorKey,
+  createBackupHistoryEntry,
+  type PendingRestore,
+  type PendingDecrypt,
+  type BackupCredentials,
+  type AppTranslationKey,
 } from '@mms/shared';
-import { exportTenantBackup, getWorkspaceLocalStoragePrefix, importDatabase, saveCollection } from '@/lib/db';
+import { exportEncryptedTenantBackup, getWorkspaceLocalStoragePrefix, importDatabase, saveCollection } from '@/lib/db';
 import { verifyAdminBackupPassword } from '@/lib/backupAuth';
-import { createBackupHistoryEntry } from '@/lib/backup/backupHistoryEntry';
-import { triggerBackupDownload } from '@/lib/backup/backupDownload';
-import { isBackupErrorKey } from '@/lib/backup/backupErrors';
-import type { BackupCredentials, PendingDecrypt, PendingRestore } from '@/lib/backup/backupRestoreTypes';
+import { triggerFileDownload } from '@/lib/download';
 import { notify } from '@/lib/notify';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
 import { useBranding } from '@/tenant/hooks/useBranding';
+
 
 export interface UseBackupRestoreOptions {
   subdomain: string | null | undefined;
@@ -95,9 +97,6 @@ export function useBackupRestore({
   const storagePrefix = getWorkspaceLocalStoragePrefix();
   const tenantLabel = branding.madrasaName?.trim() || subdomain || 'workspace';
 
-  const persistHistory = useCallback((backupHistory: WorkspaceBackupRecord[]): void => {
-    saveCollection('backups', backupHistory);
-  }, []);
 
   const errorDescription = useCallback(
     (message: string): string => (isBackupErrorKey(message) ? t(message) : message),
@@ -116,29 +115,12 @@ export function useBackupRestore({
     [storagePrefix, t],
   );
 
-  const runRestore = useCallback(
-    async (jsonText: string): Promise<void> => {
-      setRestoreId('active');
-      try {
-        await importDatabase(jsonText);
-        notify.success(t('backup.restoreSuccess'), { description: t('backup.restoreSuccessDesc') });
-        window.location.reload();
-      } catch (restoreError) {
-        const error = restoreError as Error;
-        notify.error(t('backup.restoreFailed'), { description: errorDescription(error.message) });
-        setRestoreId(null);
-      }
-    },
-    [errorDescription, t],
-  );
-
   const downloadSafetyBackup = useCallback(
     async (credentials: BackupCredentials): Promise<void> => {
-      const plaintext = await exportTenantBackup();
-      const encrypted = await encryptWorkspaceBackup(plaintext, credentials, { subdomain, tenantLabel });
-      triggerBackupDownload(
+      const { encrypted } = await exportEncryptedTenantBackup(credentials, tenantLabel);
+      triggerFileDownload(
+        new Blob([encrypted], { type: 'application/json' }),
         buildBackupFileName(new Date(), { tenantSlug: subdomain, suffix: 'pre_restore', encrypted: true }),
-        encrypted,
       );
     },
     [subdomain, tenantLabel],
@@ -147,16 +129,23 @@ export function useBackupRestore({
   const beginRestore = useCallback(
     async (payload: PendingRestore): Promise<void> => {
       setSafetyStep(true);
+      setRestoreId('active');
       try {
         await downloadSafetyBackup(payload.credentials);
-        await runRestore(payload.jsonText);
+        await importDatabase(payload.jsonText);
+        notify.success(t('backup.restoreSuccess'), { description: t('backup.restoreSuccessDesc') });
+        window.location.reload();
+      } catch (err) {
+        const error = err as Error;
+        notify.error(t('backup.restoreFailed'), { description: errorDescription(error.message) });
+        setRestoreId(null);
       } finally {
         setSafetyStep(false);
         setPendingRestore(null);
         setSelectedFileName(null);
       }
     },
-    [downloadSafetyBackup, runRestore],
+    [downloadSafetyBackup, errorDescription, t],
   );
 
   const runEncryptedExport = useCallback(
@@ -169,15 +158,12 @@ export function useBackupRestore({
           return;
         }
 
-        const plaintext = await exportTenantBackup();
-        const raw = extractBackupRawKeys(JSON.parse(plaintext) as unknown) ?? {};
-        const stats = computeBackupStats(raw);
         const credentials = { adminEmail: email.trim().toLowerCase(), password };
-        const encrypted = await encryptWorkspaceBackup(plaintext, credentials, { subdomain, tenantLabel });
+        const { encrypted, stats } = await exportEncryptedTenantBackup(credentials, tenantLabel);
 
         const now = new Date();
         const fileName = buildBackupFileName(now, { tenantSlug: subdomain, encrypted: true });
-        triggerBackupDownload(fileName, encrypted);
+        triggerFileDownload(new Blob([encrypted], { type: 'application/json' }), fileName);
 
         setLastExportStats({
           collections: stats.collectionCount,
@@ -185,7 +171,8 @@ export function useBackupRestore({
           size: formatBackupSize(encrypted.length),
         });
 
-        persistHistory(
+        saveCollection(
+          'backups',
           appendBackupHistory(
             backups,
             createBackupHistoryEntry(encrypted, now, t('backup.fullBackupName'), stats, {
@@ -201,13 +188,13 @@ export function useBackupRestore({
       } catch (createError) {
         const backupError = createError as Error;
         notify.error(t('backup.createFailed'), {
-          description: isBackupErrorKey(backupError.message) ? t(backupError.message) : backupError.message,
+          description: errorDescription(backupError.message),
         });
       } finally {
         setIsCreating(false);
       }
     },
-    [backups, persistHistory, subdomain, t, tenantLabel],
+    [backups, errorDescription, subdomain, t, tenantLabel],
   );
 
   const handleDecryptSubmit = useCallback(
@@ -216,38 +203,40 @@ export function useBackupRestore({
       setDecryptLoading(true);
       try {
         const credentials = { adminEmail: email.trim().toLowerCase(), password };
+        const isPlaintext = pendingDecrypt.kind === 'plaintext';
+        let plaintext = '';
+        let fileName = '';
 
-        if (pendingDecrypt.kind === 'plaintext') {
+        if (isPlaintext) {
           const verified = await verifyAdminBackupPassword(email, password);
           if (!verified.ok) {
             notify.error(t('backup.restoreFailed'), { description: t(verified.errorKey) });
             return;
           }
-          setSelectedFileName(pendingDecrypt.fileName);
-          queuePlaintextRestore(pendingDecrypt.jsonText, credentials, pendingDecrypt.fileName);
-          setPendingDecrypt(null);
-          return;
+          plaintext = pendingDecrypt.jsonText;
+          fileName = pendingDecrypt.fileName;
+        } else {
+          const encryptedText =
+            pendingDecrypt.kind === 'file'
+              ? pendingDecrypt.encryptedText
+              : pendingDecrypt.backup.data ?? '';
+          const result = await decryptWorkspaceBackup(encryptedText, credentials);
+          if (!result.ok) {
+            notify.error(t('backup.restoreFailed'), { description: t(result.errorKey) });
+            return;
+          }
+          plaintext = result.plaintext;
+          fileName =
+            pendingDecrypt.kind === 'file'
+              ? pendingDecrypt.fileName
+              : pendingDecrypt.backup.fileName ?? pendingDecrypt.backup.name;
         }
 
-        const encryptedText =
-          pendingDecrypt.kind === 'file'
-            ? pendingDecrypt.encryptedText
-            : pendingDecrypt.backup.data ?? '';
-        const result = await decryptWorkspaceBackup(encryptedText, credentials);
-        if (!result.ok) {
-          notify.error(t('backup.restoreFailed'), { description: t(result.errorKey) });
-          return;
+        if (pendingDecrypt.kind !== 'history') {
+          setSelectedFileName(fileName);
         }
 
-        const fileName =
-          pendingDecrypt.kind === 'file'
-            ? pendingDecrypt.fileName
-            : pendingDecrypt.backup.fileName ?? pendingDecrypt.backup.name;
-
-        if (pendingDecrypt.kind === 'file') {
-          setSelectedFileName(pendingDecrypt.fileName);
-        }
-        queuePlaintextRestore(result.plaintext, credentials, fileName);
+        queuePlaintextRestore(plaintext, credentials, fileName);
         setPendingDecrypt(null);
       } finally {
         setDecryptLoading(false);
@@ -259,11 +248,21 @@ export function useBackupRestore({
   const processImportFile = useCallback(
     (file: File | undefined): void => {
       if (!file) return;
+
+      const fail = (key: AppTranslationKey, params?: Record<string, string | number>) => {
+        notify.error(t('backup.restoreFailed'), { description: t(key, params) });
+      };
+
       const lower = file.name.toLowerCase();
       const isJson = lower.endsWith('.json') || file.type === 'application/json';
       const isEncryptedExt = lower.endsWith('.mmsbak');
       if (!isJson && !isEncryptedExt) {
-        notify.error(t('backup.restoreFailed'), { description: t('backup.invalidFormat') });
+        fail('backup.invalidFormat');
+        return;
+      }
+
+      if (file.size > BACKUP_UPLOAD_MAX_BYTES) {
+        fail('backup.fileTooLarge', { max: formatBackupSize(BACKUP_UPLOAD_MAX_BYTES) });
         return;
       }
 
@@ -271,31 +270,29 @@ export function useBackupRestore({
       reader.onload = (loadEvent) => {
         const text = loadEvent.target?.result;
         if (typeof text !== 'string') {
-          notify.error(t('backup.restoreFailed'), { description: t('backup.invalidFormat') });
+          fail('backup.invalidFormat');
           return;
         }
 
-        if (isEncryptedBackupPayload(text)) {
-          const parsed = JSON.parse(text) as { adminEmail?: string };
+        const encryptedFile = parseEncryptedBackupFile(text);
+        if (encryptedFile) {
           setPendingDecrypt({
             kind: 'file',
             encryptedText: text,
             fileName: file.name,
-            adminEmail: typeof parsed.adminEmail === 'string' ? parsed.adminEmail : adminEmail,
+            adminEmail: encryptedFile.adminEmail || adminEmail,
           });
           return;
         }
 
         if (isEncryptedExt) {
-          notify.error(t('backup.restoreFailed'), { description: t('backup.invalidFormat') });
+          fail('backup.invalidFormat');
           return;
         }
 
         setPendingDecrypt({ kind: 'plaintext', jsonText: text, fileName: file.name });
       };
-      reader.onerror = () => {
-        notify.error(t('backup.restoreFailed'), { description: t('backup.invalidFormat') });
-      };
+      reader.onerror = () => fail('backup.invalidFormat');
       reader.readAsText(file);
     },
     [adminEmail, t],
@@ -332,16 +329,16 @@ export function useBackupRestore({
           tenantSlug: subdomain,
           encrypted: backup.encrypted ?? isEncryptedBackupPayload(backup.data),
         });
-      triggerBackupDownload(fileName, backup.data);
+      triggerFileDownload(new Blob([backup.data], { type: 'application/json' }), fileName);
     },
     [subdomain, t],
   );
 
   const handleClearHistory = useCallback((): void => {
-    persistHistory(DEFAULT_BACKUP_HISTORY);
+    saveCollection('backups', DEFAULT_BACKUP_HISTORY);
     setClearHistoryOpen(false);
     notify.success(t('settings.backupResetToast'), { description: t('settings.backupResetToastDesc') });
-  }, [persistHistory, t]);
+  }, [t]);
 
   const workspaceNote = useMemo(
     () => t('backup.workspaceScopeNote', { prefix: storagePrefix }),
@@ -353,36 +350,62 @@ export function useBackupRestore({
     [t],
   );
 
-  return {
-    backups,
-    historyCount: backups.length,
-    uploadLimitLabel: formatBackupSize(BACKUP_UPLOAD_MAX_BYTES),
-    workspaceNote,
-    tips,
-    isCreating,
-    exportModalOpen,
-    setExportModalOpen,
-    pendingDecrypt,
-    setPendingDecrypt,
-    decryptLoading,
-    restoreId,
-    pendingRestore,
-    setPendingRestore,
-    clearHistoryOpen,
-    setClearHistoryOpen,
-    dragActive,
-    setDragActive,
-    selectedFileName,
-    setSelectedFileName,
-    lastExportStats,
-    safetyStep,
-    confirmPhrase,
-    runEncryptedExport,
-    handleDecryptSubmit,
-    processImportFile,
-    openHistoryRestore,
-    handleDownloadBackup,
-    handleClearHistory,
-    beginRestore,
-  };
+  return useMemo(
+    () => ({
+      backups,
+      historyCount: backups.length,
+      uploadLimitLabel: formatBackupSize(BACKUP_UPLOAD_MAX_BYTES),
+      workspaceNote,
+      tips,
+      isCreating,
+      exportModalOpen,
+      setExportModalOpen,
+      pendingDecrypt,
+      setPendingDecrypt,
+      decryptLoading,
+      restoreId,
+      pendingRestore,
+      setPendingRestore,
+      clearHistoryOpen,
+      setClearHistoryOpen,
+      dragActive,
+      setDragActive,
+      selectedFileName,
+      setSelectedFileName,
+      lastExportStats,
+      safetyStep,
+      confirmPhrase,
+      runEncryptedExport,
+      handleDecryptSubmit,
+      processImportFile,
+      openHistoryRestore,
+      handleDownloadBackup,
+      handleClearHistory,
+      beginRestore,
+    }),
+    [
+      backups,
+      workspaceNote,
+      tips,
+      isCreating,
+      exportModalOpen,
+      pendingDecrypt,
+      decryptLoading,
+      restoreId,
+      pendingRestore,
+      clearHistoryOpen,
+      dragActive,
+      selectedFileName,
+      lastExportStats,
+      safetyStep,
+      confirmPhrase,
+      runEncryptedExport,
+      handleDecryptSubmit,
+      processImportFile,
+      openHistoryRestore,
+      handleDownloadBackup,
+      handleClearHistory,
+      beginRestore,
+    ]
+  );
 }

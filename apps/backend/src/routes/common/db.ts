@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
 import {
   fetchDatabaseSnapshot,
   synchronizeData,
@@ -7,7 +7,6 @@ import {
   persistCollection,
   fetchObject,
   persistObject,
-  SyncPayload
 } from '../../services/dbSyncService.js';
 import { canBulkSync, canDownloadBulkSync, canReadCollection, canReadObject, canResetTenantData, canWriteCollection, canWriteObject } from '../../services/rbacService.js';
 import { authenticateTenant } from '../../middleware/authenticate.js';
@@ -19,6 +18,8 @@ import {
   type GlobalSettings,
   WORKSPACES_COLLECTION,
   PLATFORM_SUPER_USERS_OBJECT_KEY,
+  type TenantDatabaseSnapshot,
+  validateAndNormalizeSnapshot,
 } from '@mms/shared';
 import type { User } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
@@ -50,6 +51,33 @@ function sanitizeUserCollections(collections: Record<string, unknown[]>, userId:
       delete collections[key];
     }
   }
+}
+
+/**
+ * Runs collection-specific validation/normalization if defined.
+ * Returns the normalized rows on success, or null if validation fails.
+ */
+async function validateAndNormalizeCollectionIfRequired(
+  collectionName: string,
+  rows: unknown[],
+  request: FastifyRequest,
+  reply: FastifyReply,
+  userRole: string,
+): Promise<unknown[] | null> {
+  if (collectionName === 'contacts') {
+    let result = rows;
+    const isValid = await executeDynamicValidation(request, reply, async (tenant, lang) => {
+      result = await validateAndNormalizeContacts(
+        tenant,
+        rows,
+        lang,
+        userRole,
+      );
+    });
+    if (!isValid) return null;
+    return result;
+  }
+  return rows;
 }
 
 /**
@@ -100,23 +128,26 @@ export default async function dbRoutes(
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
       try {
-        const payload = parsed.data as SyncPayload;
-        if (payload.collections && WORKSPACES_COLLECTION in payload.collections) {
-          return sendForbidden(reply, 'Sync payload contains global collection "workspaces"');
+        const snapshot = parsed.data as TenantDatabaseSnapshot;
+        const validatedSnapshot = validateAndNormalizeSnapshot(snapshot);
+        if (!validatedSnapshot.ok) {
+          if (validatedSnapshot.errorKey === 'backup.missingAdminUser') {
+            return sendForbidden(reply, 'Sync payload must contain at least one administrator');
+          }
+          return sendForbidden(reply, 'Sync payload contains restricted keys or prototype pollution');
         }
-        if (payload.objects && PLATFORM_SUPER_USERS_OBJECT_KEY in payload.objects) {
-          return sendForbidden(reply, 'Sync payload contains global object "platform_super_users"');
-        }
+
+        const payload = validatedSnapshot.data;
         if (payload.collections?.contacts) {
-          const isValid = await executeDynamicValidation(request, reply, async (tenant, lang) => {
-            payload.collections!.contacts = await validateAndNormalizeContacts(
-              tenant,
-              payload.collections!.contacts,
-              lang,
-              user.role,
-            );
-          });
-          if (!isValid) return;
+          const validated = await validateAndNormalizeCollectionIfRequired(
+            'contacts',
+            payload.collections.contacts,
+            request,
+            reply,
+            user.role,
+          );
+          if (!validated) return;
+          payload.collections.contacts = validated;
         }
         if (payload.collections) {
           sanitizeUserCollections(payload.collections, user.id);
@@ -134,6 +165,14 @@ export default async function dbRoutes(
           }
         }
         await withSyncTimeout(synchronizeData(payload));
+        await recordAudit({
+          userId: String(user.id),
+          userEmail: user.email,
+          action: 'database.restore',
+          entityType: 'collection',
+          entityId: 'sync',
+          summary: `Restored workspace backup with ${Object.keys(payload.collections || {}).length} collections and ${Object.keys(payload.objects || {}).length} objects`,
+        });
         return reply.send({ success: true });
       } catch (error: unknown) {
         const err = error as Error & { statusCode?: number };
@@ -156,6 +195,14 @@ export default async function dbRoutes(
     }
     try {
       await resetToDefaults();
+      await recordAudit({
+        userId: String(user.id),
+        userEmail: user.email,
+        action: 'database.reset',
+        entityType: 'collection',
+        entityId: 'reset',
+        summary: 'Reset database to minimal defaults',
+      });
       return reply.send({ success: true, message: 'Workspace reset to minimal defaults' });
     } catch {
       return sendDatabaseError(reply, 'Failed to reset database');
@@ -200,17 +247,15 @@ export default async function dbRoutes(
       if (!bodyParsed.ok) return replyValidationError(reply, bodyParsed.message);
       let collectionRowsToSave = normalizeCollectionSaveBody(bodyParsed.data);
 
-      if (name === 'contacts') {
-        const isValid = await executeDynamicValidation(request, reply, async (tenant, lang) => {
-          collectionRowsToSave = await validateAndNormalizeContacts(
-            tenant,
-            collectionRowsToSave,
-            lang,
-            user.role,
-          );
-        });
-        if (!isValid) return;
-      }
+      const validated = await validateAndNormalizeCollectionIfRequired(
+        name,
+        collectionRowsToSave,
+        request,
+        reply,
+        user.role,
+      );
+      if (!validated) return;
+      collectionRowsToSave = validated;
 
       const storageName = name === 'messages' ? `messages_u:${user.id}` : name;
       await persistCollection(storageName, collectionRowsToSave);

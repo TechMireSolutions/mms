@@ -26,12 +26,12 @@ sudo apt-get update -qq
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
   curl git build-essential ca-certificates gnupg \
   apache2 certbot python3-certbot-apache \
-  sqlite3 \
+  postgresql-client \
   ufw
 
-echo "── SQLite ──"
-# SQLite is a serverless local file database, no systemctl daemon configuration needed.
-# The database file is created and managed dynamically by the application.
+echo "── PostgreSQL Client ──"
+# Installs postgresql-client for pg_dump and psql tools.
+# The target database is typically run in a Docker container or via an external service.
 
 echo "── Node ${NODE_VERSION} (nvm) ──"
 export NVM_DIR="/home/${DEPLOY_USER}/.nvm"
@@ -72,7 +72,7 @@ echo "y" | sudo ufw enable || true
 echo "── Deploy directory ──"
 sudo mkdir -p "$DEPLOY_ROOT"
 sudo chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "$DEPLOY_ROOT"
-mkdir -p "${DEPLOY_ROOT}/.logs" "${DEPLOY_ROOT}/.backups/sqlite" "${DEPLOY_ROOT}/data"
+mkdir -p "${DEPLOY_ROOT}/.logs" "${DEPLOY_ROOT}/.backups/postgres"
 
 if [ ! -f "${DEPLOY_ROOT}/package.json" ]; then
   echo ""
@@ -85,7 +85,7 @@ echo "══ Next steps (manual) ══"
 echo "1. Clone repo to ${DEPLOY_ROOT} (if not done)"
 echo "2. Create ${DEPLOY_ROOT}/apps/backend/.env with:"
 echo "     JWT_SECRET=<32+ chars>"
-echo "     DATABASE_URL=sqlite://data/mms.db"
+echo "     DATABASE_URL=postgres://username:password@localhost:5432/mms"
 echo "     PORT=5002"
 echo "     NODE_ENV=production"
 echo "     MMS_APP_DOMAIN=mmsv2.yourdomain.com"
@@ -100,6 +100,6 @@ echo "     bash scripts/production/setup-pm2-startup.sh"
 echo "6. Apache isolation:"
 echo "     bash scripts/apply-production-host-isolation.sh apps/backend/.env"
 echo "7. Backups cron:"
-echo "     (crontab -l 2>/dev/null; echo '0 3 * * * ${DEPLOY_ROOT}/scripts/production/backup-sqlite.sh') | crontab -"
+echo "     (crontab -l 2>/dev/null; echo \"0 3 * * * bash ${DEPLOY_ROOT}/scripts/production/backup-postgres.sh\") | crontab -"
 echo ""
 echo "Bootstrap complete."

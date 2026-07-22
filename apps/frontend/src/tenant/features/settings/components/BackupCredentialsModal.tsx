@@ -95,7 +95,7 @@ export default function BackupCredentialsModal({
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            autoComplete={mode === 'export' ? 'current-password' : 'current-password'}
+            autoComplete="current-password"
             disabled={loading}
           />
         </div>

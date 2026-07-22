@@ -1,4 +1,6 @@
+import { z } from 'zod';
 import type { AppTranslationKey } from './appTranslations.js';
+import type { BackupCryptoCredentials } from './backupTypes.js';
 
 /** Encrypted on-disk backup wrapper (plaintext is a workspace backup envelope). */
 export const ENCRYPTED_BACKUP_FORMAT_ID = 'mms-encrypted-workspace-backup' as const;
@@ -22,10 +24,21 @@ export interface EncryptedWorkspaceBackupFile {
   ciphertext: string;
 }
 
-export interface BackupCryptoCredentials {
-  adminEmail: string;
-  password: string;
-}
+export const encryptedWorkspaceBackupFileSchema = z.object({
+  format: z.literal(ENCRYPTED_BACKUP_FORMAT_ID),
+  version: z.number(),
+  subdomain: z.string().nullable(),
+  tenantLabel: z.string().nullable(),
+  adminEmail: z.string(),
+  kdf: z.literal('PBKDF2'),
+  hash: z.literal('SHA-256'),
+  cipher: z.literal('AES-GCM'),
+  iterations: z.number(),
+  salt: z.string(),
+  iv: z.string(),
+  ciphertext: z.string(),
+});
+
 
 export type BackupDecryptResult =
   | { ok: true; plaintext: string; meta: EncryptedWorkspaceBackupFile }
@@ -82,11 +95,9 @@ export function isEncryptedBackupPayload(text: string): boolean {
 
 export function parseEncryptedBackupFile(text: string): EncryptedWorkspaceBackupFile | null {
   try {
-    const parsed = JSON.parse(text) as EncryptedWorkspaceBackupFile;
-    if (parsed.format !== ENCRYPTED_BACKUP_FORMAT_ID) return null;
-    if (typeof parsed.ciphertext !== 'string' || typeof parsed.salt !== 'string') return null;
-    if (typeof parsed.iv !== 'string' || typeof parsed.adminEmail !== 'string') return null;
-    return parsed;
+    const parsed = JSON.parse(text);
+    const validated = encryptedWorkspaceBackupFileSchema.safeParse(parsed);
+    return validated.success ? validated.data : null;
   } catch {
     return null;
   }

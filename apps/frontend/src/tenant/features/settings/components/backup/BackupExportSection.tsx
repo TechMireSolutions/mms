@@ -3,6 +3,7 @@ import { Database, Download, RefreshCw, Layers, Settings, HardDrive, CheckCircle
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
+import { StatCard } from '@/components/ui/StatCard';
 
 interface BackupExportSectionProps {
   adminEmail: string;
@@ -43,29 +44,27 @@ export default function BackupExportSection({
               </div>
               
               <div className="grid grid-cols-3 gap-2.5">
-                <div className="rounded-xl border border-border/60 bg-card/50 p-2.5 text-center space-y-1 hover:border-primary/20 transition-all duration-200 shadow-sm">
-                  <div className="mx-auto w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                    <Layers className="h-4 w-4" />
-                  </div>
-                  <div className="text-xs font-bold text-foreground">{lastExportStats.collections}</div>
-                  <div className="text-[10px] text-muted-foreground font-medium truncate">{t('backup.historyCollections')}</div>
-                </div>
-
-                <div className="rounded-xl border border-border/60 bg-card/50 p-2.5 text-center space-y-1 hover:border-primary/20 transition-all duration-200 shadow-sm">
-                  <div className="mx-auto w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                    <Settings className="h-4 w-4" />
-                  </div>
-                  <div className="text-xs font-bold text-foreground">{lastExportStats.objects}</div>
-                  <div className="text-[10px] text-muted-foreground font-medium truncate">{t('backup.historyObjects')}</div>
-                </div>
-
-                <div className="rounded-xl border border-border/60 bg-card/50 p-2.5 text-center space-y-1 hover:border-primary/20 transition-all duration-200 shadow-sm">
-                  <div className="mx-auto w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                    <HardDrive className="h-4 w-4" />
-                  </div>
-                  <div className="text-xs font-bold text-foreground truncate">{lastExportStats.size}</div>
-                  <div className="text-[10px] text-muted-foreground font-medium truncate">{t('backup.historySize')}</div>
-                </div>
+                <StatCard
+                  variant="compact"
+                  icon={Layers}
+                  label={t('backup.historyCollections')}
+                  value={lastExportStats.collections}
+                  accent="primary"
+                />
+                <StatCard
+                  variant="compact"
+                  icon={Settings}
+                  label={t('backup.historyObjects')}
+                  value={lastExportStats.objects}
+                  accent="primary"
+                />
+                <StatCard
+                  variant="compact"
+                  icon={HardDrive}
+                  label={t('backup.historySize')}
+                  value={lastExportStats.size}
+                  accent="primary"
+                />
               </div>
             </div>
           ) : (
@@ -76,15 +75,15 @@ export default function BackupExportSection({
               <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-card/30 px-3 py-2">
                   <Users className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <span className="truncate">{t('nav.students')} & {t('nav.teachers')}</span>
+                  <span className="truncate">{t('backup.badgeStudentsAndTeachers')}</span>
                 </div>
                 <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-card/30 px-3 py-2">
                   <DollarSign className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <span className="truncate">{t('nav.finance')} & Fees</span>
+                  <span className="truncate">{t('backup.badgeFinanceAndFees')}</span>
                 </div>
                 <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-card/30 px-3 py-2">
                   <Database className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <span className="truncate">CRM Contacts</span>
+                  <span className="truncate">{t('backup.badgeCrmContacts')}</span>
                 </div>
                 <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-card/30 px-3 py-2">
                   <BookOpen className="h-3.5 w-3.5 text-primary shrink-0" />
@@ -99,9 +98,10 @@ export default function BackupExportSection({
         <div className="pt-2">
           <Button
             type="button"
+            variant="default"
             onClick={onStartExport}
             disabled={isCreating || !adminEmail}
-            className="w-full sm:w-auto gap-2.5 min-h-[44px] px-6 bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg active:scale-[0.98] rounded-xl relative overflow-hidden"
+            className="w-full sm:w-auto gap-2.5 min-h-[44px] px-6 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg active:scale-[0.98] rounded-xl relative overflow-hidden"
           >
             {isCreating ? (
               <RefreshCw className="h-4 w-4 animate-spin" aria-hidden />

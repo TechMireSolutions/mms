@@ -1,11 +1,9 @@
 import { z } from 'zod';
+import { tenantDatabaseSnapshotSchema } from '@mms/shared';
 
 const jsonRecord = z.record(z.string(), z.unknown());
 
-export const syncPayloadSchema = z.object({
-  collections: z.record(z.string(), z.array(z.unknown())).optional(),
-  objects: z.record(z.string(), z.unknown()).optional(),
-});
+export const syncPayloadSchema = tenantDatabaseSnapshotSchema;
 
 export const collectionSaveBodySchema = z.union([
   z.array(jsonRecord),

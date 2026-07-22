@@ -133,7 +133,11 @@ export async function enqueueBackgroundJob(
   payload: unknown,
 ): Promise<BackgroundJobRecord> {
   // Create job with 'pending' status in PostgreSQL
-  await runWithTenant(tenant, () => createDatabaseBackgroundJob(tenant, userId, job, payload));
+  const pendingJob: BackgroundJobRecord = {
+    ...job,
+    status: 'pending',
+  };
+  await runWithTenant(tenant, () => createDatabaseBackgroundJob(tenant, userId, pendingJob, payload));
   return job;
 }
 

@@ -8,7 +8,6 @@ export async function verifyAdminBackupPassword(
   try {
     const response = await apiFetch('/api/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
     });
 
@@ -19,10 +18,6 @@ export async function verifyAdminBackupPassword(
 
     if (response.ok || authProbeResponse.requires2FA === true) {
       return { ok: true };
-    }
-
-    if (authProbeResponse.type === 'invalid_credentials') {
-      return { ok: false, errorKey: 'backup.invalidAdminPassword' };
     }
 
     return { ok: false, errorKey: 'backup.invalidAdminPassword' };

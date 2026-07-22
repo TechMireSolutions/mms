@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ListChecks, ShieldAlert, Trash2 } from 'lucide-react';
 import { SectionCard } from '@/components/ui/SectionCard';
 import BackupRestoreConfirmModal from '@/tenant/features/settings/components/BackupRestoreConfirmModal';
-import BackupCredentialsModal from '@/tenant/features/settings/components/BackupCredentialsModal';
-import BackupClearHistoryModal from '@/tenant/features/settings/components/backup/BackupClearHistoryModal';
+import BackupCredentialsModal, { type BackupCredentialsModalProps } from '@/tenant/features/settings/components/BackupCredentialsModal';
+import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import BackupExportSection from '@/tenant/features/settings/components/backup/BackupExportSection';
 import BackupHistorySection from '@/tenant/features/settings/components/backup/BackupHistorySection';
 import BackupImportSection from '@/tenant/features/settings/components/backup/BackupImportSection';
@@ -28,6 +28,42 @@ export default function BackupRestore(): React.JSX.Element {
 
   const backup = useBackupRestore({ subdomain, adminEmail });
 
+  const credentialsModalProps = useMemo<BackupCredentialsModalProps | null>(() => {
+    if (backup.exportModalOpen) {
+      return {
+        open: true,
+        mode: 'export',
+        adminEmail,
+        emailReadOnly: true,
+        loading: backup.isCreating,
+        onClose: () => backup.setExportModalOpen(false),
+        onSubmit: (password: string, email: string) => void backup.runEncryptedExport(password, email),
+      };
+    }
+    if (backup.pendingDecrypt) {
+      const decryptEmail =
+        backup.pendingDecrypt.kind === 'file'
+          ? backup.pendingDecrypt.adminEmail
+          : backup.pendingDecrypt.kind === 'history'
+            ? backup.pendingDecrypt.backup.adminEmail ?? adminEmail
+            : adminEmail;
+      const decryptEmailReadOnly =
+        backup.pendingDecrypt.kind === 'file' ||
+        (backup.pendingDecrypt.kind === 'history' && Boolean(backup.pendingDecrypt.backup.adminEmail));
+
+      return {
+        open: true,
+        mode: 'decrypt',
+        adminEmail: decryptEmail,
+        emailReadOnly: decryptEmailReadOnly,
+        loading: backup.decryptLoading,
+        onClose: () => backup.setPendingDecrypt(null),
+        onSubmit: (password: string, email: string) => void backup.handleDecryptSubmit(password, email),
+      };
+    }
+    return null;
+  }, [backup, adminEmail]);
+
   if (!isAdmin) {
     return (
       <SettingsPanel width="medium" introKey="settings.introBackup">
@@ -46,8 +82,9 @@ export default function BackupRestore(): React.JSX.Element {
         <div className="flex w-full flex-wrap items-center gap-3 pt-1">
           <Button
             type="button"
+            variant="outline"
             onClick={() => backup.setClearHistoryOpen(true)}
-            className="flex min-h-[44px] items-center gap-2 rounded-lg border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+            className="flex min-h-[44px] items-center gap-2 px-5 py-2.5 rounded-lg font-semibold"
           >
             <Trash2 className="h-3.5 w-3.5" />
             <span>{t('backup.clearHistory')}</span>
@@ -90,34 +127,7 @@ export default function BackupRestore(): React.JSX.Element {
         onDownload={backup.handleDownloadBackup}
       />
 
-      <BackupCredentialsModal
-        open={backup.exportModalOpen}
-        mode="export"
-        adminEmail={adminEmail}
-        emailReadOnly
-        loading={backup.isCreating}
-        onClose={() => backup.setExportModalOpen(false)}
-        onSubmit={(password, email) => void backup.runEncryptedExport(password, email)}
-      />
-
-      <BackupCredentialsModal
-        open={backup.pendingDecrypt !== null}
-        mode="decrypt"
-        adminEmail={
-          backup.pendingDecrypt?.kind === 'file'
-            ? backup.pendingDecrypt.adminEmail
-            : backup.pendingDecrypt?.kind === 'history'
-              ? backup.pendingDecrypt.backup.adminEmail ?? adminEmail
-              : adminEmail
-        }
-        emailReadOnly={
-          backup.pendingDecrypt?.kind === 'file' ||
-          (backup.pendingDecrypt?.kind === 'history' && Boolean(backup.pendingDecrypt.backup.adminEmail))
-        }
-        loading={backup.decryptLoading}
-        onClose={() => backup.setPendingDecrypt(null)}
-        onSubmit={(password, email) => void backup.handleDecryptSubmit(password, email)}
-      />
+      {credentialsModalProps && <BackupCredentialsModal {...credentialsModalProps} />}
 
       <BackupRestoreConfirmModal
         open={backup.pendingRestore !== null}
@@ -134,9 +144,16 @@ export default function BackupRestore(): React.JSX.Element {
         }}
       />
 
-      <BackupClearHistoryModal
+      <ConfirmAlertDialog
         open={backup.clearHistoryOpen}
-        onClose={() => backup.setClearHistoryOpen(false)}
+        onOpenChange={(open) => {
+          if (!open) backup.setClearHistoryOpen(false);
+        }}
+        title={t('backup.clearHistoryConfirmTitle')}
+        description={t('backup.clearHistoryConfirmDesc')}
+        confirmLabel={t('backup.clearHistoryConfirmAction')}
+        cancelLabel={t('backup.confirmCancel')}
+        destructive
         onConfirm={backup.handleClearHistory}
       />
     </SettingsPanel>

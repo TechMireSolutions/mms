@@ -13,6 +13,8 @@ async function fetchPlatformSetupStatus(): Promise<PlatformSetupStatus> {
 export function usePlatformSetupStatus(): {
   setupStatus: PlatformSetupStatus | undefined;
   isLoadingSetup: boolean;
+  isError: boolean;
+  refetch: () => Promise<unknown>;
 } {
   const { isApex } = useTenant();
 
@@ -21,11 +23,15 @@ export function usePlatformSetupStatus(): {
     queryFn: fetchPlatformSetupStatus,
     enabled: isApex,
     staleTime: 60_000,
+    retry: 5,
+    retryDelay: (attempt) => Math.min(attempt * 1000, 5000),
   });
 
   return {
     setupStatus: query.data,
     isLoadingSetup: isApex && query.isLoading,
+    isError: query.isError,
+    refetch: query.refetch,
   };
 }
 

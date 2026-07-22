@@ -1469,6 +1469,7 @@ export const APP_TRANSLATIONS_EN = {
   "backup.clearHistory": "Clear backup history",
   "backup.historyCount": "{count} of {max} stored exports",
   "backup.invalidFormat": "The file is not a valid MMS workspace backup.",
+  "backup.missingAdminUser": "The backup does not contain any user with the Administrator role. Restoring this would lock you out of the workspace.",
   "backup.securityViolation": "Security audit failed. The backup contains invalid keys or illegal payload data.",
   "backup.emptyBackup": "The backup file contains no data.",
   "backup.noData": "No backup data",
@@ -1503,6 +1504,9 @@ export const APP_TRANSLATIONS_EN = {
   "backup.tipVerify": "After restore, verify key records and allow sync to complete before continuing work.",
   "backup.tipHistoryLimit": "Large exports may download but not keep inline data in on-device history.",
   "backup.metadataOnly": "Metadata only — re-download or upload the JSON file to restore.",
+  "backup.badgeStudentsAndTeachers": "Students & Teachers",
+  "backup.badgeFinanceAndFees": "Finance & Fees",
+  "backup.badgeCrmContacts": "CRM Contacts",
 
   "finance.invoices": "Invoices",
   "finance.payments": "Payments",
