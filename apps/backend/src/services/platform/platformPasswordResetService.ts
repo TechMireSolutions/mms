@@ -1,4 +1,4 @@
-import type { PlatformPasswordForgotResult, PlatformUser, StoredPlatformUser } from '@mms/shared';
+import type { PlatformPasswordForgotResult, StoredPlatformUser } from '@mms/shared';
 import {
   normalizePlatformEmail,
   validatePlatformSetupEmail,
@@ -17,10 +17,9 @@ import {
   verifyOtpCode,
 } from '../auth/authCookieService.js';
 import { hashPassword } from '../auth/passwordService.js';
-import {
-  dispatchPlatformVerificationEmail,
-  resolvePlatformAppOrigin,
-} from './platformEmailService.js';
+import { resolvePlatformAppOrigin } from './platformEmailService.js';
+import { PlatformError, type PlatformErrorCode } from './platformErrorService.js';
+import { dispatchPlatformOtp } from './platformOtpService.js';
 import {
   findPlatformUserByEmail,
   updatePlatformUserPassword,
@@ -34,37 +33,8 @@ export interface PlatformPasswordResetPayload {
   codeHash: string;
 }
 
-export type PlatformPasswordResetErrorCode =
-  | 'invalid_email'
-  | 'password_too_short'
-  | 'password_weak'
-  | 'email_send_failed'
-  | 'smtp_required'
-  | 'invalid_reset'
-  | 'invalid_code';
-
-export class PlatformPasswordResetError extends Error {
-  readonly statusCode: number;
-
-  constructor(
-    readonly code: PlatformPasswordResetErrorCode,
-    message: string,
-  ) {
-    super(message);
-    this.name = 'PlatformPasswordResetError';
-
-    const statuses: Record<PlatformPasswordResetErrorCode, number> = {
-      invalid_email: 400,
-      password_too_short: 400,
-      password_weak: 400,
-      email_send_failed: 502,
-      smtp_required: 503,
-      invalid_reset: 404,
-      invalid_code: 401,
-    };
-    this.statusCode = statuses[code] ?? 400;
-  }
-}
+export type PlatformPasswordResetErrorCode = PlatformErrorCode;
+export const PlatformPasswordResetError = PlatformError;
 
 function buildResetUrl(resetId: string): string {
   const origin = resolvePlatformAppOrigin();
@@ -72,31 +42,18 @@ function buildResetUrl(resetId: string): string {
 }
 
 async function dispatchResetCode(email: string, code: string, resetId: string): Promise<{ sent: boolean; devCode?: string }> {
-  try {
-    return await dispatchPlatformVerificationEmail({
-      email,
-      code,
-      subject: 'Reset your MMS platform password',
-      bodyLines: [
-        'Use this verification code to reset your platform administrator password:',
-        '',
-        `Or open this link: ${buildResetUrl(resetId)}`,
-      ],
-      ttlMinutes: PLATFORM_PASSWORD_RESET_TTL_MINUTES,
-      logLabel: 'Platform password reset code',
-    });
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('not configured')) {
-      throw new PlatformPasswordResetError(
-        'smtp_required',
-        'Platform email is not configured. Set PLATFORM_RESEND_API_KEY or PLATFORM_SMTP_* and PLATFORM_EMAIL_FROM (GitHub Actions secrets are merged on deploy).',
-      );
-    }
-    throw new PlatformPasswordResetError(
-      'email_send_failed',
-      error instanceof Error ? error.message : 'Failed to send verification email',
-    );
-  }
+  return dispatchPlatformOtp({
+    email,
+    code,
+    subject: 'Reset your MMS platform password',
+    bodyLines: [
+      'Use this verification code to reset your platform administrator password:',
+      '',
+      `Or open this link: ${buildResetUrl(resetId)}`,
+    ],
+    ttlMinutes: PLATFORM_PASSWORD_RESET_TTL_MINUTES,
+    logLabel: 'Platform password reset code',
+  });
 }
 
 /** Always returns accepted — does not reveal whether the email is registered. */
@@ -189,6 +146,4 @@ export async function completePlatformPasswordReset(
   return updatePlatformUserPassword(entry.payload.userId, passwordHash);
 }
 
-export function toPublicPlatformUserFromStored(user: StoredPlatformUser): PlatformUser {
-  return { id: user.id, email: user.email, name: user.name, role: user.role };
-}
+

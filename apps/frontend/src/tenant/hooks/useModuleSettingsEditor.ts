@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { type TabDefinition } from "@mms/shared";
 import { type ModuleSettingsShape } from "@/hooks/useModuleConfig";
 import { useModuleFieldsEditor } from "./useModuleFieldsEditor";
+import { useSavedFlash } from "./useSavedFlash";
 
 interface UseModuleSettingsEditorOptions<T extends ModuleSettingsShape> {
   config: {
@@ -24,8 +25,17 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
   defaultRequiredTabs = [],
 }: UseModuleSettingsEditorOptions<T>) {
   const { settings, updateSettings } = config;
-  const [saved, setSaved] = useState<boolean>(false);
+  const { saved, flashSaved, clearSaved } = useSavedFlash();
   const [settingsDraft, setSettingsDraft] = useState<T>(settings);
+
+  const setSaved = useCallback((val: boolean | ((curr: boolean) => boolean)) => {
+    const resolved = typeof val === "function" ? val(saved) : val;
+    if (resolved) {
+      flashSaved();
+    } else {
+      clearSaved();
+    }
+  }, [saved, flashSaved, clearSaved]);
 
   // Sync draft whenever upstream settings change
   useEffect(() => {
@@ -37,7 +47,7 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
   const upd = useCallback(<K extends keyof T>(field: K, value: T[K]): void => {
     setSettingsDraft((curr) => ({ ...curr, [field]: value }));
     setSaved(false);
-  }, []);
+  }, [setSaved]);
 
   const fieldsEditor = useModuleFieldsEditor({
     initialTabs: tabRegistry,
@@ -118,9 +128,7 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
 
     updateSettings(nextSettings);
     setSaved(true);
-    const timer = setTimeout(() => setSaved(false), 2500);
-    return () => clearTimeout(timer);
-  }, [settings, settingsDraft, updateSettings, fieldsEditor]);
+  }, [settings, settingsDraft, updateSettings, fieldsEditor, setSaved]);
 
   return {
     settings,

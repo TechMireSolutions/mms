@@ -28,7 +28,7 @@ export default function WizardLayout({
   subtitle,
 }: WizardLayoutProps): React.JSX.Element {
   const branding = useBranding();
-  const { t } = useTranslation();
+  const { t, isRtl } = useTranslation();
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -113,9 +113,9 @@ export default function WizardLayout({
 
         <motion.section
           key={currentStep}
-          initial={{ opacity: 0, x: 20 }}
+          initial={{ opacity: 0, x: isRtl ? -20 : 20 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
+          exit={{ opacity: 0, x: isRtl ? 20 : -20 }}
           transition={{ duration: 0.35, ease: "easeOut" }}
           className="w-full max-w-2xl bg-card border border-border rounded-2xl shadow-sm overflow-hidden"
           aria-labelledby="wizard-step-title"

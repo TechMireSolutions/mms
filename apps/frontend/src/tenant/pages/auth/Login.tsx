@@ -10,10 +10,11 @@ import {
   is2FAVerified,
   mark2FAVerified,
 } from "@/lib/twoFactor";
-import { requiresTwoFactor } from "@mms/shared";
+import { requiresTwoFactor, isValidEmail } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
-import { FORM_ERROR, FORM_INPUT_ICON, FORM_LABEL, FORM_CHECKBOX } from "@/components/ui/formStyles";
+import { Input } from "@/components/ui/input";
+import { FORM_ERROR, FORM_LABEL, FORM_CHECKBOX } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
 const REMEMBER_EMAIL_KEY = "mms_login_remember_email";
@@ -102,7 +103,7 @@ export default function Login(): React.ReactElement {
     const trimmed = email.trim();
     if (!trimmed) {
       validationErrors.email = t("auth.emailRequired");
-    } else if (!/\S+@\S+\.\S+/.test(trimmed)) {
+    } else if (!isValidEmail(trimmed)) {
       validationErrors.email = t("auth.emailInvalid");
     }
     if (!password) {
@@ -175,10 +176,10 @@ export default function Login(): React.ReactElement {
             </label>
             <div className="relative">
               <Mail
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80"
+                className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80"
                 aria-hidden
               />
-              <input
+              <Input
                 id={emailFieldId}
                 type="email"
                 name="email"
@@ -195,7 +196,7 @@ export default function Login(): React.ReactElement {
                 aria-invalid={Boolean(fieldErrors.email)}
                 aria-describedby={fieldErrors.email ? `${emailFieldId}-error` : undefined}
                 className={cn(
-                  FORM_INPUT_ICON,
+                  "ps-9",
                   fieldErrors.email && "border-destructive focus-visible:ring-destructive/25",
                 )}
               />
@@ -213,10 +214,10 @@ export default function Login(): React.ReactElement {
             </label>
             <div className="relative">
               <Lock
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80"
+                className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80"
                 aria-hidden
               />
-              <input
+              <Input
                 id={passwordFieldId}
                 type={showPassword ? "text" : "password"}
                 name="password"
@@ -231,15 +232,14 @@ export default function Login(): React.ReactElement {
                 aria-invalid={Boolean(fieldErrors.password)}
                 aria-describedby={fieldErrors.password ? `${passwordFieldId}-error` : undefined}
                 className={cn(
-                  FORM_INPUT_ICON,
-                  "pr-11",
+                  "ps-9 pe-11",
                   fieldErrors.password && "border-destructive focus-visible:ring-destructive/25",
                 )}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute end-0.5 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                className="absolute end-0.5 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground animate-none cursor-pointer"
                 aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                 aria-pressed={showPassword}
               >

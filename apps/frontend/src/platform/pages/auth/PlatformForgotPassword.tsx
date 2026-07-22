@@ -1,33 +1,38 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
-  AlertCircle,
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Loader2,
-  Lock,
   Mail,
   RefreshCw,
   ShieldCheck,
 } from "lucide-react";
-import { type PlatformPasswordForgotResult, type AppTranslationKey } from "@mms/shared";
 import {
-  PLATFORM_MIN_PASSWORD_LENGTH,
-  validatePlatformSetupEmail,
-  validatePlatformSetupPassword,
-} from "@mms/shared";
+  getPlatformEmailError,
+  getPlatformPasswordError,
+  getPlatformPasswordMatchError,
+} from "@/platform/lib/platformValidation";
+
 import PlatformAuthLayout from "@/platform/components/PlatformAuthLayout";
+import PlatformPasswordInput from "@/platform/components/PlatformPasswordInput";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
-import PlatformOtpInput, { createEmptyOtp, isOtpComplete } from "@/platform/components/PlatformOtpInput";
+import { PlatformAlert } from "@/platform/components/PlatformAlert";
+import { OtpInput, createEmptyOtp, isOtpComplete } from "@/components/ui/OtpInput";
 import { Button } from "@/components/ui/button";
-import { FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
+import { Input } from "@/components/ui/input";
+import { FORM_LABEL } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useResendCountdown } from "@/hooks/useResendCountdown";
-import { apiJson, ApiError } from "@/lib/apiClient";
-import { mapPlatformAuthError } from "@/platform/lib/platformAuthErrors";
+import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
 import { ROUTES } from "@/lib/config/routes";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
+import {
+  usePlatformPasswordForgot,
+  usePlatformPasswordReset,
+  usePlatformPasswordResetResend,
+} from "@/platform/hooks/usePlatformAuthActions";
 
 /**
  * Apex-only forgot password for platform super-users (email OTP + new password).
@@ -38,6 +43,10 @@ export default function PlatformForgotPassword(): React.JSX.Element {
   const [searchParams] = useSearchParams();
   const { checkPlatformAuth } = usePlatformAuth();
 
+  const forgotMutation = usePlatformPasswordForgot();
+  const resetMutation = usePlatformPasswordReset();
+  const resendMutation = usePlatformPasswordResetResend();
+
   const resetIdParam = searchParams.get("resetId")?.trim() ?? "";
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
@@ -45,9 +54,10 @@ export default function PlatformForgotPassword(): React.JSX.Element {
   const [code, setCode] = useState(createEmptyOtp);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [devHint, setDevHint] = useState<string | null>(null);
+
+  const loading = forgotMutation.isPending || resetMutation.isPending || resendMutation.isPending;
 
   const isResetStep = Boolean(resetId);
   const [resendCycle, setResendCycle] = useState(0);
@@ -65,27 +75,21 @@ export default function PlatformForgotPassword(): React.JSX.Element {
     setError(null);
     setDevHint(null);
 
-    const emailKey = validatePlatformSetupEmail(email);
-    if (emailKey) {
-      setError(t(emailKey));
+    const emailError = getPlatformEmailError(email, t);
+    if (emailError) {
+      setError(emailError);
       return;
     }
 
-    setLoading(true);
     try {
-      const result = await apiJson<PlatformPasswordForgotResult>("/api/platform/auth/password/forgot", {
-        method: "POST",
-        body: JSON.stringify({ email: email.trim() }),
-      });
+      const result = await forgotMutation.mutateAsync({ email: email.trim() });
       setSent(true);
       if (result.devReset) {
         setDevHint(t("platform.forgotDevResetHint", { code: result.devReset.code, resetId: result.devReset.resetId }));
         setResetId(result.devReset.resetId);
       }
-    } catch (error) {
-      setError(error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"));
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      setError(getPlatformErrorMessage(err, t));
     }
   };
 
@@ -93,56 +97,45 @@ export default function PlatformForgotPassword(): React.JSX.Element {
     event.preventDefault();
     if (!resetId) return;
 
-    if (password !== confirmPassword) {
-      setError(t("platform.forgotPasswordMismatch"));
+    const matchError = getPlatformPasswordMatchError(password, confirmPassword, t);
+    if (matchError) {
+      setError(matchError);
       return;
     }
 
-    const passwordKey = validatePlatformSetupPassword(password);
-    if (passwordKey) {
-      setError(
-        passwordKey === "platform.setupPasswordTooShort"
-          ? t(passwordKey, { min: String(PLATFORM_MIN_PASSWORD_LENGTH) })
-          : t(passwordKey as AppTranslationKey),
-      );
+    const passwordError = getPlatformPasswordError(password, t);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
 
     if (!isOtpComplete(code)) return;
 
-    setLoading(true);
     setError(null);
     try {
-      await apiJson("/api/platform/auth/password/reset", {
-        method: "POST",
-        body: JSON.stringify({ resetId, code: code.join(""), password }),
+      await resetMutation.mutateAsync({
+        resetId,
+        code: code.join(""),
+        password,
       });
       await checkPlatformAuth();
       navigate(ROUTES.home, { replace: true });
-    } catch (error) {
-      setError(error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"));
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      setError(getPlatformErrorMessage(err, t));
     }
   };
 
   const handleResend = async (): Promise<void> => {
     if (!resetId || resendCountdown > 0) return;
-    setLoading(true);
     setError(null);
     try {
-      const result = await apiJson<PlatformPasswordForgotResult>("/api/platform/auth/password/resend", {
-        method: "POST",
-        body: JSON.stringify({ resetId }),
-      });
+      const result = await resendMutation.mutateAsync(resetId);
       if (result.devReset) {
         setDevHint(t("platform.forgotDevResetHint", { code: result.devReset.code, resetId: result.devReset.resetId }));
       }
       setResendCycle((value) => value + 1);
-    } catch (error) {
-      setError(error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"));
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      setError(getPlatformErrorMessage(err, t));
     }
   };
 
@@ -165,49 +158,33 @@ export default function PlatformForgotPassword(): React.JSX.Element {
         {pageHead}
         <PlatformAuthLayout title={t("platform.forgotResetTitle")} subtitle={t("platform.forgotResetSubtitle")}>
         <form onSubmit={(event) => void handleReset(event)} className="space-y-4">
-          {error ? <Alert message={error} /> : null}
-          {devHint ? <DevHint message={devHint} /> : null}
+          {error ? <PlatformAlert message={error} /> : null}
+          {devHint ? <PlatformAlert variant="warning" message={devHint} /> : null}
 
-          <PlatformOtpInput
+          <OtpInput
             value={code}
             onChange={setCode}
             ariaLabel={t("platform.forgotEnterCode")}
             disabled={loading}
           />
 
-          <div className="space-y-1.5">
-            <label htmlFor="platform-new-password" className={FORM_LABEL}>{t("platform.forgotNewPassword")}</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-              <input
-                id="platform-new-password"
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={PLATFORM_MIN_PASSWORD_LENGTH}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className={FORM_INPUT_ICON}
-              />
-            </div>
-          </div>
+          <PlatformPasswordInput
+            id="platform-new-password"
+            label={t("platform.forgotNewPassword")}
+            autoComplete="new-password"
+            required
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
 
-          <div className="space-y-1.5">
-            <label htmlFor="platform-confirm-password" className={FORM_LABEL}>{t("platform.forgotConfirmPassword")}</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-              <input
-                id="platform-confirm-password"
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={PLATFORM_MIN_PASSWORD_LENGTH}
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                className={FORM_INPUT_ICON}
-              />
-            </div>
-          </div>
+          <PlatformPasswordInput
+            id="platform-confirm-password"
+            label={t("platform.forgotConfirmPassword")}
+            autoComplete="new-password"
+            required
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+          />
 
           <Button type="submit" className="w-full h-11" disabled={loading || !isOtpComplete(code)}>
             {loading ? (
@@ -238,7 +215,7 @@ export default function PlatformForgotPassword(): React.JSX.Element {
 
           <p className="text-center text-sm text-muted-foreground">
             <Link to={ROUTES.home} className="text-primary font-medium hover:underline inline-flex items-center gap-1">
-              <ArrowLeft className="w-3 h-3" aria-hidden />
+              <ArrowLeft className="w-3 h-3 rtl:rotate-180" aria-hidden />
               {t("auth.backToSignIn")}
             </Link>
           </p>
@@ -263,12 +240,12 @@ export default function PlatformForgotPassword(): React.JSX.Element {
             </div>
           </div>
 
-          {devHint ? <DevHint message={devHint} /> : null}
+          {devHint ? <PlatformAlert variant="warning" message={devHint} /> : null}
 
           {resetId ? (
             <Button type="button" className="w-full h-11" onClick={() => navigate(resetPath(resetId))}>
               {t("platform.forgotEnterCode")}
-              <ArrowRight className="w-4 h-4" aria-hidden />
+              <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden />
             </Button>
           ) : null}
 
@@ -287,7 +264,7 @@ export default function PlatformForgotPassword(): React.JSX.Element {
 
           <p className="text-center text-sm text-muted-foreground">
             <Link to={ROUTES.home} className="text-primary font-medium hover:underline inline-flex items-center gap-1">
-              <ArrowLeft className="w-3 h-3" aria-hidden />
+              <ArrowLeft className="w-3 h-3 rtl:rotate-180" aria-hidden />
               {t("auth.backToSignIn")}
             </Link>
           </p>
@@ -302,20 +279,20 @@ export default function PlatformForgotPassword(): React.JSX.Element {
       {pageHead}
       <PlatformAuthLayout title={t("platform.forgotTitle")} subtitle={t("platform.forgotSubtitle")}>
       <form onSubmit={(event) => void handleRequest(event)} className="space-y-4">
-        {error ? <Alert message={error} /> : null}
+        {error ? <PlatformAlert message={error} /> : null}
 
         <div className="space-y-1.5">
           <label htmlFor="platform-forgot-email" className={FORM_LABEL}>{t("auth.email")}</label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-            <input
+            <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
+            <Input
               id="platform-forgot-email"
               type="email"
               autoComplete="username"
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className={FORM_INPUT_ICON}
+              className="ps-9"
             />
           </div>
         </div>
@@ -329,14 +306,14 @@ export default function PlatformForgotPassword(): React.JSX.Element {
           ) : (
             <>
               {t("platform.forgotSendLink")}
-              <ArrowRight className="w-4 h-4" aria-hidden />
+              <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden />
             </>
           )}
         </Button>
 
         <p className="text-center text-sm text-muted-foreground">
           <Link to={ROUTES.home} className="text-primary font-medium hover:underline inline-flex items-center gap-1">
-            <ArrowLeft className="w-3 h-3" aria-hidden />
+            <ArrowLeft className="w-3 h-3 rtl:rotate-180" aria-hidden />
             {t("auth.backToSignIn")}
           </Link>
         </p>
@@ -346,20 +323,4 @@ export default function PlatformForgotPassword(): React.JSX.Element {
   );
 }
 
-function Alert({ message }: { message: string }): React.JSX.Element {
-  return (
-    <div
-      className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-      role="alert"
-    >
-      <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" aria-hidden />
-      <span>{message}</span>
-    </div>
-  );
-}
 
-function DevHint({ message }: { message: string }): React.JSX.Element {
-  return (
-    <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-sm text-foreground">{message}</div>
-  );
-}

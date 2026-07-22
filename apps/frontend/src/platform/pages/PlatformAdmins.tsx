@@ -1,42 +1,34 @@
 import React, { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
-  AlertCircle,
   ArrowLeft,
   Loader2,
   Mail,
   User,
   UserPlus,
-  Key,
 } from "lucide-react";
-import {
-  PLATFORM_MIN_PASSWORD_LENGTH,
-  validatePlatformSetupName,
-  validatePlatformSetupPassword,
-  formatDate,
-  type AppTranslationKey,
-} from "@mms/shared";
+import { formatDate } from "@mms/shared";
+import { PlatformAlert } from "@/platform/components/PlatformAlert";
 import { PlatformPageShell, PlatformLogoMark } from "@/platform/components/PlatformPageShell";
+import PlatformPasswordInput from "@/platform/components/PlatformPasswordInput";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
+import { Input } from "@/components/ui/input";
+import { FORM_LABEL } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
-import { mapPlatformAuthError } from "@/platform/lib/platformAuthErrors";
+import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
 import { ROUTES } from "@/lib/config/routes";
-import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { usePlatformAdmins, useAddPlatformAdmin } from "@/platform/hooks/usePlatformAdmins";
-import { PlatformLoadingScreen } from "@/platform/components/PlatformLoadingScreen";
-import { ApiError } from "@/lib/apiClient";
+import {
+  getPlatformEmailError,
+  getPlatformNameError,
+  getPlatformPasswordError,
+} from "@/platform/lib/platformValidation";
+import PlatformSpinner from "@/platform/components/PlatformSpinner";
+import PlatformRetryBlock from "@/platform/components/PlatformRetryBlock";
 
 export default function PlatformAdmins(): React.JSX.Element {
   const { t } = useTranslation();
-  const {
-    platformUser,
-    isPlatformAuthenticated,
-    platformAuthChecked,
-    isCheckingPlatformAuth,
-  } = usePlatformAuth();
-
   const { data: admins, isLoading: loadingAdmins, isError: fetchError, refetch } = usePlatformAdmins();
   const addAdmin = useAddPlatformAdmin();
 
@@ -45,40 +37,25 @@ export default function PlatformAdmins(): React.JSX.Element {
   const [password, setPassword] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  if (!platformAuthChecked || isCheckingPlatformAuth) {
-    return <PlatformLoadingScreen />;
-  }
-
-  if (!isPlatformAuthenticated) {
-    return <Navigate to={ROUTES.home} replace />;
-  }
-
-  if (platformUser?.role !== "super_user") {
-    return <Navigate to={ROUTES.home} replace />;
-  }
-
   const handleAddAdmin = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();
     setSubmitError(null);
 
-    const nameKey = validatePlatformSetupName(name);
-    if (nameKey) {
-      setSubmitError(t(nameKey));
+    const nameError = getPlatformNameError(name, t);
+    if (nameError) {
+      setSubmitError(nameError);
       return;
     }
 
-    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) {
-      setSubmitError(t("platform.setupInvalidEmail"));
+    const emailError = getPlatformEmailError(email, t);
+    if (emailError) {
+      setSubmitError(emailError);
       return;
     }
 
-    const passwordKey = validatePlatformSetupPassword(password);
-    if (passwordKey) {
-      setSubmitError(
-        passwordKey === "platform.setupPasswordTooShort"
-          ? t(passwordKey, { min: String(PLATFORM_MIN_PASSWORD_LENGTH) })
-          : t(passwordKey as AppTranslationKey),
-      );
+    const passwordError = getPlatformPasswordError(password, t);
+    if (passwordError) {
+      setSubmitError(passwordError);
       return;
     }
 
@@ -91,10 +68,8 @@ export default function PlatformAdmins(): React.JSX.Element {
       setName("");
       setEmail("");
       setPassword("");
-    } catch (error) {
-      setSubmitError(
-        error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"),
-      );
+    } catch (err) {
+      setSubmitError(getPlatformErrorMessage(err, t));
     }
   };
 
@@ -113,7 +88,7 @@ export default function PlatformAdmins(): React.JSX.Element {
           to={ROUTES.home}
           className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
         >
-          <ArrowLeft className="w-3.5 h-3.5" aria-hidden />
+          <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden />
           {t("platform.backToConsole")}
         </Link>
 
@@ -125,24 +100,20 @@ export default function PlatformAdmins(): React.JSX.Element {
             </h2>
 
             {loadingAdmins ? (
-              <div className="flex justify-center py-8" role="status">
-                <Loader2 className="w-6 h-6 animate-spin text-primary" aria-hidden />
-                <span className="sr-only">{t("common.loading")}</span>
-              </div>
+              <PlatformSpinner label={t("common.loading")} />
             ) : fetchError ? (
-              <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-center space-y-2">
-                <p className="text-sm text-destructive">{t("apex.loadError")}</p>
-                <Button type="button" variant="ghost" size="sm" onClick={() => void refetch()}>
-                  {t("common.retry")}
-                </Button>
-              </div>
+              <PlatformRetryBlock
+                errorText={t("apex.loadError")}
+                retryText={t("common.retry")}
+                onRetry={() => void refetch()}
+              />
             ) : admins && admins.length > 0 ? (
               <div className="space-y-3">
                 {admins.map((admin) => (
                   <Card
                     key={admin.id}
                     accentColor={admin.role === "super_user" ? "primary" : undefined}
-                    className="p-5 pl-6.5 space-y-2 text-left hover:border-primary/30"
+                    className="p-5 ps-6.5 space-y-2 text-start hover:border-primary/30"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-semibold text-foreground truncate">{admin.name}</p>
@@ -181,36 +152,28 @@ export default function PlatformAdmins(): React.JSX.Element {
           <Card accentColor="primary" className="p-0">
             <form
               onSubmit={(event) => void handleAddAdmin(event)}
-              className="p-5 pl-6.5 space-y-4 text-left"
+              className="p-5 ps-6.5 space-y-4 text-start"
             >
             <div className="flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-primary" aria-hidden />
               <h2 className="text-sm font-bold text-foreground">{t("platform.addAdmin")}</h2>
             </div>
 
-            {submitError ? (
-              <div
-                className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-                role="alert"
-              >
-                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" aria-hidden />
-                <span>{submitError}</span>
-              </div>
-            ) : null}
+            {submitError ? <PlatformAlert message={submitError} /> : null}
 
             <div className="space-y-1.5">
               <label htmlFor="admin-name" className={FORM_LABEL}>
                 {t("platform.adminName")}
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-                <input
+                <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
+                <Input
                   id="admin-name"
                   type="text"
                   required
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  className={FORM_INPUT_ICON}
+                  className="ps-9"
                   disabled={addAdmin.isPending}
                 />
               </div>
@@ -221,40 +184,28 @@ export default function PlatformAdmins(): React.JSX.Element {
                 {t("platform.adminEmail")}
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-                <input
+                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
+                <Input
                   id="admin-email"
                   type="email"
                   required
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  className={FORM_INPUT_ICON}
+                  className="ps-9"
                   disabled={addAdmin.isPending}
                 />
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label htmlFor="admin-password" className={FORM_LABEL}>
-                {t("platform.adminPassword")}
-              </label>
-              <div className="relative">
-                <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-                <input
-                  id="admin-password"
-                  type="password"
-                  required
-                  minLength={PLATFORM_MIN_PASSWORD_LENGTH}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  className={FORM_INPUT_ICON}
-                  disabled={addAdmin.isPending}
-                />
-              </div>
-              <p className="text-[10px] text-muted-foreground/75">
-                {t("platform.setupPasswordTooShort", { min: String(PLATFORM_MIN_PASSWORD_LENGTH) })}
-              </p>
-            </div>
+            <PlatformPasswordInput
+              id="admin-password"
+              label={t("platform.adminPassword")}
+              autoComplete="new-password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              disabled={addAdmin.isPending}
+            />
 
             <Button type="submit" className="w-full font-semibold" disabled={addAdmin.isPending}>
               {addAdmin.isPending ? (

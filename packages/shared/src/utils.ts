@@ -755,7 +755,11 @@ export function calculateDetailedLunarAge(dob: string): string {
 export const DEFAULT_CURRENCIES = [
   { id: "cur1", code: "PKR", name: "Pakistani Rupee", symbol: "₨" },
   { id: "cur2", code: "USD", name: "US Dollar", symbol: "$" },
-  { id: "cur3", code: "GBP", name: "British Pound", symbol: "£" }
+  { id: "cur3", code: "GBP", name: "British Pound", symbol: "£" },
+  { id: "cur4", code: "CAD", name: "Canadian Dollar", symbol: "C$" },
+  { id: "cur5", code: "SAR", name: "Saudi Riyal", symbol: "﷼" },
+  { id: "cur6", code: "AED", name: "UAE Dirham", symbol: "د.إ" },
+  { id: "cur7", code: "EUR", name: "Euro", symbol: "€" }
 ];
 
 /**

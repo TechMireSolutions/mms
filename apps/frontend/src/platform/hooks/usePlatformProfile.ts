@@ -40,3 +40,20 @@ export function useUpdatePlatformProfileName() {
     },
   });
 }
+
+export function useUpdatePlatformPassword() {
+  return useMutation({
+    mutationFn: async ({
+      currentPassword,
+      newPassword,
+    }: {
+      currentPassword: string;
+      newPassword: string;
+    }) =>
+      apiJson<{ success: boolean }>('/api/platform/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify({ currentPassword, newPassword }),
+      }),
+  });
+}
+

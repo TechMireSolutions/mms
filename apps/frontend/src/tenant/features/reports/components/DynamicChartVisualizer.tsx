@@ -29,6 +29,8 @@ import { getBrandingChartPalette } from "@/lib/brandingChartPalette";
 
 import { getCollection, getObject, saveObject } from "@/lib/db";
 import { METADATA_FIELDS, VisualizerConfig, type ReportCollection, getFieldLabel, getCollectionLabel } from "@/tenant/features/reports/components/reportMetadata";
+import { Input } from "@/components/ui/input";
+import { FormSelect } from "@/components/ui/FormSelect";
 
 interface CollectionMeta {
   name: string;
@@ -678,12 +680,12 @@ export default function DynamicChartVisualizer({
             {/* Widget Title */}
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.chartTitleLabel")}</label>
-              <input
+              <Input
                 type="text"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder={t("reports.visualizer.titlePlaceholder")}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
+                className="w-full px-3 py-2 text-xs rounded-xl bg-card/50 text-foreground focus:ring-2 focus:ring-primary/20 font-semibold min-h-0"
               />
             </div>
 
@@ -691,36 +693,32 @@ export default function DynamicChartVisualizer({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.dataCollection")}</label>
-                <select
+                <FormSelect
                   value={collectionKey}
-                  onChange={(event) => setCollectionKey(event.target.value as keyof typeof METADATA_CONFIGS)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
-                >
-                  {Object.entries(METADATA_CONFIGS).map(([metadataKey, metadataConfig]) => {
+                  onChange={(value) => setCollectionKey(value as keyof typeof METADATA_CONFIGS)}
+                  className="w-full text-xs"
+                  options={Object.entries(METADATA_CONFIGS).map(([metadataKey, metadataConfig]) => {
                     const transKey = `reports.collections.${metadataKey}`;
                     const translated = t(transKey as AppTranslationKey);
-                    return (
-                      <option key={metadataKey} value={metadataKey}>
-                        {translated === transKey ? metadataConfig.name : translated}
-                      </option>
-                    );
+                    return {
+                      value: metadataKey,
+                      label: translated === transKey ? metadataConfig.name : translated,
+                    };
                   })}
-                </select>
+                />
               </div>
 
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.xAxisDimension")}</label>
-                <select
+                <FormSelect
                   value={xAxisField}
-                  onChange={(event) => setXAxisField(event.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
-                >
-                  {activeMeta.fields.map((metadataField) => (
-                    <option key={metadataField.value} value={metadataField.value}>
-                      {getFieldLabel(metadataField.value, metadataField.label, t)}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setXAxisField}
+                  className="w-full text-xs"
+                  options={activeMeta.fields.map((metadataField) => ({
+                    value: metadataField.value,
+                    label: getFieldLabel(metadataField.value, metadataField.label, t),
+                  }))}
+                />
               </div>
             </div>
 
@@ -728,41 +726,40 @@ export default function DynamicChartVisualizer({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.operation")}</label>
-                <select
+                <FormSelect
                   value={operation}
-                  onChange={(event) => setOperation(event.target.value as "count" | "sum" | "avg" | "min" | "max")}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
-                >
-                  <option value="count">{t("reports.visualizer.opCount")}</option>
-                  {activeMeta.numericFields.length > 0 && (
-                    <>
-                      <option value="sum">{t("reports.visualizer.opSum")}</option>
-                      <option value="avg">{t("reports.visualizer.opAvg")}</option>
-                      <option value="min">{t("reports.visualizer.opMin")}</option>
-                      <option value="max">{t("reports.visualizer.opMax")}</option>
-                    </>
-                  )}
-                </select>
+                  onChange={(value) => setOperation(value as "count" | "sum" | "avg" | "min" | "max")}
+                  className="w-full text-xs"
+                  options={[
+                    { value: "count", label: t("reports.visualizer.opCount") },
+                    ...(activeMeta.numericFields.length > 0
+                      ? [
+                          { value: "sum", label: t("reports.visualizer.opSum") },
+                          { value: "avg", label: t("reports.visualizer.opAvg") },
+                          { value: "min", label: t("reports.visualizer.opMin") },
+                          { value: "max", label: t("reports.visualizer.opMax") },
+                        ]
+                      : []),
+                  ]}
+                />
               </div>
 
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.targetField")}</label>
-                <select
+                <FormSelect
                   disabled={operation === "count"}
                   value={targetField}
-                  onChange={(event) => setTargetField(event.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-40"
-                >
-                  {activeMeta.numericFields.length === 0 ? (
-                    <option value="">{t("reports.widgets.builder.noNumericFields")}</option>
-                  ) : (
-                    activeMeta.numericFields.map((numericField) => (
-                      <option key={numericField.value} value={numericField.value}>
-                        {getFieldLabel(numericField.value, numericField.label, t)}
-                      </option>
-                    ))
-                  )}
-                </select>
+                  onChange={setTargetField}
+                  className="w-full text-xs"
+                  options={
+                    activeMeta.numericFields.length === 0
+                      ? [{ value: "", label: t("reports.widgets.builder.noNumericFields") }]
+                      : activeMeta.numericFields.map((numericField) => ({
+                          value: numericField.value,
+                          label: getFieldLabel(numericField.value, numericField.label, t),
+                        }))
+                  }
+                />
               </div>
             </div>
 
@@ -770,35 +767,36 @@ export default function DynamicChartVisualizer({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.chartType")}</label>
-                <select
+                <FormSelect
                   value={chartType}
-                  onChange={(event) => setChartType(event.target.value as "bar" | "line" | "area" | "pie" | "radar")}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
-                >
-                  <option value="bar">{t("reports.visualizer.chartBar")}</option>
-                  <option value="line">{t("reports.visualizer.chartLine")}</option>
-                  <option value="area">{t("reports.visualizer.chartArea")}</option>
-                  <option value="pie">{t("reports.visualizer.chartPie")}</option>
-                  <option value="radar">{t("reports.visualizer.chartRadar")}</option>
-                </select>
+                  onChange={(value) => setChartType(value as "bar" | "line" | "area" | "pie" | "radar")}
+                  className="w-full text-xs"
+                  options={[
+                    { value: "bar", label: t("reports.visualizer.chartBar") },
+                    { value: "line", label: t("reports.visualizer.chartLine") },
+                    { value: "area", label: t("reports.visualizer.chartArea") },
+                    { value: "pie", label: t("reports.visualizer.chartPie") },
+                    { value: "radar", label: t("reports.visualizer.chartRadar") },
+                  ]}
+                />
               </div>
 
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
                   <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.colorPalette")}</label>
-                  {(isColorblindSafeChartPalette(activePalette)) && (
+                  {isColorblindSafeChartPalette(activePalette) && (
                     <span className="text-[8px] bg-success/15 text-success px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest leading-none">{t('charts.accessibleBadge')}</span>
                   )}
                 </div>
-                <select
+                <FormSelect
                   value={activePalette}
-                  onChange={(event) => setActivePalette(event.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
-                >
-                  {CHART_PALETTE_DEFS.filter((def) => def.id !== 'brand' && def.colors.length > 0).map((def) => (
-                    <option key={def.id} value={def.id}>{t(def.labelKey)}</option>
-                  ))}
-                </select>
+                  onChange={setActivePalette}
+                  className="w-full text-xs"
+                  options={CHART_PALETTE_DEFS.filter((def) => def.id !== 'brand' && def.colors.length > 0).map((def) => ({
+                    value: def.id,
+                    label: t(def.labelKey),
+                  }))}
+                />
               </div>
             </div>
 
@@ -896,13 +894,12 @@ export default function DynamicChartVisualizer({
                     )}
                   </select>
 
-                  {/* Input value */}
-                  <input
+                  <Input
                     type="text"
                     value={rule.value}
                     onChange={(event) => handleUpdateFilter(rule.id, { value: event.target.value })}
                     placeholder={t("reports.visualizer.filterValuePlaceholder")}
-                    className="flex-1 min-w-0 px-2 py-1 text-[11px] rounded-lg border border-border bg-card/60 text-foreground focus:outline-none font-semibold"
+                    className="flex-1 min-w-0 px-2 py-1 text-[11px] rounded-lg border border-border bg-card/60 text-foreground focus:ring-2 focus:ring-primary/20 font-semibold min-h-0 h-7"
                   />
 
                   {/* Remove */}
@@ -1014,16 +1011,17 @@ export default function DynamicChartVisualizer({
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.visualizer.pdfPageSize")}</label>
-                      <select 
+                      <FormSelect 
                         value={pdfFormat}
-                        onChange={(event) => setPdfFormat(event.target.value)}
-                        className="w-full text-xs rounded-xl border border-border bg-background px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold"
-                      >
-                        <option value="a4">{t("reports.builder.formatA4")}</option>
-                        <option value="letter">{t("reports.builder.formatLetter")}</option>
-                        <option value="a3">{t("reports.builder.formatA3")}</option>
-                        <option value="legal">{t("reports.builder.formatLegal")}</option>
-                      </select>
+                        onChange={setPdfFormat}
+                        className="w-full text-xs"
+                        options={[
+                          { value: "a4", label: t("reports.builder.formatA4") },
+                          { value: "letter", label: t("reports.builder.formatLetter") },
+                          { value: "a3", label: t("reports.builder.formatA3") },
+                          { value: "legal", label: t("reports.builder.formatLegal") }
+                        ]}
+                      />
                     </div>
                   </div>
                 )}

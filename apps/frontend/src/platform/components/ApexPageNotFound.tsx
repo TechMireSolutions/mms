@@ -8,7 +8,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 export default function ApexPageNotFound(): React.JSX.Element {
   const location = useLocation();
   const { isPlatformAuthenticated } = usePlatformAuth();
-  const { t } = useTranslation();
+  const { t, dir } = useTranslation();
 
   const primaryLabel = isPlatformAuthenticated
     ? t("page.notFound.goDashboard")
@@ -17,7 +17,7 @@ export default function ApexPageNotFound(): React.JSX.Element {
   return (
     <main
       id="main-content"
-      dir="ltr"
+      dir={dir}
       className="min-h-screen flex items-center justify-center p-6 bg-background"
     >
       <div className="max-w-md w-full">

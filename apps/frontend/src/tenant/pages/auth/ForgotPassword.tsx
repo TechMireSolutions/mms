@@ -5,8 +5,12 @@ import AuthLayout from "@/tenant/components/AuthLayout";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { ROUTES } from '@/lib/config/routes';
 import { useTranslation } from "@/hooks/useTranslation";
-import { FORM_ERROR, FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { FORM_ERROR, FORM_LABEL } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
+
+import { isValidEmail } from "@mms/shared";
 
 /**
  * Forgot password reset request form for tenant sign-in entry.
@@ -21,7 +25,7 @@ export default function ForgotPassword(): React.JSX.Element {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
     if (!email) { setError(t("auth.emailRequired")); return; }
-    if (!/\S+@\S+\.\S+/.test(email)) { setError(t("auth.emailInvalid")); return; }
+    if (!isValidEmail(email)) { setError(t("auth.emailInvalid")); return; }
     setLoading(true);
     await new Promise((resolveDelay) => setTimeout(resolveDelay, 1500));
     setLoading(false);
@@ -64,17 +68,18 @@ export default function ForgotPassword(): React.JSX.Element {
               </div>
             </div>
 
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => { setSent(false); setEmail(""); }}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+              className="w-full h-11"
             >
               {t("auth.tryDifferentEmail")}
-            </button>
+            </Button>
 
             <p className="text-center text-xs text-muted-foreground">
               <Link to={ROUTES.login} className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
-                <ArrowLeft className="h-3 w-3" /> {t("auth.backToSignIn")}
+                <ArrowLeft className="h-3 w-3 rtl:rotate-180" /> {t("auth.backToSignIn")}
               </Link>
             </p>
           </div>
@@ -84,7 +89,7 @@ export default function ForgotPassword(): React.JSX.Element {
               <label htmlFor="email" className={FORM_LABEL}>
                 {t("auth.emailAddress")}
               </label>
-              <input
+              <Input
                 id="email"
                 name="email"
                 type="email"
@@ -92,31 +97,33 @@ export default function ForgotPassword(): React.JSX.Element {
                 onChange={(event) => { setEmail(event.target.value); setError(""); }}
                 placeholder="you@madrasa.app"
                 className={cn(
-                  FORM_INPUT,
                   error ? "border-destructive focus-visible:ring-destructive/20" : "",
                 )}
               />
               {error ? <p className={FORM_ERROR}>{error}</p> : null}
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-70"
+              className="w-full h-11"
             >
               {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t("auth.sendResetLink")}
+                </>
               ) : (
                 <>
                   {t("auth.sendResetLink")}
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                 </>
               )}
-            </button>
+            </Button>
 
             <p className="text-center text-xs text-muted-foreground">
               <Link to={ROUTES.login} className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
-                <ArrowLeft className="h-3 w-3" /> {t("auth.backToSignIn")}
+                <ArrowLeft className="h-3 w-3 rtl:rotate-180" /> {t("auth.backToSignIn")}
               </Link>
             </p>
           </form>

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface PlatformPageShellProps {
   children: React.ReactNode;
@@ -6,16 +7,17 @@ interface PlatformPageShellProps {
   width?: "md" | "lg";
 }
 
-/** Shared apex platform page layout (LTR card shell). */
+/** Shared apex platform page layout (LTR/RTL card shell). */
 export function PlatformPageShell({
   children,
   width = "lg",
 }: PlatformPageShellProps): React.JSX.Element {
   const maxClass = width === "md" ? "max-w-md" : "max-w-lg";
+  const { dir } = useTranslation();
 
   return (
     <div
-      dir="ltr"
+      dir={dir}
       className="min-h-screen w-full overflow-x-hidden bg-background flex flex-col items-center justify-center p-4 sm:p-6"
     >
       <div className={`w-full ${maxClass} mx-auto`}>{children}</div>

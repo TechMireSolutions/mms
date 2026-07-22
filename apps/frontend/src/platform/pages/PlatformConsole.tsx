@@ -1,22 +1,18 @@
 import React, { Suspense, lazy } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Loader2, LogOut, Plus, UserCircle, UserPlus } from "lucide-react";
+import { ArrowRight, LogOut, Plus, UserCircle, UserPlus } from "lucide-react";
 import { PlatformPageShell, PlatformLogoMark } from "@/platform/components/PlatformPageShell";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ROUTES } from "@/lib/config/routes";
 import { Button } from "@/components/ui/button";
+import PlatformSpinner from "@/platform/components/PlatformSpinner";
 
 const PlatformWorkspaceList = lazy(() => import("@/platform/components/PlatformWorkspaceList"));
 
 function WorkspaceListFallback(): React.JSX.Element {
   const { t } = useTranslation();
-  return (
-    <div className="flex items-center justify-center py-8" role="status">
-      <Loader2 className="w-6 h-6 animate-spin text-primary" aria-hidden />
-      <span className="sr-only">{t("apex.loadingMadrasas")}</span>
-    </div>
-  );
+  return <PlatformSpinner label={t("apex.loadingMadrasas")} />;
 }
 
 /**
@@ -53,7 +49,7 @@ export default function PlatformConsole(): React.JSX.Element {
               <Link to={ROUTES.onboarding}>
                 <Plus className="w-4 h-4" aria-hidden />
                 {t("auth.createMadrasa")}
-                <ArrowRight className="w-4 h-4" aria-hidden />
+                <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden />
               </Link>
             </Button>
 

@@ -1,11 +1,12 @@
-import React, { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import React from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { DEFAULT_GLOBAL_SETTINGS, getPasswordPolicyHint } from "@mms/shared";
 import { OnboardingData } from "@/platform/pages/onboarding/OnboardingWizard";
 import { useTranslation } from "@/hooks/useTranslation";
-import { FORM_INPUT, FORM_INPUT_ICON, FORM_LABEL, FORM_CHECKBOX } from "@/components/ui/formStyles";
-import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import PlatformPasswordInput from "@/platform/components/PlatformPasswordInput";
 
 /** The subset of onboarding data used by this step. */
 export interface AdminSetupData {
@@ -35,7 +36,6 @@ const FieldRow = ({ label, required = false, children, hint }: FieldRowProps) =>
   </div>
 );
 
-const strengthLabels = ["", "Weak", "Fair", "Good", "Strong"];
 const strengthColors = ["", "bg-destructive", "bg-warning", "bg-warning", "bg-primary"];
 
 function getStrength(passwordValue: string): number {
@@ -57,91 +57,91 @@ interface AdminSetupProps {
  */
 export default function AdminSetup({ data, onChange }: AdminSetupProps) {
   const { t } = useTranslation();
-  const [showPw, setShowPw] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
 
   const update = (field: keyof OnboardingData, fieldValue: unknown) => {
     onChange((prev) => ({ ...prev, [field]: fieldValue } as OnboardingData));
   };
   const strength = getStrength(data.password || "");
 
+  const getStrengthLabel = (score: number): string => {
+    switch (score) {
+      case 1:
+        return t("onboarding.admin.passwordWeak");
+      case 2:
+        return t("onboarding.admin.passwordFair");
+      case 3:
+        return t("onboarding.admin.passwordGood");
+      case 4:
+        return t("onboarding.admin.passwordStrong");
+      default:
+        return "";
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Name row */}
       <div className="grid grid-cols-2 gap-3">
-        <FieldRow label="First Name" required>
-          <input
+        <FieldRow label={t("onboarding.admin.firstName")} required>
+          <Input
             id="firstName"
             name="firstName"
             type="text"
             value={data.firstName || ""}
             onChange={(event) => update("firstName", event.target.value)}
-            placeholder="Abdullah"
-            className={FORM_INPUT}
+            placeholder={t("onboarding.admin.firstNamePlaceholder")}
           />
         </FieldRow>
-        <FieldRow label="Last Name" required>
-          <input
+        <FieldRow label={t("onboarding.admin.lastName")} required>
+          <Input
             id="lastName"
             name="lastName"
             type="text"
             value={data.lastName || ""}
             onChange={(event) => update("lastName", event.target.value)}
-            placeholder="Khan"
-            className={FORM_INPUT}
+            placeholder={t("onboarding.admin.lastNamePlaceholder")}
           />
         </FieldRow>
       </div>
 
-      <FieldRow label="Email Address" required>
-        <input
+      <FieldRow label={t("onboarding.admin.email")} required>
+        <Input
           id="email"
           name="email"
           type="email"
           value={data.email || ""}
           onChange={(event) => update("email", event.target.value)}
-          placeholder="admin@madrasa.app"
-          className={FORM_INPUT}
+          placeholder={t("onboarding.admin.emailPlaceholder")}
         />
       </FieldRow>
 
-      <FieldRow label="Phone Number">
-        <input
+      <FieldRow label={t("onboarding.admin.phone")}>
+        <Input
           id="phone"
           name="phone"
           type="tel"
           value={data.phone || ""}
           onChange={(event) => update("phone", event.target.value)}
-          placeholder="+44 7700 900000"
-          className={FORM_INPUT}
+          placeholder={t("onboarding.admin.phonePlaceholder")}
         />
       </FieldRow>
 
       {/* Password */}
-      <FieldRow
-        label="Password"
-        required
-        hint={getPasswordPolicyHint(DEFAULT_GLOBAL_SETTINGS.passwordPolicy)}
-      >
-        <div className="relative">
-          <input
-            id="password"
-            name="password"
-            type={showPw ? "text" : "password"}
-            value={data.password || ""}
-            onChange={(event) => update("password", event.target.value)}
-            placeholder="••••••••"
-            className={cn(FORM_INPUT_ICON, "pr-11")}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPw(!showPw)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          >
-            {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
-        </div>
-        {data.password && (
+      <div>
+        <PlatformPasswordInput
+          id="password"
+          name="password"
+          label={`${t("onboarding.admin.password")} *`}
+          autoComplete="new-password"
+          required
+          value={data.password || ""}
+          onChange={(event) => update("password", event.target.value)}
+          placeholder="••••••••"
+        />
+        <p className="text-xs text-muted-foreground mt-1">
+          {getPasswordPolicyHint(DEFAULT_GLOBAL_SETTINGS.passwordPolicy)}
+        </p>
+        {data.password ? (
           <div className="mt-2 space-y-1">
             <div className="flex gap-1">
               {[1, 2, 3, 4].map((level) => (
@@ -156,56 +156,42 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
             <p className={`text-xs font-medium ${
               strength <= 1 ? "text-destructive" : strength === 2 ? "text-warning" : strength === 3 ? "text-warning" : "text-primary"
             }`}>
-              {strengthLabels[strength]} password
+              {getStrengthLabel(strength)}
             </p>
           </div>
-        )}
-      </FieldRow>
+        ) : null}
+      </div>
 
       {/* Confirm password */}
-      <FieldRow label="Confirm Password" required>
-        <div className="relative">
-          <input
-            id="confirmPassword"
-            name="confirmPassword"
-            type={showConfirm ? "text" : "password"}
-            value={data.confirmPassword || ""}
-            onChange={(event) => update("confirmPassword", event.target.value)}
-            placeholder="••••••••"
-            className={cn(
-              FORM_INPUT_ICON,
-              "pr-11",
-              data.confirmPassword && data.password !== data.confirmPassword
-                ? "border-destructive focus:ring-destructive/20"
-                : "",
-            )}
-          />
-          <button
-            type="button"
-            onClick={() => setShowConfirm(!showConfirm)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          >
-            {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
-        </div>
-        {data.confirmPassword && data.password !== data.confirmPassword && (
-          <p className="text-xs text-destructive mt-1">Passwords do not match</p>
-        )}
-      </FieldRow>
+      <div>
+        <PlatformPasswordInput
+          id="confirmPassword"
+          name="confirmPassword"
+          label={`${t("onboarding.admin.confirmPassword")} *`}
+          autoComplete="new-password"
+          required
+          value={data.confirmPassword || ""}
+          onChange={(event) => update("confirmPassword", event.target.value)}
+          placeholder="••••••••"
+        />
+        {data.confirmPassword && data.password !== data.confirmPassword ? (
+          <p className="text-xs text-destructive mt-1">{t("onboarding.admin.passwordMismatch")}</p>
+        ) : null}
+      </div>
 
       {/* Terms */}
-      <div className="flex items-start gap-2.5">
-        <input
-          type="checkbox"
+      <div className="flex items-start gap-2.5 pt-1">
+        <Checkbox
           id="terms"
           checked={data.agreedTerms || false}
-          onChange={(event) => update("agreedTerms", event.target.checked)}
-          className={`${FORM_CHECKBOX} mt-0.5`}
+          onCheckedChange={(checked) => update("agreedTerms", checked === true)}
+          className="mt-0.5"
         />
-        <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed">
+        <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none">
           {t("onboarding.agreeTerms")}
         </label>
       </div>
     </div>
   );
 }
+

@@ -1,6 +1,7 @@
 import React from "react";
 import { PlatformLogoMark } from "@/platform/components/PlatformPageShell";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 
 export interface PlatformAuthLayoutProps {
@@ -16,11 +17,12 @@ export default function PlatformAuthLayout({
   subtitle,
 }: PlatformAuthLayoutProps): React.JSX.Element {
   const reducedMotion = useReducedMotion();
+  const { dir } = useTranslation();
 
   return (
     <main
       id="main-content"
-      dir="ltr"
+      dir={dir}
       className="relative flex min-h-screen flex-col items-center justify-center px-4 py-8 sm:px-6"
     >
       <div
@@ -40,7 +42,7 @@ export default function PlatformAuthLayout({
       >
         <div className="relative overflow-hidden group/auth rounded-2xl border border-border/60 bg-card/80 shadow-xl shadow-black/[0.04] backdrop-blur-xl dark:shadow-black/20">
           <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/auth:bg-primary" />
-          <div className="border-b border-border/50 bg-muted/15 px-6 py-6 text-center sm:px-8 pl-7.5">
+          <div className="border-b border-border/50 bg-muted/15 px-6 py-6 text-center sm:px-8 ps-7.5">
             <PlatformLogoMark />
             <div className="mt-4 space-y-1">
               <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">{title}</h1>
@@ -50,7 +52,7 @@ export default function PlatformAuthLayout({
             </div>
           </div>
 
-          <div className="px-6 py-6 sm:px-8 sm:py-7 pl-7 sm:pl-9">{children}</div>
+          <div className="px-6 py-6 sm:px-8 sm:py-7 ps-7 sm:ps-9">{children}</div>
         </div>
       </div>
     </main>

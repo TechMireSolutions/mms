@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import WizardLayout from "@/platform/components/onboarding/WizardLayout";
 import { ROUTES } from "@/lib/config/routes";
@@ -9,7 +9,9 @@ import {
   DEFAULT_GLOBAL_SETTINGS,
   isValidSubdomain,
   validatePasswordPolicy,
+  isValidEmail,
 } from "@mms/shared";
+import { PlatformAlert } from "@/platform/components/PlatformAlert";
 import { defaultFooterForMadrasa } from "@/tenant/features/settings/components/branding/BrandingShared";
 import { applyBrandingTheme } from "@/lib/brandingTheme";
 import CreateMadrasa from "@/platform/pages/onboarding/steps/CreateMadrasa";
@@ -17,8 +19,6 @@ import AdminSetup from "@/platform/pages/onboarding/steps/AdminSetup";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { isApiError } from "@/lib/apiClient";
-import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
-import { PlatformLoadingScreen } from "@/platform/components/PlatformLoadingScreen";
 
 export interface OnboardingData {
   name: string;
@@ -88,12 +88,6 @@ const initialData: OnboardingData = {
 
 /** Platform-protected wizard to provision a new madrasa workspace. */
 export default function OnboardingWizard(): React.JSX.Element {
-  const {
-    platformUser,
-    isPlatformAuthenticated,
-    platformAuthChecked,
-    isCheckingPlatformAuth,
-  } = usePlatformAuth();
   const { onboard } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -113,17 +107,7 @@ export default function OnboardingWizard(): React.JSX.Element {
     };
   }, []);
 
-  if (!platformAuthChecked || isCheckingPlatformAuth) {
-    return <PlatformLoadingScreen />;
-  }
 
-  if (!isPlatformAuthenticated) {
-    return <Navigate to={ROUTES.home} replace />;
-  }
-
-  if (platformUser?.role !== "super_user") {
-    return <Navigate to={ROUTES.home} replace />;
-  }
 
   const currentStep = STEP_DEFS[step - 1];
   if (!currentStep) {
@@ -139,7 +123,7 @@ export default function OnboardingWizard(): React.JSX.Element {
     }
     if (step === 2) {
       if (!data.firstName.trim() || !data.lastName.trim()) return t("onboarding.errorAdminName");
-      if (!data.email.trim() || !/\S+@\S+\.\S+/.test(data.email)) return t("onboarding.errorAdminEmail");
+      if (!isValidEmail(data.email)) return t("onboarding.errorAdminEmail");
       if (!data.agreedTerms) return t("onboarding.errorTerms");
     }
     return null;
@@ -225,14 +209,19 @@ export default function OnboardingWizard(): React.JSX.Element {
       <StepComponent data={data} onChange={setData} />
 
       {submitError ? (
-        <div className="mt-4 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          {submitError}{" "}
-          {showSignInLink ? (
-            <Link to={ROUTES.home} className="font-semibold underline">
-              {t("onboarding.signInInstead")}
-            </Link>
-          ) : null}
-        </div>
+        <PlatformAlert
+          className="mt-4"
+          message={
+            <>
+              {submitError}{" "}
+              {showSignInLink ? (
+                <Link to={ROUTES.home} className="font-semibold underline">
+                  {t("onboarding.signInInstead")}
+                </Link>
+              ) : null}
+            </>
+          }
+        />
       ) : null}
 
       <div className="flex items-center justify-between mt-7 pt-5 border-t border-border">
@@ -242,7 +231,7 @@ export default function OnboardingWizard(): React.JSX.Element {
           disabled={step === 1}
           className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:pointer-events-none"
         >
-          <ArrowLeft className="w-4 h-4" aria-hidden />
+          <ArrowLeft className="w-4 h-4 rtl:rotate-180" aria-hidden />
           {t("onboarding.back")}
         </button>
 
@@ -257,7 +246,7 @@ export default function OnboardingWizard(): React.JSX.Element {
           ) : (
             <>
               {isLastStep ? t("onboarding.createWorkspace") : t("onboarding.continue")}
-              <ArrowRight className="w-4 h-4" aria-hidden />
+              <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden />
             </>
           )}
         </button>

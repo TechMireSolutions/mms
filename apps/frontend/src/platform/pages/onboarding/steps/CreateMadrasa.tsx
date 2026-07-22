@@ -152,17 +152,17 @@ export default function CreateMadrasa({ data, onChange }: CreateMadrasaProps): R
               id="onboarding-country"
               value={data.country}
               autoComplete="country-name"
-              placeholder="United Kingdom"
+              placeholder={t("branding.countryPlaceholder")}
               onChange={(event) => updateField("country", event.target.value)}
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="onboarding-subdomain">
-              Workspace subdomain <span className="text-destructive">*</span>
+              {t("onboarding.madrasa.subdomainLabel")} <span className="text-destructive">*</span>
             </Label>
             <div className="flex items-center overflow-hidden rounded-lg border border-border focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-              <div className="flex items-center gap-1.5 border-r border-border bg-muted px-3 py-2.5">
+              <div className="flex items-center gap-1.5 border-e border-border bg-muted px-3 py-2.5">
                 <Globe className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
               </div>
               <Input
@@ -172,14 +172,14 @@ export default function CreateMadrasa({ data, onChange }: CreateMadrasaProps): R
                 className="border-0 rounded-none focus-visible:ring-0"
                 onChange={(event) => handleSubdomainChange(event.target.value)}
               />
-              <div className="border-l border-border bg-muted px-3 py-2.5">
+              <div className="border-s border-border bg-muted px-3 py-2.5">
                 <span className="text-xs text-muted-foreground">.{appDomain}</span>
               </div>
             </div>
             {data.subdomain && (
               <p className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Check className="h-3 w-3 text-primary" aria-hidden />
-                Your URL:{" "}
+                {t("onboarding.madrasa.yourUrl")}{" "}
                 <span className="font-medium text-foreground">
                   {data.subdomain}.{appDomain}
                 </span>

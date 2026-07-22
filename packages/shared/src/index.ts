@@ -108,5 +108,7 @@ export * from './contactValidation.js';
 export { buildDynamicStudentSchema, formatStudentZodIssues } from './studentValidation.js';
 export * from './sessionTypes.js';
 export * from './platformSettingsTypes.js';
+export * from './platformSchemas.js';
+
 
 

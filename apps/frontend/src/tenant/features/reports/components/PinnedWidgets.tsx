@@ -49,6 +49,8 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { Input } from "@/components/ui/input";
+import { FormSelect } from "@/components/ui/FormSelect";
 import {
   getWidgetCollections,
   getFilteredRecords,
@@ -1936,12 +1938,12 @@ export function WidgetBuilder({
             {/* Title field */}
             <div className="space-y-1">
               <label className={FORM_LABEL}>{t("reports.widgets.builder.labelTitle")}</label>
-              <input
+              <Input
                 type="text"
                 value={builderTitle}
                 onChange={(event) => setBuilderTitle(event.target.value)}
                 placeholder={t("reports.widgets.builder.placeholderTitle")}
-                className={FORM_INPUT_BUILDER}
+                className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-0"
               />
             </div>
 
@@ -2051,13 +2053,13 @@ export function WidgetBuilder({
                   </div>
                   <div className="space-y-1">
                     <label className={FORM_LABEL}>{t("reports.widgets.builder.matchValue")}</label>
-                    <input
+                    <Input
                       type="text"
                       disabled={!builderFilterField}
                       value={builderFilterValue}
                       onChange={(event) => setBuilderFilterValue(event.target.value)}
                       placeholder={t("reports.widgets.builder.placeholderValue")}
-                      className={`${FORM_INPUT_BUILDER} disabled:opacity-40 disabled:cursor-not-allowed`}
+                      className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-0 disabled:opacity-40 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -2079,12 +2081,12 @@ export function WidgetBuilder({
                     {subTextType === "fixed" && (
                       <div className="space-y-1">
                         <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.fixedSubtitle")}</label>
-                        <input
+                        <Input
                           type="text"
                           value={fixedSubText}
                           onChange={(event) => setFixedSubText(event.target.value)}
                           placeholder={t("reports.widgets.builder.placeholderSubtitle")}
-                          className={FORM_INPUT_BUILDER}
+                          className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-0"
                         />
                       </div>
                     )}
@@ -2230,22 +2232,22 @@ export function WidgetBuilder({
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
                     <label className={FORM_LABEL}>{t("reports.widgets.builder.labelOn")}</label>
-                    <input
+                    <Input
                       type="text"
                       value={switchLabelOn}
                       onChange={(event) => setSwitchLabelOn(event.target.value)}
                       placeholder={t("reports.widgets.builder.placeholderActive")}
-                      className={FORM_INPUT_BUILDER}
+                      className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-0"
                     />
                   </div>
                   <div className="space-y-1">
                     <label className={FORM_LABEL}>{t("reports.widgets.builder.labelOff")}</label>
-                    <input
+                    <Input
                       type="text"
                       value={switchLabelOff}
                       onChange={(event) => setSwitchLabelOff(event.target.value)}
                       placeholder={t("reports.widgets.builder.placeholderInactive")}
-                      className={FORM_INPUT_BUILDER}
+                      className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-0"
                     />
                   </div>
                 </div>
@@ -2270,37 +2272,39 @@ export function WidgetBuilder({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-fade-in text-left">
                   <div className="space-y-1">
                     <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.triggerCondition")}</label>
-                    <select
+                    <FormSelect
                       value={thresholdCondition}
-                      onChange={(event) => setThresholdCondition(event.target.value as "lt" | "gt" | "equals")}
-                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-card/40 text-foreground outline-none"
-                    >
-                      <option value="lt" className="bg-background text-foreground">&lt; {t("reports.widgets.builder.conditionLt")}</option>
-                      <option value="gt" className="bg-background text-foreground">&gt; {t("reports.widgets.builder.conditionGt")}</option>
-                      <option value="equals" className="bg-background text-foreground">= {t("reports.widgets.builder.conditionEquals")}</option>
-                    </select>
+                      onChange={(value) => setThresholdCondition(value as "lt" | "gt" | "equals")}
+                      className="w-full text-xs"
+                      options={[
+                        { value: "lt", label: `< ${t("reports.widgets.builder.conditionLt")}` },
+                        { value: "gt", label: `> ${t("reports.widgets.builder.conditionGt")}` },
+                        { value: "equals", label: `= ${t("reports.widgets.builder.conditionEquals")}` }
+                      ]}
+                    />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.thresholdValue")}</label>
-                    <input
+                    <Input
                       type="number"
                       value={thresholdValue}
                       onChange={(event) => setThresholdValue(event.target.value)}
                       placeholder={t("reports.widgets.builder.placeholderThreshold")}
-                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-card/40 text-foreground outline-none"
+                      className="w-full text-xs rounded-lg bg-card/40 text-foreground min-h-0 py-1.5"
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.alertColor")}</label>
-                    <select
+                    <FormSelect
                       value={thresholdColor}
-                      onChange={(event) => setThresholdColor(event.target.value as "red" | "amber" | "yellow")}
-                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-card/40 text-foreground outline-none"
-                    >
-                      <option value="red" className="text-destructive bg-background">{t("reports.widgets.builder.colorRed")}</option>
-                      <option value="amber" className="text-warning bg-background">{t("reports.widgets.builder.colorAmber")}</option>
-                      <option value="yellow" className="text-warning bg-background">{t("reports.widgets.builder.colorYellow")}</option>
-                    </select>
+                      onChange={(value) => setThresholdColor(value as "red" | "amber" | "yellow")}
+                      className="w-full text-xs"
+                      options={[
+                        { value: "red", label: t("reports.widgets.builder.colorRed") },
+                        { value: "amber", label: t("reports.widgets.builder.colorAmber") },
+                        { value: "yellow", label: t("reports.widgets.builder.colorYellow") }
+                      ]}
+                    />
                   </div>
                 </div>
               )}
@@ -2342,12 +2346,12 @@ export function WidgetBuilder({
                 </label>
                 <div className="relative max-w-xs w-full">
                   <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground pointer-events-none" style={{ width: 14, height: 14 }} />
-                  <input
+                  <Input
                     type="text"
                     placeholder={t("reports.widgets.builder.searchIcons")}
                     value={iconSearch}
                     onChange={(event) => setIconSearch(event.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 text-[11px] rounded-lg border border-border bg-card/20 backdrop-blur-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all font-semibold animate-fade-in"
+                    className="w-full pl-8 pr-3 py-1.5 text-[11px] rounded-lg border border-border bg-card/20 backdrop-blur-md text-foreground focus:ring-1 focus:ring-primary/20 transition-all font-semibold animate-fade-in min-h-0"
                   />
                 </div>
               </div>

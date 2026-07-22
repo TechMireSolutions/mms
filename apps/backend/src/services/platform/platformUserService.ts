@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import type { PlatformUser, StoredPlatformUser, PlatformRole } from '@mms/shared';
+import type { PlatformUser, StoredPlatformUser, PlatformRole, PlatformUserProfile } from '@mms/shared';
 import {
   countPlatformUserRows,
   findPlatformUserRowByEmail,
@@ -8,6 +8,7 @@ import {
   updatePlatformUserRow,
 } from '../../db/repositories/platformUserRepository.js';
 import { hashPassword, verifyPassword } from '../auth/passwordService.js';
+import { PlatformError } from './platformErrorService.js';
 
 export async function countPlatformUsers(): Promise<number> {
   return countPlatformUserRows();
@@ -17,13 +18,58 @@ export async function hasPlatformUsers(): Promise<boolean> {
   return (await countPlatformUserRows()) > 0;
 }
 
-export class PlatformUserConflictError extends Error {
-  readonly statusCode = 409;
-  readonly code = 'conflict';
-  constructor(message: string) {
-    super(message);
-    this.name = 'PlatformUserConflictError';
+export function toPlatformUserProfile(stored: StoredPlatformUser): PlatformUserProfile {
+  return {
+    id: stored.id,
+    email: stored.email,
+    name: stored.name,
+    role: stored.role,
+    createdAt: stored.createdAt,
+    emailVerifiedAt: stored.emailVerifiedAt,
+  };
+}
+
+export async function getPlatformUserProfile(userId: string): Promise<PlatformUserProfile | null> {
+  const stored = await getStoredPlatformUserById(userId);
+  if (!stored) return null;
+  return toPlatformUserProfile(stored);
+}
+
+export async function updatePlatformUserProfile(
+  userId: string,
+  name: string,
+): Promise<PlatformUserProfile> {
+  const stored = await getStoredPlatformUserById(userId);
+  if (!stored) {
+    throw new PlatformError('user_not_found', 'Platform user not found');
   }
+
+  const updated = await updatePlatformUserName(userId, name);
+  return toPlatformUserProfile(updated);
+}
+
+export async function changePlatformUserPassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<StoredPlatformUser> {
+  const stored = await findPlatformUserRowById(userId);
+  if (!stored) {
+    throw new PlatformError('user_not_found', 'Platform user not found');
+  }
+
+  const ok = await verifyPassword(currentPassword, stored.passwordHash);
+  if (!ok) {
+    throw new PlatformError('invalid_current_password', 'Current password is incorrect');
+  }
+
+  const updated = await updatePlatformUserRow(userId, {
+    passwordHash: await hashPassword(newPassword),
+  });
+  if (!updated) {
+    throw new PlatformError('user_not_found', 'Platform user not found');
+  }
+  return updated;
 }
 
 export async function createVerifiedPlatformUser(input: {
@@ -34,7 +80,7 @@ export async function createVerifiedPlatformUser(input: {
 }): Promise<StoredPlatformUser> {
   const existing = await findPlatformUserByEmail(input.email);
   if (existing) {
-    throw new PlatformUserConflictError('Platform user already exists');
+    throw new PlatformError('user_exists', 'Platform user already exists');
   }
 
   const count = await countPlatformUsers();
@@ -59,7 +105,7 @@ export async function updatePlatformUserPassword(
 ): Promise<StoredPlatformUser> {
   const updated = await updatePlatformUserRow(userId, { passwordHash });
   if (!updated) {
-    throw new Error('Platform user not found');
+    throw new PlatformError('user_not_found', 'Platform user not found');
   }
   return updated;
 }
@@ -78,31 +124,7 @@ export async function updatePlatformUserName(
 ): Promise<StoredPlatformUser> {
   const updated = await updatePlatformUserRow(userId, { name: name.trim() });
   if (!updated) {
-    throw new Error('Platform user not found');
-  }
-  return updated;
-}
-
-export async function changePlatformUserPassword(
-  userId: string,
-  currentPassword: string,
-  newPassword: string,
-): Promise<StoredPlatformUser> {
-  const stored = await findPlatformUserRowById(userId);
-  if (!stored) {
-    throw new Error('Platform user not found');
-  }
-
-  const ok = await verifyPassword(currentPassword, stored.passwordHash);
-  if (!ok) {
-    throw new Error('Invalid current password');
-  }
-
-  const updated = await updatePlatformUserRow(userId, {
-    passwordHash: await hashPassword(newPassword),
-  });
-  if (!updated) {
-    throw new Error('Platform user not found');
+    throw new PlatformError('user_not_found', 'Platform user not found');
   }
   return updated;
 }
@@ -114,6 +136,10 @@ export async function verifyPlatformUserPassword(userId: string, password: strin
   return verifyPassword(password, stored.passwordHash);
 }
 
+export function toPublicPlatformUser(user: StoredPlatformUser): PlatformUser {
+  return { id: user.id, email: user.email, name: user.name, role: user.role };
+}
+
 export async function validatePlatformCredentials(
   email: string,
   password: string,
@@ -122,7 +148,7 @@ export async function validatePlatformCredentials(
   if (!stored) return null;
   const ok = await verifyPassword(password, stored.passwordHash);
   if (!ok) return null;
-  return { id: stored.id, email: stored.email, name: stored.name, role: stored.role };
+  return toPublicPlatformUser(stored);
 }
 
 /**

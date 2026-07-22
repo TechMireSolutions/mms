@@ -9,17 +9,26 @@ export interface PlatformAuthenticatedRequest extends FastifyRequest {
 }
 
 /**
+ * Hook to enforce that the request is only allowed on the main domain (no tenant subdomain context).
+ */
+export async function requireMainDomain(
+  request: FastifyRequest,
+  reply: FastifyReply,
+): Promise<void> {
+  if (getRequestTenant()) {
+    sendForbidden(reply, 'Platform actions are only available on the main domain');
+  }
+}
+
+/**
  * Apex-only JWT for platform super-users (separate from tenant madrasa sessions).
  */
 export async function authenticatePlatform(
   request: FastifyRequest,
   reply: FastifyReply,
 ): Promise<void> {
-  const tenant = getRequestTenant();
-  if (tenant) {
-    sendForbidden(reply, 'Platform authentication is only available on the main domain');
-    return;
-  }
+  await requireMainDomain(request, reply);
+  if (reply.sent) return;
 
   delete request.headers.authorization;
   attachPlatformTokenFromCookie(request);

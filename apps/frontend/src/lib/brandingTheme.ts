@@ -1,6 +1,5 @@
 import {
   BRANDING_THEME_VARIABLES,
-  brandingPrimaryToThemeColor,
   buildBrandingCssVariables,
   isApexHost,
   normalizeBrandingCornerStyle,
@@ -21,6 +20,7 @@ import {
   applyBrandingFromSettings,
   applyDocumentLanguageWithFonts,
   resolveThemeMode,
+  syncDocumentChrome,
 } from '@/lib/brandingThemeCore';
 
 export { applyApexPlatformTheme, applyTenantEntryTheme } from '@/lib/brandingThemeCore';
@@ -33,20 +33,7 @@ function resolveDocumentLanguage(storedLanguage: string, pathname: string): stri
   return isEntryPath(pathname, { isApex }) ? 'en' : storedLanguage;
 }
 
-function syncDocumentChrome(mode: BrandingThemeMode, primaryHex: string): void {
-  const root = document.documentElement;
-  root.style.colorScheme = mode;
-  root.dataset.theme = mode;
 
-  const themeColor = brandingPrimaryToThemeColor(primaryHex);
-  let meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
-  if (!meta) {
-    meta = document.createElement('meta');
-    meta.name = 'theme-color';
-    document.head.appendChild(meta);
-  }
-  meta.content = themeColor;
-}
 
 /**
  * Applies branding colours to CSS variables.

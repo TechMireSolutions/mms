@@ -31,3 +31,15 @@ export function mapPlatformAuthError(apiError: ApiError, t: TranslateFn): string
       return apiError.message || t("errors.boundary.description");
   }
 }
+
+/** Convenience wrapper to map any caught error (ApiError or generic Error) to a translated string. */
+export function getPlatformErrorMessage(error: unknown, t: TranslateFn): string {
+  if (error instanceof ApiError) {
+    return mapPlatformAuthError(error, t);
+  }
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return t("errors.boundary.description");
+}
+

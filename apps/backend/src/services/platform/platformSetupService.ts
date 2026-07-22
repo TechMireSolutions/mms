@@ -1,7 +1,6 @@
 import type {
   PlatformSetupRegisterResult,
   PlatformSetupStatus,
-  PlatformUser,
   StoredPlatformUser,
 } from '@mms/shared';
 import {
@@ -28,7 +27,9 @@ import {
   createVerifiedPlatformUser,
   hasPlatformUsers,
 } from './platformUserService.js';
-import { isPlatformSmtpConfigured, dispatchPlatformVerificationEmail } from './platformEmailService.js';
+import { isPlatformSmtpConfigured } from './platformEmailService.js';
+import { PlatformError, type PlatformErrorCode } from './platformErrorService.js';
+import { dispatchPlatformOtp } from './platformOtpService.js';
 
 const SETUP_TTL_MS = PLATFORM_SETUP_CODE_TTL_MINUTES * 60 * 1000;
 
@@ -39,43 +40,8 @@ export interface PlatformSetupPayload {
   codeHash: string;
 }
 
-export type PlatformSetupErrorCode =
-  | 'setup_not_needed'
-  | 'invalid_email'
-  | 'invalid_name'
-  | 'password_too_short'
-  | 'password_weak'
-  | 'email_send_failed'
-  | 'smtp_required'
-  | 'invalid_setup'
-  | 'invalid_code'
-  | 'user_exists';
-
-export class PlatformSetupError extends Error {
-  readonly statusCode: number;
-
-  constructor(
-    readonly code: PlatformSetupErrorCode,
-    message: string,
-  ) {
-    super(message);
-    this.name = 'PlatformSetupError';
-
-    const statuses: Record<PlatformSetupErrorCode, number> = {
-      setup_not_needed: 409,
-      invalid_email: 400,
-      invalid_name: 400,
-      password_too_short: 400,
-      password_weak: 400,
-      email_send_failed: 502,
-      smtp_required: 503,
-      invalid_setup: 404,
-      invalid_code: 401,
-      user_exists: 409,
-    };
-    this.statusCode = statuses[code] ?? 400;
-  }
-}
+export type PlatformSetupErrorCode = PlatformErrorCode;
+export const PlatformSetupError = PlatformError;
 
 export async function getPlatformSetupStatus(): Promise<PlatformSetupStatus> {
   const needsSetup = !(await hasPlatformUsers());
@@ -86,27 +52,14 @@ export async function getPlatformSetupStatus(): Promise<PlatformSetupStatus> {
 }
 
 async function dispatchSetupCode(email: string, code: string): Promise<{ sent: boolean; devCode?: string }> {
-  try {
-    return await dispatchPlatformVerificationEmail({
-      email,
-      code,
-      subject: 'Confirm your MMS platform administrator account',
-      bodyLines: ['Use this verification code to complete platform administrator setup:'],
-      ttlMinutes: PLATFORM_SETUP_CODE_TTL_MINUTES,
-      logLabel: 'Platform setup verification code',
-    });
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('not configured')) {
-      throw new PlatformSetupError(
-        'smtp_required',
-        'Platform email is not configured. Set PLATFORM_RESEND_API_KEY or PLATFORM_SMTP_* and PLATFORM_EMAIL_FROM (GitHub Actions secrets are merged on deploy).',
-      );
-    }
-    throw new PlatformSetupError(
-      'email_send_failed',
-      error instanceof Error ? error.message : 'Failed to send verification email',
-    );
-  }
+  return dispatchPlatformOtp({
+    email,
+    code,
+    subject: 'Confirm your MMS platform administrator account',
+    bodyLines: ['Use this verification code to complete platform administrator setup:'],
+    ttlMinutes: PLATFORM_SETUP_CODE_TTL_MINUTES,
+    logLabel: 'Platform setup verification code',
+  });
 }
 
 export async function startPlatformSetup(input: {
@@ -216,6 +169,4 @@ export async function verifyPlatformSetup(
   });
 }
 
-export function toPublicPlatformUser(user: StoredPlatformUser): PlatformUser {
-  return { id: user.id, email: user.email, name: user.name, role: user.role };
-}
+

@@ -1,8 +1,7 @@
 import React from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { ROUTES, TENANT_APP_PATHS } from '@/lib/config/routes';
-import PlatformBootGate from '@/platform/components/PlatformBootGate';
-import { PlatformFallbackRoute } from '@/platform/components/PlatformAuthRequired';
+import PlatformBootGate, { PlatformFallbackRoute } from '@/platform/components/PlatformBootGate';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 
 const ApexHome = React.lazy(() => import('@/platform/pages/ApexHome'));

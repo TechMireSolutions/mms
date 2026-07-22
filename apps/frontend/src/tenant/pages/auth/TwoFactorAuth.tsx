@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Loader2, ShieldCheck, RefreshCw } from "lucide-react";
 import {
@@ -14,7 +14,7 @@ import AuthLayout from "@/tenant/components/AuthLayout";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { FORM_ERROR, FORM_OTP_DIGIT } from "@/components/ui/formStyles";
+import { FORM_ERROR } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 import {
   getPendingChallengeId,
@@ -22,8 +22,8 @@ import {
   resend2FACode,
   verify2FACode,
 } from "@/lib/twoFactor";
-
-const CODE_LENGTH = 6;
+import { useResendCountdown } from "@/hooks/useResendCountdown";
+import { OtpInput, createEmptyOtp, isOtpComplete } from "@/components/ui/OtpInput";
 
 /**
  * Two-factor verification after login when global settings require it.
@@ -62,17 +62,12 @@ export default function TwoFactorAuth(): React.JSX.Element {
     }
   }, [settings]);
 
-  const [code, setCode] = useState(Array(CODE_LENGTH).fill(""));
+  const [code, setCode] = useState(createEmptyOtp);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [resendCountdown, setResendCountdown] = useState(30);
-  const inputs = useRef<(HTMLInputElement | null)[]>([]);
+  const [resendCycle, setResendCycle] = useState(0);
 
-  useEffect(() => {
-    if (resendCountdown <= 0) return;
-    const timer = setTimeout(() => setResendCountdown((countdown) => countdown - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [resendCountdown]);
+  const resendCountdown = useResendCountdown(challengeId !== null, 30, resendCycle);
 
   if (!challengeId && !isAuthenticated) {
     return <Navigate to={ROUTES.login} replace />;
@@ -82,33 +77,7 @@ export default function TwoFactorAuth(): React.JSX.Element {
     return <Navigate to={redirectTo} replace />;
   }
 
-  const handleChange = (digitIndex: number, digitValue: string): void => {
-    if (!/^\d?$/.test(digitValue)) return;
-    const updatedCode = [...code];
-    updatedCode[digitIndex] = digitValue;
-    setCode(updatedCode);
-    setError("");
-    if (digitValue && digitIndex < CODE_LENGTH - 1) inputs.current[digitIndex + 1]?.focus();
-  };
-
-  const handleKeyDown = (digitIndex: number, event: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (event.key === "Backspace" && !code[digitIndex] && digitIndex > 0) {
-      inputs.current[digitIndex - 1]?.focus();
-    }
-    if (event.key === "ArrowLeft" && digitIndex > 0) inputs.current[digitIndex - 1]?.focus();
-    if (event.key === "ArrowRight" && digitIndex < CODE_LENGTH - 1) inputs.current[digitIndex + 1]?.focus();
-  };
-
-  const handlePaste = (event: React.ClipboardEvent<HTMLInputElement>): void => {
-    event.preventDefault();
-    const pasted = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, CODE_LENGTH);
-    const updatedCode = [...code];
-    pasted.split("").forEach((digit: string, digitIndex: number) => { updatedCode[digitIndex] = digit; });
-    setCode(updatedCode);
-    inputs.current[Math.min(pasted.length, CODE_LENGTH - 1)]?.focus();
-  };
-
-  const isComplete = code.every((digit) => digit !== "");
+  const isComplete = isOtpComplete(code);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -126,8 +95,7 @@ export default function TwoFactorAuth(): React.JSX.Element {
       navigate(redirectTo, { replace: true });
     } else {
       setError("Invalid or expired code. Please try again.");
-      setCode(Array(CODE_LENGTH).fill(""));
-      inputs.current[0]?.focus();
+      setCode(createEmptyOtp());
     }
     setLoading(false);
   };
@@ -139,10 +107,9 @@ export default function TwoFactorAuth(): React.JSX.Element {
       setError("Could not resend code. Return to sign in and try again.");
       return;
     }
-    setResendCountdown(30);
+    setResendCycle((c) => c + 1);
     setError("");
-    setCode(Array(CODE_LENGTH).fill(""));
-    inputs.current[0]?.focus();
+    setCode(createEmptyOtp());
   };
 
   return (
@@ -169,30 +136,13 @@ export default function TwoFactorAuth(): React.JSX.Element {
             </p>
           </div>
 
-          <div className="flex justify-center gap-2.5">
-            {code.map((digit, digitIndex) => (
-              <input
-                key={digitIndex}
-                id={`otp-${digitIndex}`}
-                name={`otp-${digitIndex}`}
-                autoComplete="one-time-code"
-                ref={(element) => { inputs.current[digitIndex] = element; }}
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                value={digit}
-                onChange={(event) => handleChange(digitIndex, event.target.value)}
-                onKeyDown={(event) => handleKeyDown(digitIndex, event)}
-                onPaste={handlePaste}
-                className={cn(
-                  FORM_OTP_DIGIT,
-                  digit ? "border-primary/60 bg-primary/5" : "border-border",
-                  error && "border-destructive/60 bg-destructive/5",
-                )}
-                autoFocus={digitIndex === 0}
-              />
-            ))}
-          </div>
+          <OtpInput
+            value={code}
+            onChange={setCode}
+            ariaLabel={t("auth.twoFactorTitle")}
+            disabled={loading}
+            hasError={Boolean(error)}
+          />
 
           {error ? (
             <p className={cn(FORM_ERROR, "text-center text-sm font-medium")}>

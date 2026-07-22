@@ -1,33 +1,36 @@
 import React, { useState } from "react";
 import {
-  AlertCircle,
   ArrowRight,
   Loader2,
-  Lock,
   Mail,
   RefreshCw,
   ShieldCheck,
   User,
 } from "lucide-react";
-import { type PlatformSetupRegisterResult, type AppTranslationKey } from "@mms/shared";
+import { type PlatformSetupRegisterResult, maskEmail } from "@mms/shared";
 import {
-  PLATFORM_MIN_PASSWORD_LENGTH,
-  maskEmail,
-  validatePlatformSetupEmail,
-  validatePlatformSetupName,
-  validatePlatformSetupPassword,
-} from "@mms/shared";
+  getPlatformEmailError,
+  getPlatformNameError,
+  getPlatformPasswordError,
+} from "@/platform/lib/platformValidation";
 import PlatformAuthLayout from "@/platform/components/PlatformAuthLayout";
+import PlatformPasswordInput from "@/platform/components/PlatformPasswordInput";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
-import PlatformOtpInput, { createEmptyOtp, isOtpComplete } from "@/platform/components/PlatformOtpInput";
+import { PlatformAlert } from "@/platform/components/PlatformAlert";
+import { OtpInput, createEmptyOtp, isOtpComplete } from "@/components/ui/OtpInput";
 import { Button } from "@/components/ui/button";
-import { FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
+import { Input } from "@/components/ui/input";
+import { FORM_LABEL } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useResendCountdown } from "@/hooks/useResendCountdown";
-import { apiJson, ApiError } from "@/lib/apiClient";
-import { mapPlatformAuthError } from "@/platform/lib/platformAuthErrors";
+import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { useInvalidatePlatformSetupStatus } from "@/platform/hooks/usePlatformSetupStatus";
+import {
+  usePlatformSetupRegister,
+  usePlatformSetupResend,
+  usePlatformSetupVerify,
+} from "@/platform/hooks/usePlatformAuthActions";
 
 interface PlatformSetupProps {
   smtpConfigured: boolean;
@@ -40,8 +43,12 @@ type SetupStep = "register" | "verify";
  */
 export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { checkPlatformAuth } = usePlatformAuth();
+  const checkPlatformAuth = usePlatformAuth().checkPlatformAuth;
   const invalidateSetupStatus = useInvalidatePlatformSetupStatus();
+
+  const registerMutation = usePlatformSetupRegister();
+  const verifyMutation = usePlatformSetupVerify();
+  const resendMutation = usePlatformSetupResend();
 
   const [step, setStep] = useState<SetupStep>("register");
   const [name, setName] = useState("");
@@ -49,34 +56,31 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
   const [password, setPassword] = useState("");
   const [setupSession, setSetupSession] = useState<PlatformSetupRegisterResult | null>(null);
   const [code, setCode] = useState(createEmptyOtp);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [setupNotice, setSetupNotice] = useState<string | null>(null);
   const [resendCycle, setResendCycle] = useState(0);
   const resendCountdown = useResendCountdown(step === "verify", 30, resendCycle);
+
+  const loading = registerMutation.isPending || verifyMutation.isPending || resendMutation.isPending;
 
   const handleRegister = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();
     setError(null);
     setSetupNotice(null);
 
-    const emailKey = validatePlatformSetupEmail(email);
-    if (emailKey) {
-      setError(t(emailKey));
+    const emailError = getPlatformEmailError(email, t);
+    if (emailError) {
+      setError(emailError);
       return;
     }
-    const nameKey = validatePlatformSetupName(name);
-    if (nameKey) {
-      setError(t(nameKey));
+    const nameError = getPlatformNameError(name, t);
+    if (nameError) {
+      setError(nameError);
       return;
     }
-    const passwordKey = validatePlatformSetupPassword(password);
-    if (passwordKey) {
-      setError(
-        passwordKey === "platform.setupPasswordTooShort"
-          ? t(passwordKey, { min: String(PLATFORM_MIN_PASSWORD_LENGTH) })
-          : t(passwordKey as AppTranslationKey),
-      );
+    const passwordError = getPlatformPasswordError(password, t);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
 
@@ -85,20 +89,18 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
       return;
     }
 
-    setLoading(true);
     try {
-      const result = await apiJson<PlatformSetupRegisterResult>("/api/platform/auth/setup/register", {
-        method: "POST",
-        body: JSON.stringify({ name: name.trim(), email: email.trim(), password }),
+      const result = await registerMutation.mutateAsync({
+        name: name.trim(),
+        email: email.trim(),
+        password,
       });
       setSetupSession(result);
       setStep("verify");
       setCode(createEmptyOtp());
       setSetupNotice(result.emailSent ? t("platform.setupEmailSent") : null);
-    } catch (error) {
-      setError(error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"));
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      setError(getPlatformErrorMessage(err, t));
     }
   };
 
@@ -106,38 +108,29 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
     event.preventDefault();
     if (!setupSession) return;
 
-    setLoading(true);
     setError(null);
     try {
-      await apiJson("/api/platform/auth/setup/verify", {
-        method: "POST",
-        body: JSON.stringify({ setupId: setupSession.setupId, code: code.join("") }),
+      await verifyMutation.mutateAsync({
+        setupId: setupSession.setupId,
+        code: code.join(""),
       });
       invalidateSetupStatus();
       await checkPlatformAuth();
-    } catch (error) {
-      setError(error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"));
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      setError(getPlatformErrorMessage(err, t));
     }
   };
 
   const handleResend = async (): Promise<void> => {
     if (!setupSession || resendCountdown > 0) return;
-    setLoading(true);
     setError(null);
     try {
-      const result = await apiJson<PlatformSetupRegisterResult>("/api/platform/auth/setup/resend", {
-        method: "POST",
-        body: JSON.stringify({ setupId: setupSession.setupId }),
-      });
+      const result = await resendMutation.mutateAsync(setupSession.setupId);
       setSetupSession(result);
       setSetupNotice(result.emailSent ? t("platform.setupEmailSent") : null);
       setResendCycle((value) => value + 1);
-    } catch (error) {
-      setError(error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"));
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      setError(getPlatformErrorMessage(err, t));
     }
   };
 
@@ -161,16 +154,17 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
       >
         <form onSubmit={(event) => void handleVerify(event)} className="space-y-4">
           {error ? <PlatformAlert message={error} /> : null}
-          {setupNotice ? <PlatformInfo message={setupNotice} /> : null}
+          {setupNotice ? <PlatformAlert variant="info" message={setupNotice} /> : null}
           {setupSession.devCode ? (
-            <PlatformDevHint message={t("platform.setupDevCodeHint", { code: setupSession.devCode })} />
+            <PlatformAlert variant="warning" message={t("platform.setupDevCodeHint", { code: setupSession.devCode })} />
           ) : null}
 
-          <PlatformOtpInput
+          <OtpInput
             value={code}
             onChange={setCode}
             ariaLabel={t("platform.setupVerifyEmail")}
             disabled={loading}
+            idPrefix="platform-otp"
           />
 
           <Button type="submit" className="w-full h-11" disabled={loading || !isOtpComplete(code)}>
@@ -211,21 +205,21 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
       <PlatformAuthLayout title={t("platform.setupTitle")} subtitle={t("platform.setupSubtitle")}>
       <form onSubmit={(event) => void handleRegister(event)} className="space-y-4">
         {!smtpConfigured && import.meta.env.PROD ? (
-          <PlatformDevHint message={t("platform.setupSmtpRequired")} />
+          <PlatformAlert variant="warning" message={t("platform.setupSmtpRequired")} />
         ) : null}
         {error ? <PlatformAlert message={error} /> : null}
 
         <div className="space-y-1.5">
           <label htmlFor="platform-setup-name" className={FORM_LABEL}>{t("platform.setupFullName")}</label>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-            <input
+            <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
+            <Input
               id="platform-setup-name"
               autoComplete="name"
               required
               value={name}
               onChange={(event) => setName(event.target.value)}
-              className={FORM_INPUT_ICON}
+              className="ps-9"
             />
           </div>
         </div>
@@ -233,35 +227,27 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
         <div className="space-y-1.5">
           <label htmlFor="platform-setup-email" className={FORM_LABEL}>{t("auth.email")}</label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-            <input
+            <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
+            <Input
               id="platform-setup-email"
               type="email"
               autoComplete="email"
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className={FORM_INPUT_ICON}
+              className="ps-9"
             />
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <label htmlFor="platform-setup-password" className={FORM_LABEL}>{t("auth.password")}</label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-            <input
-              id="platform-setup-password"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={PLATFORM_MIN_PASSWORD_LENGTH}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className={FORM_INPUT_ICON}
-            />
-          </div>
-        </div>
+        <PlatformPasswordInput
+          id="platform-setup-password"
+          label={t("auth.password")}
+          autoComplete="new-password"
+          required
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+        />
 
         <Button type="submit" className="w-full h-11" disabled={loading}>
           {loading ? (
@@ -272,7 +258,7 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
           ) : (
             <>
               {t("platform.setupCreateAccount")}
-              <ArrowRight className="w-4 h-4" aria-hidden />
+              <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden />
             </>
           )}
         </Button>
@@ -282,28 +268,4 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
   );
 }
 
-function PlatformAlert({ message }: { message: string }): React.JSX.Element {
-  return (
-    <div
-      className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-      role="alert"
-    >
-      <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" aria-hidden />
-      <span>{message}</span>
-    </div>
-  );
-}
 
-function PlatformInfo({ message }: { message: string }): React.JSX.Element {
-  return (
-    <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-foreground">{message}</div>
-  );
-}
-
-function PlatformDevHint({ message }: { message: string }): React.JSX.Element {
-  return (
-    <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-sm text-foreground" role="status">
-      {message}
-    </div>
-  );
-}

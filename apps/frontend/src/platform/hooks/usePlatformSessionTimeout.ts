@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react';
-import { PLATFORM_IDLE_SESSION_TIMEOUT_MINUTES, translateApp } from '@mms/shared';
+import { useCallback } from 'react';
+import { PLATFORM_IDLE_SESSION_TIMEOUT_MINUTES } from '@mms/shared';
 import { notify } from '@/lib/notify';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useIdleTimer } from '@/hooks/useIdleTimer';
 
 interface PlatformSessionTimeoutOptions {
   enabled: boolean;
@@ -16,30 +18,21 @@ export function usePlatformSessionTimeout({
   onTimeout,
   minutes = PLATFORM_IDLE_SESSION_TIMEOUT_MINUTES,
 }: PlatformSessionTimeoutOptions): void {
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { t } = useTranslation();
 
-  useEffect(() => {
-    if (!enabled) return;
+  const handleTimeout = useCallback((): void => {
+    notify.info(t('platform.sessionEndedTitle'), {
+      description: t('platform.sessionEndedDesc'),
+    });
+    onTimeout();
+  }, [onTimeout, t]);
 
-    const reset = (): void => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => {
-        notify.info(translateApp('platform.sessionEndedTitle', 'en'), {
-          description: translateApp('platform.sessionEndedDesc', 'en'),
-        });
-        onTimeout();
-      }, minutes * 60 * 1000);
-    };
-
-    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'] as const;
-    events.forEach((activityEventName) => window.addEventListener(activityEventName, reset, { passive: true }));
-    reset();
-
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      events.forEach((activityEventName) => window.removeEventListener(activityEventName, reset));
-    };
-  }, [enabled, minutes, onTimeout]);
+  useIdleTimer({
+    enabled,
+    timeoutMinutes: minutes,
+    onTimeout: handleTimeout,
+  });
 }
 
 export default usePlatformSessionTimeout;
+

@@ -4,8 +4,10 @@ import {
   requireSuperUser,
 } from '../../middleware/authenticatePlatform.js';
 import { listPlatformUsers } from '../../db/repositories/platformUserRepository.js';
-import { toPlatformUserProfile } from '../../services/platform/platformProfileService.js';
-import { createVerifiedPlatformUser } from '../../services/platform/platformUserService.js';
+import {
+  createVerifiedPlatformUser,
+  toPlatformUserProfile,
+} from '../../services/platform/platformUserService.js';
 import { hashPassword } from '../../services/auth/passwordService.js';
 import { platformCreateAdminBodySchema } from '../../validation/platformSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';

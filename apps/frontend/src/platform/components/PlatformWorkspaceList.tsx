@@ -12,7 +12,6 @@ import { isApiError } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -23,6 +22,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import WorkspaceLogo from "@/platform/components/WorkspaceLogo";
+import PlatformSpinner from "@/platform/components/PlatformSpinner";
+import PlatformRetryBlock from "@/platform/components/PlatformRetryBlock";
+import PlatformPasswordInput from "@/platform/components/PlatformPasswordInput";
 
 /**
  * Super-user workspace list with enable/disable and delete controls.
@@ -35,25 +37,17 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
   const deleteWorkspace = useDeleteWorkspace();
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-8" role="status">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" aria-hidden />
-        <span className="sr-only">{t("apex.loadingMadrasas")}</span>
-      </div>
-    );
+    return <PlatformSpinner label={t("apex.loadingMadrasas")} />;
   }
 
   if (isError) {
     return (
-      <div
-        role="alert"
-        className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-center space-y-3"
-      >
-        <p className="text-sm text-destructive">{t("apex.loadError")}</p>
-        <Button type="button" variant="ghost" size="sm" disabled={isFetching} onClick={() => void refetch()}>
-          {t("common.retry")}
-        </Button>
-      </div>
+      <PlatformRetryBlock
+        errorText={t("apex.loadError")}
+        retryText={t("common.retry")}
+        isFetching={isFetching}
+        onRetry={() => void refetch()}
+      />
     );
   }
 
@@ -64,7 +58,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
   }
 
   return (
-    <div className="space-y-2 w-full text-left">
+    <div className="space-y-2 w-full text-start">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">
         {t("platform.manageMadrasas")}
       </p>
@@ -205,10 +199,9 @@ const WorkspaceRow = memo(function WorkspaceRow({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-2">
-            <Label htmlFor={`delete-pw-${workspace.subdomain}`}>{t("platform.profileCurrentPassword")}</Label>
-            <Input
+            <PlatformPasswordInput
               id={`delete-pw-${workspace.subdomain}`}
-              type="password"
+              label={t("platform.profileCurrentPassword")}
               autoComplete="current-password"
               value={password}
               onChange={(event) => {

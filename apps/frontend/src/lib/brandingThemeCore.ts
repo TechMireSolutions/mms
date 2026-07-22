@@ -18,9 +18,10 @@ import { MMS_PLATFORM_BRANDING, MMS_PLATFORM_GLOBAL_SETTINGS } from '@/platform/
 import { ensureLocaleFontsLoaded } from '@/lib/localeFonts';
 
 function resolveThemeMode(settings: GlobalSettings): BrandingThemeMode {
-  const root = document.documentElement;
   if (settings.theme === 'dark') return 'dark';
   if (settings.theme === 'light') return 'light';
+  if (typeof document === 'undefined') return 'light';
+  const root = document.documentElement;
   return root.classList.contains('dark') ? 'dark' : 'light';
 }
 

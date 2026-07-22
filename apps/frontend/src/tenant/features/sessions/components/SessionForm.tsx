@@ -13,7 +13,7 @@ import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { notify } from "@/lib/notify";
 import { Session } from '@/lib/data/sessionsData';
-import { toTitleCase, AppTranslationKey, todayISO } from "@mms/shared";
+import { toTitleCase, AppTranslationKey, todayISO, DEFAULT_CURRENCIES } from "@mms/shared";
 
 interface SessionFormProps {
   open?: boolean;
@@ -24,7 +24,7 @@ interface SessionFormProps {
 
 const SESSION_TYPES = ["Hifz", "Qaidah", "Tajweed", "Islamic Studies", "Arabic", "Other"];
 const SESSION_STATUSES = ["active", "upcoming", "completed", "cancelled"];
-const CURRENCIES = ["PKR", "USD", "GBP", "AED", "SAR"];
+const CURRENCIES = DEFAULT_CURRENCIES.map((c) => c.code);
 
 export function SessionForm({
   open = true,

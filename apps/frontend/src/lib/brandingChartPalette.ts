@@ -1,22 +1,14 @@
 import {
   resolveBrandingChartPaletteHex,
   type BrandingChartPaletteHex,
-  type BrandingThemeMode,
 } from '@mms/shared';
 import {
   getScopedBrandingSettings,
   getScopedGlobalSettings,
 } from '@/lib/settingsPreviewStore';
+import { resolveThemeMode } from '@/lib/brandingThemeCore';
 
 export type { BrandingChartPaletteHex };
-
-function resolveActiveThemeMode(): BrandingThemeMode {
-  const settings = getScopedGlobalSettings();
-  if (settings.theme === 'dark') return 'dark';
-  if (settings.theme === 'light') return 'light';
-  if (typeof window === 'undefined') return 'light';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
 
 /** Chart palette from effective branding + global theme mode (no React). */
 export function getBrandingChartPalette(): BrandingChartPaletteHex {
@@ -24,7 +16,7 @@ export function getBrandingChartPalette(): BrandingChartPaletteHex {
   return resolveBrandingChartPaletteHex(
     branding.primaryColor,
     branding.secondaryColor,
-    resolveActiveThemeMode(),
+    resolveThemeMode(getScopedGlobalSettings()),
   );
 }
 

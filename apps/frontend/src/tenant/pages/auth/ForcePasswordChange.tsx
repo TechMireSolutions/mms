@@ -8,7 +8,8 @@ import { ROUTES } from "@/lib/config/routes";
 import { apiJson } from "@/lib/apiClient";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
-import { FORM_ERROR, FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
+import { Input } from "@/components/ui/input";
+import { FORM_ERROR, FORM_LABEL } from "@/components/ui/formStyles";
 
 export default function ForcePasswordChange(): React.ReactElement {
   const { t } = useTranslation();
@@ -73,14 +74,14 @@ export default function ForcePasswordChange(): React.ReactElement {
         <div className="space-y-1.5">
           <label htmlFor="current-password" className={FORM_LABEL}>{t("account.currentPassword")}</label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <input
+            <Lock className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Input
               id="current-password"
               type="password"
               autoComplete="current-password"
               value={currentPassword}
               onChange={(event) => setCurrentPassword(event.target.value)}
-              className={FORM_INPUT_ICON}
+              className="ps-9"
               disabled={busy}
             />
           </div>
@@ -89,14 +90,14 @@ export default function ForcePasswordChange(): React.ReactElement {
         <div className="space-y-1.5">
           <label htmlFor="new-password" className={FORM_LABEL}>{t("account.newPassword")}</label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <input
+            <Lock className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Input
               id="new-password"
               type="password"
               autoComplete="new-password"
               value={newPassword}
               onChange={(event) => setNewPassword(event.target.value)}
-              className={FORM_INPUT_ICON}
+              className="ps-9"
               disabled={busy}
             />
           </div>
@@ -106,14 +107,14 @@ export default function ForcePasswordChange(): React.ReactElement {
         <div className="space-y-1.5">
           <label htmlFor="confirm-password" className={FORM_LABEL}>{t("account.confirmPassword")}</label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <input
+            <Lock className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Input
               id="confirm-password"
               type="password"
               autoComplete="new-password"
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
-              className={FORM_INPUT_ICON}
+              className="ps-9"
               disabled={busy}
             />
           </div>
@@ -121,7 +122,7 @@ export default function ForcePasswordChange(): React.ReactElement {
 
         <Button type="submit" className="w-full h-11 font-semibold" disabled={busy}>
           {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : t("account.forcePasswordSubmit")}
-          {!busy ? <ArrowRight className="h-4 w-4" aria-hidden /> : null}
+          {!busy ? <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden /> : null}
         </Button>
       </form>
     </AuthLayout>

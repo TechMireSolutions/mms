@@ -5,6 +5,7 @@ import { useFinanceConfig } from "@/hooks/useStandardModuleConfig";
 import {
   FINANCE_TAB_REGISTRY,
   INITIAL_FINANCE_FIELD_SEED,
+  DEFAULT_CURRENCIES,
 } from "@mms/shared";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
@@ -66,14 +67,10 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
                 id="finance-currency"
                 value={settingsDraft.currency}
                 onChange={(value) => upd("currency", value)}
-                options={[
-                  { value: "PKR", label: "PKR — Pakistani Rupee" },
-                  { value: "USD", label: "USD — US Dollar" },
-                  { value: "GBP", label: "GBP — British Pound" },
-                  { value: "SAR", label: "SAR — Saudi Riyal" },
-                  { value: "AED", label: "AED — UAE Dirham" },
-                  { value: "EUR", label: "EUR — Euro" },
-                ]}
+                options={DEFAULT_CURRENCIES.map((c) => ({
+                  value: c.code,
+                  label: `${c.code} — ${c.name}`,
+                }))}
               />
             </div>
             <div>

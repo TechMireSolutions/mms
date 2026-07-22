@@ -6,6 +6,7 @@ import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessi
 import { useTranslation } from "@/hooks/useTranslation";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import type { AppTranslationKey } from "@mms/shared";
 
 const STATUSES: string[] = ["all", "active", "inactive", "completed"];
@@ -191,12 +192,12 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
               {allowed.includes("student") && (
                 <div className="flex flex-col gap-1 text-left min-w-[150px] flex-1">
                   <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.student")}</label>
-                  <input
+                  <Input
                     type="text"
                     value={filters.student}
                     onChange={(event) => set("student", event.target.value)}
                     placeholder={t("reports.filters.searchName")}
-                    className="text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
+                    className="text-sm border-border/50 bg-background/50 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
                   />
                 </div>
               )}

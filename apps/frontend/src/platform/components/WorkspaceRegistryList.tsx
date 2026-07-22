@@ -1,12 +1,13 @@
 import React, { memo } from "react";
-import { ArrowRight, ExternalLink, Loader2 } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 import type { AppTranslationKey, PublicWorkspaceSummary } from "@mms/shared";
 import { ROUTES } from "@/lib/config/routes";
 import { getAppDomain, tenantUrl } from "@/lib/config/tenantConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkspaceRegistry } from "@/platform/hooks/useWorkspaceRegistry";
 import WorkspaceLogo from "@/platform/components/WorkspaceLogo";
-import { Button } from "@/components/ui/button";
+import PlatformSpinner from "@/platform/components/PlatformSpinner";
+import PlatformRetryBlock from "@/platform/components/PlatformRetryBlock";
 
 type WorkspaceLinkDestination = typeof ROUTES.login | typeof ROUTES.forgotPassword;
 
@@ -31,35 +32,17 @@ export default function WorkspaceRegistryList({
   const { data: workspaces, isLoading, isError, refetch, isFetching } = useWorkspaceRegistry();
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-8" role="status">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" aria-hidden />
-        <span className="sr-only">{t("apex.loadingMadrasas")}</span>
-      </div>
-    );
+    return <PlatformSpinner label={t("apex.loadingMadrasas")} />;
   }
 
   if (isError) {
     return (
-      <div
-        role="alert"
-        className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-center space-y-3"
-      >
-        <p className="text-sm text-destructive">{t("apex.loadError")}</p>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          disabled={isFetching}
-          onClick={() => void refetch()}
-          className="text-primary"
-        >
-          {isFetching ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden />
-          ) : null}
-          {t("common.retry")}
-        </Button>
-      </div>
+      <PlatformRetryBlock
+        errorText={t("apex.loadError")}
+        retryText={t("common.retry")}
+        isFetching={isFetching}
+        onRetry={() => void refetch()}
+      />
     );
   }
 
@@ -113,7 +96,7 @@ const RegistryWorkspaceRow = memo(function RegistryWorkspaceRow({
     <li>
       <a
         href={targetUrl}
-        className="block w-full rounded-xl border-2 border-border bg-card p-4 shadow-sm hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group text-left"
+        className="block w-full rounded-xl border-2 border-border bg-card p-4 shadow-sm hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group text-start"
       >
         <div className="flex items-center gap-3">
           <WorkspaceLogo logoUrl={workspace.logoUrl} madrasaName={workspace.madrasaName} />

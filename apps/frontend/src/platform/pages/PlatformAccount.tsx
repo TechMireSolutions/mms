@@ -1,25 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
-  AlertCircle,
   ArrowLeft,
   CheckCircle2,
   Loader2,
-  Lock,
   Mail,
   User,
 } from "lucide-react";
-import {
-  PLATFORM_MIN_PASSWORD_LENGTH,
-  validatePlatformSetupName,
-  validatePlatformSetupPassword,
-  formatDate,
-  type AppTranslationKey,
-} from "@mms/shared";
+import { formatDate } from "@mms/shared";
 import { PlatformPageShell, PlatformLogoMark } from "@/platform/components/PlatformPageShell";
+import PlatformPasswordInput from "@/platform/components/PlatformPasswordInput";
+import { PlatformAlert } from "@/platform/components/PlatformAlert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FORM_INPUT, FORM_INPUT_ICON, FORM_LABEL } from "@/components/ui/formStyles";
+import { Input } from "@/components/ui/input";
+import { FORM_LABEL } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   AlertDialog,
@@ -31,27 +26,32 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { apiJson, ApiError } from "@/lib/apiClient";
-import { mapPlatformAuthError } from "@/platform/lib/platformAuthErrors";
+import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
 import { ROUTES } from "@/lib/config/routes";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
-import { usePlatformProfile, useUpdatePlatformProfileName } from "@/platform/hooks/usePlatformProfile";
-import { PlatformLoadingScreen } from "@/platform/components/PlatformLoadingScreen";
+import {
+  usePlatformProfile,
+  useUpdatePlatformPassword,
+  useUpdatePlatformProfileName,
+} from "@/platform/hooks/usePlatformProfile";
+import { useResetPlatformDatabase } from "@/platform/hooks/usePlatformSettings";
 import { notify } from "@/lib/notify";
+import {
+  getPlatformNameError,
+  getPlatformPasswordError,
+  getPlatformPasswordMatchError,
+} from "@/platform/lib/platformValidation";
 
 /**
  * Platform super-user profile — view name/email and update display name or password.
  */
 export default function PlatformAccount(): React.JSX.Element {
   const { t } = useTranslation();
-  const {
-    platformUser,
-    isPlatformAuthenticated,
-    platformAuthChecked,
-    isCheckingPlatformAuth,
-  } = usePlatformAuth();
+  const { platformUser } = usePlatformAuth();
   const { data: profile, isLoading: loadingProfile, isError: profileError } = usePlatformProfile();
   const updateName = useUpdatePlatformProfileName();
+  const updatePassword = useUpdatePlatformPassword();
+  const resetDbMutation = useResetPlatformDatabase();
   const isSuperUser = platformUser?.role === "super_user";
 
 
@@ -61,34 +61,25 @@ export default function PlatformAccount(): React.JSX.Element {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [savingPassword, setSavingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+
 
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
-  const [resetPending, setResetPending] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
 
   const handleResetDatabase = async (): Promise<void> => {
     if (confirmText !== "RESET_ALL_DATABASE_DATA") return;
-    setResetPending(true);
     setResetError(null);
     try {
-      await apiJson("/api/platform/settings/reset-database", {
-        method: "POST",
-        body: JSON.stringify({ confirm: confirmText }),
-      });
-      notify.success(t("platform.profileDestroyDatabaseSuccess"));
+      await resetDbMutation.mutateAsync(confirmText);
       setResetDialogOpen(false);
       setConfirmText("");
-    } catch (error) {
-      setResetError(
-        error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"),
-      );
-    } finally {
-      setResetPending(false);
+    } catch (err) {
+      setResetError(getPlatformErrorMessage(err, t));
     }
   };
+
 
 
   useEffect(() => {
@@ -97,31 +88,23 @@ export default function PlatformAccount(): React.JSX.Element {
     }
   }, [profile?.name]);
 
-  if (!platformAuthChecked || isCheckingPlatformAuth) {
-    return <PlatformLoadingScreen />;
-  }
 
-  if (!isPlatformAuthenticated) {
-    return <Navigate to={ROUTES.home} replace />;
-  }
 
   const handleSaveName = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();
     setNameError(null);
 
-    const nameKey = validatePlatformSetupName(name);
-    if (nameKey) {
-      setNameError(t(nameKey));
+    const nameError = getPlatformNameError(name, t);
+    if (nameError) {
+      setNameError(nameError);
       return;
     }
 
     try {
       await updateName.mutateAsync(name);
       notify.success(t("platform.profileSaved"));
-    } catch (error) {
-      setNameError(
-        error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"),
-      );
+    } catch (err) {
+      setNameError(getPlatformErrorMessage(err, t));
     }
   };
 
@@ -129,37 +112,26 @@ export default function PlatformAccount(): React.JSX.Element {
     event.preventDefault();
     setPasswordError(null);
 
-    if (newPassword !== confirmPassword) {
-      setPasswordError(t("platform.forgotPasswordMismatch"));
+    const matchError = getPlatformPasswordMatchError(newPassword, confirmPassword, t);
+    if (matchError) {
+      setPasswordError(matchError);
       return;
     }
 
-    const passwordKey = validatePlatformSetupPassword(newPassword);
-    if (passwordKey) {
-      setPasswordError(
-        passwordKey === "platform.setupPasswordTooShort"
-          ? t(passwordKey, { min: String(PLATFORM_MIN_PASSWORD_LENGTH) })
-          : t(passwordKey as AppTranslationKey),
-      );
+    const passwordError = getPlatformPasswordError(newPassword, t);
+    if (passwordError) {
+      setPasswordError(passwordError);
       return;
     }
 
-    setSavingPassword(true);
     try {
-      await apiJson("/api/platform/auth/change-password", {
-        method: "POST",
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
+      await updatePassword.mutateAsync({ currentPassword, newPassword });
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
       notify.success(t("platform.profilePasswordUpdated"));
-    } catch (error) {
-      setPasswordError(
-        error instanceof ApiError ? mapPlatformAuthError(error, t) : t("errors.boundary.description"),
-      );
-    } finally {
-      setSavingPassword(false);
+    } catch (err) {
+      setPasswordError(getPlatformErrorMessage(err, t));
     }
   };
 
@@ -182,7 +154,7 @@ export default function PlatformAccount(): React.JSX.Element {
           to={ROUTES.home}
           className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
         >
-          <ArrowLeft className="w-3.5 h-3.5" aria-hidden />
+          <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden />
           {t("platform.backToConsole")}
         </Link>
 
@@ -193,17 +165,17 @@ export default function PlatformAccount(): React.JSX.Element {
           </div>
         ) : profile && !profileError ? (
           <>
-            <Card accentColor="primary" className="p-5 pl-6.5 space-y-3 text-left">
-              <div className="flex items-center gap-2 text-sm ml-0.5">
+            <Card accentColor="primary" className="p-5 ps-6.5 space-y-3 text-start">
+              <div className="flex items-center gap-2 text-sm ms-0.5">
                 <Mail className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden />
                 <span className="text-muted-foreground">{t("platform.profileEmail")}</span>
-                <span className="font-medium text-foreground ml-auto truncate">{profile.email}</span>
+                <span className="font-medium text-foreground ms-auto truncate">{profile.email}</span>
               </div>
               {memberSince ? (
                 <div className="flex items-center gap-2 text-sm">
                   <User className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden />
                   <span className="text-muted-foreground">{t("platform.profileMemberSince")}</span>
-                  <span className="font-medium text-foreground ml-auto">{memberSince}</span>
+                  <span className="font-medium text-foreground ms-auto">{memberSince}</span>
                 </div>
               ) : null}
               {profile.emailVerifiedAt ? (
@@ -215,23 +187,17 @@ export default function PlatformAccount(): React.JSX.Element {
             </Card>
 
             <Card accentColor="indigo" className="p-0">
-              <form onSubmit={(event) => void handleSaveName(event)} className="p-5 pl-6.5 space-y-4 text-left">
-              <h2 className="text-sm font-semibold text-foreground ml-0.5">{t("platform.profileName")}</h2>
-              {nameError ? (
-                <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive" role="alert">
-                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" aria-hidden />
-                  <span>{nameError}</span>
-                </div>
-              ) : null}
+              <form onSubmit={(event) => void handleSaveName(event)} className="p-5 ps-6.5 space-y-4 text-start">
+              <h2 className="text-sm font-semibold text-foreground ms-0.5">{t("platform.profileName")}</h2>
+              {nameError ? <PlatformAlert message={nameError} /> : null}
               <div className="space-y-1.5">
                 <label htmlFor="platform-profile-name" className={FORM_LABEL}>{t("platform.profileName")}</label>
-                <input
+                <Input
                   id="platform-profile-name"
                   autoComplete="name"
                   required
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  className={FORM_INPUT}
                 />
               </div>
               <Button type="submit" className="w-full" disabled={updateName.isPending || name === platformUser?.name}>
@@ -248,63 +214,35 @@ export default function PlatformAccount(): React.JSX.Element {
             </Card>
 
             <Card accentColor="emerald" className="p-0">
-              <form onSubmit={(event) => void handleChangePassword(event)} className="p-5 pl-6.5 space-y-4 text-left">
-              <h2 className="text-sm font-semibold text-foreground ml-0.5">{t("platform.profileChangePassword")}</h2>
-              {passwordError ? (
-                <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive" role="alert">
-                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" aria-hidden />
-                  <span>{passwordError}</span>
-                </div>
-              ) : null}
-              <div className="space-y-1.5">
-                <label htmlFor="platform-current-password" className={FORM_LABEL}>{t("platform.profileCurrentPassword")}</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-                  <input
-                    id="platform-current-password"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    value={currentPassword}
-                    onChange={(event) => setCurrentPassword(event.target.value)}
-                    className={FORM_INPUT_ICON}
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="platform-new-password" className={FORM_LABEL}>{t("platform.profileNewPassword")}</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-                  <input
-                    id="platform-new-password"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    minLength={PLATFORM_MIN_PASSWORD_LENGTH}
-                    value={newPassword}
-                    onChange={(event) => setNewPassword(event.target.value)}
-                    className={FORM_INPUT_ICON}
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="platform-confirm-new-password" className={FORM_LABEL}>{t("platform.profileConfirmPassword")}</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-                  <input
-                    id="platform-confirm-new-password"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    minLength={PLATFORM_MIN_PASSWORD_LENGTH}
-                    value={confirmPassword}
-                    onChange={(event) => setConfirmPassword(event.target.value)}
-                    className={FORM_INPUT_ICON}
-                  />
-                </div>
-              </div>
-              <Button type="submit" className="w-full" disabled={savingPassword}>
-                {savingPassword ? (
+              <form onSubmit={(event) => void handleChangePassword(event)} className="p-5 ps-6.5 space-y-4 text-start">
+              <h2 className="text-sm font-semibold text-foreground ms-0.5">{t("platform.profileChangePassword")}</h2>
+              {passwordError ? <PlatformAlert message={passwordError} /> : null}
+              <PlatformPasswordInput
+                id="platform-current-password"
+                label={t("platform.profileCurrentPassword")}
+                autoComplete="current-password"
+                required
+                value={currentPassword}
+                onChange={(event) => setCurrentPassword(event.target.value)}
+              />
+              <PlatformPasswordInput
+                id="platform-new-password"
+                label={t("platform.profileNewPassword")}
+                autoComplete="new-password"
+                required
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+              />
+              <PlatformPasswordInput
+                id="platform-confirm-new-password"
+                label={t("platform.profileConfirmPassword")}
+                autoComplete="new-password"
+                required
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+              />
+              <Button type="submit" className="w-full" disabled={updatePassword.isPending}>
+                {updatePassword.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
                     {t("common.save")}
@@ -323,9 +261,9 @@ export default function PlatformAccount(): React.JSX.Element {
 
             {isSuperUser && (
               <>
-                <Card accentColor="destructive" className="p-5 pl-6.5 space-y-4 text-left">
-                  <h2 className="text-sm font-semibold text-foreground ml-0.5">{t("platform.profileDestroyDatabase")}</h2>
-                  <p className="text-xs text-muted-foreground ml-0.5">
+                <Card accentColor="destructive" className="p-5 ps-6.5 space-y-4 text-start">
+                  <h2 className="text-sm font-semibold text-foreground ms-0.5">{t("platform.profileDestroyDatabase")}</h2>
+                  <p className="text-xs text-muted-foreground ms-0.5">
                     {t("platform.profileDestroyDatabaseDesc")}
                   </p>
                   <Button
@@ -350,11 +288,11 @@ export default function PlatformAccount(): React.JSX.Element {
                         {t("platform.profileDestroyDatabaseDesc")}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <div className="space-y-3 my-2 text-left">
+                    <div className="space-y-3 my-2 text-start">
                       <p className="text-xs text-muted-foreground">
                         {t("platform.profileDestroyDatabasePrompt")}
                       </p>
-                      <input
+                      <Input
                         type="text"
                         value={confirmText}
                         onChange={(event) => {
@@ -362,8 +300,7 @@ export default function PlatformAccount(): React.JSX.Element {
                           if (resetError) setResetError(null);
                         }}
                         placeholder="RESET_ALL_DATABASE_DATA"
-                        className={FORM_INPUT}
-                        disabled={resetPending}
+                        disabled={resetDbMutation.isPending}
                       />
                       {resetError ? (
                         <p className="text-xs text-destructive" role="alert">
@@ -372,14 +309,14 @@ export default function PlatformAccount(): React.JSX.Element {
                       ) : null}
                     </div>
                     <AlertDialogFooter>
-                      <AlertDialogCancel disabled={resetPending}>{t("common.cancel")}</AlertDialogCancel>
+                      <AlertDialogCancel disabled={resetDbMutation.isPending}>{t("common.cancel")}</AlertDialogCancel>
                       <Button
                         type="button"
                         variant="destructive"
-                        disabled={resetPending || confirmText !== "RESET_ALL_DATABASE_DATA"}
+                        disabled={resetDbMutation.isPending || confirmText !== "RESET_ALL_DATABASE_DATA"}
                         onClick={handleResetDatabase}
                       >
-                        {resetPending ? (
+                        {resetDbMutation.isPending ? (
                           <>
                             <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />
                             {t("platform.profileDestroyDatabaseConfirm")}

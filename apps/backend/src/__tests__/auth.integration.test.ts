@@ -42,6 +42,18 @@ const mockFindPlatformUserByEmail = vi.fn();
 const mockUpdatePlatformUserPassword = vi.fn();
 const mockGetStoredPlatformUserById = vi.fn();
 const mockListPlatformWorkspaces = vi.fn();
+const mockGetPlatformUserProfile = vi.fn().mockImplementation(async (id: string) => {
+  const stored = await mockGetStoredPlatformUserById(id);
+  if (!stored) return null;
+  return {
+    id: stored.id,
+    email: stored.email,
+    name: stored.name,
+    role: stored.role,
+    createdAt: stored.createdAt,
+    emailVerifiedAt: stored.emailVerifiedAt,
+  };
+});
 
 vi.mock('../services/platform/platformUserService.js', () => ({
   validatePlatformCredentials: (...args: unknown[]) => mockValidatePlatformCredentials(...args),
@@ -54,6 +66,22 @@ vi.mock('../services/platform/platformUserService.js', () => ({
   updatePlatformUserPassword: (...args: unknown[]) => mockUpdatePlatformUserPassword(...args),
   updatePlatformUserName: vi.fn(),
   changePlatformUserPassword: vi.fn(),
+  getPlatformUserProfile: (...args: unknown[]) => mockGetPlatformUserProfile(...args),
+  updatePlatformUserProfile: vi.fn(),
+  toPlatformUserProfile: (stored: any) => ({
+    id: stored.id,
+    email: stored.email,
+    name: stored.name,
+    role: stored.role,
+    createdAt: stored.createdAt,
+    emailVerifiedAt: stored.emailVerifiedAt,
+  }),
+  toPublicPlatformUser: (user: any) => ({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+  }),
 }));
 
 vi.mock('../services/workspaceService.js', async (importOriginal) => {

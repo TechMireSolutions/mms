@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
 import type { PlatformUser } from '@mms/shared';
-import { authenticatePlatform } from '../../middleware/authenticatePlatform.js';
+import { authenticatePlatform, requireMainDomain } from '../../middleware/authenticatePlatform.js';
 import {
   issuePlatformSession,
   loginPlatformUser,
@@ -11,23 +11,20 @@ import {
   getPlatformSetupStatus,
   resendPlatformSetupCode,
   startPlatformSetup,
-  toPublicPlatformUser,
   verifyPlatformSetup,
 } from '../../services/platform/platformSetupService.js';
+import {
+  toPublicPlatformUser,
+  getPlatformUserProfile,
+  changePlatformUserPassword as updatePlatformUserPassword,
+  updatePlatformUserProfile,
+} from '../../services/platform/platformUserService.js';
 import {
   completePlatformPasswordReset,
   requestPlatformPasswordReset,
   resendPlatformPasswordReset,
-  toPublicPlatformUserFromStored,
 } from '../../services/platform/platformPasswordResetService.js';
-import {
-  getPlatformUserProfile,
-  updatePlatformUserPassword,
-  updatePlatformUserProfile,
-} from '../../services/platform/platformProfileService.js';
-import { getRequestTenant } from '../../lib/tenantContext.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
-import { sendForbidden } from '../../lib/httpErrors.js';
 import {
   platformChangePasswordBodySchema,
   platformPasswordForgotBodySchema,
@@ -47,11 +44,7 @@ export default async function platformAuthRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
-  fastify.addHook('preHandler', async (request, reply) => {
-    if (getRequestTenant()) {
-      return sendForbidden(reply, 'Platform actions are only available on the main domain');
-    }
-  });
+  fastify.addHook('preHandler', requireMainDomain);
 
   fastify.get('/setup/status', async (request, reply) => {
     return reply.send(await getPlatformSetupStatus());
@@ -109,7 +102,7 @@ export default async function platformAuthRoutes(
 
       const stored = await completePlatformPasswordReset(resetId, code, password);
       const user = issuePlatformSession(
-        toPublicPlatformUserFromStored(stored),
+        toPublicPlatformUser(stored),
         fastify.jwt,
         reply,
       );
