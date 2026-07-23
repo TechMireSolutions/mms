@@ -1,5 +1,4 @@
 import {
-  DEMO_TEACHERS,
   DEFAULT_TEACHERS_SETTINGS,
   WORKSPACES_COLLECTION,
   parseTenantScopedStorageKey,
@@ -49,8 +48,8 @@ export async function runMigration004(): Promise<void> {
   if (subdomains.size === 0) {
     const legacyTeachers = await getCollectionByStorageName(TEACHERS_COLLECTION);
     if (!Array.isArray(legacyTeachers) || legacyTeachers.length === 0) {
-      await saveCollection(TEACHERS_COLLECTION, [...DEMO_TEACHERS]);
-      console.log('[Migration 004] Seeded demo teachers (legacy storage)');
+      await saveCollection(TEACHERS_COLLECTION, []);
+      console.log('[Migration 004] Seeded empty teachers collection (legacy storage)');
       changed = true;
     }
 
@@ -61,7 +60,7 @@ export async function runMigration004(): Promise<void> {
     }
 
     if (changed) {
-      console.log('[Migration 004] Demo teachers migration completed.');
+      console.log('[Migration 004] Teachers migration completed.');
     }
     return;
   }
@@ -70,8 +69,8 @@ export async function runMigration004(): Promise<void> {
     const teachersKey = tenantCollectionKey(subdomain, TEACHERS_COLLECTION);
     const existing = await getCollectionByStorageName(teachersKey);
     if (!Array.isArray(existing) || existing.length === 0) {
-      await saveCollection(teachersKey, [...DEMO_TEACHERS]);
-      console.log(`[Migration 004] Seeded demo teachers for tenant "${subdomain}"`);
+      await saveCollection(teachersKey, []);
+      console.log(`[Migration 004] Seeded empty teachers collection for tenant "${subdomain}"`);
       changed = true;
     }
 

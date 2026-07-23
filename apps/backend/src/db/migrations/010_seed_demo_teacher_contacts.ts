@@ -1,12 +1,9 @@
 import {
   DEFAULT_TEACHERS_SETTINGS,
-  DEMO_TEACHER_CONTACTS,
-  DEMO_TEACHERS,
   WORKSPACES_COLLECTION,
   parseTenantScopedStorageKey,
   tenantCollectionKey,
   tenantObjectKey,
-  type Contact,
   type Workspace,
 } from '@mms/shared';
 import {
@@ -20,20 +17,6 @@ import {
 const TEACHERS_COLLECTION = 'teachers';
 const CONTACTS_COLLECTION = 'contacts';
 const TEACHERS_SETTINGS_KEY = 'teachers_settings';
-
-function mergeContactsById(existing: Contact[], demo: Contact[]): Contact[] {
-  const byId = new Map<string, Contact>();
-  for (const row of existing) {
-    byId.set(String(row.id), row);
-  }
-  for (const row of demo) {
-    const key = String(row.id);
-    if (!byId.has(key)) {
-      byId.set(key, row);
-    }
-  }
-  return [...byId.values()];
-}
 
 async function discoverTenantSubdomains(): Promise<Set<string>> {
   const subdomains = new Set<string>();
@@ -62,17 +45,13 @@ async function seedTenantTeachers(
   let changed = false;
   const existingTeachers = await getCollectionByStorageName(teachersKey);
   if (!Array.isArray(existingTeachers) || existingTeachers.length === 0) {
-    await saveCollection(teachersKey, [...DEMO_TEACHERS]);
+    await saveCollection(teachersKey, []);
     changed = true;
   }
 
   const existingContacts = await getCollectionByStorageName(contactsKey);
-  const merged = mergeContactsById(
-    Array.isArray(existingContacts) ? (existingContacts as Contact[]) : [],
-    DEMO_TEACHER_CONTACTS,
-  );
-  if (!Array.isArray(existingContacts) || merged.length !== existingContacts.length) {
-    await saveCollection(contactsKey, merged);
+  if (!Array.isArray(existingContacts)) {
+    await saveCollection(contactsKey, []);
     changed = true;
   }
 

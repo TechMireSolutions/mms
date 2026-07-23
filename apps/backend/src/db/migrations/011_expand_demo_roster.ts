@@ -1,17 +1,10 @@
 import {
   DEFAULT_STUDENTS_SETTINGS,
   DEFAULT_TEACHERS_SETTINGS,
-  DEMO_STUDENT_CONTACTS_ALL,
-  DEMO_STUDENT_COUNT,
-  DEMO_STUDENTS,
-  DEMO_TEACHER_CONTACTS,
-  DEMO_TEACHER_COUNT,
-  DEMO_TEACHERS,
   WORKSPACES_COLLECTION,
   parseTenantScopedStorageKey,
   tenantCollectionKey,
   tenantObjectKey,
-  type Contact,
   type Workspace,
 } from '@mms/shared';
 import {
@@ -27,20 +20,6 @@ const TEACHERS_COLLECTION = 'teachers';
 const CONTACTS_COLLECTION = 'contacts';
 const STUDENTS_SETTINGS_KEY = 'students_settings';
 const TEACHERS_SETTINGS_KEY = 'teachers_settings';
-
-function mergeContactsById(existing: Contact[], demo: Contact[]): Contact[] {
-  const byId = new Map<string, Contact>();
-  for (const row of existing) {
-    byId.set(String(row.id), row);
-  }
-  for (const row of demo) {
-    const key = String(row.id);
-    if (!byId.has(key)) {
-      byId.set(key, row);
-    }
-  }
-  return [...byId.values()];
-}
 
 async function discoverTenantSubdomains(): Promise<Set<string>> {
   const subdomains = new Set<string>();
@@ -71,26 +50,20 @@ async function expandTenantRoster(
   let changed = false;
 
   const existingStudents = await getCollectionByStorageName(studentsKey);
-  const studentCount = Array.isArray(existingStudents) ? existingStudents.length : 0;
-  if (studentCount < DEMO_STUDENT_COUNT) {
-    await saveCollection(studentsKey, [...DEMO_STUDENTS]);
+  if (!Array.isArray(existingStudents)) {
+    await saveCollection(studentsKey, []);
     changed = true;
   }
 
   const existingTeachers = await getCollectionByStorageName(teachersKey);
-  const teacherCount = Array.isArray(existingTeachers) ? existingTeachers.length : 0;
-  if (teacherCount < DEMO_TEACHER_COUNT) {
-    await saveCollection(teachersKey, [...DEMO_TEACHERS]);
+  if (!Array.isArray(existingTeachers)) {
+    await saveCollection(teachersKey, []);
     changed = true;
   }
 
   const existingContacts = await getCollectionByStorageName(contactsKey);
-  const merged = mergeContactsById(
-    Array.isArray(existingContacts) ? (existingContacts as Contact[]) : [],
-    [...DEMO_TEACHER_CONTACTS, ...DEMO_STUDENT_CONTACTS_ALL],
-  );
-  if (!Array.isArray(existingContacts) || merged.length !== existingContacts.length) {
-    await saveCollection(contactsKey, merged);
+  if (!Array.isArray(existingContacts)) {
+    await saveCollection(contactsKey, []);
     changed = true;
   }
 
