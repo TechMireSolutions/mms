@@ -11,12 +11,16 @@ export async function resetAndReseedDatabase(): Promise<void> {
   const client = await pool.connect();
   try {
     // Forcefully terminate other database connections to release exclusive schema locks (e.g. background workers, other requests)
-    await client.query(`
-      SELECT pg_terminate_backend(pg_stat_activity.pid)
-      FROM pg_stat_activity
-      WHERE pg_stat_activity.datname = current_database()
-        AND pid <> pg_backend_pid();
-    `);
+    try {
+      await client.query(`
+        SELECT pg_terminate_backend(pg_stat_activity.pid)
+        FROM pg_stat_activity
+        WHERE pg_stat_activity.datname = current_database()
+          AND pid <> pg_backend_pid();
+      `);
+    } catch (err) {
+      console.warn('[Platform Database Reset] Warning: Could not terminate other active backend connections (insufficient privileges):', err);
+    }
 
     // Drop all tables individually instead of dropping the public schema to avoid privilege errors
     await client.query(`
