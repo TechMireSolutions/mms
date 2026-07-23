@@ -149,7 +149,7 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     // 5. Fill out step 1 (Institution details)
     await page.fill('#onboarding-name', 'Test Madrasa');
     await page.fill('#onboarding-tagline', 'Learn with excellence');
-    await page.fill('#onboarding-country', 'United Kingdom');
+    await page.selectOption('#onboarding-country', 'United Kingdom');
     await page.fill('#onboarding-subdomain', subdomain);
 
     // Wait for the URL preview to be shown to ensure state synced
