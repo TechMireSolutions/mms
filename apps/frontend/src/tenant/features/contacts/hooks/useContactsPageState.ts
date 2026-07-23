@@ -93,9 +93,7 @@ export function useContactsPageState({
       } as Contact;
 
       let phones = Array.isArray(base.phones) ? base.phones : [];
-      const scalarPhone = typeof (base as Record<string, unknown>).phone === 'string'
-        ? String((base as Record<string, unknown>).phone).trim()
-        : '';
+      const scalarPhone = typeof base.phone === 'string' ? base.phone.trim() : '';
 
       if (scalarPhone && !phones.some((p) => (p.number || '').trim())) {
         const parsed = parsePhoneNumber(scalarPhone, defaultCode, Object.values(countryCodesMap));
