@@ -34,6 +34,11 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
       setResetDialogOpen(false);
       setConfirmText("");
       platformLogout();
+      // Force a full page reload after a short delay to let the backend migrations complete
+      // and ensure the client-side state/cache is completely cleared.
+      setTimeout(() => {
+        window.location.href = "/platform";
+      }, 800);
     } catch (err) {
       setResetError(getPlatformErrorMessage(err, t));
     }
