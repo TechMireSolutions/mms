@@ -3,7 +3,7 @@ import { DollarSign, Tag, Info } from "lucide-react";
 import { calcFee, CalculatedFee } from '@/lib/data/enrollmentData';
 import { Student } from '@/lib/data/studentsData';
 import { Session } from '@/lib/data/sessionsData';
-import { formatMoney } from "@mms/shared";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 interface Step5FeeCalculationProps {
   student: Student | null | undefined;
@@ -13,6 +13,7 @@ interface Step5FeeCalculationProps {
 }
 
 export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }: Step5FeeCalculationProps): React.ReactElement {
+  const { formatCurrency } = useFinanceCurrency();
   const baseFee = session?.baseFee || 0;
 
   const fee = React.useMemo<CalculatedFee>(() => {
@@ -42,7 +43,7 @@ export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }
         <div className="divide-y divide-border">
           <div className="flex items-center justify-between px-4 py-3">
             <span className="text-sm text-muted-foreground">Base Fee ({session?.name || "Session"})</span>
-            <span className="text-sm font-semibold text-foreground">{formatMoney(baseFee)}</span>
+            <span className="text-sm font-semibold text-foreground">{formatCurrency(baseFee)}</span>
           </div>
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-2">
@@ -53,12 +54,12 @@ export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }
               )}
             </div>
             <span className={`text-sm font-semibold ${displayFee.discountAmt > 0 ? "text-success" : "text-muted-foreground"}`}>
-              {displayFee.discountAmt > 0 ? `– ${formatMoney(displayFee.discountAmt)}` : formatMoney(0)}
+              {displayFee.discountAmt > 0 ? `– ${formatCurrency(displayFee.discountAmt)}` : formatCurrency(0)}
             </span>
           </div>
           <div className="flex items-center justify-between px-4 py-3 bg-primary/5">
             <span className="text-sm font-bold text-foreground">Final Amount Due</span>
-            <span className="text-lg font-bold text-primary">{formatMoney(displayFee.finalFee)}</span>
+            <span className="text-lg font-bold text-primary">{formatCurrency(displayFee.finalFee)}</span>
           </div>
         </div>
       </div>

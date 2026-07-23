@@ -12,7 +12,8 @@ import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/comp
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { formatDate, formatMoney } from "@mms/shared";
+import { formatDate } from "@mms/shared";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 const PAGE_SIZE = 12;
 
@@ -41,6 +42,7 @@ export function EnrollmentList({
   columnCustomizer,
 }: EnrollmentListProps): React.ReactElement {
   const { t } = useTranslation();
+  const { formatCurrency } = useFinanceCurrency();
   const [statusFilter, setStatus]   = useState<string>("all");
   const [sessionFilter, setSession] = useState<string>("all");
 
@@ -222,7 +224,7 @@ export function EnrollmentList({
                       )}
                       {showFinalFee && (
                         <td className="px-3 py-2.5 text-right font-semibold text-foreground whitespace-nowrap">
-                          {formatMoney(enrollment.finalFee)}
+                          {formatCurrency(enrollment.finalFee)}
                           {enrollment.discountPct > 0 && (
                             <span className="ml-1 text-[10px] text-success font-normal" aria-label={`Discount percentage: ${enrollment.discountPct} percent`}>–{enrollment.discountPct}%</span>
                           )}

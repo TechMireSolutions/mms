@@ -3,7 +3,7 @@ import { User, BookOpen, Layers, DollarSign, CheckCircle2 } from "lucide-react";
 import { calcAge, Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
 import { CalculatedFee } from '@/lib/data/enrollmentData';
-import { formatMoney } from "@mms/shared";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useEnrollmentConfig } from "@/hooks/useStandardModuleConfig";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
@@ -82,6 +82,7 @@ export function Step6Confirmation({
   const age = student ? calcAge(student.dob) : null;
 
   const { orderedFields: allOrderedFields, isFieldEnabled } = useEnrollmentConfig();
+  const { formatCurrency } = useFinanceCurrency();
 
   const orderedFields = React.useMemo(() => {
     return allOrderedFields.filter((field) => !["studentId", "sessionId", "classId"].includes(field.id));
@@ -117,11 +118,11 @@ export function Step6Confirmation({
         </Section>
 
         <Section icon={DollarSign} title="Fee">
-          <Row label="Base Fee" value={session ? formatMoney(session.baseFee) : "—"} />
-          <Row label={feeResult?.label || "Discount"} value={feeResult && feeResult.pct > 0 ? `– ${formatMoney(feeResult.discountAmt)} (${feeResult.pct}%)` : "None"} />
+          <Row label="Base Fee" value={session ? formatCurrency(session.baseFee) : "—"} />
+          <Row label={feeResult?.label || "Discount"} value={feeResult && feeResult.pct > 0 ? `– ${formatCurrency(feeResult.discountAmt)} (${feeResult.pct}%)` : "None"} />
           <div className="flex items-center justify-between py-2">
             <span className="text-xs font-bold text-foreground">Total Due</span>
-            <span className="text-sm font-bold text-primary">{formatMoney(feeResult?.finalFee)}</span>
+            <span className="text-sm font-bold text-primary">{formatCurrency(feeResult?.finalFee)}</span>
           </div>
         </Section>
       </div>
@@ -210,7 +211,7 @@ export function Step6Confirmation({
         <p className="text-xs font-bold text-foreground">What happens next?</p>
         {[
           "Enrollment record created with Pending status",
-          "Invoice auto-generated for " + (formatMoney(feeResult?.finalFee) || "—"),
+          "Invoice auto-generated for " + (formatCurrency(feeResult?.finalFee) || "—"),
           "Notification sent to parent/guardian",
           "Status → Confirmed once payment is received",
         ].map((item, index) => (

@@ -6,7 +6,8 @@ import { Modal } from "@/components/ui/Modal";
 import { STATUS_MAP, Enrollment } from '@/lib/data/enrollmentData';
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { Button } from "@/components/ui/button";
-import { formatMoney, formatDateTime } from "@mms/shared";
+import { formatDateTime } from "@mms/shared";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 interface SectionProps {
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
@@ -76,6 +77,7 @@ interface EnrollmentDetailProps {
  */
 export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite }: EnrollmentDetailProps): React.ReactElement | null {
   const { data: resolvedStudents = [] } = useStudentsByIds(enrollment ? [enrollment.studentId] : []);
+  const { formatCurrency } = useFinanceCurrency();
   const student = resolvedStudents[0];
 
   if (!enrollment) return null;
@@ -131,11 +133,11 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
         </Section>
 
         <Section icon={DollarSign} title="Fee Breakdown">
-          <Row label="Base Fee"            value={formatMoney(enrollment.baseFee)} />
-          <Row label={enrollment.discountLabel || "Discount"} value={enrollment.discountPct > 0 ? `– ${formatMoney(enrollment.discountAmt)} (${enrollment.discountPct}%)` : "None"} />
+          <Row label="Base Fee"            value={formatCurrency(enrollment.baseFee)} />
+          <Row label={enrollment.discountLabel || "Discount"} value={enrollment.discountPct > 0 ? `– ${formatCurrency(enrollment.discountAmt)} (${enrollment.discountPct}%)` : "None"} />
           <div className="flex items-center justify-between py-2.5">
             <span className="text-xs font-bold text-foreground">Total Due</span>
-            <span className="text-sm font-bold text-primary">{formatMoney(enrollment.finalFee)}</span>
+            <span className="text-sm font-bold text-primary">{formatCurrency(enrollment.finalFee)}</span>
           </div>
           <Row label="Payment Status" value={
             <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${paymentColors[enrollment.paymentStatus] || "bg-muted text-muted-foreground"}`}>

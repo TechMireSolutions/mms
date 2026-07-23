@@ -2,7 +2,7 @@ import React from 'react';
 import {
   ClipboardList, Filter, CheckCircle2, Clock, XCircle, CalendarPlus, Banknote,
 } from 'lucide-react';
-import { formatMoney } from '@mms/shared';
+import { useFinanceCurrency } from '@/hooks/useCurrency';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useEnrollmentsMetrics } from '@/tenant/features/enrollments/hooks/useEnrollmentsApi';
 import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
@@ -17,6 +17,7 @@ export function EnrollmentsCommandMetrics({
   shown,
 }: EnrollmentsCommandMetricsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { formatCurrency } = useFinanceCurrency();
   const { data: serverMetrics } = useEnrollmentsMetrics();
 
   const metrics = {
@@ -33,7 +34,7 @@ export function EnrollmentsCommandMetrics({
     { icon: Filter, label: t('enrollments.metrics.filtered'), value: shown, accent: 'info' as const },
     { icon: CheckCircle2, label: t('enrollments.metrics.confirmed'), value: metrics.confirmed, accent: 'success' as const },
     { icon: Clock, label: t('enrollments.metrics.pending'), value: metrics.pending, accent: 'warning' as const },
-    { icon: Banknote, label: t('enrollments.metrics.revenue'), value: formatMoney(metrics.revenue), accent: 'indigo' as const },
+    { icon: Banknote, label: t('enrollments.metrics.revenue'), value: formatCurrency(metrics.revenue), accent: 'indigo' as const },
     { icon: XCircle, label: t('enrollments.metrics.cancelled'), value: metrics.cancelled, accent: 'destructive' as const },
     { icon: CalendarPlus, label: t('enrollments.metrics.newThisPeriod'), value: metrics.newThisPeriod, accent: 'success' as const },
   ];

@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } fro
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { Users, DollarSign, TrendingUp, BookOpen } from "lucide-react";
 import { ENROLLMENT_STATUSES, Enrollment } from '@/lib/data/enrollmentData';
-import { formatMoney } from "@mms/shared";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { StatCard } from "@/components/ui/StatCard";
 
 
@@ -28,6 +28,7 @@ interface SessionDataPoint {
  * @returns The EnrollmentReports component.
  */
 export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): React.ReactElement {
+  const { formatCurrency } = useFinanceCurrency();
   const palette = useBrandPalette();
   const COLORS = useMemo(
     () => [palette.primary, palette.secondary, palette.charts[0], palette.charts[3]],
@@ -69,7 +70,7 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
         <StatCard icon={Users}      label="Total Enrollments" value={total}    sub={`${confirmed} confirmed`} accent="primary" />
         <StatCard icon={TrendingUp} label="Confirmed"          value={confirmed} sub={`${pending} pending`}   accent="success" />
         <StatCard icon={BookOpen}   label="Cancelled"          value={cancelled} sub="This period"            accent="destructive" />
-        <StatCard icon={DollarSign} label="Revenue Due"        value={formatMoney(totalFees)} sub={`Paid: ${formatMoney(paidFees)}`} accent="warning" />
+        <StatCard icon={DollarSign} label="Revenue Due"        value={formatCurrency(totalFees)} sub={`Paid: ${formatCurrency(paidFees)}`} accent="warning" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -124,7 +125,7 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
                   <p className="text-sm font-semibold text-foreground">{sessionStats.name}</p>
                   <p className="text-xs text-muted-foreground">{sessionStats.count} enrollment{sessionStats.count !== 1 ? "s" : ""}</p>
                 </div>
-                <p className="text-sm font-bold text-primary">{formatMoney(sessionStats.revenue)}</p>
+                <p className="text-sm font-bold text-primary">{formatCurrency(sessionStats.revenue)}</p>
               </div>
             ))
           )}

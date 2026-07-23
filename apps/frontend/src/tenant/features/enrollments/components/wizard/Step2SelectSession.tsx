@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
  * @param date - Date string to format.
  * @returns Formatted date.
  */
-import { formatDate, formatMoney } from "@mms/shared";
+import { formatDate } from "@mms/shared";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 
 interface Step2SelectSessionProps {
@@ -31,6 +32,7 @@ interface Step2SelectSessionProps {
  * @returns The Step2SelectSession component.
  */
 export function Step2SelectSession({ value, onChange, sessions = [] }: Step2SelectSessionProps): React.ReactElement {
+  const { formatCurrency } = useFinanceCurrency();
   const { t } = useTranslation();
   const sessionStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(
     () => ({
@@ -93,7 +95,7 @@ export function Step2SelectSession({ value, onChange, sessions = [] }: Step2Sele
                     </div>
                     <div className="flex items-center gap-1 text-xs font-bold text-foreground">
                       <DollarSign className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-                      {formatMoney(session.baseFee)}
+                      {formatCurrency(session.baseFee)}
                     </div>
                   </div>
                   {session.classes && session.classes.length > 0 && (
