@@ -167,7 +167,7 @@ export const OBLIGATION_TYPE_BADGE: Record<string, string> = {
 };
 
 /** Card left-border accent stripe colors (globle1). */
-export const CARD_STRIPE_COLORS = {
+export const CARD_STRIPE_COLORS: Record<string, string> = {
   primary: "bg-primary/45 group-hover/card:bg-primary",
   success: "bg-success/45 group-hover/card:bg-success",
   warning: "bg-warning/45 group-hover/card:bg-warning",
@@ -177,4 +177,12 @@ export const CARD_STRIPE_COLORS = {
   indigo: "bg-primary/45 group-hover/card:bg-primary",
   rose: "bg-destructive/45 group-hover/card:bg-destructive",
   amber: "bg-warning/45 group-hover/card:bg-warning",
-} as const;
+  teal: "bg-teal-500/45 group-hover/card:bg-teal-500",
+  purple: "bg-purple-500/45 group-hover/card:bg-purple-500",
+  muted: "bg-muted-foreground/35 group-hover/card:bg-muted-foreground",
+  green: "bg-success/45 group-hover/card:bg-success",
+  red: "bg-destructive/45 group-hover/card:bg-destructive",
+  blue: "bg-info/45 group-hover/card:bg-info",
+  violet: "bg-primary/45 group-hover/card:bg-primary",
+};
+

@@ -7,7 +7,7 @@ import { CARD_STRIPE_COLORS } from "@/lib/semanticTone"
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & {
-    accentColor?: "primary" | "success" | "warning" | "destructive" | "info" | "emerald" | "indigo" | "rose" | "amber"
+    accentColor?: "primary" | "success" | "warning" | "destructive" | "info" | "emerald" | "indigo" | "rose" | "amber" | "teal" | "purple" | "muted" | string
   }
 >(({ className, accentColor, ...props }, ref) => {
 
