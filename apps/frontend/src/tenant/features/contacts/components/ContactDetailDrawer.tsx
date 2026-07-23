@@ -9,9 +9,19 @@ import {
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Card } from "@/components/ui/card";
-import { Contact, ContactActivity, canViewContactField, CONTACTS_MODULE_CONTRACT } from "@mms/shared";
+import {
+  Contact,
+  ContactActivity,
+  canViewContactField,
+  CONTACTS_MODULE_CONTRACT,
+  getDisplayName,
+  getPrimaryPhone,
+  getPrimaryEmail,
+  hasWhatsApp,
+  formatDate,
+  todayISO,
+} from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
-import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, formatDate, todayISO } from "@mms/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -275,7 +285,7 @@ export default function ContactDetailDrawer({
         by: user?.name || t('contacts.detail.systemUser'),
       }));
     const all = [...noteActs, ...messageActs];
-    return all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return all.sort((a, b) => (new Date(b.date || 0).getTime() || 0) - (new Date(a.date || 0).getTime() || 0));
   }, [c.activities, userMessages, c.id, user?.name, t]);
 
   const fieldsToRender = allFields.filter(
