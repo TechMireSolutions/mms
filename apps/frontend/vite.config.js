@@ -48,12 +48,12 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('/packages/shared/dist/')) {
-            if (id.includes('/appTranslations')) {
-              return 'mms-shared-i18n';
-            }
-            if (id.includes('/tenantUtils')) {
-              return 'mms-shared-tenant';
-            }
+            if (id.includes('/appTranslationsEn')) return 'mms-i18n-en';
+            if (id.includes('/appTranslationsAr')) return 'mms-i18n-ar';
+            if (id.includes('/appTranslationsUr')) return 'mms-i18n-ur';
+            if (id.includes('/appTranslationsFa')) return 'mms-i18n-fa';
+            if (id.includes('/appTranslations')) return 'mms-shared-i18n';
+            if (id.includes('/tenantUtils')) return 'mms-shared-tenant';
             return 'mms-shared';
           }
           if (!id.includes('node_modules')) {
