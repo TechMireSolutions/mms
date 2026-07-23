@@ -18,12 +18,18 @@ export async function resetAndReseedDatabase(): Promise<void> {
         AND pid <> pg_backend_pid();
     `);
 
-    await client.query('DROP SCHEMA IF EXISTS public CASCADE;');
+    // Drop all tables individually instead of dropping the public schema to avoid privilege errors
+    await client.query(`
+      DO $$ DECLARE
+          r RECORD;
+      BEGIN
+          FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+              EXECUTE 'DROP TABLE IF EXISTS public.' || quote_ident(r.tablename) || ' CASCADE';
+          END LOOP;
+      END $$;
+    `);
     await client.query('DROP SCHEMA IF EXISTS drizzle CASCADE;');
-    await client.query('CREATE SCHEMA public;');
-    await client.query('GRANT ALL ON SCHEMA public TO postgres;');
-    await client.query('GRANT ALL ON SCHEMA public TO public;');
-    console.log('[Platform Database Reset] Schema cleared. Re-running database initialization and migrations...');
+    console.log('[Platform Database Reset] Tables cleared. Re-running database initialization and migrations...');
   } finally {
     client.release();
   }
