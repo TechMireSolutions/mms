@@ -12,6 +12,7 @@
     "build": "tsc && cp src/db/seeds.json.gz dist/db/seeds.json.gz && (cp src/db/seeds.json dist/db/seeds.json || true)",
     "start": "node dist/index.js",
     "worker:start": "node dist/worker.js",
+    "db:reset": "tsx src/scripts/resetDb.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --quiet",
     "test": "vitest run"

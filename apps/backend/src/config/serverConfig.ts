@@ -25,8 +25,14 @@ export function loadServerConfig(): ServerConfig {
       );
     }
   }
-  if (isProd && jwtSecret.length < 32) {
-    throw new Error('JWT_SECRET must be at least 32 characters in production');
+  if (isProd) {
+    if (jwtSecret.length < 32) {
+      throw new Error('JWT_SECRET must be at least 32 characters in production');
+    }
+    const BANNED_SECRETS = ['change-me', 'dev-local-change-me', 'secret', '12345678901234567890123456789012'];
+    if (BANNED_SECRETS.includes(jwtSecret)) {
+      throw new Error('JWT_SECRET uses a known weak or default placeholder. Set a high-entropy secret key in production.');
+    }
   }
 
   let databaseUrl = process.env.DATABASE_URL;
