@@ -27,10 +27,10 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
   const confirmInputId = useId();
 
   const handleResetDatabase = async (): Promise<void> => {
-    if (confirmText !== "RESET_ALL_DATABASE_DATA") return;
+    if (confirmText.trim() !== "RESET_ALL_DATABASE_DATA") return;
     setResetError(null);
     try {
-      await resetDbMutation.mutateAsync(confirmText);
+      await resetDbMutation.mutateAsync(confirmText.trim());
       setResetDialogOpen(false);
       setConfirmText("");
       platformLogout();
@@ -96,7 +96,7 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
             <Button
               type="button"
               variant="destructive"
-              disabled={resetDbMutation.isPending || confirmText !== "RESET_ALL_DATABASE_DATA"}
+              disabled={resetDbMutation.isPending || confirmText.trim() !== "RESET_ALL_DATABASE_DATA"}
               onClick={handleResetDatabase}
             >
               {resetDbMutation.isPending ? (
