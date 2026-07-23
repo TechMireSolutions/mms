@@ -36,6 +36,8 @@ export interface AuthContextType {
     adminPhone?: string;
     website?: string;
     footerText?: string;
+    city?: string;
+    region?: string;
   }) => Promise<OnboardResult>;
   exchangeHandoff: (code: string) => Promise<void>;
 }
@@ -198,6 +200,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     adminPhone?: string;
     website?: string;
     footerText?: string;
+    city?: string;
+    region?: string;
   }): Promise<OnboardResult> => {
     setAuthError(null);
     return apiJson<OnboardResult>('/api/auth/onboard', {

@@ -170,6 +170,16 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
     };
     await saveObject('branding', fullBranding);
 
+    const contactPreferences = {
+      defaultCountry: input.country || '',
+      defaultProvince: input.region || '',
+      defaultCity: input.city || '',
+      showDetailedSolarAge: false,
+      showLunarDob: false,
+      showDetailedLunarAge: false,
+    };
+    await saveObject('contact_preferences', contactPreferences);
+
     await assertPasswordMeetsPolicy(input.password);
     await createUser(input.email, input.adminName, input.password, 'admin', workspace.subdomain, {
       mustChangePassword: true,

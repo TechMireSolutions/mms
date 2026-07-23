@@ -28,6 +28,8 @@ export interface OnboardingData {
   subdomainTouched: boolean;
   logoUrl: string;
   country: string;
+  province: string;
+  city: string;
   primaryColor: string;
   secondaryColor: string;
   footerText: string;
@@ -75,6 +77,8 @@ const initialData: OnboardingData = {
   subdomainTouched: false,
   logoUrl: "",
   country: "",
+  province: "",
+  city: "",
   primaryColor: DEFAULT_BRANDING_SETTINGS.primaryColor,
   secondaryColor: DEFAULT_BRANDING_SETTINGS.secondaryColor,
   footerText: "",
@@ -177,6 +181,8 @@ export default function OnboardingWizard(): React.JSX.Element {
         password: data.password,
         subdomain: data.subdomain,
         country: data.country,
+        region: data.province,
+        city: data.city,
         primaryColor: data.primaryColor,
         secondaryColor: data.secondaryColor,
         logoUrl: data.logoUrl || undefined,

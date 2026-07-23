@@ -74,7 +74,7 @@ export function useContactsSyncOutbox() {
 
   useEffect(() => {
     const onOnline = () => {
-      void flush();
+      void flush({ notify: true });
     };
     window.addEventListener('online', onOnline);
     return () => window.removeEventListener('online', onOnline);

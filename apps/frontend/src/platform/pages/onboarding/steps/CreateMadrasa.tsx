@@ -6,6 +6,7 @@ import {
   DEFAULT_BRANDING_SETTINGS,
   mergeBrandingSettings,
   slugifySubdomain,
+  COUNTRY_CODES,
 } from "@mms/shared";
 import { applyBrandingTheme } from "@/lib/brandingTheme";
 import { getAppDomain } from "@/lib/config/tenantConfig";
@@ -25,6 +26,7 @@ import {
   TAGLINE_MAX,
   defaultFooterForMadrasa,
 } from "@/tenant/features/settings/components/branding/BrandingShared";
+import { FormSelect } from "@/components/ui/FormSelect";
 
 interface CreateMadrasaProps {
   data: OnboardingData;
@@ -80,6 +82,13 @@ export default function CreateMadrasa({ data, onChange }: CreateMadrasaProps): R
       subdomainTouched: true,
     }));
   };
+
+  const countryOptions = useMemo(() => {
+    return COUNTRY_CODES.map((c) => ({
+      value: c.country,
+      label: `${c.country} (${c.code})`,
+    }));
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -148,12 +157,32 @@ export default function CreateMadrasa({ data, onChange }: CreateMadrasaProps): R
 
           <div className="space-y-2">
             <Label htmlFor="onboarding-country">{t("branding.country")}</Label>
-            <Input
+            <FormSelect
               id="onboarding-country"
               value={data.country}
-              autoComplete="country-name"
+              onChange={(val) => updateField("country", val)}
+              options={countryOptions}
               placeholder={t("branding.countryPlaceholder")}
-              onChange={(event) => updateField("country", event.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="onboarding-province">{t("contacts.setup.defaultProvince")}</Label>
+            <Input
+              id="onboarding-province"
+              value={data.province}
+              placeholder={t("contacts.setup.defaultProvincePlaceholder")}
+              onChange={(event) => updateField("province", event.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="onboarding-city">{t("contacts.setup.defaultCity")}</Label>
+            <Input
+              id="onboarding-city"
+              value={data.city}
+              placeholder={t("contacts.setup.defaultCityPlaceholder")}
+              onChange={(event) => updateField("city", event.target.value)}
             />
           </div>
 

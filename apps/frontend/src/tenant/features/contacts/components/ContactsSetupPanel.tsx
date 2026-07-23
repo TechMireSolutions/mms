@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Save, Users } from "lucide-react";
+import { Save, Users, AlertTriangle } from "lucide-react";
 import {
   FieldConfig, ContactPreferences, TabDefinition,
   CONFIG_VERSION,
@@ -21,6 +21,7 @@ import { ToggleRow } from "@/components/ui/ToggleRow";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FormSelect } from "@/components/ui/FormSelect";
 
 interface ContactsSetupPanelProps {
   config: FieldConfig;
@@ -34,7 +35,7 @@ interface ContactsSetupPanelProps {
  * @returns React element.
  */
 export default function ContactsSetupPanel({ config, onConfigChange, mode }: ContactsSetupPanelProps): React.JSX.Element {
-  const { updatePrefs, prefs: contextPrefs } = useContactConfig();
+  const { updatePrefs, prefs: contextPrefs, countryCodes } = useContactConfig();
   const { logSetupAudit } = useContactMutations();
   const { t } = useTranslation();
 
@@ -58,6 +59,13 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
   });
 
   const [prefs, setPrefs] = useState<ContactPreferences>(() => contextPrefs);
+
+  const countryOptions = React.useMemo(() => {
+    return (countryCodes || []).map((c) => ({
+      value: c.country,
+      label: `${c.country} (+${c.code})`,
+    }));
+  }, [countryCodes]);
 
   const updatePreference = <K extends keyof ContactPreferences>(key: K, value: ContactPreferences[K]): void => {
     setPrefs((currentPreferences) => ({ ...currentPreferences, [key]: value }));
@@ -97,6 +105,16 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
   };
 
   const handleSave = (): void => {
+    // Validate inputs (e.g. no numbers inside province/city names)
+    if (prefs.defaultProvince && /\d/.test(prefs.defaultProvince)) {
+      notify.error(t("contacts.setup.invalidProvince"));
+      return;
+    }
+    if (prefs.defaultCity && /\d/.test(prefs.defaultCity)) {
+      notify.error(t("contacts.setup.invalidCity"));
+      return;
+    }
+
     const applyTitleCaseToTabs = (tabs: TabDefinition[]) => tabs.map((tab) => ({ ...tab, label: toTitleCase(tab.label) }));
     saveSettings({}, {
       version: CONFIG_VERSION,
@@ -139,6 +157,15 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
 
       {showPrefs && (
         <>
+          {!saved && (
+            <div
+              className="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning"
+              role="alert"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>{t("contacts.setup.unsavedWarning")}</span>
+            </div>
+          )}
           
           <section className="rounded-xl border border-border bg-card overflow-hidden">
             <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">
@@ -149,10 +176,11 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div>
                   <label className={FORM_LABEL} htmlFor="defaultCountry">{t('contacts.setup.defaultCountry')}</label>
-                  <Input
+                  <FormSelect
                     id="defaultCountry"
                     value={prefs.defaultCountry || ""}
-                    onChange={(e) => updatePreference("defaultCountry", e.target.value)}
+                    onChange={(val) => updatePreference("defaultCountry", val)}
+                    options={countryOptions}
                     placeholder={t('contacts.setup.defaultCountryPlaceholder')}
                   />
                 </div>
