@@ -107,6 +107,9 @@ export async function initDb(): Promise<void> {
       connectionString,
       max: config.pgPoolMax,
     });
+    pool.on('error', (err) => {
+      console.error('Unexpected database pool client error:', err);
+    });
 
     _rootDb = drizzle(pool, { schema });
     setDb(_rootDb);
