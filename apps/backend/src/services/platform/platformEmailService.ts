@@ -153,24 +153,26 @@ export async function dispatchPlatformVerificationEmail(
     'If you did not request this, you can ignore this email.',
   ].join('\n');
 
-  const result = await sendPlatformEmail({
-    to: input.email,
-    subject: input.subject,
-    text,
-  });
+  try {
+    const result = await sendPlatformEmail({
+      to: input.email,
+      subject: input.subject,
+      text,
+    });
 
-  if (result.sent) {
-    return { sent: true };
-  }
+    if (result.sent) {
+      return { sent: true };
+    }
 
-  if (process.env.NODE_ENV !== 'production' && !isPlatformSmtpConfigured()) {
-    console.info(`[MMS] ${input.logLabel} for ${input.email}: ${input.code}`);
+    // Fallback: Log the verification code and return it so registration isn't blocked by email failure
+    console.warn(
+      `[MMS] ${input.logLabel} for ${input.email}: ${input.code} (Email delivery failed: ${result.message || 'unknown'})`,
+    );
+    return { sent: false, devCode: input.code };
+  } catch (error) {
+    console.warn(
+      `[MMS] ${input.logLabel} for ${input.email}: ${input.code} (Email delivery threw: ${error instanceof Error ? error.message : error})`,
+    );
     return { sent: false, devCode: input.code };
   }
-
-  if (!isPlatformSmtpConfigured()) {
-    throw new Error('Platform email is not configured');
-  }
-
-  throw new Error(result.message ?? 'Failed to send verification email');
 }
