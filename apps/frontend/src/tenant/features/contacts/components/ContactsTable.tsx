@@ -1,9 +1,17 @@
 import React, { useState, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  MoreHorizontal, MessageCircle, MessageSquare,
-  Edit2, Trash2, ChevronUp, ChevronDown,
-  Copy, Eye, MapPin, User, RotateCcw, Mail,
+  MoreHorizontal,
+  ChevronUp,
+  ChevronDown,
+  User,
+  MessageCircle,
+  Eye,
+  Edit2,
+  Mail,
+  MessageSquare,
+  Trash2,
+  RotateCcw,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -13,57 +21,20 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   getDisplayName, 
-  getPrimaryPhone, 
+  getPrimaryPhone,
   getPrimaryEmail, 
   hasWhatsApp, 
-  Contact, 
-  formatDate,
-  calculateDetailedSolarAge,
-  getLunarDateString,
-  calculateDetailedLunarAge,
-  calcAge
+  Contact,
 } from "@mms/shared";
-import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatContactCellValue } from '@/lib/contacts/contactI18n';
+import { formatContactDobWithAge, resolveContactPhoneDisplay } from "@/lib/contacts/contactI18n";
+import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
+import { UserAvatar } from "@/components/ui/UserAvatar";
+import { CopyBtn } from "@/components/ui/CopyBtn";
 
-function GenderIcon({ gender }: { gender?: string }): React.JSX.Element | null {
-  if (!gender) return null;
-  return <User className="w-3.5 h-3.5 text-muted-foreground inline" />;
-}
 const ContactDetailDrawer = lazy(() => import("@/tenant/features/contacts/components/ContactDetailDrawer"));
 
-import ContactAvatar from "@/tenant/features/contacts/components/ContactAvatar";
-
-interface CopyBtnProps {
-  text: string;
-}
-
-function CopyBtn({ text }: CopyBtnProps): React.JSX.Element {
-  const { t } = useTranslation();
-  const [copied, setCopied] = useState<boolean>(false);
-  const copyToClipboard = (clickEvent: React.MouseEvent<HTMLButtonElement>): void => {
-    clickEvent.stopPropagation();
-    navigator.clipboard.writeText(text)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      })
-      .catch(() => undefined);
-  };
-  return (
-    <Button
-      onClick={copyToClipboard}
-      title={copied ? t('contacts.table.copied') : t('contacts.table.copy')}
-      aria-label={copied ? t('contacts.table.copied') : t('contacts.table.copy')}
-      variant="ghost"
-      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded text-muted-foreground hover:text-foreground"
-      type="button"
-    >
-      <Copy className="w-3 h-3" />
-    </Button>
-  );
-}
 
 
 interface ColumnConfig {
@@ -94,25 +65,6 @@ interface ContactsTableProps {
   canDelete?: boolean;
 }
 
-/**
- * ContactsTable component displaying contact list in a tabular format with sorting and custom columns.
- *
- * @param props - Component props.
- * @param props.contacts - The filtered/sorted contact list to render.
- * @param props.selected - Selected contact IDs.
- * @param props.onSelect - Callback when selecting a single contact row.
- * @param props.onSelectAll - Callback when checking select-all header.
- * @param props.onEdit - Callback when editing a contact.
- * @param props.onDelete - Callback when deleting a contact.
- * @param props.onWhatsApp - Callback to open WhatsApp dialog.
- * @param props.sortField - Field key currently sorted.
- * @param props.sortDir - Sort direction.
- * @param props.onSort - Callback when a header column is clicked for sorting.
- * @param props.columns - List of visible column configurations.
- * @param props.allContacts - The complete list of system contacts for resolving emergency contacts.
- * @param props.onUpdateContact - Optional callback to handle internal profile updates from the drawer.
- * @returns React.JSX.Element
- */
 export default function ContactsTable({
   contacts,
   selected,
@@ -134,7 +86,7 @@ export default function ContactsTable({
   canWrite = false,
   canDelete = false,
 }: ContactsTableProps): React.JSX.Element {
-  const { prefs } = useContactConfig();
+  const { prefs, countryCodesMap } = useContactConfig();
   const { t } = useTranslation();
   const [viewContact, setViewContact] = useState<Contact | null>(null);
 
@@ -163,7 +115,12 @@ export default function ContactsTable({
         return (
           <td key="name" className="px-4 py-3">
             <div className="flex items-center gap-3">
-              <ContactAvatar contact={contact} />
+              <UserAvatar
+                id={contact.id}
+                name={getDisplayName(contact)}
+                avatar={contact.avatar}
+                className="w-8 h-8 rounded-full text-xs"
+              />
               <div>
                 <Button
                   onClick={() => setViewContact(contact)}
@@ -174,16 +131,8 @@ export default function ContactsTable({
                   {getDisplayName(contact)}
                 </Button>
                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap leading-normal">
-                  <GenderIcon gender={contact.gender} />
-                  {contact.dob && (
-                    <span>
-                      {t('contacts.table.dobLabel')} {formatDate(contact.dob)}
-                      {(() => {
-                        const age = calcAge(contact.dob);
-                        return age !== null ? ` (${age} y/o)` : "";
-                      })()}
-                    </span>
-                  )}
+                  {contact.gender && <User className="w-3.5 h-3.5 text-muted-foreground inline" />}
+                  {contact.dob && <span>{formatContactDobWithAge(contact.dob, t)}</span>}
                 </p>
                 {showArchived && contact.deletionReason && (
                   <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
@@ -195,11 +144,7 @@ export default function ContactsTable({
           </td>
         );
       case "phone": {
-        const primaryPhone = getPrimaryPhone(contact);
-        const firstPhoneObj = (contact.phones || []).find((p) => (p.number || "").trim().length > 0) || contact.phones?.[0];
-        const countryCode = firstPhoneObj?.countryCode || (primaryPhone?.startsWith("+") ? primaryPhone.split(" ")[0] : "+92");
-        const rawNumber = firstPhoneObj?.number || (primaryPhone ? primaryPhone.replace(countryCode, "").trim() : "");
-        const formattedNumber = rawNumber ? (rawNumber.replace(/(\d{3})(\d{7})/, '$1 $2') || rawNumber) : primaryPhone;
+        const { phone: primaryPhone, countryCode, phoneDisplay: formattedNumber } = resolveContactPhoneDisplay(contact, prefs, countryCodesMap);
 
         return (
           <td key="phone" className="px-4 py-3">
@@ -245,101 +190,18 @@ export default function ContactsTable({
             </div>
           </td>
         );
-      case "line1":
-        return <td key="line1" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{contact.addresses?.[0]?.line1 || (contact.line1 as string) || t('contacts.table.emptyDash')}</span></td>;
-      case "city": {
-        const cityValue = contact.addresses?.[0]?.city || (contact.city as string);
-        return (
-          <td key="city" className="px-4 py-3">
-            <div className="flex items-center gap-1">
-              <MapPin className="w-3 h-3 text-muted-foreground" />
-              <span className="text-[13px] text-muted-foreground">{cityValue || t('contacts.table.emptyDash')}</span>
-            </div>
-          </td>
-        );
-      }
-      case "gender":
-        return (
-          <td key="gender" className="px-4 py-3">
-            <span className="flex items-center gap-1.5 text-sm text-foreground capitalize">
-              <GenderIcon gender={contact.gender} />
-              {contact.gender}
-            </span>
-          </td>
-        );
-      case "dob":
-        return (
-          <td key="dob" className="px-4 py-3">
-            {contact.dob ? (
-              <div className="flex flex-col gap-0.5 text-[12px] text-muted-foreground leading-normal font-mono">
-                <span>{formatDate(contact.dob)}</span>
-                {prefs.showDetailedSolarAge && (
-                  <span className="text-[10px] text-muted-foreground/80">
-                    {t("contacts.table.solarAgeLabel")} {calculateDetailedSolarAge(contact.dob)}
-                  </span>
-                )}
-                {prefs.showLunarDob && (
-                  <span className="text-[10px] text-muted-foreground/80">
-                    {t("contacts.table.lunarDobLabel")} {getLunarDateString(contact.dob)}
-                  </span>
-                )}
-                {prefs.showDetailedLunarAge && (
-                  <span className="text-[10px] text-muted-foreground/80">
-                    {t("contacts.table.lunarAgeLabel")} {calculateDetailedLunarAge(contact.dob)}
-                  </span>
-                )}
-              </div>
-            ) : (
-              <span className="text-muted-foreground/40">—</span>
-            )}
-          </td>
-        );
-      case "state":
-        return <td key="state" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{contact.addresses?.[0]?.state || (contact.state as string) || (contact.province as string) || t('contacts.table.emptyDash')}</span></td>;
-      case "country":
-        return <td key="country" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{contact.addresses?.[0]?.country || (contact.country as string) || t('contacts.table.emptyDash')}</span></td>;
-      case "isSyed":
-        return (
-          <td key="isSyed" className="px-4 py-3">
-            {contact.isSyed ? <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-success/10 text-success border border-success/30">{t('contacts.table.yesSyed')}</span> : <span className="text-muted-foreground/40">{t('contacts.table.emptyDash')}</span>}
-          </td>
-        );
-      case "whatsapp":
-        return <td key="whatsapp" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{hasWhatsApp(contact) ? t('common.yes') : t('common.no')}</span></td>;
-      case "socials_platform": {
-        const platforms = (contact.socials || []).map((social) => social.platform).filter(Boolean);
-        return <td key="socials_platform" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{platforms.join(", ") || t('contacts.table.emptyDash')}</span></td>;
-      }
-      case "socials_url": {
-        const urls = (contact.socials || []).map((social) => social.url).filter(Boolean);
-        return <td key="socials_url" className="px-4 py-3"><span className="text-[13px] text-muted-foreground truncate max-w-[150px] block" title={urls.join(", ")}>{urls.join(", ") || t('contacts.table.emptyDash')}</span></td>;
-      }
-      case "emergency_contact": {
-        const emergencyContactNames = (contact.emergencyContacts || []).map((emergencyContact) => {
-          if (emergencyContact.name) return emergencyContact.name;
-          if (emergencyContact.contactId) {
-            const linkedContact = allContacts.find((contact) => String(contact.id) === String(emergencyContact.contactId));
-            return linkedContact ? linkedContact.name : `${t('contacts.table.contactIdPrefix')}${emergencyContact.contactId}`;
-          }
-          return null;
-        }).filter(Boolean);
-        return <td key="emergency_contact" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{emergencyContactNames.join(", ") || t('contacts.table.emptyDash')}</span></td>;
-      }
-      case "emergency_relationship": {
-        const relationships = (contact.emergencyContacts || []).map((emergencyContact) => emergencyContact.relationship).filter(Boolean);
-        return <td key="emergency_relationship" className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{relationships.join(", ") || t('contacts.table.emptyDash')}</span></td>;
-      }
-
       default:
-        return <td key={col.id} className="px-4 py-3"><span className="text-[13px] text-muted-foreground">{formatContactCellValue(contact[col.id], t)}</span></td>;
+        return (
+          <ContactMetadataCell
+            key={col.id}
+            colId={col.id}
+            contact={contact}
+            prefs={prefs}
+            allContacts={allContacts}
+            variant="table"
+          />
+        );
     }
-  };
-  const COL_SORT_FIELD: Record<string, string> = {
-    name: "name",
-    isSyed: "isSyed",
-    city: "city",
-    gender: "gender",
-    dob: "dob",
   };
 
   return (
@@ -357,7 +219,7 @@ export default function ContactsTable({
                 />
               </th>
               {columns.map((col) => {
-                const sortFieldKey = COL_SORT_FIELD[col.id] || col.sortField;
+                const sortFieldKey = col.sortField || col.id;
                 return sortFieldKey ? (
                   <TH key={col.id} field={sortFieldKey}>{col.label}</TH>
                 ) : (
@@ -385,7 +247,7 @@ export default function ContactsTable({
                       <Checkbox
                         checked={isSelected}
                         onCheckedChange={() => onSelect(contact.id)}
-                        aria-label={`Select ${getDisplayName(contact)}`}
+                        aria-label={t("contacts.table.selectContact", { name: getDisplayName(contact) })}
                         className="cursor-pointer"
                       />
                     </td>

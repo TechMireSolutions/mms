@@ -9,7 +9,7 @@ import {
   DEFAULT_FORM_TABS,
   INITIAL_FIELD_SEED,
 } from "@mms/shared";
-import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactMutations } from "@/tenant/features/contacts/hooks/useContacts";
 import { apiJson } from "@/lib/apiClient";
@@ -29,11 +29,6 @@ interface ContactsSetupPanelProps {
   mode?: "fields" | "preferences";
 }
 
-/**
- * ContactsSetupPanel component providing a full dynamic field configuration UI.
- * @param props Component properties.
- * @returns React element.
- */
 export default function ContactsSetupPanel({ config, onConfigChange, mode }: ContactsSetupPanelProps): React.JSX.Element {
   const { updatePrefs, prefs: contextPrefs, countryCodes } = useContactConfig();
   const { logSetupAudit } = useContactMutations();
@@ -170,56 +165,56 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
           <section className="rounded-xl border border-border bg-card overflow-hidden">
             <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">
               <Users className="w-4 h-4 text-primary" />
-              <span className="text-sm font-bold text-foreground">{t('contacts.setup.generalPreferences')}</span>
+              <span className="text-sm font-bold text-foreground">{t("contacts.setup.generalPreferences")}</span>
             </div>
             <div className="p-4 space-y-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div>
-                  <label className={FORM_LABEL} htmlFor="defaultCountry">{t('contacts.setup.defaultCountry')}</label>
+                  <label className={FORM_LABEL} htmlFor="defaultCountry">{t("contacts.setup.defaultCountry")}</label>
                   <FormSelect
                     id="defaultCountry"
                     value={prefs.defaultCountry || ""}
                     onChange={(val) => updatePreference("defaultCountry", val)}
                     options={countryOptions}
-                    placeholder={t('contacts.setup.defaultCountryPlaceholder')}
+                    placeholder={t("contacts.setup.defaultCountryPlaceholder")}
                   />
                 </div>
                 <div>
-                  <label className={FORM_LABEL} htmlFor="defaultProvince">{t('contacts.setup.defaultProvince')}</label>
+                  <label className={FORM_LABEL} htmlFor="defaultProvince">{t("contacts.setup.defaultProvince")}</label>
                   <Input
                     id="defaultProvince"
                     value={prefs.defaultProvince || ""}
                     onChange={(e) => updatePreference("defaultProvince", e.target.value)}
-                    placeholder={t('contacts.setup.defaultProvincePlaceholder')}
+                    placeholder={t("contacts.setup.defaultProvincePlaceholder")}
                   />
                 </div>
                 <div>
-                  <label className={FORM_LABEL} htmlFor="defaultCity">{t('contacts.setup.defaultCity')}</label>
+                  <label className={FORM_LABEL} htmlFor="defaultCity">{t("contacts.setup.defaultCity")}</label>
                   <Input
                     id="defaultCity"
                     value={prefs.defaultCity || ""}
                     onChange={(e) => updatePreference("defaultCity", e.target.value)}
-                    placeholder={t('contacts.setup.defaultCityPlaceholder')}
+                    placeholder={t("contacts.setup.defaultCityPlaceholder")}
                   />
                 </div>
               </div>
 
               <div className="border-t border-border/60 pt-3 mt-3 space-y-2">
                 <ToggleRow
-                  label={t('contacts.setup.showDetailedSolarAge')}
-                  description={t('contacts.setup.showDetailedSolarAgeDesc')}
+                  label={t("contacts.setup.showDetailedSolarAge")}
+                  description={t("contacts.setup.showDetailedSolarAgeDesc")}
                   value={!!prefs.showDetailedSolarAge}
                   onChange={(val) => updatePreference("showDetailedSolarAge", val)}
                 />
                 <ToggleRow
-                  label={t('contacts.setup.showLunarDob')}
-                  description={t('contacts.setup.showLunarDobDesc')}
+                  label={t("contacts.setup.showLunarDob")}
+                  description={t("contacts.setup.showLunarDobDesc")}
                   value={!!prefs.showLunarDob}
                   onChange={(val) => updatePreference("showLunarDob", val)}
                 />
                 <ToggleRow
-                  label={t('contacts.setup.showDetailedLunarAge')}
-                  description={t('contacts.setup.showDetailedLunarAgeDesc')}
+                  label={t("contacts.setup.showDetailedLunarAge")}
+                  description={t("contacts.setup.showDetailedLunarAgeDesc")}
                   value={!!prefs.showDetailedLunarAge}
                   onChange={(val) => updatePreference("showDetailedLunarAge", val)}
                 />
@@ -236,7 +231,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
           className="flex items-center gap-2 px-5 min-h-[44px]"
         >
           <Save className="w-4 h-4" />
-          <span>{saved ? t('contacts.form.saved') : t('contacts.setup.saveAndApply')}</span>
+          <span>{saved ? t("contacts.form.saved") : t("contacts.setup.saveAndApply")}</span>
         </Button>
       </div>
     </div>

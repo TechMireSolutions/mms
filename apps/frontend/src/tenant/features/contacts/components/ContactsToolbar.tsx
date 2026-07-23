@@ -6,10 +6,10 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import ColumnCustomizer from "@/tenant/features/contacts/components/ColumnCustomizer";
+import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import { toTitleCase } from "@mms/shared";
+import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 
 interface ContactsToolbarProps {
   search: string;
@@ -46,9 +46,9 @@ export default function ContactsToolbar({
   onShowDeletedChange,
   canViewDeleted = false,
 }: ContactsToolbarProps): React.JSX.Element {
-  const { availableColumns, genders, systemSortOptions } = useContactConfig();
+  const { availableColumns, genders, systemSortOptions, columnRegistry, updateUserColumnLayout } = useContactConfig();
   const { t } = useTranslation();
- 
+
   const sortOptions = React.useMemo(() => {
     const dynamicSorts = availableColumns
       .filter((column) => column.sortField)
@@ -66,19 +66,29 @@ export default function ContactsToolbar({
 
     return combined;
   }, [availableColumns, systemSortOptions]);
- 
+
+  const columnCustomizerLabels = React.useMemo(
+    () => ({
+      trigger: t("contacts.columns"),
+      title: t("contacts.columns"),
+      visibleAndOrder: t("contacts.visibleAndOrder"),
+      hidden: t("contacts.hidden"),
+      fixed: t("contacts.fixed"),
+      hideColumn: (label: string) => t("contacts.hideColumn", { label }),
+    }),
+    [t],
+  );
+
   return (
     <div className="flex flex-col sm:flex-row gap-2">
-      
       <SearchBar
         value={search}
         onChange={onSearchChange}
         placeholder={t("contacts.searchPlaceholder")}
         className="flex-1"
       />
- 
+
       <div className="flex items-center gap-2 flex-shrink-0">
-        
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -108,7 +118,7 @@ export default function ContactsToolbar({
                 onCheckedChange={() => onGenderChange(genderOption)}
                 className="text-sm"
               >
-                {genderOption ? toTitleCase(genderOption) : t("contacts.allGenders")}
+                {genderOption ? formatContactGenderLabel(genderOption, t) : t("contacts.allGenders")}
               </DropdownMenuCheckboxItem>
             ))}
 
@@ -127,7 +137,6 @@ export default function ContactsToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        
         {hasActiveFilters && (
           <Button
             type="button"
@@ -157,8 +166,11 @@ export default function ContactsToolbar({
           </Button>
         )}
 
-        
-        <ColumnCustomizer />
+        <ModuleColumnCustomizer
+          columnRegistry={columnRegistry}
+          updateUserColumnLayout={updateUserColumnLayout}
+          labels={columnCustomizerLabels}
+        />
       </div>
     </div>
   );

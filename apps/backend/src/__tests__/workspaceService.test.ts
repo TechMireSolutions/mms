@@ -45,7 +45,7 @@ describe('workspaceService', () => {
       enabled: true,
     };
     
-    vi.mocked(mockDb.where).mockResolvedValue([mockWs] as any);
+    vi.mocked(mockDb.where).mockResolvedValue([mockWs] as unknown as never);
 
     const removed = await deleteWorkspace(' Demo ');
 

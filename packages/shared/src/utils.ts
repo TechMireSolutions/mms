@@ -982,5 +982,325 @@ export function calcPercentage(value: number, total: number): number {
   return Math.round((value / total) * 100);
 }
 
+/**
+ * Strips blank or empty items from contact phones, emails, addresses, socials, and emergency contacts.
+ * @param draft - Partial contact record to clean.
+ * @returns Cleaned partial contact record.
+ */
+export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
+  const result = { ...draft };
+
+  if (Array.isArray(result.phones)) {
+    result.phones = result.phones.filter((phone) => (phone.number || "").trim().length > 0);
+  }
+  if (Array.isArray(result.emails)) {
+    result.emails = result.emails.filter((email) => (email.address || "").trim().length > 0);
+  }
+  if (Array.isArray(result.addresses)) {
+    result.addresses = result.addresses.filter((address) => (address.line1 || "").trim().length > 0);
+  }
+  if (Array.isArray(result.socials)) {
+    result.socials = result.socials.filter((social) => (social.url || "").trim().length > 0);
+  }
+  if (Array.isArray(result.emergencyContacts)) {
+    result.emergencyContacts = result.emergencyContacts.filter(
+      (em) => em.contactId != null && String(em.contactId).trim().length > 0,
+    );
+  }
+
+  return result;
+}
+
+/**
+ * Normalizes a single Phone entry into a valid PhoneNumber object.
+ */
+export function normalizePhoneItem(item: unknown, index = 0, defaultCode = "+92"): ContactPhone {
+  if (!item) return { label: "Mobile", number: "", countryCode: defaultCode, isPrimary: index === 0 };
+  if (typeof item === "string") {
+    const parsed = parsePhoneNumber(item.trim(), defaultCode);
+    return { label: "Mobile", number: parsed.number || item.trim(), countryCode: parsed.countryCode || defaultCode, isPrimary: index === 0 };
+  }
+  if (typeof item === "object") {
+    const obj = item as Record<string, unknown>;
+    const rawNum = String(obj.number || obj.phone || obj.value || obj.num || "").trim();
+    const label = String(obj.label || obj.type || "Mobile").trim() || "Mobile";
+    const countryCode = String(obj.countryCode || obj.code || defaultCode).trim() || defaultCode;
+    const isPrimary = typeof obj.isPrimary === "boolean" ? obj.isPrimary : index === 0;
+    const whatsappStatus = obj.whatsappStatus as ContactPhone["whatsappStatus"];
+    const parsed = parsePhoneNumber(rawNum, countryCode);
+    return {
+      label,
+      number: parsed.number || rawNum,
+      countryCode: parsed.countryCode || countryCode,
+      isPrimary,
+      whatsappStatus,
+    };
+  }
+  return { label: "Mobile", number: "", countryCode: defaultCode, isPrimary: index === 0 };
+}
+
+/**
+ * Normalizes a single Email entry into a valid EmailAddress object.
+ */
+export function normalizeEmailItem(item: unknown, index = 0): ContactEmail {
+  if (!item) return { label: "Personal", address: "", isPrimary: index === 0 };
+  if (typeof item === "string") {
+    return { label: "Personal", address: item.trim(), isPrimary: index === 0 };
+  }
+  if (typeof item === "object") {
+    const obj = item as Record<string, unknown>;
+    const address = String(obj.address || obj.email || obj.value || "").trim();
+    const label = String(obj.label || obj.type || "Personal").trim() || "Personal";
+    const isPrimary = typeof obj.isPrimary === "boolean" ? obj.isPrimary : index === 0;
+    const isVerified = typeof obj.isVerified === "boolean" ? obj.isVerified : undefined;
+    return { label, address, isPrimary, isVerified };
+  }
+  return { label: "Personal", address: "", isPrimary: index === 0 };
+}
+
+/**
+ * Normalizes a single Address entry into a valid Address object.
+ */
+export function normalizeAddressItem(
+  item: unknown,
+  defaultCity = "",
+  defaultProvince = "",
+  defaultCountry = "",
+  index = 0
+): ContactAddress {
+  if (!item) return { label: "Home", line1: "", city: defaultCity, state: defaultProvince, country: defaultCountry, isPrimary: index === 0 };
+  if (typeof item === "string") {
+    return { label: "Home", line1: item.trim(), city: defaultCity, state: defaultProvince, country: defaultCountry, isPrimary: index === 0 };
+  }
+  if (typeof item === "object") {
+    const obj = item as Record<string, unknown>;
+    const line1 = String(obj.line1 || obj.address || obj.street || obj.value || "").trim();
+    const city = String(obj.city || defaultCity).trim();
+    const state = String(obj.state || obj.province || defaultProvince).trim();
+    const country = String(obj.country || defaultCountry).trim();
+    const label = String(obj.label || obj.type || "Home").trim() || "Home";
+    const isPrimary = typeof obj.isPrimary === "boolean" ? obj.isPrimary : index === 0;
+    return { label, line1, city, state, country, isPrimary };
+  }
+  return { label: "Home", line1: "", city: defaultCity, state: defaultProvince, country: defaultCountry, isPrimary: index === 0 };
+}
+
+/**
+ * Normalizes a single Social link entry into a valid SocialLink object.
+ */
+export function normalizeSocialItem(item: unknown): ContactSocial {
+  if (!item) return { platform: "WhatsApp", url: "" };
+  if (typeof item === "string") {
+    return { platform: "WhatsApp", url: item.trim() };
+  }
+  if (typeof item === "object") {
+    const obj = item as Record<string, unknown>;
+    const url = String(obj.url || obj.link || obj.value || "").trim();
+    const platform = String(obj.platform || obj.type || "WhatsApp").trim() || "WhatsApp";
+    return { platform, url };
+  }
+  return { platform: "WhatsApp", url: "" };
+}
+
+/**
+ * Normalizes a single Emergency Contact entry into a valid EmergencyContact object.
+ */
+export function normalizeEmergencyItem(item: unknown): EmergencyContact {
+  if (!item) return { relationship: "Father", contactId: "" };
+  if (typeof item === "string" || typeof item === "number") {
+    return { relationship: "Father", contactId: String(item) };
+  }
+  if (typeof item === "object") {
+    const obj = item as Record<string, unknown>;
+    const contactId = String(obj.contactId || obj.id || obj.targetId || "").trim();
+    const relationship = String(obj.relationship || obj.relation || obj.type || "Father").trim() || "Father";
+    return { relationship, contactId };
+  }
+  return { relationship: "Father", contactId: "" };
+}
+
+/**
+ * Normalizes a full Contact object for form edit and display operations.
+ */
+export function normalizeContactForEdit(
+  raw: Partial<Contact> | undefined,
+  initialDraft: Partial<Contact> | undefined,
+  defaultCity = "",
+  defaultProvince = "",
+  defaultCountry = ""
+): Partial<Contact> {
+  const merged: Partial<Contact> = {
+    firstName: "",
+    lastName: "",
+    name: "",
+    gender: "",
+    dob: "",
+    cnic: "",
+    isSyed: false,
+    notes: "",
+    phones: [],
+    emails: [],
+    addresses: [],
+    socials: [],
+    emergencyContacts: [],
+    relationships: [],
+    ...initialDraft,
+    ...raw,
+  };
+
+  let firstName = (merged.firstName || "").trim();
+  let lastName = (merged.lastName || "").trim();
+  const fullName = (merged.name || "").trim();
+
+  if (!firstName && fullName) {
+    const parts = fullName.split(" ").filter(Boolean);
+    firstName = parts[0] || "";
+    lastName = parts.slice(1).join(" ");
+  }
+
+  let phones: ContactPhone[] = Array.isArray(merged.phones)
+    ? merged.phones.map((item, idx) => normalizePhoneItem(item, idx))
+    : [];
+
+  const scalarPhone = typeof (merged as Record<string, unknown>).phone === "string"
+    ? String((merged as Record<string, unknown>).phone).trim()
+    : "";
+  if (scalarPhone && !phones.some((p) => (p.number || "").trim() === scalarPhone)) {
+    phones.unshift(normalizePhoneItem(scalarPhone, 0));
+  }
+
+  if (phones.length === 0) {
+    phones = [{ label: "Mobile", number: "", countryCode: "+92", isPrimary: true }];
+  }
+
+  let emails: ContactEmail[] = Array.isArray(merged.emails)
+    ? merged.emails.map((item, idx) => normalizeEmailItem(item, idx))
+    : [];
+
+  const scalarEmail = typeof (merged as Record<string, unknown>).email === "string"
+    ? String((merged as Record<string, unknown>).email).trim()
+    : "";
+  if (scalarEmail && !emails.some((e) => (e.address || "").trim().toLowerCase() === scalarEmail.toLowerCase())) {
+    emails.unshift(normalizeEmailItem(scalarEmail, 0));
+  }
+
+  if (emails.length === 0) {
+    emails = [{ label: "Personal", address: "", isPrimary: true }];
+  }
+
+  let addresses: ContactAddress[] = Array.isArray(merged.addresses)
+    ? merged.addresses.map((item, idx) => normalizeAddressItem(item, defaultCity, defaultProvince, defaultCountry, idx))
+    : [];
+
+  const scalarAddress = typeof (merged as Record<string, unknown>).address === "string"
+    ? String((merged as Record<string, unknown>).address).trim()
+    : "";
+  const scalarCity = typeof (merged as Record<string, unknown>).city === "string"
+    ? String((merged as Record<string, unknown>).city).trim()
+    : defaultCity;
+  const scalarState = typeof (merged as Record<string, unknown>).state === "string"
+    ? String((merged as Record<string, unknown>).state).trim()
+    : defaultProvince;
+  const scalarCountry = typeof (merged as Record<string, unknown>).country === "string"
+    ? String((merged as Record<string, unknown>).country).trim()
+    : defaultCountry;
+
+  if (scalarAddress && !addresses.some((a) => (a.line1 || "").trim() === scalarAddress)) {
+    addresses.unshift({
+      label: "Home",
+      line1: scalarAddress,
+      city: scalarCity,
+      state: scalarState,
+      country: scalarCountry,
+      isPrimary: true,
+    });
+  }
+
+  if (addresses.length === 0) {
+    addresses = [{
+      label: "Home",
+      line1: "",
+      city: defaultCity,
+      state: defaultProvince,
+      country: defaultCountry,
+      isPrimary: true,
+    }];
+  }
+
+  const socials: ContactSocial[] = Array.isArray(merged.socials)
+    ? merged.socials.map(normalizeSocialItem)
+    : [];
+
+  const emergencyContacts: EmergencyContact[] = Array.isArray(merged.emergencyContacts)
+    ? merged.emergencyContacts.map(normalizeEmergencyItem)
+    : [];
+
+  return {
+    ...merged,
+    firstName,
+    lastName,
+    name: fullName || (lastName ? `${firstName} ${lastName}`.trim() : firstName),
+    phones,
+    emails,
+    addresses,
+    socials,
+    emergencyContacts,
+  };
+}
+
+/**
+ * Synchronizes primary phone, email, and primary address scalar fields (phone, email, line1, city, state, country)
+ * onto the contact object from its structured collections.
+ * @param contact - Partial contact object
+ * @returns Contact object with updated/synchronized scalar fields
+ */
+export function syncContactScalarFields<T extends Partial<Contact>>(contact: T): T {
+  const result = { ...contact } as Record<string, unknown>;
+  const primaryPhoneStr = getPrimaryPhone(contact);
+  const primaryEmailStr = getPrimaryEmail(contact);
+  const firstAddr = contact.addresses?.[0];
+
+  if (primaryPhoneStr) {
+    result.phone = primaryPhoneStr;
+  } else {
+    delete result.phone;
+  }
+
+  if (primaryEmailStr) {
+    result.email = primaryEmailStr;
+  } else {
+    delete result.email;
+  }
+
+  if (firstAddr?.line1) {
+    result.line1 = firstAddr.line1;
+  } else {
+    delete result.line1;
+  }
+
+  if (firstAddr?.city) {
+    result.city = firstAddr.city;
+  } else {
+    delete result.city;
+  }
+
+  if (firstAddr?.state) {
+    result.state = firstAddr.state;
+  } else {
+    delete result.state;
+  }
+
+  if (firstAddr?.country) {
+    result.country = firstAddr.country;
+  } else {
+    delete result.country;
+  }
+
+  return result as T;
+}
+
+
+
+
 
 

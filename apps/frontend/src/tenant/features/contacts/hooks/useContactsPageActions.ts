@@ -1,9 +1,9 @@
-import { useCallback } from 'react';
-import type { Contact } from '@mms/shared';
-import { notify } from '@/lib/notify';
-import { reportClientError } from '@/lib/clientErrorReporting';
-import { useTranslation } from '@/hooks/useTranslation';
-import { useContactMutations } from '@/tenant/features/contacts/hooks/useContacts';
+import { useCallback } from "react";
+import type { Contact } from "@mms/shared";
+import { notify } from "@/lib/notify";
+import { reportClientError } from "@/lib/clientErrorReporting";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useContactMutations } from "@/tenant/features/contacts/hooks/useContacts";
 
 export function useContactsPageActions() {
   const { t } = useTranslation();

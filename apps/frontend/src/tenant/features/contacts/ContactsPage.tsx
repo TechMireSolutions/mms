@@ -1,16 +1,12 @@
 import React, { useMemo, useState, lazy, Suspense, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserPlus, AlertTriangle, MessageCircle, MessageSquare, Download, Users, UserX, RefreshCw, X, Loader2, Trash2, RotateCcw } from "lucide-react";
+import { UserPlus, AlertTriangle, Download, Users, UserX, Loader2, Trash2, X, MessageCircle, MessageSquare, RotateCcw, RefreshCw } from "lucide-react";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { getPrimaryEmail, getPrimaryPhone, hasWhatsApp, Contact, CONTACTS_MODULE_CONTRACT, resolveModuleTierTab, getDisplayName } from "@mms/shared";
-import type { AppTranslationKey } from "@mms/shared";
-import { useTranslation } from "@/hooks/useTranslation";
+import { Contact, CONTACTS_MODULE_CONTRACT, resolveModuleTierTab, hasWhatsApp, getPrimaryPhone, getPrimaryEmail, getDisplayName } from "@mms/shared";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useContacts, useContactsCollection, useContactsPaginated, useContactsByIds, CONTACTS_DUPLICATES_QUERY_KEY } from "@/tenant/features/contacts/hooks/useContacts";
-// ... (rest of imports unchanged, targeting line 146-170 for inner body refactor)
-
 import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
 import { useContactsPageActions } from "@/tenant/features/contacts/hooks/useContactsPageActions";
 import { useContactsPageState } from "@/tenant/features/contacts/hooks/useContactsPageState";
@@ -19,7 +15,6 @@ import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
-import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { Button } from "@/components/ui/button";
 import ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
@@ -40,82 +35,14 @@ import {
   relayGoogleContactsOAuthPopup,
   stashGoogleContactsOAuthCode,
   GOOGLE_CONTACTS_OAUTH_MESSAGE,
-  shouldOpenContactsSyncSetup,
 } from "@/lib/contacts/googleContactsOAuth";
+
+import ContactsSettingsPanel from "@/tenant/features/contacts/components/ContactsSettingsPanel";
 
 const ContactForm = lazy(() => import("@/tenant/features/contacts/components/ContactForm"));
 const DuplicateDetection = lazy(() => import("@/tenant/features/contacts/components/DuplicateDetection"));
 const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
-const ContactsSetupPanel = lazy(() => import("@/tenant/features/contacts/components/ContactsSetupPanel"));
-const ContactSyncPanel = lazy(() => import("@/tenant/features/contacts/components/ContactSyncPanel"));
 
-function LazyFallback(): React.JSX.Element {
-  const { t } = useTranslation();
-  return (
-    <div className="flex items-center justify-center py-12" role="status" aria-live="polite">
-      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" aria-hidden="true" />
-      <span className="sr-only">{t("common.loading")}</span>
-    </div>
-  );
-}
-interface SettingsPanelProps {
-  contacts: Contact[];
-  onImport: (list: Contact[]) => void;
-  canWrite: boolean;
-}
-
-const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
-  fields: "contacts.setup.fields",
-  preferences: "contacts.setup.preferences",
-  sync: "contacts.setup.sync",
-};
-
-function SettingsPanel({ contacts, onImport, canWrite, canEditSetup }: SettingsPanelProps & { canEditSetup: boolean }) {
-  const { t } = useTranslation();
-  const { fieldConfig, updateConfig } = useContactConfig();
-  const settingsSubTabs = useMemo(() => {
-    const tabsFromConfig = fieldConfig.settingsSubTabs || [];
-    return CONTACTS_MODULE_CONTRACT.setupSubTabs
-      .map((key, index) => {
-        const setupTabConfig = tabsFromConfig.find((tab) => tab.key === key);
-        return {
-          key,
-          label: SETUP_TAB_LABEL_KEYS[key] ? t(SETUP_TAB_LABEL_KEYS[key]) : setupTabConfig?.label ?? key,
-          order: setupTabConfig?.order ?? index,
-          enabled: setupTabConfig?.enabled ?? true,
-        };
-      })
-      .filter((tab) => tab.enabled)
-      .sort((a, b) => a.order - b.order);
-  }, [fieldConfig.settingsSubTabs, t]);
-
-  const [sub, setSub] = useState<string>(() => {
-    if (shouldOpenContactsSyncSetup()) return 'sync';
-    return settingsSubTabs[0]?.key || "preferences";
-  });
-  return (
-    <div className="space-y-4">
-      <SubTabBar
-        tabs={settingsSubTabs.map((tab) => ({ key: tab.key, label: tab.label }))}
-        value={sub}
-        onChange={setSub}
-      />
-      <Suspense fallback={<LazyFallback />}>
-        {sub === "preferences" && !canEditSetup ? (
-          <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
-            {t("contacts.setupReadOnly")}
-          </p>
-        ) : null}
-        {sub === "preferences" && canEditSetup && (
-          <ContactsSetupPanel config={fieldConfig} onConfigChange={updateConfig as (config: object) => void} mode="preferences" />
-        )}
-        {sub === "sync" && (
-          <ContactSyncPanel contacts={contacts} onImport={onImport as (contacts: object[]) => void} canWrite={canWrite} />
-        )}
-      </Suspense>
-    </div>
-  );
-}
 
 function ContactsInner() {
   const queryClient = useQueryClient();
@@ -264,15 +191,15 @@ function ContactsInner() {
       clearGoogleContactsOAuthUrlParams();
       if (!relayGoogleContactsOAuthPopup(code)) {
         stashGoogleContactsOAuthCode(code);
-        setActiveTab('setup');
+        setActiveTab("setup");
       }
     }
 
     const handleOAuthMessage = (event: MessageEvent): void => {
       if (event.origin !== window.location.origin) return;
-      if (event.data?.type !== GOOGLE_CONTACTS_OAUTH_MESSAGE || typeof event.data.code !== 'string') return;
+      if (event.data?.type !== GOOGLE_CONTACTS_OAUTH_MESSAGE || typeof event.data.code !== "string") return;
       stashGoogleContactsOAuthCode(event.data.code);
-      setActiveTab('setup');
+      setActiveTab("setup");
     };
     window.addEventListener('message', handleOAuthMessage);
     return () => window.removeEventListener('message', handleOAuthMessage);
@@ -632,7 +559,7 @@ function ContactsInner() {
         ) : effectiveTab === "setup" ? (
           <motion.div key="setup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
             <ErrorBoundary>
-              <SettingsPanel
+              <ContactsSettingsPanel
                 contacts={contacts}
                 canWrite={canWrite}
                 canEditSetup={canEditSetup}
@@ -654,7 +581,7 @@ function ContactsInner() {
               defaultCity={defaultCity}
               defaultProvince={defaultProvince}
               onClose={() => { setShowForm(false); setEditContact(null); }}
-              onSave={handleSave as (contact: object) => void}
+              onSave={handleSave}
             />
           {showDuplicates && (
             <DuplicateDetection

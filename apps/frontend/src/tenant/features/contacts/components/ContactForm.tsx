@@ -21,8 +21,10 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import ContactPicker from "@/tenant/features/contacts/components/contactLink/ContactPicker";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
+import { getFallbackCountryCode } from "@/lib/contacts/contactI18n";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { AvatarCropper } from "@/components/ui/AvatarCropper";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import { cn } from "@/lib/utils";
 import {
   useContactConfig,
@@ -32,11 +34,7 @@ import {
 import {
   toTitleCase,
   applyTitleCaseToContact,
-  normalizeToE164,
   parsePhoneNumber,
-  getPrimaryPhone,
-  getPrimaryEmail,
-  getInitials,
   getDisplayName,
   Contact,
   PhoneNumber,
@@ -47,6 +45,9 @@ import {
   RELATIONSHIPS,
   todayISO,
   formatCnic,
+  cleanContactDraft,
+  normalizeContactForEdit,
+  syncContactScalarFields,
 } from "@mms/shared";
 import {
   Field,
@@ -57,41 +58,10 @@ import {
 import { FORM_CARD } from "@/components/ui/formStyles";
 import { SectionCard } from "@/components/ui/SectionCard";
 
-const SUPPORTED_DIAL_CODES = ["+92", "+1", "+44"] as const;
-
-const parsePhoneEntry = (phone: PhoneNumber) => {
+const parsePhoneEntry = (phone: PhoneNumber, defaultCountryCode = "+92"): { countryCode: string; number: string } => {
   const trimmed = (phone.number || "").trim();
-  if (trimmed.startsWith("+") || trimmed.startsWith("00")) {
-    return parsePhoneNumber(trimmed, phone.countryCode || "+92", [...SUPPORTED_DIAL_CODES]);
-  }
-  const e164 = normalizeToE164(phone.countryCode || "+92", phone.number);
-  return parsePhoneNumber(e164, phone.countryCode || "+92", [...SUPPORTED_DIAL_CODES]);
-};
-
-
-
-const cleanContactDraft = (draft: Partial<Contact>): Partial<Contact> => {
-  const result = { ...draft };
-
-  if (Array.isArray(result.phones)) {
-    result.phones = result.phones.filter((phone) => (phone.number || "").trim().length > 0);
-  }
-  if (Array.isArray(result.emails)) {
-    result.emails = result.emails.filter((email) => (email.address || "").trim().length > 0);
-  }
-  if (Array.isArray(result.addresses)) {
-    result.addresses = result.addresses.filter((address) => (address.line1 || "").trim().length > 0);
-  }
-  if (Array.isArray(result.socials)) {
-    result.socials = result.socials.filter((social) => (social.url || "").trim().length > 0);
-  }
-  if (Array.isArray(result.emergencyContacts)) {
-    result.emergencyContacts = result.emergencyContacts.filter(
-      (em) => em.contactId != null && String(em.contactId).trim().length > 0,
-    );
-  }
-
-  return result;
+  const parsed = parsePhoneNumber(trimmed, phone.countryCode || defaultCountryCode);
+  return { countryCode: parsed.countryCode, number: parsed.number || trimmed };
 };
 
 interface ContactFormProps {
@@ -107,237 +77,16 @@ interface ContactFormProps {
 }
 
 const CONTACT_TABS = [
-  { key: "basic", label: "Basic Info", icon: User },
-  { key: "phones", label: "Phones", icon: Phone },
-  { key: "emails", label: "Emails", icon: Mail },
-  { key: "addresses", label: "Addresses", icon: MapPin },
-  { key: "socials", label: "Socials", icon: Share2 },
-  { key: "emergency", label: "Emergency", icon: Heart },
+  { key: "basic", labelKey: "contacts.form.tabBasic", icon: User },
+  { key: "phones", labelKey: "contacts.form.tabPhones", icon: Phone },
+  { key: "emails", labelKey: "contacts.form.tabEmails", icon: Mail },
+  { key: "addresses", labelKey: "contacts.form.tabAddresses", icon: MapPin },
+  { key: "socials", labelKey: "contacts.form.tabSocials", icon: Share2 },
+  { key: "emergency", labelKey: "contacts.form.tabEmergency", icon: Heart },
 ] as const;
 
 type TabKey = (typeof CONTACT_TABS)[number]["key"];
 
-const normalizePhoneItem = (item: unknown, index: number): PhoneNumber => {
-  if (!item) return { label: "Mobile", number: "", countryCode: "+92", isPrimary: index === 0 };
-  if (typeof item === "string") {
-    const parsed = parsePhoneEntry({ label: "Mobile", number: item, countryCode: "+92" });
-    return { label: "Mobile", number: parsed.number || item, countryCode: parsed.countryCode || "+92", isPrimary: index === 0 };
-  }
-  if (typeof item === "object") {
-    const obj = item as Record<string, unknown>;
-    const rawNum = String(obj.number || obj.phone || obj.value || obj.num || "").trim();
-    const label = String(obj.label || obj.type || "Mobile").trim();
-    const countryCode = String(obj.countryCode || obj.code || "+92").trim();
-    const isPrimary = typeof obj.isPrimary === "boolean" ? obj.isPrimary : index === 0;
-    const whatsappStatus = obj.whatsappStatus as PhoneNumber["whatsappStatus"];
-    const parsed = parsePhoneEntry({ label, number: rawNum, countryCode });
-    return {
-      label: label || "Mobile",
-      number: parsed.number || rawNum,
-      countryCode: countryCode || parsed.countryCode || "+92",
-      isPrimary,
-      whatsappStatus,
-    };
-  }
-  return { label: "Mobile", number: "", countryCode: "+92", isPrimary: index === 0 };
-};
-
-const normalizeEmailItem = (item: unknown, index: number): EmailAddress => {
-  if (!item) return { label: "Personal", address: "", isPrimary: index === 0 };
-  if (typeof item === "string") {
-    return { label: "Personal", address: item.trim(), isPrimary: index === 0 };
-  }
-  if (typeof item === "object") {
-    const obj = item as Record<string, unknown>;
-    const address = String(obj.address || obj.email || obj.value || "").trim();
-    const label = String(obj.label || obj.type || "Personal").trim();
-    const isPrimary = typeof obj.isPrimary === "boolean" ? obj.isPrimary : index === 0;
-    const isVerified = typeof obj.isVerified === "boolean" ? obj.isVerified : undefined;
-    return { label: label || "Personal", address, isPrimary, isVerified };
-  }
-  return { label: "Personal", address: "", isPrimary: index === 0 };
-};
-
-const normalizeAddressItem = (
-  item: unknown,
-  defaultCity: string,
-  defaultProvince: string,
-  defaultCountry: string,
-  index: number,
-): Address => {
-  if (!item) return { label: "Home", line1: "", city: defaultCity, state: defaultProvince, country: defaultCountry, isPrimary: index === 0 };
-  if (typeof item === "string") {
-    return { label: "Home", line1: item.trim(), city: defaultCity, state: defaultProvince, country: defaultCountry, isPrimary: index === 0 };
-  }
-  if (typeof item === "object") {
-    const obj = item as Record<string, unknown>;
-    const line1 = String(obj.line1 || obj.address || obj.street || obj.value || "").trim();
-    const city = String(obj.city || defaultCity).trim();
-    const state = String(obj.state || obj.province || defaultProvince).trim();
-    const country = String(obj.country || defaultCountry).trim();
-    const label = String(obj.label || obj.type || "Home").trim();
-    const isPrimary = typeof obj.isPrimary === "boolean" ? obj.isPrimary : index === 0;
-    return { label: label || "Home", line1, city, state, country, isPrimary };
-  }
-  return { label: "Home", line1: "", city: defaultCity, state: defaultProvince, country: defaultCountry, isPrimary: index === 0 };
-};
-
-const normalizeSocialItem = (item: unknown): SocialLink => {
-  if (!item) return { platform: "WhatsApp", url: "" };
-  if (typeof item === "string") {
-    return { platform: "WhatsApp", url: item.trim() };
-  }
-  if (typeof item === "object") {
-    const obj = item as Record<string, unknown>;
-    const url = String(obj.url || obj.link || obj.value || "").trim();
-    const platform = String(obj.platform || obj.type || "WhatsApp").trim();
-    return { platform: platform || "WhatsApp", url };
-  }
-  return { platform: "WhatsApp", url: "" };
-};
-
-const normalizeEmergencyItem = (item: unknown): EmergencyContact => {
-  if (!item) return { relationship: "Father", contactId: "" };
-  if (typeof item === "string" || typeof item === "number") {
-    return { relationship: "Father", contactId: String(item) };
-  }
-  if (typeof item === "object") {
-    const obj = item as Record<string, unknown>;
-    const contactId = String(obj.contactId || obj.id || obj.targetId || "").trim();
-    const relationship = String(obj.relationship || obj.relation || obj.type || "Father").trim();
-    return { relationship: relationship || "Father", contactId };
-  }
-  return { relationship: "Father", contactId: "" };
-};
-
-const normalizeContactForEdit = (
-  raw: Partial<Contact> | undefined,
-  initialDraft: Partial<Contact> | undefined,
-  defaultCity: string,
-  defaultProvince: string,
-  defaultCountry: string,
-): Partial<Contact> => {
-  const merged: Partial<Contact> = {
-    firstName: "",
-    lastName: "",
-    name: "",
-    gender: "",
-    dob: "",
-    cnic: "",
-    isSyed: false,
-    notes: "",
-    phones: [],
-    emails: [],
-    addresses: [],
-    socials: [],
-    emergencyContacts: [],
-    relationships: [],
-    ...initialDraft,
-    ...raw,
-  };
-
-  // 1. First Name / Last Name resolution from name if unpopulated
-  let firstName = (merged.firstName || "").trim();
-  let lastName = (merged.lastName || "").trim();
-  const fullName = (merged.name || "").trim();
-
-  if (!firstName && fullName) {
-    const parts = fullName.split(" ").filter(Boolean);
-    firstName = parts[0] || "";
-    lastName = parts.slice(1).join(" ");
-  }
-
-  // 2. Phones resolution (array of strings or objects, plus legacy scalar phone)
-  let phones: PhoneNumber[] = Array.isArray(merged.phones)
-    ? merged.phones.map((item, idx) => normalizePhoneItem(item, idx))
-    : [];
-
-  const scalarPhone = typeof (merged as Record<string, unknown>).phone === "string" ? String((merged as Record<string, unknown>).phone).trim() : "";
-  if (scalarPhone && !phones.some((p) => (p.number || "").trim() === scalarPhone)) {
-    phones.unshift(normalizePhoneItem(scalarPhone, 0));
-  }
-
-  if (phones.length === 0) {
-    phones = [{ label: "Mobile", number: "", countryCode: "+92", isPrimary: true }];
-  }
-
-  // 3. Emails resolution (array of strings or objects, plus legacy scalar email)
-  let emails: EmailAddress[] = Array.isArray(merged.emails)
-    ? merged.emails.map((item, idx) => normalizeEmailItem(item, idx))
-    : [];
-
-  const scalarEmail = typeof (merged as Record<string, unknown>).email === "string" ? String((merged as Record<string, unknown>).email).trim() : "";
-  if (scalarEmail && !emails.some((e) => (e.address || "").trim().toLowerCase() === scalarEmail.toLowerCase())) {
-    emails.unshift(normalizeEmailItem(scalarEmail, 0));
-  }
-
-  if (emails.length === 0) {
-    emails = [{ label: "Personal", address: "", isPrimary: true }];
-  }
-
-  // 4. Addresses resolution (array of strings or objects, plus scalar address fields)
-  let addresses: Address[] = Array.isArray(merged.addresses)
-    ? merged.addresses.map((item, idx) => normalizeAddressItem(item, defaultCity, defaultProvince, defaultCountry, idx))
-    : [];
-
-  const scalarLine1 = (merged.line1 as string || merged.address as string || "").trim();
-  const scalarCity = (merged.city as string || "").trim();
-  const scalarState = (merged.state as string || "").trim();
-  const scalarCountry = (merged.country as string || "").trim();
-
-  if ((scalarLine1 || scalarCity || scalarState || scalarCountry) && addresses.length === 0) {
-    addresses = [
-      {
-        label: "Home",
-        line1: scalarLine1,
-        city: scalarCity || defaultCity,
-        state: scalarState || defaultProvince,
-        country: scalarCountry || defaultCountry,
-      },
-    ];
-  }
-
-  if (addresses.length === 0) {
-    addresses = [
-      {
-        label: "Home",
-        line1: "",
-        city: defaultCity,
-        state: defaultProvince,
-        country: defaultCountry,
-      },
-    ];
-  }
-
-  // 5. Socials & Emergency Contacts (array of strings or objects)
-  let socials: SocialLink[] = Array.isArray(merged.socials)
-    ? merged.socials.map(normalizeSocialItem)
-    : [];
-
-  if (socials.length === 0) {
-    socials = [{ platform: "WhatsApp", url: "" }];
-  }
-
-  let emergencyContacts: EmergencyContact[] = Array.isArray(merged.emergencyContacts)
-    ? merged.emergencyContacts.map(normalizeEmergencyItem)
-    : [];
-
-  if (emergencyContacts.length === 0) {
-    emergencyContacts = [{ relationship: "Father", contactId: "" }];
-  }
-
-  return {
-    ...merged,
-    firstName,
-    lastName,
-    name: fullName || [firstName, lastName].filter(Boolean).join(" "),
-    phones,
-    emails,
-    addresses,
-    socials,
-    emergencyContacts,
-  };
-};
 
 export default function ContactForm({
   open = true,
@@ -361,9 +110,21 @@ export default function ContactForm({
     socialPlatforms,
     relationships: relationshipOptions,
     genders,
+    countryCodes,
+    countryCodesMap,
+    prefs,
   } = useContactConfig();
   const validate = useContactValidation();
   const formInstanceId = contact?.id || "new";
+
+  const defaultCountryCode = useMemo(() => {
+    return getFallbackCountryCode(prefs, countryCodesMap);
+  }, [prefs, countryCodesMap]);
+
+  const countryCodeOptions = useMemo(() => {
+    const list = (countryCodes || []).map((c) => c.code).filter(Boolean);
+    return Array.from(new Set([defaultCountryCode, ...list]));
+  }, [countryCodes, defaultCountryCode]);
 
 
   const [tab, setTab] = useState<TabKey>("basic");
@@ -417,8 +178,9 @@ export default function ContactForm({
     return CONTACT_TABS.map((tabItem) => {
       const count = countMap[tabItem.key];
       return {
-        ...tabItem,
-        label: t(`contacts.tabs.${tabItem.key}`) || tabItem.label,
+        key: tabItem.key,
+        icon: tabItem.icon,
+        label: t(tabItem.labelKey),
         badge: count && count > 0 ? count : undefined,
       };
     });
@@ -499,6 +261,23 @@ export default function ContactForm({
     });
   };
 
+  const removeListField = useCallback((fieldKey: keyof Contact, idx: number) => {
+    setContactDraft((prev) => {
+      const list = (prev[fieldKey] as unknown[]) || [];
+      const newLen = list.length - 1;
+      const tabName = String(fieldKey);
+      for (let i = idx; i < newLen; i++) {
+        const next = localIdMap.current.get(`${tabName}:${i + 1}`);
+        if (next !== undefined) localIdMap.current.set(`${tabName}:${i}`, next);
+      }
+      localIdMap.current.delete(`${tabName}:${newLen}`);
+      return {
+        ...prev,
+        [fieldKey]: list.filter((_, i) => i !== idx),
+      };
+    });
+  }, []);
+
   const handleSave = () => {
     setValidationErrors([]);
     const cleanedDraft = cleanContactDraft(contactDraft);
@@ -511,9 +290,7 @@ export default function ContactForm({
         formErrors.push({
           fieldId: "cnic",
           tabId: "basic",
-          message:
-            t("contacts.form.cnicInvalid") ||
-            "CNIC must be in the format 99999 9999999 9",
+          message: t("contacts.form.cnicInvalid"),
         });
       }
     }
@@ -524,9 +301,7 @@ export default function ContactForm({
       if (firstError.tabId) {
         setTab(firstError.tabId as TabKey);
       }
-      notify.error(
-        t("contacts.form.pleaseFixErrors") || "Please fix validation errors",
-      );
+      notify.error(t("contacts.form.pleaseFixErrors"));
       return;
     }
 
@@ -553,46 +328,8 @@ export default function ContactForm({
           cleanedDraft.createdAt || todayISO(),
       } as Contact;
 
-      const finalized = applyTitleCaseToContact(contactRaw) as Contact;
-      const primaryPhoneStr = getPrimaryPhone(finalized);
-      const primaryEmailStr = getPrimaryEmail(finalized);
-      const firstAddr = finalized.addresses?.[0];
-
-      if (primaryPhoneStr) {
-        (finalized as Record<string, unknown>).phone = primaryPhoneStr;
-      } else {
-        delete (finalized as Record<string, unknown>).phone;
-      }
-
-      if (primaryEmailStr) {
-        (finalized as Record<string, unknown>).email = primaryEmailStr;
-      } else {
-        delete (finalized as Record<string, unknown>).email;
-      }
-
-      if (firstAddr?.line1) {
-        (finalized as Record<string, unknown>).line1 = firstAddr.line1;
-      } else {
-        delete (finalized as Record<string, unknown>).line1;
-      }
-
-      if (firstAddr?.city) {
-        (finalized as Record<string, unknown>).city = firstAddr.city;
-      } else {
-        delete (finalized as Record<string, unknown>).city;
-      }
-
-      if (firstAddr?.state) {
-        (finalized as Record<string, unknown>).state = firstAddr.state;
-      } else {
-        delete (finalized as Record<string, unknown>).state;
-      }
-
-      if (firstAddr?.country) {
-        (finalized as Record<string, unknown>).country = firstAddr.country;
-      } else {
-        delete (finalized as Record<string, unknown>).country;
-      }
+      const titleCased = applyTitleCaseToContact(contactRaw) as Contact;
+      const finalized = syncContactScalarFields(titleCased);
 
       onSave(finalized);
       notify.success(
@@ -614,7 +351,7 @@ export default function ContactForm({
   const renderBasic = () => (
     <div className="space-y-4 text-left">
       <SectionCard
-        title={t("contacts.form.createNewContact") || "Basic Info"}
+        title={t("contacts.form.createNewContact")}
         icon={User}
         accentColor="primary"
       >
@@ -633,22 +370,17 @@ export default function ContactForm({
             <div className="relative flex-shrink-0 group">
               <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-primary/30 via-accent/30 to-secondary/30 group-hover:from-primary/60 group-hover:via-accent/60 group-hover:to-secondary/60 blur-[2px] transition-all duration-500 opacity-75 group-hover:opacity-100" />
               <div className="relative w-20 h-20 rounded-full bg-card overflow-hidden flex items-center justify-center border border-border/80 shadow-surface group-hover:scale-[1.02] transition-transform duration-300">
-                {contactDraft.avatar ? (
-                  <img
-                    src={contactDraft.avatar}
-                    alt="Profile"
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                ) : (
-                  <span className="text-2xl font-bold text-primary select-none">
-                    {getInitials(getDisplayName(contactDraft))}
-                  </span>
-                )}
+                <UserAvatar
+                  id={contactDraft.id}
+                  name={getDisplayName(contactDraft)}
+                  avatar={contactDraft.avatar}
+                  className="w-full h-full text-2xl"
+                />
 
                 <label className="absolute inset-0 bg-black/45 flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white gap-1 rounded-full">
                   <Camera className="w-4 h-4" />
                   <span className="text-[10px] font-bold uppercase tracking-wider">
-                    {t("account.changePhoto") || "Change"}
+                    {t("account.changePhoto")}
                   </span>
                   <input
                     id="contact-avatar-file-input"
@@ -657,7 +389,7 @@ export default function ContactForm({
                     accept="image/*"
                     className="hidden"
                     onChange={handleAvatarChange}
-                    aria-label={t("account.changePhoto") || "Change Photo"}
+                    aria-label={t("account.changePhoto")}
                   />
                 </label>
               </div>
@@ -665,9 +397,7 @@ export default function ContactForm({
 
             <div className="text-center sm:text-left flex-1 min-w-0">
               <h3 className="text-base font-bold text-foreground truncate">
-                {contactDraft.name ||
-                  t("contacts.form.createNewContact") ||
-                  "New Contact"}
+                {contactDraft.name || t("contacts.form.createNewContact")}
               </h3>
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1">
                 {contactDraft.gender &&
@@ -678,7 +408,7 @@ export default function ContactForm({
                   )}
                 {contactDraft.isSyed && (
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/15 text-primary border border-primary/20">
-                    {t("contacts.reportFields.isSyed") || "Syed"}
+                    {t("contacts.reportFields.isSyed")}
                   </span>
                 )}
               </div>
@@ -772,7 +502,7 @@ export default function ContactForm({
 
           {isFieldEnabled("basic", "cnic") && (
             <Field
-              label={t("contacts.form.cnic") || "CNIC"}
+              label={t("contacts.form.cnic")}
               id={`cf-${formInstanceId}-cnic`}
               error={getFieldError("cnic")}
             >
@@ -786,16 +516,12 @@ export default function ContactForm({
                     const formatted = formatCnic(e.target.value);
                     updateDraft({ cnic: formatted });
                   }}
-                  placeholder={
-                    t("contacts.form.cnicPlaceholder") || "99999 9999999 9"
-                  }
+                  placeholder={t("contacts.form.cnicPlaceholder")}
                   className="pl-10"
                 />
               </div>
             </Field>
           )}
-
-
 
           {isFieldEnabled("basic", "isSyed") && (
             <div className="flex flex-col justify-end min-h-[44px]">
@@ -837,7 +563,7 @@ export default function ContactForm({
 
       {isFieldEnabled("basic", "notes") && (
         <SectionCard
-          title={t("contacts.form.notes") || "Notes"}
+          title={t("contacts.form.notes")}
           icon={FileText}
           accentColor="amber"
         >
@@ -851,7 +577,7 @@ export default function ContactForm({
               name="notes"
               value={(contactDraft.notes as string) || ""}
               onChange={(e) => updateDraft({ notes: e.target.value })}
-              placeholder={t("contacts.form.notesPlaceholder") || "Add notes about this contact"}
+              placeholder={t("contacts.form.notesPlaceholder")}
               className="min-h-[88px] resize-y"
             />
           </Field>
@@ -865,24 +591,10 @@ export default function ContactForm({
     const addPhone = () => {
       setContactDraft((prev) => ({
         ...prev,
-        phones: [...(prev.phones || []), { label: "Mobile", number: "", countryCode: "+92" }],
+        phones: [...(prev.phones || []), { label: "Mobile", number: "", countryCode: defaultCountryCode }],
       }));
     };
-    const removePhone = (idx: number) => {
-      setContactDraft((prev) => {
-        const currentPhones = prev.phones || [];
-        const newLen = currentPhones.length - 1;
-        for (let i = idx; i < newLen; i++) {
-          const next = localIdMap.current.get(`phones:${i + 1}`);
-          if (next !== undefined) localIdMap.current.set(`phones:${i}`, next);
-        }
-        localIdMap.current.delete(`phones:${newLen}`);
-        return {
-          ...prev,
-          phones: currentPhones.filter((_, i) => i !== idx),
-        };
-      });
-    };
+    const removePhone = (idx: number) => removeListField("phones", idx);
     const updatePhone = (idx: number, patch: Partial<PhoneNumber>) => {
       setContactDraft((prev) => ({
         ...prev,
@@ -943,8 +655,8 @@ export default function ContactForm({
 
                   <div className="flex items-center gap-2 w-full">
                     <EditableSelect
-                      options={["+92", "+1", "+44", "+966", "+971"]}
-                      value={phone.countryCode || "+92"}
+                      options={countryCodeOptions}
+                      value={phone.countryCode || defaultCountryCode}
                       onChange={(val) => updatePhone(idx, { countryCode: val })}
                       className="w-[90px] shrink-0"
                       id={`phone-country-${idx}`}
@@ -961,7 +673,7 @@ export default function ContactForm({
                           const val = e.target.value;
                           const trimmed = val.trim();
                           if (trimmed.startsWith("+") || trimmed.startsWith("00")) {
-                            const parsed = parsePhoneNumber(val, phone.countryCode || "+92", ["+92", "+1", "+44", "+966", "+971"]);
+                            const parsed = parsePhoneNumber(val, phone.countryCode || defaultCountryCode, countryCodeOptions);
                             updatePhone(idx, {
                               countryCode: parsed.countryCode,
                               number: parsed.number,
@@ -971,7 +683,7 @@ export default function ContactForm({
                           updatePhone(idx, { number: val });
                         }}
                         onBlur={() => handlePhoneBlur(idx)}
-                        placeholder={t("contacts.form.phoneNumberPlaceholder") || "0300 1234567"}
+                        placeholder={t("contacts.form.phoneNumberPlaceholder")}
                         className={cn(
                           "pl-10",
                           numError &&
@@ -1012,21 +724,7 @@ export default function ContactForm({
         emails: [...(prev.emails || []), { label: "Personal", address: "" }],
       }));
     };
-    const removeEmail = (idx: number) => {
-      setContactDraft((prev) => {
-        const currentEmails = prev.emails || [];
-        const newLen = currentEmails.length - 1;
-        for (let i = idx; i < newLen; i++) {
-          const next = localIdMap.current.get(`emails:${i + 1}`);
-          if (next !== undefined) localIdMap.current.set(`emails:${i}`, next);
-        }
-        localIdMap.current.delete(`emails:${newLen}`);
-        return {
-          ...prev,
-          emails: currentEmails.filter((_, i) => i !== idx),
-        };
-      });
-    };
+    const removeEmail = (idx: number) => removeListField("emails", idx);
     const updateEmail = (idx: number, patch: Partial<EmailAddress>) => {
       setContactDraft((prev) => ({
         ...prev,
@@ -1144,21 +842,7 @@ export default function ContactForm({
         ],
       }));
     };
-    const removeAddress = (idx: number) => {
-      setContactDraft((prev) => {
-        const currentAddresses = prev.addresses || [];
-        const newLen = currentAddresses.length - 1;
-        for (let i = idx; i < newLen; i++) {
-          const next = localIdMap.current.get(`addresses:${i + 1}`);
-          if (next !== undefined) localIdMap.current.set(`addresses:${i}`, next);
-        }
-        localIdMap.current.delete(`addresses:${newLen}`);
-        return {
-          ...prev,
-          addresses: currentAddresses.filter((_, i) => i !== idx),
-        };
-      });
-    };
+    const removeAddress = (idx: number) => removeListField("addresses", idx);
     const updateAddress = (idx: number, patch: Partial<Address>) => {
       setContactDraft((prev) => ({
         ...prev,
@@ -1311,21 +995,7 @@ export default function ContactForm({
         socials: [...(prev.socials || []), { platform: "WhatsApp", url: "" }],
       }));
     };
-    const removeSocial = (idx: number) => {
-      setContactDraft((prev) => {
-        const currentSocials = prev.socials || [];
-        const newLen = currentSocials.length - 1;
-        for (let i = idx; i < newLen; i++) {
-          const next = localIdMap.current.get(`socials:${i + 1}`);
-          if (next !== undefined) localIdMap.current.set(`socials:${i}`, next);
-        }
-        localIdMap.current.delete(`socials:${newLen}`);
-        return {
-          ...prev,
-          socials: currentSocials.filter((_, i) => i !== idx),
-        };
-      });
-    };
+    const removeSocial = (idx: number) => removeListField("socials", idx);
     const updateSocial = (idx: number, patch: Partial<SocialLink>) => {
       setContactDraft((prev) => ({
         ...prev,
@@ -1401,7 +1071,7 @@ export default function ContactForm({
                       onChange={(e) =>
                         updateSocial(idx, { url: e.target.value })
                       }
-                      placeholder={t("contacts.form.socialHandlePlaceholder") || "Username, handle or link URL"}
+                      placeholder={t("contacts.form.socialHandlePlaceholder")}
                       className={cn(
                         "pl-10",
                         urlError &&
@@ -1444,21 +1114,7 @@ export default function ContactForm({
         ],
       }));
     };
-    const removeEmergency = (idx: number) => {
-      setContactDraft((prev) => {
-        const currentEmergency = prev.emergencyContacts || [];
-        const newLen = currentEmergency.length - 1;
-        for (let i = idx; i < newLen; i++) {
-          const next = localIdMap.current.get(`emergency:${i + 1}`);
-          if (next !== undefined) localIdMap.current.set(`emergency:${i}`, next);
-        }
-        localIdMap.current.delete(`emergency:${newLen}`);
-        return {
-          ...prev,
-          emergencyContacts: currentEmergency.filter((_, i) => i !== idx),
-        };
-      });
-    };
+    const removeEmergency = (idx: number) => removeListField("emergencyContacts", idx);
     const updateEmergency = (idx: number, patch: Partial<EmergencyContact>) => {
       setContactDraft((prev) => ({
         ...prev,
@@ -1602,7 +1258,7 @@ export default function ContactForm({
   const footerStart = contactDraft.firstName ? (
     <div className="flex flex-wrap items-center gap-2.5 text-xs">
       <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60">
-        {contactDraft.name || contactDraft.firstName}
+        {getDisplayName(contactDraft)}
       </span>
       <div className="flex items-center gap-1.5">
         <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px]">
@@ -1645,8 +1301,8 @@ export default function ContactForm({
       onTabChange={setTab}
       tabPanelIdPrefix="contact-form-tab"
       lang={language}
-      cancelLabel={t("common.cancel") || "Cancel"}
-      saveLabel={t("contacts.form.saveContact") || "Save"}
+      cancelLabel={t("common.cancel")}
+      saveLabel={t("contacts.form.saveContact")}
       onSave={handleSave}
       saving={saving}
       saveDisabled={!contactDraft.firstName?.trim()}

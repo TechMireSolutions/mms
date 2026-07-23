@@ -68,7 +68,7 @@ vi.mock('../services/platform/platformUserService.js', () => ({
   changePlatformUserPassword: vi.fn(),
   getPlatformUserProfile: (...args: unknown[]) => mockGetPlatformUserProfile(...args),
   updatePlatformUserProfile: vi.fn(),
-  toPlatformUserProfile: (stored: any) => ({
+  toPlatformUserProfile: (stored: Record<string, unknown>) => ({
     id: stored.id,
     email: stored.email,
     name: stored.name,
@@ -76,7 +76,7 @@ vi.mock('../services/platform/platformUserService.js', () => ({
     createdAt: stored.createdAt,
     emailVerifiedAt: stored.emailVerifiedAt,
   }),
-  toPublicPlatformUser: (user: any) => ({
+  toPublicPlatformUser: (user: Record<string, unknown>) => ({
     id: user.id,
     email: user.email,
     name: user.name,

@@ -1,10 +1,10 @@
-import React from 'react';
-import { WifiOff, AlertCircle, CloudUpload, AlertTriangle } from 'lucide-react';
-import { useTranslation } from '@/hooks/useTranslation';
-import { useContacts } from '@/tenant/features/contacts/hooks/useContacts';
-import { useContactsSyncOutbox } from '@/tenant/features/contacts/hooks/useContactsSyncOutbox';
-import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { WifiOff, AlertCircle, CloudUpload, AlertTriangle } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useContacts } from "@/tenant/features/contacts/hooks/useContacts";
+import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { Button } from "@/components/ui/button";
 
 interface ContactsDataBannerProps {
   onReviewConflicts?: () => void;

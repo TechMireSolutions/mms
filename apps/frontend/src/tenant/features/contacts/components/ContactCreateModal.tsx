@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useMemo } from "react";
-import type { Contact } from "@mms/shared";
+import { type Contact, toTitleCase } from "@mms/shared";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactMutations } from "@/tenant/features/contacts/hooks/useContacts";
@@ -9,11 +9,11 @@ const ContactForm = lazy(() => import("@/tenant/features/contacts/components/Con
 function nameToDraft(name: string): Partial<Contact> {
   const trimmed = name.trim();
   if (!trimmed) return {};
-  const parts = trimmed.split(/\s+/);
+  const parts = trimmed.split(/\s+/).map((p) => toTitleCase(p));
   return {
     firstName: parts[0] ?? "",
     lastName: parts.slice(1).join(" "),
-    name: trimmed,
+    name: parts.join(" "),
   };
 }
 
@@ -68,7 +68,7 @@ export default function ContactCreateModal({
   if (!open) return null;
 
   return (
-    <Suspense fallback={<span role="status" className="sr-only">{t("common.loading") || "Loading…"}</span>}>
+    <Suspense fallback={<span role="status" className="sr-only">{t("common.loading")}</span>}>
       <ContactForm
         key={`create-${initialName}-${createDefaults?.gender ?? ""}`}
         open

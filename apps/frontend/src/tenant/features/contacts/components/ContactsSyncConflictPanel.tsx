@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, ChevronDown, ChevronUp, Loader2, Trash2 } from 'lucide-react';
-import type { Contact, AppTranslationKey } from '@mms/shared';
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { AlertTriangle, ChevronDown, ChevronUp, Loader2, Trash2 } from "lucide-react";
+import type { Contact, AppTranslationKey } from "@mms/shared";
 import {
   CONTACT_SYNC_FIELD_LABEL_KEYS,
   defaultSyncFieldPicks,
@@ -9,35 +9,27 @@ import {
   resolveSyncConflictContactId,
   type SyncFieldPick,
   formatDateTime,
-} from '@mms/shared';
-import type { ContactsSyncConflict } from '@/lib/contacts/contactsSyncOutbox';
+} from "@mms/shared";
+import type { ContactsSyncConflict } from "@/lib/contacts/contactsSyncOutbox";
 import {
   describeContactsOutboxEntry,
   dismissContactsSyncConflict,
   getContactsSyncConflicts,
   requeueAllContactsSyncConflicts,
   requeueContactsSyncConflict,
-} from '@/lib/contacts/contactsSyncOutbox';
-import { useTranslation } from '@/hooks/useTranslation';
-import { useContactsSyncOutbox } from '@/tenant/features/contacts/hooks/useContactsSyncOutbox';
-import { useContactById, useContactMutations } from '@/tenant/features/contacts/hooks/useContacts';
-import { FormModal } from '@/components/ui/FormModal';
-import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
-import { Button } from '@/components/ui/button';
-import { notify } from '@/lib/notify';
+} from "@/lib/contacts/contactsSyncOutbox";
+import { getSyncConflictKindLabel } from "@/lib/contacts/contactI18n";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
+import { useContactById, useContactMutations } from "@/tenant/features/contacts/hooks/useContacts";
+import { FormModal } from "@/components/ui/FormModal";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { Button } from "@/components/ui/button";
+import { notify } from "@/lib/notify";
 
 interface ContactsSyncConflictPanelProps {
   open: boolean;
   onClose: () => void;
-}
-
-function kindLabel(
-  kind: ContactsSyncConflict['kind'],
-  t: (key: 'contacts.sync.conflictKindCreate' | 'contacts.sync.conflictKindUpdate' | 'contacts.sync.conflictKindDelete') => string,
-): string {
-  if (kind === 'upsert') return t('contacts.sync.conflictKindCreate');
-  if (kind === 'update') return t('contacts.sync.conflictKindUpdate');
-  return t('contacts.sync.conflictKindDelete');
 }
 
 function fieldLabel(field: string, t: (key: AppTranslationKey) => string): string {
@@ -140,7 +132,7 @@ function ConflictRow({ entry, title, onRequestDismiss, onResolved }: ConflictRow
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-foreground truncate">{title}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {kindLabel(entry.kind, t)} · {formatDateTime(entry.failedAt)}
+            {getSyncConflictKindLabel(entry.kind, t)} · {formatDateTime(entry.failedAt)}
           </p>
         </div>
         <div className="flex items-center gap-1 shrink-0">

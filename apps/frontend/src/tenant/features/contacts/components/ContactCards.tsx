@@ -1,32 +1,28 @@
 import React, { useState, lazy, Suspense, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-  MoreHorizontal, MessageCircle, MessageSquare, Edit2, Trash2, Eye, Phone, Mail, RotateCcw, Copy, Check,
-  MapPin, User, Calendar, CheckCircle2, AlertTriangle
+  MoreHorizontal, MessageCircle, MessageSquare, Edit2, Trash2, Eye, Phone, Mail, RotateCcw,
+  AlertTriangle,
 } from "lucide-react";
 import { 
   type Contact, 
   formatDate,
   getDisplayName, 
-  getPrimaryPhone, 
   getPrimaryEmail, 
   hasWhatsApp,
-  calculateDetailedSolarAge,
-  getLunarDateString,
-  calculateDetailedLunarAge,
-  calcAge
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
+import { formatContactDobWithAge, resolveContactPhoneDisplay, getContactAccentBarClass, formatTelHref } from "@/lib/contacts/contactI18n";
+import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { notify } from "@/lib/notify";
-import ContactAvatar from "@/tenant/features/contacts/components/ContactAvatar";
-import { formatContactCellValue } from "@/lib/contacts/contactI18n";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CopyBtn } from "@/components/ui/CopyBtn";
 
 const MotionButton = motion.create(Button);
 
@@ -78,9 +74,8 @@ export default function ContactCards({
   onUpdateContact,
 }: ContactCardsProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { prefs } = useContactConfig();
+  const { prefs, countryCodesMap } = useContactConfig();
   const [viewContact, setViewContact] = useState<Contact | null>(null);
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const visibleColumnIds = useMemo(
     () => new Set(columns.map((col) => col.id)),
@@ -97,132 +92,6 @@ export default function ContactCards({
     ),
     [columns]
   );
-
-  const handleCopyContactValue = (text: string, key: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopiedKey(key);
-      notify.success(t("contacts.table.copied"));
-      setTimeout(() => setCopiedKey(null), 2000);
-    }).catch(() => {
-      // ignore
-    });
-  };
-
-  const renderMetadataValue = (colId: string, item: Contact): React.ReactNode => {
-    switch (colId) {
-      case "gender": {
-        const genderValue = item.gender;
-        if (!genderValue) return <span className="text-muted-foreground/40">—</span>;
-        return (
-          <span className="flex items-center gap-1 capitalize">
-            <User className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-            {genderValue}
-          </span>
-        );
-      }
-      case "isSyed":
-        return item.isSyed ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 bg-success/10 text-success rounded border border-success/20">
-            <CheckCircle2 className="w-3 h-3" />
-            {t("contacts.table.yesSyed")}
-          </span>
-        ) : (
-          <span className="text-muted-foreground/40">—</span>
-        );
-
-      case "city":
-      case "country":
-      case "state":
-      case "line1": {
-        const addressValue = item.addresses?.[0]?.[colId as "city" | "country" | "state" | "line1"] || item[colId as keyof Contact];
-        if (!addressValue) return <span className="text-muted-foreground/40">—</span>;
-        return (
-          <span className="flex items-center gap-1 truncate">
-            <MapPin className="w-3.5 h-3.5 text-primary/70 shrink-0" />
-            <span className="truncate">{String(addressValue)}</span>
-          </span>
-        );
-      }
-      case "dob":
-        return item.dob ? (
-          <div className="flex flex-col gap-0.5 text-[11px] font-mono leading-normal">
-            <span className="flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5 text-primary/70 shrink-0" />
-              {formatDate(item.dob)}
-            </span>
-            {prefs.showDetailedSolarAge && (
-              <span className="text-muted-foreground/80 ps-4.5 block">
-                {t("contacts.table.solarAgeLabel")} {calculateDetailedSolarAge(item.dob)}
-              </span>
-            )}
-            {prefs.showLunarDob && (
-              <span className="text-muted-foreground/80 ps-4.5 block">
-                {t("contacts.table.lunarDobLabel")} {getLunarDateString(item.dob)}
-              </span>
-            )}
-            {prefs.showDetailedLunarAge && (
-              <span className="text-muted-foreground/80 ps-4.5 block">
-                {t("contacts.table.lunarAgeLabel")} {calculateDetailedLunarAge(item.dob)}
-              </span>
-            )}
-          </div>
-        ) : (
-          <span className="text-muted-foreground/40">—</span>
-        );
-      case "whatsapp":
-        return (
-          <span className={`text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${hasWhatsApp(item)
-              ? "bg-success/10 text-success border-success/20"
-              : "bg-muted text-muted-foreground border-border"
-            }`}>
-            {hasWhatsApp(item) ? t("common.yes") : t("common.no")}
-          </span>
-        );
-      case "socials_platform": {
-        const platforms = (item.socials || []).map((social) => social.platform).filter(Boolean);
-        return platforms.length > 0 ? (
-          <span className="truncate">{platforms.join(", ")}</span>
-        ) : (
-          <span className="text-muted-foreground/40">—</span>
-        );
-      }
-      case "socials_url": {
-        const urls = (item.socials || []).map((social) => social.url).filter(Boolean);
-        return urls.length > 0 ? (
-          <span className="truncate" title={urls.join(", ")}>{urls.join(", ")}</span>
-        ) : (
-          <span className="text-muted-foreground/40">—</span>
-        );
-      }
-      case "emergency_contact": {
-        const emergencyContactNames = (item.emergencyContacts || []).map((emergencyContact) => {
-          if (emergencyContact.name) return emergencyContact.name;
-          if (emergencyContact.contactId) {
-            const linkedContact = allContacts.find((contact) => String(contact.id) === String(emergencyContact.contactId));
-            return linkedContact ? linkedContact.name : `${t("contacts.table.contactIdPrefix")}${emergencyContact.contactId}`;
-          }
-          return null;
-        }).filter(Boolean);
-        return emergencyContactNames.length > 0 ? (
-          <span className="truncate">{emergencyContactNames.join(", ")}</span>
-        ) : (
-          <span className="text-muted-foreground/40">—</span>
-        );
-      }
-      case "emergency_relationship": {
-        const relationships = (item.emergencyContacts || []).map((emergencyContact) => emergencyContact.relationship).filter(Boolean);
-        return relationships.length > 0 ? (
-          <span className="truncate">{relationships.join(", ")}</span>
-        ) : (
-          <span className="text-muted-foreground/40">—</span>
-        );
-      }
-      default: {
-        const raw = item[colId as keyof Contact];
-        return <span>{formatContactCellValue(raw, t)}</span>;
-      }
-    }
-  };
 
   return (
     <>
@@ -248,8 +117,7 @@ export default function ContactCards({
         {contacts.map((contact) => {
           const isSelected = selected.includes(contact.id);
           const displayName = getDisplayName(contact);
-
-          const phone = getPrimaryPhone(contact);
+          const { phone, countryCode, phoneDisplay } = resolveContactPhoneDisplay(contact, prefs, countryCodesMap);
           const email = getPrimaryEmail(contact);
 
           return (
@@ -268,15 +136,7 @@ export default function ContactCards({
             >
               <div 
                 aria-hidden="true"
-                className={`absolute start-0 top-0 bottom-0 w-1.5 ${
-                  isSelected
-                    ? "bg-primary/70 group-hover:bg-primary"
-                    : contact.gender?.toLowerCase() === "male"
-                    ? "bg-info/50 group-hover:bg-info"
-                    : contact.gender?.toLowerCase() === "female"
-                    ? "bg-destructive/50 group-hover:bg-destructive"
-                    : "bg-muted-foreground/35 group-hover:bg-muted-foreground/60"
-                } transition-colors duration-300`} 
+                className={`absolute start-0 top-0 bottom-0 w-1.5 ${getContactAccentBarClass(isSelected, contact.gender)} transition-colors duration-300`} 
               />
  
               {/* Core Profile Area */}
@@ -285,7 +145,7 @@ export default function ContactCards({
                   <Checkbox
                     checked={isSelected}
                     onCheckedChange={() => onSelect(contact.id)}
-                    aria-label={t("contacts.table.selectContact", { name: displayName }) || `Select ${displayName}`}
+                    aria-label={t("contacts.table.selectContact", { name: displayName })}
                   />
                 </div>
                 <Button
@@ -293,22 +153,21 @@ export default function ContactCards({
                   variant="ghost"
                   className="h-auto p-0 hover:bg-transparent flex flex-1 items-start gap-2.5 min-w-0 text-start cursor-pointer hover:text-foreground shadow-none justify-start"
                   onClick={() => setViewContact(contact)}
-                  aria-label={t("contacts.table.viewProfile") || "View Profile"}
+                  aria-label={t("contacts.table.viewProfile")}
                 >
-                  <div className="relative animate-none">
-                    <ContactAvatar contact={contact} className="w-11 h-11 rounded-2xl text-sm shadow-inner group-hover:scale-105 transition-transform duration-200" />
-                  </div>
+                    <UserAvatar
+                      id={contact.id}
+                      name={displayName}
+                      avatar={contact.avatar}
+                      className="w-11 h-11 rounded-2xl text-sm shadow-inner group-hover:scale-105 transition-transform duration-200"
+                    />
                   <div className="min-w-0 flex-1">
                     <h4 className="text-sm font-black text-foreground tracking-tight truncate group-hover:text-primary transition-colors">
                       {displayName}
                     </h4>
                     {contact.dob && (
                       <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                        {t("contacts.table.dobLabel")} {formatDate(contact.dob)}
-                        {(() => {
-                          const age = calcAge(contact.dob);
-                          return age !== null ? ` (${age} y/o)` : "";
-                        })()}
+                        {formatContactDobWithAge(contact.dob, t)}
                       </p>
                     )}
                   </div>
@@ -319,74 +178,24 @@ export default function ContactCards({
               {(showPhonePill || showEmailPill) && (
                 <div className="space-y-2 py-0.5 ms-1">
                   {phone && showPhonePill && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => handleCopyContactValue(phone, `phone:${contact.id}`)}
-                      className="w-full flex items-center justify-between h-auto text-xs font-normal text-muted-foreground bg-muted/40 dark:bg-muted/20 hover:bg-muted/65 dark:hover:bg-muted/35 hover:text-foreground backdrop-blur-sm px-3 py-2 rounded-xl border border-border/30 dark:border-border/15 transition-all group/pill cursor-pointer min-w-0 shadow-none"
-                      aria-label={`${t("contacts.detail.call")}: ${phone}. ${t("contacts.table.copy")}`}
-                    >
+                    <div className="w-full flex items-center justify-between text-xs font-normal text-muted-foreground bg-muted/40 dark:bg-muted/20 hover:bg-muted/65 dark:hover:bg-muted/35 hover:text-foreground backdrop-blur-sm px-3 py-1.5 rounded-xl border border-border/30 dark:border-border/15 transition-all group/pill min-w-0">
                       <div className="flex items-center gap-2 min-w-0 flex-1 pe-2">
                         <Phone aria-hidden="true" className="w-3.5 h-3.5 text-primary/80 dark:text-primary/70 flex-shrink-0 group-hover/pill:text-primary transition-colors" />
-                        <span className="font-semibold tracking-tight truncate select-all">{phone}</span>
+                        <span className="font-semibold tracking-tight truncate select-all">
+                          {countryCode ? `${countryCode} ${phoneDisplay}` : (phoneDisplay || phone)}
+                        </span>
                       </div>
-                      <div className="w-4 h-4 flex items-center justify-center shrink-0">
-                        <AnimatePresence mode="wait">
-                          {copiedKey === `phone:${contact.id}` ? (
-                            <motion.div
-                              key="check"
-                              initial={{ scale: 0.7, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              exit={{ scale: 0.7, opacity: 0 }}
-                            >
-                              <Check aria-hidden="true" className="w-3.5 h-3.5 text-success" />
-                            </motion.div>
-                          ) : (
-                            <motion.div
-                              key="copy"
-                              className="opacity-40 group-focus-visible/pill:opacity-100 group-hover/pill:opacity-100 transition-all"
-                            >
-                              <Copy aria-hidden="true" className="w-3.5 h-3.5 text-muted-foreground/50 dark:text-muted-foreground/35" />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </Button>
+                      <CopyBtn text={phone} showToast className="h-6 w-6 opacity-60 group-hover/pill:opacity-100 transition-opacity p-0.5 rounded text-muted-foreground hover:text-foreground" />
+                    </div>
                   )}
                   {email && showEmailPill && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => handleCopyContactValue(email, `email:${contact.id}`)}
-                      className="w-full flex items-center justify-between h-auto text-xs font-normal text-muted-foreground bg-muted/40 dark:bg-muted/20 hover:bg-muted/65 dark:hover:bg-muted/35 hover:text-foreground backdrop-blur-sm px-3 py-2 rounded-xl border border-border/30 dark:border-border/15 transition-all group/pill cursor-pointer min-w-0 shadow-none"
-                      aria-label={`${t("contacts.reportFields.email")}: ${email}. ${t("contacts.table.copy")}`}
-                    >
+                    <div className="w-full flex items-center justify-between text-xs font-normal text-muted-foreground bg-muted/40 dark:bg-muted/20 hover:bg-muted/65 dark:hover:bg-muted/35 hover:text-foreground backdrop-blur-sm px-3 py-1.5 rounded-xl border border-border/30 dark:border-border/15 transition-all group/pill min-w-0">
                       <div className="flex items-center gap-2 min-w-0 flex-1 pe-2">
                         <Mail aria-hidden="true" className="w-3.5 h-3.5 text-primary/80 dark:text-primary/70 flex-shrink-0 group-hover/pill:text-primary transition-colors" />
                         <span className="font-semibold tracking-tight truncate select-all">{email}</span>
                       </div>
-                      <div className="w-4 h-4 flex items-center justify-center shrink-0">
-                        <AnimatePresence mode="wait">
-                          {copiedKey === `email:${contact.id}` ? (
-                            <motion.div
-                              key="check"
-                              initial={{ scale: 0.7, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              exit={{ scale: 0.7, opacity: 0 }}
-                            >
-                              <Check aria-hidden="true" className="w-3.5 h-3.5 text-success" />
-                            </motion.div>
-                          ) : (
-                            <motion.div
-                              key="copy"
-                              className="opacity-40 group-focus-visible/pill:opacity-100 group-hover/pill:opacity-100 transition-all"
-                            >
-                              <Copy aria-hidden="true" className="w-3.5 h-3.5 text-muted-foreground/50 dark:text-muted-foreground/35" />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </Button>
+                      <CopyBtn text={email} showToast className="h-6 w-6 opacity-60 group-hover/pill:opacity-100 transition-opacity p-0.5 rounded text-muted-foreground hover:text-foreground" />
+                    </div>
                   )}
                 </div>
               )}
@@ -404,7 +213,7 @@ export default function ContactCards({
                           {col.label}
                         </span>
                         <div className="text-xs font-semibold text-foreground truncate mt-0.5">
-                          {renderMetadataValue(col.id, contact)}
+                          <ContactMetadataCell colId={col.id} contact={contact} prefs={prefs} allContacts={allContacts} variant="card" />
                         </div>
                       </div>
                     );
@@ -417,11 +226,11 @@ export default function ContactCards({
                 <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-2.5 space-y-1 text-[11px] text-destructive text-start">
                   <div className="flex items-center gap-1.5 font-bold">
                     <AlertTriangle className="w-3.5 h-3.5" />
-                    <span>Deleted {formatDate(contact.deletedAt)}</span>
+                    <span>{t("contacts.table.deletedAt", { date: formatDate(contact.deletedAt) })}</span>
                   </div>
                   {contact.deletionReason && (
                     <p className="font-semibold opacity-90 italic">
-                      Reason: {contact.deletionReason}
+                      {t("contacts.deletionReasonLabel")}: {contact.deletionReason}
                     </p>
                   )}
                 </div>
@@ -432,7 +241,7 @@ export default function ContactCards({
                 <div className="flex items-center gap-1.5">
                   {phone ? (
                     <motion.a
-                      href={`tel:${phone}`}
+                      href={formatTelHref(phone)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className="p-2.5 rounded-xl border border-border/50 dark:border-border/30 bg-muted/40 dark:bg-card/60 text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/20 transition-colors shadow-xs"

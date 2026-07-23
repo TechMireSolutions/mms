@@ -2,32 +2,31 @@ import React, { useState, useEffect, useMemo, useRef, useId } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Edit2, MessageCircle, MessageSquare, Phone, Mail,
-  ExternalLink, Calendar, User, Clock, Tag,
-  Send, LucideIcon, MapPin, Copy, Check,
-  LayoutDashboard, History, Users as UsersIcon, FileText, BrainCircuit, ShieldCheck, Search, Zap,
-  Loader2, Trash2
+  Calendar, User, Tag, Clock, BrainCircuit,
+  Send, LucideIcon, MapPin, Search, ExternalLink,
+  LayoutDashboard, History, Users as UsersIcon, FileText, Zap,
+  Loader2, Trash2,
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Card } from "@/components/ui/card";
 import { Contact, ContactActivity, canViewContactField, CONTACTS_MODULE_CONTRACT } from "@mms/shared";
-import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
-import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, calcAge, getInitials } from "@mms/shared";
-import { formatDate, todayISO } from "@mms/shared";
-import { useAuth } from '@/lib/contexts/AuthContext';
-import { usePermissions } from '@/tenant/hooks/usePermissions';
-import { useTranslation } from '@/hooks/useTranslation';
-import { ACTIVITY_TYPE_I18N } from '@/lib/contacts/contactI18n';
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
+import { getDisplayName, getPrimaryPhone, getPrimaryEmail, hasWhatsApp, formatDate, todayISO } from "@mms/shared";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { usePermissions } from "@/tenant/hooks/usePermissions";
+import { useTranslation } from "@/hooks/useTranslation";
+import { ACTIVITY_TYPE_I18N, formatContactDobWithAge, formatTelHref } from "@/lib/contacts/contactI18n";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { apiJson } from "@/lib/apiClient";
-import { getCollection } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { Input } from "@/components/ui/input";
 import { uploadAttachmentFile } from "@/lib/attachmentUpload";
 import { notify } from "@/lib/notify";
-import ContactAvatar from "@/tenant/features/contacts/components/ContactAvatar";
+import { UserAvatar } from "@/components/ui/UserAvatar";
+import { CopyBtn } from "@/components/ui/CopyBtn";
 
-const ICON_MAP: Record<string, LucideIcon | typeof Tag> = {
+const ICON_MAP: Record<string, LucideIcon> = {
   // tab keys
   overview: LayoutDashboard,
   timeline: History,
@@ -39,7 +38,7 @@ const ICON_MAP: Record<string, LucideIcon | typeof Tag> = {
   // activity types
   note: FileText,
   stage_change: Zap,
-  system: ShieldCheck,
+  system: User,
   sms: MessageSquare,
   whatsapp: MessageCircle,
   call: Phone,
@@ -79,7 +78,6 @@ interface ContactDetailDrawerProps {
   onUpdateContact?: (contact: Contact) => Promise<void>;
 }
 
-/** Helper component for rendering a card with grouped contact fields */
 interface FieldGroupCardProps {
   group: string;
   fields: { key: string; label: string; type: string }[];
@@ -115,11 +113,6 @@ function FieldGroupCard({ group, fields, formatValue }: FieldGroupCardProps): Re
   );
 }
 
-/**
- * ContactDetailDrawer component for displaying a detailed slide-out panel for a contact.
- *
- * @returns React.JSX.Element
- */
 export default function ContactDetailDrawer({
   contact: initialContact,
   onClose,
@@ -139,7 +132,6 @@ export default function ContactDetailDrawer({
   const noteInputId = useId();
   const [c, setC] = useState<Contact>(initialContact);
   const [noteText, setNoteText] = useState<string>("");
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [userMessages, setUserMessages] = useState<{
     id: string;
     userId: string;
@@ -151,13 +143,6 @@ export default function ContactDetailDrawer({
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const copyToClipboard = (text: string, key: string) => {
-    void navigator.clipboard.writeText(text);
-    setCopiedKey(key);
-    notify.success(t('contacts.table.copied'));
-    setTimeout(() => setCopiedKey(null), 2000);
-  };
 
   const handleFiles = async (filesList: FileList | null) => {
     if (!filesList || filesList.length === 0) return;
@@ -173,7 +158,7 @@ export default function ContactDetailDrawer({
           type: res.type,
           size: res.size,
           url: res.url,
-          date: new Date().toISOString(),
+          date: todayISO(),
         });
       }
       const updatedContact = {
@@ -210,9 +195,12 @@ export default function ContactDetailDrawer({
     }
     const dbKey = `messages_u:${user.id}`;
     const load = () => {
-      setUserMessages(
-        (getCollection(dbKey) as typeof userMessages) ?? []
-      );
+      try {
+        const raw = localStorage.getItem(dbKey);
+        setUserMessages(raw ? (JSON.parse(raw) as typeof userMessages) : []);
+      } catch {
+        setUserMessages([]);
+      }
     };
     load();
     window.addEventListener("local-database-update", load);
@@ -245,8 +233,6 @@ export default function ContactDetailDrawer({
     setC(initialContact);
     setActiveTab(detailTabs[0]?.key || "");
   }, [initialContact, detailTabs]);
-
-  const age = calcAge(c.dob as string | null);
 
   const allFields = useMemo(() => {
     return Object.entries(fields).flatMap(([tabId, tabFields]) =>
@@ -312,15 +298,10 @@ export default function ContactDetailDrawer({
     if (fieldValue === undefined || fieldValue === null || fieldValue === "" || fieldValue === false) return null;
     if (Array.isArray(fieldValue)) return fieldValue.length ? (fieldValue as unknown[]).join(", ") : null;
     if (field.key === "dob") {
-      try {
-        const yrsLabel = t('contacts.detail.yearsOld');
-        return `${formatDate(fieldValue as string, true)}${age ? ` (${age} ${yrsLabel})` : ""}`;
-      } catch {
-        return String(fieldValue);
-      }
+      return formatContactDobWithAge(fieldValue as string, t);
     }
     return String(fieldValue);
-  }, [c, age, t]);
+  }, [c, t]);
 
   const primaryPhone = enabledTabIds.has("phones") ? getPrimaryPhone(c) : null;
   const primaryEmail = enabledTabIds.has("emails") ? getPrimaryEmail(c) : null;
@@ -418,9 +399,13 @@ export default function ContactDetailDrawer({
         >
           {activeTab === "overview" && (
             <>
-              {/* Profile Card Header */}
               <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-card via-card to-muted/40 border border-border/80 shadow-xs">
-                <ContactAvatar contact={c} className="w-16 h-16 rounded-2xl text-2xl shadow-xs" />
+                <UserAvatar
+                  id={c.id}
+                  name={getDisplayName(c)}
+                  avatar={c.avatar}
+                  className="w-16 h-16 rounded-2xl text-2xl shadow-xs"
+                />
                 <div className="flex-1 min-w-0">
                   <h3 className="text-base font-bold text-foreground truncate leading-tight">{getDisplayName(c)}</h3>
                   <div className="flex flex-wrap gap-1.5 mt-2 items-center">
@@ -473,7 +458,7 @@ export default function ContactDetailDrawer({
                 )}
                 {primaryPhone && (
                   <a
-                    href={`tel:${primaryPhone.replace(/[^\d+]/g, "")}`}
+                    href={formatTelHref(primaryPhone)}
                     aria-label={`${t('contacts.detail.call')} ${primaryPhone}`}
                     className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-all ${DETAIL_STYLES.callAction}`}
                   >
@@ -518,7 +503,6 @@ export default function ContactDetailDrawer({
                     <Card className={COLLECTION_CONTAINER_CLASS}>
                       {c.phones.map((phone, phoneIndex) => {
                         const rawPhone = String(phone.number || "");
-                        const copyKey = `phone-${phoneIndex}`;
                         return (
                           <div key={`phone-${phone.number}-${phoneIndex}`} className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
                             <div className="min-w-0">
@@ -531,17 +515,13 @@ export default function ContactDetailDrawer({
                             </div>
                             {rawPhone && (
                               <div className="flex items-center gap-1 flex-shrink-0">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  aria-label={t('contacts.detail.copyPhone')}
-                                  onClick={() => copyToClipboard(rawPhone, copyKey)}
-                                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
-                                >
-                                  {copiedKey === copyKey ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
-                                </Button>
+                                <CopyBtn
+                                  text={rawPhone}
+                                  showToast
+                                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground p-0 flex items-center justify-center opacity-100"
+                                />
                                 <a
-                                  href={`tel:${rawPhone.replace(/[^\d+]/g, "")}`}
+                                  href={formatTelHref(rawPhone)}
                                   aria-label={t('contacts.detail.callPhone', { phone: rawPhone })}
                                   className="h-8 w-8 rounded-lg flex items-center justify-center text-info hover:bg-info/10 transition-colors"
                                 >
@@ -565,7 +545,6 @@ export default function ContactDetailDrawer({
                     <Card className={COLLECTION_CONTAINER_CLASS}>
                       {c.emails.map((email, emailIndex) => {
                         const rawEmail = String(email.address || "");
-                        const copyKey = `email-${emailIndex}`;
                         return (
                           <div key={`email-${email.address}-${emailIndex}`} className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
                             <div className="min-w-0">
@@ -578,15 +557,11 @@ export default function ContactDetailDrawer({
                             </div>
                             {rawEmail && (
                               <div className="flex items-center gap-1 flex-shrink-0">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  aria-label={t('contacts.detail.copyEmail')}
-                                  onClick={() => copyToClipboard(rawEmail, copyKey)}
-                                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
-                                >
-                                  {copiedKey === copyKey ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
-                                </Button>
+                                <CopyBtn
+                                  text={rawEmail}
+                                  showToast
+                                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground p-0 flex items-center justify-center opacity-100"
+                                />
                                 <a
                                   href={`mailto:${rawEmail}`}
                                   aria-label={t('contacts.detail.emailContact', { email: rawEmail })}
@@ -729,7 +704,7 @@ export default function ContactDetailDrawer({
                     type="text"
                     placeholder={t('contacts.detail.logEventOrNote')}
                     value={noteText}
-                    onChange={(e) => setNoteText(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNoteText(e.target.value)}
                     className="flex-1 px-4 py-3 rounded-2xl"
                   />
                   <Button
@@ -808,9 +783,12 @@ export default function ContactDetailDrawer({
                     return (
                       <Card key={relationshipIndex} className={`flex items-center justify-between gap-3 p-4 ${DETAIL_STYLES.networkItemCard}`}>
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors ${DETAIL_STYLES.networkItemIcon}`}>
-                            {target ? getInitials(target.name) : "?"}
-                          </div>
+                          <UserAvatar
+                            id={target?.id ?? relationship.contactId}
+                            name={target?.name ?? "?"}
+                            avatar={target?.avatar}
+                            className="w-10 h-10 rounded-xl text-xs flex-shrink-0"
+                          />
                           <div className="min-w-0">
                             <span className={`text-[9px] font-black uppercase tracking-widest mb-0.5 block ${DETAIL_STYLES.networkRelType}`}>{relationship.relationship}</span>
                             <h5 className="text-sm font-bold text-foreground truncate">{target ? target.name : `${t('contacts.table.contactIdPrefix')}${relationship.contactId}`}</h5>
@@ -877,7 +855,7 @@ export default function ContactDetailDrawer({
                   onChange={handleFileChange}
                   multiple
                   className="hidden"
-                  aria-label={t('contacts.detail.cloudStorageRepository') || "Upload Documents"}
+                  aria-label={t('contacts.detail.cloudStorageRepository')}
                 />
                 <Button
                   disabled={isUploading}

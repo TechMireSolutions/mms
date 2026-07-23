@@ -1,20 +1,21 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Search, Plus, User, Mail, Phone, Camera } from 'lucide-react';
-import type { Contact } from '@mms/shared';
-import { getInitials } from '@mms/shared';
-import { cn } from '@/lib/utils';
-import { uploadUserImage } from '@/lib/imageUpload';
-import { genderAvatarGradient, genderBadgeClass } from '@/lib/semanticTone';
+import React, { useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Search, Plus, User, Mail, Phone, Camera } from "lucide-react";
+import type { Contact } from "@mms/shared";
+import { getPrimaryPhone, getPrimaryEmail } from "@mms/shared";
+import { cn } from "@/lib/utils";
+import { uploadUserImage } from "@/lib/imageUpload";
+import { genderBadgeClass } from "@/lib/semanticTone";
 import ContactCreateModal, {
   type ContactCreateDefaults,
-} from '@/tenant/features/contacts/components/ContactCreateModal';
-import { FORM_LABEL } from '@/components/ui/formStyles';
-import { useDebounce } from '@/hooks/useDebounce';
-import { useTranslation } from '@/hooks/useTranslation';
-import { useContactById, useContactsPaginated } from '@/tenant/features/contacts/hooks/useContacts';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+} from "@/tenant/features/contacts/components/ContactCreateModal";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useContactById, useContactsPaginated } from "@/tenant/features/contacts/hooks/useContacts";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 
 export interface ContactPickerProps {
   label: string;
@@ -52,15 +53,19 @@ export default function ContactPicker({
   createDefaults,
   onAvatarChange,
   searchPlaceholder,
-  emptyTitle = 'No contacts found',
-  emptyHint = 'Try adjusting your search terms or create a new contact below.',
-  createLabel = 'Create New Contact',
+  emptyTitle,
+  emptyHint,
+  createLabel,
   createWithQueryLabel,
   error = false,
   id,
   name,
 }: ContactPickerProps): React.JSX.Element {
   const { t } = useTranslation();
+
+  const resolvedEmptyTitle = emptyTitle ?? t('contacts.picker.emptyTitle');
+  const resolvedEmptyHint = emptyHint ?? t('contacts.picker.emptyHint');
+  const resolvedCreateLabel = createLabel ?? t('contacts.picker.createLabel');
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -90,7 +95,7 @@ export default function ContactPicker({
   const directory = serverMode ? (searchPage?.contacts ?? []) : contacts;
 
   const matches = directory.filter((contact) => {
-    const contactPhone = contact.phones?.[0]?.number || '';
+    const contactPhone = getPrimaryPhone(contact) || '';
     if (normalizedExcludeIds.includes(String(contact.id))) return false;
     if (hasPhone && (!contactPhone || String(contactPhone).trim().length === 0)) return false;
     if (serverMode) return true;
@@ -122,10 +127,8 @@ export default function ContactPicker({
 
   if (selected) {
     const genderBadgeColor = genderBadgeClass(selected.gender ?? '');
-    const initials = getInitials(selected.name);
-    const avatarGradient = genderAvatarGradient(selected.gender ?? '');
-    const selectedPhone = (selected.phone as string | undefined) || selected.phones?.[0]?.number;
-    const selectedEmail = (selected.email as string | undefined) || selected.emails?.[0]?.address;
+    const selectedPhone = getPrimaryPhone(selected);
+    const selectedEmail = getPrimaryEmail(selected);
 
     return (
       <div className="relative">
@@ -138,13 +141,12 @@ export default function ContactPicker({
               onAvatarChange && 'cursor-pointer group/avatar',
             )}
           >
-            {selected.avatar ? (
-              <img src={selected.avatar} alt={selected.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className={`w-full h-full bg-gradient-to-br ${avatarGradient} flex items-center justify-center text-white font-bold text-sm`}>
-                {initials}
-              </div>
-            )}
+            <UserAvatar
+              id={selected.id}
+              name={selected.name}
+              avatar={selected.avatar}
+              className="w-full h-full text-sm"
+            />
             {onAvatarChange && (
               <div className="absolute inset-0 bg-black/40 rounded-xl opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center transition-opacity duration-150">
                 <Camera className="w-4 h-4 text-white" />
@@ -158,7 +160,7 @@ export default function ContactPicker({
               accept="image/*"
               className="hidden"
               onChange={handleFileChange}
-              aria-label={t("account.changePhoto") || "Change Photo"}
+              aria-label={t("account.changePhoto")}
             />
           </div>
           <div className="flex-1 min-w-0">
@@ -236,14 +238,12 @@ export default function ContactPicker({
               {matches.length === 0 && !isSearching && (
                 <div className="px-4.5 py-4 text-xs text-muted-foreground flex flex-col items-center justify-center gap-1.5 text-center bg-muted/5">
                   <User className="w-5 h-5 text-muted-foreground/45" />
-                  <p className="font-semibold text-foreground/80">{emptyTitle}</p>
-                  <p className="text-[10px] text-muted-foreground">{emptyHint}</p>
+                  <p className="font-semibold text-foreground/80">{resolvedEmptyTitle}</p>
+                  <p className="text-[10px] text-muted-foreground">{resolvedEmptyHint}</p>
                 </div>
               )}
               {matches.map((contact) => {
-                const contactInitials = getInitials(contact.name);
-                const contactGradient = genderAvatarGradient(contact.gender ?? '');
-                const contactPhone = contact.phones?.[0]?.number;
+                const contactPhone = getPrimaryPhone(contact);
                 const contactCity = contact.city as string | undefined;
                 const contactTag = contact.tag as string | undefined;
 
@@ -255,9 +255,12 @@ export default function ContactPicker({
                     onMouseDown={() => { onChange(contact.id, contact); setQuery(''); setOpen(false); }}
                     className="w-full flex items-center h-auto font-normal justify-start gap-3 px-3.5 py-2.5 hover:bg-muted transition-colors text-left focus:outline-none rounded-none shadow-none text-foreground"
                   >
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${contactGradient} flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-white shadow-sm`}>
-                      {contactInitials}
-                    </div>
+                    <UserAvatar
+                      id={contact.id}
+                      name={contact.name}
+                      avatar={contact.avatar}
+                      className="w-8 h-8 text-[11px] flex-shrink-0"
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="text-[13px] font-semibold text-foreground truncate">{contact.name}</p>
                       <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 truncate mt-0.5">
@@ -283,8 +286,8 @@ export default function ContactPicker({
                 >
                   <Plus className="w-4 h-4 text-primary" />
                   {query
-                    ? (createWithQueryLabel?.(query) ?? `Create contact "${query}"`)
-                    : createLabel}
+                    ? (createWithQueryLabel?.(query) ?? t('contacts.picker.createWithQuery', { query }))
+                    : resolvedCreateLabel}
                 </Button>
               )}
             </motion.div>

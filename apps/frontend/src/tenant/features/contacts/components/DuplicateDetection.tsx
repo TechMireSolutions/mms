@@ -2,11 +2,15 @@ import React, { useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, AlertTriangle, GitMerge, Check, Loader2 } from "lucide-react";
-import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsDuplicatePairs } from "@/tenant/features/contacts/hooks/useContacts";
-import { DUPLICATE_FIELD_I18N, DUPLICATE_REASON_I18N } from "@/lib/contacts/contactI18n";
+import {
+  DUPLICATE_REASON_I18N,
+  getDuplicateFieldLabel,
+  getDuplicateFieldValue,
+} from "@/lib/contacts/contactI18n";
 import {
   Contact,
   COLOR_PALETTES,
@@ -14,7 +18,7 @@ import {
   applyTitleCaseToContact,
   mergeContacts,
   findContactDuplicatePairs,
-  type AppTranslationKey,
+  getDisplayName,
 } from "@mms/shared";
 
 interface DuplicatePair {
@@ -23,23 +27,6 @@ interface DuplicatePair {
   reason: string;
   contacts: [Contact, Contact];
 }
-
-const getLabelForField = (field: string, t: (key: AppTranslationKey) => string): string => {
-  const key = DUPLICATE_FIELD_I18N[field];
-  return key ? t(key) : field;
-};
-
-const getValueForField = (field: string, contact: Contact, emptyDash: string): string => {
-  if (field === "phone") {
-    const ph = (contact.phones || [])[0];
-    return ph ? (ph.countryCode ? `${ph.countryCode} ${ph.number}` : ph.number) : emptyDash;
-  }
-  if (field === "email") {
-    return (contact.emails || [])[0]?.address || emptyDash;
-  }
-  const fieldValue = contact[field as keyof Contact];
-  return (fieldValue as string) || emptyDash;
-};
 
 interface ConfidenceBadgeProps {
   score: number;
@@ -73,7 +60,6 @@ function ContactCard({ contact, selected, onSelect, label }: ContactCardProps): 
   const { prefs } = useContactConfig();
   const { t } = useTranslation();
   const fields = prefs.duplicateDetectionFields || [];
-  const emptyDash = t('contacts.table.emptyDash');
 
   return (
     <div
@@ -89,8 +75,8 @@ function ContactCard({ contact, selected, onSelect, label }: ContactCardProps): 
       <div className="space-y-1.5">
         {fields.map((field) => (
           <div key={field} className="flex items-start gap-2">
-            <span className="text-[11px] text-muted-foreground w-14 flex-shrink-0">{getLabelForField(field, t)}:</span>
-            <span className="text-[12px] font-medium text-foreground truncate">{getValueForField(field, contact, emptyDash)}</span>
+            <span className="text-[11px] text-muted-foreground w-14 flex-shrink-0">{getDuplicateFieldLabel(field, t)}:</span>
+            <span className="text-[12px] font-medium text-foreground truncate">{getDuplicateFieldValue(field, contact, t)}</span>
           </div>
         ))}
       </div>
@@ -147,7 +133,7 @@ function MergePreview({ pair, keepIndex, onClose, onConfirm }: MergePreviewProps
           <div className={`${prefs.duplicateDetectionColorWarning ?? COLOR_PALETTES.amber.bg} rounded-xl p-3 flex gap-2.5`}>
             <AlertTriangle className={`w-4 h-4 ${prefs.duplicateDetectionColorWarningText ?? COLOR_PALETTES.amber.text} flex-shrink-0 mt-0.5`} />
             <p className={`text-xs ${prefs.duplicateDetectionColorWarningText ?? COLOR_PALETTES.amber.text}`}>
-              <strong>{other.name || other.firstName}</strong> {t('contacts.duplicates.mergeWarning')} <strong>{keep.name || keep.firstName}</strong>.
+              <strong>{getDisplayName(other)}</strong> {t('contacts.duplicates.mergeWarning')} <strong>{getDisplayName(keep)}</strong>.
             </p>
           </div>
 
@@ -155,15 +141,15 @@ function MergePreview({ pair, keepIndex, onClose, onConfirm }: MergePreviewProps
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t('contacts.duplicates.mergedResult')}</p>
             <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-2 text-foreground">
               {fields.map((field) => {
-                const keepValue = getValueForField(field, keep, emptyDash);
-                const otherValue = getValueForField(field, other, emptyDash);
-                const mergedValue = getValueForField(field, mergedResult, emptyDash);
+                const keepValue = getDuplicateFieldValue(field, keep, t);
+                const otherValue = getDuplicateFieldValue(field, other, t);
+                const mergedValue = getDuplicateFieldValue(field, mergedResult, t);
 
                 const fromOther = (!keepValue || keepValue === emptyDash || keepValue === "") && (otherValue && otherValue !== emptyDash && otherValue !== "");
 
                 return (
                   <div key={field} className="flex items-center gap-2">
-                    <span className="text-[11px] text-muted-foreground w-24 flex-shrink-0">{getLabelForField(field, t)}:</span>
+                    <span className="text-[11px] text-muted-foreground w-24 flex-shrink-0">{getDuplicateFieldLabel(field, t)}:</span>
                     <span className="text-[13px] font-medium text-foreground flex-1 truncate">{mergedValue || emptyDash}</span>
                     {fromOther && (
                       <span className={`text-[10px] ${prefs.duplicateDetectionColorHighlight ?? COLOR_PALETTES.blue.bg} px-1.5 py-0.5 rounded-full font-medium`}>

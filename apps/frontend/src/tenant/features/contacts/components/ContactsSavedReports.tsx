@@ -7,15 +7,8 @@ import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useIsAdminViewer } from "@/tenant/hooks/useViewerRole";
@@ -26,10 +19,59 @@ import {
 } from "@/tenant/features/contacts/hooks/useContacts";
 import { applyContactsWorkDrillDown } from "@/lib/contacts/contactsWorkDrillDown";
 import { notify } from "@/lib/notify";
-import ContactsSavedReportUserPicker from "@/tenant/features/contacts/components/ContactsSavedReportUserPicker";
+import { useUsersCollection } from "@/tenant/features/users/hooks/useUsersApi";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ContactsSavedReportsProps {
   suggestedDrillDown?: ContactsWorkDrillDown;
+}
+
+function ContactsSavedReportUserPicker({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (userIds: string[]) => void;
+}): React.JSX.Element {
+  const { t } = useTranslation();
+  const users = useUsersCollection();
+
+  const options = useMemo(
+    () => users.slice().sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "")),
+    [users],
+  );
+
+  const toggle = (userId: string) => {
+    if (value.includes(userId)) {
+      onChange(value.filter((selectedUserId) => selectedUserId !== userId));
+    } else {
+      onChange([...value, userId]);
+    }
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <Label>{t("contacts.savedReports.usersPickerLabel")}</Label>
+      <div className="max-h-40 overflow-y-auto rounded-lg border border-border divide-y divide-border">
+        {options.length === 0 ? (
+          <p className="px-3 py-2 text-xs text-muted-foreground">{t("common.loading")}</p>
+        ) : (
+          options.map((user) => (
+            <label
+              key={user.id}
+              className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-muted/50"
+            >
+              <Checkbox
+                checked={value.includes(String(user.id))}
+                onCheckedChange={() => toggle(String(user.id))}
+              />
+              <span className="truncate">{user.name || user.email}</span>
+            </label>
+          ))
+        )}
+      </div>
+    </div>
+  );
 }
 
 function formatDrillDownSummary(
@@ -49,8 +91,8 @@ export default function ContactsSavedReports({
   suggestedDrillDown = {},
 }: ContactsSavedReportsProps): React.JSX.Element {
   const { t } = useTranslation();
-  const settings = useGlobalSettings();
   const { user } = useAuth();
+
   const { role } = usePermissions();
   const isAdmin = useIsAdminViewer();
   const { genders } = useContactConfig();
@@ -146,9 +188,9 @@ export default function ContactsSavedReports({
   const formatLastRun = useMemo(
     () => (iso?: string) => {
       if (!iso) return t("contacts.savedReports.neverRun");
-      return formatDate(iso, settings.dateFormat);
+      return formatDate(iso);
     },
-    [settings.dateFormat, t],
+    [t],
   );
 
   const shareLabel = (scope: ContactsSavedReportShareScope | undefined): string => {
@@ -287,25 +329,19 @@ export default function ContactsSavedReports({
             />
           </div>
           <div className="space-y-1.5">
-            <Label>{t("contacts.savedReports.shareScopeLabel")}</Label>
-            <Select
+            <Label htmlFor="saved-report-share-scope">{t("contacts.savedReports.shareScopeLabel")}</Label>
+            <FormSelect
+              id="saved-report-share-scope"
               value={shareScope}
-              onValueChange={(v) => {
+              onChange={(v) => {
                 setShareScope(v as ContactsSavedReportShareScope);
                 if (v !== "users") setSharedWithUserIds([]);
               }}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {shareScopeOptions.map((scope) => (
-                  <SelectItem key={scope} value={scope}>
-                    {shareLabel(scope)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              options={shareScopeOptions.map((scope) => ({
+                value: scope,
+                label: shareLabel(scope),
+              }))}
+            />
           </div>
           {shareScope === "users" && (
             <ContactsSavedReportUserPicker value={sharedWithUserIds} onChange={setSharedWithUserIds} />

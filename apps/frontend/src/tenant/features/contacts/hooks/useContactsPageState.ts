@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
-import type { AppTranslationKey, Contact, PhoneNumber } from "@mms/shared";
+import type { Contact, PhoneNumber } from "@mms/shared";
 import {
   parsePhoneNumber,
   getPrimaryPhone,
@@ -10,7 +10,6 @@ import {
   filterActiveContacts,
   isContactDeleted,
   CONTACTS_MODULE_CONTRACT,
-  toTitleCase,
 } from "@mms/shared";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -23,6 +22,7 @@ import {
 } from "@/lib/contacts/contactsBackgroundJobs";
 import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
 import { reportClientError } from "@/lib/clientErrorReporting";
+import { getFallbackCountryCode, formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { startServerContactsCsvExport } from "@/lib/backgroundJobs/startServerContactsCsvExport";
 import {
   CONTACTS_WORK_DRILLDOWN_EVENT,
@@ -81,8 +81,7 @@ export function useContactsPageState({
   });
 
   const contacts = useMemo(() => {
-    const country = prefs?.defaultCountry || "";
-    const defaultCode = countryCodesMap[country] || "";
+    const defaultCode = getFallbackCountryCode(prefs, countryCodesMap);
     const source = showDeletedArchives
       ? rawContacts.filter(isContactDeleted)
       : filterActiveContacts(rawContacts);
@@ -120,7 +119,7 @@ export function useContactsPageState({
         phones,
       };
     });
-  }, [rawContacts, showDeletedArchives, prefs?.defaultCountry, countryCodesMap]);
+  }, [rawContacts, showDeletedArchives, prefs, countryCodesMap]);
 
   const [search, setSearch] = useState("");
   const [filterGender, setFilterGender] = useState("");
@@ -219,11 +218,7 @@ export function useContactsPageState({
   const defaultProvince = prefs.defaultProvince || "";
 
   const genderLabel = useCallback(
-    (gender: string) => {
-      const key = `contacts.gender.${gender.toLowerCase()}` as AppTranslationKey;
-      const translated = t(key);
-      return translated === key ? toTitleCase(gender) : translated;
-    },
+    (gender: string) => formatContactGenderLabel(gender, t),
     [t],
   );
 
