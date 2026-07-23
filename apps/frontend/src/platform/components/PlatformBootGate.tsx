@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { ROUTES } from '@/lib/config/routes';
-import { PlatformLoadingScreen } from '@/platform/components/PlatformLoadingScreen';
+import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 import ApexPageNotFound from '@/platform/components/ApexPageNotFound';
 
 interface PlatformBootGateProps {
@@ -26,7 +26,7 @@ export default function PlatformBootGate({
   } = usePlatformAuth();
 
   if (!platformAuthChecked || isCheckingPlatformAuth) {
-    return <PlatformLoadingScreen />;
+    return <RouteStatusFallback fullScreen />;
   }
 
   if (requireAuth && !isPlatformAuthenticated) {
@@ -46,7 +46,7 @@ export function PlatformFallbackRoute(): React.JSX.Element {
   const { isPlatformAuthenticated, isCheckingPlatformAuth, platformAuthChecked } = usePlatformAuth();
 
   if (!platformAuthChecked || isCheckingPlatformAuth) {
-    return <PlatformLoadingScreen />;
+    return <RouteStatusFallback fullScreen />;
   }
 
   if (!isPlatformAuthenticated) {

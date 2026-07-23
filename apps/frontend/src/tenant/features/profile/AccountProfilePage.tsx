@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { CheckCircle2, Loader2, Lock, Mail, User, Camera, ShieldCheck } from "lucide-react";
+import PasswordInput from "@/components/ui/PasswordInput";
 import type { TenantUserProfile } from "@mms/shared";
 import { calculateProfileCompleteness, getInitials } from "@mms/shared";
 import { Button } from "@/components/ui/button";
@@ -646,23 +647,19 @@ export default function AccountProfile(): React.JSX.Element {
                         }}
                         className="space-y-4"
                       >
-                        <div className="space-y-1 text-start">
-                          <Label htmlFor="current-password" className="text-xs font-semibold text-muted-foreground">{t("account.currentPassword")}</Label>
-                          <Input
-                            id="current-password"
-                            type="password"
-                            value={currentPassword}
-                            onChange={(event) => setCurrentPassword(event.target.value)}
-                            required
-                            autoComplete="current-password"
-                            className="min-h-[44px]"
-                          />
-                        </div>
-                        <div className="space-y-1 text-start">
-                          <Label htmlFor="new-password" className="text-xs font-semibold text-muted-foreground">{t("account.newPassword")}</Label>
-                          <Input
+                        <PasswordInput
+                          id="current-password"
+                          label={t("account.currentPassword")}
+                          value={currentPassword}
+                          onChange={(event) => setCurrentPassword(event.target.value)}
+                          required
+                          autoComplete="current-password"
+                          className="min-h-[44px]"
+                        />
+                        <div className="space-y-1">
+                          <PasswordInput
                             id="new-password"
-                            type="password"
+                            label={t("account.newPassword")}
                             value={newPassword}
                             onChange={(event) => setNewPassword(event.target.value)}
                             required
@@ -697,11 +694,10 @@ export default function AccountProfile(): React.JSX.Element {
                             )}
                           </div>
                         </div>
-                        <div className="space-y-1 text-start">
-                          <Label htmlFor="confirm-password" className="text-xs font-semibold text-muted-foreground">{t("account.confirmPassword")}</Label>
-                          <Input
+                        <div className="space-y-1">
+                          <PasswordInput
                             id="confirm-password"
-                            type="password"
+                            label={t("account.confirmPassword")}
                             value={confirmPassword}
                             onChange={(event) => setConfirmPassword(event.target.value)}
                             required

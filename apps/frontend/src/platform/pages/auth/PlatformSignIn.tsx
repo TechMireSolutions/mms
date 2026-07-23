@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Loader2, Mail } from "lucide-react";
 import PlatformAuthLayout from "@/platform/components/PlatformAuthLayout";
-import PlatformPasswordInput from "@/platform/components/PlatformPasswordInput";
+import PasswordInput from "@/components/ui/PasswordInput";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
 import { useTranslation } from "@/hooks/useTranslation";
-import { PlatformAlert } from "@/platform/components/PlatformAlert";
+import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FORM_LABEL } from "@/components/ui/formStyles";
@@ -46,7 +46,7 @@ export default function PlatformSignIn(): React.JSX.Element {
           noValidate
           aria-busy={isPlatformLoginSubmitting}
         >
-          {error ? <PlatformAlert message={error} /> : null}
+          {error ? <Alert message={error} /> : null}
 
           <div className="space-y-1.5 text-start">
             <label htmlFor="platform-email" className={FORM_LABEL}>{t("auth.email")}</label>
@@ -68,7 +68,7 @@ export default function PlatformSignIn(): React.JSX.Element {
             </div>
           </div>
 
-          <PlatformPasswordInput
+          <PasswordInput
             id="platform-password"
             name="password"
             label={t("auth.password")}

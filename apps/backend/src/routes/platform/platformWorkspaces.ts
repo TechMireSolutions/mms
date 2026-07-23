@@ -17,6 +17,7 @@ import {
 } from '../../validation/platformSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sendNotFound } from '../../lib/httpErrors.js';
+import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
 
 export default async function platformWorkspaceRoutes(
   fastify: FastifyInstance,
@@ -31,6 +32,7 @@ export default async function platformWorkspaceRoutes(
   });
 
   fastify.patch('/:subdomain', async (request, reply) => {
+    const { platformUser } = request as PlatformAuthenticatedRequest;
     const params = parseRequest(subdomainParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
     const body = parseRequest(workspaceEnabledPatchBodySchema, request.body);
@@ -40,6 +42,15 @@ export default async function platformWorkspaceRoutes(
     if (!updated) {
       return sendNotFound(reply, 'Workspace not found');
     }
+
+    await insertPlatformActivityLog({
+      userId: platformUser.id,
+      userEmail: platformUser.email,
+      action: 'toggle_workspace',
+      details: { subdomain: params.data.subdomain, enabled: body.data.enabled },
+      ipAddress: request.ip,
+    });
+
     const workspaces = await listPlatformWorkspaces();
     const row = workspaces.find((ws) => ws.subdomain === updated.subdomain);
     return reply.send({ workspace: row });
@@ -64,6 +75,16 @@ export default async function platformWorkspaceRoutes(
     if (!removed) {
       return sendNotFound(reply, 'Workspace not found');
     }
+
+    await insertPlatformActivityLog({
+      userId: platformUser.id,
+      userEmail: platformUser.email,
+      action: 'delete_workspace',
+      details: { subdomain: params.data.subdomain },
+      ipAddress: request.ip,
+    });
+
     return reply.send({ deleted: true, subdomain: removed.subdomain });
   });
 }
+

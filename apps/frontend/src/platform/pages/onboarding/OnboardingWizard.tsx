@@ -11,7 +11,8 @@ import {
   validatePasswordPolicy,
   isValidEmail,
 } from "@mms/shared";
-import { PlatformAlert } from "@/platform/components/PlatformAlert";
+import { Alert } from "@/components/ui/Alert";
+import { Button } from "@/components/ui/button";
 import { defaultFooterForMadrasa } from "@/tenant/features/settings/components/branding/BrandingShared";
 import { applyBrandingTheme } from "@/lib/brandingTheme";
 import CreateMadrasa from "@/platform/pages/onboarding/steps/CreateMadrasa";
@@ -209,7 +210,7 @@ export default function OnboardingWizard(): React.JSX.Element {
       <StepComponent data={data} onChange={setData} />
 
       {submitError ? (
-        <PlatformAlert
+        <Alert
           className="mt-4"
           message={
             <>
@@ -225,17 +226,18 @@ export default function OnboardingWizard(): React.JSX.Element {
       ) : null}
 
       <div className="flex items-center justify-between mt-7 pt-5 border-t border-border">
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => setStep((value) => value - 1)}
           disabled={step === 1}
           className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:pointer-events-none"
         >
           <ArrowLeft className="w-4 h-4 rtl:rotate-180" aria-hidden />
           {t("onboarding.back")}
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="button"
           onClick={handleNext}
           disabled={loading}
@@ -249,7 +251,7 @@ export default function OnboardingWizard(): React.JSX.Element {
               <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden />
             </>
           )}
-        </button>
+        </Button>
       </div>
     </WizardLayout>
   );

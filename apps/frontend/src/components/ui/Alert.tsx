@@ -2,7 +2,7 @@ import React from 'react';
 import { AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export interface PlatformAlertProps {
+export interface AlertProps {
   message: string | React.ReactNode;
   variant?: 'error' | 'warning' | 'info' | 'destructiveBlock';
   className?: string;
@@ -10,15 +10,14 @@ export interface PlatformAlertProps {
 }
 
 /**
- * Unified Alert component for the platform administration interface.
- * Implements DRY standard for error state and alert banners.
+ * Unified Alert component for error state and alert banners across the application.
  */
-export function PlatformAlert({
+export function Alert({
   message,
   variant = 'error',
   className,
   role,
-}: PlatformAlertProps): React.JSX.Element {
+}: AlertProps): React.JSX.Element {
   if (variant === 'error') {
     return (
       <div
@@ -75,3 +74,5 @@ export function PlatformAlert({
     </div>
   );
 }
+
+export default Alert;

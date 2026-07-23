@@ -1,31 +1,24 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import {
-  ArrowLeft,
-  Loader2,
-  Mail,
-  User,
-  UserPlus,
-} from "lucide-react";
+import { Loader2, Mail, User, UserPlus } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { formatDate } from "@mms/shared";
-import { PlatformAlert } from "@/platform/components/PlatformAlert";
-import { PlatformPageShell, PlatformLogoMark } from "@/platform/components/PlatformPageShell";
-import PlatformPasswordInput from "@/platform/components/PlatformPasswordInput";
+import { Alert } from "@/components/ui/Alert";
+import { PlatformPageShell } from "@/platform/components/PlatformPageShell";
+import PasswordInput from "@/components/ui/PasswordInput";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
-import { ROUTES } from "@/lib/config/routes";
 import { usePlatformAdmins, useAddPlatformAdmin } from "@/platform/hooks/usePlatformAdmins";
-import {
-  getPlatformEmailError,
-  getPlatformNameError,
-  getPlatformPasswordError,
-} from "@/platform/lib/platformValidation";
-import PlatformSpinner from "@/platform/components/PlatformSpinner";
-import PlatformRetryBlock from "@/platform/components/PlatformRetryBlock";
+import { getPlatformRegisterError } from "@/platform/lib/platformValidation";
+import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+
+import { containerVariants, cardVariants } from "@/platform/lib/animations";
 
 export default function PlatformAdmins(): React.JSX.Element {
   const { t } = useTranslation();
@@ -41,21 +34,9 @@ export default function PlatformAdmins(): React.JSX.Element {
     event.preventDefault();
     setSubmitError(null);
 
-    const nameError = getPlatformNameError(name, t);
-    if (nameError) {
-      setSubmitError(nameError);
-      return;
-    }
-
-    const emailError = getPlatformEmailError(email, t);
-    if (emailError) {
-      setSubmitError(emailError);
-      return;
-    }
-
-    const passwordError = getPlatformPasswordError(password, t);
-    if (passwordError) {
-      setSubmitError(passwordError);
+    const validationError = getPlatformRegisterError(name, email, password, t);
+    if (validationError) {
+      setSubmitError(validationError);
       return;
     }
 
@@ -74,151 +55,165 @@ export default function PlatformAdmins(): React.JSX.Element {
   };
 
   return (
-    <PlatformPageShell width="lg">
-      <div className="space-y-6">
-        <div className="text-center space-y-3">
-          <PlatformLogoMark />
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{t("platform.adminsTitle")}</h1>
-            <p className="text-sm text-muted-foreground mt-1">{t("platform.adminsSubtitle")}</p>
-          </div>
-        </div>
+    <PlatformPageShell width="7xl">
+      <div className="space-y-8">
+        <PageHeader
+          title={t("platform.adminsTitle")}
+          subtitle={t("platform.adminsSubtitle")}
+        />
 
-        <Link
-          to={ROUTES.home}
-          className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-        >
-          <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden />
-          {t("platform.backToConsole")}
-        </Link>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-          {/* List of Admins */}
-          <div className="space-y-4">
-            <h2 className="text-sm font-semibold text-foreground tracking-wider uppercase">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          {/* List of Admins (2/3 width on desktop) */}
+          <div className="lg:col-span-2 space-y-4 text-start">
+            <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
               {t("platform.manageAdmins")}
             </h2>
 
             {loadingAdmins ? (
-              <PlatformSpinner label={t("common.loading")} />
+              <RouteStatusFallback />
             ) : fetchError ? (
-              <PlatformRetryBlock
-                errorText={t("apex.loadError")}
-                retryText={t("common.retry")}
+              <ErrorState
+                title={t("apex.loadError")}
                 onRetry={() => void refetch()}
+                compact
               />
             ) : admins && admins.length > 0 ? (
-              <div className="space-y-3">
-                {admins.map((admin) => (
-                  <Card
-                    key={admin.id}
-                    accentColor={admin.role === "super_user" ? "primary" : undefined}
-                    className="p-5 ps-6.5 space-y-2 text-start hover:border-primary/30"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-semibold text-foreground truncate">{admin.name}</p>
-                      <span
-                        className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${
-                          admin.role === "super_user"
-                            ? "bg-primary/10 text-primary border border-primary/20"
-                            : "bg-muted text-muted-foreground border border-border"
-                        }`}
+              <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              >
+                <AnimatePresence mode="popLayout">
+                  {admins.map((admin) => (
+                    <motion.div
+                      key={admin.id}
+                      variants={cardVariants}
+                      layout
+                      className="h-full"
+                    >
+                      <Card
+                        accentColor={admin.role === "super_user" ? "primary" : undefined}
+                        className="p-6 space-y-3.5 text-start hover:border-primary/20 hover:scale-[1.01] h-full flex flex-col justify-between"
                       >
-                        {admin.role === "super_user"
-                          ? t("platform.roleSuperUser")
-                          : t("platform.roleAdmin")}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Mail className="w-3.5 h-3.5 shrink-0" aria-hidden />
-                      <span className="truncate">{admin.email}</span>
-                    </div>
-                    {admin.createdAt ? (
-                      <p className="text-[10px] text-muted-foreground/70">
-                        {t("platform.profileMemberSince")}: {formatDate(admin.createdAt)}
-                      </p>
-                    ) : null}
-                  </Card>
-                ))}
-              </div>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-sm font-bold text-foreground truncate">{admin.name}</p>
+                            <StatusBadge
+                              status={admin.role}
+                              config={{
+                                super_user: {
+                                  label: t("platform.roleSuperUser"),
+                                  cls: "bg-primary/10 text-primary border-primary/20",
+                                },
+                                admin: {
+                                  label: t("platform.roleAdmin"),
+                                  cls: "bg-muted text-muted-foreground border-border",
+                                },
+                              }}
+                              size="sm"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                            <Mail className="w-4 h-4 shrink-0 opacity-80" aria-hidden />
+                            <span className="truncate">{admin.email}</span>
+                          </div>
+                        </div>
+                        {admin.createdAt ? (
+                          <p className="text-[10px] text-muted-foreground/60 font-semibold pt-2 border-t border-border/40 mt-2">
+                            {t("platform.profileMemberSince")}: {formatDate(admin.createdAt)}
+                          </p>
+                        ) : null}
+                      </Card>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                {t("platform.noAdmins")}
-              </p>
+              <div className="text-center py-12 border-2 border-dashed border-border/30 rounded-2xl bg-muted/5">
+                <p className="text-sm text-muted-foreground">
+                  {t("platform.noAdmins")}
+                </p>
+              </div>
             )}
           </div>
 
-          {/* Add Admin Form */}
-          <Card accentColor="primary" className="p-0">
-            <form
-              onSubmit={(event) => void handleAddAdmin(event)}
-              className="p-5 ps-6.5 space-y-4 text-start"
-            >
-            <div className="flex items-center gap-2">
-              <UserPlus className="w-5 h-5 text-primary" aria-hidden />
-              <h2 className="text-sm font-bold text-foreground">{t("platform.addAdmin")}</h2>
-            </div>
+          {/* Add Admin Form (1/3 width on desktop) */}
+          <div className="space-y-4">
+            <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground text-start">
+              {t("platform.addAdmin")}
+            </h2>
+            <Card accentColor="primary" className="p-0 overflow-hidden">
+              <form
+                onSubmit={(event) => void handleAddAdmin(event)}
+                className="p-6 space-y-4 text-start"
+              >
+                <div className="flex items-center gap-2">
+                  <UserPlus className="w-5 h-5 text-primary" aria-hidden />
+                  <h3 className="text-sm font-bold text-foreground">{t("platform.addAdmin")}</h3>
+                </div>
 
-            {submitError ? <PlatformAlert message={submitError} /> : null}
+                {submitError ? <Alert message={submitError} /> : null}
 
-            <div className="space-y-1.5">
-              <label htmlFor="admin-name" className={FORM_LABEL}>
-                {t("platform.adminName")}
-              </label>
-              <div className="relative">
-                <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-                <Input
-                  id="admin-name"
-                  type="text"
+                <div className="space-y-1.5">
+                  <label htmlFor="admin-name" className={FORM_LABEL}>
+                    {t("platform.adminName")}
+                  </label>
+                  <div className="relative">
+                    <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
+                    <Input
+                      id="admin-name"
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      className="ps-9 min-h-[44px]"
+                      disabled={addAdmin.isPending}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="admin-email" className={FORM_LABEL}>
+                    {t("platform.adminEmail")}
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
+                    <Input
+                      id="admin-email"
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      className="ps-9 min-h-[44px]"
+                      disabled={addAdmin.isPending}
+                    />
+                  </div>
+                </div>
+
+                <PasswordInput
+                  id="admin-password"
+                  label={t("platform.adminPassword")}
+                  autoComplete="new-password"
                   required
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  className="ps-9"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                   disabled={addAdmin.isPending}
                 />
-              </div>
-            </div>
 
-            <div className="space-y-1.5">
-              <label htmlFor="admin-email" className={FORM_LABEL}>
-                {t("platform.adminEmail")}
-              </label>
-              <div className="relative">
-                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-                <Input
-                  id="admin-email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  className="ps-9"
-                  disabled={addAdmin.isPending}
-                />
-              </div>
-            </div>
-
-            <PlatformPasswordInput
-              id="admin-password"
-              label={t("platform.adminPassword")}
-              autoComplete="new-password"
-              required
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              disabled={addAdmin.isPending}
-            />
-
-            <Button type="submit" className="w-full font-semibold" disabled={addAdmin.isPending}>
-              {addAdmin.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />
-                  {t("platform.createAdminPending")}
-                </>
-              ) : (
-                t("platform.addAdmin")
-              )}
-            </Button>
-            </form>
-          </Card>
+                <Button type="submit" className="w-full font-bold h-11 rounded-xl cursor-pointer" disabled={addAdmin.isPending}>
+                  {addAdmin.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />
+                      {t("platform.createAdminPending")}
+                    </>
+                  ) : (
+                    t("platform.addAdmin")
+                  )}
+                </Button>
+              </form>
+            </Card>
+          </div>
         </div>
       </div>
     </PlatformPageShell>

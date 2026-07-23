@@ -6,7 +6,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FORM_LABEL } from "@/components/ui/formStyles";
-import PlatformPasswordInput from "@/platform/components/PlatformPasswordInput";
+import PasswordInput from "@/components/ui/PasswordInput";
 
 /** The subset of onboarding data used by this step. */
 export interface AdminSetupData {
@@ -128,7 +128,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
 
       {/* Password */}
       <div>
-        <PlatformPasswordInput
+        <PasswordInput
           id="password"
           name="password"
           label={`${t("onboarding.admin.password")} *`}
@@ -164,7 +164,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
 
       {/* Confirm password */}
       <div>
-        <PlatformPasswordInput
+        <PasswordInput
           id="confirmPassword"
           name="confirmPassword"
           label={`${t("onboarding.admin.confirmPassword")} *`}

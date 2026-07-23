@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useId } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Eye, EyeOff, ArrowRight, Loader2, Mail, Lock, AlertCircle } from "lucide-react";
+import { ArrowRight, Loader2, Mail, AlertCircle } from "lucide-react";
+import PasswordInput from "@/components/ui/PasswordInput";
 import AuthLayout from "@/tenant/components/AuthLayout";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -48,7 +49,6 @@ export default function Login(): React.ReactElement {
     }
   });
   const [password, setPassword] = useState<string>("");
-  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [rememberMe, setRememberMe] = useState<boolean>(() => {
     try {
       return Boolean(localStorage.getItem(REMEMBER_EMAIL_KEY));
@@ -208,57 +208,36 @@ export default function Login(): React.ReactElement {
             ) : null}
           </div>
 
-          <div className="space-y-1.5">
-            <label htmlFor={passwordFieldId} className={FORM_LABEL}>
-              {t("auth.password")}
-            </label>
-            <div className="relative">
-              <Lock
-                className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80"
-                aria-hidden
-              />
-              <Input
-                id={passwordFieldId}
-                type={showPassword ? "text" : "password"}
-                name="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(event) => {
-                  setPassword(event.target.value);
-                  setFieldErrors((prev) => ({ ...prev, password: undefined }));
-                  setFormError("");
-                }}
-                placeholder="••••••••"
-                aria-invalid={Boolean(fieldErrors.password)}
-                aria-describedby={fieldErrors.password ? `${passwordFieldId}-error` : undefined}
-                className={cn(
-                  "ps-9 pe-11",
-                  fieldErrors.password && "border-destructive focus-visible:ring-destructive/25",
-                )}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute end-0.5 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground animate-none cursor-pointer"
-                aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
-                aria-pressed={showPassword}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-            {fieldErrors.password ? (
-              <p id={`${passwordFieldId}-error`} className={FORM_ERROR} role="alert">
-                {fieldErrors.password}
-              </p>
-            ) : null}
-            <div className="flex justify-end pt-0.5">
-              <Link
-                to={ROUTES.forgotPassword}
-                className="rounded-md px-1 py-1 text-xs font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
-              >
-                {t("auth.forgotPassword")}
-              </Link>
-            </div>
+          <PasswordInput
+            id={passwordFieldId}
+            name="password"
+            label={t("auth.password")}
+            autoComplete="current-password"
+            value={password}
+            onChange={(event) => {
+              setPassword(event.target.value);
+              setFieldErrors((prev) => ({ ...prev, password: undefined }));
+              setFormError("");
+            }}
+            placeholder="••••••••"
+            aria-invalid={Boolean(fieldErrors.password)}
+            aria-describedby={fieldErrors.password ? `${passwordFieldId}-error` : undefined}
+            className={cn(
+              fieldErrors.password && "border-destructive focus-visible:ring-destructive/25",
+            )}
+          />
+          {fieldErrors.password ? (
+            <p id={`${passwordFieldId}-error`} className={FORM_ERROR} role="alert">
+              {fieldErrors.password}
+            </p>
+          ) : null}
+          <div className="flex justify-end pt-0.5">
+            <Link
+              to={ROUTES.forgotPassword}
+              className="rounded-md px-1 py-1 text-xs font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+            >
+              {t("auth.forgotPassword")}
+            </Link>
           </div>
 
           <label

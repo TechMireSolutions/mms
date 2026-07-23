@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { ArrowUpRight, ArrowDownRight, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 import { formatNumber } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -145,6 +146,8 @@ export function StatCard({
   const buttonProps = onClick ? { type: "button" as const } : {};
   const isCompact = variant === "compact";
 
+  const resolvedAccentColor = (accent || color) as any;
+
   if (isCompact) {
     const formattedValue = typeof value === "number" ? formatNumber(value) : value;
     return (
@@ -154,31 +157,35 @@ export function StatCard({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: delayIndex * 0.04, duration: 0.3, ease: "easeOut" }}
-        className={cn(
-          "relative overflow-hidden group flex items-center gap-3 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm px-4 py-3 ps-5.5 shadow-sm transition-all duration-300 text-start min-h-[44px] w-full",
-          onClick && "cursor-pointer hover:shadow-md hover:border-primary/40 hover:bg-card/75",
-          className
-        )}
+        className={cn("w-full text-start", onClick && "cursor-pointer")}
       >
-        <div className={cn("absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300", theme.stripe)} />
-        {Icon && (
-          <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ms-0.5 shadow-sm ring-4", theme.iconBg, theme.ring)} aria-hidden="true">
-            <Icon className={cn("w-4 h-4", theme.iconText)} />
-          </div>
-        )}
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide truncate">
-            {label}
-          </p>
-          <p className="text-lg font-bold text-foreground leading-tight tabular-nums">
-            {formattedValue}
-          </p>
-          {sub && (
-            <p className="text-[10px] font-semibold text-muted-foreground mt-1 opacity-70 truncate">
-              {sub}
-            </p>
+        <Card
+          accentColor={resolvedAccentColor}
+          className={cn(
+            "flex items-center gap-3 px-4 py-3 ps-5.5 min-h-[44px] w-full",
+            onClick && "hover:border-primary/40 hover:bg-card/75",
+            className
           )}
-        </div>
+        >
+          {Icon && (
+            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ms-0.5 shadow-sm ring-4", theme.iconBg, theme.ring)} aria-hidden="true">
+              <Icon className={cn("w-4 h-4", theme.iconText)} />
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide truncate">
+              {label}
+            </p>
+            <p className="text-lg font-bold text-foreground leading-tight tabular-nums">
+              {formattedValue}
+            </p>
+            {sub && (
+              <p className="text-[10px] font-semibold text-muted-foreground mt-1 opacity-70 truncate">
+                {sub}
+              </p>
+            )}
+          </div>
+        </Card>
       </Comp>
     );
   }
@@ -190,51 +197,54 @@ export function StatCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: delayIndex * 0.04, duration: 0.3, ease: "easeOut" }}
-      className={cn(
-        "relative overflow-hidden group flex items-center justify-between rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm p-4 ps-5.5 shadow-sm hover:shadow-md transition-all duration-300 text-start min-h-[82px] w-full",
-        onClick && "cursor-pointer hover:border-primary/40 hover:bg-card/75",
-        className
-      )}
+      className={cn("w-full text-start", onClick && "cursor-pointer")}
     >
-      <div className={cn("absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300", theme.stripe)} />
-      
-      <div className="flex items-center gap-3.5 min-w-0">
-        {Icon && (
-          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ms-0.5 shadow-sm ring-4", theme.iconBg, theme.ring)} aria-hidden="true">
-            <Icon className={cn("w-5 h-5", theme.iconText)} />
-          </div>
+      <Card
+        accentColor={resolvedAccentColor}
+        className={cn(
+          "flex items-center justify-between p-4 ps-5.5 min-h-[82px] w-full",
+          onClick && "hover:border-primary/40 hover:bg-card/75",
+          className
         )}
-        <div className="min-w-0">
-          <span className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1.5">
-            {label}
-          </span>
-          <p className="text-lg font-black text-foreground leading-none tracking-tight">
-            {value}
-          </p>
-          {sub && (
-            <p className="text-[10px] font-semibold text-muted-foreground mt-1 opacity-70 truncate">
-              {sub}
+      >
+        <div className="flex items-center gap-3.5 min-w-0">
+          {Icon && (
+            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ms-0.5 shadow-sm ring-4", theme.iconBg, theme.ring)} aria-hidden="true">
+              <Icon className={cn("w-5 h-5", theme.iconText)} />
+            </div>
+          )}
+          <div className="min-w-0">
+            <span className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1.5">
+              {label}
+            </span>
+            <p className="text-lg font-black text-foreground leading-none tracking-tight">
+              {value}
             </p>
-          )}
+            {sub && (
+              <p className="text-[10px] font-semibold text-muted-foreground mt-1 opacity-70 truncate">
+                {sub}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
 
-      {trend !== undefined && (
-        <span
-          className={cn(
-            "flex items-center gap-0.5 text-[11px] font-bold self-start ms-2 shrink-0 select-none",
-            trend >= 0 ? "text-success" : "text-destructive"
-          )}
-          aria-label={trend >= 0 ? t("ui.statCard.positiveTrend") : t("ui.statCard.negativeTrend")}
-        >
-          {trend >= 0 ? (
-            <ArrowUpRight className="w-3 h-3" aria-hidden="true" />
-          ) : (
-            <ArrowDownRight className="w-3 h-3" aria-hidden="true" />
-          )}
-          {Math.abs(trend)}%
-        </span>
-      )}
+        {trend !== undefined && (
+          <span
+            className={cn(
+              "flex items-center gap-0.5 text-[11px] font-bold self-start ms-2 shrink-0 select-none",
+              trend >= 0 ? "text-success" : "text-destructive"
+            )}
+            aria-label={trend >= 0 ? t("ui.statCard.positiveTrend") : t("ui.statCard.negativeTrend")}
+          >
+            {trend >= 0 ? (
+              <ArrowUpRight className="w-3 h-3" aria-hidden="true" />
+            ) : (
+              <ArrowDownRight className="w-3 h-3" aria-hidden="true" />
+            )}
+            {Math.abs(trend)}%
+          </span>
+        )}
+      </Card>
     </Comp>
   );
 }

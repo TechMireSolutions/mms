@@ -5,9 +5,6 @@ import type {
 } from '@mms/shared';
 import {
   normalizePlatformEmail,
-  validatePlatformSetupEmail,
-  validatePlatformSetupName,
-  validatePlatformSetupPassword,
   PLATFORM_SETUP_CODE_TTL_MINUTES,
 } from '@mms/shared';
 import {
@@ -30,6 +27,12 @@ import {
 import { isPlatformSmtpConfigured } from './platformEmailService.js';
 import { PlatformError, type PlatformErrorCode } from './platformErrorService.js';
 import { dispatchPlatformOtp } from './platformOtpService.js';
+import {
+  enforcePlatformEmail,
+  enforcePlatformName,
+  enforcePlatformPassword,
+  buildSetupRegisterResult,
+} from './platformValidationService.js';
 
 const SETUP_TTL_MS = PLATFORM_SETUP_CODE_TTL_MINUTES * 60 * 1000;
 
@@ -71,21 +74,9 @@ export async function startPlatformSetup(input: {
     throw new PlatformSetupError('setup_not_needed', 'Platform administrator already exists');
   }
 
-  const emailError = validatePlatformSetupEmail(input.email);
-  if (emailError) {
-    throw new PlatformSetupError('invalid_email', 'Invalid email address');
-  }
-  const nameError = validatePlatformSetupName(input.name);
-  if (nameError) {
-    throw new PlatformSetupError('invalid_name', 'Invalid display name');
-  }
-  const passwordError = validatePlatformSetupPassword(input.password);
-  if (passwordError === 'platform.setupPasswordTooShort') {
-    throw new PlatformSetupError('password_too_short', 'Password does not meet minimum length');
-  }
-  if (passwordError === 'platform.setupPasswordWeak') {
-    throw new PlatformSetupError('password_weak', 'Password does not meet complexity requirements');
-  }
+  enforcePlatformEmail(input.email);
+  enforcePlatformName(input.name);
+  enforcePlatformPassword(input.password);
 
   const email = normalizePlatformEmail(input.email);
   const code = generateOtpCode();
@@ -106,12 +97,7 @@ export async function startPlatformSetup(input: {
 
   const dispatch = await dispatchSetupCode(email, code);
 
-  return {
-    setupId,
-    email,
-    emailSent: dispatch.sent,
-    devCode: dispatch.devCode,
-  };
+  return buildSetupRegisterResult(dispatch, setupId, email);
 }
 
 export async function resendPlatformSetupCode(setupId: string): Promise<PlatformSetupRegisterResult> {
@@ -134,12 +120,7 @@ export async function resendPlatformSetupCode(setupId: string): Promise<Platform
 
   const dispatch = await dispatchSetupCode(entry.payload.email, code);
 
-  return {
-    setupId,
-    email: entry.payload.email,
-    emailSent: dispatch.sent,
-    devCode: dispatch.devCode,
-  };
+  return buildSetupRegisterResult(dispatch, setupId, entry.payload.email);
 }
 
 export async function verifyPlatformSetup(

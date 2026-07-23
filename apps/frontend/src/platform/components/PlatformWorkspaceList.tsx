@@ -1,5 +1,6 @@
 import React, { memo, useEffect, useState } from "react";
-import { ExternalLink, Loader2, Trash2 } from "lucide-react";
+import { ExternalLink, Loader2, Trash2, Globe, Ban } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import type { PlatformWorkspaceRow } from "@mms/shared";
 import { getAppDomain, tenantUrl } from "@/lib/config/tenantConfig";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -12,6 +13,7 @@ import { isApiError } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -22,9 +24,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import WorkspaceLogo from "@/platform/components/WorkspaceLogo";
-import PlatformSpinner from "@/platform/components/PlatformSpinner";
-import PlatformRetryBlock from "@/platform/components/PlatformRetryBlock";
-import PlatformPasswordInput from "@/platform/components/PlatformPasswordInput";
+import PasswordInput from "@/components/ui/PasswordInput";
+import { SearchBar } from "@/components/ui/SearchBar";
+import { SubTabBar } from "@/components/ui/SubTabBar";
+import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 /**
  * Super-user workspace list with enable/disable and delete controls.
@@ -32,20 +38,21 @@ import PlatformPasswordInput from "@/platform/components/PlatformPasswordInput";
 export default function PlatformWorkspaceList(): React.JSX.Element {
   const { t } = useTranslation();
   const appDomain = getAppDomain();
-  const { data: workspaces, isLoading, isError, refetch, isFetching } = usePlatformWorkspaces();
+  const { data: workspaces, isLoading, isError, refetch } = usePlatformWorkspaces();
   const setEnabled = useSetWorkspaceEnabled();
   const deleteWorkspace = useDeleteWorkspace();
 
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+
   if (isLoading) {
-    return <PlatformSpinner label={t("apex.loadingMadrasas")} />;
+    return <RouteStatusFallback />;
   }
 
   if (isError) {
     return (
-      <PlatformRetryBlock
-        errorText={t("apex.loadError")}
-        retryText={t("common.retry")}
-        isFetching={isFetching}
+      <ErrorState
+        title={t("apex.loadError")}
         onRetry={() => void refetch()}
       />
     );
@@ -53,30 +60,69 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
 
   const items = workspaces ?? [];
 
-  if (items.length === 0) {
-    return <p className="text-sm text-muted-foreground text-center py-2">{t("apex.noMadrasasYet")}</p>;
-  }
+  const filteredItems = items.filter((workspace) => {
+    const matchesSearch =
+      workspace.madrasaName.toLowerCase().includes(search.toLowerCase()) ||
+      workspace.subdomain.toLowerCase().includes(search.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && workspace.enabled) ||
+      (statusFilter === "inactive" && !workspace.enabled);
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
-    <div className="space-y-2 w-full text-start">
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">
-        {t("platform.manageMadrasas")}
-      </p>
-      <ul className="space-y-3">
-        {items.map((workspace) => (
-          <WorkspaceRow
-            key={workspace.subdomain}
-            workspace={workspace}
-            appDomain={appDomain}
-            togglePending={setEnabled.isPending && setEnabled.variables?.subdomain === workspace.subdomain}
-            deletePending={deleteWorkspace.isPending && deleteWorkspace.variables?.subdomain === workspace.subdomain}
-            onToggle={(enabled) => setEnabled.mutate({ subdomain: workspace.subdomain, enabled })}
-            onDelete={(password) =>
-              deleteWorkspace.mutateAsync({ subdomain: workspace.subdomain, password })
-            }
-          />
-        ))}
-      </ul>
+    <div className="space-y-6 w-full text-start">
+      {/* Search and Filter bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/40 pb-4">
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder={t("common.search")}
+          className="w-full md:max-w-md"
+        />
+        <SubTabBar
+          tabs={[
+            { key: "all", label: t("attendance.filter.all") },
+            { key: "active", label: t("platform.workspaceActive"), icon: Globe },
+            { key: "inactive", label: t("platform.workspaceInactive"), icon: Ban },
+          ]}
+          value={statusFilter}
+          onChange={setStatusFilter}
+        />
+      </div>
+
+      {filteredItems.length === 0 ? (
+        <EmptyState
+          icon={Globe}
+          title={search ? t("platform.noAdmins") : t("apex.noMadrasasYet")}
+          description={search ? "No workspaces match your search criteria" : undefined}
+          compact
+        />
+      ) : (
+        <motion.ul 
+          layout
+          className="grid grid-cols-1 lg:grid-cols-2 gap-4"
+        >
+          <AnimatePresence mode="popLayout">
+            {filteredItems.map((workspace) => (
+              <WorkspaceRow
+                key={workspace.subdomain}
+                workspace={workspace}
+                appDomain={appDomain}
+                togglePending={setEnabled.isPending && setEnabled.variables?.subdomain === workspace.subdomain}
+                deletePending={deleteWorkspace.isPending && deleteWorkspace.variables?.subdomain === workspace.subdomain}
+                onToggle={(enabled) => setEnabled.mutate({ subdomain: workspace.subdomain, enabled })}
+                onDelete={(password) =>
+                  deleteWorkspace.mutateAsync({ subdomain: workspace.subdomain, password })
+                }
+              />
+            ))}
+          </AnimatePresence>
+        </motion.ul>
+      )}
     </div>
   );
 }
@@ -127,69 +173,105 @@ const WorkspaceRow = memo(function WorkspaceRow({
 
   return (
     <>
-      <li
-        className={`rounded-xl border-2 p-4 shadow-sm transition-colors ${
-          workspace.enabled ? "border-border bg-card" : "border-destructive/30 bg-destructive/5"
-        }`}
+      <motion.li
+        layout
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ type: "spring", stiffness: 100, damping: 15 }}
+        className="h-full"
       >
-        <div className="flex items-start gap-3">
-          <WorkspaceLogo logoUrl={workspace.logoUrl} madrasaName={workspace.madrasaName} />
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-foreground">{workspace.madrasaName}</p>
-            <p className="text-xs text-muted-foreground font-mono break-all">
-              {workspace.subdomain}.{appDomain}
-            </p>
-            {!workspace.enabled ? (
-              <p className="text-xs text-destructive mt-1">{t("platform.workspaceDisabledBadge")}</p>
-            ) : null}
-          </div>
-          <div className="flex flex-col items-end gap-1 shrink-0">
-            <div className="flex items-center gap-2">
-              <Label htmlFor={`ws-enabled-${workspace.subdomain}`} className="text-xs text-muted-foreground sr-only">
-                {t("platform.toggleWorkspace", { name: workspace.madrasaName })}
-              </Label>
-              <Switch
-                id={`ws-enabled-${workspace.subdomain}`}
-                checked={workspace.enabled}
-                disabled={busy}
-                onCheckedChange={onToggle}
+        <Card
+          accentColor={!workspace.enabled ? "destructive" : undefined}
+          className="p-6 flex flex-col justify-between hover:scale-[1.01] transition-all duration-300 h-full text-start"
+        >
+          <div className="flex items-start gap-4">
+            <div className="relative group-hover:scale-105 transition-transform duration-300">
+              <WorkspaceLogo logoUrl={workspace.logoUrl} madrasaName={workspace.madrasaName} className="h-12 w-12 rounded-xl border border-border/30" />
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="text-sm font-bold text-foreground truncate">{workspace.madrasaName}</p>
+              <p className="text-xs text-muted-foreground font-mono break-all opacity-85">
+                {workspace.subdomain}.{appDomain}
+              </p>
+              {!workspace.enabled ? (
+                <div className="mt-1">
+                  <StatusBadge
+                    status="disabled"
+                    config={{
+                      disabled: {
+                        label: t("platform.workspaceDisabledBadge"),
+                        cls: "bg-destructive/15 text-destructive border-destructive/20",
+                      },
+                    }}
+                    size="sm"
+                  />
+                </div>
+              ) : null}
+            </div>
+            <div className="flex flex-col items-end gap-1.5 shrink-0">
+              <div className="flex items-center gap-2">
+                <Label htmlFor={`ws-enabled-${workspace.subdomain}`} className="text-xs text-muted-foreground sr-only">
+                  {t("platform.toggleWorkspace", { name: workspace.madrasaName })}
+                </Label>
+                <Switch
+                  id={`ws-enabled-${workspace.subdomain}`}
+                  checked={workspace.enabled}
+                  disabled={busy}
+                  onCheckedChange={onToggle}
+                />
+              </div>
+              <StatusBadge
+                status={workspace.enabled ? "active" : "inactive"}
+                config={{
+                  active: {
+                    label: t("platform.workspaceActive"),
+                    cls: "bg-success/10 text-success border-success/20",
+                  },
+                  inactive: {
+                    label: t("platform.workspaceInactive"),
+                    cls: "bg-destructive/10 text-destructive border-destructive/20",
+                  },
+                }}
+                size="sm"
               />
             </div>
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-              {workspace.enabled ? t("platform.workspaceActive") : t("platform.workspaceInactive")}
-            </span>
           </div>
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          {workspace.enabled ? (
-            <a
-              href={tenantLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+
+          <div className="mt-5 pt-4 border-t border-border/40 flex items-center justify-between gap-3">
+            {workspace.enabled ? (
+              <a
+                href={tenantLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline hover:text-primary/95 transition-colors group/link"
+              >
+                <ExternalLink className="w-3.5 h-3.5 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform duration-250" aria-hidden />
+                {t("platform.openWorkspace")}
+              </a>
+            ) : (
+              <div className="w-4 h-4" /> // placeholder
+            )}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={busy}
+              className="h-8 px-2.5 rounded-lg text-xs font-bold text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"
+              onClick={() => setConfirmOpen(true)}
             >
-              <ExternalLink className="w-3 h-3" aria-hidden />
-              {t("platform.openWorkspace")}
-            </a>
-          ) : null}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={busy}
-            className="h-7 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 ms-auto"
-            onClick={() => setConfirmOpen(true)}
-          >
-            <Trash2 className="w-3.5 h-3.5 me-1" aria-hidden />
-            {t("platform.deleteWorkspace")}
-          </Button>
-        </div>
-      </li>
+              <Trash2 className="w-3.5 h-3.5 me-1.5" aria-hidden />
+              {t("platform.deleteWorkspace")}
+            </Button>
+          </div>
+        </Card>
+      </motion.li>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("platform.deleteWorkspaceTitle")}</AlertDialogTitle>
+            <AlertDialogTitle className="text-destructive font-bold">{t("platform.deleteWorkspaceTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
               {t("platform.deleteWorkspaceDesc", {
                 name: workspace.madrasaName,
@@ -198,8 +280,8 @@ const WorkspaceRow = memo(function WorkspaceRow({
               })}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="space-y-2">
-            <PlatformPasswordInput
+          <div className="space-y-2.5 my-2">
+            <PasswordInput
               id={`delete-pw-${workspace.subdomain}`}
               label={t("platform.profileCurrentPassword")}
               autoComplete="current-password"
@@ -212,7 +294,7 @@ const WorkspaceRow = memo(function WorkspaceRow({
             />
             <p className="text-xs text-muted-foreground">{t("platform.deleteWorkspacePasswordHint")}</p>
             {passwordError ? (
-              <p className="text-xs text-destructive" role="alert">
+              <p className="text-xs text-destructive font-semibold" role="alert">
                 {passwordError}
               </p>
             ) : null}
@@ -240,3 +322,4 @@ const WorkspaceRow = memo(function WorkspaceRow({
     </>
   );
 });
+

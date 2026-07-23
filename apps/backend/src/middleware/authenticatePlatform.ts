@@ -46,6 +46,13 @@ export async function authenticatePlatform(
     return;
   }
 
+  const { getStoredPlatformUserById } = await import('../services/platform/platformUserService.js');
+  const userExists = await getStoredPlatformUserById(payload.id);
+  if (!userExists) {
+    sendUnauthorized(reply, 'User no longer exists');
+    return;
+  }
+
   (request as PlatformAuthenticatedRequest).platformUser = {
     id: payload.id,
     email: payload.email,

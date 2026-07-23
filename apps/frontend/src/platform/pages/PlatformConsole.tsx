@@ -1,18 +1,23 @@
 import React, { Suspense, lazy } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, LogOut, Plus, UserCircle, UserPlus } from "lucide-react";
-import { PlatformPageShell, PlatformLogoMark } from "@/platform/components/PlatformPageShell";
+import { ArrowRight, Plus, Globe, Building2, Ban } from "lucide-react";
+import { motion } from "framer-motion";
+import { PlatformPageShell } from "@/platform/components/PlatformPageShell";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ROUTES } from "@/lib/config/routes";
 import { Button } from "@/components/ui/button";
-import PlatformSpinner from "@/platform/components/PlatformSpinner";
+import { StatCard } from "@/components/ui/StatCard";
+import { usePlatformWorkspaces } from "@/platform/hooks/usePlatformWorkspaces";
+import { CardSkeleton } from "@/components/ui/LoadingState";
+import { PageHeader } from "@/components/ui/PageHeader";
+
+import { containerVariantsConsole as containerVariants, itemVariants } from "@/platform/lib/animations";
 
 const PlatformWorkspaceList = lazy(() => import("@/platform/components/PlatformWorkspaceList"));
 
 function WorkspaceListFallback(): React.JSX.Element {
-  const { t } = useTranslation();
-  return <PlatformSpinner label={t("apex.loadingMadrasas")} />;
+  return <CardSkeleton count={2} className="grid-cols-1 lg:grid-cols-2" />;
 }
 
 /**
@@ -20,84 +25,82 @@ function WorkspaceListFallback(): React.JSX.Element {
  */
 export default function PlatformConsole(): React.JSX.Element {
   const { t } = useTranslation();
-  const { platformUser, platformLogout } = usePlatformAuth();
+  const { platformUser } = usePlatformAuth();
+  const { data: workspaces } = usePlatformWorkspaces();
   const isSuperUser = platformUser?.role === "super_user";
 
+  const totalWorkspaces = workspaces?.length ?? 0;
+  const activeWorkspaces = workspaces?.filter((w) => w.enabled).length ?? 0;
+  const disabledWorkspaces = workspaces?.filter((w) => !w.enabled).length ?? 0;
+
+  const headerActions = isSuperUser ? (
+    <Button
+      asChild
+      className="h-11 rounded-xl font-bold px-5 shadow-sm shadow-primary/20 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer self-start sm:self-auto"
+      onMouseEnter={() => {
+        void import("@/platform/pages/onboarding/OnboardingWizard");
+      }}
+    >
+      <Link to={ROUTES.onboarding}>
+        <Plus className="w-4 h-4 me-1.5" aria-hidden />
+        {t("auth.createMadrasa")}
+        <ArrowRight className="w-4 h-4 ms-1 rtl:rotate-180" aria-hidden />
+      </Link>
+    </Button>
+  ) : undefined;
+
   return (
-    <PlatformPageShell>
-      <div className="text-center space-y-6">
-        <PlatformLogoMark />
+    <PlatformPageShell width="7xl">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className="space-y-8"
+      >
+        <motion.div variants={itemVariants}>
+          <PageHeader
+            title={t("platform.consoleTitle")}
+            subtitle={t("platform.consoleSubtitle", { name: platformUser?.name ?? "" })}
+            actions={headerActions}
+          />
+        </motion.div>
 
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">
-            {t("platform.consoleTitle")}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {t("platform.consoleSubtitle", { name: platformUser?.name ?? "" })}
-          </p>
-        </div>
+        {/* Dashboard Statistics Grid */}
+        <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard
+            label={t("platform.manageMadrasas")}
+            value={totalWorkspaces}
+            icon={Building2}
+            accent="primary"
+            delayIndex={0}
+          />
+          <StatCard
+            label={t("platform.workspaceActive")}
+            value={activeWorkspaces}
+            icon={Globe}
+            accent="success"
+            delayIndex={1}
+          />
+          <StatCard
+            label={t("platform.workspaceInactive")}
+            value={disabledWorkspaces}
+            icon={Ban}
+            accent="destructive"
+            delayIndex={2}
+          />
+        </motion.div>
 
-        {isSuperUser ? (
-          <>
-            <Button
-              asChild
-              className="w-full h-11 rounded-xl font-semibold"
-              onMouseEnter={() => {
-                void import("@/platform/pages/onboarding/OnboardingWizard");
-              }}
-            >
-              <Link to={ROUTES.onboarding}>
-                <Plus className="w-4 h-4" aria-hidden />
-                {t("auth.createMadrasa")}
-                <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden />
-              </Link>
-            </Button>
-
-            <Button
-              asChild
-              variant="outline"
-              className="w-full h-11 rounded-xl"
-              onMouseEnter={() => {
-                void import("@/platform/pages/PlatformAdmins");
-              }}
-            >
-              <Link to={ROUTES.platformAdmins}>
-                <UserPlus className="w-4 h-4" aria-hidden />
-                {t("platform.manageAdmins")}
-              </Link>
-            </Button>
-          </>
-        ) : null}
-
-        <Suspense fallback={<WorkspaceListFallback />}>
-          <PlatformWorkspaceList />
-        </Suspense>
-
-        <Button
-          asChild
-          variant="outline"
-          className="w-full h-11 rounded-xl"
-          onMouseEnter={() => {
-            void import("@/platform/pages/PlatformAccount");
-          }}
+        {/* Workspaces List Section */}
+        <motion.div
+          variants={itemVariants}
+          className="bg-card/30 border border-border/40 rounded-2xl p-6 backdrop-blur-sm shadow-sm space-y-6"
         >
-          <Link to={ROUTES.platformAccount}>
-            <UserCircle className="w-4 h-4" aria-hidden />
-            {t("platform.myAccount")}
-          </Link>
-        </Button>
-
-        <div className="flex justify-center text-sm">
-          <button
-            type="button"
-            onClick={platformLogout}
-            className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
-          >
-            <LogOut className="w-3.5 h-3.5" aria-hidden />
-            {t("platform.signOut")}
-          </button>
-        </div>
-      </div>
+          <Suspense fallback={<WorkspaceListFallback />}>
+            <PlatformWorkspaceList />
+          </Suspense>
+        </motion.div>
+      </motion.div>
     </PlatformPageShell>
   );
 }
+

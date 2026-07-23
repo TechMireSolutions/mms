@@ -3,9 +3,8 @@ import { Eye, EyeOff, Lock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PLATFORM_MIN_PASSWORD_LENGTH } from '@mms/shared';
 
-export interface PlatformPasswordInputProps
+export interface PasswordInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
   id: string;
   label?: string;
@@ -13,11 +12,11 @@ export interface PlatformPasswordInputProps
   minPasswordLength?: number;
 }
 
-export const PlatformPasswordInput: React.FC<PlatformPasswordInputProps> = ({
+export const PasswordInput: React.FC<PasswordInputProps> = ({
   id,
   label,
   showToggle = true,
-  minPasswordLength = PLATFORM_MIN_PASSWORD_LENGTH,
+  minPasswordLength,
   value,
   onChange,
   disabled,
@@ -38,7 +37,7 @@ export const PlatformPasswordInput: React.FC<PlatformPasswordInputProps> = ({
       ) : null}
       <div className="relative">
         <Lock
-          className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+          className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/80 pointer-events-none"
           aria-hidden
         />
         <Input
@@ -57,7 +56,7 @@ export const PlatformPasswordInput: React.FC<PlatformPasswordInputProps> = ({
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute end-0.5 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+            className="absolute end-0.5 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground cursor-pointer"
             aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
             aria-pressed={showPassword}
           >
@@ -73,4 +72,4 @@ export const PlatformPasswordInput: React.FC<PlatformPasswordInputProps> = ({
   );
 };
 
-export default PlatformPasswordInput;
+export default PasswordInput;

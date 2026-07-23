@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import {
   authenticatePlatform,
   requireSuperUser,
+  type PlatformAuthenticatedRequest,
 } from '../../middleware/authenticatePlatform.js';
 import { listPlatformUsers } from '../../db/repositories/platformUserRepository.js';
 import {
@@ -11,6 +12,7 @@ import {
 import { hashPassword } from '../../services/auth/passwordService.js';
 import { platformCreateAdminBodySchema } from '../../validation/platformSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
 
 export default async function platformUsersRoutes(
   fastify: FastifyInstance,
@@ -26,6 +28,7 @@ export default async function platformUsersRoutes(
   });
 
   fastify.post('/', async (request, reply) => {
+    const { platformUser } = request as PlatformAuthenticatedRequest;
     const parsed = parseRequest(platformCreateAdminBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     const { name, email, password } = parsed.data;
@@ -38,6 +41,15 @@ export default async function platformUsersRoutes(
       role: 'admin',
     });
 
+    await insertPlatformActivityLog({
+      userId: platformUser.id,
+      userEmail: platformUser.email,
+      action: 'create_admin',
+      details: { adminEmail: email, adminName: name.trim() },
+      ipAddress: request.ip,
+    });
+
     return reply.send({ user: toPlatformUserProfile(stored) });
   });
 }
+

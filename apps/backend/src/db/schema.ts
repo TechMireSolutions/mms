@@ -465,3 +465,14 @@ export const customTabs = pgTable('custom_tabs', {
   index('custom_tabs_workspace_idx').on(table.workspaceSubdomain),
 ]);
 
+export const platformActivityLogs = pgTable('platform_activity_logs', {
+  id: serial('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => platformUsers.id, { onDelete: 'cascade' }),
+  userEmail: text('user_email').notNull(),
+  action: text('action').notNull(), // 'reset_database' | 'toggle_workspace' | 'delete_workspace' | 'create_admin'
+  details: jsonb('details').$type<Record<string, unknown>>().notNull(),
+  ipAddress: text('ip_address'),
+  createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
+});
+
+

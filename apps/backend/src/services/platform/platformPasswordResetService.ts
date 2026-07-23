@@ -1,8 +1,6 @@
 import type { PlatformPasswordForgotResult, StoredPlatformUser } from '@mms/shared';
 import {
   normalizePlatformEmail,
-  validatePlatformSetupEmail,
-  validatePlatformSetupPassword,
   PLATFORM_PASSWORD_RESET_TTL_MINUTES,
 } from '@mms/shared';
 import {
@@ -24,6 +22,11 @@ import {
   findPlatformUserByEmail,
   updatePlatformUserPassword,
 } from './platformUserService.js';
+import {
+  enforcePlatformEmail,
+  enforcePlatformPassword,
+  buildDevForgotResult,
+} from './platformValidationService.js';
 
 const RESET_TTL_MS = PLATFORM_PASSWORD_RESET_TTL_MINUTES * 60 * 1000;
 
@@ -58,10 +61,7 @@ async function dispatchResetCode(email: string, code: string, resetId: string): 
 
 /** Always returns accepted — does not reveal whether the email is registered. */
 export async function requestPlatformPasswordReset(emailInput: string): Promise<PlatformPasswordForgotResult> {
-  const emailError = validatePlatformSetupEmail(emailInput);
-  if (emailError) {
-    throw new PlatformPasswordResetError('invalid_email', 'Invalid email address');
-  }
+  enforcePlatformEmail(emailInput);
 
   const email = normalizePlatformEmail(emailInput);
   const user = await findPlatformUserByEmail(email);
@@ -84,13 +84,7 @@ export async function requestPlatformPasswordReset(emailInput: string): Promise<
   );
 
   const dispatch = await dispatchResetCode(email, code, resetId);
-  const result: PlatformPasswordForgotResult = { accepted: true };
-
-  if (process.env.NODE_ENV !== 'production' && dispatch.devCode) {
-    result.devReset = { resetId, code: dispatch.devCode };
-  }
-
-  return result;
+  return buildDevForgotResult(dispatch, resetId);
 }
 
 export async function resendPlatformPasswordReset(resetId: string): Promise<PlatformPasswordForgotResult> {
@@ -108,13 +102,7 @@ export async function resendPlatformPasswordReset(resetId: string): Promise<Plat
   await putAuthArtifact('platform_password_reset', updated, RESET_TTL_MS, resetId);
 
   const dispatch = await dispatchResetCode(entry.payload.email, code, resetId);
-  const result: PlatformPasswordForgotResult = { accepted: true };
-
-  if (process.env.NODE_ENV !== 'production' && dispatch.devCode) {
-    result.devReset = { resetId, code: dispatch.devCode };
-  }
-
-  return result;
+  return buildDevForgotResult(dispatch, resetId);
 }
 
 export async function completePlatformPasswordReset(
@@ -122,13 +110,7 @@ export async function completePlatformPasswordReset(
   code: string,
   password: string,
 ): Promise<StoredPlatformUser> {
-  const passwordError = validatePlatformSetupPassword(password);
-  if (passwordError === 'platform.setupPasswordTooShort') {
-    throw new PlatformPasswordResetError('password_too_short', 'Password does not meet minimum length');
-  }
-  if (passwordError === 'platform.setupPasswordWeak') {
-    throw new PlatformPasswordResetError('password_weak', 'Password does not meet complexity requirements');
-  }
+  enforcePlatformPassword(password);
 
   const entry = await getAuthArtifact<PlatformPasswordResetPayload>(resetId, 'platform_password_reset');
   if (!entry) {

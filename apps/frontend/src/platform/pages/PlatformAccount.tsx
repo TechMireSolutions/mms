@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowLeft,
   CheckCircle2,
   Loader2,
   Mail,
   User,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { formatDate } from "@mms/shared";
-import { PlatformPageShell, PlatformLogoMark } from "@/platform/components/PlatformPageShell";
-import PlatformPasswordInput from "@/platform/components/PlatformPasswordInput";
-import { PlatformAlert } from "@/platform/components/PlatformAlert";
+import { PlatformPageShell } from "@/platform/components/PlatformPageShell";
+import PasswordInput from "@/components/ui/PasswordInput";
+import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,10 @@ import {
   getPlatformPasswordError,
   getPlatformPasswordMatchError,
 } from "@/platform/lib/platformValidation";
+import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
+import { PageHeader } from "@/components/ui/PageHeader";
+
+import { containerVariants, itemVariants as cardVariants } from "@/platform/lib/animations";
 
 /**
  * Platform super-user profile — view name/email and update display name or password.
@@ -53,8 +57,6 @@ export default function PlatformAccount(): React.JSX.Element {
   const updatePassword = useUpdatePlatformPassword();
   const resetDbMutation = useResetPlatformDatabase();
   const isSuperUser = platformUser?.role === "super_user";
-
-
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
 
@@ -62,7 +64,6 @@ export default function PlatformAccount(): React.JSX.Element {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState<string | null>(null);
-
 
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
@@ -79,8 +80,6 @@ export default function PlatformAccount(): React.JSX.Element {
       setResetError(getPlatformErrorMessage(err, t));
     }
   };
-
-
 
   useEffect(() => {
     if (profile?.name) {
@@ -140,197 +139,212 @@ export default function PlatformAccount(): React.JSX.Element {
     : null;
 
   return (
-    <PlatformPageShell width="md">
-      <div className="space-y-6">
-        <div className="text-center space-y-3">
-          <PlatformLogoMark />
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{t("platform.profileTitle")}</h1>
-            <p className="text-sm text-muted-foreground mt-1">{t("platform.profileSubtitle")}</p>
-          </div>
-        </div>
-
-        <Link
-          to={ROUTES.home}
-          className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-        >
-          <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden />
-          {t("platform.backToConsole")}
-        </Link>
+    <PlatformPageShell width="7xl">
+      <div className="space-y-8">
+        <PageHeader
+          title={t("platform.profileTitle")}
+          subtitle={t("platform.profileSubtitle")}
+        />
 
         {loadingProfile ? (
-          <div className="flex justify-center py-8" role="status">
-            <Loader2 className="w-6 h-6 animate-spin text-primary" aria-hidden />
-            <span className="sr-only">{t("common.loading")}</span>
-          </div>
+          <RouteStatusFallback />
         ) : profile && !profileError ? (
-          <>
-            <Card accentColor="primary" className="p-5 ps-6.5 space-y-3 text-start">
-              <div className="flex items-center gap-2 text-sm ms-0.5">
-                <Mail className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden />
-                <span className="text-muted-foreground">{t("platform.profileEmail")}</span>
-                <span className="font-medium text-foreground ms-auto truncate">{profile.email}</span>
-              </div>
-              {memberSince ? (
-                <div className="flex items-center gap-2 text-sm">
-                  <User className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden />
-                  <span className="text-muted-foreground">{t("platform.profileMemberSince")}</span>
-                  <span className="font-medium text-foreground ms-auto">{memberSince}</span>
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start"
+          >
+            {/* Left Side Info / Quick Actions (1/3 width) */}
+            <motion.div variants={cardVariants} className="space-y-6">
+              <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground text-start">
+                {t("platform.myAccount")}
+              </h2>
+              
+              <Card accentColor="primary" className="p-6 space-y-4 text-start">
+                <div className="flex items-center gap-3 text-sm">
+                  <Mail className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden />
+                  <span className="text-muted-foreground">{t("platform.profileEmail")}</span>
+                  <span className="font-semibold text-foreground ms-auto truncate max-w-[150px]">{profile.email}</span>
                 </div>
-              ) : null}
-              {profile.emailVerifiedAt ? (
-                <div className="flex items-center gap-2 text-sm text-primary">
-                  <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden />
-                  <span>{t("platform.profileEmailVerified")}</span>
-                </div>
-              ) : null}
-            </Card>
+                {memberSince ? (
+                  <div className="flex items-center gap-3 text-sm">
+                    <User className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden />
+                    <span className="text-muted-foreground">{t("platform.profileMemberSince")}</span>
+                    <span className="font-semibold text-foreground ms-auto">{memberSince}</span>
+                  </div>
+                ) : null}
+                {profile.emailVerifiedAt ? (
+                  <div className="flex items-center gap-2 text-sm text-primary font-bold pt-2 border-t border-border/40">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden />
+                    <span>{t("platform.profileEmailVerified")}</span>
+                  </div>
+                ) : null}
+              </Card>
 
-            <Card accentColor="indigo" className="p-0">
-              <form onSubmit={(event) => void handleSaveName(event)} className="p-5 ps-6.5 space-y-4 text-start">
-              <h2 className="text-sm font-semibold text-foreground ms-0.5">{t("platform.profileName")}</h2>
-              {nameError ? <PlatformAlert message={nameError} /> : null}
-              <div className="space-y-1.5">
-                <label htmlFor="platform-profile-name" className={FORM_LABEL}>{t("platform.profileName")}</label>
-                <Input
-                  id="platform-profile-name"
-                  autoComplete="name"
-                  required
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={updateName.isPending || name === platformUser?.name}>
-                {updateName.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
-                    {t("common.save")}
-                  </>
-                ) : (
-                  t("platform.profileSave")
-                )}
-              </Button>
-              </form>
-            </Card>
+              {isSuperUser && (
+                <div className="space-y-6">
+                  <Card accentColor="destructive" className="p-6 space-y-4 text-start border-destructive/10 bg-destructive/5">
+                    <h3 className="text-sm font-bold text-destructive">{t("platform.profileDestroyDatabase")}</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {t("platform.profileDestroyDatabaseDesc")}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      className="w-full font-bold h-10 rounded-xl cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all"
+                      onClick={() => {
+                        setResetError(null);
+                        setConfirmText("");
+                        setResetDialogOpen(true);
+                      }}
+                    >
+                      {t("platform.profileDestroyDatabaseButton")}
+                    </Button>
+                  </Card>
 
-            <Card accentColor="emerald" className="p-0">
-              <form onSubmit={(event) => void handleChangePassword(event)} className="p-5 ps-6.5 space-y-4 text-start">
-              <h2 className="text-sm font-semibold text-foreground ms-0.5">{t("platform.profileChangePassword")}</h2>
-              {passwordError ? <PlatformAlert message={passwordError} /> : null}
-              <PlatformPasswordInput
-                id="platform-current-password"
-                label={t("platform.profileCurrentPassword")}
-                autoComplete="current-password"
-                required
-                value={currentPassword}
-                onChange={(event) => setCurrentPassword(event.target.value)}
-              />
-              <PlatformPasswordInput
-                id="platform-new-password"
-                label={t("platform.profileNewPassword")}
-                autoComplete="new-password"
-                required
-                value={newPassword}
-                onChange={(event) => setNewPassword(event.target.value)}
-              />
-              <PlatformPasswordInput
-                id="platform-confirm-new-password"
-                label={t("platform.profileConfirmPassword")}
-                autoComplete="new-password"
-                required
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-              />
-              <Button type="submit" className="w-full" disabled={updatePassword.isPending}>
-                {updatePassword.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
-                    {t("common.save")}
-                  </>
-                ) : (
-                  t("platform.profileChangePassword")
-                )}
-              </Button>
-              <p className="text-center text-xs text-muted-foreground">
-                <Link to={ROUTES.platformForgotPassword} className="text-primary font-medium hover:underline">
-                  {t("platform.profileForgotLink")}
-                </Link>
-              </p>
-              </form>
-            </Card>
-
-            {isSuperUser && (
-              <>
-                <Card accentColor="destructive" className="p-5 ps-6.5 space-y-4 text-start">
-                  <h2 className="text-sm font-semibold text-foreground ms-0.5">{t("platform.profileDestroyDatabase")}</h2>
-                  <p className="text-xs text-muted-foreground ms-0.5">
-                    {t("platform.profileDestroyDatabaseDesc")}
-                  </p>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    className="w-full"
-                    onClick={() => {
-                      setResetError(null);
-                      setConfirmText("");
-                      setResetDialogOpen(true);
-                    }}
-                  >
-                    {t("platform.profileDestroyDatabaseButton")}
-                  </Button>
-                </Card>
-
-                <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="text-destructive">{t("platform.profileDestroyDatabaseTitle")}</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        {t("platform.profileDestroyDatabaseDesc")}
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <div className="space-y-3 my-2 text-start">
-                      <p className="text-xs text-muted-foreground">
-                        {t("platform.profileDestroyDatabasePrompt")}
-                      </p>
-                      <Input
-                        type="text"
-                        value={confirmText}
-                        onChange={(event) => {
-                          setConfirmText(event.target.value);
-                          if (resetError) setResetError(null);
-                        }}
-                        placeholder="RESET_ALL_DATABASE_DATA"
-                        disabled={resetDbMutation.isPending}
-                      />
-                      {resetError ? (
-                        <p className="text-xs text-destructive" role="alert">
-                          {resetError}
+                  <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-destructive font-bold">{t("platform.profileDestroyDatabaseTitle")}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {t("platform.profileDestroyDatabaseDesc")}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <div className="space-y-3 my-2 text-start">
+                        <p className="text-xs text-muted-foreground font-semibold">
+                          {t("platform.profileDestroyDatabasePrompt")}
                         </p>
-                      ) : null}
+                        <Input
+                          type="text"
+                          value={confirmText}
+                          onChange={(event) => {
+                            setConfirmText(event.target.value);
+                            if (resetError) setResetError(null);
+                          }}
+                          placeholder="RESET_ALL_DATABASE_DATA"
+                          disabled={resetDbMutation.isPending}
+                          className="min-h-[44px]"
+                        />
+                        {resetError ? (
+                          <p className="text-xs text-destructive font-bold" role="alert">
+                            {resetError}
+                          </p>
+                        ) : null}
+                      </div>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={resetDbMutation.isPending}>{t("common.cancel")}</AlertDialogCancel>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          disabled={resetDbMutation.isPending || confirmText !== "RESET_ALL_DATABASE_DATA"}
+                          onClick={handleResetDatabase}
+                        >
+                          {resetDbMutation.isPending ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />
+                              {t("platform.profileDestroyDatabaseConfirm")}
+                            </>
+                          ) : (
+                            t("platform.profileDestroyDatabaseConfirm")
+                          )}
+                        </Button>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Right Side Settings Forms (2/3 width) */}
+            <motion.div variants={cardVariants} className="lg:col-span-2 space-y-6">
+              <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground text-start">
+                {t("platform.profileName")}
+              </h2>
+              
+              <Card accentColor="indigo" className="p-0 overflow-hidden">
+                <form onSubmit={(event) => void handleSaveName(event)} className="p-6 space-y-4 text-start">
+                  <h3 className="text-sm font-bold text-foreground">{t("platform.profileName")}</h3>
+                  {nameError ? <Alert message={nameError} /> : null}
+                  <div className="space-y-1.5">
+                    <label htmlFor="platform-profile-name" className={FORM_LABEL}>{t("platform.profileName")}</label>
+                    <Input
+                      id="platform-profile-name"
+                      autoComplete="name"
+                      required
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      className="min-h-[44px]"
+                    />
+                  </div>
+                  <Button type="submit" className="w-fit px-6 font-bold h-10 rounded-xl cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all" disabled={updateName.isPending || name === platformUser?.name}>
+                    {updateName.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />
+                        {t("common.save")}
+                      </>
+                    ) : (
+                      t("platform.profileSave")
+                    )}
+                  </Button>
+                </form>
+              </Card>
+
+              <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground text-start">
+                {t("platform.profileChangePassword")}
+              </h2>
+
+              <Card accentColor="emerald" className="p-0 overflow-hidden">
+                <form onSubmit={(event) => void handleChangePassword(event)} className="p-6 space-y-4 text-start">
+                  <h3 className="text-sm font-bold text-foreground">{t("platform.profileChangePassword")}</h3>
+                  {passwordError ? <Alert message={passwordError} /> : null}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <PasswordInput
+                        id="platform-current-password"
+                        label={t("platform.profileCurrentPassword")}
+                        autoComplete="current-password"
+                        required
+                        value={currentPassword}
+                        onChange={(event) => setCurrentPassword(event.target.value)}
+                      />
                     </div>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel disabled={resetDbMutation.isPending}>{t("common.cancel")}</AlertDialogCancel>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        disabled={resetDbMutation.isPending || confirmText !== "RESET_ALL_DATABASE_DATA"}
-                        onClick={handleResetDatabase}
-                      >
-                        {resetDbMutation.isPending ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />
-                            {t("platform.profileDestroyDatabaseConfirm")}
-                          </>
-                        ) : (
-                          t("platform.profileDestroyDatabaseConfirm")
-                        )}
-                      </Button>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </>
-            )}
-          </>
+                    <PasswordInput
+                      id="platform-new-password"
+                      label={t("platform.profileNewPassword")}
+                      autoComplete="new-password"
+                      required
+                      value={newPassword}
+                      onChange={(event) => setNewPassword(event.target.value)}
+                    />
+                    <PasswordInput
+                      id="platform-confirm-new-password"
+                      label={t("platform.profileConfirmPassword")}
+                      autoComplete="new-password"
+                      required
+                      value={confirmPassword}
+                      onChange={(event) => setConfirmPassword(event.target.value)}
+                    />
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+                    <Button type="submit" className="w-fit px-6 font-bold h-10 rounded-xl cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all" disabled={updatePassword.isPending}>
+                      {updatePassword.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />
+                          {t("common.save")}
+                        </>
+                      ) : (
+                        t("platform.profileChangePassword")
+                      )}
+                    </Button>
+                    <Link to={ROUTES.platformForgotPassword} className="text-xs text-primary font-bold hover:underline">
+                      {t("platform.profileForgotLink")}
+                    </Link>
+                  </div>
+                </form>
+              </Card>
+            </motion.div>
+          </motion.div>
         ) : (
           <p className="text-sm text-destructive text-center" role="alert">
             {t("errors.boundary.description")}

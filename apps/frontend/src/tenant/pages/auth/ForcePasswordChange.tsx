@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, ArrowRight, KeyRound, Loader2, Lock } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
+import PasswordInput from "@/components/ui/PasswordInput";
+import { Alert } from "@/components/ui/Alert";
 import { DEFAULT_GLOBAL_SETTINGS, validatePasswordPolicy } from "@mms/shared";
 import AuthLayout from "@/tenant/components/AuthLayout";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -8,8 +10,7 @@ import { ROUTES } from "@/lib/config/routes";
 import { apiJson } from "@/lib/apiClient";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { FORM_ERROR, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_ERROR } from "@/components/ui/formStyles";
 
 export default function ForcePasswordChange(): React.ReactElement {
   const { t } = useTranslation();
@@ -57,68 +58,42 @@ export default function ForcePasswordChange(): React.ReactElement {
   return (
     <AuthLayout title={t("account.forcePasswordTitle")}>
       <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4" noValidate>
-        <div className="rounded-xl border border-warning/30 bg-warning/10 px-3.5 py-3 text-sm text-foreground">
-          <div className="flex items-start gap-2">
-            <KeyRound className="h-4 w-4 mt-0.5 text-warning" aria-hidden />
-            <p>{t("account.forcePasswordBody")}</p>
-          </div>
-        </div>
+        <Alert
+          variant="warning"
+          message={t("account.forcePasswordBody")}
+        />
 
-        {error ? (
-          <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/5 px-3.5 py-3 text-sm text-destructive" role="alert">
-            <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" aria-hidden />
-            <span>{error}</span>
-          </div>
-        ) : null}
+        {error ? <Alert message={error} /> : null}
 
-        <div className="space-y-1.5">
-          <label htmlFor="current-password" className={FORM_LABEL}>{t("account.currentPassword")}</label>
-          <div className="relative">
-            <Lock className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <Input
-              id="current-password"
-              type="password"
-              autoComplete="current-password"
-              value={currentPassword}
-              onChange={(event) => setCurrentPassword(event.target.value)}
-              className="ps-9"
-              disabled={busy}
-            />
-          </div>
-        </div>
+        <PasswordInput
+          id="current-password"
+          label={t("account.currentPassword")}
+          autoComplete="current-password"
+          value={currentPassword}
+          onChange={(event) => setCurrentPassword(event.target.value)}
+          disabled={busy}
+        />
 
-        <div className="space-y-1.5">
-          <label htmlFor="new-password" className={FORM_LABEL}>{t("account.newPassword")}</label>
-          <div className="relative">
-            <Lock className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <Input
-              id="new-password"
-              type="password"
-              autoComplete="new-password"
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
-              className="ps-9"
-              disabled={busy}
-            />
-          </div>
+        <div className="space-y-1">
+          <PasswordInput
+            id="new-password"
+            label={t("account.newPassword")}
+            autoComplete="new-password"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            disabled={busy}
+          />
           <p className={FORM_ERROR}>{t("account.passwordRulesHint")}</p>
         </div>
 
-        <div className="space-y-1.5">
-          <label htmlFor="confirm-password" className={FORM_LABEL}>{t("account.confirmPassword")}</label>
-          <div className="relative">
-            <Lock className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <Input
-              id="confirm-password"
-              type="password"
-              autoComplete="new-password"
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              className="ps-9"
-              disabled={busy}
-            />
-          </div>
-        </div>
+        <PasswordInput
+          id="confirm-password"
+          label={t("account.confirmPassword")}
+          autoComplete="new-password"
+          value={confirmPassword}
+          onChange={(event) => setConfirmPassword(event.target.value)}
+          disabled={busy}
+        />
 
         <Button type="submit" className="w-full h-11 font-semibold" disabled={busy}>
           {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : t("account.forcePasswordSubmit")}

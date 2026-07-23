@@ -9,14 +9,12 @@ import {
 } from "lucide-react";
 import { type PlatformSetupRegisterResult, maskEmail } from "@mms/shared";
 import {
-  getPlatformEmailError,
-  getPlatformNameError,
-  getPlatformPasswordError,
+  getPlatformRegisterError,
 } from "@/platform/lib/platformValidation";
 import PlatformAuthLayout from "@/platform/components/PlatformAuthLayout";
-import PlatformPasswordInput from "@/platform/components/PlatformPasswordInput";
+import PasswordInput from "@/components/ui/PasswordInput";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
-import { PlatformAlert } from "@/platform/components/PlatformAlert";
+import { Alert } from "@/components/ui/Alert";
 import { OtpInput, createEmptyOtp, isOtpComplete } from "@/components/ui/OtpInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,21 +66,12 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
     setError(null);
     setSetupNotice(null);
 
-    const emailError = getPlatformEmailError(email, t);
-    if (emailError) {
-      setError(emailError);
+    const validationError = getPlatformRegisterError(name, email, password, t);
+    if (validationError) {
+      setError(validationError);
       return;
     }
-    const nameError = getPlatformNameError(name, t);
-    if (nameError) {
-      setError(nameError);
-      return;
-    }
-    const passwordError = getPlatformPasswordError(password, t);
-    if (passwordError) {
-      setError(passwordError);
-      return;
-    }
+
 
     if (!smtpConfigured && import.meta.env.PROD) {
       setError(t("platform.setupSmtpRequired"));
@@ -153,10 +142,10 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
         subtitle={t("platform.setupVerifySubtitle", { email: maskEmail(setupSession.email) })}
       >
         <form onSubmit={(event) => void handleVerify(event)} className="space-y-4">
-          {error ? <PlatformAlert message={error} /> : null}
-          {setupNotice ? <PlatformAlert variant="info" message={setupNotice} /> : null}
+          {error ? <Alert message={error} /> : null}
+          {setupNotice ? <Alert variant="info" message={setupNotice} /> : null}
           {setupSession.devCode ? (
-            <PlatformAlert variant="warning" message={t("platform.setupDevCodeHint", { code: setupSession.devCode })} />
+            <Alert variant="warning" message={t("platform.setupDevCodeHint", { code: setupSession.devCode })} />
           ) : null}
 
           <OtpInput
@@ -205,9 +194,9 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
       <PlatformAuthLayout title={t("platform.setupTitle")} subtitle={t("platform.setupSubtitle")}>
       <form onSubmit={(event) => void handleRegister(event)} className="space-y-4">
         {!smtpConfigured && import.meta.env.PROD ? (
-          <PlatformAlert variant="warning" message={t("platform.setupSmtpRequired")} />
+          <Alert variant="warning" message={t("platform.setupSmtpRequired")} />
         ) : null}
-        {error ? <PlatformAlert message={error} /> : null}
+        {error ? <Alert message={error} /> : null}
 
         <div className="space-y-1.5">
           <label htmlFor="platform-setup-name" className={FORM_LABEL}>{t("platform.setupFullName")}</label>
@@ -240,7 +229,7 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
           </div>
         </div>
 
-        <PlatformPasswordInput
+        <PasswordInput
           id="platform-setup-password"
           label={t("auth.password")}
           autoComplete="new-password"

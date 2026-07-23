@@ -16,9 +16,9 @@ import {
 } from "@/platform/lib/platformValidation";
 
 import PlatformAuthLayout from "@/platform/components/PlatformAuthLayout";
-import PlatformPasswordInput from "@/platform/components/PlatformPasswordInput";
+import PasswordInput from "@/components/ui/PasswordInput";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
-import { PlatformAlert } from "@/platform/components/PlatformAlert";
+import { Alert } from "@/components/ui/Alert";
 import { OtpInput, createEmptyOtp, isOtpComplete } from "@/components/ui/OtpInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -158,8 +158,8 @@ export default function PlatformForgotPassword(): React.JSX.Element {
         {pageHead}
         <PlatformAuthLayout title={t("platform.forgotResetTitle")} subtitle={t("platform.forgotResetSubtitle")}>
         <form onSubmit={(event) => void handleReset(event)} className="space-y-4">
-          {error ? <PlatformAlert message={error} /> : null}
-          {devHint ? <PlatformAlert variant="warning" message={devHint} /> : null}
+          {error ? <Alert message={error} /> : null}
+          {devHint ? <Alert variant="warning" message={devHint} /> : null}
 
           <OtpInput
             value={code}
@@ -168,7 +168,7 @@ export default function PlatformForgotPassword(): React.JSX.Element {
             disabled={loading}
           />
 
-          <PlatformPasswordInput
+          <PasswordInput
             id="platform-new-password"
             label={t("platform.forgotNewPassword")}
             autoComplete="new-password"
@@ -177,7 +177,7 @@ export default function PlatformForgotPassword(): React.JSX.Element {
             onChange={(event) => setPassword(event.target.value)}
           />
 
-          <PlatformPasswordInput
+          <PasswordInput
             id="platform-confirm-password"
             label={t("platform.forgotConfirmPassword")}
             autoComplete="new-password"
@@ -240,7 +240,7 @@ export default function PlatformForgotPassword(): React.JSX.Element {
             </div>
           </div>
 
-          {devHint ? <PlatformAlert variant="warning" message={devHint} /> : null}
+          {devHint ? <Alert variant="warning" message={devHint} /> : null}
 
           {resetId ? (
             <Button type="button" className="w-full h-11" onClick={() => navigate(resetPath(resetId))}>
@@ -279,7 +279,7 @@ export default function PlatformForgotPassword(): React.JSX.Element {
       {pageHead}
       <PlatformAuthLayout title={t("platform.forgotTitle")} subtitle={t("platform.forgotSubtitle")}>
       <form onSubmit={(event) => void handleRequest(event)} className="space-y-4">
-        {error ? <PlatformAlert message={error} /> : null}
+        {error ? <Alert message={error} /> : null}
 
         <div className="space-y-1.5">
           <label htmlFor="platform-forgot-email" className={FORM_LABEL}>{t("auth.email")}</label>

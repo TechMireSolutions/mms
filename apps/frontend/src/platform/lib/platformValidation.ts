@@ -48,3 +48,25 @@ export function getPlatformPasswordMatchError(
   return key ? t(key) : null;
 }
 
+/**
+ * Validates name, email, and password for platform registration/invite and returns first error.
+ */
+export function getPlatformRegisterError(
+  name: string,
+  email: string,
+  password: string,
+  t: TranslateFn
+): string | null {
+  const nameError = getPlatformNameError(name, t);
+  if (nameError) return nameError;
+
+  const emailError = getPlatformEmailError(email, t);
+  if (emailError) return emailError;
+
+  const passwordError = getPlatformPasswordError(password, t);
+  if (passwordError) return passwordError;
+
+  return null;
+}
+
+

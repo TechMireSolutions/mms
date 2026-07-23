@@ -183,6 +183,13 @@
       "when": 1784712151711,
       "tag": "0025_motionless_speed",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1784775797237,
+      "tag": "0026_numerous_betty_ross",
+      "breakpoints": true
     }
   ]
 }

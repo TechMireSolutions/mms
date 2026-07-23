@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { initDb } from '../db/database.js';
 import { buildApp } from '../app.js';
+import { insertPlatformUser } from '../db/repositories/platformUserRepository.js';
 
 vi.mock('../services/platform/platformDatabaseService.js', () => ({
   resetAndReseedDatabase: vi.fn().mockResolvedValue(undefined),
@@ -17,6 +18,25 @@ describe('platformSettings REST API routes', () => {
       await initDb();
       isDbAvailable = true;
       app = await buildApp();
+
+      // Seed mock platform users to satisfy getStoredPlatformUserById validation in authenticatePlatform middleware
+      await insertPlatformUser({
+        id: 'p-super',
+        email: 'admin@platform.com',
+        name: 'Super Admin',
+        passwordHash: 'dummy-hash',
+        role: 'super_user',
+        createdAt: new Date().toISOString(),
+      }).catch(() => {});
+
+      await insertPlatformUser({
+        id: 'p-admin',
+        email: 'normal@platform.com',
+        name: 'Normal Admin',
+        passwordHash: 'dummy-hash',
+        role: 'admin',
+        createdAt: new Date().toISOString(),
+      }).catch(() => {});
     } catch {
       console.warn('[PlatformSettings Test] Postgres connection unavailable. Skipping live DB integration test.');
     }
