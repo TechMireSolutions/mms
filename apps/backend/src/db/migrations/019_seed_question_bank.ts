@@ -39,14 +39,14 @@ async function seedQuestionBankForPrefix(prefix: string): Promise<boolean> {
   const questionsKey = prefix ? `${prefix}questions` : 'questions';
   const existingQuestions = await getCollectionByStorageName(questionsKey);
   if (!Array.isArray(existingQuestions) || existingQuestions.length === 0) {
-    await saveCollection(questionsKey, DEFAULT_QUESTION_BANK_QUESTIONS);
+    await saveCollection(questionsKey, []);
     changed = true;
   }
 
   const testsKey = prefix ? `${prefix}tests` : 'tests';
   const existingTests = await getCollectionByStorageName(testsKey);
   if (!Array.isArray(existingTests) || existingTests.length === 0) {
-    await saveCollection(testsKey, DEFAULT_QUESTION_BANK_TESTS);
+    await saveCollection(testsKey, []);
     changed = true;
   }
 

@@ -42,8 +42,8 @@ export async function getMinimalCollectionsForSeed(): Promise<Record<string, unk
       minimal[name] = [];
     }
   }
-  minimal['questions'] = DEFAULT_QUESTION_BANK_QUESTIONS;
-  minimal['tests'] = DEFAULT_QUESTION_BANK_TESTS;
+  minimal['questions'] = [];
+  minimal['tests'] = [];
   minimal['assessment_results'] = [];
   minimal['overdue_obligations'] = [];
   return minimal;
