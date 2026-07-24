@@ -38,7 +38,6 @@ export interface UseContactsPageStateOptions {
     defaultCity?: string;
     defaultProvince?: string;
   };
-  countryCodesMap: Record<string, string>;
   tableColumns: Array<{ id: string; label: string }>;
   canWrite: boolean;
   canDelete: boolean;

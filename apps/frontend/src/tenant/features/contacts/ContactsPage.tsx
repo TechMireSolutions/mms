@@ -28,13 +28,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { startContactsDuplicateScan } from "@/lib/backgroundJobs/startServerContactsCsvExport";
 import { collectLinkedContactIds, mergeContactLinkDirectory } from "@/lib/contacts/contactLinkIds";
 import { notify } from "@/lib/notify";
-import {
-  clearGoogleContactsOAuthUrlParams,
-  readGoogleContactsOAuthCodeFromUrl,
-  relayGoogleContactsOAuthPopup,
-  stashGoogleContactsOAuthCode,
-  GOOGLE_CONTACTS_OAUTH_MESSAGE,
-} from "@/lib/contacts/googleContactsOAuth";
+import { useGoogleContactsOAuthListener } from "@/lib/contacts/googleContactsOAuthListener";
 
 import ContactsSettingsPanel from "@/tenant/features/contacts/components/ContactsSettingsPanel";
 
@@ -56,7 +50,7 @@ function ContactsInner() {
     canEditSetup,
   } = useModulePermissions(CONTACTS_MODULE_CONTRACT);
   const bulkActions = CONTACTS_MODULE_CONTRACT.work.bulkActions;
-  const { prefs, countryCodesMap } = useContactConfig();
+  const { prefs } = useContactConfig();
   const tableColumns = useContactColumns();
   const [viewModeOverride, setViewModeOverride] = useState<"table" | "cards" | null>(null);
   const [conflictPanelOpen, setConflictPanelOpen] = useState(false);
@@ -66,7 +60,6 @@ function ContactsInner() {
 
   const state = useContactsPageState({
     prefs,
-    countryCodesMap,
     tableColumns,
     canWrite,
     canDelete,
@@ -147,25 +140,9 @@ function ContactsInner() {
     prevConflictCount.current = conflictCount;
   }, [conflictCount]);
 
-  useEffect(() => {
-    const code = readGoogleContactsOAuthCodeFromUrl();
-    if (code) {
-      clearGoogleContactsOAuthUrlParams();
-      if (!relayGoogleContactsOAuthPopup(code)) {
-        stashGoogleContactsOAuthCode(code);
-        setActiveTab("setup");
-      }
-    }
-
-    const handleOAuthMessage = (event: MessageEvent): void => {
-      if (event.origin !== window.location.origin) return;
-      if (event.data?.type !== GOOGLE_CONTACTS_OAUTH_MESSAGE || typeof event.data.code !== "string") return;
-      stashGoogleContactsOAuthCode(event.data.code);
-      setActiveTab("setup");
-    };
-    window.addEventListener('message', handleOAuthMessage);
-    return () => window.removeEventListener('message', handleOAuthMessage);
-  }, [setActiveTab]);
+  useGoogleContactsOAuthListener(useCallback(() => {
+    setActiveTab("setup");
+  }, [setActiveTab]));
 
   const linkSourceContacts = useMemo(() => {
     const rows = [...workContacts];

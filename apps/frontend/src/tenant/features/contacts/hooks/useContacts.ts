@@ -332,10 +332,9 @@ export function useContacts(options?: { enabled?: boolean; includeDeleted?: bool
   });
 }
 
-export function useContactMutations() {
+export function useInvalidateContactsQueries() {
   const queryClient = useQueryClient();
-
-  const invalidate = () => {
+  return () => {
     void queryClient.invalidateQueries({ queryKey: CONTACTS_QUERY_KEY });
     void queryClient.invalidateQueries({ queryKey: [...CONTACTS_QUERY_KEY, 'with-deleted'] });
     void queryClient.invalidateQueries({ queryKey: CONTACTS_METRICS_QUERY_KEY });
@@ -343,6 +342,10 @@ export function useContactMutations() {
     void queryClient.invalidateQueries({ queryKey: CONTACTS_WIDGET_AGGREGATES_QUERY_KEY });
     void queryClient.invalidateQueries({ queryKey: CONTACTS_DUPLICATES_QUERY_KEY });
   };
+}
+
+export function useContactMutations() {
+  const invalidate = useInvalidateContactsQueries();
 
   const upsertContact = useMutation({
     mutationFn: async (contact: Contact) =>

@@ -149,7 +149,7 @@ export default function ContactDetailDrawer({
   const { t } = useTranslation();
   useBodyScrollLock();
   const noteInputId = useId();
-  const [c, setC] = useState<Contact>(initialContact);
+  const [contactState, setContactState] = useState<Contact>(initialContact);
   const [noteText, setNoteText] = useState<string>("");
   const [userMessages, setUserMessages] = useState<{
     id: string;
@@ -167,7 +167,7 @@ export default function ContactDetailDrawer({
     if (!filesList || filesList.length === 0) return;
     setIsUploading(true);
     try {
-      const newAttachments = [...(c.attachments || [])];
+      const newAttachments = [...(contactState.attachments || [])];
       for (let i = 0; i < filesList.length; i++) {
         const file = filesList[i];
         const res = await uploadAttachmentFile(file);
@@ -181,16 +181,16 @@ export default function ContactDetailDrawer({
         });
       }
       const updatedContact = {
-        ...c,
+        ...contactState,
         attachments: newAttachments,
       };
-      const prev = c;
-      setC(updatedContact);
+      const prev = contactState;
+      setContactState(updatedContact);
       if (onUpdateContact) {
         await onUpdateContact(updatedContact)
           .then(() => notify.success(t("contacts.detail.uploadSuccess")))
           .catch(() => {
-            setC(prev);
+            setContactState(prev);
             notify.error(t("contacts.detail.uploadFailed"));
           });
       } else {
@@ -249,7 +249,7 @@ export default function ContactDetailDrawer({
   );
 
   useEffect(() => {
-    setC(initialContact);
+    setContactState(initialContact);
     setActiveTab(detailTabs[0]?.key || "");
   }, [initialContact, detailTabs]);
 
@@ -281,9 +281,9 @@ export default function ContactDetailDrawer({
 
   const combinedActivities = useMemo(() => {
     const VALID_ACTIVITY_TYPES = new Set<ContactActivity["type"]>(["note", "stage_change", "whatsapp", "email", "system", "task", "call"]);
-    const noteActs = c.activities || [];
+    const noteActs = contactState.activities || [];
     const messageActs: ContactActivity[] = userMessages
-      .filter((userMessage) => String(userMessage.contactId) === String(c.id))
+      .filter((userMessage) => String(userMessage.contactId) === String(contactState.id))
       .map((userMessage) => ({
         id: userMessage.id,
         type: (VALID_ACTIVITY_TYPES.has(userMessage.channel as ContactActivity["type"])
@@ -295,14 +295,14 @@ export default function ContactDetailDrawer({
       }));
     const all = [...noteActs, ...messageActs];
     return all.sort((a, b) => (new Date(b.date || 0).getTime()) - (new Date(a.date || 0).getTime()));
-  }, [c.activities, userMessages, c.id, user?.name, t]);
+  }, [contactState.activities, userMessages, contactState.id, user?.name, t]);
 
   const fieldsToRender = allFields.filter(
     (field) =>
       !heroFieldSet.has(field.key) &&
       isTabFieldEnabled(field.tab, field.key) &&
-      c[field.key] !== undefined && c[field.key] !== null && c[field.key] !== "" && c[field.key] !== false &&
-      !(Array.isArray(c[field.key]) && (c[field.key] as unknown[]).length === 0)
+      contactState[field.key] !== undefined && contactState[field.key] !== null && contactState[field.key] !== "" && contactState[field.key] !== false &&
+      !(Array.isArray(contactState[field.key]) && (contactState[field.key] as unknown[]).length === 0)
   );
 
   const grouped = fieldsToRender.reduce<Record<string, typeof fieldsToRender>>((acc, field) => {
@@ -313,7 +313,7 @@ export default function ContactDetailDrawer({
   }, {});
 
   const formatFieldValue = React.useCallback((field: { key: string; type: string }): string | null => {
-    const fieldValue = (c as Record<string, unknown>)[field.key];
+    const fieldValue = (contactState as Record<string, unknown>)[field.key];
     if (fieldValue === undefined || fieldValue === null || fieldValue === "" || fieldValue === false) return null;
     if (Array.isArray(fieldValue)) return fieldValue.length ? (fieldValue as unknown[]).join(", ") : null;
     if (field.key === "dob") {
@@ -323,10 +323,10 @@ export default function ContactDetailDrawer({
       return formatContactGenderLabel(fieldValue as string, t);
     }
     return String(fieldValue);
-  }, [c, t]);
+  }, [contactState, t]);
 
-  const primaryPhone = enabledTabIds.has("phones") ? getPrimaryPhone(c) : null;
-  const primaryEmail = enabledTabIds.has("emails") ? getPrimaryEmail(c) : null;
+  const primaryPhone = enabledTabIds.has("phones") ? getPrimaryPhone(contactState) : null;
+  const primaryEmail = enabledTabIds.has("emails") ? getPrimaryEmail(contactState) : null;
 
   const handleAddNote = (event: React.FormEvent) => {
     event.preventDefault();
@@ -341,16 +341,16 @@ export default function ContactDetailDrawer({
       by: user?.name || t('contacts.detail.systemUser')
     };
 
-    const prev = c;
-    const updatedContact = { ...c, activities: [newActivity, ...(c.activities || [])] };
+    const prev = contactState;
+    const updatedContact = { ...contactState, activities: [newActivity, ...(contactState.activities || [])] };
 
     // Optimistic update
-    setC(updatedContact);
+    setContactState(updatedContact);
     setNoteText("");
 
     if (onUpdateContact) {
       onUpdateContact(updatedContact).catch(() => {
-        setC(prev);
+        setContactState(prev);
         setNoteText(trimmed);
         notify.error(t('contacts.detail.noteSaveFailed'));
       });
@@ -360,11 +360,11 @@ export default function ContactDetailDrawer({
   const handleNavigateToContact = (targetId: string | number): void => {
     const target = allContacts.find((contact) => String(contact.id) === String(targetId));
     if (target) {
-      setC(target);
+      setContactState(target);
       return;
     }
     void apiJson<{ contact: Contact }>(`${CONTACTS_MODULE_CONTRACT.restBasePath}/${targetId}`)
-      .then((body) => setC(body.contact))
+      .then((body) => setContactState(body.contact))
       .catch(() => undefined);
   };
 
@@ -376,7 +376,7 @@ export default function ContactDetailDrawer({
       headerActions={
         <Button
           variant="outline"
-          onClick={() => onEdit(c)}
+          onClick={() => onEdit(contactState)}
           aria-label={t('contacts.detail.editProfile')}
           className="h-8 w-8 p-1.5 rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shadow-none"
           title={t('contacts.detail.editProfile')}
@@ -399,8 +399,8 @@ export default function ContactDetailDrawer({
         <>
           <div className="flex items-center gap-2 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
             <Clock className="w-3 h-3" />
-            {(c.updatedAt || c.createdAt) && (
-              <span>{t('contacts.detail.updatedLabel')} {formatDate((c.updatedAt || c.createdAt) as string)}</span>
+            {(contactState.updatedAt || contactState.createdAt) && (
+              <span>{t('contacts.detail.updatedLabel')} {formatDate((contactState.updatedAt || contactState.createdAt) as string)}</span>
             )}
           </div>
           <div className="flex items-center gap-1.5">
@@ -423,15 +423,15 @@ export default function ContactDetailDrawer({
             <>
               <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-card via-card to-muted/40 border border-border/80 shadow-xs">
                 <UserAvatar
-                  id={c.id}
-                  name={getDisplayName(c)}
-                  avatar={c.avatar}
+                  id={contactState.id}
+                  name={getDisplayName(contactState)}
+                  avatar={contactState.avatar}
                   className="w-16 h-16 rounded-2xl text-2xl shadow-xs"
                 />
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-bold text-foreground truncate leading-tight">{getDisplayName(c)}</h3>
+                  <h3 className="text-base font-bold text-foreground truncate leading-tight">{getDisplayName(contactState)}</h3>
                   <div className="flex flex-wrap gap-1.5 mt-2 items-center">
-                    {c.isSyed && (
+                    {contactState.isSyed && (
                       <span className={`text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider ${DETAIL_STYLES.syedBadge}`}>
                         {t('contacts.table.yesSyed')}
                       </span>
@@ -447,7 +447,7 @@ export default function ContactDetailDrawer({
                   <span className="text-[10px] font-bold uppercase tracking-widest">{t('contacts.detail.aiIntelligence')}</span>
                 </div>
                 <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 text-[12px] text-foreground leading-relaxed italic relative">
-                  {c.aiSummary || t('contacts.detail.defaultAiSummary')}
+                  {contactState.aiSummary || t('contacts.detail.defaultAiSummary')}
                 </div>
               </div>
 
@@ -456,10 +456,10 @@ export default function ContactDetailDrawer({
                 {enabledTabIds.has("phones") && (
                   <Button
                     variant="ghost"
-                    disabled={!hasWhatsApp(c)}
-                    onClick={() => onWhatsApp([c])}
+                    disabled={!hasWhatsApp(contactState)}
+                    onClick={() => onWhatsApp([contactState])}
                     className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border h-auto font-normal transition-all shadow-none ${
-                      hasWhatsApp(c) ? DETAIL_STYLES.whatsappActive : DETAIL_STYLES.whatsappDisabled
+                      hasWhatsApp(contactState) ? DETAIL_STYLES.whatsappActive : DETAIL_STYLES.whatsappDisabled
                     }`}
                     type="button"
                   >
@@ -470,7 +470,7 @@ export default function ContactDetailDrawer({
                 {primaryPhone && (
                   <Button
                     variant="ghost"
-                    onClick={() => onSms([c])}
+                    onClick={() => onSms([contactState])}
                     className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border h-auto font-normal transition-all shadow-none ${DETAIL_STYLES.smsAction}`}
                     type="button"
                   >
@@ -491,7 +491,7 @@ export default function ContactDetailDrawer({
                 {primaryEmail && (
                   <Button
                     variant="ghost"
-                    onClick={() => onEmail([c])}
+                    onClick={() => onEmail([contactState])}
                     className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border h-auto font-normal transition-all shadow-none ${DETAIL_STYLES.emailAction}`}
                     type="button"
                   >
@@ -517,13 +517,13 @@ export default function ContactDetailDrawer({
                   ))}
 
                 {/* Collection: Phone Numbers */}
-                {enabledTabIds.has("phones") && visibleCollectionFields.phones.length > 0 && c.phones && c.phones.length > 0 && (
+                {enabledTabIds.has("phones") && visibleCollectionFields.phones.length > 0 && contactState.phones && contactState.phones.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">
                       {t('contacts.form.phonesLabel')}
                     </h4>
                     <Card className={COLLECTION_CONTAINER_CLASS}>
-                      {c.phones.map((phone, phoneIndex) => {
+                      {contactState.phones.map((phone, phoneIndex) => {
                         const rawPhone = String(phone.number || "");
                         return (
                           <div key={`phone-${phone.number}-${phoneIndex}`} className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
@@ -559,13 +559,13 @@ export default function ContactDetailDrawer({
                 )}
 
                 {/* Collection: Emails */}
-                {enabledTabIds.has("emails") && visibleCollectionFields.emails.length > 0 && c.emails && c.emails.length > 0 && (
+                {enabledTabIds.has("emails") && visibleCollectionFields.emails.length > 0 && contactState.emails && contactState.emails.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">
                       {t('contacts.form.emailsLabel')}
                     </h4>
                     <Card className={COLLECTION_CONTAINER_CLASS}>
-                      {c.emails.map((email, emailIndex) => {
+                      {contactState.emails.map((email, emailIndex) => {
                         const rawEmail = String(email.address || "");
                         return (
                           <div key={`email-${email.address}-${emailIndex}`} className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
@@ -601,13 +601,13 @@ export default function ContactDetailDrawer({
                 )}
 
                 {/* Collection: Addresses */}
-                {enabledTabIds.has("addresses") && visibleCollectionFields.addresses.length > 0 && c.addresses && c.addresses.length > 0 && (
+                {enabledTabIds.has("addresses") && visibleCollectionFields.addresses.length > 0 && contactState.addresses && contactState.addresses.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">
                       {t('contacts.detail.addresses')}
                     </h4>
                     <Card className={COLLECTION_CONTAINER_CLASS}>
-                      {c.addresses.map((address, addressIndex) => {
+                      {contactState.addresses.map((address, addressIndex) => {
                         const fullAddr = [address.line1, address.city, address.state, address.country]
                           .filter(Boolean)
                           .join(", ");
@@ -640,13 +640,13 @@ export default function ContactDetailDrawer({
                 )}
 
                 {/* Collection: Socials */}
-                {enabledTabIds.has("socials") && visibleCollectionFields.socials.length > 0 && c.socials && c.socials.length > 0 && (
+                {enabledTabIds.has("socials") && visibleCollectionFields.socials.length > 0 && contactState.socials && contactState.socials.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">
                       {t('contacts.detail.socials')}
                     </h4>
                     <Card className={COLLECTION_CONTAINER_CLASS}>
-                      {c.socials.map((social, socialIndex) => {
+                      {contactState.socials.map((social, socialIndex) => {
                         const handle = String(social.url || "");
                         const url = handle.startsWith("http") ? handle : `https://${handle}`;
                         return (
@@ -676,13 +676,13 @@ export default function ContactDetailDrawer({
                 )}
 
                 {/* Collection: Emergency Contacts */}
-                {enabledTabIds.has("emergency") && visibleCollectionFields.emergency.length > 0 && c.emergencyContacts && c.emergencyContacts.length > 0 && (
+                {enabledTabIds.has("emergency") && visibleCollectionFields.emergency.length > 0 && contactState.emergencyContacts && contactState.emergencyContacts.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">
                       {t('contacts.detail.emergency')}
                     </h4>
                     <Card className={COLLECTION_CONTAINER_CLASS}>
-                      {c.emergencyContacts.map((emergencyContact, emergencyContactIndex) => {
+                      {contactState.emergencyContacts.map((emergencyContact, emergencyContactIndex) => {
                         const target = allContacts.find((contact) => String(contact.id) === String(emergencyContact.contactId));
                         return (
                           <div key={emergencyContactIndex} className="p-3 border-b border-border/50 last:border-b-0">
@@ -788,19 +788,19 @@ export default function ContactDetailDrawer({
                   <UsersIcon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className={`text-sm font-bold leading-none ${DETAIL_STYLES.networkTitle}`}>{c.relationships?.length || 0} {t('contacts.detail.relationships')}</h4>
+                  <h4 className={`text-sm font-bold leading-none ${DETAIL_STYLES.networkTitle}`}>{contactState.relationships?.length || 0} {t('contacts.detail.relationships')}</h4>
                   <p className={`text-[10px] font-medium mt-1 uppercase tracking-tight ${DETAIL_STYLES.networkSubtitle}`}>{t('contacts.detail.activeSocialGraph')}</p>
                 </div>
               </div>
 
               <div className="space-y-3">
-                {(!c.relationships || c.relationships.length === 0) ? (
+                {(!contactState.relationships || contactState.relationships.length === 0) ? (
                   <div className="text-center py-20">
                     <UsersIcon className="w-12 h-12 mx-auto text-muted-foreground/20" />
                     <p className="text-xs font-bold text-muted-foreground mt-2 uppercase tracking-widest">{t('contacts.detail.noConnectionsMapped')}</p>
                   </div>
                 ) : (
-                  c.relationships.map((relationship, relationshipIndex) => {
+                  contactState.relationships.map((relationship, relationshipIndex) => {
                     const target = allContacts.find((contact) => String(contact.id) === String(relationship.contactId));
                     return (
                       <Card key={relationshipIndex} className={`flex items-center justify-between gap-3 p-4 ${DETAIL_STYLES.networkItemCard}`}>
@@ -890,12 +890,12 @@ export default function ContactDetailDrawer({
               </div>
 
               <div className="space-y-3">
-                {(!c.attachments || c.attachments.length === 0) ? (
+                {(!contactState.attachments || contactState.attachments.length === 0) ? (
                   <div className="py-10 text-center">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{t('contacts.detail.repositoryEmpty')}</p>
                   </div>
                 ) : (
-                  c.attachments.map((file) => (
+                  contactState.attachments.map((file) => (
                     <Card key={file.id} className="flex items-center justify-between p-4 hover:border-primary/20 transition-all">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="p-2 rounded-lg bg-muted text-muted-foreground">
@@ -921,14 +921,14 @@ export default function ContactDetailDrawer({
                             aria-label={t('contacts.detail.deleteFile', { name: file.name })}
                             onClick={() => {
                               const updatedContact = {
-                                ...c,
-                                attachments: (c.attachments || []).filter((f) => f.id !== file.id)
+                                ...contactState,
+                                attachments: (contactState.attachments || []).filter((f) => f.id !== file.id)
                               };
-                              const prev = c;
-                              setC(updatedContact);
+                              const prev = contactState;
+                              setContactState(updatedContact);
                               onUpdateContact(updatedContact)
                                 .then(() => notify.success(t("contacts.detail.deleteSuccess")))
-                                .catch(() => setC(prev));
+                                .catch(() => setContactState(prev));
                             }}
                             className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all shadow-none"
                             type="button"

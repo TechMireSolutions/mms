@@ -185,7 +185,7 @@ export default function ContactForm({
   }, [prefs, countryCodesMap]);
 
   const countryCodeOptions = useMemo(() => {
-    const list = (countryCodes || []).map((c) => c.code).filter(Boolean);
+    const list = (countryCodes || []).map((countryItem) => countryItem.code).filter(Boolean);
     return Array.from(new Set([defaultCountryCode, ...list]));
   }, [countryCodes, defaultCountryCode]);
 
@@ -214,11 +214,11 @@ export default function ContactForm({
   }, [open, contact, initialDraft, defaultCity, defaultProvince, defaultCountry]);
 
   const visibleTabs = useMemo(() => {
-    const phoneCount = (contactDraft.phones || []).filter(p => (p.number || "").trim()).length;
-    const emailCount = (contactDraft.emails || []).filter(e => (e.address || "").trim()).length;
-    const addressCount = (contactDraft.addresses || []).filter(a => (a.line1 || a.city || "").trim()).length;
-    const socialCount = (contactDraft.socials || []).filter(s => (s.url || "").trim()).length;
-    const emergencyCount = (contactDraft.emergencyContacts || []).filter(e => e.contactId).length;
+    const phoneCount = (contactDraft.phones || []).filter(phone => (phone.number || "").trim()).length;
+    const emailCount = (contactDraft.emails || []).filter(email => (email.address || "").trim()).length;
+    const addressCount = (contactDraft.addresses || []).filter(address => (address.line1 || address.city || "").trim()).length;
+    const socialCount = (contactDraft.socials || []).filter(social => (social.url || "").trim()).length;
+    const emergencyCount = (contactDraft.emergencyContacts || []).filter(emergency => emergency.contactId).length;
 
     const countMap: Record<string, number> = {
       phones: phoneCount,
