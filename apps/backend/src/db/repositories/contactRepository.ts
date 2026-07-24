@@ -2,7 +2,10 @@ import { type Contact } from '@mms/shared';
 import { contacts } from '../schema.js';
 import { createGenericRepository } from './genericRepository.js';
 
-const repo = createGenericRepository<Contact, typeof contacts>(contacts, { conflictTarget: [contacts.workspaceSubdomain, contacts.id] });
+const repo = createGenericRepository<Contact, typeof contacts>(contacts, {
+  updateStrategy: 'overwrite',
+  conflictTarget: [contacts.workspaceSubdomain, contacts.id],
+});
 
 export const listContactsByWorkspace = repo.listByWorkspace;
 export const findContactById = repo.findById;

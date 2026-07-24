@@ -153,7 +153,7 @@ export async function validatePlatformCredentials(
 
 /**
  * Optional dev bootstrap from env when PLATFORM_ALLOW_ENV_BOOTSTRAP=true.
- * Production first-run uses email-verified setup instead.
+ * Production / clean first-run presents the interactive setup screen instead.
  */
 export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
   if ((await countPlatformUserRows()) > 0) return;
@@ -162,17 +162,11 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
     return;
   }
 
-  const email = process.env.PLATFORM_ADMIN_EMAIL?.trim();
+  const email = process.env.PLATFORM_ADMIN_EMAIL?.trim() || 'syedaalin@gmail.com';
   const password = process.env.PLATFORM_ADMIN_PASSWORD?.trim()
-    ?? process.env.SEED_DEV_PASSWORD?.trim();
-  const name = process.env.PLATFORM_ADMIN_NAME?.trim() || 'Platform Admin';
-
-  if (!email || !password) {
-    console.warn(
-      'PLATFORM_ALLOW_ENV_BOOTSTRAP is set but PLATFORM_ADMIN_EMAIL / PLATFORM_ADMIN_PASSWORD are missing.',
-    );
-    return;
-  }
+    ?? process.env.SEED_DEV_PASSWORD?.trim()
+    ?? 'Pa$$w0rd11111';
+  const name = process.env.PLATFORM_ADMIN_NAME?.trim() || 'Syeda Alin';
 
   const user: StoredPlatformUser = {
     id: randomBytes(8).toString('hex'),

@@ -5,7 +5,7 @@ import { UserPlus, AlertTriangle, Download, Users, UserX, Loader2, Trash2, X, Me
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { Contact, CONTACTS_MODULE_CONTRACT, hasWhatsApp, getPrimaryPhone, getPrimaryEmail, getDisplayName } from "@mms/shared";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { useContactsCollectionState, useContactsPaginated, useContactsByIds, CONTACTS_DUPLICATES_QUERY_KEY } from "@/tenant/features/contacts/hooks/useContacts";
+import { useContactsByIds, CONTACTS_DUPLICATES_QUERY_KEY } from "@/tenant/features/contacts/hooks/useContacts";
 import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
 import { useContactsPageState } from "@/tenant/features/contacts/hooks/useContactsPageState";
 import { useContactConfig, useContactColumns } from "@/lib/contexts/ContactConfigContext";
@@ -58,16 +58,13 @@ function ContactsInner() {
   const bulkActions = CONTACTS_MODULE_CONTRACT.work.bulkActions;
   const { prefs, countryCodesMap } = useContactConfig();
   const tableColumns = useContactColumns();
-  const [showDeletedArchives, setShowDeletedArchives] = useState(false);
   const [viewModeOverride, setViewModeOverride] = useState<"table" | "cards" | null>(null);
-  const [listPage, setListPage] = useState(1);
   const [conflictPanelOpen, setConflictPanelOpen] = useState(false);
   const { conflictCount } = useContactsSyncOutbox();
   const prevConflictCount = useRef(conflictCount);
   const openConflictReview = useCallback(() => setConflictPanelOpen(true), []);
 
   const state = useContactsPageState({
-    rawContacts: [],
     prefs,
     countryCodesMap,
     tableColumns,
@@ -76,7 +73,6 @@ function ContactsInner() {
     canExport,
     canViewReports,
     canViewSetup,
-    showDeletedArchives,
   });
 
   const {
@@ -85,7 +81,6 @@ function ContactsInner() {
     effectiveTab,
     setActiveTab,
     contacts,
-    filtered,
     search,
     setSearch,
     filterGender,
@@ -133,43 +128,17 @@ function ContactsInner() {
     handleMerge,
     handleRestore,
     showDeletedArchives: viewingDeleted,
-    updateRawContacts,
-    updateDirectoryRows,
+    setShowDeletedArchives,
+    needsFullContactsList,
+    isContactsLoading,
+    useServerWork,
+    workPageData,
+    isWorkPageFetching,
+    setListPage,
+    workContacts,
+    shownCount,
+    workTruncated,
   } = state;
-
-  const needsFullContactsList = showDeletedArchives || effectiveTab === "setup";
-
-  const { contacts: rawContacts, isLoading: isContactsLoading } = useContactsCollectionState({
-    enabled: needsFullContactsList,
-    includeDeleted: showDeletedArchives && canDelete,
-  });
-
-  const useServerWork = !showDeletedArchives && effectiveTab === "work";
-  const isListView = true;
-  const workLimit = CONTACTS_MODULE_CONTRACT.defaultPageSize;
-
-  const { data: workPageData, isFetching: isWorkPageFetching } = useContactsPaginated({
-    page: isListView ? listPage : 1,
-    limit: workLimit,
-    search,
-    gender: filterGender,
-    sortField,
-    sortDir,
-    enabled: useServerWork,
-  });
-
-  // Keep state.rawContacts and directoryRows updated
-  useEffect(() => {
-    updateRawContacts?.(rawContacts);
-  }, [rawContacts, updateRawContacts]);
-
-  useEffect(() => {
-    updateDirectoryRows?.(workPageData?.contacts);
-  }, [workPageData?.contacts, updateDirectoryRows]);
-
-  React.useEffect(() => {
-    setListPage(1);
-  }, [search, filterGender, sortField, sortDir, showDeletedArchives]);
 
   useEffect(() => {
     if (prevConflictCount.current === 0 && conflictCount > 0) {
@@ -197,13 +166,6 @@ function ContactsInner() {
     window.addEventListener('message', handleOAuthMessage);
     return () => window.removeEventListener('message', handleOAuthMessage);
   }, [setActiveTab]);
-
-  const workContacts = useMemo(() => {
-    return useServerWork ? (workPageData?.contacts ?? []) : filtered;
-  }, [useServerWork, workPageData?.contacts, filtered]);
-
-  const shownCount = useServerWork && workPageData ? workPageData.total : filtered.length;
-  const workTruncated = useServerWork && !isListView && Boolean(workPageData?.hasMore);
 
   const linkSourceContacts = useMemo(() => {
     const rows = [...workContacts];

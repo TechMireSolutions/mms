@@ -1227,8 +1227,16 @@ export function normalizeContactForEdit(
   const scalarPhone = typeof (merged as Record<string, unknown>).phone === "string"
     ? String((merged as Record<string, unknown>).phone).trim()
     : "";
-  if (scalarPhone && !phones.some((p) => (p.number || "").trim() === scalarPhone)) {
-    phones.unshift(normalizePhoneItem(scalarPhone, 0));
+  if (scalarPhone) {
+    const e164Scalar = normalizeToE164("", scalarPhone);
+    const exists = phones.some((p) => {
+      const numTrim = (p.number || "").trim();
+      const e164Item = normalizeToE164(p.countryCode || "+92", numTrim);
+      return numTrim === scalarPhone || (e164Scalar && e164Item === e164Scalar);
+    });
+    if (!exists) {
+      phones.unshift(normalizePhoneItem(scalarPhone, 0));
+    }
   }
 
   if (phones.length === 0) {

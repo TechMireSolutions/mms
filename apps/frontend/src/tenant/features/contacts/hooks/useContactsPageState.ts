@@ -30,10 +30,9 @@ import {
   type ContactsWorkDrillDown,
 } from "@/lib/contacts/contactsWorkDrillDown";
 import { notify } from "@/lib/notify";
-import { useContactMutations } from "@/tenant/features/contacts/hooks/useContacts";
+import { useContactMutations, useContactsCollectionState, useContactsPaginated } from "@/tenant/features/contacts/hooks/useContacts";
 
 export interface UseContactsPageStateOptions {
-  rawContacts: Contact[];
   prefs: {
     defaultCountry?: string;
     defaultCity?: string;
@@ -46,13 +45,10 @@ export interface UseContactsPageStateOptions {
   canExport: boolean;
   canViewReports: boolean;
   canViewSetup: boolean;
-  showDeletedArchives?: boolean;
-  /** Server-paginated Work rows; when set, used for select-all, bulk export, and row lookup. */
-  directoryRows?: Contact[];
+  initialShowDeletedArchives?: boolean;
 }
 
 export function useContactsPageState({
-  rawContacts: initialRawContacts,
   prefs,
   tableColumns,
   canWrite,
@@ -60,32 +56,11 @@ export function useContactsPageState({
   canExport,
   canViewReports,
   canViewSetup,
-  showDeletedArchives = false,
-  directoryRows: initialDirectoryRows,
+  initialShowDeletedArchives = false,
 }: UseContactsPageStateOptions) {
   const { t } = useTranslation();
-  const [rawContactsState, setRawContactsState] = useState<Contact[]>(initialRawContacts || []);
-  const [directoryRowsState, setDirectoryRowsState] = useState<Contact[] | undefined>(initialDirectoryRows);
-
-  const updateRawContacts = useCallback((list: Contact[]) => {
-    setRawContactsState((prev) => {
-      if (prev === list) return prev;
-      if (prev.length === 0 && list.length === 0) return prev;
-      return list;
-    });
-  }, []);
-
-  const updateDirectoryRows = useCallback((list: Contact[] | undefined) => {
-    setDirectoryRowsState((prev) => {
-      if (prev === list) return prev;
-      if (prev === undefined && list === undefined) return prev;
-      if (prev && list && prev.length === 0 && list.length === 0) return prev;
-      return list;
-    });
-  }, []);
-
-  const effectiveRawContacts = rawContactsState.length > 0 ? rawContactsState : initialRawContacts;
-  const effectiveDirectoryRows = directoryRowsState !== undefined ? directoryRowsState : initialDirectoryRows;
+  const [showDeletedArchives, setShowDeletedArchives] = useState(initialShowDeletedArchives);
+  const [listPage, setListPage] = useState(1);
   const {
     upsertContact,
     updateContact,
@@ -232,12 +207,6 @@ export function useContactsPageState({
     canViewReports,
   });
 
-  const contacts = useMemo(() => {
-    return showDeletedArchives
-      ? effectiveRawContacts.filter(isContactDeleted)
-      : filterActiveContacts(effectiveRawContacts);
-  }, [effectiveRawContacts, showDeletedArchives]);
-
   const [search, setSearch] = useState("");
   const [filterGender, setFilterGender] = useState("");
   const [sortField, setSortField] = useState("name");
@@ -253,6 +222,36 @@ export function useContactsPageState({
   const [deleteTarget, setDeleteTarget] = useState<{ id: string | number; name?: string } | null>(null);
 
   const effectiveTab = resolveModuleTierTab(activeTab, visibleTopTabs.map((tab) => tab.id));
+
+  useEffect(() => {
+    setListPage(1);
+  }, [search, filterGender, sortField, sortDir, showDeletedArchives]);
+
+  const needsFullContactsList = showDeletedArchives || effectiveTab === "setup";
+
+  const { contacts: rawContacts, isLoading: isContactsLoading } = useContactsCollectionState({
+    enabled: needsFullContactsList,
+    includeDeleted: showDeletedArchives && canDelete,
+  });
+
+  const useServerWork = !showDeletedArchives && effectiveTab === "work";
+  const workLimit = CONTACTS_MODULE_CONTRACT.defaultPageSize;
+
+  const { data: workPageData, isFetching: isWorkPageFetching } = useContactsPaginated({
+    page: listPage,
+    limit: workLimit,
+    search,
+    gender: filterGender,
+    sortField,
+    sortDir,
+    enabled: useServerWork,
+  });
+
+  const contacts = useMemo(() => {
+    return showDeletedArchives
+      ? (rawContacts || []).filter(isContactDeleted)
+      : filterActiveContacts(rawContacts || []);
+  }, [rawContacts, showDeletedArchives]);
 
   const applyDrillDown = useCallback(
     (filter: ContactsWorkDrillDown) => {
@@ -358,9 +357,16 @@ export function useContactsPageState({
     });
   }, [contacts, search, filterGender, sortField, sortDir]);
 
+  const workContacts = useMemo(() => {
+    return useServerWork ? (workPageData?.contacts ?? []) : filtered;
+  }, [useServerWork, workPageData?.contacts, filtered]);
+
+  const shownCount = useServerWork && workPageData ? workPageData.total : filtered.length;
+  const workTruncated = useServerWork && Boolean(workPageData?.hasMore);
+
   const rowSource = useMemo(
-    () => effectiveDirectoryRows ?? filtered,
-    [effectiveDirectoryRows, filtered],
+    () => (useServerWork ? (workPageData?.contacts ?? []) : filtered),
+    [useServerWork, workPageData?.contacts, filtered],
   );
 
   const hasActiveFilters = !!(filterGender || search);
@@ -406,7 +412,7 @@ export function useContactsPageState({
       const primaryEmailStr = getPrimaryEmail(contactDraft);
       const firstAddr = getPrimaryAddress(contactDraft);
 
-      const basePayload: Partial<Contact> = {
+      const basePayload = {
         phone: primaryPhoneStr || undefined,
         email: primaryEmailStr || undefined,
         line1: firstAddr?.line1 || undefined,
@@ -415,21 +421,17 @@ export function useContactsPageState({
         country: firstAddr?.country || undefined,
       };
 
-      const payload: Contact = editContact
-        ? {
-            ...editContact,
-            ...contactDraft,
-            ...basePayload,
-            phones: contactDraft.phones || [],
-            emails: contactDraft.emails || [],
-            addresses: contactDraft.addresses || [],
-            socials: contactDraft.socials || [],
-            emergencyContacts: contactDraft.emergencyContacts || [],
-          }
-        : {
-            ...contactDraft,
-            ...basePayload,
-          };
+      const payload: Contact = {
+        ...(editContact || {}),
+        ...contactDraft,
+        ...basePayload,
+        phones: contactDraft.phones || [],
+        emails: contactDraft.emails || [],
+        addresses: contactDraft.addresses || [],
+        socials: contactDraft.socials || [],
+        emergencyContacts: contactDraft.emergencyContacts || [],
+      } as Contact;
+
       void saveContact(payload, isCreatingContact)
         .then(() => {
           setShowForm(false);
@@ -662,7 +664,17 @@ export function useContactsPageState({
     handleMerge,
     handleRestore,
     showDeletedArchives,
-    updateRawContacts,
-    updateDirectoryRows,
+    setShowDeletedArchives,
+    needsFullContactsList,
+    rawContacts,
+    isContactsLoading,
+    useServerWork,
+    workPageData,
+    isWorkPageFetching,
+    listPage,
+    setListPage,
+    workContacts,
+    shownCount,
+    workTruncated,
   };
 }
