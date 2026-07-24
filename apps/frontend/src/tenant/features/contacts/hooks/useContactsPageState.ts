@@ -364,11 +364,6 @@ export function useContactsPageState({
   const shownCount = useServerWork && workPageData ? workPageData.total : filtered.length;
   const workTruncated = useServerWork && Boolean(workPageData?.hasMore);
 
-  const rowSource = useMemo(
-    () => (useServerWork ? (workPageData?.contacts ?? []) : filtered),
-    [useServerWork, workPageData?.contacts, filtered],
-  );
-
   const hasActiveFilters = !!(filterGender || search);
   const activeFilterCount = filterGender ? 1 : 0;
 
@@ -385,8 +380,8 @@ export function useContactsPageState({
     [],
   );
   const handleSelectAll = useCallback(
-    () => setSelected((selectedIds) => (selectedIds.length === rowSource.length ? [] : rowSource.map((contact) => contact.id))),
-    [rowSource],
+    () => setSelected((selectedIds) => (selectedIds.length === workContacts.length ? [] : workContacts.map((contact) => contact.id))),
+    [workContacts],
   );
 
   const handleEdit = useCallback(
@@ -447,10 +442,10 @@ export function useContactsPageState({
   const handleDelete = useCallback(
     (id: string | number) => {
       if (!canDelete) return;
-      const selectedContact = rowSource.find((contact) => contact.id === id) ?? contacts.find((contact) => contact.id === id);
+      const selectedContact = workContacts.find((contact) => contact.id === id) ?? contacts.find((contact) => contact.id === id);
       setDeleteTarget({ id, name: selectedContact?.name || selectedContact?.firstName });
     },
-    [rowSource, contacts, canDelete],
+    [workContacts, contacts, canDelete],
   );
 
   const confirmSingleDelete = useCallback(
@@ -525,10 +520,10 @@ export function useContactsPageState({
 
   const handleBulkExport = useCallback(() => {
     if (!canExport) return;
-    const rows = rowSource.filter((contact) => selected.includes(contact.id));
+    const rows = workContacts.filter((contact) => selected.includes(contact.id));
     if (rows.length === 0) return;
     runExport(rows, "selection");
-  }, [rowSource, selected, runExport, canExport]);
+  }, [workContacts, selected, runExport, canExport]);
 
   const requestBulkDelete = useCallback(() => {
     if (!canDelete || selected.length === 0) return;

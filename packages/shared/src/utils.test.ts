@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parsePhoneNumber, normalizeToE164, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress } from "./utils.js";
 import type { Contact } from "./contactTypes.js";
 
 
@@ -259,6 +259,13 @@ describe("calculateDetailedSolarAge", () => {
   it("calculates accurate age in years, months, and days format", () => {
     const age = calculateDetailedSolarAge("2000-01-01");
     expect(age).toMatch(/^\d+y \d+m \d+d$/);
+  });
+
+  it("decomposes pure date components correctly", () => {
+    const relativeTo = new Date("2025-06-15T00:00:00.000Z");
+    const components = getSolarAgeComponents("2000-01-01", relativeTo);
+    expect(components).toEqual({ years: 25, months: 5, days: 14 });
+    expect(formatSolarAgeComponents(components)).toBe("25y 5m 14d");
   });
 
   it("handles ISO timestamp strings correctly", () => {

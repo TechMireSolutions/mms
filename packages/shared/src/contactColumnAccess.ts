@@ -1,4 +1,4 @@
-import type { FieldDefinition } from './contactTypes.js';
+import { INITIAL_FIELD_SEED, type FieldDefinition } from './contactTypes.js';
 import { canViewContactField } from './contactFieldAccess.js';
 
 export interface ContactColumnFieldContext {
@@ -12,7 +12,10 @@ function findField(
   tabId: string,
   fieldId: string,
 ): FieldDefinition | null {
-  return (fields[tabId] || []).find((field) => field.key === fieldId) ?? null;
+  const fromFields = (fields[tabId] || []).find((field) => field.key === fieldId);
+  if (fromFields) return fromFields;
+  const seedField = (INITIAL_FIELD_SEED[tabId] || []).find((field) => field.key === fieldId);
+  return seedField ?? null;
 }
 
 /** Maps a Work table column key to its governing field definition (if any). */
@@ -106,6 +109,7 @@ export function canViewContactColumn(
   columnFieldContext: ContactColumnFieldContext,
 ): boolean {
   const field = resolveContactColumnField(columnKey, columnFieldContext);
-  if (!field?.enabled) return false;
+  if (!field) return true;
+  if (!field.enabled) return false;
   return canViewContactField(viewerRole, field);
 }

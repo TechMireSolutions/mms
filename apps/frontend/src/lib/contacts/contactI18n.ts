@@ -1,6 +1,7 @@
 import {
   formatDate,
   calcAge,
+  calculateDetailedSolarAge,
   parsePhoneNumber,
   getPrimaryPhone,
   getPrimaryEmail,
@@ -37,13 +38,18 @@ export const ACTIVITY_TYPE_I18N: Record<string, AppTranslationKey> = {
   whatsapp: 'contacts.whatsapp',
 };
 
-/** Formats contact Date of Birth with inline age. */
+/** Formats contact Date of Birth with inline age or detailed solar age. */
 export function formatContactDobWithAge(
   dob: string | undefined | null,
   t: (key: AppTranslationKey, params?: Record<string, string | number>) => string,
+  options?: { showDetailedSolarAge?: boolean; language?: string },
 ): string {
   if (!dob) return '';
   const dateStr = formatDate(dob);
+  if (options?.showDetailedSolarAge) {
+    const detailedAge = calculateDetailedSolarAge(dob, options.language ?? 'en');
+    return detailedAge ? `${t('contacts.table.dobLabel')} ${dateStr} (${detailedAge})` : `${t('contacts.table.dobLabel')} ${dateStr}`;
+  }
   const age = calcAge(dob);
   const ageStr = age !== null ? t('contacts.table.inlineAge', { count: age }) : '';
   return `${t('contacts.table.dobLabel')} ${dateStr}${ageStr}`;

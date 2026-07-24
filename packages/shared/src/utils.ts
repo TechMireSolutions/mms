@@ -698,42 +698,63 @@ export function parseUtcDateParts(dob: string | null | undefined): { year: numbe
   return { year, month, day, date };
 }
 
+export interface SolarAgeParts {
+  years: number;
+  months: number;
+  days: number;
+}
+
 /**
- * Calculate detailed solar age (Years, Months, Days) based on a date of birth.
- * @param dob - Date of birth string
- * @param locale - Optional active language locale
- * @returns Detailed solar age string, e.g. "24y 5m 12d"
+ * Calculates numeric solar age components (Years, Months, Days) for a given date of birth.
+ * SRP: Pure date arithmetic responsibility.
  */
-export function calculateDetailedSolarAge(dob: string, locale = "en"): string {
+export function getSolarAgeComponents(dob: string, relativeTo = new Date()): SolarAgeParts | null {
   try {
     const parsed = parseUtcDateParts(dob);
-    if (!parsed) return "";
-    const now = new Date();
-    if (parsed.date > now) return "";
+    if (!parsed || parsed.date > relativeTo) return null;
 
-    let years = now.getFullYear() - parsed.year;
-    let months = now.getMonth() - parsed.month;
-    let days = now.getDate() - parsed.day;
+    let years = relativeTo.getFullYear() - parsed.year;
+    let months = relativeTo.getMonth() - parsed.month;
+    let days = relativeTo.getDate() - parsed.day;
 
     if (days < 0) {
       months--;
-      const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+      const prevMonth = new Date(relativeTo.getFullYear(), relativeTo.getMonth(), 0);
       days += prevMonth.getDate();
     }
     if (months < 0) {
       years--;
       months += 12;
     }
-    if (years < 0) return "";
+    if (years < 0) return null;
 
-    if (locale.startsWith("ar") || locale.startsWith("ur") || locale.startsWith("fa")) {
-      const nf = new Intl.NumberFormat(`${locale}-u-nu-arabext`);
-      return `${nf.format(years)}y ${nf.format(months)}m ${nf.format(days)}d`;
-    }
-    return `${years}y ${months}m ${days}d`;
+    return { years, months, days };
   } catch {
-    return "";
+    return null;
   }
+}
+
+/**
+ * Formats numeric solar age components into a localized string representation.
+ * SRP: Pure formatting and localization responsibility.
+ */
+export function formatSolarAgeComponents(parts: SolarAgeParts | null, locale = "en"): string {
+  if (!parts) return "";
+  const { years, months, days } = parts;
+  if (locale.startsWith("ar") || locale.startsWith("ur") || locale.startsWith("fa")) {
+    const nf = new Intl.NumberFormat(`${locale}-u-nu-arabext`);
+    return `${nf.format(years)}y ${nf.format(months)}m ${nf.format(days)}d`;
+  }
+  return `${years}y ${months}m ${days}d`;
+}
+
+/**
+ * Calculate detailed solar age (Years, Months, Days) based on a date of birth.
+ * Composite helper for callers.
+ */
+export function calculateDetailedSolarAge(dob: string, locale = "en"): string {
+  const parts = getSolarAgeComponents(dob);
+  return formatSolarAgeComponents(parts, locale);
 }
 
 /**
@@ -772,21 +793,23 @@ function getHijriParts(date: Date): { year: number; month: number; day: number }
   return { year, month, day };
 }
 
+export interface LunarAgeParts {
+  years: number;
+  months: number;
+  days: number;
+}
+
 /**
- * Calculate detailed Hijri (lunar) age (Years, Months, Days) based on a date of birth.
- * @param dob - Date of birth string
- * @param locale - Optional active language locale
- * @returns Detailed lunar age string, e.g. "25y 2m 8d"
+ * Calculates numeric Hijri (lunar) age components (Years, Months, Days) for a given date of birth.
+ * SRP: Pure Hijri date arithmetic responsibility.
  */
-export function calculateDetailedLunarAge(dob: string, locale = "en"): string {
+export function getLunarAgeComponents(dob: string, relativeTo = new Date()): LunarAgeParts | null {
   try {
     const parsed = parseUtcDateParts(dob);
-    if (!parsed) return "";
-    const now = new Date();
-    if (parsed.date > now) return "";
+    if (!parsed || parsed.date > relativeTo) return null;
 
     const birthParts = getHijriParts(parsed.date);
-    const nowParts = getHijriParts(now);
+    const nowParts = getHijriParts(relativeTo);
 
     let years = nowParts.year - birthParts.year;
     let months = nowParts.month - birthParts.month;
@@ -794,7 +817,7 @@ export function calculateDetailedLunarAge(dob: string, locale = "en"): string {
 
     if (days < 0) {
       months--;
-      const prevHijriDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() - nowParts.day));
+      const prevHijriDate = new Date(Date.UTC(relativeTo.getFullYear(), relativeTo.getMonth(), relativeTo.getDate() - nowParts.day));
       const prevHijriDays = getHijriParts(prevHijriDate).day;
       days += prevHijriDays > 0 ? prevHijriDays : 30;
     }
@@ -802,16 +825,21 @@ export function calculateDetailedLunarAge(dob: string, locale = "en"): string {
       years--;
       months += 12;
     }
-    if (years < 0) return "";
+    if (years < 0) return null;
 
-    if (locale.startsWith("ar") || locale.startsWith("ur") || locale.startsWith("fa")) {
-      const nf = new Intl.NumberFormat(`${locale}-u-nu-arabext`);
-      return `${nf.format(years)}y ${nf.format(months)}m ${nf.format(days)}d`;
-    }
-    return `${years}y ${months}m ${days}d`;
+    return { years, months, days };
   } catch {
-    return "";
+    return null;
   }
+}
+
+/**
+ * Calculate detailed Hijri (lunar) age (Years, Months, Days) based on a date of birth.
+ * Composite helper reusing formatSolarAgeComponents.
+ */
+export function calculateDetailedLunarAge(dob: string, locale = "en"): string {
+  const parts = getLunarAgeComponents(dob);
+  return formatSolarAgeComponents(parts, locale);
 }
 
 export const DEFAULT_CURRENCIES = [
@@ -1368,9 +1396,3 @@ export function syncContactScalarFields<T extends Partial<Contact>>(contact: T):
 
   return result as T;
 }
-
-
-
-
-
-

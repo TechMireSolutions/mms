@@ -22,6 +22,8 @@ import { ContactActionMenu } from "@/tenant/features/contacts/components/Contact
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { CopyBtn } from "@/components/ui/CopyBtn";
 
+import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
+
 interface ColumnConfig {
   id: string;
   label: string;
@@ -73,6 +75,7 @@ export default function ContactsTable({
   canDelete = false,
 }: ContactsTableProps): React.JSX.Element {
   const { prefs, countryCodesMap } = useContactConfig();
+  const { language } = useGlobalSettings();
   const { t } = useTranslation();
 
   const allSelected  = contacts.length > 0 && selected.length === contacts.length;
@@ -117,7 +120,7 @@ export default function ContactsTable({
                 </Button>
                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap leading-normal">
                   {contact.gender && <User className="w-3.5 h-3.5 text-muted-foreground inline" />}
-                  {contact.dob && <span>{formatContactDobWithAge(contact.dob, t)}</span>}
+                  {contact.dob && <span>{formatContactDobWithAge(contact.dob, t, { showDetailedSolarAge: prefs.showDetailedSolarAge, language })}</span>}
                 </p>
                 {showArchived && contact.deletionReason && (
                   <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">

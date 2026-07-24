@@ -1,6 +1,6 @@
 import { loadBackendEnv } from '../config/loadEnv.js';
 import { hashPassword } from '../services/auth/passwordService.js';
-import { insertPlatformUser, countPlatformUserRows, findPlatformUserRowByEmail, updatePlatformUserRow } from '../db/repositories/platformUserRepository.js';
+import { insertPlatformUser, findPlatformUserRowByEmail, updatePlatformUserRow } from '../db/repositories/platformUserRepository.js';
 import { initDb, closeDatabase } from '../db/database.js';
 import { randomBytes } from 'node:crypto';
 

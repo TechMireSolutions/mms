@@ -16,6 +16,7 @@ import { formatContactDobWithAge, resolveContactPhoneDisplay, getContactAccentBa
 import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -85,6 +86,7 @@ export default function ContactCards({
   allSelected = false,
 }: ContactCardsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { language } = useGlobalSettings();
   const { prefs, countryCodesMap } = useContactConfig();
 
   const visibleColumnIds = useMemo(
@@ -181,7 +183,7 @@ export default function ContactCards({
                     </h4>
                     {contact.dob && (
                       <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                        {formatContactDobWithAge(contact.dob, t)}
+                        {formatContactDobWithAge(contact.dob, t, { showDetailedSolarAge: prefs.showDetailedSolarAge, language })}
                       </p>
                     )}
                   </div>
