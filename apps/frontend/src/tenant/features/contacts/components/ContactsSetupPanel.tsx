@@ -62,11 +62,23 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
 
   const [prefs, setPrefs] = useState<ContactPreferences>(() => contextPrefs);
 
+  React.useEffect(() => {
+    setPrefs(contextPrefs);
+  }, [contextPrefs]);
+
+  const isPrefsDirty = React.useMemo(() => {
+    return JSON.stringify(prefs) !== JSON.stringify(contextPrefs);
+  }, [prefs, contextPrefs]);
+
   const countryOptions = React.useMemo(() => {
-    return (countryCodes || []).map((c) => ({
-      value: c.country,
-      label: `${c.country} (+${c.code})`,
-    }));
+    return (countryCodes || []).map((c) => {
+      const codeStr = (c.code || "").trim();
+      const formattedCode = codeStr.startsWith("+") ? codeStr : `+${codeStr}`;
+      return {
+        value: c.country,
+        label: `${c.country} (${formattedCode})`,
+      };
+    });
   }, [countryCodes]);
 
   const updatePreference = <K extends keyof ContactPreferences>(key: K, value: ContactPreferences[K]): void => {
@@ -159,7 +171,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
 
       {showPrefs && (
         <>
-          {!saved && (
+          {isPrefsDirty && (
             <div
               className="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning"
               role="alert"
