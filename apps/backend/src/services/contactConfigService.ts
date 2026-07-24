@@ -1,4 +1,4 @@
-import type { FieldConfig } from '@mms/shared';
+import { DEFAULT_FORM_TABS, type FieldConfig } from '@mms/shared';
 import { fetchObject } from './dbSyncService.js';
 import { loadCustomTabs } from './customTabsService.js';
 
@@ -10,7 +10,7 @@ export async function loadContactFieldConfig(): Promise<FieldConfig | null> {
   const config = raw as FieldConfig;
 
   const tabRows = await loadCustomTabs('contacts');
-  const formTabs = tabRows.map((row) => ({
+  const customFormTabs = tabRows.map((row) => ({
     key: row.key,
     label: row.label,
     icon: row.icon ?? undefined,
@@ -21,6 +21,11 @@ export async function loadContactFieldConfig(): Promise<FieldConfig | null> {
     color: row.color ?? undefined,
     isSystem: row.isSystem,
   }));
+
+  const baseTabs = config.formTabs && config.formTabs.length > 0 ? config.formTabs : DEFAULT_FORM_TABS;
+  const formTabs = customFormTabs.length > 0
+    ? [...customFormTabs, ...baseTabs.filter((bt) => !customFormTabs.some((ct) => ct.key === bt.key))]
+    : baseTabs;
 
   return {
     ...config,

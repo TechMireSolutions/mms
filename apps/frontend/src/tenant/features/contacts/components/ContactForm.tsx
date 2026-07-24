@@ -1198,19 +1198,30 @@ export default function ContactForm({
         {getDisplayName(contactDraft)}
       </span>
       <div className="flex items-center gap-1.5">
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px]">
-          {contactDraft.phones?.length || 0} {t("contacts.form.phonesLabel")}
-        </span>
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold border border-amber-500/20 text-[10px]">
-          {contactDraft.emails?.length || 0} {t("contacts.form.emailsLabel")}
-        </span>
-        {contactDraft.emergencyContacts &&
-          contactDraft.emergencyContacts.length > 0 && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold border border-rose-500/20 text-[10px]">
-              {contactDraft.emergencyContacts.length}{" "}
-              {t("contacts.detail.emergency")}
-            </span>
-          )}
+        {(() => {
+          const filledPhones = (contactDraft.phones || []).filter(p => (p.number || "").trim()).length;
+          const filledEmails = (contactDraft.emails || []).filter(e => (e.address || "").trim()).length;
+          const filledEmergency = (contactDraft.emergencyContacts || []).filter(e => e.contactId).length;
+          return (
+            <>
+              {filledPhones > 0 && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px]">
+                  {filledPhones} {t("contacts.form.phonesLabel")}
+                </span>
+              )}
+              {filledEmails > 0 && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold border border-amber-500/20 text-[10px]">
+                  {filledEmails} {t("contacts.form.emailsLabel")}
+                </span>
+              )}
+              {filledEmergency > 0 && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold border border-rose-500/20 text-[10px]">
+                  {filledEmergency} {t("contacts.detail.emergency")}
+                </span>
+              )}
+            </>
+          );
+        })()}
       </div>
     </div>
   ) : (

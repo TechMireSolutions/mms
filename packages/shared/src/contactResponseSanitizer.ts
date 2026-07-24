@@ -16,12 +16,13 @@ const TAB_COLLECTION_KEYS: Record<string, (keyof Contact)[]> = {
 };
 
 function tabEnabled(tabs: TabDefinition[], tabId: string): boolean {
-  const tab = tabs.find((t) => t.key === tabId);
+  const tab = tabs.find((t) => (t.key || '').toLowerCase() === tabId.toLowerCase());
   return tab ? tab.enabled !== false : true;
 }
 
 function fieldVisible(viewerRole: string, field: FieldDefinition | undefined): boolean {
-  if (!field || !field.enabled) return false;
+  if (!field) return true;
+  if (!field.enabled) return false;
   return canViewContactField(viewerRole, field);
 }
 
@@ -35,19 +36,19 @@ export function sanitizeContactForViewer(
   const { fields, tabs } = config;
 
   for (const [tabId, keys] of Object.entries(TAB_COLLECTION_KEYS)) {
-    const tab = tabs.find((candidateTab) => candidateTab.key === tabId);
-    const tabDef = tab ?? { key: tabId, label: tabId, enabled: false, order: 0 };
+    const tab = tabs.find((candidateTab) => (candidateTab.key || '').toLowerCase() === tabId.toLowerCase());
+    const tabDef = tab ?? { key: tabId, label: tabId, enabled: true, order: 0 };
     if (!tabEnabled(tabs, tabId) || !canViewContactTab(viewerRole, tabDef)) {
       for (const key of keys) {
         delete sanitizedContact[key];
       }
       continue;
     }
-    if (tabId === 'phones' && !fieldVisible(viewerRole, fields.phones?.find((field) => field.key === 'number'))) {
+    if (tabId === 'phones' && fields.phones?.length && !fieldVisible(viewerRole, fields.phones.find((field) => field.key === 'number'))) {
       delete sanitizedContact.phones;
       delete sanitizedContact.phone;
     }
-    if (tabId === 'emails' && !fieldVisible(viewerRole, fields.emails?.find((field) => field.key === 'address'))) {
+    if (tabId === 'emails' && fields.emails?.length && !fieldVisible(viewerRole, fields.emails.find((field) => field.key === 'address'))) {
       delete sanitizedContact.emails;
       delete sanitizedContact.email;
     }
