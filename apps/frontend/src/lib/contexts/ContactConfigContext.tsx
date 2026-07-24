@@ -27,6 +27,7 @@ import {
   WhatsAppTemplate,
   translateApp,
   ColumnRegistryEntry,
+  DEFAULT_COLUMN_REGISTRY,
   canViewContactColumn,
   canViewContactTab,
   buildDynamicContactSchema,
@@ -543,6 +544,19 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
 
     // 2. Add columns for any active fields that aren't in the registry yet
     const existingKeys = new Set(filteredRegistry.map((column) => column.key));
+
+    DEFAULT_COLUMN_REGISTRY.forEach((defaultCol) => {
+      if (!existingKeys.has(defaultCol.key)) {
+        const maxOrder = filteredRegistry.reduce((max, column) => Math.max(max, column.order), -1);
+        filteredRegistry.push({
+          ...defaultCol,
+          enabled: false,
+          order: maxOrder + 1,
+        });
+        existingKeys.add(defaultCol.key);
+      }
+    });
+
     const specialKeys = new Set([
       "firstName", "lastName", "avatar", "number", "address", "line1", "city",
       "state", "country", "label", "platform", "url", "contactId", "relationship"

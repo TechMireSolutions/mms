@@ -884,6 +884,8 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "contacts.clearFilters": "پاک کردن فیلترها",
   "contacts.clickAddContact": "جهت ثبت اولین مخاطب روی «افزودن مخاطب» کلیک کنید.",
   "contacts.columns": "ستون‌ها",
+  "contacts.resetLayout": "بازنشانی چیدمان",
+  "contacts.searchColumnsPlaceholder": "فیلتر ستون‌ها...",
   "contacts.contactsHavePhone": "مخاطب دارای شماره تلفن هستند",
   "contacts.deleteConfirmDescription": "«{name}» بایگانی شود؟ بعداً از بایگانی بازیابی می‌شود.",
   "contacts.deleteConfirmDescriptionDefault": "این مخاطب بایگانی شود؟ بعداً قابل بازیابی است.",

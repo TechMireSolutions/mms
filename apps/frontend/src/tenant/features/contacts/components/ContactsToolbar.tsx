@@ -1,5 +1,5 @@
 import React from "react";
-import { SlidersHorizontal, RefreshCw, Archive } from "lucide-react";
+import { SlidersHorizontal, RefreshCw, Archive, Table, LayoutGrid } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
+import { DEFAULT_COLUMN_REGISTRY } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
@@ -21,9 +22,11 @@ interface ContactsToolbarProps {
   hasActiveFilters: boolean;
   activeFilterCount: number;
   onClearFilters: () => void;
-   showDeletedArchives?: boolean;
+  showDeletedArchives?: boolean;
   onShowDeletedChange?: (show: boolean) => void;
   canViewDeleted?: boolean;
+  viewMode?: "table" | "cards";
+  onViewModeChange?: (mode: "table" | "cards") => void;
 }
 
 /**
@@ -45,6 +48,8 @@ export default function ContactsToolbar({
   showDeletedArchives = false,
   onShowDeletedChange,
   canViewDeleted = false,
+  viewMode = "table",
+  onViewModeChange,
 }: ContactsToolbarProps): React.JSX.Element {
   const { availableColumns, genders, systemSortOptions, columnRegistry, updateUserColumnLayout } = useContactConfig();
   const { t } = useTranslation();
@@ -67,6 +72,10 @@ export default function ContactsToolbar({
     return combined;
   }, [availableColumns, systemSortOptions]);
 
+  const handleResetColumnLayout = React.useCallback(() => {
+    updateUserColumnLayout(DEFAULT_COLUMN_REGISTRY);
+  }, [updateUserColumnLayout]);
+
   const columnCustomizerLabels = React.useMemo(
     () => ({
       trigger: t("contacts.columns"),
@@ -75,6 +84,8 @@ export default function ContactsToolbar({
       hidden: t("contacts.hidden"),
       fixed: t("contacts.fixed"),
       hideColumn: (label: string) => t("contacts.hideColumn", { label }),
+      reset: t("contacts.resetLayout"),
+      searchPlaceholder: t("contacts.searchColumnsPlaceholder"),
     }),
     [t],
   );
@@ -166,9 +177,41 @@ export default function ContactsToolbar({
           </Button>
         )}
 
+        {onViewModeChange && (
+          <div className="flex items-center p-0.5 rounded-xl border border-border/50 bg-card/60 backdrop-blur-md shadow-xs" role="group" aria-label="View Mode">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onViewModeChange("table")}
+              className={`h-9 px-2.5 rounded-lg text-xs font-semibold transition-all ${
+                viewMode === "table"
+                  ? "bg-primary text-primary-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              aria-label="Table View"
+            >
+              <Table className="w-3.5 h-3.5" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onViewModeChange("cards")}
+              className={`h-9 px-2.5 rounded-lg text-xs font-semibold transition-all ${
+                viewMode === "cards"
+                  ? "bg-primary text-primary-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              aria-label="Cards View"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        )}
+
         <ModuleColumnCustomizer
           columnRegistry={columnRegistry}
           updateUserColumnLayout={updateUserColumnLayout}
+          onResetLayout={handleResetColumnLayout}
           labels={columnCustomizerLabels}
         />
       </div>

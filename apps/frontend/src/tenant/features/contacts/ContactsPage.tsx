@@ -26,6 +26,7 @@ import ContactsSyncConflictPanel from "@/tenant/features/contacts/components/Con
 import { ListPagination } from "@/components/ui/ListPagination";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { TableSkeleton } from "@/components/ui/LoadingState";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { startContactsDuplicateScan } from "@/lib/backgroundJobs/startServerContactsCsvExport";
 import { collectLinkedContactIds, mergeContactLinkDirectory } from "@/lib/contacts/contactLinkIds";
 import { notify } from "@/lib/notify";
@@ -58,6 +59,7 @@ function ContactsInner() {
   const { prefs, countryCodesMap } = useContactConfig();
   const tableColumns = useContactColumns();
   const [showDeletedArchives, setShowDeletedArchives] = useState(false);
+  const [viewModeOverride, setViewModeOverride] = useState<"table" | "cards" | null>(null);
   const [listPage, setListPage] = useState(1);
   const [conflictPanelOpen, setConflictPanelOpen] = useState(false);
   const workDirectoryRowsRef = useRef<Contact[] | undefined>(undefined);
@@ -252,6 +254,70 @@ function ContactsInner() {
     setShowDuplicates(true);
   }, [openingDuplicates, shownCount, queryClient, t, setShowDuplicates]);
 
+  const handleWhatsApp = useCallback((targets: Contact[]) => {
+    setMessagingTarget({ channel: "whatsapp", contacts: targets });
+  }, [setMessagingTarget]);
+
+  const handleSms = useCallback((targets: Contact[]) => {
+    setMessagingTarget({ channel: "sms", contacts: targets });
+  }, [setMessagingTarget]);
+
+  const handleEmail = useCallback((targets: Contact[]) => {
+    setMessagingTarget({ channel: "email", contacts: targets });
+  }, [setMessagingTarget]);
+
+  const selectedTargets = useMemo(() => {
+    if (selected.length === 0) return { waTargets: [], smsReady: [] };
+    const targets = workContacts.filter((contact) => selected.includes(contact.id));
+    const waTargets = targets.filter((contact) => hasWhatsApp(contact));
+    const smsReady = targets.filter((contact) => Boolean(getPrimaryPhone(contact)));
+    return { waTargets, smsReady };
+  }, [selected, workContacts]);
+
+  const commonDirectoryProps = useMemo(() => ({
+    contacts: workContacts,
+    selected,
+    onSelect: handleSelect,
+    onSelectAll: handleSelectAll,
+    onEdit: handleEdit,
+    onDelete: handleDelete,
+    onRestore: handleRestore,
+    showArchived: viewingDeleted,
+    onWhatsApp: handleWhatsApp,
+    onSms: handleSms,
+    onEmail: handleEmail,
+    allContacts: allContactsForLinks,
+    onUpdateContact: handleUpdateContact,
+    canWrite,
+    canDelete,
+    columns: tableColumns,
+    allSelected: workContacts.length > 0 && selected.length === workContacts.length,
+  }), [
+    workContacts,
+    selected,
+    handleSelect,
+    handleSelectAll,
+    handleEdit,
+    handleDelete,
+    handleRestore,
+    viewingDeleted,
+    handleWhatsApp,
+    handleSms,
+    handleEmail,
+    allContactsForLinks,
+    handleUpdateContact,
+    canWrite,
+    canDelete,
+    tableColumns,
+  ]);
+
+  const tableProps = useMemo(() => ({
+    ...commonDirectoryProps,
+    sortField,
+    sortDir,
+    onSort: handleSort,
+  }), [commonDirectoryProps, sortField, sortDir, handleSort]);
+
   return (
     <ModulePageShell
       seoTitle={`MMS - ${t("nav.contacts")}`}
@@ -319,6 +385,8 @@ function ContactsInner() {
                   setSelected([]);
                 }}
                 canViewDeleted={canDelete}
+                viewMode={viewModeOverride ?? "table"}
+                onViewModeChange={setViewModeOverride}
               />
             </ErrorBoundary>
 
@@ -364,76 +432,65 @@ function ContactsInner() {
                     <span className="text-sm font-semibold text-foreground">{t("contacts.selectedCount", { count: selected.length })}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {(() => {
-                      const targets = workContacts.filter((contact) => selected.includes(contact.id));
-                      const waTargets = targets.filter((contact) => hasWhatsApp(contact));
-                      const smsReady = targets.filter((contact) => Boolean(getPrimaryPhone(contact)));
-                      const waClickable = waTargets.length > 0;
-                      const smsClickable = smsReady.length > 0;
-                      return (
-                        <>
-                          {bulkActions.includes("whatsapp") && !viewingDeleted && (
-                            <Button
-                              type="button"
-                              size="sm"
-                              disabled={!waClickable}
-                              onClick={() => setMessagingTarget({ channel: "whatsapp", contacts: waTargets })}
-                              aria-label={t("contacts.whatsappBulk", { count: waTargets.length })}
-                              className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm"
-                            >
-                              <MessageCircle className="w-3.5 h-3.5" /> {t("contacts.whatsappBulk", { count: waTargets.length })}
-                            </Button>
-                          )}
-                          {bulkActions.includes("sms") && !viewingDeleted && (
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              disabled={!smsClickable}
-                              onClick={() => setMessagingTarget({ channel: "sms", contacts: smsReady })}
-                              aria-label={t("contacts.smsBulk", { count: smsReady.length })}
-                              className="gap-1.5 border-primary/40 bg-primary/10 text-primary font-semibold hover:bg-primary/20"
-                            >
-                              <MessageSquare className="w-3.5 h-3.5" /> {t("contacts.smsBulk", { count: smsReady.length })}
-                            </Button>
-                          )}
-                          {bulkActions.includes("export") && (
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={handleBulkExport}
-                              disabled={!canExport}
-                              className="gap-1.5 font-semibold"
-                            >
-                              <Download className="w-3.5 h-3.5" /> {t("contacts.bulkExport")}
-                            </Button>
-                          )}
-                          {bulkActions.includes("delete") && canDelete && !viewingDeleted && (
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="destructive"
-                              onClick={requestBulkDelete}
-                              className="gap-1.5 font-semibold"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" /> {t("contacts.bulkDelete")}
-                            </Button>
-                          )}
-                          {viewingDeleted && canDelete && (
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={requestBulkRestore}
-                              className="gap-1.5 border-primary/40 text-primary font-semibold hover:bg-primary/10"
-                            >
-                              <RotateCcw className="w-3.5 h-3.5" /> {t("contacts.bulkRestore")}
-                            </Button>
-                          )}
-                        </>
-                      );
-                    })()}
+                    {bulkActions.includes("whatsapp") && !viewingDeleted && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={selectedTargets.waTargets.length === 0}
+                        onClick={() => setMessagingTarget({ channel: "whatsapp", contacts: selectedTargets.waTargets })}
+                        aria-label={t("contacts.whatsappBulk", { count: selectedTargets.waTargets.length })}
+                        className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" /> {t("contacts.whatsappBulk", { count: selectedTargets.waTargets.length })}
+                      </Button>
+                    )}
+                    {bulkActions.includes("sms") && !viewingDeleted && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={selectedTargets.smsReady.length === 0}
+                        onClick={() => setMessagingTarget({ channel: "sms", contacts: selectedTargets.smsReady })}
+                        aria-label={t("contacts.smsBulk", { count: selectedTargets.smsReady.length })}
+                        className="gap-1.5 border-primary/40 bg-primary/10 text-primary font-semibold hover:bg-primary/20"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" /> {t("contacts.smsBulk", { count: selectedTargets.smsReady.length })}
+                      </Button>
+                    )}
+                    {bulkActions.includes("export") && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleBulkExport}
+                        disabled={!canExport}
+                        className="gap-1.5 font-semibold"
+                      >
+                        <Download className="w-3.5 h-3.5" /> {t("contacts.bulkExport")}
+                      </Button>
+                    )}
+                    {bulkActions.includes("delete") && canDelete && !viewingDeleted && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        onClick={requestBulkDelete}
+                        className="gap-1.5 font-semibold"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> {t("contacts.bulkDelete")}
+                      </Button>
+                    )}
+                    {viewingDeleted && canDelete && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={requestBulkRestore}
+                        className="gap-1.5 border-primary/40 text-primary font-semibold hover:bg-primary/10"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" /> {t("contacts.bulkRestore")}
+                      </Button>
+                    )}
                     <Button
                       type="button"
                       variant="ghost"
@@ -456,76 +513,54 @@ function ContactsInner() {
               ) : (
                 <motion.div key="list-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
                   {workContacts.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 rounded-xl border-2 border-dashed border-border text-muted-foreground gap-3">
-                      <UserX className="w-8 h-8 opacity-30" />
-                      <p className="text-sm font-semibold">
-                        {hasActiveFilters
-                          ? t("contacts.noContactsMatchFilters")
-                          : viewingDeleted
-                            ? t("contacts.noDeletedContacts")
-                            : t("contacts.noContactsYet")}
-                      </p>
-                      <p className="text-xs text-center max-w-xs">
-                        {hasActiveFilters
-                          ? t("contacts.tryAdjustingFilters")
-                          : viewingDeleted
-                            ? t("contacts.showActive")
-                            : t("contacts.clickAddContact")}
-                      </p>
-                      {hasActiveFilters && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={clearFilters}
-                          className="gap-1.5"
-                        >
-                          <RefreshCw className="w-3 h-3" /> {t("contacts.clearFilters")}
-                        </Button>
-                      )}
+                    <div className="rounded-2xl border border-border/40 bg-card/40 backdrop-blur-xl p-6">
+                      <EmptyState
+                        icon={UserX}
+                        title={
+                          hasActiveFilters
+                            ? t("contacts.noContactsMatchFilters")
+                            : viewingDeleted
+                              ? t("contacts.noDeletedContacts")
+                              : t("contacts.noContactsYet")
+                        }
+                        description={
+                          hasActiveFilters
+                            ? t("contacts.tryAdjustingFilters")
+                            : viewingDeleted
+                              ? t("contacts.showActive")
+                              : t("contacts.clickAddContact")
+                        }
+                        action={
+                          hasActiveFilters ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={clearFilters}
+                              className="gap-1.5"
+                            >
+                              <RefreshCw className="w-3 h-3" /> {t("contacts.clearFilters")}
+                            </Button>
+                          ) : null
+                        }
+                      />
                     </div>
                   ) : (
                     <ErrorBoundary>
-                      <div className="lg:hidden">
-                        <ContactCards
-                          contacts={workContacts}
-                          selected={selected}
-                          onSelect={handleSelect}
-                          onEdit={handleEdit}
-                          onDelete={handleDelete}
-                          onRestore={handleRestore}
-                          showArchived={viewingDeleted}
-                          onWhatsApp={(targets) => setMessagingTarget({ channel: "whatsapp", contacts: targets })}
-                          onSms={(targets) => setMessagingTarget({ channel: "sms", contacts: targets })}
-                          onEmail={(targets) => setMessagingTarget({ channel: "email", contacts: targets })}
-                          allContacts={allContactsForLinks}
-                          canWrite={canWrite}
-                          canDelete={canDelete}
-                          columns={tableColumns}
-                          onSelectAll={handleSelectAll}
-                          allSelected={workContacts.length > 0 && selected.length === workContacts.length}
-                          onUpdateContact={handleUpdateContact}
-                        />
-                      </div>
-                      <div className="hidden lg:block space-y-2">
-                        <ContactsTable
-                          contacts={workContacts} selected={selected}
-                          onSelect={handleSelect} onSelectAll={handleSelectAll}
-                          onEdit={handleEdit} onDelete={handleDelete}
-                          onRestore={handleRestore}
-                          showArchived={viewingDeleted}
-                          onWhatsApp={(targets) => setMessagingTarget({ channel: "whatsapp", contacts: targets })}
-                          onSms={(targets) => setMessagingTarget({ channel: "sms", contacts: targets })}
-                          onEmail={(targets) => setMessagingTarget({ channel: "email", contacts: targets })}
-                          onSort={handleSort}
-                          sortField={sortField} sortDir={sortDir}
-                          columns={tableColumns}
-                          allContacts={allContactsForLinks}
-                          onUpdateContact={handleUpdateContact}
-                          canWrite={canWrite}
-                          canDelete={canDelete}
-                        />
-                      </div>
+                      {viewModeOverride === "cards" ? (
+                        <ContactCards {...commonDirectoryProps} />
+                      ) : viewModeOverride === "table" ? (
+                        <ContactsTable {...tableProps} />
+                      ) : (
+                        <>
+                          <div className="lg:hidden">
+                            <ContactCards {...commonDirectoryProps} />
+                          </div>
+                          <div className="hidden lg:block space-y-2">
+                            <ContactsTable {...tableProps} />
+                          </div>
+                        </>
+                      )}
                       {useServerWork && workPageData && (
                          <ListPagination
                            page={workPageData.page}

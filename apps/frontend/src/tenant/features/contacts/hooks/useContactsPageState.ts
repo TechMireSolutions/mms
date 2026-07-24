@@ -57,6 +57,43 @@ export interface UseContactsPageStateOptions {
   directoryRowsRef?: React.MutableRefObject<Contact[] | undefined>;
 }
 
+function normalizeContactPhones(
+  contact: Contact,
+  defaultCode: string,
+  countryCodesMap: Record<string, string>,
+): Contact {
+  const base = {
+    relationships: [],
+    activities: [],
+    ...contact,
+  } as Contact;
+
+  let phones = Array.isArray(base.phones) ? base.phones : [];
+  const scalarPhone = typeof base.phone === 'string' ? base.phone.trim() : '';
+
+  if (scalarPhone && !phones.some((p) => (p.number || '').trim())) {
+    const parsed = parsePhoneNumber(scalarPhone, defaultCode, Object.values(countryCodesMap));
+    phones = [{ label: 'Mobile', number: parsed.number || scalarPhone, countryCode: parsed.countryCode || defaultCode, isPrimary: true }, ...phones];
+  }
+
+  if (phones.length > 0) {
+    phones = phones.map((phone: PhoneNumber) => {
+      if (phone.countryCode && phone.number) return phone;
+      const parsed = parsePhoneNumber(phone.number, phone.countryCode || defaultCode, Object.values(countryCodesMap));
+      return {
+        ...phone,
+        countryCode: parsed.countryCode || defaultCode,
+        number: parsed.number || phone.number,
+      };
+    });
+  }
+
+  return {
+    ...base,
+    phones,
+  };
+}
+
 export function useContactsPageState({
   rawContacts,
   prefs,
@@ -86,38 +123,7 @@ export function useContactsPageState({
     const source = showDeletedArchives
       ? rawContacts.filter(isContactDeleted)
       : filterActiveContacts(rawContacts);
-    return source.map((contact) => {
-      const base = {
-        relationships: [],
-        activities: [],
-        ...contact,
-      } as Contact;
-
-      let phones = Array.isArray(base.phones) ? base.phones : [];
-      const scalarPhone = typeof base.phone === 'string' ? base.phone.trim() : '';
-
-      if (scalarPhone && !phones.some((p) => (p.number || '').trim())) {
-        const parsed = parsePhoneNumber(scalarPhone, defaultCode, Object.values(countryCodesMap));
-        phones = [{ label: 'Mobile', number: parsed.number || scalarPhone, countryCode: parsed.countryCode || defaultCode, isPrimary: true }, ...phones];
-      }
-
-      if (phones.length > 0) {
-        phones = phones.map((phone: PhoneNumber) => {
-          if (phone.countryCode && phone.number) return phone;
-          const parsed = parsePhoneNumber(phone.number, phone.countryCode || defaultCode, Object.values(countryCodesMap));
-          return {
-            ...phone,
-            countryCode: parsed.countryCode || defaultCode,
-            number: parsed.number || phone.number,
-          };
-        });
-      }
-
-      return {
-        ...base,
-        phones,
-      };
-    });
+    return source.map((contact) => normalizeContactPhones(contact, defaultCode, countryCodesMap));
   }, [rawContacts, showDeletedArchives, prefs, countryCodesMap]);
 
   const [search, setSearch] = useState("");

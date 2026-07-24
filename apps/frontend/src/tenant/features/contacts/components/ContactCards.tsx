@@ -1,7 +1,7 @@
 import React, { useState, lazy, Suspense, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-  MoreHorizontal, MessageCircle, MessageSquare, Edit2, Trash2, Eye, Phone, Mail, RotateCcw,
+  MessageCircle, MessageSquare, Eye, Phone, Mail,
   AlertTriangle,
 } from "lucide-react";
 import { 
@@ -14,11 +14,8 @@ import {
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { formatContactDobWithAge, resolveContactPhoneDisplay, getContactAccentBarClass, formatTelHref } from "@/lib/contacts/contactI18n";
 import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
+import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
 import { useTranslation } from "@/hooks/useTranslation";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -52,6 +49,21 @@ interface ContactCardsProps {
   allSelected?: boolean;
   onUpdateContact?: (contact: Contact) => Promise<void>;
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+    },
+  },
+};
+
+const cardItemVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" as const } },
+};
 
 /** Mobile-first card directory with dynamic, config-driven preferences (globle1.md §3.3). */
 export default function ContactCards({
@@ -96,7 +108,7 @@ export default function ContactCards({
   return (
     <>
       {onSelectAll && contacts.length > 0 && (
-        <div className="flex items-center justify-between px-4 py-3 bg-card/65 backdrop-blur-md rounded-2xl border border-border/40 mb-3.5 shadow-sm">
+        <div className="flex items-center justify-between px-4 py-3 bg-card/65 backdrop-blur-md rounded-2xl border border-border/40 mb-3.5 shadow-xs">
           <div className="flex items-center gap-2.5">
             <Checkbox
               checked={allSelected ? true : (selected.length > 0 ? "indeterminate" : false)}
@@ -113,7 +125,12 @@ export default function ContactCards({
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+      >
         {contacts.map((contact) => {
           const isSelected = selected.includes(contact.id);
           const displayName = getDisplayName(contact);
@@ -124,13 +141,12 @@ export default function ContactCards({
             <motion.div
               key={contact.id}
               layout
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
+              variants={cardItemVariants}
               whileHover={{ y: -4, scale: 1.01, transition: { duration: 0.2 } }}
               role="region"
               aria-label={displayName}
-              className={`relative overflow-hidden group rounded-2xl border bg-gradient-to-br from-card/95 via-card/85 to-background/70 dark:from-card/95 dark:via-card/80 dark:to-background/60 backdrop-blur-xl p-4 ps-5.5 space-y-4 transition-all duration-300 shadow-sm hover:shadow-md ${isSelected
-                  ? "border-primary/50 bg-primary/[0.015] dark:bg-primary/[0.02] shadow-sm shadow-primary/5"
+              className={`relative overflow-hidden group rounded-2xl border bg-gradient-to-br from-card/95 via-card/85 to-background/70 dark:from-card/95 dark:via-card/80 dark:to-background/60 backdrop-blur-xl p-4 ps-5.5 space-y-4 transition-all duration-300 shadow-xs hover:shadow-md ${isSelected
+                  ? "border-primary/50 bg-primary/[0.025] dark:bg-primary/[0.03] shadow-xs shadow-primary/5"
                   : "border-border/50 dark:border-border/30 hover:border-primary/35 dark:hover:border-primary/20"
                 }`}
             >
@@ -321,52 +337,26 @@ export default function ContactCards({
                     <Eye aria-hidden="true" className="w-3.5 h-3.5" />
                     <span>{t("contacts.table.viewProfile")}</span>
                   </MotionButton>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <MotionButton
-                        type="button"
-                        variant="outline"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="p-2.5 rounded-xl border border-border/50 dark:border-border/30 hover:bg-muted hover:text-foreground text-muted-foreground transition-colors cursor-pointer h-auto shadow-none"
-                        aria-label={t("contacts.table.actions")}
-                      >
-                        <MoreHorizontal aria-hidden="true" className="w-4 h-4" />
-                      </MotionButton>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                      {canWrite && !showArchived && (
-                        <DropdownMenuItem onClick={() => onEdit(contact)}>
-                          <Edit2 aria-hidden="true" className="w-3.5 h-3.5 me-2" /> {t("contacts.table.edit")}
-                        </DropdownMenuItem>
-                      )}
-                      {!showArchived ? (
-                        canDelete && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => onDelete(contact.id)}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Trash2 aria-hidden="true" className="w-3.5 h-3.5 me-2" /> {t("contacts.table.deleteContact")}
-                            </DropdownMenuItem>
-                          </>
-                        )
-                      ) : (
-                        canDelete && (
-                          <DropdownMenuItem onClick={() => onRestore?.(contact.id)}>
-                            <RotateCcw aria-hidden="true" className="w-3.5 h-3.5 me-2" /> {t("contacts.restoreContact")}
-                          </DropdownMenuItem>
-                        )
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <ContactActionMenu
+                    contact={contact}
+                    onView={setViewContact}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onRestore={onRestore}
+                    onWhatsApp={onWhatsApp}
+                    onSms={onSms}
+                    onEmail={onEmail}
+                    showArchived={showArchived}
+                    canWrite={canWrite}
+                    canDelete={canDelete}
+                    triggerClassName="p-2.5 rounded-xl border border-border/50 dark:border-border/30 hover:bg-muted hover:text-foreground text-muted-foreground transition-colors cursor-pointer h-auto shadow-none min-h-0 min-w-0"
+                  />
                 </div>
               </div>
             </motion.div>
           );
         })}
-      </div>
+      </motion.div>
 
       {viewContact && (
         <Suspense fallback={null}>

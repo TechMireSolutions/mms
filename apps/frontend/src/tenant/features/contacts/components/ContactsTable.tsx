@@ -1,27 +1,15 @@
 import React, { useState, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  MoreHorizontal,
   ChevronUp,
   ChevronDown,
   User,
   MessageCircle,
-  Eye,
-  Edit2,
-  Mail,
-  MessageSquare,
-  Trash2,
-  RotateCcw,
 } from "lucide-react";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   getDisplayName, 
-  getPrimaryPhone,
   getPrimaryEmail, 
   hasWhatsApp, 
   Contact,
@@ -30,10 +18,12 @@ import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactDobWithAge, resolveContactPhoneDisplay } from "@/lib/contacts/contactI18n";
 import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
+import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { CopyBtn } from "@/components/ui/CopyBtn";
 
 const ContactDetailDrawer = lazy(() => import("@/tenant/features/contacts/components/ContactDetailDrawer"));
+
 
 
 
@@ -100,9 +90,9 @@ export default function ContactsTable({
       : <ChevronDown className="w-3 h-3 text-primary" />;
   };
 
-  const TH = ({ field, children }: { field: string; children: React.ReactNode }): React.JSX.Element => (
+  const TH = ({ field, children, className }: { field: string; children: React.ReactNode; className?: string }): React.JSX.Element => (
     <th
-      className="px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer select-none hover:text-foreground transition-colors"
+      className={`px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer select-none hover:text-foreground transition-colors ${className || ""}`}
       onClick={() => onSort(field)}
     >
       <div className="flex items-center gap-1">{children}<SortIcon field={field} /></div>
@@ -113,7 +103,7 @@ export default function ContactsTable({
     switch (col.id) {
       case "name":
         return (
-          <td key="name" className="px-4 py-3">
+          <td key="name" className="px-4 py-3 sticky left-10 z-10 bg-card group-hover:bg-muted/40 transition-colors border-r border-border/30">
             <div className="flex items-center gap-3">
               <UserAvatar
                 id={contact.id}
@@ -210,7 +200,7 @@ export default function ContactsTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="w-10 px-4 py-3">
+              <th className="w-10 px-4 py-3 sticky left-0 z-20 bg-muted/95 backdrop-blur-md border-r border-border/30">
                 <Checkbox
                   checked={someSelected ? "indeterminate" : allSelected}
                   onCheckedChange={() => onSelectAll()}
@@ -220,10 +210,12 @@ export default function ContactsTable({
               </th>
               {columns.map((col) => {
                 const sortFieldKey = col.sortField || col.id;
+                const isNameCol = col.id === "name";
+                const stickyClass = isNameCol ? "sticky left-10 z-20 bg-muted/95 backdrop-blur-md border-r border-border/30" : "";
                 return sortFieldKey ? (
-                  <TH key={col.id} field={sortFieldKey}>{col.label}</TH>
+                  <TH key={col.id} field={sortFieldKey} className={stickyClass}>{col.label}</TH>
                 ) : (
-                  <th key={col.id} className="px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{col.label}</th>
+                  <th key={col.id} className={`px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide ${stickyClass}`}>{col.label}</th>
                 );
               })}
               <th className="px-4 py-3 w-16" />
@@ -233,7 +225,6 @@ export default function ContactsTable({
             <AnimatePresence>
               {contacts.map((contact) => {
                 const isSelected = selected.includes(contact.id);
-                const primaryEmailVal = getPrimaryEmail(contact);
                 return (
                   <motion.tr
                     key={contact.id}
@@ -243,7 +234,7 @@ export default function ContactsTable({
                     transition={{ duration: 0.1 }}
                     className={`hover:bg-muted/20 transition-colors group ${isSelected ? "bg-primary/[0.02]" : ""}`}
                   >
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 sticky left-0 z-20 bg-card group-hover:bg-muted/40 transition-colors border-r border-border/30">
                       <Checkbox
                         checked={isSelected}
                         onCheckedChange={() => onSelect(contact.id)}
@@ -253,42 +244,19 @@ export default function ContactsTable({
                     </td>
                     {columns.map((col) => renderCell(col, contact))}
                     <td className="px-4 py-3">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="min-w-[44px] min-h-[44px] p-0 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" type="button" aria-label={t('contacts.table.actions')}>
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem onClick={() => setViewContact(contact)}>
-                            <Eye className="w-3.5 h-3.5 me-2" /> {t('contacts.table.viewProfile')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onEdit(contact)} disabled={!canWrite || showArchived}>
-                            <Edit2 className="w-3.5 h-3.5 me-2" /> {t('contacts.table.edit')}
-                          </DropdownMenuItem>
-                          {!showArchived ? (
-                            <>
-                              <DropdownMenuItem disabled={!hasWhatsApp(contact)} onClick={() => onWhatsApp([contact])}>
-                                <MessageCircle className={`w-3.5 h-3.5 me-2 ${hasWhatsApp(contact) ? "text-success" : "text-muted-foreground"}`} /> {t('contacts.whatsapp')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem disabled={!primaryEmailVal} onClick={() => onEmail([contact])}>
-                                <Mail className={`w-3.5 h-3.5 me-2 ${primaryEmailVal ? "text-warning" : "text-muted-foreground"}`} /> {t("contacts.detail.emailAction")}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem disabled={!getPrimaryPhone(contact)} onClick={() => onSms([contact])}>
-                                <MessageSquare className="w-3.5 h-3.5 me-2 text-primary" /> {t("contacts.sms")}
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => onDelete(contact.id)} disabled={!canDelete} className="text-destructive focus:text-destructive">
-                                <Trash2 className="w-3.5 h-3.5 me-2" /> {t('contacts.table.deleteContact')}
-                              </DropdownMenuItem>
-                            </>
-                          ) : (
-                            <DropdownMenuItem onClick={() => onRestore?.(contact.id)} disabled={!canDelete}>
-                              <RotateCcw className="w-3.5 h-3.5 me-2" /> {t("contacts.restoreContact")}
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <ContactActionMenu
+                        contact={contact}
+                        onView={setViewContact}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                        onRestore={onRestore}
+                        onWhatsApp={onWhatsApp}
+                        onSms={onSms}
+                        onEmail={onEmail}
+                        showArchived={showArchived}
+                        canWrite={canWrite}
+                        canDelete={canDelete}
+                      />
                     </td>
                   </motion.tr>
                 );

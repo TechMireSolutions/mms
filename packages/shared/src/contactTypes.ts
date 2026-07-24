@@ -399,13 +399,21 @@ export const DEFAULT_SETTINGS_SUB_TABS: TabDefinition[] = [
 ];
 
 export const DEFAULT_COLUMN_REGISTRY: ColumnRegistryEntry[] = [
-  { key: "name",           label: "Name",           enabled: true,  order: 0, sortable: true,  width: 0,   fixed: true },
-  { key: "gender",         label: "Gender",         enabled: true,  order: 1, sortable: true,  width: 100 },
-  { key: "phone",          label: "Phone",          enabled: true,  order: 2, sortable: false, width: 140 },
-  { key: "whatsapp",       label: "WhatsApp",       enabled: true,  order: 3, sortable: false, width: 90  },
-  { key: "email",          label: "Email",          enabled: false, order: 4, sortable: false, width: 180 },
-  { key: "city",           label: "City",           enabled: false, order: 5, sortable: true,  width: 110 },
-  { key: "dob",            label: "Date of Birth",  enabled: false, order: 6, sortable: true,  width: 130 },
+  { key: "name",                   label: "Name",                   enabled: true,  order: 0,  sortable: true,  width: 0,   fixed: true },
+  { key: "gender",                 label: "Gender",                 enabled: true,  order: 1,  sortable: true,  width: 100 },
+  { key: "phone",                  label: "Phone",                  enabled: true,  order: 2,  sortable: false, width: 140 },
+  { key: "whatsapp",               label: "WhatsApp",               enabled: true,  order: 3,  sortable: false, width: 90  },
+  { key: "email",                  label: "Email",                  enabled: false, order: 4,  sortable: false, width: 180 },
+  { key: "isSyed",                 label: "Is Syed",                enabled: false, order: 5,  sortable: true,  width: 90  },
+  { key: "dob",                    label: "Date of Birth",          enabled: false, order: 6,  sortable: true,  width: 130 },
+  { key: "line1",                  label: "Street Address",         enabled: false, order: 7,  sortable: true,  width: 150 },
+  { key: "city",                   label: "City",                   enabled: false, order: 8,  sortable: true,  width: 110 },
+  { key: "state",                  label: "State / Province",       enabled: false, order: 9,  sortable: true,  width: 120 },
+  { key: "country",                label: "Country",                enabled: false, order: 10, sortable: true,  width: 110 },
+  { key: "socials_platform",       label: "Social Platforms",       enabled: false, order: 11, sortable: false, width: 130 },
+  { key: "socials_url",            label: "Social Links",           enabled: false, order: 12, sortable: false, width: 150 },
+  { key: "emergency_contact",      label: "Emergency Contact",      enabled: false, order: 13, sortable: false, width: 150 },
+  { key: "emergency_relationship", label: "Emergency Relationship", enabled: false, order: 14, sortable: false, width: 140 },
 ];
 
 export interface Message {

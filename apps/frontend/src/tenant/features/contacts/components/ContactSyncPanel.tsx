@@ -18,6 +18,7 @@ import {
   CONTACTS_GOOGLE_SYNC_QUERY_KEY,
 } from '@/tenant/features/contacts/hooks/useContacts';
 import { useTranslation } from "@/hooks/useTranslation";
+import { resolvePhoneLabel, resolveEmailLabel } from "@/lib/contacts/contactI18n";
 import { getPrimaryPhone, getPrimaryEmail } from "@mms/shared";
 import { Contact, parseVCard, toVCard } from "@mms/shared";
 import { FORM_LABEL } from "@/components/ui/formStyles";
@@ -431,8 +432,8 @@ interface AppleContactsPanelProps {
 function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContactsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
   const { phoneLabels, emailLabels, defaultPhoneCountryCode } = useContactConfig();
-  const mobileLabel = phoneLabels[0] || t('contacts.sync.mobileLabel');
-  const personalLabel = emailLabels[0] || t('contacts.sync.personalLabel');
+  const mobileLabel = resolvePhoneLabel(undefined, phoneLabels, t);
+  const personalLabel = resolveEmailLabel(undefined, emailLabels, t);
   const [previewList, setPreviewList] = useState<Contact[]>([]);
   const [importing, setImporting] = useState<boolean>(false);
   const [result, setResult] = useState<{ imported: number; skipped: number } | null>(null);

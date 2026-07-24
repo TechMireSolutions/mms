@@ -76,6 +76,10 @@ function cellValue(
     return (contact.emails || [])[0]?.address || (contact.email as string) || '';
   }
   if (columnId === 'whatsapp') return hasWhatsApp(contact) ? labels.yes : labels.no;
+  if (columnId === 'isSyed') return contact.isSyed ? labels.yes : labels.no;
+  if (columnId === 'line1') {
+    return (contact.addresses || [])[0]?.line1 || (contact.line1 as string) || '';
+  }
   if (columnId === 'city') {
     return (contact.addresses || [])[0]?.city || (contact.city as string) || '';
   }
@@ -85,9 +89,27 @@ function cellValue(
   if (columnId === 'country') {
     return (contact.addresses || [])[0]?.country || (contact.country as string) || '';
   }
-  const cellValue = contact[columnId as keyof Contact];
-  if (cellValue === undefined || cellValue === null) return '';
-  return String(cellValue);
+  if (columnId === 'socials_platform') {
+    return (contact.socials || []).map((s) => s.platform).filter(Boolean).join('; ');
+  }
+  if (columnId === 'socials_url') {
+    return (contact.socials || []).map((s) => s.url).filter(Boolean).join('; ');
+  }
+  if (columnId === 'emergency_contact') {
+    return (contact.emergencyContacts || [])
+      .map((ec) => ec.name || (ec.contactId ? String(ec.contactId) : ''))
+      .filter(Boolean)
+      .join('; ');
+  }
+  if (columnId === 'emergency_relationship') {
+    return (contact.emergencyContacts || [])
+      .map((ec) => ec.relationship)
+      .filter(Boolean)
+      .join('; ');
+  }
+  const cellVal = contact[columnId as keyof Contact];
+  if (cellVal === undefined || cellVal === null) return '';
+  return String(cellVal);
 }
 
 /** Builds CSV rows (header + data) for the given contacts and visible columns. */

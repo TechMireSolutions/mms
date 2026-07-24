@@ -2394,6 +2394,8 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "contacts.fixed": "ثابت",
   "contacts.hideColumn": "إخفاء العمود {label}",
   "contacts.hidden": "مخفي",
+  "contacts.resetLayout": "إعادة ضبط المخطط",
+  "contacts.searchColumnsPlaceholder": "تصفية الأعمدة...",
   "contacts.avatarAlt": "الصورة الرمزية",
   "contacts.form.tabBasic": "المعلومات الأساسية",
   "contacts.form.tabPhones": "أرقام الهواتف",

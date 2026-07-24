@@ -2397,6 +2397,8 @@ export const APP_TRANSLATIONS_EN = {
   "contacts.fixed": "Fixed",
   "contacts.hideColumn": "Hide column {label}",
   "contacts.hidden": "Hidden",
+  "contacts.resetLayout": "Reset layout",
+  "contacts.searchColumnsPlaceholder": "Filter columns...",
   "contacts.avatarAlt": "Avatar",
   "contacts.form.tabBasic": "Basic Info",
   "contacts.form.tabPhones": "Phones",

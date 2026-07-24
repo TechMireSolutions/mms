@@ -25,7 +25,15 @@ import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ACTIVITY_TYPE_I18N, formatContactDobWithAge, formatTelHref } from "@/lib/contacts/contactI18n";
+import {
+  ACTIVITY_TYPE_I18N,
+  formatContactDobWithAge,
+  formatTelHref,
+  resolvePhoneLabel,
+  resolveEmailLabel,
+  resolveAddressLabel,
+  resolveSocialPlatformLabel,
+} from "@/lib/contacts/contactI18n";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { apiJson } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
@@ -285,7 +293,7 @@ export default function ContactDetailDrawer({
         by: user?.name || t('contacts.detail.systemUser'),
       }));
     const all = [...noteActs, ...messageActs];
-    return all.sort((a, b) => (new Date(b.date || 0).getTime() || 0) - (new Date(a.date || 0).getTime() || 0));
+    return all.sort((a, b) => (new Date(b.date || 0).getTime()) - (new Date(a.date || 0).getTime()));
   }, [c.activities, userMessages, c.id, user?.name, t]);
 
   const fieldsToRender = allFields.filter(
@@ -518,7 +526,7 @@ export default function ContactDetailDrawer({
                             <div className="min-w-0">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
-                                  {phone.label || phoneLabels[0] || t('contacts.detail.mobileLabel')}
+                                  {resolvePhoneLabel(phone.label, phoneLabels, t)}
                                 </span>
                               </div>
                               <span className="font-semibold text-sm text-foreground block truncate">{rawPhone}</span>
@@ -560,7 +568,7 @@ export default function ContactDetailDrawer({
                             <div className="min-w-0">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
-                                  {email.label || emailLabels[0] || t('contacts.detail.personalLabel')}
+                                  {resolveEmailLabel(email.label, emailLabels, t)}
                                 </span>
                               </div>
                               <span className="font-semibold text-sm text-foreground block truncate">{rawEmail}</span>
@@ -604,7 +612,7 @@ export default function ContactDetailDrawer({
                             <div className="min-w-0">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
-                                  {address.label || addressLabels[0] || t('contacts.detail.homeLabel')}
+                                  {resolveAddressLabel(address.label, addressLabels, t)}
                                 </span>
                               </div>
                               <span className="font-semibold text-xs text-foreground block leading-relaxed">{fullAddr || "—"}</span>
@@ -641,7 +649,7 @@ export default function ContactDetailDrawer({
                           <div key={socialIndex} className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
                             <div className="min-w-0">
                               <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase inline-block mb-1">
-                                {social.platform || socialPlatforms[0] || t('contacts.detail.socialFallback')}
+                                {resolveSocialPlatformLabel(social.platform, socialPlatforms, t)}
                               </span>
                               <span className="font-semibold text-xs text-foreground block truncate">{handle || "—"}</span>
                             </div>

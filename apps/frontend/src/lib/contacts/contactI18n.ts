@@ -179,4 +179,41 @@ export function getSyncConflictKindLabel(
   return t('contacts.sync.conflictKindDelete');
 }
 
+/** Resolves localized or config-driven label for a phone entry with default fallbacks. */
+export function resolvePhoneLabel(
+  label: string | undefined | null,
+  phoneLabels: string[] | undefined,
+  t: (key: AppTranslationKey) => string,
+): string {
+  return label || phoneLabels?.[0] || t('contacts.detail.mobileLabel');
+}
+
+/** Resolves localized or config-driven label for an email entry with default fallbacks. */
+export function resolveEmailLabel(
+  label: string | undefined | null,
+  emailLabels: string[] | undefined,
+  t: (key: AppTranslationKey) => string,
+): string {
+  return label || emailLabels?.[0] || t('contacts.detail.personalLabel');
+}
+
+/** Resolves localized or config-driven label for an address entry with default fallbacks. */
+export function resolveAddressLabel(
+  label: string | undefined | null,
+  addressLabels: string[] | undefined,
+  t: (key: AppTranslationKey) => string,
+): string {
+  return label || addressLabels?.[0] || t('contacts.detail.homeLabel');
+}
+
+/** Resolves localized or config-driven platform label for a social link entry with default fallbacks. */
+export function resolveSocialPlatformLabel(
+  platform: string | undefined | null,
+  socialPlatforms: string[] | undefined,
+  t: (key: AppTranslationKey) => string,
+): string {
+  return platform || socialPlatforms?.[0] || t('contacts.detail.socialFallback');
+}
+
+
 
