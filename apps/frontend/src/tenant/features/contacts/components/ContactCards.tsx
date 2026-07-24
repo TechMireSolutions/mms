@@ -339,7 +339,7 @@ export default function ContactCards({
                   </MotionButton>
                   <ContactActionMenu
                     contact={contact}
-                    onView={onView || (() => {})}
+                    onView={onView}
                     onEdit={onEdit}
                     onDelete={onDelete}
                     onRestore={onRestore}

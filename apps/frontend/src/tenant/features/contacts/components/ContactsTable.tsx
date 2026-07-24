@@ -21,7 +21,6 @@ import { ContactMetadataCell } from "@/tenant/features/contacts/components/Conta
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { CopyBtn } from "@/components/ui/CopyBtn";
-
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 
 interface ColumnConfig {
@@ -78,7 +77,7 @@ export default function ContactsTable({
   const { language } = useGlobalSettings();
   const { t } = useTranslation();
 
-  const allSelected  = contacts.length > 0 && selected.length === contacts.length;
+  const allSelected = contacts.length > 0 && selected.length === contacts.length;
   const someSelected = selected.length > 0 && selected.length < contacts.length;
 
   const SortIcon = ({ field }: { field: string }): React.JSX.Element => {
@@ -118,7 +117,7 @@ export default function ContactsTable({
                 >
                   {getDisplayName(contact)}
                 </Button>
-                 <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap leading-normal">
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap leading-normal">
                   {contact.gender && <User className="w-3.5 h-3.5 text-muted-foreground inline" />}
                   {contact.dob && <span>{formatContactDobWithAge(contact.dob, t, { showDetailedSolarAge: prefs.showDetailedSolarAge, language })}</span>}
                 </p>
@@ -243,7 +242,7 @@ export default function ContactsTable({
                   <td className="px-4 py-3">
                     <ContactActionMenu
                       contact={contact}
-                      onView={onView || (() => {})}
+                      onView={onView}
                       onEdit={onEdit}
                       onDelete={onDelete}
                       onRestore={onRestore}

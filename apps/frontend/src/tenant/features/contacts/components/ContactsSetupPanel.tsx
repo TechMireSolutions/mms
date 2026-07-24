@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { Save, Users, AlertTriangle } from "lucide-react";
 import {
   FieldConfig, ContactPreferences, TabDefinition,
@@ -8,12 +8,12 @@ import {
   getContactFieldRemovalIssues,
   DEFAULT_FORM_TABS,
   INITIAL_FIELD_SEED,
+  CONTACTS_MODULE_CONTRACT,
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactMutations } from "@/tenant/features/contacts/hooks/useContacts";
 import { apiJson } from "@/lib/apiClient";
-import { CONTACTS_MODULE_CONTRACT } from "@mms/shared";
 import { notify } from "@/lib/notify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,19 +34,19 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
   const { logSetupAudit } = useContactMutations();
   const { t } = useTranslation();
 
-  const getInitialTabs = (): TabDefinition[] => {
+  const getInitialTabs = useCallback((): TabDefinition[] => {
     return config.formTabs && config.formTabs.length > 0 ? config.formTabs : DEFAULT_FORM_TABS;
-  };
+  }, [config.formTabs]);
 
-  const editorConfig = React.useMemo(() => ({
+  const editorConfig = useMemo(() => ({
     settings: config,
     updateSettings: onConfigChange,
   }), [config, onConfigChange]);
 
-  const defaultEnabledTabs = React.useMemo(() => {
+  const defaultEnabledTabs = useMemo(() => {
     return (config.formTabs && config.formTabs.length > 0)
-      ? config.formTabs.filter((t) => t.enabled !== false).map((t) => t.key)
-      : DEFAULT_FORM_TABS.filter((t) => t.enabled !== false).map((t) => t.key);
+      ? config.formTabs.filter((tab) => tab.enabled !== false).map((tab) => tab.key)
+      : DEFAULT_FORM_TABS.filter((tab) => tab.enabled !== false).map((tab) => tab.key);
   }, [config.formTabs]);
 
   const {
@@ -62,33 +62,31 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
 
   const [prefs, setPrefs] = useState<ContactPreferences>(() => contextPrefs);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setPrefs(contextPrefs);
   }, [contextPrefs]);
 
-  const isPrefsDirty = React.useMemo(() => {
+  const isPrefsDirty = useMemo(() => {
     return JSON.stringify(prefs) !== JSON.stringify(contextPrefs);
   }, [prefs, contextPrefs]);
 
-  const countryOptions = React.useMemo(() => {
-    return (countryCodes || []).map((c) => {
-      const codeStr = (c.code || "").trim();
+  const countryOptions = useMemo(() => {
+    return (countryCodes || []).map((countryCodeObj) => {
+      const codeStr = (countryCodeObj.code || "").trim();
       const formattedCode = codeStr.startsWith("+") ? codeStr : `+${codeStr}`;
       return {
-        value: c.country,
-        label: `${c.country} (${formattedCode})`,
+        value: countryCodeObj.country,
+        label: `${countryCodeObj.country} (${formattedCode})`,
       };
     });
   }, [countryCodes]);
 
-  const updatePreference = <K extends keyof ContactPreferences>(key: K, value: ContactPreferences[K]): void => {
+  const updatePreference = useCallback(<K extends keyof ContactPreferences>(key: K, value: ContactPreferences[K]): void => {
     setPrefs((currentPreferences) => ({ ...currentPreferences, [key]: value }));
     setSaved(false);
-  };
+  }, [setSaved]);
 
-  // Wrap handleDeleteField to add CRM-specific checks
-  const originalDeleteField = fieldsEditor.handleDeleteField;
-  fieldsEditor.handleDeleteField = async (tabId: string, fieldId: string) => {
+  const handleDeleteFieldWithGuard = useCallback(async (tabId: string, fieldId: string) => {
     const issues = getContactFieldRemovalIssues({
       fieldKey: fieldId,
       columnRegistry: config.columnRegistry || DEFAULT_COLUMN_REGISTRY,
@@ -114,12 +112,16 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
       notify.error(t("contacts.saveFailed"));
       return;
     }
-    originalDeleteField(tabId, fieldId);
+    fieldsEditor.handleDeleteField(tabId, fieldId);
     setSaved(false);
-  };
+  }, [config.columnRegistry, contextPrefs, fieldsEditor, setSaved, t]);
 
-  const handleSave = (): void => {
-    // Validate inputs (e.g. no numbers inside province/city names)
+  const wrappedFieldsEditor = useMemo(() => ({
+    ...fieldsEditor,
+    handleDeleteField: handleDeleteFieldWithGuard,
+  }), [fieldsEditor, handleDeleteFieldWithGuard]);
+
+  const handleSave = useCallback((): void => {
     if (prefs.defaultProvince && /\d/.test(prefs.defaultProvince)) {
       notify.error(t("contacts.setup.invalidProvince"));
       return;
@@ -146,15 +148,15 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
     };
     setPrefs(updatedPrefs);
     updatePrefs(updatedPrefs);
-    const auditArea = showPrefs ? "preferences" : "fields";
+    const auditArea = mode === "preferences" ? "preferences" : "fields";
     void logSetupAudit.mutateAsync({
       area: auditArea,
       summary: t("contacts.setup.auditSummary", { area: auditArea }),
     });
-  };
+  }, [prefs, config, fieldsEditor.formTabs, mode, saveSettings, updatePrefs, logSetupAudit, t]);
 
-  const isCoreField = (tabId: string, fieldKey: string): boolean =>
-    INITIAL_FIELD_SEED[tabId]?.some((f) => f.key === fieldKey) ?? false;
+  const isCoreField = useCallback((tabId: string, fieldKey: string): boolean =>
+    INITIAL_FIELD_SEED[tabId]?.some((field) => field.key === fieldKey) ?? false, []);
 
   const showFields = mode === "fields";
   const showPrefs = mode === "preferences";
@@ -163,7 +165,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
     <div className="space-y-6 max-w-3xl text-left">
       {showFields && (
         <ModuleFieldsSetup
-          editor={fieldsEditor}
+          editor={wrappedFieldsEditor}
           isCoreField={isCoreField}
           onStateChange={() => setSaved(false)}
         />
@@ -180,7 +182,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
               <span>{t("contacts.setup.unsavedWarning")}</span>
             </div>
           )}
-          
+
           <section className="rounded-xl border border-border bg-card overflow-hidden">
             <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">
               <Users className="w-4 h-4 text-primary" />

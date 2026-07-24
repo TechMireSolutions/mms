@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { Eye, Edit2, MessageCircle, Mail, MessageSquare, Trash2, RotateCcw, MoreHorizontal } from "lucide-react";
 import { Contact, getPrimaryEmail, getPrimaryPhone, hasWhatsApp } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 
 export interface ContactActionMenuProps {
   contact: Contact;
-  onView: (contact: Contact) => void;
+  onView?: (contact: Contact) => void;
   onEdit: (contact: Contact) => void;
   onDelete: (id: string | number) => void;
   onRestore?: (id: string | number) => void;
@@ -48,6 +48,34 @@ export function ContactActionMenu({
   const primaryPhone = getPrimaryPhone(contact);
   const waAvailable = hasWhatsApp(contact);
 
+  const handleView = useCallback(() => {
+    onView?.(contact);
+  }, [contact, onView]);
+
+  const handleEdit = useCallback(() => {
+    onEdit(contact);
+  }, [contact, onEdit]);
+
+  const handleDelete = useCallback(() => {
+    onDelete(contact.id);
+  }, [contact.id, onDelete]);
+
+  const handleRestore = useCallback(() => {
+    onRestore?.(contact.id);
+  }, [contact.id, onRestore]);
+
+  const handleWhatsAppAction = useCallback(() => {
+    onWhatsApp([contact]);
+  }, [contact, onWhatsApp]);
+
+  const handleEmailAction = useCallback(() => {
+    onEmail([contact]);
+  }, [contact, onEmail]);
+
+  const handleSmsAction = useCallback(() => {
+    onSms([contact]);
+  }, [contact, onSms]);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -64,31 +92,33 @@ export function ContactActionMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem onClick={() => onView(contact)}>
-          <Eye className="w-3.5 h-3.5 me-2" /> {t("contacts.table.viewProfile")}
-        </DropdownMenuItem>
+        {onView && (
+          <DropdownMenuItem onClick={handleView}>
+            <Eye className="w-3.5 h-3.5 me-2" /> {t("contacts.table.viewProfile")}
+          </DropdownMenuItem>
+        )}
         {canWrite && !showArchived && (
-          <DropdownMenuItem onClick={() => onEdit(contact)}>
+          <DropdownMenuItem onClick={handleEdit}>
             <Edit2 className="w-3.5 h-3.5 me-2" /> {t("contacts.table.edit")}
           </DropdownMenuItem>
         )}
         {!showArchived ? (
           <>
-            <DropdownMenuItem disabled={!waAvailable} onClick={() => onWhatsApp([contact])}>
+            <DropdownMenuItem disabled={!waAvailable} onClick={handleWhatsAppAction}>
               <MessageCircle className={`w-3.5 h-3.5 me-2 ${waAvailable ? "text-success" : "text-muted-foreground"}`} />{" "}
               {t("contacts.whatsapp")}
             </DropdownMenuItem>
-            <DropdownMenuItem disabled={!primaryEmail} onClick={() => onEmail([contact])}>
+            <DropdownMenuItem disabled={!primaryEmail} onClick={handleEmailAction}>
               <Mail className={`w-3.5 h-3.5 me-2 ${primaryEmail ? "text-warning" : "text-muted-foreground"}`} />{" "}
               {t("contacts.detail.emailAction")}
             </DropdownMenuItem>
-            <DropdownMenuItem disabled={!primaryPhone} onClick={() => onSms([contact])}>
+            <DropdownMenuItem disabled={!primaryPhone} onClick={handleSmsAction}>
               <MessageSquare className="w-3.5 h-3.5 me-2 text-primary" /> {t("contacts.sms")}
             </DropdownMenuItem>
             {canDelete && (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onDelete(contact.id)} className="text-destructive focus:text-destructive">
+                <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">
                   <Trash2 className="w-3.5 h-3.5 me-2" /> {t("contacts.table.deleteContact")}
                 </DropdownMenuItem>
               </>
@@ -96,7 +126,7 @@ export function ContactActionMenu({
           </>
         ) : (
           canDelete && (
-            <DropdownMenuItem onClick={() => onRestore?.(contact.id)}>
+            <DropdownMenuItem onClick={handleRestore}>
               <RotateCcw className="w-3.5 h-3.5 me-2" /> {t("contacts.restoreContact")}
             </DropdownMenuItem>
           )

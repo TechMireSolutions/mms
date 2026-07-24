@@ -98,6 +98,7 @@ function ContactsInner() {
     genderLabel,
     handleSort,
     handleSelect,
+    handleSelectAll,
     handleEdit,
     handleNew,
     handleSave,
@@ -203,15 +204,11 @@ function ContactsInner() {
     return { waTargets, smsReady };
   }, [selected, workContacts]);
 
-  const handleSelectAllWork = useCallback(() => {
-    setSelected((selectedIds) => (selectedIds.length === workContacts.length ? [] : workContacts.map((contact) => contact.id)));
-  }, [workContacts, setSelected]);
-
   const commonDirectoryProps = useMemo(() => ({
     contacts: workContacts,
     selected,
     onSelect: handleSelect,
-    onSelectAll: handleSelectAllWork,
+    onSelectAll: handleSelectAll,
     onView: setViewContact,
     onEdit: handleEdit,
     onDelete: handleDelete,
@@ -230,7 +227,7 @@ function ContactsInner() {
     workContacts,
     selected,
     handleSelect,
-    handleSelectAllWork,
+    handleSelectAll,
     setViewContact,
     handleEdit,
     handleDelete,
