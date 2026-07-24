@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { USER_STATUS_VALUES, toTitleCase, type SystemUser, getInitials } from '@mms/shared';
+import { USER_STATUS_VALUES, toTitleCase, type SystemUser, getInitials, getPrimaryEmail, getPrimaryPhone } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
 import { useContactById } from '@/tenant/features/contacts/hooks/useContacts';
@@ -57,8 +57,8 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
     const contact = selectedContact;
     if (!contact) return;
     const name = toTitleCase(contact.name.trim()) as string;
-    const email = (contact.emails?.[0]?.address || '').trim().toLowerCase();
-    const phone = (contact.phones?.[0]?.number || '').trim();
+    const email = (getPrimaryEmail(contact) || '').toLowerCase();
+    const phone = getPrimaryPhone(contact) || '';
     onSave({
       ...user,
       contactId: contact.id,

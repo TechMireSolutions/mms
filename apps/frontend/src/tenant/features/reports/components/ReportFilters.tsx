@@ -8,6 +8,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { AppTranslationKey } from "@mms/shared";
+import { capitalize } from "@mms/shared";
 
 const STATUSES: string[] = ["all", "active", "inactive", "completed"];
 
@@ -159,7 +160,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
                       value: status,
                       label: status === "all"
                         ? t("reports.filters.allStatuses")
-                        : t(`reports.filters.status${status.charAt(0).toUpperCase() + status.slice(1)}` as AppTranslationKey)
+                        : t(`reports.filters.status${capitalize(status)}` as AppTranslationKey)
                     }))}
                     className="w-full"
                   />

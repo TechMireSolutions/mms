@@ -12,12 +12,13 @@ import {
   formatDate,
   formatDateTime,
   getInitials,
+  getPrimaryPhone,
+  getAvatarColor,
 } from "@mms/shared";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
 import { useContactsByIds } from '@/tenant/features/contacts/hooks/useContacts';
 import { calcAge, type Student } from '@/lib/data/studentsData';
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { AVATAR_GRADIENT_ROTATION } from "@/lib/semanticTone";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 
@@ -98,14 +99,13 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
 
   // Determine avatar initials and color
   const initials = getInitials(student.name);
-  const colorIdx = student.id.charCodeAt(student.id.length - 1) % AVATAR_GRADIENT_ROTATION.length;
-  const avatarGradient = AVATAR_GRADIENT_ROTATION[colorIdx];
+  const avatarGradient = getAvatarColor(student.id);
 
-  const primaryPhone = studentContact?.phones?.[0]?.number || student.phone;
+  const primaryPhone = (studentContact ? getPrimaryPhone(studentContact) : null) || student.phone;
 
-  const fatherPhone = fatherContact?.phones?.[0]?.number;
-  const motherPhone = motherContact?.phones?.[0]?.number;
-  const guardianPhone = guardianContact?.phones?.[0]?.number;
+  const fatherPhone = fatherContact ? (getPrimaryPhone(fatherContact) || undefined) : undefined;
+  const motherPhone = motherContact ? (getPrimaryPhone(motherContact) || undefined) : undefined;
+  const guardianPhone = guardianContact ? (getPrimaryPhone(guardianContact) || undefined) : undefined;
 
   return (
     <>

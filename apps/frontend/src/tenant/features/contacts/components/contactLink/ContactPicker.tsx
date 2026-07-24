@@ -1,11 +1,11 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Search, Plus, User, Mail, Phone, Camera } from "lucide-react";
-import type { Contact } from "@mms/shared";
-import { getPrimaryPhone, getPrimaryEmail } from "@mms/shared";
+import { type Contact, getPrimaryPhone, getPrimaryEmail, getPrimaryAddress } from "@mms/shared";
 import { cn } from "@/lib/utils";
 import { uploadUserImage } from "@/lib/imageUpload";
 import { genderBadgeClass } from "@/lib/semanticTone";
+import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import ContactCreateModal, {
   type ContactCreateDefaults,
 } from "@/tenant/features/contacts/components/ContactCreateModal";
@@ -92,38 +92,52 @@ export default function ContactPicker({
 
   const normalizedExcludeIds = useMemo(() => excludeIds.map(String), [excludeIds]);
 
-  const directory = serverMode ? (searchPage?.contacts ?? []) : contacts;
+  const directory = useMemo(
+    () => (serverMode ? (searchPage?.contacts ?? []) : contacts),
+    [serverMode, searchPage?.contacts, contacts],
+  );
 
-  const matches = directory.filter((contact) => {
-    const contactPhone = getPrimaryPhone(contact) || '';
-    if (normalizedExcludeIds.includes(String(contact.id))) return false;
-    if (hasPhone && (!contactPhone || String(contactPhone).trim().length === 0)) return false;
-    if (serverMode) return true;
-    return (
-      contact.name.toLowerCase().includes(query.toLowerCase()) || contactPhone.includes(query)
-    );
-  }).slice(0, 8);
+  const matches = useMemo(() => {
+    const lowerQuery = query.trim().toLowerCase();
+    return directory
+      .filter((contact) => {
+        const contactPhone = getPrimaryPhone(contact) || "";
+        if (normalizedExcludeIds.includes(String(contact.id))) return false;
+        if (hasPhone && (!contactPhone || String(contactPhone).trim().length === 0)) return false;
+        if (serverMode) return true;
+        if (!lowerQuery) return true;
+        return (
+          contact.name.toLowerCase().includes(lowerQuery) || contactPhone.includes(lowerQuery)
+        );
+      })
+      .slice(0, 8);
+  }, [directory, normalizedExcludeIds, hasPhone, serverMode, query]);
 
-  const selected =
-    (serverMode ? selectedFromServer : contacts.find((contact) => String(contact.id) === String(value))) ??
-    directory.find((contact) => String(contact.id) === String(value));
+  const selected = useMemo(
+    () =>
+      (serverMode
+        ? selectedFromServer
+        : contacts?.find((contact) => String(contact.id) === String(value))) ??
+      directory.find((contact) => String(contact.id) === String(value)),
+    [serverMode, selectedFromServer, contacts, value, directory],
+  );
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     try {
-      const url = await uploadUserImage(file, 'avatar');
+      const url = await uploadUserImage(file, "avatar");
       onAvatarChange?.(url);
     } catch {
       // ignore
     }
-    event.target.value = '';
-  };
+    event.target.value = "";
+  }, [onAvatarChange]);
 
-  const openCreateFlow = (searchText: string): void => {
+  const openCreateFlow = useCallback((searchText: string): void => {
     setCreateQuery(searchText);
     setCreateOpen(true);
-  };
+  }, []);
 
   if (selected) {
     const genderBadgeColor = genderBadgeClass(selected.gender ?? '');
@@ -168,7 +182,7 @@ export default function ContactPicker({
               <p className="text-[13px] font-bold text-foreground truncate">{selected.name}</p>
               {selected.gender && (
                 <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full capitalize ${genderBadgeColor}`}>
-                  {selected.gender}
+                  {formatContactGenderLabel(selected.gender, t)}
                 </span>
               )}
             </div>
@@ -210,7 +224,7 @@ export default function ContactPicker({
           id={resolvedId}
           name={resolvedName}
           className={cn("pl-9.5 pr-8.5", error && "border-destructive focus-visible:ring-destructive")}
-          placeholder={searchPlaceholder ?? `Search ${label.toLowerCase()}…`}
+          placeholder={searchPlaceholder ?? t("contacts.searchPlaceholder")}
           value={query}
           onChange={(event) => { setQuery(event.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
@@ -244,7 +258,8 @@ export default function ContactPicker({
               )}
               {matches.map((contact) => {
                 const contactPhone = getPrimaryPhone(contact);
-                const contactCity = contact.city as string | undefined;
+                const primaryAddr = getPrimaryAddress(contact);
+                const contactCity = primaryAddr?.city || (contact.city as string | undefined);
                 const contactTag = contact.tag as string | undefined;
 
                 return (
@@ -264,7 +279,7 @@ export default function ContactPicker({
                     <div className="flex-1 min-w-0">
                       <p className="text-[13px] font-semibold text-foreground truncate">{contact.name}</p>
                       <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 truncate mt-0.5">
-                        {contactPhone || '—'}
+                        {contactPhone || t("contacts.table.emptyDash")}
                         {contactCity && <span>· {contactCity}</span>}
                         {contactTag && <span className="bg-primary/5 text-primary text-[9px] px-1.5 py-0.2 rounded border border-primary/10 capitalize font-medium">{contactTag}</span>}
                       </p>

@@ -11,6 +11,8 @@ import {
   rbacModuleLabel,
   workspaceRoleDescription,
   workspaceRoleLabel,
+  getPrimaryEmail,
+  getPrimaryPhone,
   type WorkspaceRole,
   type SystemUser,
   type UserStatus,
@@ -224,8 +226,8 @@ function Step1({ form, setForm, errors }: Step1Props): JSX.Element {
       setForm((previousForm) => ({ ...previousForm, contactId: null, name: "", email: "", phone: "" }));
       return;
     }
-    const primaryEmail = contact.emails?.[0]?.address || "";
-    const primaryPhone = contact.phones?.[0]?.number || "";
+    const primaryEmail = getPrimaryEmail(contact) || "";
+    const primaryPhone = getPrimaryPhone(contact) || "";
     setForm((previousForm) => ({
       ...previousForm,
       contactId: contact.id,

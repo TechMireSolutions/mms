@@ -5,7 +5,7 @@ import {
   SlidersHorizontal, Info, Pencil, ArrowUpRight, ShieldAlert, ArrowRight, Search, EyeOff, Users
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { formatMoney, type AppTranslationKey } from "@mms/shared";
+import { formatMoney, capitalize, type AppTranslationKey } from "@mms/shared";
 import { SimplePagination } from "@/components/ui/SimplePagination";
 import { useLocalPagination } from "@/hooks/useLocalPagination";
 const CustomWidgetChartFallback = React.lazy(() => import("@/tenant/features/reports/components/pinnedWidgets/CustomWidgetChartFallback"));
@@ -856,7 +856,7 @@ function CustomWidgetRenderer({
               const widgetTitle = resolveWidgetTitle(widget, t);
               const collectionLabel = getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t);
               const showCollection = !widgetTitle.toLowerCase().includes(collectionLabel.toLowerCase());
-              const formulaPart = resolvedWidgetType !== "switch" ? t(`reports.widgets.builder.formula${widget.operation.charAt(0).toUpperCase() + widget.operation.slice(1)}` as AppTranslationKey) || widget.operation : "";
+              const formulaPart = resolvedWidgetType !== "switch" ? t(`reports.widgets.builder.formula${capitalize(widget.operation)}` as AppTranslationKey) || widget.operation : "";
               return showCollection
                 ? `${collectionLabel}${formulaPart ? ` • ${formulaPart}` : ""}`
                 : formulaPart;
@@ -2368,7 +2368,7 @@ export function WidgetBuilder({
                         : "bg-card/30 border-border/50 text-muted-foreground hover:text-foreground hover:bg-card/50"
                     }`}
                   >
-                    {t(`reports.widgets.builder.cat${tab.charAt(0).toUpperCase() + tab.slice(1)}` as AppTranslationKey) || tab}
+                    {t(`reports.widgets.builder.cat${capitalize(tab)}` as AppTranslationKey) || tab}
                   </button>
                 ))}
               </div>

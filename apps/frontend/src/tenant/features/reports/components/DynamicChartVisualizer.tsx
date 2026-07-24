@@ -20,6 +20,7 @@ import {
   formatDateTime,
   getDenominationPoints,
   todayISO,
+  capitalize,
   type AppTranslationKey,
   formatNumber,
 } from "@mms/shared";
@@ -562,7 +563,7 @@ export default function DynamicChartVisualizer({
               <YAxis tick={{ fontSize: axisFontSize, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
               {showTooltip && <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: `${axisFontSize}px` }} />}
               {showLegend && <Legend wrapperStyle={{ fontSize: `${legendFontSize}px`, paddingTop: "12px" }} />}
-              <Bar dataKey="value" name={t(`reports.visualizer.op${operation === "avg" ? "Avg" : (operation === "count" ? "Count" : operation.charAt(0).toUpperCase() + operation.slice(1))}` as AppTranslationKey)} radius={[4, 4, 0, 0]} maxBarSize={30}>
+              <Bar dataKey="value" name={t(`reports.visualizer.op${operation === "avg" ? "Avg" : (operation === "count" ? "Count" : capitalize(operation))}` as AppTranslationKey)} radius={[4, 4, 0, 0]} maxBarSize={30}>
                 {processedData.map((_, index) => (
                   <Cell key={index} fill={currentColors[index % currentColors.length]} />
                 ))}
@@ -580,7 +581,7 @@ export default function DynamicChartVisualizer({
               <YAxis tick={{ fontSize: axisFontSize, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
               {showTooltip && <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: `${axisFontSize}px` }} />}
               {showLegend && <Legend wrapperStyle={{ fontSize: `${legendFontSize}px`, paddingTop: "12px" }} />}
-              <Line type="monotone" dataKey="value" name={t(`reports.visualizer.op${operation === "avg" ? "Avg" : (operation === "count" ? "Count" : operation.charAt(0).toUpperCase() + operation.slice(1))}` as AppTranslationKey)} stroke={firstColor} strokeWidth={3} dot={{ r: 4, strokeWidth: 1 }} activeDot={{ r: 6 }} />
+              <Line type="monotone" dataKey="value" name={t(`reports.visualizer.op${operation === "avg" ? "Avg" : (operation === "count" ? "Count" : capitalize(operation))}` as AppTranslationKey)} stroke={firstColor} strokeWidth={3} dot={{ r: 4, strokeWidth: 1 }} activeDot={{ r: 6 }} />
             </LineChart>
           </SafeResponsiveContainer>
         );
@@ -600,7 +601,7 @@ export default function DynamicChartVisualizer({
               <YAxis tick={{ fontSize: axisFontSize, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
               {showTooltip && <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: `${axisFontSize}px` }} />}
               {showLegend && <Legend wrapperStyle={{ fontSize: `${legendFontSize}px`, paddingTop: "12px" }} />}
-              <Area type="monotone" dataKey="value" name={t(`reports.visualizer.op${operation === "avg" ? "Avg" : (operation === "count" ? "Count" : operation.charAt(0).toUpperCase() + operation.slice(1))}` as AppTranslationKey)} stroke={firstColor} fill="url(#visGrad)" strokeWidth={2.5} />
+              <Area type="monotone" dataKey="value" name={t(`reports.visualizer.op${operation === "avg" ? "Avg" : (operation === "count" ? "Count" : capitalize(operation))}` as AppTranslationKey)} stroke={firstColor} fill="url(#visGrad)" strokeWidth={2.5} />
             </AreaChart>
           </SafeResponsiveContainer>
         );
@@ -645,7 +646,7 @@ export default function DynamicChartVisualizer({
               <PolarGrid stroke="hsl(var(--border))" />
               <PolarAngleAxis dataKey="name" tick={{ fontSize: Math.max(8, axisFontSize - 1) }} />
               <PolarRadiusAxis angle={30} domain={[0, "auto"]} tick={{ fontSize: Math.max(7, axisFontSize - 2) }} />
-              <Radar name={t(`reports.visualizer.op${operation === "avg" ? "Avg" : (operation === "count" ? "Count" : operation.charAt(0).toUpperCase() + operation.slice(1))}` as AppTranslationKey)} dataKey="value" stroke={firstColor} fill={firstColor} fillOpacity={0.25} />
+              <Radar name={t(`reports.visualizer.op${operation === "avg" ? "Avg" : (operation === "count" ? "Count" : capitalize(operation))}` as AppTranslationKey)} dataKey="value" stroke={firstColor} fill={firstColor} fillOpacity={0.25} />
               {showTooltip && <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: `${axisFontSize}px` }} />}
             </RadarChart>
           </SafeResponsiveContainer>

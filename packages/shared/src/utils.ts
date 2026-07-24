@@ -36,6 +36,17 @@ export function toTitleCase(value: unknown): unknown {
     .join(" ");
 }
 
+/**
+ * Capitalize the first letter of a string token/word
+ * @param value - The input string
+ * @returns String with first letter uppercase
+ */
+export function capitalize(value: string): string {
+  if (!value) return "";
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+
 
 const SYSTEM_EXCLUDED_KEYS = new Set([
   "id",
@@ -428,6 +439,17 @@ export function getPrimaryEmail(contact: Partial<Contact>): string | null {
 }
 
 /**
+ * Extract primary address object from contact
+ * @param contact - Contact object
+ * @returns Primary address object or null.
+ */
+export function getPrimaryAddress(contact: Partial<Contact>): ContactAddress | null {
+  const addresses = contact.addresses || [];
+  const addr = addresses.find((a) => a.isPrimary) || addresses[0];
+  return addr || null;
+}
+
+/**
  * Build display name with Syed/Syeda prefix if applicable
  * Does NOT modify the stored name, only formats for display
  * @param contact - Contact object
@@ -657,19 +679,41 @@ export function calcAge(dob: string | null | undefined): number | null {
 }
 
 /**
+ * Safely parses a Date-of-Birth string into a UTC Date object and its numeric year, month, and day components.
+ * @param dob - Date of birth string
+ * @returns Object with parsed year, 0-indexed month, day, and UTC Date instance, or null if invalid
+ */
+export function parseUtcDateParts(dob: string | null | undefined): { year: number; month: number; day: number; date: Date } | null {
+  if (!dob) return null;
+  const dateOnly = dob.split("T")[0];
+  const parts = dateOnly.split("-");
+  if (parts.length < 3) return null;
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+  if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
+
+  const date = new Date(Date.UTC(year, month, day));
+  if (isNaN(date.getTime())) return null;
+  return { year, month, day, date };
+}
+
+/**
  * Calculate detailed solar age (Years, Months, Days) based on a date of birth.
  * @param dob - Date of birth string
- * @returns Detailed solar age string, e.g. \"24y 5m 12d\"
+ * @param locale - Optional active language locale
+ * @returns Detailed solar age string, e.g. "24y 5m 12d"
  */
-export function calculateDetailedSolarAge(dob: string): string {
+export function calculateDetailedSolarAge(dob: string, locale = "en"): string {
   try {
-    const birth = new Date(dob);
-    if (isNaN(birth.getTime())) return "";
+    const parsed = parseUtcDateParts(dob);
+    if (!parsed) return "";
     const now = new Date();
+    if (parsed.date > now) return "";
 
-    let years = now.getFullYear() - birth.getFullYear();
-    let months = now.getMonth() - birth.getMonth();
-    let days = now.getDate() - birth.getDate();
+    let years = now.getFullYear() - parsed.year;
+    let months = now.getMonth() - parsed.month;
+    let days = now.getDate() - parsed.day;
 
     if (days < 0) {
       months--;
@@ -679,6 +723,12 @@ export function calculateDetailedSolarAge(dob: string): string {
     if (months < 0) {
       years--;
       months += 12;
+    }
+    if (years < 0) return "";
+
+    if (locale.startsWith("ar") || locale.startsWith("ur") || locale.startsWith("fa")) {
+      const nf = new Intl.NumberFormat(`${locale}-u-nu-arabext`);
+      return `${nf.format(years)}y ${nf.format(months)}m ${nf.format(days)}d`;
     }
     return `${years}y ${months}m ${days}d`;
   } catch {
@@ -694,14 +744,15 @@ export function calculateDetailedSolarAge(dob: string): string {
  */
 export function getLunarDateString(dob: string, locale = "en"): string {
   try {
-    const date = new Date(dob);
-    if (isNaN(date.getTime())) return "";
+    const parsed = parseUtcDateParts(dob);
+    if (!parsed) return "";
     const formatter = new Intl.DateTimeFormat(`${locale}-u-ca-islamic-umalqura`, {
+      timeZone: "UTC",
       day: "numeric",
       month: "long",
       year: "numeric"
     });
-    return formatter.format(date);
+    return formatter.format(parsed.date);
   } catch {
     return "";
   }
@@ -709,6 +760,7 @@ export function getLunarDateString(dob: string, locale = "en"): string {
 
 function getHijriParts(date: Date): { year: number; month: number; day: number } {
   const formatter = new Intl.DateTimeFormat("en-US-u-ca-islamic-umalqura", {
+    timeZone: "UTC",
     day: "numeric",
     month: "numeric",
     year: "numeric"
@@ -723,15 +775,17 @@ function getHijriParts(date: Date): { year: number; month: number; day: number }
 /**
  * Calculate detailed Hijri (lunar) age (Years, Months, Days) based on a date of birth.
  * @param dob - Date of birth string
- * @returns Detailed lunar age string, e.g. \"25y 2m 8d\"
+ * @param locale - Optional active language locale
+ * @returns Detailed lunar age string, e.g. "25y 2m 8d"
  */
-export function calculateDetailedLunarAge(dob: string): string {
+export function calculateDetailedLunarAge(dob: string, locale = "en"): string {
   try {
-    const birthDate = new Date(dob);
-    if (isNaN(birthDate.getTime())) return "";
+    const parsed = parseUtcDateParts(dob);
+    if (!parsed) return "";
     const now = new Date();
+    if (parsed.date > now) return "";
 
-    const birthParts = getHijriParts(birthDate);
+    const birthParts = getHijriParts(parsed.date);
     const nowParts = getHijriParts(now);
 
     let years = nowParts.year - birthParts.year;
@@ -740,11 +794,19 @@ export function calculateDetailedLunarAge(dob: string): string {
 
     if (days < 0) {
       months--;
-      days += 30; // standard lunar month approximation
+      const prevHijriDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() - nowParts.day));
+      const prevHijriDays = getHijriParts(prevHijriDate).day;
+      days += prevHijriDays > 0 ? prevHijriDays : 30;
     }
     if (months < 0) {
       years--;
       months += 12;
+    }
+    if (years < 0) return "";
+
+    if (locale.startsWith("ar") || locale.startsWith("ur") || locale.startsWith("fa")) {
+      const nf = new Intl.NumberFormat(`${locale}-u-nu-arabext`);
+      return `${nf.format(years)}y ${nf.format(months)}m ${nf.format(days)}d`;
     }
     return `${years}y ${months}m ${days}d`;
   } catch {

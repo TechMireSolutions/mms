@@ -27,6 +27,7 @@ import {
   STUDENT_STATUS_VALUES,
   normalizeStoredStudent,
   toTitleCase,
+  getPrimaryEmail,
   type StudentDuplicateReason,
   type AppTranslationKey,
   buildDynamicStudentSchema,
@@ -205,7 +206,7 @@ export default function StudentForm({
 
     setSaving(true);
     try {
-      const email = linkedContact?.emails?.[0]?.address || "";
+      const email = (linkedContact ? getPrimaryEmail(linkedContact) : null) || "";
       const duplicateReason = await checkStudentRegistrationDuplicate({
         excludeId: student?.id ? String(student.id) : undefined,
         contactId: String(studentDraft.contactId),

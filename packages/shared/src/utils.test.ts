@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parsePhoneNumber, normalizeToE164, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress } from "./utils.js";
 import type { Contact } from "./contactTypes.js";
 
 
@@ -252,6 +252,121 @@ describe("calcPercentage", () => {
     expect(calcPercentage(10, -5)).toBe(0);
     expect(calcPercentage(0, 100)).toBe(0);
     expect(Number.isNaN(calcPercentage(NaN, 100))).toBe(true);
+  });
+});
+
+describe("calculateDetailedSolarAge", () => {
+  it("calculates accurate age in years, months, and days format", () => {
+    const age = calculateDetailedSolarAge("2000-01-01");
+    expect(age).toMatch(/^\d+y \d+m \d+d$/);
+  });
+
+  it("handles ISO timestamp strings correctly", () => {
+    const age = calculateDetailedSolarAge("2000-01-01T00:00:00.000Z");
+    expect(age).toMatch(/^\d+y \d+m \d+d$/);
+  });
+
+  it.each([
+    ["empty string", ""],
+    ["invalid string", "invalid-date"],
+    ["future date", "2099-01-01"],
+  ])("returns empty string for %s", (_, input) => {
+    expect(calculateDetailedSolarAge(input)).toBe("");
+  });
+});
+
+describe("getLunarDateString", () => {
+  it("converts Gregorian date to localized Hijri string", () => {
+    const result = getLunarDateString("2000-01-01");
+    expect(result).toBeTruthy();
+    expect(result).toBeTypeOf("string");
+  });
+
+  it.each([
+    ["empty string", ""],
+    ["invalid string", "invalid"],
+  ])("returns empty string for %s", (_, input) => {
+    expect(getLunarDateString(input)).toBe("");
+  });
+});
+
+describe("calculateDetailedLunarAge", () => {
+  it("calculates detailed Hijri lunar age in years, months, and days", () => {
+    const age = calculateDetailedLunarAge("2000-01-01");
+    expect(age).toMatch(/^\d+y \d+m \d+d$/);
+  });
+
+  it.each([
+    ["empty string", ""],
+    ["invalid string", "invalid-date"],
+    ["future date", "2099-01-01"],
+  ])("returns empty string for %s", (_, input) => {
+    expect(calculateDetailedLunarAge(input)).toBe("");
+  });
+});
+
+describe("parseUtcDateParts", () => {
+  it("parses YYYY-MM-DD date string into UTC components", () => {
+    const parts = parseUtcDateParts("1995-05-15");
+    expect(parts).toEqual({
+      year: 1995,
+      month: 4, // 0-indexed May
+      day: 15,
+      date: new Date(Date.UTC(1995, 4, 15)),
+    });
+  });
+
+  it("handles ISO timestamps safely", () => {
+    const parts = parseUtcDateParts("2000-01-01T12:34:56.789Z");
+    expect(parts?.year).toBe(2000);
+    expect(parts?.month).toBe(0);
+    expect(parts?.day).toBe(1);
+  });
+
+  it.each([
+    ["null input", null],
+    ["empty string", ""],
+    ["invalid string", "invalid-date"],
+  ])("returns null for %s", (_, input) => {
+    expect(parseUtcDateParts(input)).toBeNull();
+  });
+});
+
+describe("capitalize", () => {
+  it("capitalizes the first character of string tokens", () => {
+    expect(capitalize("hello")).toBe("Hello");
+    expect(capitalize("world")).toBe("World");
+    expect(capitalize("alreadyCapital")).toBe("AlreadyCapital");
+  });
+
+  it("handles empty or falsy strings gracefully", () => {
+    expect(capitalize("")).toBe("");
+  });
+});
+
+describe("getPrimaryAddress", () => {
+  it("returns address marked isPrimary when present", () => {
+    const contact: Partial<Contact> = {
+      addresses: [
+        { line1: "123 Secondary St", city: "Lahore", isPrimary: false },
+        { line1: "456 Primary Ave", city: "Karachi", isPrimary: true },
+      ],
+    };
+    expect(getPrimaryAddress(contact)).toEqual({ line1: "456 Primary Ave", city: "Karachi", isPrimary: true });
+  });
+
+  it("falls back to first address if none is explicitly primary", () => {
+    const contact: Partial<Contact> = {
+      addresses: [
+        { line1: "789 First St", city: "Islamabad" },
+      ],
+    };
+    expect(getPrimaryAddress(contact)).toEqual({ line1: "789 First St", city: "Islamabad" });
+  });
+
+  it("returns null if addresses array is empty or undefined", () => {
+    expect(getPrimaryAddress({})).toBeNull();
+    expect(getPrimaryAddress({ addresses: [] })).toBeNull();
   });
 });
 

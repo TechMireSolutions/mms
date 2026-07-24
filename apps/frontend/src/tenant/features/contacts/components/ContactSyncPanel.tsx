@@ -18,6 +18,7 @@ import {
   CONTACTS_GOOGLE_SYNC_QUERY_KEY,
 } from '@/tenant/features/contacts/hooks/useContacts';
 import { useTranslation } from "@/hooks/useTranslation";
+import { getPrimaryPhone, getPrimaryEmail } from "@mms/shared";
 import { Contact, parseVCard, toVCard } from "@mms/shared";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { isApiError } from "@/lib/apiClient";
@@ -533,7 +534,7 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
                 <div key={contactIndex} className="flex items-center justify-between px-3 py-1.5 rounded-lg hover:bg-muted/50 text-sm">
                   <span className="font-medium text-foreground truncate">{contact.name}</span>
                   <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
-                    {contact.phones?.[0]?.number || contact.emails?.[0]?.address || ""}
+                    {getPrimaryPhone(contact) || getPrimaryEmail(contact) || ""}
                   </span>
                 </div>
               ))}

@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { CheckCircle2, Loader2, Lock, Mail, User, Camera, ShieldCheck } from "lucide-react";
 import PasswordInput from "@/components/ui/PasswordInput";
-import type { TenantUserProfile } from "@mms/shared";
-import { calculateProfileCompleteness, getInitials } from "@mms/shared";
+import { calculateProfileCompleteness, getInitials, getPrimaryEmail, getPrimaryPhone } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,17 +17,6 @@ import { notify } from "@/lib/notify";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-
-function contactPrimaryEmail(profile: TenantUserProfile): string {
-  const fromList = profile.contact?.emails?.[0]?.address;
-  return fromList || (profile.contact?.email as string | undefined) || "";
-}
-
-function contactPrimaryPhone(profile: TenantUserProfile): string {
-  const phone = profile.contact?.phones?.[0];
-  if (!phone) return (profile.contact?.phone as string | undefined) || "";
-  return `${phone.countryCode ?? ""}${phone.number}`.trim();
-}
 
 interface PasswordStrengthResult {
   score: number;
@@ -91,8 +79,8 @@ export default function AccountProfile(): React.JSX.Element {
   useEffect(() => {
     if (!profile) return;
     setName(profile.contact?.name ?? profile.name ?? "");
-    setPhone(contactPrimaryPhone(profile));
-    setContactEmail(contactPrimaryEmail(profile));
+    setPhone(profile.contact ? (getPrimaryPhone(profile.contact) || "") : ((profile as unknown as Record<string, unknown>).phone as string | undefined ?? ""));
+    setContactEmail(profile.contact ? (getPrimaryEmail(profile.contact) || "") : ((profile as unknown as Record<string, unknown>).email as string | undefined ?? ""));
   }, [profile]);
 
   const loginVerified = useMemo(

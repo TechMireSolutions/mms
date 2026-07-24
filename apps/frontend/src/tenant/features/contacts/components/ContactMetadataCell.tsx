@@ -8,6 +8,7 @@ import {
   calculateDetailedSolarAge,
   getLunarDateString,
   calculateDetailedLunarAge,
+  getPrimaryAddress,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactCellValue, formatContactGenderLabel } from "@/lib/contacts/contactI18n";
@@ -31,13 +32,37 @@ export function ContactMetadataCell({
   allContacts = [],
   variant = "table",
 }: ContactMetadataCellProps): React.JSX.Element {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+
+  const contactsMap = React.useMemo(() => {
+    if (!allContacts || allContacts.length === 0) return null;
+    const map = new Map<string, Contact>();
+    for (const c of allContacts) {
+      if (c.id) map.set(String(c.id), c);
+    }
+    return map;
+  }, [allContacts]);
+
+  const renderDash = (): React.ReactNode => (
+    <span className="text-muted-foreground/40">{t("contacts.table.emptyDash")}</span>
+  );
+
+  const renderJoinedList = (items: (string | undefined | null)[], showTitle = false): React.ReactNode => {
+    const valid = items.filter(Boolean) as string[];
+    if (valid.length === 0) return renderDash();
+    const joined = valid.join(", ");
+    return (
+      <span className="truncate" title={showTitle ? joined : undefined}>
+        {joined}
+      </span>
+    );
+  };
 
   const renderValue = (): React.ReactNode => {
     switch (colId) {
       case "gender": {
         const genderValue = contact.gender;
-        if (!genderValue) return <span className="text-muted-foreground/40">{t("contacts.table.emptyDash")}</span>;
+        if (!genderValue) return renderDash();
         return (
           <span className="flex items-center gap-1 capitalize">
             <User className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
@@ -52,17 +77,18 @@ export function ContactMetadataCell({
             {t("contacts.table.yesSyed")}
           </span>
         ) : (
-          <span className="text-muted-foreground/40">{t("contacts.table.emptyDash")}</span>
+          renderDash()
         );
 
       case "city":
       case "country":
       case "state":
       case "line1": {
+        const primaryAddr = getPrimaryAddress(contact);
         const addressValue =
-          contact.addresses?.[0]?.[colId as "city" | "country" | "state" | "line1"] ||
+          primaryAddr?.[colId as "city" | "country" | "state" | "line1"] ||
           (contact[colId as keyof Contact] as string | undefined);
-        if (!addressValue) return <span className="text-muted-foreground/40">{t("contacts.table.emptyDash")}</span>;
+        if (!addressValue) return renderDash();
         return (
           <span className="flex items-center gap-1 truncate">
             <MapPin className="w-3.5 h-3.5 text-primary/70 shrink-0" />
@@ -71,23 +97,23 @@ export function ContactMetadataCell({
         );
       }
       case "dob": {
-        if (!contact.dob) return <span className="text-muted-foreground/40">{t("contacts.table.emptyDash")}</span>;
+        if (!contact.dob) return renderDash();
         return (
           <div className="flex flex-col gap-0.5 text-[11px] font-mono leading-normal">
             <span>{formatDate(contact.dob)}</span>
             {prefs.showDetailedSolarAge && (
               <span className="text-[10px] text-muted-foreground/80">
-                {t("contacts.table.solarAgeLabel")} {calculateDetailedSolarAge(contact.dob)}
+                {t("contacts.table.solarAgeLabel")} {calculateDetailedSolarAge(contact.dob, language)}
               </span>
             )}
             {prefs.showLunarDob && (
               <span className="text-[10px] text-muted-foreground/80">
-                {t("contacts.table.lunarDobLabel")} {getLunarDateString(contact.dob)}
+                {t("contacts.table.lunarDobLabel")} {getLunarDateString(contact.dob, language)}
               </span>
             )}
             {prefs.showDetailedLunarAge && (
               <span className="text-[10px] text-muted-foreground/80">
-                {t("contacts.table.lunarAgeLabel")} {calculateDetailedLunarAge(contact.dob)}
+                {t("contacts.table.lunarAgeLabel")} {calculateDetailedLunarAge(contact.dob, language)}
               </span>
             )}
           </div>
@@ -105,55 +131,27 @@ export function ContactMetadataCell({
             {hasWhatsApp(contact) ? t("common.yes") : t("common.no")}
           </span>
         );
-      case "socials_platform": {
-        const platforms = (contact.socials || []).map((s) => s.platform).filter(Boolean);
-        return platforms.length > 0 ? (
-          <span className="truncate">{platforms.join(", ")}</span>
-        ) : (
-          <span className="text-muted-foreground/40">{t("contacts.table.emptyDash")}</span>
-        );
-      }
-      case "socials_url": {
-        const urls = (contact.socials || []).map((s) => s.url).filter(Boolean);
-        return urls.length > 0 ? (
-          <span className="truncate" title={urls.join(", ")}>
-            {urls.join(", ")}
-          </span>
-        ) : (
-          <span className="text-muted-foreground/40">{t("contacts.table.emptyDash")}</span>
-        );
-      }
+      case "socials_platform":
+        return renderJoinedList((contact.socials || []).map((s) => s.platform));
+      case "socials_url":
+        return renderJoinedList((contact.socials || []).map((s) => s.url), true);
       case "emergency_contact": {
-        const names = (contact.emergencyContacts || [])
-          .map((ec) => {
-            if (ec.name) return ec.name;
-            if (ec.contactId) {
-              const linked = allContacts.find((c) => String(c.id) === String(ec.contactId));
-              return linked ? linked.name : `${t("contacts.table.contactIdPrefix")}${ec.contactId}`;
-            }
-            return null;
-          })
-          .filter(Boolean);
-        return names.length > 0 ? (
-          <span className="truncate">{names.join(", ")}</span>
-        ) : (
-          <span className="text-muted-foreground/40">{t("contacts.table.emptyDash")}</span>
-        );
+        const names = (contact.emergencyContacts || []).map((ec) => {
+          if (ec.name) return ec.name;
+          if (ec.contactId) {
+            const linked = contactsMap?.get(String(ec.contactId));
+            return linked ? linked.name : `${t("contacts.table.contactIdPrefix")}${ec.contactId}`;
+          }
+          return null;
+        });
+        return renderJoinedList(names);
       }
-      case "emergency_relationship": {
-        const relationships = (contact.emergencyContacts || [])
-          .map((ec) => ec.relationship)
-          .filter(Boolean);
-        return relationships.length > 0 ? (
-          <span className="truncate">{relationships.join(", ")}</span>
-        ) : (
-          <span className="text-muted-foreground/40">{t("contacts.table.emptyDash")}</span>
-        );
-      }
+      case "emergency_relationship":
+        return renderJoinedList((contact.emergencyContacts || []).map((ec) => ec.relationship));
       default: {
         const raw = contact[colId as keyof Contact];
         const formatted = formatContactCellValue(raw, t);
-        return formatted ? <span>{formatted}</span> : <span className="text-muted-foreground/40">{t("contacts.table.emptyDash")}</span>;
+        return formatted ? <span>{formatted}</span> : renderDash();
       }
     }
   };

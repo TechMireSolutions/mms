@@ -5,6 +5,7 @@ import {
   parsePhoneNumber,
   getPrimaryPhone,
   getPrimaryEmail,
+  getPrimaryAddress,
   resolveModuleTierTab,
   contactMatchesSearch,
   filterActiveContacts,
@@ -288,32 +289,31 @@ export function useContactsPageState({
       const isCreatingContact = !editContact;
       const primaryPhoneStr = getPrimaryPhone(contactDraft);
       const primaryEmailStr = getPrimaryEmail(contactDraft);
-      const firstAddr = contactDraft.addresses?.[0];
+      const firstAddr = getPrimaryAddress(contactDraft);
+
+      const basePayload: Partial<Contact> = {
+        phone: primaryPhoneStr || undefined,
+        email: primaryEmailStr || undefined,
+        line1: firstAddr?.line1 || undefined,
+        city: firstAddr?.city || undefined,
+        state: firstAddr?.state || undefined,
+        country: firstAddr?.country || undefined,
+      };
 
       const payload: Contact = editContact
         ? {
             ...editContact,
             ...contactDraft,
+            ...basePayload,
             phones: contactDraft.phones || [],
-            phone: primaryPhoneStr || undefined,
             emails: contactDraft.emails || [],
-            email: primaryEmailStr || undefined,
             addresses: contactDraft.addresses || [],
-            line1: firstAddr?.line1 || undefined,
-            city: firstAddr?.city || undefined,
-            state: firstAddr?.state || undefined,
-            country: firstAddr?.country || undefined,
             socials: contactDraft.socials || [],
             emergencyContacts: contactDraft.emergencyContacts || [],
           }
         : {
             ...contactDraft,
-            phone: primaryPhoneStr || undefined,
-            email: primaryEmailStr || undefined,
-            line1: firstAddr?.line1 || undefined,
-            city: firstAddr?.city || undefined,
-            state: firstAddr?.state || undefined,
-            country: firstAddr?.country || undefined,
+            ...basePayload,
           };
       void saveContact(payload, isCreatingContact)
         .then(() => {
