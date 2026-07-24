@@ -3,14 +3,13 @@ import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import type { Contact } from "@mms/shared";
 import {
   getPrimaryPhone,
-  getPrimaryEmail,
-  getPrimaryAddress,
   hasWhatsApp,
   resolveModuleTierTab,
   contactMatchesSearch,
   filterActiveContacts,
   isContactDeleted,
   CONTACTS_MODULE_CONTRACT,
+  syncContactScalarFields,
 } from "@mms/shared";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -438,18 +437,7 @@ export function useContactsPageState({
     (contactDraft: Contact) => {
       if (!canWrite) return;
       const isCreatingContact = !editContact;
-      const primaryPhoneStr = getPrimaryPhone(contactDraft);
-      const primaryEmailStr = getPrimaryEmail(contactDraft);
-      const firstAddr = getPrimaryAddress(contactDraft);
-
-      const basePayload = {
-        phone: primaryPhoneStr || undefined,
-        email: primaryEmailStr || undefined,
-        line1: firstAddr?.line1 || undefined,
-        city: firstAddr?.city || undefined,
-        state: firstAddr?.state || undefined,
-        country: firstAddr?.country || undefined,
-      };
+      const basePayload = syncContactScalarFields(contactDraft);
 
       const payload: Contact = {
         ...(editContact || {}),
@@ -615,9 +603,9 @@ export function useContactsPageState({
   );
 
   const handleMerge = useCallback(
-    (keepId: string | number, deleteId: string | number, mergedData: Contact) => {
+    async (keepId: string | number, deleteId: string | number, mergedData: Contact) => {
       if (!canWrite) return;
-      void mergeContacts(keepId, deleteId, mergedData);
+      await mergeContacts(keepId, deleteId, mergedData);
     },
     [canWrite, mergeContacts],
   );

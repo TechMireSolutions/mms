@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, ChevronDown, ChevronUp, Loader2, Trash2 } from "lucide-react";
 import type { Contact } from "@mms/shared";
 import {
@@ -43,7 +43,7 @@ interface ConflictRowProps {
   onResolved: () => void;
 }
 
-function ConflictRow({ entry, title, onRequestDismiss, onResolved }: ConflictRowProps): React.JSX.Element {
+function ConflictRow({ entry, title, onRequestDismiss, onResolved }: ConflictRowProps): JSX.Element {
   const { t } = useTranslation();
   const { updateContact, upsertContact, deleteContact } = useContactMutations();
   const [expanded, setExpanded] = useState(false);
@@ -60,10 +60,10 @@ function ConflictRow({ entry, title, onRequestDismiss, onResolved }: ConflictRow
   }, [local, serverContact]);
 
   useEffect(() => {
-    if (expanded && diffs.length > 0 && Object.keys(fieldPicks).length === 0) {
+    if (expanded && !serverLoading && diffs.length > 0 && Object.keys(fieldPicks).length === 0) {
       setFieldPicks(defaultSyncFieldPicks(diffs));
     }
-  }, [expanded, diffs, fieldPicks]);
+  }, [expanded, serverLoading, diffs, fieldPicks]);
 
   const togglePick = (field: string, pick: SyncFieldPick) => {
     setFieldPicks((prev) => ({ ...prev, [field]: pick }));
@@ -212,26 +212,24 @@ function ConflictRow({ entry, title, onRequestDismiss, onResolved }: ConflictRow
           )}
           <div className="flex flex-wrap gap-2 pt-1">
             {local && (
-              <>
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={applying}
-                  onClick={() => void handleApplyMerge()}
-                >
-                  {t('contacts.sync.conflictApplyMerge')}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={applying}
-                  onClick={() => void handleKeepMine()}
-                >
-                  {t('contacts.sync.conflictKeepLocal')}
-                </Button>
-              </>
+              <Button
+                type="button"
+                size="sm"
+                disabled={applying}
+                onClick={() => void handleApplyMerge()}
+              >
+                {t('contacts.sync.conflictApplyMerge')}
+              </Button>
             )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={applying}
+              onClick={() => void handleKeepMine()}
+            >
+              {t('contacts.sync.conflictKeepLocal')}
+            </Button>
             <Button
               type="button"
               variant="outline"
@@ -252,7 +250,7 @@ function ConflictRow({ entry, title, onRequestDismiss, onResolved }: ConflictRow
 export default function ContactsSyncConflictPanel({
   open,
   onClose,
-}: ContactsSyncConflictPanelProps): React.JSX.Element {
+}: ContactsSyncConflictPanelProps): JSX.Element {
   const { t } = useTranslation();
   const { flush, refreshCounts } = useContactsSyncOutbox();
   const [conflicts, setConflicts] = useState<ContactsSyncConflict[]>(() => getContactsSyncConflicts());
@@ -264,12 +262,12 @@ export default function ContactsSyncConflictPanel({
     refreshCounts();
   }, [refreshCounts]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open) return;
     refreshList();
   }, [open, refreshList]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handler = () => setConflicts(getContactsSyncConflicts());
     window.addEventListener('contacts-sync-outbox-changed', handler);
     return () => window.removeEventListener('contacts-sync-outbox-changed', handler);

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   MessageCircle, MessageSquare, Eye, Phone, Mail,
@@ -23,10 +23,30 @@ import { CopyBtn } from "@/components/ui/CopyBtn";
 
 const MotionButton = motion.create(Button);
 
+interface ContactInfoPillProps {
+  icon: typeof Phone | typeof Mail;
+  text: string;
+  copyText: string;
+}
+
+function ContactInfoPill({ icon: Icon, text, copyText }: ContactInfoPillProps) {
+  return (
+    <div className="w-full flex items-center justify-between text-xs font-normal text-muted-foreground bg-muted/40 dark:bg-muted/20 hover:bg-muted/65 dark:hover:bg-muted/35 hover:text-foreground backdrop-blur-sm px-3 py-1.5 rounded-xl border border-border/30 dark:border-border/15 transition-all group/pill min-w-0">
+      <div className="flex items-center gap-2 min-w-0 flex-1 pe-2">
+        <Icon aria-hidden="true" className="w-3.5 h-3.5 text-primary/80 dark:text-primary/70 flex-shrink-0 group-hover/pill:text-primary transition-colors" />
+        <span className="font-semibold tracking-tight truncate select-all">{text}</span>
+      </div>
+      <CopyBtn text={copyText} showToast className="h-6 w-6 opacity-60 group-hover/pill:opacity-100 transition-opacity p-0.5 rounded text-muted-foreground hover:text-foreground" />
+    </div>
+  );
+}
+
 interface ColumnConfig {
   id: string;
   label: string;
 }
+// Unchanged lines...
+
 
 interface ContactCardsProps {
   contacts: Contact[];
@@ -168,7 +188,7 @@ export default function ContactCards({
                   variant="ghost"
                   className="h-auto p-0 hover:bg-transparent flex flex-1 items-start gap-2.5 min-w-0 text-start cursor-pointer hover:text-foreground shadow-none justify-start"
                   onClick={() => onView?.(contact)}
-                  aria-label={t("contacts.table.viewProfile")}
+                  aria-label={`${t("contacts.table.viewProfile")} - ${displayName}`}
                 >
                     <UserAvatar
                       id={contact.id}
@@ -193,24 +213,18 @@ export default function ContactCards({
               {(showPhonePill || showEmailPill) && (
                 <div className="space-y-2 py-0.5 ms-1">
                   {phone && showPhonePill && (
-                    <div className="w-full flex items-center justify-between text-xs font-normal text-muted-foreground bg-muted/40 dark:bg-muted/20 hover:bg-muted/65 dark:hover:bg-muted/35 hover:text-foreground backdrop-blur-sm px-3 py-1.5 rounded-xl border border-border/30 dark:border-border/15 transition-all group/pill min-w-0">
-                      <div className="flex items-center gap-2 min-w-0 flex-1 pe-2">
-                        <Phone aria-hidden="true" className="w-3.5 h-3.5 text-primary/80 dark:text-primary/70 flex-shrink-0 group-hover/pill:text-primary transition-colors" />
-                        <span className="font-semibold tracking-tight truncate select-all">
-                          {countryCode ? `${countryCode} ${phoneDisplay}` : (phoneDisplay || phone)}
-                        </span>
-                      </div>
-                      <CopyBtn text={phone} showToast className="h-6 w-6 opacity-60 group-hover/pill:opacity-100 transition-opacity p-0.5 rounded text-muted-foreground hover:text-foreground" />
-                    </div>
+                    <ContactInfoPill
+                      icon={Phone}
+                      text={countryCode ? `${countryCode} ${phoneDisplay}` : (phoneDisplay || phone)}
+                      copyText={phone}
+                    />
                   )}
                   {email && showEmailPill && (
-                    <div className="w-full flex items-center justify-between text-xs font-normal text-muted-foreground bg-muted/40 dark:bg-muted/20 hover:bg-muted/65 dark:hover:bg-muted/35 hover:text-foreground backdrop-blur-sm px-3 py-1.5 rounded-xl border border-border/30 dark:border-border/15 transition-all group/pill min-w-0">
-                      <div className="flex items-center gap-2 min-w-0 flex-1 pe-2">
-                        <Mail aria-hidden="true" className="w-3.5 h-3.5 text-primary/80 dark:text-primary/70 flex-shrink-0 group-hover/pill:text-primary transition-colors" />
-                        <span className="font-semibold tracking-tight truncate select-all">{email}</span>
-                      </div>
-                      <CopyBtn text={email} showToast className="h-6 w-6 opacity-60 group-hover/pill:opacity-100 transition-opacity p-0.5 rounded text-muted-foreground hover:text-foreground" />
-                    </div>
+                    <ContactInfoPill
+                      icon={Mail}
+                      text={email}
+                      copyText={email}
+                    />
                   )}
                 </div>
               )}
@@ -260,13 +274,13 @@ export default function ContactCards({
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className="p-2.5 rounded-xl border border-border/50 dark:border-border/30 bg-muted/40 dark:bg-card/60 text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/20 transition-colors shadow-xs"
-                      title={t("contacts.detail.call")}
-                      aria-label={t("contacts.detail.call")}
+                      title={`${t("contacts.detail.call")} - ${displayName}`}
+                      aria-label={`${t("contacts.detail.call")} - ${displayName}`}
                     >
                       <Phone aria-hidden="true" className="w-4 h-4" />
                     </motion.a>
                   ) : (
-                    <div className="p-2.5 rounded-xl border border-border/20 bg-card/20 text-muted-foreground/30 cursor-not-allowed opacity-40">
+                    <div className="p-2.5 rounded-xl border border-border/20 bg-card/20 text-muted-foreground/30 cursor-not-allowed opacity-40" title={`${t("contacts.detail.call")} - ${displayName}`}>
                       <Phone aria-hidden="true" className="w-4 h-4" />
                     </div>
                   )}
@@ -282,8 +296,8 @@ export default function ContactCards({
                         ? "border-success/30 dark:border-success/20 bg-success/5 text-success hover:text-success hover:bg-success/10 cursor-pointer"
                         : "border-border/20 text-muted-foreground/30 opacity-40 cursor-not-allowed"
                       }`}
-                    title={t("contacts.whatsapp")}
-                    aria-label={t("contacts.whatsapp")}
+                    title={`${t("contacts.whatsapp")} - ${displayName}`}
+                    aria-label={`${t("contacts.whatsapp")} - ${displayName}`}
                   >
                     <MessageCircle aria-hidden="true" className="w-4 h-4" />
                   </MotionButton>
@@ -299,8 +313,8 @@ export default function ContactCards({
                         ? "border-primary/30 dark:border-primary/20 bg-primary/5 text-primary hover:text-primary hover:bg-primary/10 cursor-pointer"
                         : "border-border/20 text-muted-foreground/30 opacity-40 cursor-not-allowed"
                       }`}
-                    title={t("contacts.sms")}
-                    aria-label={t("contacts.sms")}
+                    title={`${t("contacts.sms")} - ${displayName}`}
+                    aria-label={`${t("contacts.sms")} - ${displayName}`}
                   >
                     <MessageSquare aria-hidden="true" className="w-4 h-4" />
                   </MotionButton>
@@ -316,8 +330,8 @@ export default function ContactCards({
                         ? "border-secondary/30 dark:border-secondary/20 bg-secondary/5 text-secondary hover:text-secondary hover:bg-secondary/10 cursor-pointer"
                         : "border-border/20 text-muted-foreground/30 opacity-40 cursor-not-allowed"
                       }`}
-                    title={t("contacts.detail.emailAction")}
-                    aria-label={t("contacts.detail.emailAction")}
+                    title={`${t("contacts.detail.emailAction")} - ${displayName}`}
+                    aria-label={`${t("contacts.detail.emailAction")} - ${displayName}`}
                   >
                     <Mail aria-hidden="true" className="w-4 h-4" />
                   </MotionButton>
@@ -331,7 +345,7 @@ export default function ContactCards({
                     whileTap={{ scale: 0.98 }}
                     onClick={() => onView?.(contact)}
                     className="flex items-center h-auto gap-1.5 px-3 py-2 rounded-xl border border-border/50 dark:border-border/30 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/80 hover:border-border transition-colors cursor-pointer shadow-none"
-                    aria-label={t("contacts.table.viewProfile")}
+                    aria-label={`${t("contacts.table.viewProfile")} - ${displayName}`}
                   >
                     <Eye aria-hidden="true" className="w-3.5 h-3.5" />
                     <span>{t("contacts.table.viewProfile")}</span>

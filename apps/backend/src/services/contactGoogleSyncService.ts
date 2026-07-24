@@ -2,6 +2,8 @@ import type { Contact } from '@mms/shared';
 import { normalizeToE164, parsePhoneNumber } from '@mms/shared';
 import { loadContactRuntimeDefaults, loadContacts, type ContactRuntimeDefaults } from './contactService.js';
 import { fetchObject, persistObject } from './dbSyncService.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
+import { bulkSaveContacts } from '../db/repositories/contactRepository.js';
 
 const CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY = 'contact_google_sync_by_user';
 const GOOGLE_PEOPLE_FIELDS =
@@ -341,6 +343,11 @@ export async function runGoogleContactsSync(userId: string): Promise<GoogleConta
   const fresh = mapped.filter(
     (contact) => !existingNames.has(contact.name?.toLowerCase().trim() || ''),
   );
+
+  const tenant = getRequestTenant();
+  if (tenant && fresh.length > 0) {
+    await bulkSaveContacts(tenant, fresh);
+  }
 
   return {
     contacts: fresh,

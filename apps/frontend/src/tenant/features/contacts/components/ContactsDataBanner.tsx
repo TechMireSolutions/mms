@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, useEffect } from "react";
 import { WifiOff, AlertCircle, CloudUpload, AlertTriangle } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContacts } from "@/tenant/features/contacts/hooks/useContacts";
@@ -16,16 +16,16 @@ interface ContactsDataBannerProps {
 export default function ContactsDataBanner({
   onReviewConflicts,
   listFetchEnabled = true,
-}: ContactsDataBannerProps): React.JSX.Element | null {
+}: ContactsDataBannerProps): JSX.Element | null {
   const { t } = useTranslation();
   const { isError, isFetching } = useContacts({ enabled: listFetchEnabled });
   const { pendingCount, conflictCount, flushing, flush, clearConflicts } = useContactsSyncOutbox();
-  const [offline, setOffline] = React.useState(() =>
+  const [offline, setOffline] = useState(() =>
     typeof navigator !== 'undefined' ? !navigator.onLine : false,
   );
-  const [dismissAllOpen, setDismissAllOpen] = React.useState(false);
+  const [dismissAllOpen, setDismissAllOpen] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const onOffline = () => setOffline(true);
     const onOnline = () => setOffline(false);
     window.addEventListener('offline', onOffline);
@@ -36,7 +36,7 @@ export default function ContactsDataBanner({
     };
   }, []);
 
-  const banners: React.JSX.Element[] = [];
+  const banners: JSX.Element[] = [];
 
   if (offline) {
     banners.push(

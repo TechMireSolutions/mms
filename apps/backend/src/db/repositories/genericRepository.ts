@@ -70,37 +70,39 @@ export function createGenericRepository<
     const { id: _, ...extra } = processedRecord;
     const db = getDb();
 
-    const existing = await db
-      .select({ id: table.id })
-      .from(dbTable)
-      .where(and(eq(table.workspaceSubdomain, subdomain), eq(table.id, id)));
+    await db.transaction(async (tx) => {
+      const existing = await tx
+        .select({ id: table.id })
+        .from(dbTable)
+        .where(and(eq(table.workspaceSubdomain, subdomain), eq(table.id, id)));
 
-    if (existing.length > 0) {
-      if (updateStrategy === 'overwrite') {
-        await db
-          .update(dbTable)
-          .set({
-            customData: extra,
-            updatedAt: new Date(),
-          })
-          .where(and(eq(table.workspaceSubdomain, subdomain), eq(table.id, id)));
+      if (existing.length > 0) {
+        if (updateStrategy === 'overwrite') {
+          await tx
+            .update(dbTable)
+            .set({
+              customData: extra,
+              updatedAt: new Date(),
+            })
+            .where(and(eq(table.workspaceSubdomain, subdomain), eq(table.id, id)));
+        } else {
+          await tx
+            .update(dbTable)
+            .set({
+              customData: sql`COALESCE(${table.customData}, '{}'::jsonb) || ${JSON.stringify(extra)}::jsonb`,
+              updatedAt: new Date(),
+            })
+            .where(and(eq(table.workspaceSubdomain, subdomain), eq(table.id, id)));
+        }
       } else {
-        await db
-          .update(dbTable)
-          .set({
-            customData: sql`COALESCE(${table.customData}, '{}'::jsonb) || ${JSON.stringify(extra)}::jsonb`,
-            updatedAt: new Date(),
-          })
-          .where(and(eq(table.workspaceSubdomain, subdomain), eq(table.id, id)));
+        await tx.insert(dbTable).values({
+          id,
+          workspaceSubdomain: subdomain,
+          customData: extra,
+          updatedAt: new Date(),
+        });
       }
-    } else {
-      await db.insert(dbTable).values({
-        id,
-        workspaceSubdomain: subdomain,
-        customData: extra,
-        updatedAt: new Date(),
-      });
-    }
+    });
   }
 
   async function bulkSave(workspaceSubdomain: string, list: T[]): Promise<void> {
@@ -146,22 +148,24 @@ export function createGenericRepository<
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     const db = getDb();
 
-    await db.delete(dbTable).where(eq(table.workspaceSubdomain, subdomain));
+    await db.transaction(async (tx) => {
+      await tx.delete(dbTable).where(eq(table.workspaceSubdomain, subdomain));
 
-    if (list.length === 0) return;
+      if (list.length === 0) return;
 
-    const values = list.map((record) => {
-      const id = String(record.id);
-      const { id: _, ...extra } = record;
-      return {
-        id,
-        workspaceSubdomain: subdomain,
-        customData: extra,
-        updatedAt: new Date(),
-      };
+      const values = list.map((record) => {
+        const id = String(record.id);
+        const { id: _, ...extra } = record;
+        return {
+          id,
+          workspaceSubdomain: subdomain,
+          customData: extra,
+          updatedAt: new Date(),
+        };
+      });
+
+      await tx.insert(dbTable).values(values);
     });
-
-    await db.insert(dbTable).values(values);
   }
 
   async function deleteByWorkspace(workspaceSubdomain: string): Promise<void> {

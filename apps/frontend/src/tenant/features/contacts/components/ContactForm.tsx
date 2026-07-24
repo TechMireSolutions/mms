@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, ChangeEvent, ReactNode, ElementType } from "react";
 import {
   User,
   Phone,
@@ -89,14 +89,14 @@ type TabKey = (typeof CONTACT_TABS)[number]["key"];
 interface ListFieldCardProps {
   id: string;
   index: number;
-  icon: React.ElementType;
+  icon: ElementType;
   accentClass?: string;
   iconClass?: string;
   label: string;
-  typeSelect?: React.ReactNode;
+  typeSelect?: ReactNode;
   onRemove: () => void;
   removeLabel: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 function ListFieldCard({
@@ -110,7 +110,7 @@ function ListFieldCard({
   onRemove,
   removeLabel,
   children,
-}: ListFieldCardProps): React.JSX.Element {
+}: ListFieldCardProps): JSX.Element {
   return (
     <motion.div
       key={id}
@@ -138,11 +138,11 @@ function ListFieldCard({
 }
 
 interface EmptyListCardProps {
-  icon: React.ElementType;
+  icon: ElementType;
   message: string;
 }
 
-function EmptyListCard({ icon: Icon, message }: EmptyListCardProps): React.JSX.Element {
+function EmptyListCard({ icon: Icon, message }: EmptyListCardProps): JSX.Element {
   return (
     <div className="text-center py-8 border border-dashed border-border/80 rounded-2xl bg-muted/5 backdrop-blur-sm">
       <Icon className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
@@ -161,7 +161,7 @@ export default function ContactForm({
   defaultProvince = "",
   initialDraft,
   lockGender = false,
-}: ContactFormProps): React.JSX.Element {
+}: ContactFormProps): JSX.Element {
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
   const {
@@ -204,7 +204,7 @@ export default function ContactForm({
   );
 
   // Re-sync draft when editing another contact or re-opening modal
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open) return;
     setTab("basic");
     setContactDraft(
@@ -283,7 +283,7 @@ export default function ContactForm({
   }, []);
 
   const handleAvatarChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -659,7 +659,7 @@ export default function ContactForm({
   const renderPhones = () => {
     const phones = contactDraft.phones || [];
     const addPhone = () => {
-      addSubListItem("phones", { label: "Mobile", number: "", countryCode: defaultCountryCode });
+      addSubListItem("phones", { label: phoneLabels[0] || "Mobile", number: "", countryCode: defaultCountryCode });
     };
     const removePhone = (idx: number) => removeSubListItem("phones", idx);
     const updatePhone = (idx: number, patch: Partial<PhoneNumber>) => updateSubListItem("phones", idx, patch);
@@ -766,7 +766,7 @@ export default function ContactForm({
   const renderEmails = () => {
     const emails = contactDraft.emails || [];
     const addEmail = () => {
-      addSubListItem("emails", { label: "Personal", address: "" });
+      addSubListItem("emails", { label: emailLabels[0] || "Personal", address: "" });
     };
     const removeEmail = (idx: number) => removeSubListItem("emails", idx);
     const updateEmail = (idx: number, patch: Partial<EmailAddress>) => updateSubListItem("emails", idx, patch);
@@ -853,7 +853,7 @@ export default function ContactForm({
     const addresses = contactDraft.addresses || [];
     const addAddress = () => {
       addSubListItem("addresses", {
-        label: "Home",
+        label: addressLabels[0] || "Home",
         line1: "",
         city: defaultCity,
         state: defaultProvince,
@@ -988,7 +988,7 @@ export default function ContactForm({
   const renderSocials = () => {
     const socials = contactDraft.socials || [];
     const addSocial = () => {
-      addSubListItem("socials", { platform: "WhatsApp", url: "" });
+      addSubListItem("socials", { platform: socialPlatforms[0] || "WhatsApp", url: "" });
     };
     const removeSocial = (idx: number) => removeSubListItem("socials", idx);
     const updateSocial = (idx: number, patch: Partial<SocialLink>) => updateSubListItem("socials", idx, patch);
@@ -1073,7 +1073,7 @@ export default function ContactForm({
   const renderEmergency = () => {
     const emergencyContacts = contactDraft.emergencyContacts || [];
     const addEmergency = () => {
-      addSubListItem("emergencyContacts", { relationship: "Father", contactId: "" });
+      addSubListItem("emergencyContacts", { relationship: relationshipOptions[0] || "Father", contactId: "" });
     };
     const removeEmergency = (idx: number) => removeSubListItem("emergencyContacts", idx);
     const updateEmergency = (idx: number, patch: Partial<EmergencyContact>) => updateSubListItem("emergencyContacts", idx, patch);

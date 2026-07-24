@@ -4,6 +4,8 @@ import {
   flushContactsOutbox,
   getContactsOutbox,
   getContactsSyncConflicts,
+  OUTBOX_KEY,
+  CONFLICTS_KEY,
 } from '@/lib/contacts/contactsSyncOutbox';
 import { useContactMutations, CONTACTS_QUERY_KEY } from '@/tenant/features/contacts/hooks/useContacts';
 import { queryClientInstance } from '@/lib/queryClient';
@@ -25,8 +27,22 @@ export function useContactsSyncOutbox() {
 
   useEffect(() => {
     const handler = () => refreshCounts();
+    const handleStorage = (event: StorageEvent) => {
+      if (
+        event.key === null ||
+        event.key === OUTBOX_KEY ||
+        event.key === CONFLICTS_KEY
+      ) {
+        refreshCounts();
+      }
+    };
+
     window.addEventListener('contacts-sync-outbox-changed', handler);
-    return () => window.removeEventListener('contacts-sync-outbox-changed', handler);
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('contacts-sync-outbox-changed', handler);
+      window.removeEventListener('storage', handleStorage);
+    };
   }, [refreshCounts]);
 
   const flush = useCallback(async (options?: { notify?: boolean }) => {

@@ -437,20 +437,53 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
   const [previewList, setPreviewList] = useState<Contact[]>([]);
   const [importing, setImporting] = useState<boolean>(false);
   const [result, setResult] = useState<{ imported: number; skipped: number } | null>(null);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const processFile = useCallback(
+    (file: File): void => {
+      const reader = new FileReader();
+      reader.onload = (readerEvent) => {
+        if (readerEvent.target && typeof readerEvent.target.result === "string") {
+          setPreviewList(parseVCard(readerEvent.target.result, { mobileLabel, personalLabel, defaultPhoneCountryCode }));
+          setResult(null);
+        }
+      };
+      reader.readAsText(file);
+    },
+    [mobileLabel, personalLabel, defaultPhoneCountryCode],
+  );
 
   const handleFile = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const file = event.target.files?.[0];
     if (!file) return;
     event.target.value = "";
-    const reader = new FileReader();
-    reader.onload = (readerEvent) => {
-      if (readerEvent.target && typeof readerEvent.target.result === "string") {
-        setPreviewList(parseVCard(readerEvent.target.result, { mobileLabel, personalLabel, defaultPhoneCountryCode }));
-        setResult(null);
-      }
-    };
-    reader.readAsText(file);
+    processFile(file);
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLButtonElement>): void => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (canWrite) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (event: React.DragEvent<HTMLButtonElement>): void => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLButtonElement>): void => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+    if (!canWrite) return;
+    const file = event.dataTransfer.files?.[0];
+    if (file) {
+      processFile(file);
+    }
   };
 
   const handleImport = (): void => {
@@ -507,7 +540,12 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
             variant="outline"
             onClick={() => canWrite && fileRef.current?.click()}
             disabled={!canWrite}
-            className="w-full flex flex-col items-center justify-center gap-2 py-7 border-2 border-dashed border-border rounded-xl text-muted-foreground hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer bg-card disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-card h-auto shadow-none"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`w-full flex flex-col items-center justify-center gap-2 py-7 border-2 border-dashed rounded-xl text-muted-foreground transition-all cursor-pointer bg-card disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-card h-auto shadow-none ${
+              isDragging ? "border-primary bg-primary/10" : "border-border hover:border-primary/40 hover:bg-primary/5"
+            }`}
           >
             <FileText className="w-7 h-7 opacity-40" />
             <span className="text-sm font-semibold text-foreground">{t('contacts.sync.uploadVcf')}</span>

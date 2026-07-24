@@ -35,6 +35,20 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
 
   const SIZE = 280;
   const RADIUS = SIZE / 2;
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        event.stopImmediatePropagation?.();
+        event.preventDefault();
+        onCancel();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
+  }, [onCancel]);
+
   useEffect(() => {
     const img = new Image();
     img.onload = () => {
@@ -135,7 +149,16 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.stopPropagation();
+          event.nativeEvent.stopImmediatePropagation();
+          onCancel();
+        }
+      }}
+    >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}

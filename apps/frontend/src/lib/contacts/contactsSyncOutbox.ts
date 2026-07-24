@@ -1,7 +1,7 @@
 import type { Contact } from '@mms/shared';
 
-const OUTBOX_KEY = 'mms_contacts_sync_outbox';
-const CONFLICTS_KEY = 'mms_contacts_sync_conflicts';
+export const OUTBOX_KEY = 'mms_contacts_sync_outbox';
+export const CONFLICTS_KEY = 'mms_contacts_sync_conflicts';
 
 export type ContactsOutboxEntry =
   | { id: string; kind: 'upsert'; contact: Contact; createdAt: string }

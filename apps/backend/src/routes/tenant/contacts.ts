@@ -96,6 +96,31 @@ function ensureBackgroundJobRunners(): void {
   backgroundJobRunnersReady = true;
 }
 
+const ALLOWED_SELF_CONTACT_FIELDS = new Set([
+  'id',
+  '_blueprintId',
+  'firstName',
+  'lastName',
+  'name',
+  'gender',
+  'dob',
+  'cnic',
+  'isSyed',
+  'avatar',
+  'preferredLanguage',
+  'preferredContactMethod',
+  'phones',
+  'emails',
+  'addresses',
+  'socials',
+  'emergencyContacts',
+  'phone',
+  'email',
+  'city',
+  'state',
+  'country',
+]);
+
 function savedReportViewer(user: User): ContactsSavedReportViewer {
   return {
     id: String(user.id),
@@ -491,7 +516,7 @@ export async function contactRoutes(
     if (!isValid) return;
 
     try {
-      const { contact, created, restoredFromDelete } = await upsertContact(parsed.data as Contact);
+      const { contact, created, restoredFromDelete } = await upsertContact(parsed.data as Contact, user);
       if (restoredFromDelete) {
         await auditContact(user, 'contact.restore', `Restored contact ${String(contact.id)} via upsert`, String(contact.id));
       } else {
@@ -507,6 +532,9 @@ export async function contactRoutes(
         .send({ success: true, contact: await sanitizeOneForUser(contact, user) });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to save contact record';
+      if (errorMessage.includes('Permission denied')) {
+        return sendForbidden(reply, errorMessage);
+      }
       return sendDatabaseError(reply, errorMessage);
     }
   });
@@ -541,8 +569,25 @@ export async function contactRoutes(
     if (!isOwnContact && !canWriteContacts(user)) {
       return sendForbidden(reply);
     }
+    const before = await getContactById(params.data.id);
+    if (!before) {
+      return sendNotFound(reply, 'Contact not found');
+    }
+
     const body = parseRequest(contactRecordSchema, request.body);
     if (!body.ok) return replyValidationError(reply, body.message);
+
+    if (isOwnContact && !canWriteContacts(user)) {
+      const modifiedRestrictedFields = Object.keys(body.data).filter((key) => {
+        if (ALLOWED_SELF_CONTACT_FIELDS.has(key)) return false;
+        const beforeVal = (before as Record<string, unknown>)[key];
+        const newVal = (body.data as Record<string, unknown>)[key];
+        return JSON.stringify(beforeVal) !== JSON.stringify(newVal);
+      });
+      if (modifiedRestrictedFields.length > 0) {
+        return sendForbidden(reply, 'Cannot update restricted contact fields');
+      }
+    }
 
     const isValid = await executeDynamicValidation(request, reply, (tenant, lang) =>
       validateContactDynamic(tenant, body.data, lang, user.role)
@@ -550,7 +595,6 @@ export async function contactRoutes(
     if (!isValid) return;
 
     try {
-      const before = await getContactById(params.data.id);
       const updated = await updateContactById(params.data.id, {
         ...body.data,
         id: body.data.id ?? params.data.id,

@@ -22,12 +22,15 @@ import {
   type ContactsWidgetAggregateResult,
   type ContactsWidgetQuery,
   type FieldConfig,
+  type User,
 } from '@mms/shared';
 import { fetchCollection } from './dbSyncService.js';
 import { loadContactFieldConfig } from './contactConfigService.js';
 import { invalidateDuplicateScanCache } from './contactDuplicateScanService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { applyContactRelationshipInference } from './contactRelationshipInferenceService.js';
+import { runInTransaction } from '../db/database.js';
+import { canDeleteContacts } from './rbacService.js';
 import {
   listContactsByWorkspace,
   findContactById,
@@ -200,101 +203,129 @@ export async function prepareContactRecord(contact: Contact, id?: string | numbe
   return applyTitleCaseToContact({ ...withPhones, id: resolvedId }) as Contact;
 }
 
-export async function upsertContact(contact: Contact): Promise<{
+export interface UpsertContactOptions {
+  user?: User;
+  canRestore?: boolean;
+}
+
+export async function upsertContact(
+  contact: Contact,
+  options?: User | UpsertContactOptions,
+): Promise<{
   contact: Contact;
   created: boolean;
   restoredFromDelete?: boolean;
 }> {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  const contactWithId = await prepareContactRecord(contact, contact.id);
-  const existing = await findContactById(tenant, String(contactWithId.id));
-  const created = !existing;
-  const restoredFromDelete = existing && Boolean(existing.deletedAt);
+  return runInTransaction(async () => {
+    const tenant = getRequestTenant();
+    if (!tenant) throw new Error('Tenant context required');
+    const contactWithId = await prepareContactRecord(contact, contact.id);
+    const existing = await findContactById(tenant, String(contactWithId.id));
+    const created = !existing;
+    const restoredFromDelete = existing && Boolean(existing.deletedAt);
 
-  let saved: Contact;
-  if (created) {
-    saved = contactWithId;
-  } else {
-    saved = { ...existing, ...contactWithId, deletedAt: undefined, deletedBy: undefined };
-  }
+    const user = options && 'role' in options ? (options as User) : (options as UpsertContactOptions)?.user;
+    const explicitCanRestore = options && !('role' in options) ? (options as UpsertContactOptions)?.canRestore : undefined;
 
-  await saveContact(tenant, saved);
-  await applyContactRelationshipInference(tenant, saved);
-  await invalidateDuplicateScanCache();
-  return { contact: saved, created, restoredFromDelete: restoredFromDelete || undefined };
+    if (restoredFromDelete) {
+      if (explicitCanRestore === false) {
+        throw new Error('Permission denied: Restoring soft-deleted contacts requires delete permissions');
+      }
+      if (user && !canDeleteContacts(user)) {
+        throw new Error('Permission denied: Restoring soft-deleted contacts requires delete permissions');
+      }
+    }
+
+    let saved: Contact;
+    if (created) {
+      saved = contactWithId;
+    } else {
+      saved = { ...existing, ...contactWithId, deletedAt: undefined, deletedBy: undefined };
+    }
+
+    await saveContact(tenant, saved);
+    await applyContactRelationshipInference(tenant, saved);
+    await invalidateDuplicateScanCache();
+    return { contact: saved, created, restoredFromDelete: restoredFromDelete || undefined };
+  });
 }
 
 export async function updateContactById(id: string, contact: Contact): Promise<Contact | null> {
-  const tenant = getRequestTenant();
-  if (!tenant) return null;
-  const existing = await findContactById(tenant, id);
-  if (!existing || existing.deletedAt) {
-    return null;
-  }
-  const contactWithId = await prepareContactRecord({ ...contact, id }, id);
-  await saveContact(tenant, contactWithId);
-  await applyContactRelationshipInference(tenant, contactWithId);
-  await invalidateDuplicateScanCache();
-  return contactWithId;
+  return runInTransaction(async () => {
+    const tenant = getRequestTenant();
+    if (!tenant) return null;
+    const existing = await findContactById(tenant, id);
+    if (!existing || existing.deletedAt) {
+      return null;
+    }
+    const contactWithId = await prepareContactRecord({ ...contact, id }, id);
+    await saveContact(tenant, contactWithId);
+    await applyContactRelationshipInference(tenant, contactWithId);
+    await invalidateDuplicateScanCache();
+    return contactWithId;
+  });
 }
 
 export async function restoreContactById(id: string, _restoredBy: string): Promise<Contact | null> {
-  const tenant = getRequestTenant();
-  if (!tenant) return null;
-  const existing = await findContactById(tenant, id);
-  if (!existing) return null;
-  if (!existing.deletedAt) return existing;
+  return runInTransaction(async () => {
+    const tenant = getRequestTenant();
+    if (!tenant) return null;
+    const existing = await findContactById(tenant, id);
+    if (!existing) return null;
+    if (!existing.deletedAt) return existing;
 
-  const now = new Date().toISOString();
-  const restored: Contact = {
-    ...existing,
-    deletedAt: undefined,
-    deletedBy: undefined,
-    deletionReason: undefined,
-    updatedAt: now,
-  };
-  await saveContact(tenant, restored);
-  await invalidateDuplicateScanCache();
-  return restored;
+    const now = new Date().toISOString();
+    const restored: Contact = {
+      ...existing,
+      deletedAt: undefined,
+      deletedBy: undefined,
+      deletionReason: undefined,
+      updatedAt: now,
+    };
+    await saveContact(tenant, restored);
+    await invalidateDuplicateScanCache();
+    return restored;
+  });
 }
 
 export async function bulkRestoreContacts(
   ids: string[],
   _restoredBy: string,
 ): Promise<{ succeeded: number; failed: number }> {
-  const tenant = getRequestTenant();
-  if (!tenant) return { succeeded: 0, failed: ids.length };
-  let succeeded = 0;
-  let failed = 0;
-  const now = new Date().toISOString();
-  const toSave: Contact[] = [];
+  return runInTransaction(async () => {
+    const tenant = getRequestTenant();
+    if (!tenant) return { succeeded: 0, failed: ids.length };
+    let succeeded = 0;
+    let failed = 0;
+    const now = new Date().toISOString();
+    const toSave: Contact[] = [];
 
-  const existingContacts = await findContactsByIds(tenant, ids);
-  const existingMap = new Map(existingContacts.map((c) => [c.id, c]));
+    const existingContacts = await findContactsByIds(tenant, ids);
+    const existingMap = new Map(existingContacts.map((c) => [c.id, c]));
 
-  for (const id of ids) {
-    const existing = existingMap.get(id);
-    if (existing && existing.deletedAt) {
-      const restored: Contact = {
-        ...existing,
-        deletedAt: undefined,
-        deletedBy: undefined,
-        deletionReason: undefined,
-        updatedAt: now,
-      };
-      toSave.push(restored);
-      succeeded += 1;
-    } else {
-      failed += 1;
+    for (const id of ids) {
+      const existing = existingMap.get(id);
+      if (existing && existing.deletedAt) {
+        const restored: Contact = {
+          ...existing,
+          deletedAt: undefined,
+          deletedBy: undefined,
+          deletionReason: undefined,
+          updatedAt: now,
+        };
+        toSave.push(restored);
+        succeeded += 1;
+      } else {
+        failed += 1;
+      }
     }
-  }
 
-  if (toSave.length > 0) {
-    await bulkSaveContacts(tenant, toSave);
-    await invalidateDuplicateScanCache();
-  }
-  return { succeeded, failed };
+    if (toSave.length > 0) {
+      await bulkSaveContacts(tenant, toSave);
+      await invalidateDuplicateScanCache();
+    }
+    return { succeeded, failed };
+  });
 }
 
 export async function softDeleteContactById(
@@ -302,22 +333,24 @@ export async function softDeleteContactById(
   deletedBy: string,
   deletionReason?: string,
 ): Promise<boolean> {
-  const tenant = getRequestTenant();
-  if (!tenant) return false;
-  const existing = await findContactById(tenant, id);
-  if (!existing || existing.deletedAt) {
-    return false;
-  }
-  const trimmedReason = deletionReason?.trim();
-  const updated: Contact = {
-    ...existing,
-    deletedAt: new Date().toISOString(),
-    deletedBy,
-    deletionReason: trimmedReason || undefined,
-  };
-  await saveContact(tenant, updated);
-  await invalidateDuplicateScanCache();
-  return true;
+  return runInTransaction(async () => {
+    const tenant = getRequestTenant();
+    if (!tenant) return false;
+    const existing = await findContactById(tenant, id);
+    if (!existing || existing.deletedAt) {
+      return false;
+    }
+    const trimmedReason = deletionReason?.trim();
+    const updated: Contact = {
+      ...existing,
+      deletedAt: new Date().toISOString(),
+      deletedBy,
+      deletionReason: trimmedReason || undefined,
+    };
+    await saveContact(tenant, updated);
+    await invalidateDuplicateScanCache();
+    return true;
+  });
 }
 
 export async function bulkSoftDeleteContacts(
@@ -325,36 +358,38 @@ export async function bulkSoftDeleteContacts(
   deletedBy: string,
   deletionReason?: string,
 ): Promise<{ succeeded: number; failed: number }> {
-  const tenant = getRequestTenant();
-  if (!tenant) return { succeeded: 0, failed: ids.length };
-  let succeeded = 0;
-  let failed = 0;
-  const now = new Date().toISOString();
-  const trimmedReason = deletionReason?.trim();
-  const toSave: Contact[] = [];
+  return runInTransaction(async () => {
+    const tenant = getRequestTenant();
+    if (!tenant) return { succeeded: 0, failed: ids.length };
+    let succeeded = 0;
+    let failed = 0;
+    const now = new Date().toISOString();
+    const trimmedReason = deletionReason?.trim();
+    const toSave: Contact[] = [];
 
-  const existingContacts = await findContactsByIds(tenant, ids);
-  const existingMap = new Map(existingContacts.map((c) => [c.id, c]));
+    const existingContacts = await findContactsByIds(tenant, ids);
+    const existingMap = new Map(existingContacts.map((c) => [c.id, c]));
 
-  for (const id of ids) {
-    const existing = existingMap.get(id);
-    if (existing && !existing.deletedAt) {
-      const updated: Contact = {
-        ...existing,
-        deletedAt: now,
-        deletedBy,
-        deletionReason: trimmedReason || undefined,
-      };
-      toSave.push(updated);
-      succeeded += 1;
-    } else {
-      failed += 1;
+    for (const id of ids) {
+      const existing = existingMap.get(id);
+      if (existing && !existing.deletedAt) {
+        const updated: Contact = {
+          ...existing,
+          deletedAt: now,
+          deletedBy,
+          deletionReason: trimmedReason || undefined,
+        };
+        toSave.push(updated);
+        succeeded += 1;
+      } else {
+        failed += 1;
+      }
     }
-  }
 
-  if (toSave.length > 0) {
-    await bulkSaveContacts(tenant, toSave);
-    await invalidateDuplicateScanCache();
-  }
-  return { succeeded, failed };
+    if (toSave.length > 0) {
+      await bulkSaveContacts(tenant, toSave);
+      await invalidateDuplicateScanCache();
+    }
+    return { succeeded, failed };
+  });
 }

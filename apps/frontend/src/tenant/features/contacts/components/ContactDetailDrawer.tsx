@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useId } from "react";
+import { useState, useEffect, useMemo, useRef, useId, useCallback, ChangeEvent, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Edit2, MessageCircle, MessageSquare, Phone, Mail,
@@ -36,6 +36,7 @@ import {
   resolveSocialPlatformLabel,
 } from "@/lib/contacts/contactI18n";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { apiJson } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -103,7 +104,7 @@ interface FieldGroupCardProps {
   formatValue: (field: { key: string; type: string }) => string | null;
 }
 
-function FieldGroupCard({ group, fields, formatValue }: FieldGroupCardProps): React.JSX.Element | null {
+function FieldGroupCard({ group, fields, formatValue }: FieldGroupCardProps): JSX.Element | null {
   const validFields = fields.map((f) => ({ field: f, val: formatValue(f) })).filter((item) => Boolean(item.val));
   if (validFields.length === 0) return null;
 
@@ -141,7 +142,7 @@ export default function ContactDetailDrawer({
   onEmail,
   allContacts = [],
   onUpdateContact,
-}: ContactDetailDrawerProps): React.JSX.Element {
+}: ContactDetailDrawerProps): JSX.Element {
   const { enabledTabIds, isTabFieldEnabled, fieldConfig, fields, phoneLabels, emailLabels, addressLabels, socialPlatforms } = useContactConfig();
   const { user } = useAuth();
   const { role } = usePermissions();
@@ -151,14 +152,14 @@ export default function ContactDetailDrawer({
   const noteInputId = useId();
   const [contactState, setContactState] = useState<Contact>(initialContact);
   const [noteText, setNoteText] = useState<string>("");
-  const [userMessages, setUserMessages] = useState<{
+  const userMessages = useLiveCollection<{
     id: string;
     userId: string;
     contactId: string | number;
     channel: string;
     body: string;
     sentAt: string;
-  }[]>([]);
+  }>(user?.id ? `messages_u:${user.id}` : "", [], { enabled: !!user?.id, serverSync: false });
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -203,28 +204,9 @@ export default function ContactDetailDrawer({
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     handleFiles(e.target.files);
   };
-
-  useEffect(() => {
-    if (!user?.id) {
-      setUserMessages([]);
-      return;
-    }
-    const dbKey = `messages_u:${user.id}`;
-    const load = () => {
-      try {
-        const raw = localStorage.getItem(dbKey);
-        setUserMessages(raw ? (JSON.parse(raw) as typeof userMessages) : []);
-      } catch {
-        setUserMessages([]);
-      }
-    };
-    load();
-    window.addEventListener("local-database-update", load);
-    return () => window.removeEventListener("local-database-update", load);
-  }, [user?.id]);
 
   const detailTabs = useMemo(() => {
     const tabsFromConfig = fieldConfig.detailTabs || [];
@@ -312,7 +294,7 @@ export default function ContactDetailDrawer({
     return acc;
   }, {});
 
-  const formatFieldValue = React.useCallback((field: { key: string; type: string }): string | null => {
+  const formatFieldValue = useCallback((field: { key: string; type: string }): string | null => {
     const fieldValue = (contactState as Record<string, unknown>)[field.key];
     if (fieldValue === undefined || fieldValue === null || fieldValue === "" || fieldValue === false) return null;
     if (Array.isArray(fieldValue)) return fieldValue.length ? (fieldValue as unknown[]).join(", ") : null;
@@ -328,7 +310,7 @@ export default function ContactDetailDrawer({
   const primaryPhone = enabledTabIds.has("phones") ? getPrimaryPhone(contactState) : null;
   const primaryEmail = enabledTabIds.has("emails") ? getPrimaryEmail(contactState) : null;
 
-  const handleAddNote = (event: React.FormEvent) => {
+  const handleAddNote = (event: FormEvent) => {
     event.preventDefault();
     const trimmed = noteText.trim();
     if (!trimmed) return;
@@ -726,7 +708,7 @@ export default function ContactDetailDrawer({
                     type="text"
                     placeholder={t('contacts.detail.logEventOrNote')}
                     value={noteText}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNoteText(e.target.value)}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setNoteText(e.target.value)}
                     className="flex-1 px-4 py-3 rounded-2xl"
                   />
                   <Button

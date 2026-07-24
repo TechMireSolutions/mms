@@ -57,7 +57,7 @@ import { runMigration033 } from './migrations/033_migrate_logs_to_tables.js';
 import { deleteAuthArtifactsForWorkspace, purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
 import { initPlatformSettings } from '../services/platform/platformSettingsService.js';
-import { setDb } from './dbClient.js';
+import { setDb, getDb } from './dbClient.js';
 
 // ---------------------------------------------------------------------------
 // Transaction propagation
@@ -583,7 +583,7 @@ export async function runInTransaction<T>(cb: () => Promise<T>): Promise<T> {
   const existing = txStorage.getStore();
   if (existing) return cb();
 
-  return await _rootDb.transaction(async (tx) => {
+  return await getDb().transaction(async (tx) => {
     return await txStorage.run(tx, cb);
   });
 }

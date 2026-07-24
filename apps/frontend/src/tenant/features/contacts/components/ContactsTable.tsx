@@ -99,7 +99,7 @@ export default function ContactsTable({
     switch (col.id) {
       case "name":
         return (
-          <td key="name" className="px-4 py-3 sticky left-10 z-10 bg-card group-hover:bg-muted/40 transition-colors border-r border-border/30">
+          <td key="name" className="px-4 py-3 sticky left-12 z-10 bg-card group-hover:bg-muted/40 transition-colors border-r border-border/30">
             <div className="flex items-center gap-3">
               <UserAvatar
                 id={contact.id}
@@ -198,7 +198,7 @@ export default function ContactsTable({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border bg-muted/30">
-            <th className="w-10 px-4 py-3 sticky left-0 z-20 bg-muted/95 backdrop-blur-md border-r border-border/30">
+            <th className="w-12 min-w-12 px-4 py-3 sticky left-0 z-20 bg-muted/95 backdrop-blur-md border-r border-border/30">
               <Checkbox
                 checked={someSelected ? "indeterminate" : allSelected}
                 onCheckedChange={() => onSelectAll()}
@@ -209,7 +209,7 @@ export default function ContactsTable({
             {columns.map((col) => {
               const sortFieldKey = col.sortField || col.id;
               const isNameCol = col.id === "name";
-              const stickyClass = isNameCol ? "sticky left-10 z-20 bg-muted/95 backdrop-blur-md border-r border-border/30" : "";
+              const stickyClass = isNameCol ? "sticky left-12 z-20 bg-muted/95 backdrop-blur-md border-r border-border/30" : "";
               return sortFieldKey ? (
                 <TH key={col.id} field={sortFieldKey} className={stickyClass}>{col.label}</TH>
               ) : (
@@ -232,7 +232,7 @@ export default function ContactsTable({
                   transition={{ duration: 0.1 }}
                   className={`hover:bg-muted/20 transition-colors group ${isSelected ? "bg-primary/[0.02]" : ""}`}
                 >
-                  <td className="px-4 py-3 sticky left-0 z-20 bg-card group-hover:bg-muted/40 transition-colors border-r border-border/30">
+                  <td className="w-12 min-w-12 px-4 py-3 sticky left-0 z-20 bg-card group-hover:bg-muted/40 transition-colors border-r border-border/30">
                     <Checkbox
                       checked={isSelected}
                       onCheckedChange={() => onSelect(contact.id)}

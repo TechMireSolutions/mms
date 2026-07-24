@@ -1,7 +1,9 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, AlertTriangle, GitMerge, Check, Loader2 } from "lucide-react";
+import { notify } from "@/lib/notify";
+import { reportClientError } from "@/lib/clientErrorReporting";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -90,9 +92,10 @@ interface MergePreviewProps {
   keepIndex: number;
   onClose: () => void;
   onConfirm: () => void;
+  confirming?: boolean;
 }
 
-function MergePreview({ pair, keepIndex, onClose, onConfirm }: MergePreviewProps): React.JSX.Element {
+function MergePreview({ pair, keepIndex, onClose, onConfirm, confirming }: MergePreviewProps): React.JSX.Element {
   const { prefs } = useContactConfig();
   const { t } = useTranslation();
   const emptyDash = t('contacts.table.emptyDash');
@@ -176,10 +179,15 @@ function MergePreview({ pair, keepIndex, onClose, onConfirm }: MergePreviewProps
           <Button
             type="button"
             onClick={onConfirm}
+            disabled={confirming}
             className="flex items-center gap-2 px-5 min-h-[44px] font-semibold"
           >
-            <GitMerge className="w-4 h-4" />
-            <span>{t('contacts.duplicates.confirmMerge')}</span>
+            {confirming ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <GitMerge className="w-4 h-4" />
+            )}
+            <span>{confirming ? t('common.loading') : t('contacts.duplicates.confirmMerge')}</span>
           </Button>
         </div>
       </motion.div>
@@ -190,7 +198,7 @@ function MergePreview({ pair, keepIndex, onClose, onConfirm }: MergePreviewProps
 interface DuplicateDetectionProps {
   contacts?: Contact[];
   onClose: () => void;
-  onMerge: (keepId: string | number, deleteId: string | number, mergedData: Contact) => void;
+  onMerge: (keepId: string | number, deleteId: string | number, mergedData: Contact) => Promise<void>;
   canWrite?: boolean;
 }
 
@@ -219,8 +227,9 @@ export default function DuplicateDetection({
   const [keepIndex, setKeepIndex] = useState<Record<string, number>>({});
   const [merging, setMerging] = useState<DuplicatePair | null>(null);
   const [loadedPairs, setLoadedPairs] = useState<DuplicatePair[]>([]);
+  const [confirming, setConfirming] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!serverPairs?.pairs) return;
     const mappedPairs = serverPairs.pairs.map((pair) => ({
       id: pair.id,
@@ -254,8 +263,8 @@ export default function DuplicateDetection({
     return detectedPairs.filter((pair) => !dismissedPairIds.has(pair.id) && !mergedPairIds.has(pair.id));
   }, [detectedPairs, dismissedPairIds, mergedPairIds]);
 
-  const handleMergeConfirm = (): void => {
-    if (!merging) return;
+  const handleMergeConfirm = async (): Promise<void> => {
+    if (!merging || confirming) return;
     const pair = merging;
     const selectedKeepIndex = keepIndex[pair.id] ?? 0;
     const keep = pair.contacts[selectedKeepIndex];
@@ -263,13 +272,21 @@ export default function DuplicateDetection({
 
     const mergedRaw = mergeContacts(keep, other);
     const mergedResult = applyTitleCaseToContact(mergedRaw as Record<string, unknown>) as Contact;
-    onMerge(keep.id, other.id, mergedResult);
-    setMergedPairIds((prev) => {
-      const updatedMergedPairIds = new Set(prev);
-      updatedMergedPairIds.add(pair.id);
-      return updatedMergedPairIds;
-    });
-    setMerging(null);
+    setConfirming(true);
+    try {
+      await onMerge(keep.id, other.id, mergedResult);
+      setMergedPairIds((prev) => {
+        const updatedMergedPairIds = new Set(prev);
+        updatedMergedPairIds.add(pair.id);
+        return updatedMergedPairIds;
+      });
+      setMerging(null);
+    } catch (err) {
+      notify.error(t('contacts.saveFailed'));
+      reportClientError(err, { scope: 'contacts.duplicate_merge_confirm' });
+    } finally {
+      setConfirming(false);
+    }
   };
 
   const handleDismiss = (pairId: string): void => {
@@ -434,6 +451,7 @@ export default function DuplicateDetection({
             keepIndex={keepIndex[merging.id] ?? 0}
             onClose={() => setMerging(null)}
             onConfirm={handleMergeConfirm}
+            confirming={confirming}
           />
         )}
       </AnimatePresence>

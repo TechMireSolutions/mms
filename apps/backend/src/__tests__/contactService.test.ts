@@ -33,6 +33,10 @@ vi.mock('../services/contactConfigService.js', () => ({
   loadContactFieldConfig: vi.fn().mockResolvedValue(null),
 }));
 
+vi.mock('../db/database.js', () => ({
+  runInTransaction: (cb: () => unknown) => cb(),
+}));
+
 import { updateContactById, upsertContact } from '../services/contactService.js';
 
 function contact(overrides: Partial<Contact>): Contact {

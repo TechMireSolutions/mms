@@ -1,4 +1,4 @@
-import React, { useMemo, useState, lazy, Suspense } from "react";
+import { useMemo, useState, lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import { Contact, CONTACTS_MODULE_CONTRACT, type AppTranslationKey } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -9,7 +9,7 @@ import { shouldOpenContactsSyncSetup } from "@/lib/contacts/googleContactsOAuth"
 const ContactsSetupPanel = lazy(() => import("@/tenant/features/contacts/components/ContactsSetupPanel"));
 const ContactSyncPanel = lazy(() => import("@/tenant/features/contacts/components/ContactSyncPanel"));
 
-function LazyFallback(): React.JSX.Element {
+function LazyFallback(): JSX.Element {
   const { t } = useTranslation();
   return (
     <div className="flex items-center justify-center py-12" role="status" aria-live="polite">
@@ -37,7 +37,7 @@ export default function ContactsSettingsPanel({
   onImport,
   canWrite,
   canEditSetup,
-}: ContactsSettingsPanelProps): React.JSX.Element {
+}: ContactsSettingsPanelProps): JSX.Element {
   const { t } = useTranslation();
   const { fieldConfig, updateConfig } = useContactConfig();
 
@@ -70,7 +70,7 @@ export default function ContactsSettingsPanel({
         onChange={setSub}
       />
       <Suspense fallback={<LazyFallback />}>
-        {sub === "fields" && !canEditSetup ? (
+        {!canEditSetup && (sub === "fields" || sub === "preferences") ? (
           <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
             {t("contacts.setupReadOnly")}
           </p>
@@ -78,11 +78,6 @@ export default function ContactsSettingsPanel({
         {sub === "fields" && canEditSetup && (
           <ContactsSetupPanel config={fieldConfig} onConfigChange={updateConfig} mode="fields" />
         )}
-        {sub === "preferences" && !canEditSetup ? (
-          <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
-            {t("contacts.setupReadOnly")}
-          </p>
-        ) : null}
         {sub === "preferences" && canEditSetup && (
           <ContactsSetupPanel config={fieldConfig} onConfigChange={updateConfig} mode="preferences" />
         )}
