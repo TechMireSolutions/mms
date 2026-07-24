@@ -1192,36 +1192,34 @@ export default function ContactForm({
     }
   };
 
+  const footerCounts = useMemo(() => {
+    const filledPhones = (contactDraft.phones || []).filter(p => (p.number || "").trim()).length;
+    const filledEmails = (contactDraft.emails || []).filter(e => (e.address || "").trim()).length;
+    const filledEmergency = (contactDraft.emergencyContacts || []).filter(e => e.contactId).length;
+    return { filledPhones, filledEmails, filledEmergency };
+  }, [contactDraft.phones, contactDraft.emails, contactDraft.emergencyContacts]);
+
   const footerStart = contactDraft.firstName ? (
     <div className="flex flex-wrap items-center gap-2.5 text-xs">
       <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60">
         {getDisplayName(contactDraft)}
       </span>
       <div className="flex items-center gap-1.5">
-        {(() => {
-          const filledPhones = (contactDraft.phones || []).filter(p => (p.number || "").trim()).length;
-          const filledEmails = (contactDraft.emails || []).filter(e => (e.address || "").trim()).length;
-          const filledEmergency = (contactDraft.emergencyContacts || []).filter(e => e.contactId).length;
-          return (
-            <>
-              {filledPhones > 0 && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px]">
-                  {filledPhones} {t("contacts.form.phonesLabel")}
-                </span>
-              )}
-              {filledEmails > 0 && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold border border-amber-500/20 text-[10px]">
-                  {filledEmails} {t("contacts.form.emailsLabel")}
-                </span>
-              )}
-              {filledEmergency > 0 && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold border border-rose-500/20 text-[10px]">
-                  {filledEmergency} {t("contacts.detail.emergency")}
-                </span>
-              )}
-            </>
-          );
-        })()}
+        {footerCounts.filledPhones > 0 && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px]">
+            {footerCounts.filledPhones} {t("contacts.form.phonesLabel")}
+          </span>
+        )}
+        {footerCounts.filledEmails > 0 && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold border border-amber-500/20 text-[10px]">
+            {footerCounts.filledEmails} {t("contacts.form.emailsLabel")}
+          </span>
+        )}
+        {footerCounts.filledEmergency > 0 && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold border border-rose-500/20 text-[10px]">
+            {footerCounts.filledEmergency} {t("contacts.detail.emergency")}
+          </span>
+        )}
       </div>
     </div>
   ) : (

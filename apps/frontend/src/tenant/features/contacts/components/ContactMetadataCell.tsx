@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { User, CheckCircle2, MapPin } from "lucide-react";
 import {
   Contact,
@@ -19,6 +19,7 @@ export interface ContactMetadataCellProps {
   contact: Contact;
   prefs: Pick<ContactPreferences, "showDetailedSolarAge" | "showLunarDob" | "showDetailedLunarAge">;
   allContacts?: Contact[];
+  contactsMap?: Map<string, Contact> | null;
   variant?: "table" | "card";
 }
 
@@ -31,18 +32,20 @@ export function ContactMetadataCell({
   contact,
   prefs,
   allContacts = [],
+  contactsMap: externalContactsMap,
   variant = "table",
 }: ContactMetadataCellProps): React.JSX.Element {
   const { t, language } = useTranslation();
 
-  const contactsMap = React.useMemo(() => {
+  const contactsMap = useMemo(() => {
+    if (externalContactsMap !== undefined) return externalContactsMap;
     if (!allContacts || allContacts.length === 0) return null;
     const map = new Map<string, Contact>();
     for (const c of allContacts) {
       if (c.id) map.set(String(c.id), c);
     }
     return map;
-  }, [allContacts]);
+  }, [allContacts, externalContactsMap]);
 
   const renderDash = (): React.ReactNode => (
     <span className="text-muted-foreground/40">{t("contacts.table.emptyDash")}</span>

@@ -5,6 +5,8 @@ import {
   getPrimaryPhone,
   getPrimaryEmail,
   getPrimaryAddress,
+  getDisplayName,
+  hasWhatsApp,
   resolveModuleTierTab,
   contactMatchesSearch,
   filterActiveContacts,
@@ -31,6 +33,16 @@ import {
 } from "@/lib/contacts/contactsWorkDrillDown";
 import { notify } from "@/lib/notify";
 import { useContactMutations, useContactsCollectionState, useContactsPaginated } from "@/tenant/features/contacts/hooks/useContacts";
+
+function getContactSortValue(contact: Contact, field: string): string | number {
+  if (field === "name") return getDisplayName(contact).toLowerCase();
+  if (field === "phone") return getPrimaryPhone(contact) || "";
+  if (field === "email") return getPrimaryEmail(contact) || "";
+  const val = (contact as Record<string, unknown>)[field];
+  if (typeof val === "number") return val;
+  if (typeof val === "string") return val.toLowerCase();
+  return String(val || "").toLowerCase();
+}
 
 export interface UseContactsPageStateOptions {
   prefs: {
@@ -344,11 +356,8 @@ export function useContactsPageState({
       return true;
     });
     return [...list].sort((a, b) => {
-      const recA = a as Record<string, unknown>;
-      const recB = b as Record<string, unknown>;
-      const av = typeof recA[sortField] === "number" ? (recA[sortField] as number) : String(recA[sortField] || "").toLowerCase();
-      const bv = typeof recB[sortField] === "number" ? (recB[sortField] as number) : String(recB[sortField] || "").toLowerCase();
-
+      const av = getContactSortValue(a, sortField);
+      const bv = getContactSortValue(b, sortField);
       if (typeof av === "number" && typeof bv === "number") {
         return sortDir === "asc" ? av - bv : bv - av;
       }
@@ -359,6 +368,14 @@ export function useContactsPageState({
   const workContacts = useMemo(() => {
     return useServerWork ? (workPageData?.contacts ?? []) : filtered;
   }, [useServerWork, workPageData?.contacts, filtered]);
+
+  const selectedTargets = useMemo(() => {
+    if (selected.length === 0) return { waTargets: [], smsReady: [] };
+    const targets = workContacts.filter((contact) => selected.includes(contact.id));
+    const waTargets = targets.filter((contact) => hasWhatsApp(contact));
+    const smsReady = targets.filter((contact) => Boolean(getPrimaryPhone(contact)));
+    return { waTargets, smsReady };
+  }, [selected, workContacts]);
 
   const shownCount = useServerWork && workPageData ? workPageData.total : filtered.length;
   const workTruncated = useServerWork && Boolean(workPageData?.hasMore);
@@ -602,6 +619,18 @@ export function useContactsPageState({
     [canDelete, contacts, restoreContactAction, t],
   );
 
+  const handleWhatsApp = useCallback((targets: Contact[]) => {
+    setMessagingTarget({ channel: "whatsapp", contacts: targets });
+  }, []);
+
+  const handleSms = useCallback((targets: Contact[]) => {
+    setMessagingTarget({ channel: "sms", contacts: targets });
+  }, []);
+
+  const handleEmail = useCallback((targets: Contact[]) => {
+    setMessagingTarget({ channel: "email", contacts: targets });
+  }, []);
+
   return {
     t,
     visibleTopTabs,
@@ -626,6 +655,9 @@ export function useContactsPageState({
     setShowDuplicates,
     messagingTarget,
     setMessagingTarget,
+    handleWhatsApp,
+    handleSms,
+    handleEmail,
     hasActiveFilters,
     activeFilterCount,
     defaultCountry,
@@ -668,6 +700,7 @@ export function useContactsPageState({
     listPage,
     setListPage,
     workContacts,
+    selectedTargets,
     shownCount,
     workTruncated,
   };

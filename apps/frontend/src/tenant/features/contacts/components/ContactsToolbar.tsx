@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useCallback } from "react";
 import { SlidersHorizontal, RefreshCw, Archive, Table, LayoutGrid } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import {
@@ -29,12 +29,6 @@ interface ContactsToolbarProps {
   onViewModeChange?: (mode: "table" | "cards") => void;
 }
 
-/**
- * ContactsToolbar component rendering a search bar,
- * advanced filter/sorting menus, and column customization.
- * @param props Component properties.
- * @returns React element.
- */
 export default function ContactsToolbar({
   search,
   onSearchChange,
@@ -54,7 +48,7 @@ export default function ContactsToolbar({
   const { availableColumns, genders, systemSortOptions, columnRegistry, updateUserColumnLayout } = useContactConfig();
   const { t } = useTranslation();
 
-  const sortOptions = React.useMemo(() => {
+  const sortOptions = useMemo(() => {
     const dynamicSorts = availableColumns
       .filter((column) => column.sortField)
       .map((column) => ({
@@ -72,11 +66,11 @@ export default function ContactsToolbar({
     return combined;
   }, [availableColumns, systemSortOptions]);
 
-  const handleResetColumnLayout = React.useCallback(() => {
+  const handleResetColumnLayout = useCallback(() => {
     updateUserColumnLayout(DEFAULT_COLUMN_REGISTRY);
   }, [updateUserColumnLayout]);
 
-  const columnCustomizerLabels = React.useMemo(
+  const columnCustomizerLabels = useMemo(
     () => ({
       trigger: t("contacts.columns"),
       title: t("contacts.columns"),

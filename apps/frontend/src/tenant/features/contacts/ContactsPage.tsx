@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserPlus, AlertTriangle, Download, Users, UserX, Loader2, Trash2, X, MessageCircle, MessageSquare, RotateCcw, RefreshCw } from "lucide-react";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { Contact, CONTACTS_MODULE_CONTRACT, hasWhatsApp, getPrimaryPhone, getPrimaryEmail, getDisplayName } from "@mms/shared";
+import { Contact, CONTACTS_MODULE_CONTRACT, getDisplayName, getPrimaryPhone, getPrimaryEmail } from "@mms/shared";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useContactsByIds, CONTACTS_DUPLICATES_QUERY_KEY } from "@/tenant/features/contacts/hooks/useContacts";
 import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
@@ -90,6 +90,9 @@ function ContactsInner() {
     setShowDuplicates,
     messagingTarget,
     setMessagingTarget,
+    handleWhatsApp,
+    handleSms,
+    handleEmail,
     hasActiveFilters,
     activeFilterCount,
     defaultCountry,
@@ -130,6 +133,7 @@ function ContactsInner() {
     isWorkPageFetching,
     setListPage,
     workContacts,
+    selectedTargets,
     shownCount,
     workTruncated,
   } = state;
@@ -183,26 +187,6 @@ function ContactsInner() {
     }
     setShowDuplicates(true);
   }, [openingDuplicates, shownCount, queryClient, t, setShowDuplicates]);
-
-  const handleWhatsApp = useCallback((targets: Contact[]) => {
-    setMessagingTarget({ channel: "whatsapp", contacts: targets });
-  }, [setMessagingTarget]);
-
-  const handleSms = useCallback((targets: Contact[]) => {
-    setMessagingTarget({ channel: "sms", contacts: targets });
-  }, [setMessagingTarget]);
-
-  const handleEmail = useCallback((targets: Contact[]) => {
-    setMessagingTarget({ channel: "email", contacts: targets });
-  }, [setMessagingTarget]);
-
-  const selectedTargets = useMemo(() => {
-    if (selected.length === 0) return { waTargets: [], smsReady: [] };
-    const targets = workContacts.filter((contact) => selected.includes(contact.id));
-    const waTargets = targets.filter((contact) => hasWhatsApp(contact));
-    const smsReady = targets.filter((contact) => Boolean(getPrimaryPhone(contact)));
-    return { waTargets, smsReady };
-  }, [selected, workContacts]);
 
   const commonDirectoryProps = useMemo(() => ({
     contacts: workContacts,

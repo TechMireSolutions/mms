@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronUp,
@@ -16,7 +16,7 @@ import {
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatContactDobWithAge, resolveContactPhoneDisplay } from "@/lib/contacts/contactI18n";
+import { formatContactGenderLabel, resolveContactPhoneDisplay } from "@/lib/contacts/contactI18n";
 import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
 import { UserAvatar } from "@/components/ui/UserAvatar";
@@ -77,6 +77,15 @@ export default function ContactsTable({
   const { language } = useGlobalSettings();
   const { t } = useTranslation();
 
+  const contactsMap = useMemo(() => {
+    if (!allContacts || allContacts.length === 0) return null;
+    const map = new Map<string, Contact>();
+    for (const c of allContacts) {
+      if (c.id) map.set(String(c.id), c);
+    }
+    return map;
+  }, [allContacts]);
+
   const allSelected = contacts.length > 0 && selected.length === contacts.length;
   const someSelected = selected.length > 0 && selected.length < contacts.length;
 
@@ -117,10 +126,12 @@ export default function ContactsTable({
                 >
                   {getDisplayName(contact)}
                 </Button>
-                <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap leading-normal">
-                  {contact.gender && <User className="w-3.5 h-3.5 text-muted-foreground inline" />}
-                  {contact.dob && <span>{formatContactDobWithAge(contact.dob, t, { showDetailedSolarAge: prefs.showDetailedSolarAge, language })}</span>}
-                </p>
+                {contact.gender && (
+                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap leading-normal">
+                    <User className="w-3.5 h-3.5 text-muted-foreground inline" />
+                    <span>{formatContactGenderLabel(contact.gender, t)}</span>
+                  </p>
+                )}
                 {showArchived && contact.deletionReason && (
                   <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
                     {t('contacts.deletionReasonLabel')}: {contact.deletionReason}
@@ -185,6 +196,7 @@ export default function ContactsTable({
             contact={contact}
             prefs={prefs}
             allContacts={allContacts}
+            contactsMap={contactsMap}
             variant="table"
           />
         );

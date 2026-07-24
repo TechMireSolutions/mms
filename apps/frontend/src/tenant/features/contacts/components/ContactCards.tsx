@@ -12,7 +12,7 @@ import {
   hasWhatsApp,
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
-import { formatContactDobWithAge, resolveContactPhoneDisplay, getContactAccentBarClass, formatTelHref } from "@/lib/contacts/contactI18n";
+import { formatContactGenderLabel, resolveContactPhoneDisplay, getContactAccentBarClass, formatTelHref } from "@/lib/contacts/contactI18n";
 import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -93,6 +93,15 @@ export default function ContactCards({
     () => new Set(columns.map((col) => col.id)),
     [columns]
   );
+
+  const contactsMap = useMemo(() => {
+    if (!allContacts || allContacts.length === 0) return null;
+    const map = new Map<string, Contact>();
+    for (const c of allContacts) {
+      if (c.id) map.set(String(c.id), c);
+    }
+    return map;
+  }, [allContacts]);
 
   const showPhonePill = !columns.length || visibleColumnIds.has("phone");
   const showEmailPill = !columns.length || visibleColumnIds.has("email");
@@ -181,9 +190,9 @@ export default function ContactCards({
                     <h4 className="text-sm font-black text-foreground tracking-tight truncate group-hover:text-primary transition-colors">
                       {displayName}
                     </h4>
-                    {contact.dob && (
-                      <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                        {formatContactDobWithAge(contact.dob, t, { showDetailedSolarAge: prefs.showDetailedSolarAge, language })}
+                    {contact.gender && (
+                      <p className="text-[11px] font-semibold text-muted-foreground mt-0.5 truncate capitalize">
+                        {formatContactGenderLabel(contact.gender, t)}
                       </p>
                     )}
                   </div>
@@ -229,7 +238,7 @@ export default function ContactCards({
                           {col.label}
                         </span>
                         <div className="text-xs font-semibold text-foreground truncate mt-0.5">
-                          <ContactMetadataCell colId={col.id} contact={contact} prefs={prefs} allContacts={allContacts} variant="card" />
+                          <ContactMetadataCell colId={col.id} contact={contact} prefs={prefs} allContacts={allContacts} contactsMap={contactsMap} variant="card" />
                         </div>
                       </div>
                     );
