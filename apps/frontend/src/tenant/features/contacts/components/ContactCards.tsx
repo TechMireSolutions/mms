@@ -12,11 +12,10 @@ import {
   hasWhatsApp,
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
-import { formatContactGenderLabel, resolveContactPhoneDisplay, getContactAccentBarClass, formatTelHref } from "@/lib/contacts/contactI18n";
+import { buildContactsMap, formatContactGenderLabel, resolveContactPhoneDisplay, getContactAccentBarClass, formatTelHref } from "@/lib/contacts/contactI18n";
 import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -47,7 +46,6 @@ interface ContactCardsProps {
   columns?: ColumnConfig[];
   onSelectAll?: () => void;
   allSelected?: boolean;
-  onUpdateContact?: (contact: Contact) => Promise<void>;
 }
 
 const containerVariants = {
@@ -86,7 +84,6 @@ export default function ContactCards({
   allSelected = false,
 }: ContactCardsProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { language } = useGlobalSettings();
   const { prefs, countryCodesMap } = useContactConfig();
 
   const visibleColumnIds = useMemo(
@@ -94,14 +91,7 @@ export default function ContactCards({
     [columns]
   );
 
-  const contactsMap = useMemo(() => {
-    if (!allContacts || allContacts.length === 0) return null;
-    const map = new Map<string, Contact>();
-    for (const c of allContacts) {
-      if (c.id) map.set(String(c.id), c);
-    }
-    return map;
-  }, [allContacts]);
+  const contactsMap = useMemo(() => buildContactsMap(allContacts), [allContacts]);
 
   const showPhonePill = !columns.length || visibleColumnIds.has("phone");
   const showEmailPill = !columns.length || visibleColumnIds.has("email");

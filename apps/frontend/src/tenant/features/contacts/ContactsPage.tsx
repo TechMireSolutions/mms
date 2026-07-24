@@ -3,9 +3,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserPlus, AlertTriangle, Download, Users, UserX, Loader2, Trash2, X, MessageCircle, MessageSquare, RotateCcw, RefreshCw } from "lucide-react";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { Contact, CONTACTS_MODULE_CONTRACT, getDisplayName, getPrimaryPhone, getPrimaryEmail } from "@mms/shared";
+import { CONTACTS_MODULE_CONTRACT, getDisplayName, getPrimaryPhone, getPrimaryEmail } from "@mms/shared";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { useContactsByIds, CONTACTS_DUPLICATES_QUERY_KEY } from "@/tenant/features/contacts/hooks/useContacts";
+import { CONTACTS_DUPLICATES_QUERY_KEY } from "@/tenant/features/contacts/hooks/useContacts";
 import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
 import { useContactsPageState } from "@/tenant/features/contacts/hooks/useContactsPageState";
 import { useContactConfig, useContactColumns } from "@/lib/contexts/ContactConfigContext";
@@ -26,7 +26,6 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { TableSkeleton } from "@/components/ui/LoadingState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { startContactsDuplicateScan } from "@/lib/backgroundJobs/startServerContactsCsvExport";
-import { collectLinkedContactIds, mergeContactLinkDirectory } from "@/lib/contacts/contactLinkIds";
 import { notify } from "@/lib/notify";
 import { useGoogleContactsOAuthListener } from "@/lib/contacts/googleContactsOAuthListener";
 
@@ -40,7 +39,6 @@ const ContactDetailDrawer = lazy(() => import("@/tenant/features/contacts/compon
 
 function ContactsInner() {
   const queryClient = useQueryClient();
-  const [viewContact, setViewContact] = useState<Contact | null>(null);
   const {
     canWrite,
     canDelete,
@@ -86,6 +84,8 @@ function ContactsInner() {
     setShowForm,
     editContact,
     setEditContact,
+    viewContact,
+    setViewContact,
     showDuplicates,
     setShowDuplicates,
     messagingTarget,
@@ -133,6 +133,7 @@ function ContactsInner() {
     isWorkPageFetching,
     setListPage,
     workContacts,
+    allContactsForLinks,
     selectedTargets,
     shownCount,
     workTruncated,
@@ -148,23 +149,6 @@ function ContactsInner() {
   useGoogleContactsOAuthListener(useCallback(() => {
     setActiveTab("setup");
   }, [setActiveTab]));
-
-  const linkSourceContacts = useMemo(() => {
-    const rows = [...workContacts];
-    if (editContact) rows.push(editContact);
-    return rows;
-  }, [workContacts, editContact]);
-  const linkedContactIds = useMemo(
-    () => collectLinkedContactIds(linkSourceContacts),
-    [linkSourceContacts],
-  );
-  const { data: resolvedLinkContacts = [] } = useContactsByIds(
-    needsFullContactsList ? [] : linkedContactIds,
-  );
-  const allContactsForLinks = useMemo(() => {
-    if (needsFullContactsList) return contacts;
-    return mergeContactLinkDirectory(linkSourceContacts, resolvedLinkContacts);
-  }, [needsFullContactsList, contacts, linkSourceContacts, resolvedLinkContacts]);
 
   const [openingDuplicates, setOpeningDuplicates] = useState(false);
 

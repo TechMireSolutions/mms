@@ -231,6 +231,17 @@ export function resolveSyncFieldLabel(
   return key ? t(key as AppTranslationKey) : field;
 }
 
+/** Builds an id-to-Contact Map efficiently from an array of contacts. */
+export function buildContactsMap(contacts?: Contact[]): Map<string, Contact> | null {
+  if (!contacts || contacts.length === 0) return null;
+  const map = new Map<string, Contact>();
+  for (const c of contacts) {
+    if (c.id) map.set(String(c.id), c);
+  }
+  return map;
+}
+
+
 
 
 

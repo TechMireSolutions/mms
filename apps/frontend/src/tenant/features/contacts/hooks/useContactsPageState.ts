@@ -5,7 +5,6 @@ import {
   getPrimaryPhone,
   getPrimaryEmail,
   getPrimaryAddress,
-  getDisplayName,
   hasWhatsApp,
   resolveModuleTierTab,
   contactMatchesSearch,
@@ -31,18 +30,15 @@ import {
   consumeContactsWorkDrillDown,
   type ContactsWorkDrillDown,
 } from "@/lib/contacts/contactsWorkDrillDown";
+import { collectLinkedContactIds, mergeContactLinkDirectory } from "@/lib/contacts/contactLinkIds";
+import { sortContacts } from "@/lib/contacts/contactSortUtils";
 import { notify } from "@/lib/notify";
-import { useContactMutations, useContactsCollectionState, useContactsPaginated } from "@/tenant/features/contacts/hooks/useContacts";
-
-function getContactSortValue(contact: Contact, field: string): string | number {
-  if (field === "name") return getDisplayName(contact).toLowerCase();
-  if (field === "phone") return getPrimaryPhone(contact) || "";
-  if (field === "email") return getPrimaryEmail(contact) || "";
-  const val = (contact as Record<string, unknown>)[field];
-  if (typeof val === "number") return val;
-  if (typeof val === "string") return val.toLowerCase();
-  return String(val || "").toLowerCase();
-}
+import {
+  useContactMutations,
+  useContactsCollectionState,
+  useContactsPaginated,
+  useContactsByIds,
+} from "@/tenant/features/contacts/hooks/useContacts";
 
 export interface UseContactsPageStateOptions {
   prefs: {
@@ -95,9 +91,10 @@ export function useContactsPageState({
         } else {
           await updateContact.mutateAsync({ id: String(contact.id), contact });
         }
-      } catch {
+      } catch (err) {
         saveFailed();
-        throw new Error("contact_save_failed");
+        reportClientError(err, { scope: "contacts.save_contact" });
+        throw err;
       }
     },
     [upsertContact, updateContact, saveFailed],
@@ -115,8 +112,9 @@ export function useContactsPageState({
             ? t("contacts.deletedDescription", { name })
             : t("contacts.deletedDescriptionDefault"),
         });
-      } catch {
+      } catch (err) {
         saveFailed();
+        reportClientError(err, { scope: "contacts.remove_contact" });
       }
     },
     [deleteContact, t, saveFailed],
@@ -139,8 +137,9 @@ export function useContactsPageState({
         notify.success(t("contacts.mergeSuccessTitle"), {
           description: t("contacts.mergeSuccessDesc"),
         });
-      } catch {
+      } catch (err) {
         saveFailed();
+        reportClientError(err, { scope: "contacts.merge_contacts" });
       }
     },
     [updateContact, deleteContact, logMergeAudit, t, saveFailed],
@@ -154,8 +153,9 @@ export function useContactsPageState({
         try {
           await upsertContact.mutateAsync(contact);
           succeeded += 1;
-        } catch {
+        } catch (err) {
           failed += 1;
+          reportClientError(err, { scope: "contacts.import_contact_item" });
         }
       }
       if (succeeded > 0 && failed === 0) {
@@ -192,8 +192,9 @@ export function useContactsPageState({
         } else {
           saveFailed();
         }
-      } catch {
+      } catch (err) {
         saveFailed();
+        reportClientError(err, { scope: "contacts.bulk_delete" });
       }
     },
     [bulkDeleteMutation, t, saveFailed],
@@ -225,6 +226,7 @@ export function useContactsPageState({
   const [selected, setSelected] = useState<(string | number)[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editContact, setEditContact] = useState<Contact | null>(null);
+  const [viewContact, setViewContact] = useState<Contact | null>(null);
   const [showDuplicates, setShowDuplicates] = useState(false);
   const [messagingTarget, setMessagingTarget] = useState<{ channel: "sms" | "whatsapp" | "email"; contacts: Contact[] } | null>(null);
   const [activeTab, setActiveTab] = usePersistedTabState<string>("contacts_active_tab", "work");
@@ -305,7 +307,10 @@ export function useContactsPageState({
           reportClientError(auditError, { scope: "contacts.export_audit" });
         });
       };
-      const fail = () => notify.error(t("contacts.exportFailed"));
+      const fail = (err?: unknown) => {
+        notify.error(t("contacts.exportFailed"));
+        if (err) reportClientError(err, { scope: "contacts.export_csv" });
+      };
 
       if (rows.length > CONTACTS_MODULE_CONTRACT.exportInlineMaxRows) {
         const jobId = startContactsBackgroundJob(
@@ -323,9 +328,9 @@ export function useContactsPageState({
             completeContactsBackgroundJob(jobId);
             finish();
           })
-          .catch(() => {
+          .catch((err) => {
             failContactsBackgroundJob(jobId, t("contacts.exportFailed"));
-            fail();
+            fail(err);
           });
         return;
       }
@@ -333,8 +338,8 @@ export function useContactsPageState({
       try {
         downloadContactsCsv(rows, tableColumns, exportLabels, filename);
         finish();
-      } catch {
-        fail();
+      } catch (err) {
+        fail(err);
       }
     },
     [tableColumns, exportLabels, t, logExportAudit],
@@ -355,19 +360,33 @@ export function useContactsPageState({
       if (filterGender && contact.gender !== filterGender) return false;
       return true;
     });
-    return [...list].sort((a, b) => {
-      const av = getContactSortValue(a, sortField);
-      const bv = getContactSortValue(b, sortField);
-      if (typeof av === "number" && typeof bv === "number") {
-        return sortDir === "asc" ? av - bv : bv - av;
-      }
-      return sortDir === "asc" ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
-    });
+    return sortContacts(list, sortField, sortDir);
   }, [contacts, search, filterGender, sortField, sortDir]);
 
   const workContacts = useMemo(() => {
     return useServerWork ? (workPageData?.contacts ?? []) : filtered;
   }, [useServerWork, workPageData?.contacts, filtered]);
+
+  // Centralized linked contact directory resolution (SSOT)
+  const linkSourceContacts = useMemo(() => {
+    const rows = [...workContacts];
+    if (editContact) rows.push(editContact);
+    return rows;
+  }, [workContacts, editContact]);
+
+  const linkedContactIds = useMemo(
+    () => collectLinkedContactIds(linkSourceContacts),
+    [linkSourceContacts],
+  );
+
+  const { data: resolvedLinkContacts = [] } = useContactsByIds(
+    needsFullContactsList ? [] : linkedContactIds,
+  );
+
+  const allContactsForLinks = useMemo(() => {
+    if (needsFullContactsList) return contacts;
+    return mergeContactLinkDirectory(linkSourceContacts, resolvedLinkContacts);
+  }, [needsFullContactsList, contacts, linkSourceContacts, resolvedLinkContacts]);
 
   const selectedTargets = useMemo(() => {
     if (selected.length === 0) return { waTargets: [], smsReady: [] };
@@ -449,7 +468,7 @@ export function useContactsPageState({
           setEditContact(null);
         })
         .catch(() => {
-          /* saveContact notifies on failure */
+          /* saveContact handles error reporting */
         });
     },
     [editContact, saveContact, canWrite],
@@ -480,6 +499,7 @@ export function useContactsPageState({
         .then(() => undefined)
         .catch((err: unknown) => {
           notify.error(t("contacts.saveFailed"));
+          reportClientError(err, { scope: "contacts.update_contact" });
           throw err;
         });
     },
@@ -517,8 +537,9 @@ export function useContactsPageState({
         .catch((auditError) => {
           reportClientError(auditError, { scope: "contacts.export_audit" });
         });
-    } catch {
+    } catch (err) {
       notify.error(t("contacts.exportFailed"));
+      reportClientError(err, { scope: "contacts.server_export_csv" });
     }
   }, [
     filtered,
@@ -574,8 +595,9 @@ export function useContactsPageState({
         }
         setSelected([]);
       })
-      .catch(() => {
+      .catch((err) => {
         notify.error(t("contacts.restoreFailed"));
+        reportClientError(err, { scope: "contacts.bulk_restore" });
       });
   }, [canDelete, selected, bulkRestoreContactsAction, t]);
 
@@ -612,8 +634,9 @@ export function useContactsPageState({
               : t("contacts.restoreSuccessDescriptionDefault"),
           });
         })
-        .catch(() => {
+        .catch((err) => {
           notify.error(t("contacts.restoreFailed"));
+          reportClientError(err, { scope: "contacts.restore_single" });
         });
     },
     [canDelete, contacts, restoreContactAction, t],
@@ -651,6 +674,8 @@ export function useContactsPageState({
     setShowForm,
     editContact,
     setEditContact,
+    viewContact,
+    setViewContact,
     showDuplicates,
     setShowDuplicates,
     messagingTarget,
@@ -700,6 +725,7 @@ export function useContactsPageState({
     listPage,
     setListPage,
     workContacts,
+    allContactsForLinks,
     selectedTargets,
     shownCount,
     workTruncated,

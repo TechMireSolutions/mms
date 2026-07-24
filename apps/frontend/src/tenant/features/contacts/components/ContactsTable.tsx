@@ -16,12 +16,11 @@ import {
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatContactGenderLabel, resolveContactPhoneDisplay } from "@/lib/contacts/contactI18n";
+import { buildContactsMap, formatContactGenderLabel, resolveContactPhoneDisplay } from "@/lib/contacts/contactI18n";
 import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { CopyBtn } from "@/components/ui/CopyBtn";
-import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 
 interface ColumnConfig {
   id: string;
@@ -47,7 +46,6 @@ interface ContactsTableProps {
   onSort: (field: string) => void;
   columns?: ColumnConfig[];
   allContacts?: Contact[];
-  onUpdateContact?: (contact: Contact) => Promise<void>;
   canWrite?: boolean;
   canDelete?: boolean;
 }
@@ -74,17 +72,9 @@ export default function ContactsTable({
   canDelete = false,
 }: ContactsTableProps): React.JSX.Element {
   const { prefs, countryCodesMap } = useContactConfig();
-  const { language } = useGlobalSettings();
   const { t } = useTranslation();
 
-  const contactsMap = useMemo(() => {
-    if (!allContacts || allContacts.length === 0) return null;
-    const map = new Map<string, Contact>();
-    for (const c of allContacts) {
-      if (c.id) map.set(String(c.id), c);
-    }
-    return map;
-  }, [allContacts]);
+  const contactsMap = useMemo(() => buildContactsMap(allContacts), [allContacts]);
 
   const allSelected = contacts.length > 0 && selected.length === contacts.length;
   const someSelected = selected.length > 0 && selected.length < contacts.length;

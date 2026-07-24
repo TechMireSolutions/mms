@@ -12,7 +12,7 @@ import {
   getPrimaryAddress,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatContactCellValue, formatContactGenderLabel } from "@/lib/contacts/contactI18n";
+import { buildContactsMap, formatContactCellValue, formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 
 export interface ContactMetadataCellProps {
   colId: string;
@@ -39,12 +39,7 @@ export function ContactMetadataCell({
 
   const contactsMap = useMemo(() => {
     if (externalContactsMap !== undefined) return externalContactsMap;
-    if (!allContacts || allContacts.length === 0) return null;
-    const map = new Map<string, Contact>();
-    for (const c of allContacts) {
-      if (c.id) map.set(String(c.id), c);
-    }
-    return map;
+    return buildContactsMap(allContacts);
   }, [allContacts, externalContactsMap]);
 
   const renderDash = (): React.ReactNode => (
