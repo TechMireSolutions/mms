@@ -28,6 +28,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import {
   ACTIVITY_TYPE_I18N,
   formatContactDobWithAge,
+  formatContactGenderLabel,
   formatTelHref,
   resolvePhoneLabel,
   resolveEmailLabel,
@@ -317,6 +318,9 @@ export default function ContactDetailDrawer({
     if (Array.isArray(fieldValue)) return fieldValue.length ? (fieldValue as unknown[]).join(", ") : null;
     if (field.key === "dob") {
       return formatContactDobWithAge(fieldValue as string, t);
+    }
+    if (field.key === "gender") {
+      return formatContactGenderLabel(fieldValue as string, t);
     }
     return String(fieldValue);
   }, [c, t]);

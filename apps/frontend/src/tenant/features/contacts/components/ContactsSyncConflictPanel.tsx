@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, ChevronDown, ChevronUp, Loader2, Trash2 } from "lucide-react";
-import type { Contact, AppTranslationKey } from "@mms/shared";
+import type { Contact } from "@mms/shared";
 import {
-  CONTACT_SYNC_FIELD_LABEL_KEYS,
   defaultSyncFieldPicks,
   diffContactForSync,
   mergeContactForSync,
@@ -18,7 +17,7 @@ import {
   requeueAllContactsSyncConflicts,
   requeueContactsSyncConflict,
 } from "@/lib/contacts/contactsSyncOutbox";
-import { getSyncConflictKindLabel } from "@/lib/contacts/contactI18n";
+import { getSyncConflictKindLabel, resolveSyncFieldLabel } from "@/lib/contacts/contactI18n";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
 import { useContactById, useContactMutations } from "@/tenant/features/contacts/hooks/useContacts";
@@ -30,11 +29,6 @@ import { notify } from "@/lib/notify";
 interface ContactsSyncConflictPanelProps {
   open: boolean;
   onClose: () => void;
-}
-
-function fieldLabel(field: string, t: (key: AppTranslationKey) => string): string {
-  const key = CONTACT_SYNC_FIELD_LABEL_KEYS[field as keyof typeof CONTACT_SYNC_FIELD_LABEL_KEYS];
-  return key ? t(key as AppTranslationKey) : field;
 }
 
 function localContactFromEntry(entry: ContactsSyncConflict): Contact | undefined {
@@ -179,7 +173,7 @@ function ConflictRow({ entry, title, onRequestDismiss, onResolved }: ConflictRow
                 <tbody>
                   {diffs.map((diff) => (
                     <tr key={diff.field} className="border-t border-border/50">
-                      <td className="py-1 pr-2 font-medium">{fieldLabel(diff.field, t)}</td>
+                      <td className="py-1 pr-2 font-medium">{resolveSyncFieldLabel(diff.field, t)}</td>
                       <td className="py-1 pr-2">
                         <Button
                           type="button"

@@ -1,8 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
-import type { Contact, PhoneNumber } from "@mms/shared";
+import type { Contact } from "@mms/shared";
 import {
-  parsePhoneNumber,
   getPrimaryPhone,
   getPrimaryEmail,
   getPrimaryAddress,
@@ -23,7 +22,7 @@ import {
 } from "@/lib/contacts/contactsBackgroundJobs";
 import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
 import { reportClientError } from "@/lib/clientErrorReporting";
-import { getFallbackCountryCode, formatContactGenderLabel } from "@/lib/contacts/contactI18n";
+import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { startServerContactsCsvExport } from "@/lib/backgroundJobs/startServerContactsCsvExport";
 import {
   CONTACTS_WORK_DRILLDOWN_EVENT,
@@ -31,9 +30,7 @@ import {
   type ContactsWorkDrillDown,
 } from "@/lib/contacts/contactsWorkDrillDown";
 import { notify } from "@/lib/notify";
-import type { useContactsPageActions } from "@/tenant/features/contacts/hooks/useContactsPageActions";
-
-type PageActions = ReturnType<typeof useContactsPageActions>;
+import { useContactMutations } from "@/tenant/features/contacts/hooks/useContacts";
 
 export interface UseContactsPageStateOptions {
   rawContacts: Contact[];
@@ -49,69 +46,186 @@ export interface UseContactsPageStateOptions {
   canExport: boolean;
   canViewReports: boolean;
   canViewSetup: boolean;
-  pageActions: PageActions;
   showDeletedArchives?: boolean;
   /** Server-paginated Work rows; when set, used for select-all, bulk export, and row lookup. */
   directoryRows?: Contact[];
-  /** Ref updated after paginated Work fetch — avoids hook order cycle with useContactsPaginated. */
-  directoryRowsRef?: React.MutableRefObject<Contact[] | undefined>;
-}
-
-function normalizeContactPhones(
-  contact: Contact,
-  defaultCode: string,
-  countryCodesMap: Record<string, string>,
-): Contact {
-  const base = {
-    relationships: [],
-    activities: [],
-    ...contact,
-  } as Contact;
-
-  let phones = Array.isArray(base.phones) ? base.phones : [];
-  const scalarPhone = typeof base.phone === 'string' ? base.phone.trim() : '';
-
-  if (scalarPhone && !phones.some((p) => (p.number || '').trim())) {
-    const parsed = parsePhoneNumber(scalarPhone, defaultCode, Object.values(countryCodesMap));
-    phones = [{ label: 'Mobile', number: parsed.number || scalarPhone, countryCode: parsed.countryCode || defaultCode, isPrimary: true }, ...phones];
-  }
-
-  if (phones.length > 0) {
-    phones = phones.map((phone: PhoneNumber) => {
-      if (phone.countryCode && phone.number) return phone;
-      const parsed = parsePhoneNumber(phone.number, phone.countryCode || defaultCode, Object.values(countryCodesMap));
-      return {
-        ...phone,
-        countryCode: parsed.countryCode || defaultCode,
-        number: parsed.number || phone.number,
-      };
-    });
-  }
-
-  return {
-    ...base,
-    phones,
-  };
 }
 
 export function useContactsPageState({
-  rawContacts,
+  rawContacts: initialRawContacts,
   prefs,
-  countryCodesMap,
   tableColumns,
   canWrite,
   canDelete,
   canExport,
   canViewReports,
   canViewSetup,
-  pageActions,
   showDeletedArchives = false,
-  directoryRows,
-  directoryRowsRef,
+  directoryRows: initialDirectoryRows,
 }: UseContactsPageStateOptions) {
   const { t } = useTranslation();
-  const { saveContact, removeContact, mergeContacts, importContacts, updateContact, bulkDeleteContacts, bulkRestoreContacts, restoreContact, logExportAudit } =
-    pageActions;
+  const [rawContactsState, setRawContactsState] = useState<Contact[]>(initialRawContacts || []);
+  const [directoryRowsState, setDirectoryRowsState] = useState<Contact[] | undefined>(initialDirectoryRows);
+
+  const updateRawContacts = useCallback((list: Contact[]) => {
+    setRawContactsState((prev) => {
+      if (prev === list) return prev;
+      if (prev.length === 0 && list.length === 0) return prev;
+      return list;
+    });
+  }, []);
+
+  const updateDirectoryRows = useCallback((list: Contact[] | undefined) => {
+    setDirectoryRowsState((prev) => {
+      if (prev === list) return prev;
+      if (prev === undefined && list === undefined) return prev;
+      if (prev && list && prev.length === 0 && list.length === 0) return prev;
+      return list;
+    });
+  }, []);
+
+  const effectiveRawContacts = rawContactsState.length > 0 ? rawContactsState : initialRawContacts;
+  const effectiveDirectoryRows = directoryRowsState !== undefined ? directoryRowsState : initialDirectoryRows;
+  const {
+    upsertContact,
+    updateContact,
+    deleteContact,
+    bulkDeleteContacts: bulkDeleteMutation,
+    bulkRestoreContacts: bulkRestoreMutation,
+    restoreContact: restoreMutation,
+    logExportAudit,
+    logMergeAudit,
+  } = useContactMutations();
+
+  const saveFailed = useCallback(() => {
+    notify.error(t("contacts.saveFailed"));
+  }, [t]);
+
+  const saveContact = useCallback(
+    async (contact: Contact, isNew: boolean): Promise<void> => {
+      try {
+        if (isNew) {
+          await upsertContact.mutateAsync(contact);
+        } else {
+          await updateContact.mutateAsync({ id: String(contact.id), contact });
+        }
+      } catch {
+        saveFailed();
+        throw new Error("contact_save_failed");
+      }
+    },
+    [upsertContact, updateContact, saveFailed],
+  );
+
+  const removeContact = useCallback(
+    async (id: string | number, name?: string, deletionReason?: string): Promise<void> => {
+      try {
+        await deleteContact.mutateAsync({
+          id: String(id),
+          ...(deletionReason ? { deletionReason } : {}),
+        });
+        notify.info(t("contacts.deletedTitle"), {
+          description: name
+            ? t("contacts.deletedDescription", { name })
+            : t("contacts.deletedDescriptionDefault"),
+        });
+      } catch {
+        saveFailed();
+      }
+    },
+    [deleteContact, t, saveFailed],
+  );
+
+  const mergeContacts = useCallback(
+    async (keepId: string | number, deleteId: string | number, merged: Contact): Promise<void> => {
+      try {
+        await updateContact.mutateAsync({ id: String(keepId), contact: merged });
+        await deleteContact.mutateAsync({ id: String(deleteId) });
+        void logMergeAudit
+          .mutateAsync({
+            keepId,
+            deleteId,
+            mergedName: merged.name || merged.firstName,
+          })
+          .catch((auditError) => {
+            reportClientError(auditError, { scope: "contacts.merge_audit" });
+          });
+        notify.success(t("contacts.mergeSuccessTitle"), {
+          description: t("contacts.mergeSuccessDesc"),
+        });
+      } catch {
+        saveFailed();
+      }
+    },
+    [updateContact, deleteContact, logMergeAudit, t, saveFailed],
+  );
+
+  const importContacts = useCallback(
+    async (list: Contact[]): Promise<void> => {
+      let succeeded = 0;
+      let failed = 0;
+      for (const contact of list) {
+        try {
+          await upsertContact.mutateAsync(contact);
+          succeeded += 1;
+        } catch {
+          failed += 1;
+        }
+      }
+      if (succeeded > 0 && failed === 0) {
+        notify.success(
+          list.length === 1
+            ? t("contacts.importSuccessOne")
+            : t("contacts.importSuccess", { count: succeeded }),
+        );
+      } else if (succeeded > 0 && failed > 0) {
+        notify.warning(t("contacts.bulkPartialFailure", { succeeded, failed }));
+      } else {
+        saveFailed();
+      }
+    },
+    [upsertContact, t, saveFailed],
+  );
+
+  const bulkDeleteContactsAction = useCallback(
+    async (ids: (string | number)[], deletionReason?: string): Promise<void> => {
+      if (ids.length === 0) return;
+      try {
+        const result = await bulkDeleteMutation.mutateAsync({
+          ids,
+          ...(deletionReason ? { deletionReason } : {}),
+        });
+        if (result.succeeded > 0 && result.failed === 0) {
+          notify.success(
+            result.succeeded === 1
+              ? t("contacts.deletedTitle")
+              : t("contacts.bulkDeleteSuccess", { count: result.succeeded }),
+          );
+        } else if (result.succeeded > 0 && result.failed > 0) {
+          notify.warning(t("contacts.bulkPartialFailure", { succeeded: result.succeeded, failed: result.failed }));
+        } else {
+          saveFailed();
+        }
+      } catch {
+        saveFailed();
+      }
+    },
+    [bulkDeleteMutation, t, saveFailed],
+  );
+
+  const restoreContactAction = useCallback(
+    async (id: string): Promise<void> => {
+      await restoreMutation.mutateAsync(id);
+    },
+    [restoreMutation],
+  );
+
+  const bulkRestoreContactsAction = useCallback(
+    async (ids: (string | number)[]): Promise<{ succeeded: number; failed: number }> => {
+      return bulkRestoreMutation.mutateAsync(ids);
+    },
+    [bulkRestoreMutation],
+  );
 
   const visibleTopTabs = useFilteredModuleTierTabs({
     canViewSetup,
@@ -119,12 +233,10 @@ export function useContactsPageState({
   });
 
   const contacts = useMemo(() => {
-    const defaultCode = getFallbackCountryCode(prefs, countryCodesMap);
-    const source = showDeletedArchives
-      ? rawContacts.filter(isContactDeleted)
-      : filterActiveContacts(rawContacts);
-    return source.map((contact) => normalizeContactPhones(contact, defaultCode, countryCodesMap));
-  }, [rawContacts, showDeletedArchives, prefs, countryCodesMap]);
+    return showDeletedArchives
+      ? effectiveRawContacts.filter(isContactDeleted)
+      : filterActiveContacts(effectiveRawContacts);
+  }, [effectiveRawContacts, showDeletedArchives]);
 
   const [search, setSearch] = useState("");
   const [filterGender, setFilterGender] = useState("");
@@ -134,7 +246,7 @@ export function useContactsPageState({
   const [showForm, setShowForm] = useState(false);
   const [editContact, setEditContact] = useState<Contact | null>(null);
   const [showDuplicates, setShowDuplicates] = useState(false);
-  const [messagingTarget, setMessagingTarget] = useState<{ channel: 'sms' | 'whatsapp' | 'email'; contacts: Contact[] } | null>(null);
+  const [messagingTarget, setMessagingTarget] = useState<{ channel: "sms" | "whatsapp" | "email"; contacts: Contact[] } | null>(null);
   const [activeTab, setActiveTab] = usePersistedTabState<string>("contacts_active_tab", "work");
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false);
@@ -234,13 +346,10 @@ export function useContactsPageState({
       return true;
     });
     return [...list].sort((a, b) => {
-      let av: string | number = "";
-      let bv: string | number = "";
-
       const recA = a as Record<string, unknown>;
       const recB = b as Record<string, unknown>;
-      av = typeof recA[sortField] === "number" ? (recA[sortField] as number) : String(recA[sortField] || "").toLowerCase();
-      bv = typeof recB[sortField] === "number" ? (recB[sortField] as number) : String(recB[sortField] || "").toLowerCase();
+      const av = typeof recA[sortField] === "number" ? (recA[sortField] as number) : String(recA[sortField] || "").toLowerCase();
+      const bv = typeof recB[sortField] === "number" ? (recB[sortField] as number) : String(recB[sortField] || "").toLowerCase();
 
       if (typeof av === "number" && typeof bv === "number") {
         return sortDir === "asc" ? av - bv : bv - av;
@@ -250,8 +359,8 @@ export function useContactsPageState({
   }, [contacts, search, filterGender, sortField, sortDir]);
 
   const rowSource = useMemo(
-    () => directoryRowsRef?.current ?? directoryRows ?? filtered,
-    [directoryRowsRef, directoryRows, filtered],
+    () => effectiveDirectoryRows ?? filtered,
+    [effectiveDirectoryRows, filtered],
   );
 
   const hasActiveFilters = !!(filterGender || search);
@@ -428,9 +537,9 @@ export function useContactsPageState({
     (deletionReason?: string) => {
       if (!canDelete || selected.length === 0) return;
       setBulkDeleteOpen(false);
-      void bulkDeleteContacts(selected, deletionReason).then(() => setSelected([]));
+      void bulkDeleteContactsAction(selected, deletionReason).then(() => setSelected([]));
     },
-    [canDelete, selected, bulkDeleteContacts],
+    [canDelete, selected, bulkDeleteContactsAction],
   );
 
   const requestBulkRestore = useCallback(() => {
@@ -441,7 +550,7 @@ export function useContactsPageState({
   const confirmBulkRestore = useCallback(() => {
     if (!canDelete || selected.length === 0) return;
     setBulkRestoreOpen(false);
-    void bulkRestoreContacts(selected)
+    void bulkRestoreContactsAction(selected)
       .then((result) => {
         if (result.succeeded > 0) {
           notify.success(
@@ -455,7 +564,7 @@ export function useContactsPageState({
       .catch(() => {
         notify.error(t("contacts.restoreFailed"));
       });
-  }, [canDelete, selected, bulkRestoreContacts, t]);
+  }, [canDelete, selected, bulkRestoreContactsAction, t]);
 
   const clearFilters = useCallback(() => {
     setFilterGender("");
@@ -482,7 +591,7 @@ export function useContactsPageState({
     (id: string | number) => {
       if (!canDelete) return;
       const selectedContact = contacts.find((contact) => contact.id === id);
-      void restoreContact(String(id))
+      void restoreContactAction(String(id))
         .then(() => {
           notify.success(t("contacts.restoreSuccessTitle"), {
             description: selectedContact?.name
@@ -494,7 +603,7 @@ export function useContactsPageState({
           notify.error(t("contacts.restoreFailed"));
         });
     },
-    [canDelete, contacts, restoreContact, t],
+    [canDelete, contacts, restoreContactAction, t],
   );
 
   return {
@@ -553,5 +662,7 @@ export function useContactsPageState({
     handleMerge,
     handleRestore,
     showDeletedArchives,
+    updateRawContacts,
+    updateDirectoryRows,
   };
 }

@@ -3,12 +3,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserPlus, AlertTriangle, Download, Users, UserX, Loader2, Trash2, X, MessageCircle, MessageSquare, RotateCcw, RefreshCw } from "lucide-react";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { Contact, CONTACTS_MODULE_CONTRACT, resolveModuleTierTab, hasWhatsApp, getPrimaryPhone, getPrimaryEmail, getDisplayName } from "@mms/shared";
-import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { Contact, CONTACTS_MODULE_CONTRACT, hasWhatsApp, getPrimaryPhone, getPrimaryEmail, getDisplayName } from "@mms/shared";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { useContacts, useContactsCollection, useContactsPaginated, useContactsByIds, CONTACTS_DUPLICATES_QUERY_KEY } from "@/tenant/features/contacts/hooks/useContacts";
+import { useContactsCollectionState, useContactsPaginated, useContactsByIds, CONTACTS_DUPLICATES_QUERY_KEY } from "@/tenant/features/contacts/hooks/useContacts";
 import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
-import { useContactsPageActions } from "@/tenant/features/contacts/hooks/useContactsPageActions";
 import { useContactsPageState } from "@/tenant/features/contacts/hooks/useContactsPageState";
 import { useContactConfig, useContactColumns } from "@/lib/contexts/ContactConfigContext";
 import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
@@ -43,10 +41,12 @@ import ContactsSettingsPanel from "@/tenant/features/contacts/components/Contact
 const ContactForm = lazy(() => import("@/tenant/features/contacts/components/ContactForm"));
 const DuplicateDetection = lazy(() => import("@/tenant/features/contacts/components/DuplicateDetection"));
 const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
+const ContactDetailDrawer = lazy(() => import("@/tenant/features/contacts/components/ContactDetailDrawer"));
 
 
 function ContactsInner() {
   const queryClient = useQueryClient();
+  const [viewContact, setViewContact] = useState<Contact | null>(null);
   const {
     canWrite,
     canDelete,
@@ -62,31 +62,12 @@ function ContactsInner() {
   const [viewModeOverride, setViewModeOverride] = useState<"table" | "cards" | null>(null);
   const [listPage, setListPage] = useState(1);
   const [conflictPanelOpen, setConflictPanelOpen] = useState(false);
-  const workDirectoryRowsRef = useRef<Contact[] | undefined>(undefined);
   const { conflictCount } = useContactsSyncOutbox();
   const prevConflictCount = useRef(conflictCount);
   const openConflictReview = useCallback(() => setConflictPanelOpen(true), []);
-  const [fetchGateTab, setFetchGateTab] = useState("work");
-  const localVisibleTopTabs = useFilteredModuleTierTabs({
-    canViewSetup,
-    canViewReports,
-  });
-  const visibleTopTabIds = useMemo(() => localVisibleTopTabs.map((t) => t.id), [localVisibleTopTabs]);
-  const fetchGateEffectiveTab = resolveModuleTierTab(fetchGateTab, visibleTopTabIds);
-  const needsFullContactsList = showDeletedArchives || fetchGateEffectiveTab === "setup";
-
-  const { isLoading: isContactsLoading } = useContacts({
-    enabled: needsFullContactsList,
-    includeDeleted: showDeletedArchives && canDelete,
-  });
-  const pageActions = useContactsPageActions();
-  const rawContacts = useContactsCollection({
-    enabled: needsFullContactsList,
-    includeDeleted: showDeletedArchives && canDelete,
-  });
 
   const state = useContactsPageState({
-    rawContacts,
+    rawContacts: [],
     prefs,
     countryCodesMap,
     tableColumns,
@@ -95,16 +76,13 @@ function ContactsInner() {
     canExport,
     canViewReports,
     canViewSetup,
-    pageActions,
     showDeletedArchives,
-    directoryRowsRef: workDirectoryRowsRef,
   });
 
   const {
     t,
     visibleTopTabs,
     effectiveTab,
-    activeTab,
     setActiveTab,
     contacts,
     filtered,
@@ -132,7 +110,6 @@ function ContactsInner() {
     genderLabel,
     handleSort,
     handleSelect,
-    handleSelectAll,
     handleEdit,
     handleNew,
     handleSave,
@@ -156,13 +133,18 @@ function ContactsInner() {
     handleMerge,
     handleRestore,
     showDeletedArchives: viewingDeleted,
+    updateRawContacts,
+    updateDirectoryRows,
   } = state;
 
-  useEffect(() => {
-    setFetchGateTab(activeTab);
-  }, [activeTab]);
+  const needsFullContactsList = showDeletedArchives || effectiveTab === "setup";
 
-  const useServerWork = !viewingDeleted && effectiveTab === "work";
+  const { contacts: rawContacts, isLoading: isContactsLoading } = useContactsCollectionState({
+    enabled: needsFullContactsList,
+    includeDeleted: showDeletedArchives && canDelete,
+  });
+
+  const useServerWork = !showDeletedArchives && effectiveTab === "work";
   const isListView = true;
   const workLimit = CONTACTS_MODULE_CONTRACT.defaultPageSize;
 
@@ -175,6 +157,15 @@ function ContactsInner() {
     sortDir,
     enabled: useServerWork,
   });
+
+  // Keep state.rawContacts and directoryRows updated
+  useEffect(() => {
+    updateRawContacts?.(rawContacts);
+  }, [rawContacts, updateRawContacts]);
+
+  useEffect(() => {
+    updateDirectoryRows?.(workPageData?.contacts);
+  }, [workPageData?.contacts, updateDirectoryRows]);
 
   React.useEffect(() => {
     setListPage(1);
@@ -211,7 +202,6 @@ function ContactsInner() {
     return useServerWork ? (workPageData?.contacts ?? []) : filtered;
   }, [useServerWork, workPageData?.contacts, filtered]);
 
-  workDirectoryRowsRef.current = useServerWork ? workContacts : undefined;
   const shownCount = useServerWork && workPageData ? workPageData.total : filtered.length;
   const workTruncated = useServerWork && !isListView && Boolean(workPageData?.hasMore);
 
@@ -274,11 +264,16 @@ function ContactsInner() {
     return { waTargets, smsReady };
   }, [selected, workContacts]);
 
+  const handleSelectAllWork = useCallback(() => {
+    setSelected((selectedIds) => (selectedIds.length === workContacts.length ? [] : workContacts.map((contact) => contact.id)));
+  }, [workContacts, setSelected]);
+
   const commonDirectoryProps = useMemo(() => ({
     contacts: workContacts,
     selected,
     onSelect: handleSelect,
-    onSelectAll: handleSelectAll,
+    onSelectAll: handleSelectAllWork,
+    onView: setViewContact,
     onEdit: handleEdit,
     onDelete: handleDelete,
     onRestore: handleRestore,
@@ -296,7 +291,8 @@ function ContactsInner() {
     workContacts,
     selected,
     handleSelect,
-    handleSelectAll,
+    handleSelectAllWork,
+    setViewContact,
     handleEdit,
     handleDelete,
     handleRestore,
@@ -635,6 +631,21 @@ function ContactsInner() {
                 email: getPrimaryEmail(c) || "",
               }))}
               onClose={() => setMessagingTarget(null)}
+            />
+          )}
+          {viewContact && (
+            <ContactDetailDrawer
+              contact={viewContact}
+              onClose={() => setViewContact(null)}
+              onEdit={(contactToEdit) => {
+                setViewContact(null);
+                if (canWrite) handleEdit(contactToEdit);
+              }}
+              onWhatsApp={handleWhatsApp}
+              onSms={handleSms}
+              onEmail={handleEmail}
+              allContacts={allContactsForLinks}
+              onUpdateContact={canWrite ? handleUpdateContact : undefined}
             />
           )}
         </AnimatePresence>

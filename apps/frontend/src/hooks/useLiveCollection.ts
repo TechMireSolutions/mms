@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { getCollection, hasCollectionInCache, saveCollectionCacheOnly } from "@/lib/db";
 import { apiFetch } from "@/lib/apiClient";
 
+const EMPTY_ARRAY: unknown[] = [];
+
 /**
  * A custom React hook that reads a local database collection and subscribes to
  * the 'local-database-update' event, returning a reactive state representation
@@ -23,12 +25,12 @@ export function useLiveCollection<T = unknown>(
   defaultDataRef.current = defaultData;
 
   const [data, setData] = useState<T[]>(() =>
-    enabled ? getCollection<T>(dbKey, defaultDataRef.current) : ([] as T[]),
+    enabled ? getCollection<T>(dbKey, defaultDataRef.current) : (EMPTY_ARRAY as T[]),
   );
 
   useEffect(() => {
     if (!enabled) {
-      setData([] as T[]);
+      setData(EMPTY_ARRAY as T[]);
       return;
     }
 
@@ -62,6 +64,6 @@ export function useLiveCollection<T = unknown>(
     };
   }, [dbKey, enabled, serverSync]);
 
-  if (!enabled) return [] as T[];
+  if (!enabled) return EMPTY_ARRAY as T[];
   return data;
 }

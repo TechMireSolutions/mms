@@ -43,6 +43,12 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
     updateSettings: onConfigChange,
   }), [config, onConfigChange]);
 
+  const defaultEnabledTabs = React.useMemo(() => {
+    return (config.formTabs && config.formTabs.length > 0)
+      ? config.formTabs.filter((t) => t.enabled !== false).map((t) => t.key)
+      : DEFAULT_FORM_TABS.filter((t) => t.enabled !== false).map((t) => t.key);
+  }, [config.formTabs]);
+
   const {
     fieldsEditor,
     saved,
@@ -51,6 +57,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
   } = useModuleSettingsEditor({
     config: editorConfig,
     tabRegistry: getInitialTabs(),
+    defaultEnabledTabs,
   });
 
   const [prefs, setPrefs] = useState<ContactPreferences>(() => contextPrefs);

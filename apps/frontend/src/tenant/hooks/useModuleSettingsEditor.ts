@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { type TabDefinition } from "@mms/shared";
 import { type ModuleSettingsShape } from "@/hooks/useModuleConfig";
 import { useModuleFieldsEditor } from "./useModuleFieldsEditor";
@@ -21,12 +21,18 @@ interface UseModuleSettingsEditorOptions<T extends ModuleSettingsShape> {
 export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
   config,
   tabRegistry,
-  defaultEnabledTabs = ["basic"],
+  defaultEnabledTabs,
   defaultRequiredTabs = [],
 }: UseModuleSettingsEditorOptions<T>) {
   const { settings, updateSettings } = config;
   const { saved, flashSaved, clearSaved } = useSavedFlash();
   const [settingsDraft, setSettingsDraft] = useState<T>(settings);
+
+  const resolvedDefaultEnabledTabs = useMemo(() => {
+    if (defaultEnabledTabs && defaultEnabledTabs.length > 0) return defaultEnabledTabs;
+    const fromRegistry = tabRegistry.filter((t) => t.enabled !== false).map((t) => t.key);
+    return fromRegistry.length > 0 ? fromRegistry : ["basic"];
+  }, [defaultEnabledTabs, tabRegistry]);
 
   const setSaved = useCallback((val: boolean | ((curr: boolean) => boolean)) => {
     const resolved = typeof val === "function" ? val(saved) : val;
@@ -49,10 +55,16 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     setSaved(false);
   }, [setSaved]);
 
+  const activeEnabledTabs = useMemo(() => {
+    return settings.enabledTabs && settings.enabledTabs.length > 0
+      ? settings.enabledTabs
+      : resolvedDefaultEnabledTabs;
+  }, [settings.enabledTabs, resolvedDefaultEnabledTabs]);
+
   const fieldsEditor = useModuleFieldsEditor({
     initialTabs: tabRegistry,
     initialFields: settings.fields || {},
-    initialEnabledTabs: Array.from(new Set(settings.enabledTabs || defaultEnabledTabs)),
+    initialEnabledTabs: Array.from(new Set(activeEnabledTabs)),
     initialRequiredTabs: Array.from(new Set(settings.requiredTabs || defaultRequiredTabs)),
   });
 
@@ -65,12 +77,16 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
 
     const coreTabKeys = new Set(tabRegistry.map((tab) => tab.key));
     const customTabs = (settings.formTabs || []).filter((tab: TabDefinition) => !coreTabKeys.has(tab.key));
+    const currentActiveEnabledTabs = settings.enabledTabs && settings.enabledTabs.length > 0
+      ? settings.enabledTabs
+      : resolvedDefaultEnabledTabs;
+
     const updatedTabs = [
       ...tabRegistry,
       ...customTabs,
     ].map((tab) => ({
       ...tab,
-      enabled: tab.key === "basic" ? true : (settings.enabledTabs || defaultEnabledTabs).includes(tab.key),
+      enabled: tab.key === "basic" ? true : currentActiveEnabledTabs.includes(tab.key),
     }));
 
     // Perform structural checks to break potential infinite update loop
@@ -80,7 +96,7 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     const newFieldsStr = JSON.stringify(settings.fields || {});
     
     const currentEnabledStr = Array.from(fieldsEditor.enabledTabs).sort().join(',');
-    const newEnabledStr = Array.from(new Set(settings.enabledTabs || defaultEnabledTabs)).sort().join(',');
+    const newEnabledStr = Array.from(new Set(currentActiveEnabledTabs)).sort().join(',');
     
     const currentRequiredStr = Array.from(fieldsEditor.requiredTabs).sort().join(',');
     const newRequiredStr = Array.from(new Set(settings.requiredTabs || defaultRequiredTabs)).sort().join(',');
@@ -94,14 +110,14 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
       resetRef.current(
         updatedTabs,
         settings.fields || {},
-        settings.enabledTabs || defaultEnabledTabs,
+        currentActiveEnabledTabs,
         settings.requiredTabs || defaultRequiredTabs
       );
     }
   }, [
     settings,
     tabRegistry,
-    defaultEnabledTabs,
+    resolvedDefaultEnabledTabs,
     defaultRequiredTabs,
     fieldsEditor.formTabs,
     fieldsEditor.tabFields,
@@ -140,3 +156,4 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     saveSettings,
   };
 }
+

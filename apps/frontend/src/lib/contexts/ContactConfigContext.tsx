@@ -28,6 +28,9 @@ import {
   translateApp,
   ColumnRegistryEntry,
   DEFAULT_COLUMN_REGISTRY,
+  COLUMN_FIELD_MAPPING,
+  DEFAULT_ENABLED_TABS,
+  INITIAL_FIELD_SEED,
   canViewContactColumn,
   canViewContactTab,
   buildDynamicContactSchema,
@@ -144,7 +147,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const [fieldConfig, setFieldConfigState] = useState<FieldConfig>(() => loadFieldConfig());
   const [localUserColumnOverlay, setLocalUserColumnOverlay] = useState<ContactColumnPreference[] | null>(null);
 
-  const userColumnOverlay = useMemo(() => {
+  const rawUserColumnOverlay = useMemo(() => {
     if (localUserColumnOverlay) {
       return localUserColumnOverlay;
     }
@@ -413,13 +416,12 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
 
   const enabledTabIds = useMemo(() => {
     if (fieldConfig.formTabs) {
-      return new Set(
-        fieldConfig.formTabs
-          .filter((tab) => canViewContactTab(viewerRole, tab))
-          .map((tab) => tab.key),
-      );
+      const activeFromTabs = fieldConfig.formTabs
+        .filter((tab) => canViewContactTab(viewerRole, tab) && tab.enabled !== false)
+        .map((tab) => tab.key);
+      return new Set([...DEFAULT_ENABLED_TABS, ...activeFromTabs]);
     }
-    return new Set(fieldConfig.enabledTabs || ["phones", "emails", "addresses", "socials", "emergency"]);
+    return new Set([...DEFAULT_ENABLED_TABS, ...(fieldConfig.enabledTabs || [])]);
   }, [fieldConfig, viewerRole]);
 
   const requiredTabIds = useMemo(() => {
@@ -452,7 +454,12 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
    */
   const isTabFieldEnabled = useCallback(
     (tabId: string, fieldId: string) => {
-      const field = (fields[tabId] || []).find((fieldDefinition) => fieldDefinition.key === fieldId);
+      const tabFieldsList = fields[tabId];
+      if (!tabFieldsList || tabFieldsList.length === 0) {
+        const seedField = (INITIAL_FIELD_SEED[tabId] || []).find((f: FieldDefinition) => f.key === fieldId);
+        return seedField?.enabled ?? false;
+      }
+      const field = tabFieldsList.find((fieldDefinition) => fieldDefinition.key === fieldId);
       return field?.enabled ?? false;
     },
     [fields]
@@ -474,8 +481,25 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   );
 
   const tenantColumnRegistry = useMemo(() => {
-    const registry = [...(fieldConfig.columnRegistry || [])];
-    
+    const baseRegistryMap = new Map<string, ColumnRegistryEntry>();
+    DEFAULT_COLUMN_REGISTRY.forEach((defaultCol) => {
+      const stored = (fieldConfig.columnRegistry || []).find((c) => c.key === defaultCol.key);
+      baseRegistryMap.set(defaultCol.key, {
+        ...defaultCol,
+        order: stored?.order ?? defaultCol.order,
+        sortField: stored?.sortField || defaultCol.sortField,
+        enabled: defaultCol.enabled,
+      });
+    });
+
+    (fieldConfig.columnRegistry || []).forEach((storedCol) => {
+      if (!baseRegistryMap.has(storedCol.key)) {
+        baseRegistryMap.set(storedCol.key, { ...storedCol });
+      }
+    });
+
+    const registry = Array.from(baseRegistryMap.values()).sort((a, b) => a.order - b.order);
+
     // Find all active fields across all enabled tabs in the registry
     const activeFields: Array<{ tabId: string; field: FieldDefinition }> = [];
     Object.entries(fields).forEach(([tabId, tabFields]) => {
@@ -489,97 +513,33 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // 1. Filter out columns from registry that don't match active tabs/fields
+    // Filter out columns from registry that don't match active tabs/fields using single source of truth mapping
     const filteredRegistry = registry.filter((column) => {
-      if (column.key === "name") {
-        return isTabFieldEnabled("basic", "firstName");
+      const mapping = COLUMN_FIELD_MAPPING[column.key];
+      if (mapping) {
+        const tabActive = mapping.tabId === "basic" || enabledTabIds.has(mapping.tabId);
+        return tabActive && isTabFieldEnabled(mapping.tabId, mapping.fieldId);
       }
-      if (column.key === "phone") {
-        return enabledTabIds.has("phones") && isTabFieldEnabled("phones", "number");
-      }
-      if (column.key === "whatsapp") {
-        return enabledTabIds.has("phones") && isTabFieldEnabled("phones", "whatsapp");
-      }
-      if (column.key === "email") {
-        return enabledTabIds.has("emails") && isTabFieldEnabled("emails", "address");
-      }
-      if (column.key === "city") {
-        return enabledTabIds.has("addresses") && isTabFieldEnabled("addresses", "city");
-      }
-      if (column.key === "state") {
-        return enabledTabIds.has("addresses") && isTabFieldEnabled("addresses", "state");
-      }
-      if (column.key === "country") {
-        return enabledTabIds.has("addresses") && isTabFieldEnabled("addresses", "country");
-      }
-      if (column.key === "line1") {
-        return enabledTabIds.has("addresses") && isTabFieldEnabled("addresses", "line1");
-      }
-      if (column.key === "gender") {
-        return isTabFieldEnabled("basic", "gender");
-      }
-      if (column.key === "dob") {
-        return isTabFieldEnabled("basic", "dob");
-      }
-
-      if (column.key === "isSyed") {
-        return isTabFieldEnabled("basic", "isSyed");
-      }
-      if (column.key === "socials_platform") {
-        return enabledTabIds.has("socials") && isTabFieldEnabled("socials", "platform");
-      }
-      if (column.key === "socials_url") {
-        return enabledTabIds.has("socials") && isTabFieldEnabled("socials", "url");
-      }
-      if (column.key === "emergency_contact") {
-        return enabledTabIds.has("emergency") && isTabFieldEnabled("emergency", "contactId");
-      }
-      if (column.key === "emergency_relationship") {
-        return enabledTabIds.has("emergency") && isTabFieldEnabled("emergency", "relationship");
-      }
-
-      // Check if the field is defined and enabled in active fields
       return activeFields.some((activeField) => activeField.field.key === column.key);
-    });
-
-    // 2. Add columns for any active fields that aren't in the registry yet
-    const existingKeys = new Set(filteredRegistry.map((column) => column.key));
-
-    DEFAULT_COLUMN_REGISTRY.forEach((defaultCol) => {
-      if (!existingKeys.has(defaultCol.key)) {
-        const maxOrder = filteredRegistry.reduce((max, column) => Math.max(max, column.order), -1);
-        filteredRegistry.push({
-          ...defaultCol,
-          enabled: false,
-          order: maxOrder + 1,
-        });
-        existingKeys.add(defaultCol.key);
-      }
-    });
-
-    const specialKeys = new Set([
-      "firstName", "lastName", "avatar", "number", "address", "line1", "city",
-      "state", "country", "label", "platform", "url", "contactId", "relationship"
-    ]);
-
-    activeFields.forEach((activeField) => {
-      const fieldKey = activeField.field.key;
-      if (!specialKeys.has(fieldKey) && !existingKeys.has(fieldKey)) {
-        const maxOrder = filteredRegistry.reduce((max, column) => Math.max(max, column.order), -1);
-        filteredRegistry.push({
-          key: fieldKey,
-          label: activeField.field.label,
-          enabled: false,
-          order: maxOrder + 1,
-          sortable: true
-        });
-      }
     });
 
     const viewerRole = user?.role ?? '';
     const columnCtx = { fields, enabledTabIds, isTabFieldEnabled };
     return filteredRegistry.filter((column) => canViewContactColumn(viewerRole, column.key, columnCtx));
   }, [fieldConfig.columnRegistry, fields, enabledTabIds, isTabFieldEnabled, user?.role]);
+
+  const userColumnOverlay = useMemo(() => {
+    if (!rawUserColumnOverlay || rawUserColumnOverlay.length === 0) return null;
+
+    const activeTenantKeys = new Set(tenantColumnRegistry.filter((c) => c.enabled).map((c) => c.key));
+
+    return rawUserColumnOverlay.map((pref) => {
+      if (activeTenantKeys.has(pref.key) && pref.enabled === false) {
+        return { ...pref, enabled: true };
+      }
+      return pref;
+    });
+  }, [rawUserColumnOverlay, tenantColumnRegistry]);
 
   const columnRegistry = useMemo(
     () => applyModuleColumnOverlay(tenantColumnRegistry, userColumnOverlay) as ColumnRegistryEntry[],

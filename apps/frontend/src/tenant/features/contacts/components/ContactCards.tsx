@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense, useMemo } from "react";
+import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   MessageCircle, MessageSquare, Eye, Phone, Mail,
@@ -23,8 +23,6 @@ import { CopyBtn } from "@/components/ui/CopyBtn";
 
 const MotionButton = motion.create(Button);
 
-const ContactDetailDrawer = lazy(() => import("@/tenant/features/contacts/components/ContactDetailDrawer"));
-
 interface ColumnConfig {
   id: string;
   label: string;
@@ -34,6 +32,7 @@ interface ContactCardsProps {
   contacts: Contact[];
   selected: (string | number)[];
   onSelect: (id: string | number) => void;
+  onView?: (contact: Contact) => void;
   onEdit: (contact: Contact) => void;
   onDelete: (id: string | number) => void;
   onRestore?: (id: string | number) => void;
@@ -70,6 +69,7 @@ export default function ContactCards({
   contacts,
   selected,
   onSelect,
+  onView,
   onEdit,
   onDelete,
   onRestore,
@@ -83,11 +83,9 @@ export default function ContactCards({
   columns = [],
   onSelectAll,
   allSelected = false,
-  onUpdateContact,
 }: ContactCardsProps): React.JSX.Element {
   const { t } = useTranslation();
   const { prefs, countryCodesMap } = useContactConfig();
-  const [viewContact, setViewContact] = useState<Contact | null>(null);
 
   const visibleColumnIds = useMemo(
     () => new Set(columns.map((col) => col.id)),
@@ -168,7 +166,7 @@ export default function ContactCards({
                   type="button"
                   variant="ghost"
                   className="h-auto p-0 hover:bg-transparent flex flex-1 items-start gap-2.5 min-w-0 text-start cursor-pointer hover:text-foreground shadow-none justify-start"
-                  onClick={() => setViewContact(contact)}
+                  onClick={() => onView?.(contact)}
                   aria-label={t("contacts.table.viewProfile")}
                 >
                     <UserAvatar
@@ -305,7 +303,7 @@ export default function ContactCards({
                   >
                     <MessageSquare aria-hidden="true" className="w-4 h-4" />
                   </MotionButton>
-
+ 
                   <MotionButton
                     type="button"
                     variant="ghost"
@@ -330,7 +328,7 @@ export default function ContactCards({
                     variant="outline"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setViewContact(contact)}
+                    onClick={() => onView?.(contact)}
                     className="flex items-center h-auto gap-1.5 px-3 py-2 rounded-xl border border-border/50 dark:border-border/30 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/80 hover:border-border transition-colors cursor-pointer shadow-none"
                     aria-label={t("contacts.table.viewProfile")}
                   >
@@ -339,7 +337,7 @@ export default function ContactCards({
                   </MotionButton>
                   <ContactActionMenu
                     contact={contact}
-                    onView={setViewContact}
+                    onView={onView || (() => {})}
                     onEdit={onEdit}
                     onDelete={onDelete}
                     onRestore={onRestore}
@@ -357,21 +355,6 @@ export default function ContactCards({
           );
         })}
       </motion.div>
-
-      {viewContact && (
-        <Suspense fallback={null}>
-          <ContactDetailDrawer
-            contact={viewContact}
-            onClose={() => setViewContact(null)}
-            onEdit={onEdit}
-            onWhatsApp={onWhatsApp}
-            onSms={onSms}
-            onEmail={onEmail}
-            allContacts={allContacts}
-            onUpdateContact={onUpdateContact}
-          />
-        </Suspense>
-      )}
     </>
   );
 }

@@ -62,12 +62,6 @@ export function useDashboardConfig() {
       const legacy = loadDashboardPreferences();
       saveObject(DASHBOARD_PREFERENCES_KEY, legacy);
     }
-
-    const saved = getObject<CustomWidget[] | null>(DASHBOARD_WIDGETS_KEY, null);
-    const current = getOrInitializeCustomWidgets();
-    if (!saved || JSON.stringify(saved) !== JSON.stringify(current)) {
-      saveObject(DASHBOARD_WIDGETS_KEY, current);
-    }
   }, []);
 
   const updateCustomWidgets = useCallback((customWidgetsDraft: CustomWidget[]) => {

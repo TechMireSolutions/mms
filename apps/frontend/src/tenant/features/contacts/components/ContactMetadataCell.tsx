@@ -4,6 +4,7 @@ import {
   Contact,
   hasWhatsApp,
   ContactPreferences,
+  COLOR_PALETTES,
   formatDate,
   calculateDetailedSolarAge,
   getLunarDateString,
@@ -72,7 +73,7 @@ export function ContactMetadataCell({
       }
       case "isSyed":
         return contact.isSyed ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 bg-success/10 text-success rounded border border-success/20">
+          <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 rounded border ${COLOR_PALETTES.success.bg}`}>
             <CheckCircle2 className="w-3 h-3" />
             {t("contacts.table.yesSyed")}
           </span>
@@ -124,8 +125,8 @@ export function ContactMetadataCell({
           <span
             className={`text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${
               hasWhatsApp(contact)
-                ? "bg-success/10 text-success border-success/20"
-                : "bg-muted text-muted-foreground border-border"
+                ? COLOR_PALETTES.success.bg
+                : COLOR_PALETTES.slate.bg
             }`}
           >
             {hasWhatsApp(contact) ? t("common.yes") : t("common.no")}

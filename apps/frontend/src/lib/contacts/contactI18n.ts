@@ -5,6 +5,7 @@ import {
   getPrimaryPhone,
   getPrimaryEmail,
   toTitleCase,
+  CONTACT_SYNC_FIELD_LABEL_KEYS,
   type AppTranslationKey,
   type ContactDuplicateReasonKey,
   type Contact,
@@ -214,6 +215,16 @@ export function resolveSocialPlatformLabel(
 ): string {
   return platform || socialPlatforms?.[0] || t('contacts.detail.socialFallback');
 }
+
+/** Resolves localized label for sync conflict fields based on single-source CONTACT_SYNC_FIELD_LABEL_KEYS. */
+export function resolveSyncFieldLabel(
+  field: string,
+  t: (key: AppTranslationKey) => string,
+): string {
+  const key = CONTACT_SYNC_FIELD_LABEL_KEYS[field as keyof typeof CONTACT_SYNC_FIELD_LABEL_KEYS];
+  return key ? t(key as AppTranslationKey) : field;
+}
+
 
 
 

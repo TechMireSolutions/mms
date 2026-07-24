@@ -266,6 +266,13 @@ export const DEFAULT_WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
   { id: "custom", label: "Custom Message", body: "" },
 ];
 
+export const DEFAULT_PHONE_LABELS = ["Mobile", "Home", "Work", "WhatsApp", "Other"];
+export const DEFAULT_EMAIL_LABELS = ["Personal", "Work", "Other"];
+export const DEFAULT_ADDRESS_LABELS = ["Home", "Work", "Billing", "Other"];
+export const DEFAULT_SOCIAL_PLATFORMS = [
+  "WhatsApp", "Facebook", "Twitter/X", "LinkedIn", "Instagram", "YouTube", "Other"
+];
+
 export const SOCIAL_PLATFORMS = [
   "Facebook", "Twitter / X", "Instagram", "LinkedIn", "TikTok", "YouTube",
   "WhatsApp", "Telegram", "Snapchat",
@@ -403,11 +410,11 @@ export const DEFAULT_COLUMN_REGISTRY: ColumnRegistryEntry[] = [
   { key: "gender",                 label: "Gender",                 enabled: true,  order: 1,  sortable: true,  width: 100 },
   { key: "phone",                  label: "Phone",                  enabled: true,  order: 2,  sortable: false, width: 140 },
   { key: "whatsapp",               label: "WhatsApp",               enabled: true,  order: 3,  sortable: false, width: 90  },
-  { key: "email",                  label: "Email",                  enabled: false, order: 4,  sortable: false, width: 180 },
-  { key: "isSyed",                 label: "Is Syed",                enabled: false, order: 5,  sortable: true,  width: 90  },
-  { key: "dob",                    label: "Date of Birth",          enabled: false, order: 6,  sortable: true,  width: 130 },
+  { key: "email",                  label: "Email",                  enabled: true,  order: 4,  sortable: false, width: 180 },
+  { key: "isSyed",                 label: "Is Syed",                enabled: true,  order: 5,  sortable: true,  width: 90  },
+  { key: "dob",                    label: "Date of Birth",          enabled: true,  order: 6,  sortable: true,  width: 130 },
   { key: "line1",                  label: "Street Address",         enabled: false, order: 7,  sortable: true,  width: 150 },
-  { key: "city",                   label: "City",                   enabled: false, order: 8,  sortable: true,  width: 110 },
+  { key: "city",                   label: "City",                   enabled: true,  order: 8,  sortable: true,  width: 110 },
   { key: "state",                  label: "State / Province",       enabled: false, order: 9,  sortable: true,  width: 120 },
   { key: "country",                label: "Country",                enabled: false, order: 10, sortable: true,  width: 110 },
   { key: "socials_platform",       label: "Social Platforms",       enabled: false, order: 11, sortable: false, width: 130 },
@@ -415,6 +422,24 @@ export const DEFAULT_COLUMN_REGISTRY: ColumnRegistryEntry[] = [
   { key: "emergency_contact",      label: "Emergency Contact",      enabled: false, order: 13, sortable: false, width: 150 },
   { key: "emergency_relationship", label: "Emergency Relationship", enabled: false, order: 14, sortable: false, width: 140 },
 ];
+
+export const COLUMN_FIELD_MAPPING: Record<string, { tabId: string; fieldId: string }> = {
+  name: { tabId: "basic", fieldId: "firstName" },
+  gender: { tabId: "basic", fieldId: "gender" },
+  dob: { tabId: "basic", fieldId: "dob" },
+  isSyed: { tabId: "basic", fieldId: "isSyed" },
+  phone: { tabId: "phones", fieldId: "number" },
+  whatsapp: { tabId: "phones", fieldId: "whatsapp" },
+  email: { tabId: "emails", fieldId: "address" },
+  line1: { tabId: "addresses", fieldId: "line1" },
+  city: { tabId: "addresses", fieldId: "city" },
+  state: { tabId: "addresses", fieldId: "state" },
+  country: { tabId: "addresses", fieldId: "country" },
+  socials_platform: { tabId: "socials", fieldId: "platform" },
+  socials_url: { tabId: "socials", fieldId: "url" },
+  emergency_contact: { tabId: "emergency", fieldId: "contactId" },
+  emergency_relationship: { tabId: "emergency", fieldId: "relationship" },
+};
 
 export interface Message {
   id: string;

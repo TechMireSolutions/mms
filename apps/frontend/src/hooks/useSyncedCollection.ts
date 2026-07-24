@@ -8,6 +8,8 @@ export interface UseSyncedCollectionOptions<T> {
   enabled?: boolean;
 }
 
+const EMPTY_ARRAY: unknown[] = [];
+
 /**
  * A custom React hook that coordinates query-first fetching with localStorage fallback.
  * It encapsulates the pattern:
@@ -23,7 +25,7 @@ export function useSyncedCollection<T>({
   enabled = true,
 }: UseSyncedCollectionOptions<T>): T[] {
   const localData = useLiveCollection<T>(collectionName, defaultData, { enabled });
-  if (!enabled) return [];
+  if (!enabled) return EMPTY_ARRAY as T[];
   if (isSuccess && queryData) {
     return queryData;
   }

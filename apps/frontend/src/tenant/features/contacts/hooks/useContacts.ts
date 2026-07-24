@@ -552,6 +552,13 @@ export function useContactsSavedReportMutations() {
   return { createSavedReport, deleteSavedReport, runSavedReport };
 }
 
+export interface UseContactsCollectionResult {
+  contacts: Contact[];
+  isLoading: boolean;
+  isError: boolean;
+  isFetching: boolean;
+}
+
 /** Query-first contacts; falls back to localStorage only before the first successful fetch. */
 export function useContactsCollection(options?: { enabled?: boolean; includeDeleted?: boolean }): Contact[] {
   const enabled = options?.enabled ?? true;
@@ -564,3 +571,23 @@ export function useContactsCollection(options?: { enabled?: boolean; includeDele
     enabled,
   });
 }
+
+/** Returns synced contacts along with query loading and fetching state. */
+export function useContactsCollectionState(options?: { enabled?: boolean; includeDeleted?: boolean }): UseContactsCollectionResult {
+  const enabled = options?.enabled ?? true;
+  const includeDeleted = options?.includeDeleted ?? false;
+  const queryResult = useContacts({ enabled, includeDeleted });
+  const contacts = useSyncedCollection<Contact>({
+    queryData: queryResult.data,
+    isSuccess: queryResult.isSuccess,
+    collectionName: CONTACTS_MODULE_CONTRACT.collectionKey,
+    enabled,
+  });
+  return {
+    contacts,
+    isLoading: queryResult.isLoading,
+    isError: queryResult.isError,
+    isFetching: queryResult.isFetching,
+  };
+}
+

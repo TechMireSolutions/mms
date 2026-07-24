@@ -11,6 +11,7 @@ import {
   getDuplicateFieldLabel,
   getDuplicateFieldValue,
 } from "@/lib/contacts/contactI18n";
+import { cn } from "@/lib/utils";
 import {
   Contact,
   COLOR_PALETTES,
@@ -43,7 +44,7 @@ function ConfidenceBadge({ score, prefs }: ConfidenceBadgeProps): React.JSX.Elem
   
   const colorClass = score >= highThreshold ? highColor : score >= medThreshold ? medColor : lowColor;
   return (
-    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${colorClass}`}>
+    <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", colorClass)}>
       {score}{t('contacts.duplicates.matchSuffix')}
     </span>
   );

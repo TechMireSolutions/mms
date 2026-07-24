@@ -21,7 +21,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import ContactPicker from "@/tenant/features/contacts/components/contactLink/ContactPicker";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
-import { getFallbackCountryCode } from "@/lib/contacts/contactI18n";
+import { getFallbackCountryCode, formatContactPhoneDisplay } from "@/lib/contacts/contactI18n";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { AvatarCropper } from "@/components/ui/AvatarCropper";
 import { UserAvatar } from "@/components/ui/UserAvatar";
@@ -43,6 +43,11 @@ import {
   SocialLink,
   EmergencyContact,
   RELATIONSHIPS,
+  GENDERS,
+  DEFAULT_PHONE_LABELS,
+  DEFAULT_EMAIL_LABELS,
+  DEFAULT_ADDRESS_LABELS,
+  DEFAULT_SOCIAL_PLATFORMS,
   todayISO,
   formatCnic,
   cleanContactDraft,
@@ -57,12 +62,6 @@ import {
 } from "@/components/ui/FormPrimitives";
 import { FORM_CARD } from "@/components/ui/formStyles";
 import { SectionCard } from "@/components/ui/SectionCard";
-
-const parsePhoneEntry = (phone: PhoneNumber, defaultCountryCode = "+92"): { countryCode: string; number: string } => {
-  const trimmed = (phone.number || "").trim();
-  const parsed = parsePhoneNumber(trimmed, phone.countryCode || defaultCountryCode);
-  return { countryCode: parsed.countryCode, number: parsed.number || trimmed };
-};
 
 interface ContactFormProps {
   open?: boolean;
@@ -87,6 +86,70 @@ const CONTACT_TABS = [
 
 type TabKey = (typeof CONTACT_TABS)[number]["key"];
 
+interface ListFieldCardProps {
+  id: string;
+  index: number;
+  icon: React.ElementType;
+  accentClass?: string;
+  iconClass?: string;
+  label: string;
+  typeSelect?: React.ReactNode;
+  onRemove: () => void;
+  removeLabel: string;
+  children: React.ReactNode;
+}
+
+function ListFieldCard({
+  id,
+  index,
+  icon: Icon,
+  accentClass = "bg-primary/60 group-hover:bg-primary",
+  iconClass = "text-primary/70 group-hover:text-primary",
+  label,
+  typeSelect,
+  onRemove,
+  removeLabel,
+  children,
+}: ListFieldCardProps): React.JSX.Element {
+  return (
+    <motion.div
+      key={id}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.15 }}
+      style={{ zIndex: 100 - index }}
+      className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
+    >
+      <div className={cn("absolute start-0 top-0 bottom-0 w-1.5 transition-colors", accentClass)} />
+      <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
+        <div className="flex items-center gap-2.5">
+          <Icon className={cn("w-4 h-4 transition-colors", iconClass)} />
+          <span className="text-xs font-semibold text-foreground/80">
+            {label}
+          </span>
+          {typeSelect}
+        </div>
+        <CardRemoveButton onClick={onRemove} label={removeLabel} />
+      </div>
+      {children}
+    </motion.div>
+  );
+}
+
+interface EmptyListCardProps {
+  icon: React.ElementType;
+  message: string;
+}
+
+function EmptyListCard({ icon: Icon, message }: EmptyListCardProps): React.JSX.Element {
+  return (
+    <div className="text-center py-8 border border-dashed border-border/80 rounded-2xl bg-muted/5 backdrop-blur-sm">
+      <Icon className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
+      <p className="text-xs text-muted-foreground">{message}</p>
+    </div>
+  );
+}
 
 export default function ContactForm({
   open = true,
@@ -134,16 +197,7 @@ export default function ContactForm({
   );
   const [cropSrc, setCropSrc] = useState<string | null>(null);
 
-  const localIdMap = React.useRef<Map<string, string>>(new Map());
-
-  /** Returns a stable UUID for a given list slot. Survives re-renders. */
-  const getLocalId = (tab: string, idx: number): string => {
-    const key = `${tab}:${idx}`;
-    if (!localIdMap.current.has(key)) {
-      localIdMap.current.set(key, crypto.randomUUID());
-    }
-    return localIdMap.current.get(key)!;
-  };
+  const getLocalId = (tabName: string, idx: number): string => `${formInstanceId}-${tabName}-${idx}`;
 
   const [contactDraft, setContactDraft] = useState<Partial<Contact>>(() =>
     normalizeContactForEdit(contact, initialDraft, defaultCity, defaultProvince, defaultCountry),
@@ -152,7 +206,6 @@ export default function ContactForm({
   // Re-sync draft when editing another contact or re-opening modal
   React.useEffect(() => {
     if (!open) return;
-    localIdMap.current.clear();
     setTab("basic");
     setContactDraft(
       normalizeContactForEdit(contact, initialDraft, defaultCity, defaultProvince, defaultCountry),
@@ -251,9 +304,9 @@ export default function ContactForm({
       const currentPhones = prev.phones || [];
       const phone = currentPhones[index];
       if (!phone || !phone.number) return prev;
-      const parsed = parsePhoneEntry(phone);
+      const { countryCode, formattedNumber: number } = formatContactPhoneDisplay(phone.number, phone.countryCode || defaultCountryCode);
       const updatedPhones = [...currentPhones];
-      updatedPhones[index] = { ...phone, countryCode: parsed.countryCode, number: parsed.number };
+      updatedPhones[index] = { ...phone, countryCode, number };
       return {
         ...prev,
         phones: updatedPhones,
@@ -261,16 +314,33 @@ export default function ContactForm({
     });
   };
 
-  const removeListField = useCallback((fieldKey: keyof Contact, idx: number) => {
+  type SubListKey = "phones" | "emails" | "addresses" | "socials" | "emergencyContacts";
+
+  const addSubListItem = useCallback(<K extends SubListKey>(
+    fieldKey: K,
+    newItem: NonNullable<Contact[K]>[number]
+  ) => {
+    setContactDraft((prev) => ({
+      ...prev,
+      [fieldKey]: [...((prev[fieldKey] as unknown[]) || []), newItem],
+    }));
+  }, []);
+
+  const updateSubListItem = useCallback(<K extends SubListKey>(
+    fieldKey: K,
+    idx: number,
+    patch: Partial<NonNullable<Contact[K]>[number]>
+  ) => {
+    setContactDraft((prev) => {
+      const list = ((prev[fieldKey] as unknown[]) || []) as Record<string, unknown>[];
+      const nextList = list.map((item, i) => (i === idx ? { ...item, ...patch } : item));
+      return { ...prev, [fieldKey]: nextList };
+    });
+  }, []);
+
+  const removeSubListItem = useCallback((fieldKey: SubListKey, idx: number) => {
     setContactDraft((prev) => {
       const list = (prev[fieldKey] as unknown[]) || [];
-      const newLen = list.length - 1;
-      const tabName = String(fieldKey);
-      for (let i = idx; i < newLen; i++) {
-        const next = localIdMap.current.get(`${tabName}:${i + 1}`);
-        if (next !== undefined) localIdMap.current.set(`${tabName}:${i}`, next);
-      }
-      localIdMap.current.delete(`${tabName}:${newLen}`);
       return {
         ...prev,
         [fieldKey]: list.filter((_, i) => i !== idx),
@@ -312,8 +382,8 @@ export default function ContactForm({
       const lastName = toTitleCase((cleanedDraft.lastName || "").trim());
 
       const normalizedPhones = (cleanedDraft.phones || []).map((phone) => {
-        const parsed = parsePhoneEntry(phone);
-        return { ...phone, countryCode: parsed.countryCode, number: parsed.number };
+        const { countryCode, formattedNumber: number } = formatContactPhoneDisplay(phone.number, phone.countryCode || defaultCountryCode);
+        return { ...phone, countryCode, number };
       });
 
       const contactRaw: Contact = {
@@ -474,7 +544,7 @@ export default function ContactForm({
                   options={
                     genders.length > 0
                       ? genders
-                      : ["male", "female", "other", "unspecified"]
+                      : GENDERS
                   }
                   value={contactDraft.gender || ""}
                   onChange={(val) => updateDraft({ gender: val.toLowerCase() })}
@@ -589,28 +659,15 @@ export default function ContactForm({
   const renderPhones = () => {
     const phones = contactDraft.phones || [];
     const addPhone = () => {
-      setContactDraft((prev) => ({
-        ...prev,
-        phones: [...(prev.phones || []), { label: "Mobile", number: "", countryCode: defaultCountryCode }],
-      }));
+      addSubListItem("phones", { label: "Mobile", number: "", countryCode: defaultCountryCode });
     };
-    const removePhone = (idx: number) => removeListField("phones", idx);
-    const updatePhone = (idx: number, patch: Partial<PhoneNumber>) => {
-      setContactDraft((prev) => ({
-        ...prev,
-        phones: (prev.phones || []).map((p, i) => (i === idx ? { ...p, ...patch } : p)),
-      }));
-    };
+    const removePhone = (idx: number) => removeSubListItem("phones", idx);
+    const updatePhone = (idx: number, patch: Partial<PhoneNumber>) => updateSubListItem("phones", idx, patch);
 
     return (
       <div className="space-y-3 text-left">
         {phones.length === 0 && (
-          <div className="text-center py-8 border border-dashed border-border/85 rounded-2xl bg-muted/5 backdrop-blur-sm">
-            <Phone className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">
-              {t("contacts.form.noPhoneNumbersYet")}
-            </p>
-          </div>
+          <EmptyListCard icon={Phone} message={t("contacts.form.noPhoneNumbersYet")} />
         )}
 
         <div className="space-y-3">
@@ -618,41 +675,31 @@ export default function ContactForm({
             {phones.map((phone, idx) => {
               const numError = getListItemError("phones", "number", idx);
               return (
-                <motion.div
+                <ListFieldCard
                   key={getLocalId("phones", idx)}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  style={{ zIndex: 100 - idx }}
-                  className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
-                >
-                  <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover:bg-primary" />
-                  <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
-                    <div className="flex items-center gap-2.5">
-                      <Phone className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-                      <span className="text-xs font-semibold text-foreground/80">
-                        {t("contacts.form.type")}:
-                      </span>
-                      <EditableSelect
-                        options={
-                          phoneLabels.length > 0
-                            ? phoneLabels
-                            : ["Mobile", "Home", "Work", "WhatsApp", "Other"]
-                        }
-                        value={phone.label || "Mobile"}
-                        onChange={(val) => updatePhone(idx, { label: val })}
-                        className={TYPE_SELECT_WIDTH}
-                        id={`phone-label-${idx}`}
-                        name={`phone-label-${idx}`}
-                      />
-                    </div>
-                    <CardRemoveButton
-                      onClick={() => removePhone(idx)}
-                      label={t("contacts.form.removePhoneNumber", { index: idx + 1 })}
+                  id={getLocalId("phones", idx)}
+                  index={idx}
+                  icon={Phone}
+                  accentClass="bg-primary/60 group-hover:bg-primary"
+                  iconClass="text-primary/70 group-hover:text-primary"
+                  label={`${t("contacts.form.type")}:`}
+                  typeSelect={
+                    <EditableSelect
+                      options={
+                        phoneLabels.length > 0
+                          ? phoneLabels
+                          : DEFAULT_PHONE_LABELS
+                      }
+                      value={phone.label || "Mobile"}
+                      onChange={(val) => updatePhone(idx, { label: val })}
+                      className={TYPE_SELECT_WIDTH}
+                      id={`phone-label-${idx}`}
+                      name={`phone-label-${idx}`}
                     />
-                  </div>
-
+                  }
+                  onRemove={() => removePhone(idx)}
+                  removeLabel={t("contacts.form.removePhoneNumber", { index: idx + 1 })}
+                >
                   <div className="flex items-center gap-2 w-full">
                     <EditableSelect
                       options={countryCodeOptions}
@@ -697,7 +744,7 @@ export default function ContactForm({
                       {numError}
                     </p>
                   )}
-                </motion.div>
+                </ListFieldCard>
               );
             })}
           </AnimatePresence>
@@ -719,28 +766,15 @@ export default function ContactForm({
   const renderEmails = () => {
     const emails = contactDraft.emails || [];
     const addEmail = () => {
-      setContactDraft((prev) => ({
-        ...prev,
-        emails: [...(prev.emails || []), { label: "Personal", address: "" }],
-      }));
+      addSubListItem("emails", { label: "Personal", address: "" });
     };
-    const removeEmail = (idx: number) => removeListField("emails", idx);
-    const updateEmail = (idx: number, patch: Partial<EmailAddress>) => {
-      setContactDraft((prev) => ({
-        ...prev,
-        emails: (prev.emails || []).map((e, i) => (i === idx ? { ...e, ...patch } : e)),
-      }));
-    };
+    const removeEmail = (idx: number) => removeSubListItem("emails", idx);
+    const updateEmail = (idx: number, patch: Partial<EmailAddress>) => updateSubListItem("emails", idx, patch);
 
     return (
       <div className="space-y-3 text-left">
         {emails.length === 0 && (
-          <div className="text-center py-8 border border-dashed border-border/80 rounded-2xl bg-muted/5 backdrop-blur-sm">
-            <Mail className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">
-              {t("contacts.form.noEmailAddressesYet")}
-            </p>
-          </div>
+          <EmptyListCard icon={Mail} message={t("contacts.form.noEmailAddressesYet")} />
         )}
 
         <div className="space-y-3">
@@ -748,41 +782,31 @@ export default function ContactForm({
             {emails.map((email, idx) => {
               const emailError = getListItemError("emails", "address", idx);
               return (
-                <motion.div
+                <ListFieldCard
                   key={getLocalId("emails", idx)}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  style={{ zIndex: 100 - idx }}
-                  className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
-                >
-                  <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-amber-500/60 transition-colors group-hover:bg-amber-500" />
-                  <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
-                    <div className="flex items-center gap-2.5">
-                      <Mail className="w-4 h-4 text-amber-500/70 group-hover:text-amber-500 transition-colors" />
-                      <span className="text-xs font-semibold text-foreground/80">
-                        {t("contacts.form.type")}:
-                      </span>
-                      <EditableSelect
-                        options={
-                          emailLabels.length > 0
-                            ? emailLabels
-                            : ["Personal", "Work", "Other"]
-                        }
-                        value={email.label || "Personal"}
-                        onChange={(val) => updateEmail(idx, { label: val })}
-                        className={TYPE_SELECT_WIDTH}
-                        id={`email-label-${idx}`}
-                        name={`email-label-${idx}`}
-                      />
-                    </div>
-                    <CardRemoveButton
-                      onClick={() => removeEmail(idx)}
-                      label={t("contacts.form.removeEmailAddress", { index: idx + 1 })}
+                  id={getLocalId("emails", idx)}
+                  index={idx}
+                  icon={Mail}
+                  accentClass="bg-amber-500/60 group-hover:bg-amber-500"
+                  iconClass="text-amber-500/70 group-hover:text-amber-500"
+                  label={`${t("contacts.form.type")}:`}
+                  typeSelect={
+                    <EditableSelect
+                      options={
+                        emailLabels.length > 0
+                          ? emailLabels
+                          : DEFAULT_EMAIL_LABELS
+                      }
+                      value={email.label || "Personal"}
+                      onChange={(val) => updateEmail(idx, { label: val })}
+                      className={TYPE_SELECT_WIDTH}
+                      id={`email-label-${idx}`}
+                      name={`email-label-${idx}`}
                     />
-                  </div>
-
+                  }
+                  onRemove={() => removeEmail(idx)}
+                  removeLabel={t("contacts.form.removeEmailAddress", { index: idx + 1 })}
+                >
                   <div className="relative flex items-center group/input">
                     <Mail className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                     <Input
@@ -806,7 +830,7 @@ export default function ContactForm({
                       {emailError}
                     </p>
                   )}
-                </motion.div>
+                </ListFieldCard>
               );
             })}
           </AnimatePresence>
@@ -828,37 +852,21 @@ export default function ContactForm({
   const renderAddresses = () => {
     const addresses = contactDraft.addresses || [];
     const addAddress = () => {
-      setContactDraft((prev) => ({
-        ...prev,
-        addresses: [
-          ...(prev.addresses || []),
-          {
-            label: "Home",
-            line1: "",
-            city: defaultCity,
-            state: defaultProvince,
-            country: defaultCountry,
-          },
-        ],
-      }));
+      addSubListItem("addresses", {
+        label: "Home",
+        line1: "",
+        city: defaultCity,
+        state: defaultProvince,
+        country: defaultCountry,
+      });
     };
-    const removeAddress = (idx: number) => removeListField("addresses", idx);
-    const updateAddress = (idx: number, patch: Partial<Address>) => {
-      setContactDraft((prev) => ({
-        ...prev,
-        addresses: (prev.addresses || []).map((a, i) => (i === idx ? { ...a, ...patch } : a)),
-      }));
-    };
+    const removeAddress = (idx: number) => removeSubListItem("addresses", idx);
+    const updateAddress = (idx: number, patch: Partial<Address>) => updateSubListItem("addresses", idx, patch);
 
     return (
       <div className="space-y-3 text-left">
         {addresses.length === 0 && (
-          <div className="text-center py-8 border border-dashed border-border/80 rounded-2xl bg-muted/5 backdrop-blur-sm">
-            <MapPin className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">
-              {t("contacts.form.noAddressesYet")}
-            </p>
-          </div>
+          <EmptyListCard icon={MapPin} message={t("contacts.form.noAddressesYet")} />
         )}
 
         <div className="space-y-3">
@@ -867,41 +875,31 @@ export default function ContactForm({
               const line1Error = getListItemError("addresses", "line1", idx);
               const cityError = getListItemError("addresses", "city", idx);
               return (
-                <motion.div
+                <ListFieldCard
                   key={getLocalId("addresses", idx)}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  style={{ zIndex: 100 - idx }}
-                  className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
-                >
-                  <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-emerald-500/60 transition-colors group-hover:bg-emerald-500" />
-                  <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
-                    <div className="flex items-center gap-2.5">
-                      <MapPin className="w-4 h-4 text-emerald-500/70 group-hover:text-emerald-500 transition-colors" />
-                      <span className="text-xs font-semibold text-foreground/80">
-                        {t("contacts.form.type")}:
-                      </span>
-                      <EditableSelect
-                        options={
-                          addressLabels.length > 0
-                            ? addressLabels
-                            : ["Home", "Work", "Billing", "Other"]
-                        }
-                        value={addr.label || "Home"}
-                        onChange={(val) => updateAddress(idx, { label: val })}
-                        className={TYPE_SELECT_WIDTH}
-                        id={`address-label-${idx}`}
-                        name={`address-label-${idx}`}
-                      />
-                    </div>
-                    <CardRemoveButton
-                      onClick={() => removeAddress(idx)}
-                      label={t("contacts.form.removeAddress", { index: idx + 1 })}
+                  id={getLocalId("addresses", idx)}
+                  index={idx}
+                  icon={MapPin}
+                  accentClass="bg-emerald-500/60 group-hover:bg-emerald-500"
+                  iconClass="text-emerald-500/70 group-hover:text-emerald-500"
+                  label={`${t("contacts.form.type")}:`}
+                  typeSelect={
+                    <EditableSelect
+                      options={
+                        addressLabels.length > 0
+                          ? addressLabels
+                          : DEFAULT_ADDRESS_LABELS
+                      }
+                      value={addr.label || "Home"}
+                      onChange={(val) => updateAddress(idx, { label: val })}
+                      className={TYPE_SELECT_WIDTH}
+                      id={`address-label-${idx}`}
+                      name={`address-label-${idx}`}
                     />
-                  </div>
-
+                  }
+                  onRemove={() => removeAddress(idx)}
+                  removeLabel={t("contacts.form.removeAddress", { index: idx + 1 })}
+                >
                   <div className="space-y-3">
                     <div>
                       <div className="relative flex items-center group/input">
@@ -968,7 +966,7 @@ export default function ContactForm({
                       />
                     </div>
                   </div>
-                </motion.div>
+                </ListFieldCard>
               );
             })}
           </AnimatePresence>
@@ -990,28 +988,15 @@ export default function ContactForm({
   const renderSocials = () => {
     const socials = contactDraft.socials || [];
     const addSocial = () => {
-      setContactDraft((prev) => ({
-        ...prev,
-        socials: [...(prev.socials || []), { platform: "WhatsApp", url: "" }],
-      }));
+      addSubListItem("socials", { platform: "WhatsApp", url: "" });
     };
-    const removeSocial = (idx: number) => removeListField("socials", idx);
-    const updateSocial = (idx: number, patch: Partial<SocialLink>) => {
-      setContactDraft((prev) => ({
-        ...prev,
-        socials: (prev.socials || []).map((s, i) => (i === idx ? { ...s, ...patch } : s)),
-      }));
-    };
+    const removeSocial = (idx: number) => removeSubListItem("socials", idx);
+    const updateSocial = (idx: number, patch: Partial<SocialLink>) => updateSubListItem("socials", idx, patch);
 
     return (
       <div className="space-y-3 text-left">
         {socials.length === 0 && (
-          <div className="text-center py-8 border border-dashed border-border/80 rounded-2xl bg-muted/5 backdrop-blur-sm">
-            <Share2 className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">
-              {t("contacts.form.noSocialLinksYet")}
-            </p>
-          </div>
+          <EmptyListCard icon={Share2} message={t("contacts.form.noSocialLinksYet")} />
         )}
 
         <div className="space-y-3">
@@ -1019,49 +1004,31 @@ export default function ContactForm({
             {socials.map((soc, idx) => {
               const urlError = getListItemError("socials", "url", idx);
               return (
-                <motion.div
+                <ListFieldCard
                   key={getLocalId("socials", idx)}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  style={{ zIndex: 100 - idx }}
-                  className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
-                >
-                  <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-indigo-500/60 transition-colors group-hover:bg-indigo-500" />
-                  <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
-                    <div className="flex items-center gap-2.5">
-                      <Share2 className="w-4 h-4 text-indigo-500/70 group-hover:text-indigo-500 transition-colors" />
-                      <span className="text-xs font-semibold text-foreground/80">
-                        {t("contacts.form.type")}:
-                      </span>
-                      <EditableSelect
-                        options={
-                          socialPlatforms.length > 0
-                            ? socialPlatforms
-                            : [
-                                "WhatsApp",
-                                "Facebook",
-                                "Twitter/X",
-                                "LinkedIn",
-                                "Instagram",
-                                "YouTube",
-                                "Other",
-                              ]
-                        }
-                        value={soc.platform || "WhatsApp"}
-                        onChange={(val) => updateSocial(idx, { platform: val })}
-                        className={TYPE_SELECT_WIDTH}
-                        id={`social-platform-${idx}`}
-                        name={`social-platform-${idx}`}
-                      />
-                    </div>
-                    <CardRemoveButton
-                      onClick={() => removeSocial(idx)}
-                      label={t("contacts.form.removeSocialLink", { index: idx + 1 })}
+                  id={getLocalId("socials", idx)}
+                  index={idx}
+                  icon={Share2}
+                  accentClass="bg-indigo-500/60 group-hover:bg-indigo-500"
+                  iconClass="text-indigo-500/70 group-hover:text-indigo-500"
+                  label={`${t("contacts.form.type")}:`}
+                  typeSelect={
+                    <EditableSelect
+                      options={
+                        socialPlatforms.length > 0
+                          ? socialPlatforms
+                          : DEFAULT_SOCIAL_PLATFORMS
+                      }
+                      value={soc.platform || "WhatsApp"}
+                      onChange={(val) => updateSocial(idx, { platform: val })}
+                      className={TYPE_SELECT_WIDTH}
+                      id={`social-platform-${idx}`}
+                      name={`social-platform-${idx}`}
                     />
-                  </div>
-
+                  }
+                  onRemove={() => removeSocial(idx)}
+                  removeLabel={t("contacts.form.removeSocialLink", { index: idx + 1 })}
+                >
                   <div className="relative flex items-center group/input">
                     <Share2 className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                     <Input
@@ -1084,7 +1051,7 @@ export default function ContactForm({
                       {urlError}
                     </p>
                   )}
-                </motion.div>
+                </ListFieldCard>
               );
             })}
           </AnimatePresence>
@@ -1106,23 +1073,10 @@ export default function ContactForm({
   const renderEmergency = () => {
     const emergencyContacts = contactDraft.emergencyContacts || [];
     const addEmergency = () => {
-      setContactDraft((prev) => ({
-        ...prev,
-        emergencyContacts: [
-          ...(prev.emergencyContacts || []),
-          { relationship: "Father", contactId: "" },
-        ],
-      }));
+      addSubListItem("emergencyContacts", { relationship: "Father", contactId: "" });
     };
-    const removeEmergency = (idx: number) => removeListField("emergencyContacts", idx);
-    const updateEmergency = (idx: number, patch: Partial<EmergencyContact>) => {
-      setContactDraft((prev) => ({
-        ...prev,
-        emergencyContacts: (prev.emergencyContacts || []).map((em, i) =>
-          i === idx ? { ...em, ...patch } : em,
-        ),
-      }));
-    };
+    const removeEmergency = (idx: number) => removeSubListItem("emergencyContacts", idx);
+    const updateEmergency = (idx: number, patch: Partial<EmergencyContact>) => updateSubListItem("emergencyContacts", idx, patch);
     const excludeIds = (idx: number): (string | number)[] => {
       const linked = emergencyContacts
         .filter((_, i) => i !== idx)
@@ -1137,12 +1091,7 @@ export default function ContactForm({
     return (
       <div className="space-y-3 text-left">
         {emergencyContacts.length === 0 && (
-          <div className="text-center py-8 border border-dashed border-rose-500/20 rounded-2xl bg-rose-500/5 backdrop-blur-sm">
-            <Heart className="w-8 h-8 text-rose-500/60 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">
-              {t("contacts.form.noEmergencyContactsYet")}
-            </p>
-          </div>
+          <EmptyListCard icon={Heart} message={t("contacts.form.noEmergencyContactsYet")} />
         )}
 
         <div className="space-y-3">
@@ -1155,29 +1104,17 @@ export default function ContactForm({
               );
 
               return (
-                <motion.div
+                <ListFieldCard
                   key={getLocalId("emergency", idx)}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  style={{ zIndex: 100 - idx }}
-                  className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
+                  id={getLocalId("emergency", idx)}
+                  index={idx}
+                  icon={Heart}
+                  accentClass="bg-rose-500/60 group-hover:bg-rose-500"
+                  iconClass="text-rose-500/70 group-hover:text-rose-500"
+                  label={`${t("contacts.form.contact")} ${idx + 1}`}
+                  onRemove={() => removeEmergency(idx)}
+                  removeLabel={t("contacts.form.removeEmergencyContact", { index: idx + 1 })}
                 >
-                  <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-rose-500/60 transition-colors group-hover:bg-rose-500" />
-                  <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
-                    <div className="flex items-center gap-2.5">
-                      <Heart className="w-4 h-4 text-rose-500/70 group-hover:text-rose-500 transition-colors" />
-                      <span className="text-xs font-semibold text-foreground/80">
-                        {t("contacts.form.contact")} {idx + 1}
-                      </span>
-                    </div>
-                    <CardRemoveButton
-                      onClick={() => removeEmergency(idx)}
-                      label={t("contacts.form.removeEmergencyContact", { index: idx + 1 })}
-                    />
-                  </div>
-
                   <div className="space-y-3">
                     <ContactPicker
                       label={t("contacts.form.linkContact")}
@@ -1217,7 +1154,7 @@ export default function ContactForm({
                       />
                     </Field>
                   </div>
-                </motion.div>
+                </ListFieldCard>
               );
             })}
           </AnimatePresence>

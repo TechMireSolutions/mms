@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronUp,
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   getDisplayName, 
-  getPrimaryEmail, 
+  getPrimaryEmail,
   hasWhatsApp, 
   Contact,
 } from "@mms/shared";
@@ -21,11 +21,6 @@ import { ContactMetadataCell } from "@/tenant/features/contacts/components/Conta
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { CopyBtn } from "@/components/ui/CopyBtn";
-
-const ContactDetailDrawer = lazy(() => import("@/tenant/features/contacts/components/ContactDetailDrawer"));
-
-
-
 
 interface ColumnConfig {
   id: string;
@@ -38,6 +33,7 @@ interface ContactsTableProps {
   selected: (number | string)[];
   onSelect: (contactId: number | string) => void;
   onSelectAll: () => void;
+  onView?: (contact: Contact) => void;
   onEdit: (contact: Contact) => void;
   onDelete: (contactId: number | string) => void;
   onRestore?: (contactId: number | string) => void;
@@ -60,6 +56,7 @@ export default function ContactsTable({
   selected,
   onSelect,
   onSelectAll,
+  onView,
   onEdit,
   onDelete,
   onRestore,
@@ -72,13 +69,11 @@ export default function ContactsTable({
   onSort,
   columns = [],
   allContacts = [],
-  onUpdateContact,
   canWrite = false,
   canDelete = false,
 }: ContactsTableProps): React.JSX.Element {
   const { prefs, countryCodesMap } = useContactConfig();
   const { t } = useTranslation();
-  const [viewContact, setViewContact] = useState<Contact | null>(null);
 
   const allSelected  = contacts.length > 0 && selected.length === contacts.length;
   const someSelected = selected.length > 0 && selected.length < contacts.length;
@@ -113,7 +108,7 @@ export default function ContactsTable({
               />
               <div>
                 <Button
-                  onClick={() => setViewContact(contact)}
+                  onClick={() => onView?.(contact)}
                   variant="ghost"
                   className="min-h-[44px] h-auto p-0 text-[13px] font-semibold text-foreground hover:text-primary transition-colors text-start justify-start hover:bg-transparent"
                   type="button"
@@ -195,99 +190,80 @@ export default function ContactsTable({
   };
 
   return (
-    <>
-      <div className="overflow-x-auto rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl shadow-xs">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/30">
-              <th className="w-10 px-4 py-3 sticky left-0 z-20 bg-muted/95 backdrop-blur-md border-r border-border/30">
-                <Checkbox
-                  checked={someSelected ? "indeterminate" : allSelected}
-                  onCheckedChange={() => onSelectAll()}
-                  aria-label={allSelected ? t("contacts.deselect") : t("contacts.table.selectAll")}
-                  className="cursor-pointer"
-                />
-              </th>
-              {columns.map((col) => {
-                const sortFieldKey = col.sortField || col.id;
-                const isNameCol = col.id === "name";
-                const stickyClass = isNameCol ? "sticky left-10 z-20 bg-muted/95 backdrop-blur-md border-r border-border/30" : "";
-                return sortFieldKey ? (
-                  <TH key={col.id} field={sortFieldKey} className={stickyClass}>{col.label}</TH>
-                ) : (
-                  <th key={col.id} className={`px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide ${stickyClass}`}>{col.label}</th>
-                );
-              })}
-              <th className="px-4 py-3 w-16" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border/50">
-            <AnimatePresence>
-              {contacts.map((contact) => {
-                const isSelected = selected.includes(contact.id);
-                return (
-                  <motion.tr
-                    key={contact.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.1 }}
-                    className={`hover:bg-muted/20 transition-colors group ${isSelected ? "bg-primary/[0.02]" : ""}`}
-                  >
-                    <td className="px-4 py-3 sticky left-0 z-20 bg-card group-hover:bg-muted/40 transition-colors border-r border-border/30">
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={() => onSelect(contact.id)}
-                        aria-label={t("contacts.table.selectContact", { name: getDisplayName(contact) })}
-                        className="cursor-pointer"
-                      />
-                    </td>
-                    {columns.map((col) => renderCell(col, contact))}
-                    <td className="px-4 py-3">
-                      <ContactActionMenu
-                        contact={contact}
-                        onView={setViewContact}
-                        onEdit={onEdit}
-                        onDelete={onDelete}
-                        onRestore={onRestore}
-                        onWhatsApp={onWhatsApp}
-                        onSms={onSms}
-                        onEmail={onEmail}
-                        showArchived={showArchived}
-                        canWrite={canWrite}
-                        canDelete={canDelete}
-                      />
-                    </td>
-                  </motion.tr>
-                );
-              })}
-            </AnimatePresence>
-          </tbody>
-        </table>
+    <div className="overflow-x-auto rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl shadow-xs">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-border bg-muted/30">
+            <th className="w-10 px-4 py-3 sticky left-0 z-20 bg-muted/95 backdrop-blur-md border-r border-border/30">
+              <Checkbox
+                checked={someSelected ? "indeterminate" : allSelected}
+                onCheckedChange={() => onSelectAll()}
+                aria-label={allSelected ? t("contacts.deselect") : t("contacts.table.selectAll")}
+                className="cursor-pointer"
+              />
+            </th>
+            {columns.map((col) => {
+              const sortFieldKey = col.sortField || col.id;
+              const isNameCol = col.id === "name";
+              const stickyClass = isNameCol ? "sticky left-10 z-20 bg-muted/95 backdrop-blur-md border-r border-border/30" : "";
+              return sortFieldKey ? (
+                <TH key={col.id} field={sortFieldKey} className={stickyClass}>{col.label}</TH>
+              ) : (
+                <th key={col.id} className={`px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide ${stickyClass}`}>{col.label}</th>
+              );
+            })}
+            <th className="px-4 py-3 w-16" />
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border/50">
+          <AnimatePresence>
+            {contacts.map((contact) => {
+              const isSelected = selected.includes(contact.id);
+              return (
+                <motion.tr
+                  key={contact.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.1 }}
+                  className={`hover:bg-muted/20 transition-colors group ${isSelected ? "bg-primary/[0.02]" : ""}`}
+                >
+                  <td className="px-4 py-3 sticky left-0 z-20 bg-card group-hover:bg-muted/40 transition-colors border-r border-border/30">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => onSelect(contact.id)}
+                      aria-label={t("contacts.table.selectContact", { name: getDisplayName(contact) })}
+                      className="cursor-pointer"
+                    />
+                  </td>
+                  {columns.map((col) => renderCell(col, contact))}
+                  <td className="px-4 py-3">
+                    <ContactActionMenu
+                      contact={contact}
+                      onView={onView || (() => {})}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                      onRestore={onRestore}
+                      onWhatsApp={onWhatsApp}
+                      onSms={onSms}
+                      onEmail={onEmail}
+                      showArchived={showArchived}
+                      canWrite={canWrite}
+                      canDelete={canDelete}
+                    />
+                  </td>
+                </motion.tr>
+              );
+            })}
+          </AnimatePresence>
+        </tbody>
+      </table>
 
-        <div className="px-4 py-3 border-t border-border/50 flex items-center justify-between bg-muted/5">
-          <p className="text-xs text-muted-foreground">
-            {selected.length > 0 ? `${selected.length} / ${contacts.length} ${t('contacts.table.selectedCount')}` : `${contacts.length} ${contacts.length !== 1 ? t('contacts.table.contacts') : t('contacts.form.contact')}`}
-          </p>
-        </div>
+      <div className="px-4 py-3 border-t border-border/50 flex items-center justify-between bg-muted/5">
+        <p className="text-xs text-muted-foreground">
+          {selected.length > 0 ? `${selected.length} / ${contacts.length} ${t('contacts.table.selectedCount')}` : `${contacts.length} ${contacts.length !== 1 ? t('contacts.table.contacts') : t('contacts.form.contact')}`}
+        </p>
       </div>
-
-      <Suspense fallback={null}>
-        <AnimatePresence>
-          {viewContact && (
-            <ContactDetailDrawer
-              contact={viewContact}
-              onClose={() => setViewContact(null)}
-              onEdit={(contact) => { setViewContact(null); if (canWrite) onEdit(contact); }}
-              onWhatsApp={onWhatsApp}
-              onSms={onSms}
-              onEmail={onEmail}
-              allContacts={allContacts}
-              onUpdateContact={canWrite ? onUpdateContact : undefined}
-            />
-          )}
-        </AnimatePresence>
-      </Suspense>
-    </>
+    </div>
   );
 }

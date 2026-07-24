@@ -93,11 +93,31 @@ function migrateConfig(config: unknown): FieldConfig {
     refreshModuleTierTabKeys(normalizeTabs(workingConfig.pageTabs) ?? defaults.pageTabs ?? DEFAULT_PAGE_TABS),
   );
   workingConfig.pageTabs = normalizedPageTabs;
-  workingConfig.formTabs = normalizeTabs(workingConfig.formTabs) ?? defaults.formTabs;
+
+  const normalizedFormTabs = (normalizeTabs(workingConfig.formTabs) ?? defaults.formTabs) || DEFAULT_FORM_TABS;
+  const isCorruptedEnabledTabs = !workingConfig.enabledTabs || workingConfig.enabledTabs.length <= 1;
+
+  const repairedFormTabs = normalizedFormTabs.map((tab: any) => {
+    if (isCorruptedEnabledTabs && tab && typeof tab === "object") {
+      const defaultTab = DEFAULT_FORM_TABS.find((d) => d.key === tab.key);
+      if (defaultTab) {
+        return { ...tab, enabled: defaultTab.enabled !== false };
+      }
+    }
+    return tab;
+  });
+
+  workingConfig.formTabs = repairedFormTabs;
   workingConfig.detailTabs = normalizeTabs(workingConfig.detailTabs) ?? defaults.detailTabs;
   workingConfig.settingsSubTabs = normalizeTabs(workingConfig.settingsSubTabs) ?? defaults.settingsSubTabs;
   workingConfig.columnRegistry = workingConfig.columnRegistry ?? defaults.columnRegistry;
   workingConfig.fields = workingConfig.fields ?? defaults.fields;
+
+  if (isCorruptedEnabledTabs) {
+    const activeFormTabKeys = repairedFormTabs.filter((t: any) => t.enabled !== false).map((t: any) => t.key);
+    workingConfig.enabledTabs = Array.from(new Set([...(workingConfig.enabledTabs || []), ...activeFormTabKeys]));
+  }
+
   delete (workingConfig as Record<string, unknown>).uiStrings;
 
   return workingConfig as FieldConfig;
@@ -168,12 +188,21 @@ export function loadFieldConfig(): FieldConfig {
   const parsed = getObject("contact_field_config", fallback);
   const migrated = migrateConfig(parsed);
 
+  const mergedFields: Record<string, FieldDefinition[]> = { ...fallback.fields };
+  if (migrated.fields && typeof migrated.fields === "object") {
+    for (const [tabKey, fieldsList] of Object.entries(migrated.fields)) {
+      if (Array.isArray(fieldsList) && fieldsList.length > 0) {
+        mergedFields[tabKey] = fieldsList;
+      }
+    }
+  }
+
   const merged: FieldConfig = {
     ...fallback,
     ...migrated,
     enabledTabs: migrated.enabledTabs ?? fallback.enabledTabs,
     requiredTabs: migrated.requiredTabs ?? fallback.requiredTabs,
-    fields: migrated.fields ?? fallback.fields,
+    fields: mergedFields,
   };
   return sanitizeConfig(merged);
 }
