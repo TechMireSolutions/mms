@@ -173,7 +173,10 @@ export function ModuleColumnCustomizer({
                 ) : (
                   <button
                     type="button"
-                    onClick={() => toggle(col.key)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggle(col.key);
+                    }}
                     className="min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                     aria-label={labels.hideColumn(col.label)}
                   >
@@ -193,11 +196,17 @@ export function ModuleColumnCustomizer({
                 <button
                   type="button"
                   key={col.key}
-                  onClick={() => toggle(col.key)}
-                  className="flex items-center gap-2 w-full px-2.5 min-h-[44px] rounded-lg hover:bg-muted transition-colors text-left"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggle(col.key);
+                  }}
+                  className="flex items-center justify-between w-full px-2.5 min-h-[44px] rounded-lg border border-transparent hover:bg-muted transition-colors text-left group"
                 >
-                  <EyeOff className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                  <span className="text-sm text-muted-foreground">{col.label}</span>
+                  <div className="flex items-center gap-2">
+                    <EyeOff className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+                    <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">{col.label}</span>
+                  </div>
+                  <Eye className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors flex-shrink-0" />
                 </button>
               ))}
             </div>

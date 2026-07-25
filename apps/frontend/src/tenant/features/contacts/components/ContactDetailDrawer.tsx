@@ -16,6 +16,7 @@ import {
   CONTACTS_MODULE_CONTRACT,
   getDisplayName,
   getPrimaryPhone,
+  formatPhoneWithCountryCode,
   getPrimaryEmail,
   hasWhatsApp,
   formatDate,
@@ -516,13 +517,22 @@ export default function ContactDetailDrawer({
                 />
                 <div className="flex-1 min-w-0">
                   <h3 className="text-base font-bold text-foreground truncate leading-tight">{getDisplayName(contactState)}</h3>
-                  <div className="flex flex-wrap gap-1.5 mt-2 items-center">
-                    {contactState.isSyed && (
-                      <span className={`text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider ${DETAIL_STYLES.syedBadge}`}>
-                        {t('contacts.table.yesSyed')}
-                      </span>
-                    )}
-                  </div>
+                  {(contactState.gender || contactState.isSyed) && (
+                    <div className="flex flex-wrap gap-1.5 mt-1.5 items-center">
+                      {contactState.gender && (
+                        <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1 capitalize">
+                          <User className="w-3.5 h-3.5 text-muted-foreground" />
+                          {formatContactGenderLabel(contactState.gender, t)}
+                        </span>
+                      )}
+                      {contactState.gender && contactState.isSyed && <span className="text-muted-foreground/40">•</span>}
+                      {contactState.isSyed && (
+                        <span className={`text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider ${DETAIL_STYLES.syedBadge}`}>
+                          {t('contacts.table.yesSyed')}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -594,15 +604,15 @@ export default function ContactDetailDrawer({
                 {enabledTabIds.has("phones") && visibleCollectionFields.phones.length > 0 && contactState.phones && contactState.phones.length > 0 && (
                   <DetailSection title={t('contacts.form.phonesLabel')}>
                     {contactState.phones.map((phone, phoneIndex) => {
-                      const rawPhone = String(phone.number || "");
+                      const formattedPhone = formatPhoneWithCountryCode(phone.number, phone.countryCode || "+92") || String(phone.number || "");
                       return (
                         <CollectionRowItem
                           key={`phone-${phone.number}-${phoneIndex}`}
                           label={resolvePhoneLabel(phone.label, phoneLabels, t)}
-                          value={rawPhone}
-                          actionHref={formatTelHref(rawPhone)}
+                          value={formattedPhone}
+                          actionHref={formatTelHref(formattedPhone)}
                           actionIcon={Phone}
-                          actionTitle={t('contacts.detail.callPhone', { phone: rawPhone })}
+                          actionTitle={t('contacts.detail.callPhone', { phone: formattedPhone })}
                           actionColorClass="text-info hover:bg-info/10"
                         />
                       );

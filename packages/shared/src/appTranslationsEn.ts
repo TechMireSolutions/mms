@@ -2530,6 +2530,7 @@ export const APP_TRANSLATIONS_EN = {
   "contacts.table.copy": "Copy",
   "contacts.table.selectContact": "Select {name}",
   "contacts.table.dobLabel": "DOB:",
+  "contacts.table.solarDobLabel": "Solar DOB:",
   "contacts.table.solarAgeLabel": "Solar Age:",
   "contacts.table.lunarDobLabel": "Lunar DOB:",
   "contacts.table.lunarAgeLabel": "Lunar Age:",

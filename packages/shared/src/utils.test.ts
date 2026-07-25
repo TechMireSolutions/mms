@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parsePhoneNumber, normalizeToE164, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray } from "./utils.js";
 
 import type { Contact } from "./contactTypes.js";
 
@@ -46,6 +46,40 @@ describe("parsePhoneNumber", () => {
       countryCode: "+9993", // Greedily matches 4 digits because +9993 is not in common list
       number: "001234567",
     });
+  });
+});
+
+describe("formatPhoneWithCountryCode", () => {
+  it("formats local zero-prefixed numbers with default country code", () => {
+    expect(formatPhoneWithCountryCode("03001234567", "+92")).toBe("+92 3001234567");
+  });
+
+  it("formats bare number with default country code", () => {
+    expect(formatPhoneWithCountryCode("3001234567", "+92")).toBe("+92 3001234567");
+  });
+
+  it("retains existing country code if present", () => {
+    expect(formatPhoneWithCountryCode("+923001234567")).toBe("+92 3001234567");
+    expect(formatPhoneWithCountryCode("+15551234567", "+92")).toBe("+1 5551234567");
+  });
+
+  it("returns null for empty or null phone input", () => {
+    expect(formatPhoneWithCountryCode(null)).toBeNull();
+    expect(formatPhoneWithCountryCode("")).toBeNull();
+  });
+});
+
+describe("getPrimaryPhone", () => {
+  it("extracts and formats primary phone with country code from phones array", () => {
+    const contact = {
+      phones: [{ number: "03001234567", countryCode: "+92", isPrimary: true }],
+    } as unknown as Contact;
+    expect(getPrimaryPhone(contact)).toBe("+92 3001234567");
+  });
+
+  it("formats scalar phone field with country code fallback", () => {
+    const contact = { phone: "3012048693" } as unknown as Contact;
+    expect(getPrimaryPhone(contact, "+92")).toBe("+92 3012048693");
   });
 });
 

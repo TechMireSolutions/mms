@@ -2528,6 +2528,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "contacts.table.selectContact": "حدد {name}",
   "contacts.table.dobLabel": "تاريخ الميلاد:",
   "contacts.table.solarAgeLabel": "العمر الشمسي:",
+  "contacts.table.solarDobLabel": "تاريخ الميلاد الشمسي:",
   "contacts.table.lunarDobLabel": "تاريخ الميلاد الهجري:",
   "contacts.table.lunarAgeLabel": "العمر الهجري:",
   "contacts.table.inlineAge": " ({count} سنة)",

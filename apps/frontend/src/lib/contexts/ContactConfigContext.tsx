@@ -528,22 +528,9 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     return filteredRegistry.filter((column) => canViewContactColumn(viewerRole, column.key, columnCtx));
   }, [fieldConfig.columnRegistry, fields, enabledTabIds, isTabFieldEnabled, user?.role]);
 
-  const userColumnOverlay = useMemo(() => {
-    if (!rawUserColumnOverlay || rawUserColumnOverlay.length === 0) return null;
-
-    const activeTenantKeys = new Set(tenantColumnRegistry.filter((c) => c.enabled).map((c) => c.key));
-
-    return rawUserColumnOverlay.map((pref) => {
-      if (activeTenantKeys.has(pref.key) && pref.enabled === false) {
-        return { ...pref, enabled: true };
-      }
-      return pref;
-    });
-  }, [rawUserColumnOverlay, tenantColumnRegistry]);
-
   const columnRegistry = useMemo(
-    () => applyModuleColumnOverlay(tenantColumnRegistry, userColumnOverlay) as ColumnRegistryEntry[],
-    [tenantColumnRegistry, userColumnOverlay],
+    () => applyModuleColumnOverlay(tenantColumnRegistry, rawUserColumnOverlay) as ColumnRegistryEntry[],
+    [tenantColumnRegistry, rawUserColumnOverlay],
   );
   const availableColumns = useMemo(() => {
     return columnRegistry.map((column) => ({

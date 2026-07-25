@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { User, CheckCircle2, MapPin } from "lucide-react";
+import { User, CheckCircle2, MapPin, Globe, ExternalLink } from "lucide-react";
 import {
   Contact,
   hasWhatsApp,
@@ -95,26 +95,32 @@ export function ContactMetadataCell({
           </span>
         );
       }
+      case "solarDob":
       case "dob": {
         if (!contact.dob) return renderDash();
         return (
-          <div className="flex flex-col gap-0.5 text-[11px] font-mono leading-normal">
-            <span>{formatDate(contact.dob)}</span>
-            {prefs.showDetailedSolarAge && (
-              <span className="text-[10px] text-muted-foreground/80">
-                {t("contacts.table.solarAgeLabel")} {calculateDetailedSolarAge(contact.dob, language)}
-              </span>
-            )}
-            {prefs.showLunarDob && (
-              <span className="text-[10px] text-muted-foreground/80">
-                {t("contacts.table.lunarDobLabel")} {getLunarDateString(contact.dob, language)}
-              </span>
-            )}
-            {prefs.showDetailedLunarAge && (
-              <span className="text-[10px] text-muted-foreground/80">
-                {t("contacts.table.lunarAgeLabel")} {calculateDetailedLunarAge(contact.dob, language)}
-              </span>
-            )}
+          <div className="flex flex-col gap-0.5 text-[11px] leading-normal font-mono">
+            <span className="font-semibold text-foreground flex items-center gap-1">
+              <span aria-hidden="true" className="text-amber-500 text-xs">☀️</span>
+              <span>{formatDate(contact.dob)}</span>
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              {calculateDetailedSolarAge(contact.dob, language)}
+            </span>
+          </div>
+        );
+      }
+      case "lunarDob": {
+        if (!contact.dob) return renderDash();
+        return (
+          <div className="flex flex-col gap-0.5 text-[11px] leading-normal font-mono">
+            <span className="font-semibold text-foreground flex items-center gap-1">
+              <span aria-hidden="true" className="text-indigo-400 text-xs">🌙</span>
+              <span>{getLunarDateString(contact.dob, language)}</span>
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              {calculateDetailedLunarAge(contact.dob, language)}
+            </span>
           </div>
         );
       }
@@ -130,23 +136,67 @@ export function ContactMetadataCell({
             {hasWhatsApp(contact) ? t("common.yes") : t("common.no")}
           </span>
         );
+      case "socials":
       case "socials_platform":
-        return renderJoinedList((contact.socials || []).map((s) => s.platform));
-      case "socials_url":
-        return renderJoinedList((contact.socials || []).map((s) => s.url), true);
-      case "emergency_contact": {
-        const names = (contact.emergencyContacts || []).map((ec) => {
-          if (ec.name) return ec.name;
-          if (ec.contactId) {
-            const linked = contactsMap?.get(String(ec.contactId));
-            return linked ? linked.name : `${t("contacts.table.contactIdPrefix")}${ec.contactId}`;
-          }
-          return null;
-        });
-        return renderJoinedList(names);
+      case "socials_url": {
+        const socials = (contact.socials || []).filter((s) => (s.platform || "").trim().length > 0 || (s.url || "").trim().length > 0);
+        if (socials.length === 0) return renderDash();
+        return (
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+            {socials.map((s, idx) => {
+              const platformStr = (s.platform || "").trim();
+              const urlStr = (s.url || "").trim();
+              const href = urlStr ? (urlStr.startsWith("http") ? urlStr : `https://${urlStr}`) : undefined;
+              const displayUrl = urlStr ? urlStr.replace(/^https?:\/\//i, "").replace(/\/$/, "") : "";
+              const label = platformStr && displayUrl ? `${platformStr}: ${displayUrl}` : (platformStr || displayUrl);
+
+              if (href) {
+                return (
+                  <a
+                    key={idx}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-[11px] font-semibold transition-colors truncate max-w-[200px]"
+                    title={`${platformStr || "Link"}: ${urlStr}`}
+                  >
+                    <Globe className="w-3 h-3 shrink-0 text-primary" />
+                    <span className="truncate">{label}</span>
+                    <ExternalLink className="w-2.5 h-2.5 shrink-0 opacity-70" />
+                  </a>
+                );
+              }
+
+              return (
+                <span
+                  key={idx}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-muted text-muted-foreground border border-border/40 text-[11px] font-medium"
+                >
+                  <Globe className="w-3 h-3 shrink-0" />
+                  <span>{platformStr || displayUrl}</span>
+                </span>
+              );
+            })}
+          </div>
+        );
       }
-      case "emergency_relationship":
-        return renderJoinedList((contact.emergencyContacts || []).map((ec) => ec.relationship));
+      case "emergency_contact":
+      case "emergency_relationship": {
+        const list = (contact.emergencyContacts || []).filter((ec) => (ec.name || "").trim() || ec.contactId || (ec.relationship || "").trim());
+        if (list.length === 0) return renderDash();
+        const items = list.map((ec) => {
+          let nameStr = ec.name ? ec.name.trim() : "";
+          if (!nameStr && ec.contactId) {
+            const linked = contactsMap?.get(String(ec.contactId));
+            nameStr = linked ? linked.name : `${t("contacts.table.contactIdPrefix")}${ec.contactId}`;
+          }
+          const relStr = ec.relationship ? ec.relationship.trim() : "";
+          if (nameStr && relStr) return `${nameStr} (${relStr})`;
+          return nameStr || relStr;
+        });
+        return renderJoinedList(items.filter(Boolean));
+      }
       default: {
         const raw = contact[colId as keyof Contact];
         const formatted = formatContactCellValue(raw, t);

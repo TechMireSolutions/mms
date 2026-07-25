@@ -401,24 +401,60 @@ export function normalizeToE164(countryCode: string, number: string): string {
 }
 
 /**
- * Extract primary phone from contact
- * @param contact - Contact object
- * @returns The formatted primary phone number or null.
+ * Canonical helper to format any phone number string or contact phone entry with a country code (DRY).
+ * E.g., "+923001234567" -> "+92 3001234567"
+ * E.g., "03001234567" with default "+92" -> "+92 3001234567"
+ * E.g., "3001234567" with default "+92" -> "+92 3001234567"
  */
-export function getPrimaryPhone(contact: Partial<Contact>): string | null {
+export function formatPhoneWithCountryCode(
+  phone: string | null | undefined,
+  defaultCountryCode: string = "+92",
+): string | null {
+  if (!phone || !phone.trim()) return null;
+  const raw = phone.trim();
+  const parsed = parsePhoneNumber(raw, defaultCountryCode);
+  const code = (parsed.countryCode || defaultCountryCode).trim();
+  let num = (parsed.number || "").trim();
+
+  // Strip leading zero if prepending country code
+  if (num.startsWith("0")) {
+    num = num.replace(/^0+/, "");
+  }
+
+  if (!num) return code;
+
+  // If number already starts with +, return cleaned
+  if (num.startsWith("+")) {
+    return num;
+  }
+
+  return `${code} ${num}`;
+}
+
+/**
+ * Extract primary phone from contact formatted with country code (DRY).
+ * @param contact - Contact object
+ * @param defaultCountryCode - Optional fallback country code if missing (defaults to "+92")
+ * @returns The formatted primary phone number with country code or null.
+ */
+export function getPrimaryPhone(contact: Partial<Contact>, defaultCountryCode: string = "+92"): string | null {
   const phones = contact.phones || [];
-  const phone = phones.find((p) => p.isPrimary && (p.number || "").trim().length > 0)
+  const phoneObj = phones.find((p) => p.isPrimary && (p.number || "").trim().length > 0)
     || phones.find((p) => (p.number || "").trim().length > 0)
     || phones[0];
-  if (phone && (phone.number || "").trim().length > 0) {
-    const code = phone.countryCode ? phone.countryCode.trim() : "";
-    const phoneNumber = phone.number ? phone.number.trim() : "";
-    if (!code) return phoneNumber || null;
-    if (phoneNumber.startsWith("+") || phoneNumber.startsWith(code)) return phoneNumber;
-    return `${code} ${phoneNumber}`.trim() || null;
+
+  if (phoneObj && (phoneObj.number || "").trim().length > 0) {
+    const rawNumber = (phoneObj.number || "").trim();
+    const code = (phoneObj.countryCode || "").trim() || defaultCountryCode;
+    return formatPhoneWithCountryCode(rawNumber, code);
   }
+
   const scalarPhone = (contact as Record<string, unknown>).phone;
-  return typeof scalarPhone === "string" && scalarPhone.trim().length > 0 ? scalarPhone.trim() : null;
+  if (typeof scalarPhone === "string" && scalarPhone.trim().length > 0) {
+    return formatPhoneWithCountryCode(scalarPhone.trim(), defaultCountryCode);
+  }
+
+  return null;
 }
 
 /**

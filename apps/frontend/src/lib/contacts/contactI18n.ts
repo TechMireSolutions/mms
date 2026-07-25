@@ -3,6 +3,7 @@ import {
   calcAge,
   calculateDetailedSolarAge,
   parsePhoneNumber,
+  formatPhoneWithCountryCode,
   getPrimaryPhone,
   getPrimaryEmail,
   toTitleCase,
@@ -61,15 +62,18 @@ export function formatContactPhoneDisplay(
   countryCodeFallback = '+92',
 ): { countryCode: string; formattedNumber: string } {
   if (!rawNumber) return { countryCode: countryCodeFallback, formattedNumber: '' };
-  const parsed = parsePhoneNumber(rawNumber, countryCodeFallback);
-  return { countryCode: parsed.countryCode, formattedNumber: parsed.number || rawNumber };
+  const fullPhone = formatPhoneWithCountryCode(rawNumber, countryCodeFallback);
+  if (!fullPhone) return { countryCode: countryCodeFallback, formattedNumber: '' };
+  const parsed = parsePhoneNumber(fullPhone, countryCodeFallback);
+  return { countryCode: parsed.countryCode || countryCodeFallback, formattedNumber: parsed.number || rawNumber };
 }
 
 /** Formats tel: link href for telephone actions. */
 export function formatTelHref(phoneStr: string | undefined | null): string {
   if (!phoneStr) return '#';
-  const p = parsePhoneNumber(phoneStr);
-  const num = `${p.countryCode}${p.number}`;
+  const formatted = formatPhoneWithCountryCode(phoneStr);
+  const p = parsePhoneNumber(formatted || phoneStr);
+  const num = `${p.countryCode}${p.number.replace(/\s+/g, '')}`;
   return `tel:${num || phoneStr}`;
 }
 
@@ -110,11 +114,11 @@ export function resolveContactPhoneDisplay(
   prefs?: Partial<ContactPreferences>,
   countryCodesMap?: Record<string, string>,
 ): { phone: string | null; countryCode: string; phoneDisplay: string } {
-  const primaryPhone = getPrimaryPhone(contact);
-  const firstPhoneObj = (contact.phones || []).find((p) => (p.number || '').trim().length > 0) || contact.phones?.[0];
   const defaultCountryCode = getFallbackCountryCode(prefs, countryCodesMap);
+  const primaryPhone = getPrimaryPhone(contact, defaultCountryCode);
+  const firstPhoneObj = (contact.phones || []).find((p) => (p.number || '').trim().length > 0) || contact.phones?.[0];
   const { countryCode, formattedNumber: phoneDisplay } = formatContactPhoneDisplay(
-    firstPhoneObj?.number || primaryPhone,
+    primaryPhone || firstPhoneObj?.number,
     firstPhoneObj?.countryCode || defaultCountryCode,
   );
   return {

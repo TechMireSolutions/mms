@@ -35,7 +35,7 @@ describe('contactsSortUtils', () => {
 
   it('extracts correct sortable values for name, phone, and email', () => {
     expect(getContactSortValue(dummyContacts[0], 'name')).toBe('zara ahmed');
-    expect(getContactSortValue(dummyContacts[0], 'phone')).toBe('03001234567');
+    expect(getContactSortValue(dummyContacts[0], 'phone')).toBe('+92 3001234567');
     expect(getContactSortValue(dummyContacts[0], 'email')).toBe('zara@example.com');
   });
 

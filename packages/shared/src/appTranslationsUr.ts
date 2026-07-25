@@ -2528,6 +2528,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "contacts.table.selectContact": "منتخب کریں {name}",
   "contacts.table.dobLabel": "تاریخ پیدائش:",
   "contacts.table.solarAgeLabel": "شمسی عمر:",
+  "contacts.table.solarDobLabel": "شمسی تاریخ پیدائش:",
   "contacts.table.lunarDobLabel": "قمری تاریخ پیدائش:",
   "contacts.table.lunarAgeLabel": "قمری عمر:",
   "contacts.table.inlineAge": " ({count} سال)",

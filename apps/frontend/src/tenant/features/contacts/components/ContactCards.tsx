@@ -2,13 +2,14 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   MessageCircle, MessageSquare, Eye, Phone, Mail,
-  AlertTriangle,
+  AlertTriangle, CheckCircle2,
 } from "lucide-react";
 import { 
   type Contact, 
   formatDate,
   getDisplayName, 
   getPrimaryEmail, 
+  getPrimaryAddress,
   hasWhatsApp,
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
@@ -39,6 +40,62 @@ function ContactInfoPill({ icon: Icon, text, copyText }: ContactInfoPillProps) {
       <CopyBtn text={copyText} showToast className="h-6 w-6 opacity-60 group-hover/pill:opacity-100 transition-opacity p-0.5 rounded text-muted-foreground hover:text-foreground" />
     </div>
   );
+}
+
+function hasColumnData(contact: Contact, colId: string): boolean {
+  switch (colId) {
+    case "dob":
+    case "solarDob":
+    case "lunarDob":
+      return Boolean(contact.dob);
+
+    case "whatsapp":
+      return hasWhatsApp(contact);
+
+    case "gender":
+      return Boolean(contact.gender);
+
+    case "isSyed":
+      return contact.isSyed !== undefined && contact.isSyed !== null;
+
+    case "socials_platform":
+      return Boolean(contact.socials && contact.socials.some((s) => s.platform && s.platform.trim().length > 0));
+
+    case "socials_url":
+      return Boolean(contact.socials && contact.socials.some((s) => s.url && s.url.trim().length > 0));
+
+    case "emergency_contact":
+      return Boolean(
+        contact.emergencyContacts &&
+        contact.emergencyContacts.some((ec) => (ec.name && ec.name.trim().length > 0) || ec.contactId)
+      );
+
+    case "emergency_relationship":
+      return Boolean(
+        contact.emergencyContacts &&
+        contact.emergencyContacts.some((ec) => ec.relationship && ec.relationship.trim().length > 0)
+      );
+
+    case "line1":
+    case "city":
+    case "state":
+    case "country": {
+      const scalar = contact[colId as keyof Contact];
+      if (scalar !== undefined && scalar !== null && String(scalar).trim().length > 0) return true;
+      const addr = getPrimaryAddress(contact);
+      if (!addr) return false;
+      const addrVal = addr[colId as keyof typeof addr];
+      return addrVal !== undefined && addrVal !== null && String(addrVal).trim().length > 0;
+    }
+
+    default: {
+      const val = contact[colId as keyof Contact];
+      if (typeof val === "boolean") return true;
+      if (typeof val === "number") return true;
+      if (Array.isArray(val)) return val.length > 0;
+      return val !== undefined && val !== null && String(val).trim().length > 0;
+    }
+  }
 }
 
 interface ColumnConfig {
@@ -200,10 +257,19 @@ export default function ContactCards({
                     <h4 className="text-sm font-black text-foreground tracking-tight truncate group-hover:text-primary transition-colors">
                       {displayName}
                     </h4>
-                    {contact.gender && (
-                      <p className="text-[11px] font-semibold text-muted-foreground mt-0.5 truncate capitalize">
-                        {formatContactGenderLabel(contact.gender, t)}
-                      </p>
+                    {(contact.gender || contact.isSyed) && (
+                      <div className="text-[11px] font-semibold text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap truncate">
+                        {contact.gender && (
+                          <span className="capitalize">{formatContactGenderLabel(contact.gender, t)}</span>
+                        )}
+                        {contact.gender && contact.isSyed && <span className="text-muted-foreground/40">•</span>}
+                        {contact.isSyed && (
+                          <span className="inline-flex items-center gap-0.5 text-[10px] font-bold uppercase px-1.5 py-0.2 rounded border bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            {t("contacts.table.yesSyed")}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                 </Button>
@@ -233,13 +299,22 @@ export default function ContactCards({
               {otherColumns.length > 0 && (
                 <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40 dark:border-border/20 ms-1">
                   {otherColumns.map((col) => {
-                    const value = contact[col.id as keyof Contact];
-                    // Skip empty custom values unless they are booleans/ratings
-                    if (value === undefined || value === null || (value === "" && col.id !== "rating")) return null;
+                    if (col.id === "socials_url" && visibleColumnIds.has("socials_platform")) {
+                      return null;
+                    }
+                    if (col.id === "emergency_relationship" && visibleColumnIds.has("emergency_contact")) {
+                      return null;
+                    }
+                    if (!hasColumnData(contact, col.id)) return null;
+                    const colLabel = col.id === "socials_platform" || col.id === "socials_url"
+                      ? t("contacts.detail.socials")
+                      : (col.id === "emergency_contact" || col.id === "emergency_relationship"
+                          ? t("contacts.form.tabEmergency")
+                          : col.label);
                     return (
                       <div key={col.id} className="flex flex-col gap-0.5 bg-muted/40 dark:bg-muted/15 px-2.5 py-1.5 rounded-xl border border-border/30 dark:border-border/10 text-start min-w-0">
                         <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-tight truncate leading-none">
-                          {col.label}
+                          {colLabel}
                         </span>
                         <div className="text-xs font-semibold text-foreground truncate mt-0.5">
                           <ContactMetadataCell colId={col.id} contact={contact} prefs={prefs} allContacts={allContacts} contactsMap={contactsMap} variant="card" />

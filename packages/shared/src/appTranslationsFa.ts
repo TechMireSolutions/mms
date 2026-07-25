@@ -1377,6 +1377,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "contacts.table.lastUpdated": "آخرین به‌روزرسانی",
   "contacts.table.lunarAgeLabel": "سن قمری:",
   "contacts.table.inlineAge": " ({count} سال)",
+  "contacts.table.solarDobLabel": "تاریخ تولد شمسی:",
   "contacts.table.lunarDobLabel": "تاریخ تولد قمری:",
   "contacts.table.notRegisteredWhatsApp": "فاقد واتس‌اپ فعال",
   "contacts.table.deletedAt": "حذف شده {date}",
