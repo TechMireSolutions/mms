@@ -1,0 +1,93 @@
+import { describe, expect, it } from 'vitest';
+import { personalizeMessage, validateRecipientAddress } from '../utils.js';
+import { calculateSmsSegments } from '../smsUtils.js';
+
+describe('messagingUtils', () => {
+  describe('personalizeMessage', () => {
+    it('substitutes basic tokens correctly', () => {
+      const result = personalizeMessage('Hello {name}, your first name is {first_name}.', {
+        id: 1,
+        name: 'Ali Raza',
+        phone: '+923001234567',
+      });
+      expect(result).toBe('Hello Ali Raza, your first name is Ali.');
+    });
+
+    it('handles fallback default values when token is missing', () => {
+      const result = personalizeMessage('Dear {name|Valued Parent}, your balance of {amount|0 PKR} is due on {due_date|today}.', {
+        id: 2,
+        name: '',
+        phone: '+923001234567',
+      });
+      expect(result).toBe('Dear Valued Parent, your balance of 0 PKR is due on today.');
+    });
+
+    it('interpolates options parameters when provided', () => {
+      const result = personalizeMessage('Welcome to {madrasa_name} on {date}.', {
+        id: 3,
+        name: 'Fatima',
+        phone: '+923001234567',
+      }, { madrasaName: 'Madrasa Tul Elm', date: '2026-08-01' });
+      expect(result).toBe('Welcome to Madrasa Tul Elm on 2026-08-01.');
+    });
+  });
+
+  describe('validateRecipientAddress', () => {
+    it('validates email addresses properly', () => {
+      expect(validateRecipientAddress({ id: 1, name: 'Ali', phone: '123', email: 'ali@example.com' }, 'email')).toEqual({
+        isValid: true,
+        address: 'ali@example.com',
+        reason: undefined,
+      });
+
+      expect(validateRecipientAddress({ id: 2, name: 'Ali', phone: '123', email: 'invalid-email' }, 'email')).toEqual({
+        isValid: false,
+        address: 'invalid-email',
+        reason: 'invalid_email_format',
+      });
+
+      expect(validateRecipientAddress({ id: 3, name: 'Ali', phone: '123' }, 'email')).toEqual({
+        isValid: false,
+        address: '',
+        reason: 'missing_email',
+      });
+    });
+
+    it('validates phone numbers for SMS / WhatsApp', () => {
+      expect(validateRecipientAddress({ id: 1, name: 'Ali', phone: '+92 300 1234567' }, 'whatsapp')).toEqual({
+        isValid: true,
+        address: '+92 300 1234567',
+        reason: undefined,
+      });
+
+      expect(validateRecipientAddress({ id: 2, name: 'Ali', phone: '123' }, 'sms')).toEqual({
+        isValid: false,
+        address: '123',
+        reason: 'invalid_phone_format',
+      });
+
+      expect(validateRecipientAddress({ id: 3, name: 'Ali', phone: '' }, 'sms')).toEqual({
+        isValid: false,
+        address: '',
+        reason: 'missing_phone',
+      });
+    });
+  });
+
+  describe('calculateSmsSegments', () => {
+    it('calculates single GSM 7-bit segment', () => {
+      const res = calculateSmsSegments('Hello World');
+      expect(res.isUnicode).toBe(false);
+      expect(res.segmentLimit).toBe(160);
+      expect(res.totalSegments).toBe(1);
+      expect(res.remainingInSegment).toBe(149);
+    });
+
+    it('detects Unicode encoding for Urdu/Arabic text', () => {
+      const res = calculateSmsSegments('السلام علیکم');
+      expect(res.isUnicode).toBe(true);
+      expect(res.segmentLimit).toBe(70);
+      expect(res.totalSegments).toBe(1);
+    });
+  });
+});

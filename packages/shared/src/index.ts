@@ -110,4 +110,5 @@ export { buildDynamicStudentSchema, formatStudentZodIssues } from './studentVali
 export * from './sessionTypes.js';
 export * from './platformSettingsTypes.js';
 export * from './platformSchemas.js';
+export * from './messagingSchemas.js';
 export * from './vcardUtils.js';

@@ -54,6 +54,8 @@ const COLLECTION_READ_PERMISSION: Record<string, Permission> = {
   users: USERS_MODULE_CONTRACT.permissions.read,
   user_activity_logs: 'analytics.view',
   custom_tabs: 'configuration.view',
+  message_templates: 'contacts.read',
+  message_logs: 'contacts.read',
 };
 
 const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
@@ -87,6 +89,8 @@ const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
   users: USERS_MODULE_CONTRACT.permissions.write,
   user_activity_logs: 'analytics.view',
   custom_tabs: 'settings.global.write',
+  message_templates: 'contacts.write',
+  message_logs: 'contacts.write',
 };
 
 const OBJECT_READ_PERMISSION: Record<string, Permission> = {
@@ -424,3 +428,25 @@ export function canDeleteContacts(user: User): boolean {
   }
   return roleHasPermission(user.role, 'contacts.delete');
 }
+
+export function canReadMessaging(user: User): boolean {
+  if (!user || !user.role) {
+    return false;
+  }
+  return roleHasPermission(user.role, 'contacts.read');
+}
+
+export function canWriteMessaging(user: User): boolean {
+  if (!user || !user.role) {
+    return false;
+  }
+  return roleHasPermission(user.role, 'contacts.write');
+}
+
+export function canClearMessagingLogs(user: User): boolean {
+  if (!user || !user.role) {
+    return false;
+  }
+  return user.role === 'admin';
+}
+

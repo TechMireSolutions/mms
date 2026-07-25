@@ -1484,6 +1484,7 @@ export function paginateArray<T>(items: T[], page = 1, limit = 50, maxLimit = 50
 
 /** Recipient object interface for message personalization */
 export interface PersonalizeRecipient {
+  id?: string | number;
   name?: string;
   phone?: string;
   email?: string;

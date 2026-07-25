@@ -22,6 +22,7 @@ import {
   type MessageTemplate,
   type Message
 } from '@mms/shared';
+import { useMessagingMutations } from '@/tenant/features/messaging/hooks/useMessaging';
 
 export interface MessagingRecipient extends PersonalizeRecipient {
   id: string | number;
@@ -178,9 +179,10 @@ export default function MessageComposer({
     }
   };
 
+  const { recordDispatches } = useMessagingMutations();
+
   const saveSentMessageHistory = (sentRecords: { recipientId: string | number; body: string }[]): void => {
     if (sentRecords.length > 0 && user) {
-      const dbKey = `messages_u:${user.id}`;
       const activeTplObj = activeTemplates.find((t) => t.id === template);
       const newMsgs: Message[] = sentRecords.map((rec) => ({
         id: crypto.randomUUID(),
@@ -193,8 +195,9 @@ export default function MessageComposer({
         subject: channel === 'email' ? subject || undefined : undefined,
         category: activeTplObj?.category || 'general',
       }));
-      const currentMsgs = getCollection<Message>(dbKey) || [];
-      saveCollection(dbKey, [...newMsgs, ...currentMsgs]);
+
+      // Mutate to server REST API + fallback local storage
+      recordDispatches.mutate(newMsgs);
       window.dispatchEvent(new CustomEvent('local-database-update'));
     }
   };

@@ -23,7 +23,6 @@ import { FormSelect } from '@/components/ui/FormSelect';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
-import { getCollection, saveCollection } from '@/lib/db';
 import { useContactsCollection } from '@/tenant/features/contacts/hooks/useContacts';
 import { 
   getDisplayName, 
@@ -38,6 +37,7 @@ import {
 import MessageComposer, { type MessagingRecipient } from '@/components/ui/MessageComposer';
 import { notify } from '@/lib/notify';
 import { FORM_LABEL } from '@/components/ui/formStyles';
+import { useMessageTemplates, useMessageLogs, useMessagingMutations } from './hooks/useMessaging';
 
 const DEFAULT_TEMPLATES: MessageTemplate[] = [
   { id: 't1', label: 'General Announcement', category: 'general', channel: 'all', body: 'Dear {name|Valued Parent}, we would like to inform you that...' },
@@ -95,13 +95,15 @@ export default function MessagingPage(): React.JSX.Element {
     canViewSetup: can('configuration.view'),
   });
 
+  const { templates: customTemplates } = useMessageTemplates();
+  const { logs: messageLogs } = useMessageLogs();
+  const { saveTemplate, deleteTemplate, clearLogs } = useMessagingMutations();
+
   const templates = useMemo(() => {
-    const _tick = localTick;
-    if (!user) return DEFAULT_TEMPLATES;
-    const dbKey = `messages_templates_u:${user.id}`;
-    const custom = getCollection<MessageTemplate>(dbKey) || [];
-    return [...DEFAULT_TEMPLATES, ...custom];
-  }, [user, localTick]);
+    const defaultIds = new Set(DEFAULT_TEMPLATES.map((t) => t.id));
+    const uniqueCustom = (customTemplates || []).filter((t) => !defaultIds.has(t.id));
+    return [...DEFAULT_TEMPLATES, ...uniqueCustom];
+  }, [customTemplates]);
 
   const filteredTemplates = useMemo(() => {
     return templates.filter((tpl) => {
@@ -118,35 +120,26 @@ export default function MessagingPage(): React.JSX.Element {
       notify.error(t('messaging.createPresetDesc'));
       return;
     }
-    const dbKey = `messages_templates_u:${user.id}`;
-    const custom = getCollection<MessageTemplate>(dbKey) || [];
 
-    if (editingTemplateId) {
-      const updated = custom.map((tpl) => 
-        tpl.id === editingTemplateId 
-          ? { ...tpl, label: templateLabel.trim(), body: templateBody.trim(), category: templateCategory, channel: templateChannel, updatedAt: new Date().toISOString() }
-          : tpl
-      );
-      saveCollection(dbKey, updated);
-      notify.success(t('messaging.saveTemplate'));
-    } else {
-      const newTpl: MessageTemplate = {
-        id: `custom_${Date.now()}`,
+    saveTemplate.mutate(
+      {
+        id: editingTemplateId || undefined,
         label: templateLabel.trim(),
         body: templateBody.trim(),
         category: templateCategory,
         channel: templateChannel,
-        updatedAt: new Date().toISOString(),
-      };
-      saveCollection(dbKey, [...custom, newTpl]);
-      notify.success(t('messaging.saveTemplate'));
-    }
-
-    setEditingTemplateId(null);
-    setTemplateLabel('');
-    setTemplateBody('');
-    setTemplateCategory('general');
-    setTemplateChannel('all');
+      },
+      {
+        onSuccess: () => {
+          notify.success(t('messaging.saveTemplate'));
+          setEditingTemplateId(null);
+          setTemplateLabel('');
+          setTemplateBody('');
+          setTemplateCategory('general');
+          setTemplateChannel('all');
+        },
+      }
+    );
   };
 
   const handleEditTemplateClick = (tpl: MessageTemplate): void => {
@@ -159,18 +152,19 @@ export default function MessagingPage(): React.JSX.Element {
 
   const handleDuplicateTemplate = (tpl: MessageTemplate): void => {
     if (!user) return;
-    const dbKey = `messages_templates_u:${user.id}`;
-    const custom = getCollection<MessageTemplate>(dbKey) || [];
-    const newTpl: MessageTemplate = {
-      id: `custom_${Date.now()}`,
-      label: `${tpl.label} (Copy)`,
-      body: tpl.body,
-      category: tpl.category || 'general',
-      channel: tpl.channel || 'all',
-      updatedAt: new Date().toISOString(),
-    };
-    saveCollection(dbKey, [...custom, newTpl]);
-    notify.success(t('messaging.duplicateSuccess'));
+    saveTemplate.mutate(
+      {
+        label: `${tpl.label} (Copy)`,
+        body: tpl.body,
+        category: tpl.category || 'general',
+        channel: tpl.channel || 'all',
+      },
+      {
+        onSuccess: () => {
+          notify.success(t('messaging.duplicateSuccess'));
+        },
+      }
+    );
   };
 
   const handleCopyTemplateBody = (body: string): void => {
@@ -192,26 +186,22 @@ export default function MessagingPage(): React.JSX.Element {
 
   const confirmDeleteTemplate = (): void => {
     if (!user || !deleteTemplateId) return;
-    const dbKey = `messages_templates_u:${user.id}`;
-    const custom = getCollection<MessageTemplate>(dbKey) || [];
-    const updated = custom.filter((tpl) => tpl.id !== deleteTemplateId);
-    saveCollection(dbKey, updated);
-    setDeleteTemplateId(null);
-    notify.success(t('common.delete'));
+    deleteTemplate.mutate(deleteTemplateId, {
+      onSuccess: () => {
+        setDeleteTemplateId(null);
+        notify.success(t('common.delete'));
+      },
+    });
   };
-
-  const messageLogs = useMemo(() => {
-    const _tick = localTick;
-    if (!user) return [];
-    const dbKey = `messages_u:${user.id}`;
-    return getCollection<Message>(dbKey) || [];
-  }, [user, localTick]);
 
   const confirmClearLogs = (): void => {
     if (!user) return;
-    saveCollection(`messages_u:${user.id}`, []);
-    setConfirmClearLogsOpen(false);
-    notify.success(t('messaging.clearLogs'));
+    clearLogs.mutate(undefined, {
+      onSuccess: () => {
+        setConfirmClearLogsOpen(false);
+        notify.success(t('messaging.clearLogs'));
+      },
+    });
   };
 
   const filteredContacts = useMemo(() => {

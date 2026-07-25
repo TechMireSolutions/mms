@@ -475,4 +475,27 @@ export const platformActivityLogs = pgTable('platform_activity_logs', {
   createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
 });
 
+export const messageTemplates = pgTable('message_templates', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  index('message_templates_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('message_templates_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const messageLogs = pgTable('message_logs', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  index('message_logs_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('message_logs_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+
 
