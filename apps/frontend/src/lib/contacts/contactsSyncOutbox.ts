@@ -1,4 +1,4 @@
-import type { Contact } from '@mms/shared';
+import { getDisplayName, type Contact } from '@mms/shared';
 
 export const OUTBOX_KEY = 'mms_contacts_sync_outbox';
 export const CONFLICTS_KEY = 'mms_contacts_sync_conflicts';
@@ -147,11 +147,11 @@ export function describeContactsOutboxEntry(entry: ContactsOutboxEntry): {
   subtitle: string;
 } {
   if (entry.kind === 'upsert') {
-    const name = entry.contact.name || entry.contact.firstName || String(entry.contact.id);
+    const name = getDisplayName(entry.contact) || String(entry.contact.id);
     return { title: name, subtitle: 'upsert' };
   }
   if (entry.kind === 'update') {
-    const name = entry.contact.name || entry.contact.firstName || entry.contactId;
+    const name = getDisplayName(entry.contact) || entry.contactId;
     return { title: String(name), subtitle: 'update' };
   }
   return { title: entry.contactId, subtitle: 'delete' };

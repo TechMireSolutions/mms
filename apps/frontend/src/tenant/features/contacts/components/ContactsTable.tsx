@@ -147,7 +147,7 @@ export default function ContactsTable({
               ) : (
                 <span className="text-[13px] text-muted-foreground">{t('contacts.table.emptyDash')}</span>
               )}
-              <CopyBtn text={primaryPhone || ""} />
+              {primaryPhone && <CopyBtn text={primaryPhone} />}
               <Button
                 disabled={!hasWhatsApp(contact)}
                 onClick={(e) => {
@@ -155,6 +155,7 @@ export default function ContactsTable({
                   onWhatsApp([contact]);
                 }}
                 title={hasWhatsApp(contact) ? t('contacts.whatsapp') : t('contacts.table.notRegisteredWhatsApp')}
+                aria-label={hasWhatsApp(contact) ? t('contacts.whatsapp') : t('contacts.table.notRegisteredWhatsApp')}
                 variant="ghost"
                 className={`min-w-[44px] min-h-[44px] flex items-center justify-center p-0 transition-all hover:bg-transparent ${
                   hasWhatsApp(contact)
@@ -169,15 +170,17 @@ export default function ContactsTable({
           </td>
         );
       }
-      case "email":
+      case "email": {
+        const primaryEmail = getPrimaryEmail(contact);
         return (
           <td key="email" className="px-4 py-3">
             <div className="flex items-center gap-1 group/email">
-              <span className="text-[13px] text-muted-foreground">{getPrimaryEmail(contact)}</span>
-              <CopyBtn text={getPrimaryEmail(contact) || ""} />
+              <span className="text-[13px] text-muted-foreground">{primaryEmail || t('contacts.table.emptyDash')}</span>
+              {primaryEmail && <CopyBtn text={primaryEmail} />}
             </div>
           </td>
         );
+      }
       default:
         return (
           <ContactMetadataCell

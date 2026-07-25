@@ -23,6 +23,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { TableSkeleton } from "@/components/ui/LoadingState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useGoogleContactsOAuthListener } from "@/lib/contacts/googleContactsOAuthListener";
+import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 
 import ContactsSettingsPanel from "@/tenant/features/contacts/components/ContactsSettingsPanel";
 
@@ -87,7 +88,6 @@ function ContactsInner() {
     defaultCountry,
     defaultCity,
     defaultProvince,
-    genderLabel,
     handleSort,
     handleSelect,
     handleSelectAll,
@@ -274,7 +274,7 @@ function ContactsInner() {
               {filterGender && (
                 <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="flex flex-wrap gap-1.5">
                   <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
-                    {t("contacts.genderFilter")}: {genderLabel(filterGender)}{" "}
+                    {t("contacts.genderFilter")}: {formatContactGenderLabel(filterGender, t)}{" "}
                     <Button
                       variant="ghost"
                       size="icon"

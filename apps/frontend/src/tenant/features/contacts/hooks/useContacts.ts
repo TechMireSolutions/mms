@@ -2,9 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import {
   CONTACTS_MODULE_CONTRACT,
-  filterActiveContacts,
   type Contact,
   type ContactColumnPreference,
+  type ContactGoogleSyncConfigClient,
   type ContactsCommandMetricsSnapshot,
   type ContactsDuplicatePairsPageResult,
   type ContactsListPageResult,
@@ -16,11 +16,11 @@ import {
   type ContactsSavedReport,
   type ContactsSavedReportShareScope,
   type ContactsWorkDrillDown,
+  type GoogleContactsSyncRunResult,
 } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
-import { saveCollection } from '@/lib/db';
 import { useSyncedCollection } from '@/hooks/useSyncedCollection';
 import { enqueueContactsOutbox } from '@/lib/contacts/contactsSyncOutbox';
 
@@ -228,23 +228,6 @@ export function useContactsByIds(ids: (string | number | null | undefined)[]) {
   });
 }
 
-export interface ContactGoogleSyncConfigClient {
-  clientId?: string;
-  clientSecret?: string;
-  clearTokens?: boolean;
-  updatedAt?: string;
-  hasClientSecret?: boolean;
-  hasRefreshToken?: boolean;
-  isConnected?: boolean;
-}
-
-export interface GoogleContactsSyncRunResult {
-  contacts: Contact[];
-  total: number;
-  imported: number;
-  skipped: number;
-}
-
 export function useContactGoogleSyncConfig() {
   const { isAuthenticated } = useAuth();
   return useQuery({
@@ -316,7 +299,6 @@ export function contactsListQueryKey(includeDeleted = false) {
 async function fetchContacts(includeDeleted = false): Promise<Contact[]> {
   const url = includeDeleted ? `${CONTACTS_API}?includeDeleted=true` : CONTACTS_API;
   const contactsResponse = await apiJson<{ contacts: Contact[] }>(url);
-  saveCollection(CONTACTS_MODULE_CONTRACT.collectionKey, filterActiveContacts(contactsResponse.contacts));
   return contactsResponse.contacts;
 }
 

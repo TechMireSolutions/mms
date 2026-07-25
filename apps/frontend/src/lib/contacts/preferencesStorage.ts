@@ -1,6 +1,6 @@
 import {
-  COLOR_PALETTES,
   CONTACTS_MODULE_CONTRACT,
+  DEFAULT_CONTACT_PREFERENCES,
   type ContactPreferences,
   type FieldConfig,
 } from "@mms/shared";
@@ -26,19 +26,7 @@ const LEGACY_PREFERENCES_OBJECT_KEY = "contact_prefs";
 
 function parseLocalPreferences(): Partial<ContactPreferences> {
   try {
-    let raw = localStorage.getItem(PREFERENCES_KEY);
-    if (!raw) {
-      const legacy = localStorage.getItem("madrasa_contact_prefs");
-      if (legacy) {
-        raw = legacy;
-        localStorage.setItem(PREFERENCES_KEY, legacy);
-        try {
-          localStorage.removeItem("madrasa_contact_prefs");
-        } catch (error) {
-          console.warn("[preferencesStorage] Failed to remove legacy contact preferences key:", error);
-        }
-      }
-    }
+    const raw = localStorage.getItem(PREFERENCES_KEY);
     return raw ? (JSON.parse(raw) as Partial<ContactPreferences>) : {};
   } catch {
     return {};
@@ -47,17 +35,14 @@ function parseLocalPreferences(): Partial<ContactPreferences> {
 
 /** Loads contact preferences — tenant object authoritative, localStorage offline cache. */
 function loadPreferences(): Partial<ContactPreferences> {
-  const fromObject = readObjectLocal<Partial<ContactPreferences>>(PREFERENCES_OBJECT_KEY);
-  const legacyObject = fromObject ? null : readObjectLocal<Partial<ContactPreferences>>(LEGACY_PREFERENCES_OBJECT_KEY);
-  if (!fromObject && legacyObject) {
-    saveObject(PREFERENCES_OBJECT_KEY, legacyObject);
-  }
+  const fromObject = readObjectLocal<Partial<ContactPreferences>>(PREFERENCES_OBJECT_KEY)
+    ?? readObjectLocal<Partial<ContactPreferences>>(LEGACY_PREFERENCES_OBJECT_KEY);
   const fromLocal = parseLocalPreferences();
-  const storedPreferences = fromObject ?? legacyObject;
-  if (storedPreferences && typeof storedPreferences === "object") {
-    return { ...fromLocal, ...storedPreferences };
-  }
-  return fromLocal;
+  return {
+    ...DEFAULT_CONTACT_PREFERENCES,
+    ...fromLocal,
+    ...(fromObject && typeof fromObject === "object" ? fromObject : {}),
+  };
 }
 
 /** Persists contact preferences to tenant object + localStorage cache. */
@@ -66,33 +51,7 @@ function savePreferences(preferences: ContactPreferences): void {
   saveObject(PREFERENCES_OBJECT_KEY, preferences);
 }
 
-const DEFAULT_PREFERENCES: ContactPreferences = {
-  defaultCountry: "",
-  defaultProvince: "",
-  defaultCity: "",
-  defaultViewLayout: "list",
-  duplicateDetectionThresholdHigh: 90,
-  duplicateDetectionThresholdMedium: 75,
-  duplicateDetectionColorHigh: COLOR_PALETTES.destructive.bg,
-  duplicateDetectionColorMedium: COLOR_PALETTES.warning.bg,
-  duplicateDetectionColorLow: COLOR_PALETTES.slate.bg,
-  duplicateDetectionScorePhoneEmail: 99,
-  duplicateDetectionScoreNamePhone: 95,
-  duplicateDetectionScoreNameEmail: 95,
-  duplicateDetectionScorePhone: 80,
-  duplicateDetectionScoreEmail: 80,
-  duplicateDetectionScoreName: 75,
-  duplicateDetectionScoreDefault: 70,
-  duplicateDetectionFields: ["name", "phone", "email"],
-  duplicateDetectionColorWarning: COLOR_PALETTES.warning.bg,
-  duplicateDetectionColorWarningText: COLOR_PALETTES.warning.text,
-  duplicateDetectionColorSuccess: COLOR_PALETTES.success.bg,
-  duplicateDetectionColorSuccessText: COLOR_PALETTES.success.text,
-  duplicateDetectionColorHighlight: COLOR_PALETTES.info.bg,
-  showDetailedSolarAge: false,
-  showLunarDob: false,
-  showDetailedLunarAge: false,
-};
+const DEFAULT_PREFERENCES = DEFAULT_CONTACT_PREFERENCES;
 
 export {
   syncOptionsInConfig,

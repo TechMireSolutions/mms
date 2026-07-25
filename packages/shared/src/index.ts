@@ -41,6 +41,7 @@ export * from './contactDuplicateUtils.js';
 export * from './contactsModuleContract.js';
 export * from './contactsPreferencesTypes.js';
 export * from './contactsSearchUtils.js';
+export * from './contactsSortUtils.js';
 export * from './contactsMetricsUtils.js';
 export * from './contactsReportAnalytics.js';
 export * from './contactsWidgetAggregate.js';

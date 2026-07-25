@@ -19,45 +19,13 @@ import {
 } from '@/tenant/features/contacts/hooks/useContacts';
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolvePhoneLabel, resolveEmailLabel } from "@/lib/contacts/contactI18n";
-import { getPrimaryPhone, getPrimaryEmail } from "@mms/shared";
-import { Contact, parseVCard, toVCard } from "@mms/shared";
+import { getDisplayName, getPrimaryPhone, getPrimaryEmail } from "@mms/shared";
+import { Contact, parseVCard, toVCard, type ContactGoogleSyncConfigClient } from "@mms/shared";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { isApiError } from "@/lib/apiClient";
 import { queryClientInstance } from "@/lib/queryClient";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { triggerFileDownload } from "@/lib/download";
-
-
-const GOOGLE_STORAGE_KEY = "mms_google_contacts_config";
-
-interface GoogleOauthConfig {
-  clientId?: string;
-  clientSecret?: string;
-}
-
-interface LegacyGoogleOauthConfig extends GoogleOauthConfig {
-  accessToken?: string;
-  refreshToken?: string;
-}
-
-function readLegacyGoogleConfig(): LegacyGoogleOauthConfig {
-  try {
-    let raw = localStorage.getItem(GOOGLE_STORAGE_KEY);
-    if (!raw) raw = localStorage.getItem("madrasa_google_contacts_config");
-    return raw ? (JSON.parse(raw) as LegacyGoogleOauthConfig) : {};
-  } catch {
-    return {};
-  }
-}
-
-function clearLegacyGoogleConfig(): void {
-  try {
-    localStorage.removeItem(GOOGLE_STORAGE_KEY);
-    localStorage.removeItem("madrasa_google_contacts_config");
-  } catch {
-    /* ignore */
-  }
-}
 
 interface GoogleContactsPanelProps {
   contacts: Contact[];
@@ -72,21 +40,7 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
   const { t } = useTranslation();
   const { data: serverConfig, isLoading: configLoading } = useContactGoogleSyncConfig();
   const { saveConfig, logSyncAudit, exchangeOAuth, runGoogleSync } = useContactGoogleSyncMutations();
-  const [config, setConfig] = useState<GoogleOauthConfig>({});
-  const [migrated, setMigrated] = useState(false);
-
-  React.useEffect(() => {
-    if (configLoading || migrated) return;
-    const legacy = readLegacyGoogleConfig();
-    if (legacy.clientId || legacy.accessToken) {
-      void saveConfig.mutateAsync(legacy).finally(() => {
-        clearLegacyGoogleConfig();
-        setMigrated(true);
-      });
-      return;
-    }
-    setMigrated(true);
-  }, [configLoading, migrated, saveConfig]);
+  const [config, setConfig] = useState<ContactGoogleSyncConfigClient>({});
 
   React.useEffect(() => {
     if (serverConfig) {
@@ -111,7 +65,7 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
       setError(t('contacts.sync.clientIdRequired'));
       return;
     }
-    const updatedConfig: GoogleOauthConfig = { ...config, clientId: form.clientId.trim(), clientSecret: form.clientSecret.trim() };
+    const updatedConfig: ContactGoogleSyncConfigClient = { ...config, clientId: form.clientId.trim(), clientSecret: form.clientSecret.trim() };
     setConfig(updatedConfig);
     void saveConfig.mutateAsync(updatedConfig).then(() => {
       void logSyncAudit.mutateAsync({ action: 'credentials_saved' });
@@ -204,7 +158,7 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
   };
 
   const handleDisconnect = (): void => {
-    const disconnectedConfig: GoogleOauthConfig = { clientId: config.clientId, clientSecret: config.clientSecret };
+    const disconnectedConfig: ContactGoogleSyncConfigClient = { clientId: config.clientId, clientSecret: config.clientSecret };
     setConfig(disconnectedConfig);
     void saveConfig.mutateAsync({ clientId: config.clientId, clearTokens: true }).then(() => {
       void logSyncAudit.mutateAsync({ action: 'disconnected' });
@@ -488,8 +442,8 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
 
   const handleImport = (): void => {
     setImporting(true);
-    const existingNames = new Set(contacts.map((contact) => contact.name?.toLowerCase().trim()));
-    const fresh = previewList.filter((contact) => !existingNames.has(contact.name?.toLowerCase().trim()));
+    const existingNames = new Set(contacts.map((contact) => getDisplayName(contact).toLowerCase().trim()));
+    const fresh = previewList.filter((contact) => !existingNames.has(getDisplayName(contact).toLowerCase().trim()));
     onImport(fresh);
     setResult({ imported: fresh.length, skipped: previewList.length - fresh.length });
     setPreviewList([]);
@@ -571,7 +525,7 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
             <div className="max-h-40 overflow-y-auto space-y-1 border border-border rounded-xl p-2 bg-card">
               {previewList.slice(0, 50).map((contact, contactIndex) => (
                 <div key={contactIndex} className="flex items-center justify-between px-3 py-1.5 rounded-lg hover:bg-muted/50 text-sm">
-                  <span className="font-medium text-foreground truncate">{contact.name}</span>
+                  <span className="font-medium text-foreground truncate">{getDisplayName(contact)}</span>
                   <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
                     {getPrimaryPhone(contact) || getPrimaryEmail(contact) || ""}
                   </span>

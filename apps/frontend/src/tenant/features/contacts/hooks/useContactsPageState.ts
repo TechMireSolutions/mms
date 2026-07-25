@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import type { Contact, AppTranslationKey } from "@mms/shared";
 import {
+  getDisplayName,
   getPrimaryPhone,
   hasWhatsApp,
   resolveModuleTierTab,
@@ -23,7 +24,6 @@ import {
 } from "@/lib/contacts/contactsBackgroundJobs";
 import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
 import { reportClientError } from "@/lib/clientErrorReporting";
-import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { startServerContactsCsvExport, startContactsDuplicateScan } from "@/lib/backgroundJobs/startServerContactsCsvExport";
 import {
   CONTACTS_WORK_DRILLDOWN_EVENT,
@@ -99,6 +99,26 @@ export function useContactsPageState({
     notify.error(t("contacts.saveFailed"));
   }, [t]);
 
+  const notifyBulkResult = useCallback(
+    (
+      succeeded: number,
+      failed: number,
+      singleSuccessKey: AppTranslationKey,
+      multiSuccessKey: AppTranslationKey,
+    ) => {
+      if (succeeded > 0 && failed === 0) {
+        notify.success(
+          succeeded === 1 ? t(singleSuccessKey) : t(multiSuccessKey, { count: succeeded }),
+        );
+      } else if (succeeded > 0 && failed > 0) {
+        notify.warning(t("contacts.bulkPartialFailure", { succeeded, failed }));
+      } else {
+        saveFailed();
+      }
+    },
+    [t, saveFailed],
+  );
+
   const saveContact = useCallback(
     async (contact: Contact, isNew: boolean): Promise<void> => {
       try {
@@ -143,7 +163,7 @@ export function useContactsPageState({
           logMergeAudit.mutateAsync({
             keepId,
             deleteId,
-            mergedName: merged.name || merged.firstName,
+            mergedName: getDisplayName(merged),
           }),
           "contacts.merge_audit",
         );
@@ -170,19 +190,9 @@ export function useContactsPageState({
           reportClientError(err, { scope: "contacts.import_contact_item" });
         }
       }
-      if (succeeded > 0 && failed === 0) {
-        notify.success(
-          list.length === 1
-            ? t("contacts.importSuccessOne")
-            : t("contacts.importSuccess", { count: succeeded }),
-        );
-      } else if (succeeded > 0 && failed > 0) {
-        notify.warning(t("contacts.bulkPartialFailure", { succeeded, failed }));
-      } else {
-        saveFailed();
-      }
+      notifyBulkResult(succeeded, failed, "contacts.importSuccessOne", "contacts.importSuccess");
     },
-    [upsertContact, t, saveFailed],
+    [upsertContact, notifyBulkResult],
   );
 
   const bulkDeleteContactsAction = useCallback(
@@ -193,22 +203,12 @@ export function useContactsPageState({
           ids,
           ...(deletionReason ? { deletionReason } : {}),
         });
-        if (result.succeeded > 0 && result.failed === 0) {
-          notify.success(
-            result.succeeded === 1
-              ? t("contacts.deletedTitle")
-              : t("contacts.bulkDeleteSuccess", { count: result.succeeded }),
-          );
-        } else if (result.succeeded > 0 && result.failed > 0) {
-          notify.warning(t("contacts.bulkPartialFailure", { succeeded: result.succeeded, failed: result.failed }));
-        } else {
-          saveFailed();
-        }
+        notifyBulkResult(result.succeeded, result.failed, "contacts.deletedTitle", "contacts.bulkDeleteSuccess");
       } catch (err) {
         handleError(err, "contacts.bulk_delete");
       }
     },
-    [bulkDeleteMutation, t, saveFailed, handleError],
+    [bulkDeleteMutation, notifyBulkResult, handleError],
   );
 
   const restoreContactAction = useCallback(
@@ -368,11 +368,6 @@ export function useContactsPageState({
   const defaultCity = prefs.defaultCity || "";
   const defaultProvince = prefs.defaultProvince || "";
 
-  const genderLabel = useCallback(
-    (gender: string) => formatContactGenderLabel(gender, t),
-    [t],
-  );
-
   const filtered = useMemo(() => {
     const list = contacts.filter((contact) => {
       if (!contactMatchesSearch(contact, search)) return false;
@@ -411,9 +406,15 @@ export function useContactsPageState({
   const selectedTargets = useMemo(() => {
     if (selected.length === 0) return { waTargets: [], smsReady: [] };
     const pool = showDeletedArchives ? contacts : workContacts;
-    const targets = pool.filter((contact) => selected.includes(contact.id));
-    const waTargets = targets.filter((contact) => hasWhatsApp(contact));
-    const smsReady = targets.filter((contact) => Boolean(getPrimaryPhone(contact)));
+    const selectedSet = new Set(selected);
+    const waTargets: Contact[] = [];
+    const smsReady: Contact[] = [];
+    for (const contact of pool) {
+      if (selectedSet.has(contact.id)) {
+        if (hasWhatsApp(contact)) waTargets.push(contact);
+        if (getPrimaryPhone(contact)) smsReady.push(contact);
+      }
+    }
     return { waTargets, smsReady };
   }, [selected, workContacts, contacts, showDeletedArchives]);
 
@@ -511,7 +512,7 @@ export function useContactsPageState({
     (id: string | number) => {
       if (!canDelete) return;
       const selectedContact = findContactById(id);
-      setDeleteTarget({ id, name: selectedContact?.name || selectedContact?.firstName });
+      setDeleteTarget({ id, name: selectedContact ? getDisplayName(selectedContact) : undefined });
     },
     [findContactById, canDelete],
   );
@@ -659,11 +660,12 @@ export function useContactsPageState({
     (id: string | number) => {
       if (!canDelete) return;
       const selectedContact = contacts.find((contact) => contact.id === id);
+      const name = selectedContact ? getDisplayName(selectedContact) : undefined;
       void restoreContactAction(String(id))
         .then(() => {
           notify.success(t("contacts.restoreSuccessTitle"), {
-            description: selectedContact?.name
-              ? t("contacts.restoreSuccessDescription", { name: selectedContact.name })
+            description: name
+              ? t("contacts.restoreSuccessDescription", { name })
               : t("contacts.restoreSuccessDescriptionDefault"),
           });
         })
@@ -721,7 +723,6 @@ export function useContactsPageState({
     defaultCountry,
     defaultCity,
     defaultProvince,
-    genderLabel,
     handleSort,
     handleSelect,
     handleSelectAll,

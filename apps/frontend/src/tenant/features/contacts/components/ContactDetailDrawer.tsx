@@ -36,7 +36,6 @@ import {
   resolveAddressLabel,
   resolveSocialPlatformLabel,
 } from "@/lib/contacts/contactI18n";
-import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { apiJson } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -273,14 +272,6 @@ export default function ContactDetailDrawer({
   const noteInputId = useId();
   const [contactState, setContactState] = useState<Contact>(initialContact);
   const [noteText, setNoteText] = useState<string>("");
-  const userMessages = useLiveCollection<{
-    id: string;
-    userId: string;
-    contactId: string | number;
-    channel: string;
-    body: string;
-    sentAt: string;
-  }>(user?.id ? `messages_u:${user.id}` : "", [], { enabled: !!user?.id, serverSync: false });
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -389,22 +380,9 @@ export default function ContactDetailDrawer({
   );
 
   const combinedActivities = useMemo(() => {
-    const VALID_ACTIVITY_TYPES = new Set<ContactActivity["type"]>(["note", "stage_change", "whatsapp", "email", "system", "task", "call"]);
     const noteActs = contactState.activities || [];
-    const messageActs: ContactActivity[] = userMessages
-      .filter((userMessage) => String(userMessage.contactId) === String(contactState.id))
-      .map((userMessage) => ({
-        id: userMessage.id,
-        type: (VALID_ACTIVITY_TYPES.has(userMessage.channel as ContactActivity["type"])
-          ? userMessage.channel
-          : "system") as ContactActivity["type"],
-        content: userMessage.body,
-        date: userMessage.sentAt,
-        by: user?.name || t('contacts.detail.systemUser'),
-      }));
-    const all = [...noteActs, ...messageActs];
-    return all.sort((a, b) => (new Date(b.date || 0).getTime()) - (new Date(a.date || 0).getTime()));
-  }, [contactState.activities, userMessages, contactState.id, user?.name, t]);
+    return [...noteActs].sort((a, b) => (new Date(b.date || 0).getTime()) - (new Date(a.date || 0).getTime()));
+  }, [contactState.activities]);
 
   const fieldsToRender = allFields.filter(
     (field) =>
@@ -720,7 +698,7 @@ export default function ContactDetailDrawer({
                                 onClick={() => handleNavigateToContact(target.id)}
                                 className="font-semibold text-primary hover:underline text-start h-auto p-0 shadow-none justify-start text-xs"
                               >
-                                {target.name}
+                                {getDisplayName(target)}
                               </Button>
                             ) : (
                               <span className="font-semibold text-foreground">{String(emergencyContact.contactId || "")}</span>
@@ -826,19 +804,19 @@ export default function ContactDetailDrawer({
                         <div className="flex items-center gap-3 min-w-0">
                           <UserAvatar
                             id={target?.id ?? relationship.contactId}
-                            name={target?.name ?? "?"}
+                            name={target ? getDisplayName(target) : "?"}
                             avatar={target?.avatar}
                             className="w-10 h-10 rounded-xl text-xs flex-shrink-0"
                           />
                           <div className="min-w-0">
                             <span className={`text-[9px] font-black uppercase tracking-widest mb-0.5 block ${DETAIL_STYLES.networkRelType}`}>{relationship.relationship}</span>
-                            <h5 className="text-sm font-bold text-foreground truncate">{target ? target.name : `${t('contacts.table.contactIdPrefix')}${relationship.contactId}`}</h5>
+                            <h5 className="text-sm font-bold text-foreground truncate">{target ? getDisplayName(target) : `${t('contacts.table.contactIdPrefix')}${relationship.contactId}`}</h5>
                           </div>
                         </div>
                         {target && (
                           <Button
                             variant="ghost"
-                            aria-label={t('contacts.detail.viewContact', { name: target.name })}
+                            aria-label={t('contacts.detail.viewContact', { name: getDisplayName(target) })}
                             onClick={() => handleNavigateToContact(relationship.contactId)}
                             className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all shadow-none ${DETAIL_STYLES.networkItemAction}`}
                             type="button"

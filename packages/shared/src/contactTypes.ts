@@ -1,7 +1,9 @@
 import { DEFAULT_MODULE_TIER_TAB_LABELS } from './moduleTierTabs.js';
 
+/** Status of WhatsApp registration checks for phone numbers. */
 export type WhatsAppStatus = 'PENDING' | 'REGISTERED' | 'NOT_REGISTERED' | 'FAILED';
 
+/** Preferences governing automated WhatsApp verification triggers and UI presentation. */
 export interface WhatsAppPreferences {
   autoCheckEnabled: boolean;
   excludedCountryCodes: string[];
@@ -13,16 +15,19 @@ export interface WhatsAppPreferences {
   };
 }
 
+/** Verification response payload for WhatsApp phone status lookups. */
 export interface WhatsAppVerificationResult {
   status: WhatsAppStatus;
   checkedAt: string;
   error?: string;
 }
 
+/** Service interface for verifying WhatsApp capabilities on phone numbers. */
 export interface WhatsAppProvider {
   verifyPhoneNumber(phoneNumber: string): Promise<WhatsAppVerificationResult>;
 }
 
+/** Supported interpersonal relationship types. */
 export type RelationshipType = 
   | 'father'
   | 'mother'
@@ -33,6 +38,7 @@ export type RelationshipType =
   | 'colleague'
   | 'other';
 
+/** Phone number model for contacts with label, country code, and verification status. */
 export interface PhoneNumber {
   label: string;
   number: string;
@@ -41,6 +47,7 @@ export interface PhoneNumber {
   whatsappStatus?: 'REGISTERED' | 'NOT_REGISTERED' | 'UNCHECKED' | 'FAILED';
 }
 
+/** Email address model for contacts with verification state and primary flag. */
 export interface EmailAddress {
   label: string;
   address: string;
@@ -48,6 +55,7 @@ export interface EmailAddress {
   isVerified?: boolean;
 }
 
+/** Physical address model for contacts. */
 export interface Address {
   line1?: string;
   city?: string;
@@ -57,11 +65,13 @@ export interface Address {
   isPrimary?: boolean;
 }
 
+/** Social profile link model for contacts. */
 export interface SocialLink {
   platform: string;
   url: string;
 }
 
+/** Emergency contact entry for a contact entity. */
 export interface EmergencyContact {
   name?: string;
   relationship?: string;
@@ -72,12 +82,14 @@ export interface EmergencyContact {
   inferenceDepth?: number;
 }
 
+/** Inter-contact relationship reference link. */
 export interface ContactRelationship {
   contactId: string | number;
   relationship?: RelationshipType | string;
   notes?: string;
 }
 
+/** Audit log activity item recorded on a contact timeline. */
 export interface ContactActivity {
   id: string;
   type: "note" | "stage_change" | "whatsapp" | "email" | "system" | "task" | "call";
@@ -87,6 +99,7 @@ export interface ContactActivity {
   metadata?: Record<string, unknown>;
 }
 
+/** Document attachment associated with a contact record. */
 export interface ContactAttachment {
   id: string;
   name: string;
@@ -96,6 +109,7 @@ export interface ContactAttachment {
   date: string;
 }
 
+/** Primary domain model representing a Contact entity across the monorepo. */
 export interface Contact {
   id: string | number;
   name: string;
@@ -131,6 +145,7 @@ export interface Contact {
   [key: string]: unknown;
 }
 
+/** Schema metadata for dynamic custom and standard contact fields. */
 export interface FieldDefinition {
   key: string;
   label: string;
@@ -153,12 +168,14 @@ export interface FieldDefinition {
   precision?: number;
 }
 
+/** Field grouping container for layout organization. */
 export interface FieldGroup {
   id: string;
   label: string;
   description: string;
 }
 
+/** Tab specification entry for module layout customization. */
 export interface TabDefinition {
   key: string;
   label: string;
@@ -171,7 +188,7 @@ export interface TabDefinition {
   isSystem?: boolean;
 }
 
-
+/** Column registry configuration for contact directory tables. */
 export interface ColumnRegistryEntry {
   key: string;
   label: string;
@@ -183,6 +200,7 @@ export interface ColumnRegistryEntry {
   fixed?: boolean;
 }
 
+/** Complete field configuration envelope governing standard and custom field definitions. */
 export interface FieldConfig {
   version: number;
   enabledTabs: string[];
@@ -196,6 +214,7 @@ export interface FieldConfig {
   columnRegistry?: ColumnRegistryEntry[];
 }
 
+/** Tenant and user preferences for contact views, defaults, and duplicate scoring thresholds. */
 export interface ContactPreferences {
   defaultCountry: string;
   defaultProvince: string;
@@ -225,6 +244,7 @@ export interface ContactPreferences {
   showDetailedLunarAge?: boolean;
 }
 
+/** WhatsApp quick template preset for campaign messaging. */
 export interface WhatsAppTemplate {
   id: string;
   label: string;
@@ -261,16 +281,25 @@ export const DEFAULT_CONTACT_PREFERENCES: ContactPreferences = {
   defaultCountry: "Pakistan",
   defaultProvince: "Punjab",
   defaultCity: "Lahore",
+  defaultViewLayout: "list",
   duplicateDetectionFields: ["name", "phone", "email"],
   duplicateDetectionThresholdHigh: 90,
   duplicateDetectionThresholdMedium: 75,
-  duplicateDetectionColorHigh: COLOR_PALETTES.red.bg,
-  duplicateDetectionColorMedium: COLOR_PALETTES.amber.bg,
+  duplicateDetectionColorHigh: COLOR_PALETTES.destructive.bg,
+  duplicateDetectionColorMedium: COLOR_PALETTES.warning.bg,
   duplicateDetectionColorLow: COLOR_PALETTES.slate.bg,
-  duplicateDetectionColorWarning: COLOR_PALETTES.amber.bg,
-  duplicateDetectionColorWarningText: COLOR_PALETTES.amber.text,
-  duplicateDetectionColorSuccess: COLOR_PALETTES.emerald.bg,
-  duplicateDetectionColorSuccessText: COLOR_PALETTES.emerald.text,
+  duplicateDetectionScorePhoneEmail: 99,
+  duplicateDetectionScoreNamePhone: 95,
+  duplicateDetectionScoreNameEmail: 95,
+  duplicateDetectionScorePhone: 80,
+  duplicateDetectionScoreEmail: 80,
+  duplicateDetectionScoreName: 75,
+  duplicateDetectionScoreDefault: 70,
+  duplicateDetectionColorWarning: COLOR_PALETTES.warning.bg,
+  duplicateDetectionColorWarningText: COLOR_PALETTES.warning.text,
+  duplicateDetectionColorSuccess: COLOR_PALETTES.success.bg,
+  duplicateDetectionColorSuccessText: COLOR_PALETTES.success.text,
+  duplicateDetectionColorHighlight: COLOR_PALETTES.info.bg,
   showDetailedSolarAge: true,
   showLunarDob: false,
   showDetailedLunarAge: false,
@@ -459,6 +488,7 @@ export const COLUMN_FIELD_MAPPING: Record<string, { tabId: string; fieldId: stri
   emergency_relationship: { tabId: "emergency", fieldId: "relationship" },
 };
 
+/** Sent message record for SMS, WhatsApp, or Email communications. */
 export interface Message {
   id: string;
   userId: string;
@@ -467,3 +497,23 @@ export interface Message {
   body: string;
   sentAt: string;
 }
+
+/** Client configuration model for Google Contacts OAuth and synchronization. */
+export interface ContactGoogleSyncConfigClient {
+  clientId?: string;
+  clientSecret?: string;
+  clearTokens?: boolean;
+  updatedAt?: string;
+  hasClientSecret?: boolean;
+  hasRefreshToken?: boolean;
+  isConnected?: boolean;
+}
+
+/** Result snapshot returned when running a Google Contacts sync operation. */
+export interface GoogleContactsSyncRunResult {
+  contacts: Contact[];
+  total: number;
+  imported: number;
+  skipped: number;
+}
+

@@ -39,12 +39,13 @@ interface ConfidenceBadgeProps {
 }
 
 function getDuplicateThemeColors(prefs?: Partial<ContactPreferences>) {
+  const merged = { ...DEFAULT_CONTACT_PREFERENCES, ...prefs };
   return {
-    warningBg: prefs?.duplicateDetectionColorWarning ?? DEFAULT_CONTACT_PREFERENCES.duplicateDetectionColorWarning!,
-    warningText: prefs?.duplicateDetectionColorWarningText ?? DEFAULT_CONTACT_PREFERENCES.duplicateDetectionColorWarningText!,
-    successBg: prefs?.duplicateDetectionColorSuccess ?? DEFAULT_CONTACT_PREFERENCES.duplicateDetectionColorSuccess!,
-    successText: prefs?.duplicateDetectionColorSuccessText ?? DEFAULT_CONTACT_PREFERENCES.duplicateDetectionColorSuccessText!,
-    highlightBg: prefs?.duplicateDetectionColorHighlight ?? DEFAULT_CONTACT_PREFERENCES.duplicateDetectionColorHighlight!,
+    warningBg: merged.duplicateDetectionColorWarning,
+    warningText: merged.duplicateDetectionColorWarningText,
+    successBg: merged.duplicateDetectionColorSuccess,
+    successText: merged.duplicateDetectionColorSuccessText,
+    highlightBg: merged.duplicateDetectionColorHighlight,
   };
 }
 
