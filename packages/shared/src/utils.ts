@@ -1542,12 +1542,14 @@ export function personalizeMessage(
   });
 }
 
+/** Interface defining a dynamic personalization variable token for messaging templates. */
 export interface VariableToken {
   token: string;
   labelKey: string;
   fallbackExample: string;
 }
 
+/** Registry of standard dynamic personalization tokens supported across SMS, WhatsApp, and Email campaigns. */
 export const MESSAGING_VARIABLE_TOKENS: VariableToken[] = [
   { token: '{name}', labelKey: 'messaging.tokenFullName', fallbackExample: '{name|Valued Parent}' },
   { token: '{first_name}', labelKey: 'messaging.tokenFirstName', fallbackExample: '{first_name|Parent}' },
@@ -1560,6 +1562,7 @@ export const MESSAGING_VARIABLE_TOKENS: VariableToken[] = [
   { token: '{salutation}', labelKey: 'messaging.tokenSalutation', fallbackExample: '{salutation|Respected}' },
   { token: '{time}', labelKey: 'messaging.tokenTime', fallbackExample: '{time}' },
 ];
+
 
 /**
  * Validates whether a recipient has a valid contact address for the chosen dispatch channel.

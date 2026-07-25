@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { type MessageTemplate, type Message, getMessagesDbKey, getMessageTemplatesDbKey } from '@mms/shared';
+import { type MessageTemplate, type Message, type MessagingMetricsDto, getMessagesDbKey, getMessageTemplatesDbKey } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
 import { getCollection, saveCollection } from '@/lib/db';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -34,7 +34,7 @@ export function useMessageTemplates(options?: { enabled?: boolean }) {
   });
 
   const templates = useMemo(() => {
-    if (query.data && query.data.length > 0) return query.data;
+    if (query.data !== undefined) return query.data;
     if (dbKey) return getCollection<MessageTemplate>(dbKey) || [];
     return [];
   }, [query.data, dbKey]);
@@ -81,7 +81,7 @@ export function useMessageLogs(options?: {
   });
 
   const logs = useMemo(() => {
-    if (query.data && query.data.length > 0) return query.data;
+    if (query.data !== undefined) return query.data;
     if (dbKey && !queryString) return getCollection<Message>(dbKey) || [];
     return [];
   }, [query.data, dbKey, queryString]);
@@ -96,21 +96,7 @@ export function useMessagingMetrics(options?: { enabled?: boolean }) {
     queryKey: MESSAGING_METRICS_QUERY_KEY,
     queryFn: async () => {
       try {
-        const res = await apiJson<{
-          metrics: {
-            total: number;
-            smsCount: number;
-            whatsappCount: number;
-            emailCount: number;
-            sentCount: number;
-            deliveredCount?: number;
-            failedCount: number;
-            skippedCount: number;
-            queuedCount?: number;
-            successRate: number;
-            categoryBreakdown?: Record<string, number>;
-          };
-        }>('/api/messaging/metrics');
+        const res = await apiJson<{ metrics: MessagingMetricsDto }>('/api/messaging/metrics');
         return res.metrics;
       } catch (err) {
         return null;

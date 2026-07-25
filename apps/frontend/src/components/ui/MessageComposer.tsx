@@ -1,9 +1,8 @@
-import React, { useState, useMemo, useRef, useEffect, useContext } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  MessageCircle, MessageSquare, User, Info, Sparkles, Mail, CheckCheck, AlertCircle, Clock, ChevronLeft, ChevronRight, Play, Pause, XCircle, Zap, ShieldCheck
+  MessageCircle, MessageSquare, Info, Sparkles, Mail, CheckCheck, AlertCircle, Clock, ChevronLeft, ChevronRight, Play, Pause, XCircle, Zap, ShieldCheck
 } from 'lucide-react';
-import { ContactConfigContext } from '@/lib/contexts/ContactConfigContext';
 import { openDeviceSmsComposer } from '@/lib/deviceSms';
 import { FormModal } from '@/components/ui/FormModal';
 import { Button } from '@/components/ui/button';
@@ -19,10 +18,11 @@ import {
   calculateSmsSegments, 
   validateRecipientAddress,
   getInitials,
-  formatDate,
+  formatDateTime,
   mergeMessageTemplates,
   parsePhoneNumber,
-  type PersonalizeRecipient, 
+  toMessagingRecipient,
+  type StandardMessagingRecipient as MessagingRecipient,
   type MessageTemplate,
   type Message
 } from '@mms/shared';
@@ -30,14 +30,7 @@ import { MessagingVariableTokensBar } from '@/components/ui/MessagingVariableTok
 import { SegmentedPillFilter } from '@/components/ui/SegmentedPillFilter';
 import { useMessageTemplates, useMessagingMutations } from '@/tenant/features/messaging/hooks/useMessaging';
 
-export interface MessagingRecipient extends PersonalizeRecipient {
-  id: string | number;
-  name: string;
-  phone: string;
-  email?: string;
-}
-
-export type { MessageTemplate };
+export type { MessagingRecipient, MessageTemplate };
 
 export interface MessageComposerProps {
   channel: 'sms' | 'whatsapp' | 'email';
@@ -49,7 +42,7 @@ export interface MessageComposerProps {
   onSent?: (sent: { recipientId: string | number; body: string }[]) => void;
 }
 
-export { personalizeMessage };
+export { personalizeMessage, toMessagingRecipient };
 
 export type DispatchSpeed = 'safe' | 'normal' | 'express';
 
@@ -73,10 +66,6 @@ export default function MessageComposer({
 }: MessageComposerProps): React.JSX.Element {
   const { t } = useTranslation();
   const { user } = useAuth();
-
-  // Safely resolve whatsappTemplates from context if mounted
-  const contactConfig = useContext(ContactConfigContext);
-  const contextTemplates = contactConfig?.whatsappTemplates || [];
 
   // Evaluate recipients eligibility and validation
   const validatedRecipients = useMemo(() => {
@@ -108,15 +97,8 @@ export default function MessageComposer({
 
   const activeTemplates = useMemo(() => {
     if (templates) return templates;
-    const mappedContext: MessageTemplate[] = contextTemplates.map((t) => ({
-      id: t.id,
-      label: t.label,
-      body: t.body,
-      category: 'general' as const,
-      channel: 'whatsapp' as const,
-    }));
-    return mergeMessageTemplates(fetchedTemplates, mappedContext);
-  }, [templates, contextTemplates, fetchedTemplates]);
+    return mergeMessageTemplates(fetchedTemplates);
+  }, [templates, fetchedTemplates]);
 
   const channelFilteredTemplates = useMemo(() => {
     return activeTemplates.filter((tpl) => !tpl.channel || tpl.channel === 'all' || tpl.channel === channel);
@@ -510,7 +492,7 @@ export default function MessageComposer({
                 <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
                   smsStats.isUnicode ? 'bg-warning/15 text-warning border border-warning/30' : 'bg-muted text-foreground'
                 }`}>
-                  {smsStats.isUnicode ? 'Unicode' : 'GSM 7-bit'} • {smsStats.totalSegments} seg ({smsStats.remainingInSegment} left)
+                  {smsStats.isUnicode ? t('messaging.encodingUnicode') : t('messaging.encodingGsm')} • {t('messaging.smsSegmentStats', { segments: smsStats.totalSegments, remaining: smsStats.remainingInSegment })}
                 </span>
               )}
               <span>{message.length} {t('contacts.whatsapp.chars')}</span>
@@ -568,7 +550,7 @@ export default function MessageComposer({
                       </Button>
                     </div>
                   )}
-                  <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{channel}</span>
+                  <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{t(`messaging.channel.${channel}` as const)}</span>
                 </div>
               </h5>
 
@@ -602,7 +584,7 @@ export default function MessageComposer({
                   </div>
                   <div className="whitespace-pre-wrap leading-relaxed">{previewText}</div>
                   <div className="flex items-center justify-end gap-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-mono">
-                    <span>{formatDate(new Date())}</span>
+                    <span>{formatDateTime(new Date())}</span>
                     <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
                   </div>
                 </div>

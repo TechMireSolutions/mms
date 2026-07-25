@@ -1,4 +1,5 @@
 import type { Permission } from './permissions.js';
+import type { PersonalizeRecipient } from './utils.js';
 import { MESSAGE_CATEGORIES, MESSAGE_CHANNELS, MESSAGE_CATEGORY_OPTIONS, MESSAGE_CHANNEL_OPTIONS } from './messagingSchemas.js';
 
 export const MESSAGING_ROLE_FILTERS = ['all', 'students', 'teachers', 'staff', 'contacts'] as const;
@@ -67,3 +68,35 @@ export function getChannelBadgeStyle(channel: 'sms' | 'whatsapp' | 'email' | str
 export function getChannelLabelKey(channel: string): string {
   return `messaging.channel.${channel}`;
 }
+
+/** Standardized messaging recipient object interface. */
+export interface StandardMessagingRecipient extends PersonalizeRecipient {
+  id: string | number;
+  name: string;
+  phone: string;
+  email?: string;
+}
+
+/**
+ * Converts a contact or entity object into a standardized StandardMessagingRecipient payload.
+ */
+export function toMessagingRecipient<T extends { id: string | number; name?: string; phone?: string; email?: string }>(
+  contact: T,
+  getters?: {
+    getDisplayName?: (item: T) => string;
+    getPrimaryPhone?: (item: T) => string | null | undefined;
+    getPrimaryEmail?: (item: T) => string | null | undefined;
+  }
+): StandardMessagingRecipient {
+  const name = getters?.getDisplayName ? getters.getDisplayName(contact) : contact.name || String(contact.id);
+  const phone = (getters?.getPrimaryPhone ? getters.getPrimaryPhone(contact) : contact.phone) || '';
+  const email = (getters?.getPrimaryEmail ? getters.getPrimaryEmail(contact) : contact.email) || '';
+
+  return {
+    id: contact.id,
+    name,
+    phone,
+    email,
+  };
+}
+

@@ -3493,6 +3493,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "messaging.search.placeholder": "البحث حسب المستلم أو المحتوى...",
   "messaging.clearLogs": "مسح سجل الرسائل",
   "messaging.clearLogsDesc": "هل أنت تأكد من أنك تريد مسح جميع سجلات الرسائل؟ لا يمكن التراجع عن هذا الإجراء.",
+  "messaging.selectRecipient": "اختر {name}",
   "messaging.selectRecipients": "اختر المستلمين",
   "messaging.selectRecipientsDesc": "اختر مستلمًا واحدًا أو أكثر من قائمة جهات الاتصال (يتطلب رقم هاتف أو بريد مسجل).",
   "messaging.confirmRecipients": "تأكيد المستلمين",
@@ -3607,6 +3608,9 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "messaging.phoneNumber": "رقم الهاتف",
   "messaging.subjectPlaceholder": "مثال: إعلان هام",
   "messaging.smsSegmentBadge": "رسالة نصية • {count} أجزاء",
+  "messaging.encodingUnicode": "يونيكود",
+  "messaging.encodingGsm": "GSM 7-bit",
+  "messaging.smsSegmentStats": "{segments} أجزاء ({remaining} متبقي)",
 
 
 

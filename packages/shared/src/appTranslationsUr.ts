@@ -3493,6 +3493,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "messaging.search.placeholder": "وصول کنندہ یا مواد کے ذریعے تلاش کریں...",
   "messaging.clearLogs": "لاگ کی تاریخ صاف کریں",
   "messaging.clearLogsDesc": "کیا آپ واقعی تمام پیغام لاگز صاف کرنا چاہتے ہیں؟ اس عمل کو منسوخ نہیں کیا جا سکتا۔",
+  "messaging.selectRecipient": "منتخب کریں {name}",
   "messaging.selectRecipients": "وصول کنندگان منتخب کریں",
   "messaging.selectRecipientsDesc": "روابط کی فہرست سے ایک یا زیادہ اہداف منتخب کریں (رجسٹرڈ فون نمبر یا ای میل لازمی ہے)۔",
   "messaging.confirmRecipients": "وصول کنندگان کی تصدیق کریں",
@@ -3607,6 +3608,9 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "messaging.phoneNumber": "فون نمبر",
   "messaging.subjectPlaceholder": "مثلاً اہم اعلان",
   "messaging.smsSegmentBadge": "ایس ایم ایس • {count} حصے",
+  "messaging.encodingUnicode": "یونیکوڈ",
+  "messaging.encodingGsm": "جی ایس ایم 7-بٹ",
+  "messaging.smsSegmentStats": "{segments} حصے ({remaining} باقی)",
 
 
 

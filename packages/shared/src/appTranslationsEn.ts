@@ -3498,6 +3498,7 @@ export const APP_TRANSLATIONS_EN = {
   "messaging.search.placeholder": "Search by recipient or content...",
   "messaging.clearLogs": "Clear Log History",
   "messaging.clearLogsDesc": "Are you sure you want to clear all message logs? This action cannot be undone.",
+  "messaging.selectRecipient": "Select {name}",
   "messaging.selectRecipients": "Select Recipients",
   "messaging.selectRecipientsDesc": "Select one or more targets from contacts list (requires registered phone number or email).",
   "messaging.confirmRecipients": "Confirm Recipients",
@@ -3612,6 +3613,9 @@ export const APP_TRANSLATIONS_EN = {
   "messaging.phoneNumber": "phone number",
   "messaging.subjectPlaceholder": "e.g. Important Announcement",
   "messaging.smsSegmentBadge": "SMS • {count} seg",
+  "messaging.encodingUnicode": "Unicode",
+  "messaging.encodingGsm": "GSM 7-bit",
+  "messaging.smsSegmentStats": "{segments} seg ({remaining} left)",
 
 
 

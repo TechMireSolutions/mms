@@ -35,10 +35,9 @@ import {
   formatDateTime,
   getInitials,
   mergeMessageTemplates,
-  MESSAGE_CATEGORY_OPTIONS,
-  MESSAGE_CHANNEL_OPTIONS,
   MESSAGING_MODULE_CONTRACT,
   getChannelBadgeStyle,
+  toMessagingRecipient,
   type Message, 
   type MessageCategory,
   type MessageTemplate
@@ -69,21 +68,21 @@ export default function MessagingPage(): React.JSX.Element {
 
   const categorySelectOptions = useMemo(() => [
     { value: 'all', label: t('messaging.category.all') },
-    ...MESSAGE_CATEGORY_OPTIONS.map((opt) => ({
+    ...MESSAGING_MODULE_CONTRACT.categoryOptions.map((opt) => ({
       value: opt.value,
       label: t(opt.labelKey),
     })),
   ], [t]);
 
   const templateCategorySelectOptions = useMemo(() => 
-    MESSAGE_CATEGORY_OPTIONS.map((opt) => ({
+    MESSAGING_MODULE_CONTRACT.categoryOptions.map((opt) => ({
       value: opt.value,
       label: t(opt.labelKey),
     })),
   [t]);
 
   const channelSelectOptions = useMemo(() => 
-    MESSAGE_CHANNEL_OPTIONS.map((opt) => ({
+    MESSAGING_MODULE_CONTRACT.channelOptions.map((opt) => ({
       value: opt.value,
       label: t(opt.labelKey),
     })),
@@ -98,13 +97,6 @@ export default function MessagingPage(): React.JSX.Element {
 
   const genderOptions = useMemo(() => 
     MESSAGING_MODULE_CONTRACT.genderOptions.map((opt) => ({
-      value: opt.value,
-      label: t(opt.labelKey),
-    })),
-  [t]);
-
-  const channelFilterOptions = useMemo(() => 
-    MESSAGING_MODULE_CONTRACT.channelOptions.map((opt) => ({
       value: opt.value,
       label: t(opt.labelKey),
     })),
@@ -334,12 +326,7 @@ export default function MessagingPage(): React.JSX.Element {
   const currentSelectedList = useMemo(() => {
     return allContacts
       .filter((c) => selectedRecipients[c.id])
-      .map((c) => ({
-        id: c.id,
-        name: getDisplayName(c),
-        phone: getPrimaryPhone(c) || '',
-        email: getPrimaryEmail(c) || '',
-      }));
+      .map((c) => toMessagingRecipient(c, { getDisplayName, getPrimaryPhone, getPrimaryEmail }));
   }, [allContacts, selectedRecipients]);
 
   const allVisibleSelected = filteredContacts.length > 0 && filteredContacts.every((c) => selectedRecipients[c.id]);
@@ -355,17 +342,14 @@ export default function MessagingPage(): React.JSX.Element {
 
   const handleResendLog = (log: Message): void => {
     const recipient = contactMap.get(log.contactId);
-    const targetRecipient: MessagingRecipient = recipient ? {
-      id: recipient.id,
-      name: getDisplayName(recipient),
-      phone: getPrimaryPhone(recipient) || '',
-      email: getPrimaryEmail(recipient) || '',
-    } : {
-      id: log.contactId,
-      name: t('messaging.contactFallback', { id: log.contactId }),
-      phone: '',
-      email: '',
-    };
+    const targetRecipient: MessagingRecipient = recipient
+      ? toMessagingRecipient(recipient, { getDisplayName, getPrimaryPhone, getPrimaryEmail })
+      : {
+          id: log.contactId,
+          name: t('messaging.contactFallback', { id: log.contactId }),
+          phone: '',
+          email: '',
+        };
 
     triggerCompose(log.channel, [targetRecipient], log.body, log.subject);
     notify.success(t('messaging.resendSuccess'));
@@ -392,11 +376,11 @@ export default function MessagingPage(): React.JSX.Element {
 
   const chartData = useMemo(() => {
     return [
-      { name: 'SMS', value: stats.sms },
-      { name: 'WhatsApp', value: stats.wa },
-      { name: 'Email', value: stats.email },
-    ].filter(item => item.value > 0);
-  }, [stats]);
+      { name: t('messaging.channel.sms'), value: stats.sms },
+      { name: t('messaging.channel.whatsapp'), value: stats.wa },
+      { name: t('messaging.channel.email'), value: stats.email },
+    ].filter((item) => item.value > 0);
+  }, [stats, t]);
 
   return (
     <ModulePageShell
@@ -528,7 +512,7 @@ export default function MessagingPage(): React.JSX.Element {
                             <Checkbox
                               checked={!!selectedRecipients[c.id]}
                               onCheckedChange={() => handleToggleRecipient(c.id)}
-                              aria-label={`Select ${getDisplayName(c)}`}
+                              aria-label={t('messaging.selectRecipient', { name: getDisplayName(c) })}
                             />
                           </td>
                           <td className="px-4 py-2 font-medium text-foreground flex items-center gap-2">
@@ -643,7 +627,7 @@ export default function MessagingPage(): React.JSX.Element {
                   />
 
                   <SegmentedPillFilter
-                    options={channelFilterOptions}
+                    options={channelSelectOptions}
                     value={channelFilter}
                     onChange={(v) => setChannelFilter(v as typeof channelFilter)}
                     size="sm"

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { personalizeMessage, validateRecipientAddress } from '../utils.js';
+import { personalizeMessage, validateRecipientAddress, MESSAGING_VARIABLE_TOKENS } from '../utils.js';
 import { calculateSmsSegments } from '../smsUtils.js';
 import { mergeMessageTemplates, DEFAULT_MESSAGE_TEMPLATES } from '../contactTypes.js';
 import { getMessagesDbKey, getMessageTemplatesDbKey } from '../messagingSchemas.js';
@@ -117,4 +117,16 @@ describe('messagingUtils', () => {
       expect(getMessageTemplatesDbKey('usr_123')).toBe('messages_templates_u:usr_123');
     });
   });
+
+  describe('variableTokensRegistry', () => {
+    it('provides valid variable token registry definitions', () => {
+      expect(MESSAGING_VARIABLE_TOKENS.length).toBeGreaterThan(0);
+      MESSAGING_VARIABLE_TOKENS.forEach((vt) => {
+        expect(vt.token).toMatch(/^\{[a-z_]+\}$/);
+        expect(vt.labelKey).toContain('messaging.token');
+        expect(vt.fallbackExample).toBeTruthy();
+      });
+    });
+  });
 });
+

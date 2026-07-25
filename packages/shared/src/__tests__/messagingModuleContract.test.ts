@@ -6,6 +6,7 @@ import {
   MESSAGING_STATUS_OPTIONS,
   getChannelBadgeStyle,
   getChannelLabelKey,
+  toMessagingRecipient,
 } from '../messagingModuleContract.js';
 
 describe('messagingModuleContract', () => {
@@ -52,4 +53,21 @@ describe('messagingModuleContract', () => {
     expect(getChannelLabelKey('sms')).toBe('messaging.channel.sms');
     expect(getChannelLabelKey('whatsapp')).toBe('messaging.channel.whatsapp');
   });
+
+  it('converts objects into standardized messaging recipients via toMessagingRecipient', () => {
+    const rawContact = { id: 101, name: 'Aisha Ahmed', phone: '+923001234567', email: 'aisha@example.com' };
+    const converted = toMessagingRecipient(rawContact, {
+      getDisplayName: (c) => c.name,
+      getPrimaryPhone: (c) => c.phone,
+      getPrimaryEmail: (c) => c.email,
+    });
+
+    expect(converted).toEqual({
+      id: 101,
+      name: 'Aisha Ahmed',
+      phone: '+923001234567',
+      email: 'aisha@example.com',
+    });
+  });
 });
+

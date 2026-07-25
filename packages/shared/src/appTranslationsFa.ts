@@ -1983,6 +1983,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "messaging.saveTemplate": "ذخیره قالب جدید",
   "messaging.updateTemplate": "به‌روزرسانی قالب",
   "messaging.search.placeholder": "جستجو بر اساس گیرنده یا محتوای پیام...",
+  "messaging.selectRecipient": "انتخاب {name}",
   "messaging.selectRecipients": "انتخاب گیرندگان",
   "messaging.selectRecipientsDesc": "یک یا چند هدف را از لیست مخاطبین انتخاب کنید (شماره تلفن یا ایمیل معتبر الزامی است).",
   "messaging.sendWhatsapp": "ارسال کمپین واتس‌اپ",
@@ -2097,6 +2098,9 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "messaging.phoneNumber": "شماره تلفن",
   "messaging.subjectPlaceholder": "مانند اعلان مهم",
   "messaging.smsSegmentBadge": "پیامک • {count} بخش",
+  "messaging.encodingUnicode": "یونیکد",
+  "messaging.encodingGsm": "GSM 7-bit",
+  "messaging.smsSegmentStats": "{segments} بخش ({remaining} باقی)",
 
 
 

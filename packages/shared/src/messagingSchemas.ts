@@ -79,10 +79,15 @@ export const messagingMetricsSchema = z.object({
   categoryBreakdown: z.record(messageCategorySchema, z.number()).optional(),
 });
 
+/** Message template DTO payload structure. */
 export type MessageTemplateDto = z.infer<typeof messageTemplateSchema>;
+/** Message template creation/update input payload structure. */
 export type MessageTemplateInputDto = z.infer<typeof messageTemplateInputSchema>;
+/** Recorded message dispatch history DTO payload structure. */
 export type MessageRecordDto = z.infer<typeof messageRecordSchema>;
+/** Filter and pagination query parameters for message logs. */
 export type MessagingLogsQueryDto = z.infer<typeof messagingLogsQuerySchema>;
+/** Messaging volume and delivery metrics summary DTO. */
 export type MessagingMetricsDto = z.infer<typeof messagingMetricsSchema>;
 
 /**
