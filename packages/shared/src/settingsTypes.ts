@@ -41,6 +41,11 @@ import {
   getIntlLocaleForLanguage,
   type AppLanguageCode,
 } from "./languageUtils.js";
+import {
+  type LlmConfig,
+  type LlmProviderType,
+  LLM_PROVIDERS_META,
+} from "./llmSettingsTypes.js";
 
 export type { AppLanguageCode };
 
@@ -158,18 +163,12 @@ export interface GlobalSettings {
   /** Map of module IDs to their enabled status. */
   enabledModules: Record<string, boolean>;
   /** The chosen LLM provider. */
-  llmProvider: "gemini" | "openai" | "anthropic" | "deepseek" | "openrouter" | "groq" | "alibaba" | "none";
+  llmProvider: LlmProviderType | "none";
   /** The user's LLM API key. */
   llmApiKey: string;
   /** Dynamic list of multiple LLM configurations. */
   llmConfigs: LlmConfig[];
 }
-
-import {
-  type LlmConfig,
-  type LlmProviderType,
-  LLM_PROVIDERS_META,
-} from "./llmSettingsTypes.js";
 
 
 /** Definition for an application module. */

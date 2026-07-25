@@ -66,7 +66,7 @@ export default function LlmSettings(): React.JSX.Element {
 
   // Form states
   const [formName, setFormName] = useState('');
-  const [formProvider, setFormProvider] = useState<LlmConfig['provider']>('gemini');
+  const [formProvider, setFormProvider] = useState<LlmProviderType>('gemini');
   const [formModel, setFormModel] = useState('');
   const [formBaseUrl, setFormBaseUrl] = useState('');
   const [formApiKey, setFormApiKey] = useState('');

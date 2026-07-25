@@ -5,11 +5,11 @@ import { loadGlobalSettings } from '../../services/globalSettingsService.js';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { sendForbidden } from '../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import { getLlmProviderModelsUrl, type User, type LlmTestResult } from '@mms/shared';
-import { OUTBOUND_FETCH_TIMEOUT_MS, safeOptionalExternalHttpUrl } from '../../lib/outboundUrl.js';
+import { getLlmProviderModelsUrl, LLM_PROVIDER_KEYS, type User, type LlmTestResult } from '@mms/shared';
+import { fetchWithTimeout, safeOptionalExternalHttpUrl } from '../../lib/outboundUrl.js';
 
 const modelsBodySchema = z.object({
-  provider: z.enum(['gemini', 'openai', 'anthropic', 'deepseek', 'openrouter', 'groq', 'alibaba']),
+  provider: z.enum(LLM_PROVIDER_KEYS),
   apiKey: z.string().optional(),
   configId: z.string().optional(),
   baseUrl: z.string().optional(),
@@ -27,7 +27,7 @@ const testBodySchema = z.object({
   customConfig: z.object({
     id: z.string(),
     name: z.string(),
-    provider: z.enum(['gemini', 'openai', 'anthropic', 'deepseek', 'openrouter', 'groq', 'alibaba']),
+    provider: z.enum(LLM_PROVIDER_KEYS),
     apiKey: z.string(),
     model: z.string(),
     baseUrl: z.string().optional(),
@@ -49,13 +49,6 @@ interface AnthropicModelsResponse {
 
 interface OpenAiModelsResponse {
   data?: Array<{ id: string }>;
-}
-
-function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
-  return fetch(url, {
-    ...init,
-    signal: init?.signal ?? AbortSignal.timeout(OUTBOUND_FETCH_TIMEOUT_MS),
-  });
 }
 
 export default async function aiRoutes(

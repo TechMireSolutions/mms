@@ -1,17 +1,3 @@
-/** Configuration interface for tenant AI provider connections. */
-export interface LlmConfig {
-  id: string;
-  name: string;
-  provider: "gemini" | "openai" | "anthropic" | "deepseek" | "openrouter" | "groq" | "alibaba";
-  apiKey: string;
-  model: string;
-  baseUrl?: string;
-  isDefaultText: boolean;
-  temperature?: number;
-  maxTokens?: number;
-  topP?: number;
-}
-
 /** Registry metadata and default settings for supported AI completion providers. */
 export const LLM_PROVIDERS_META = {
   gemini: {
@@ -66,6 +52,23 @@ export const LLM_PROVIDERS_META = {
 } as const;
 
 export type LlmProviderType = keyof typeof LLM_PROVIDERS_META;
+
+/** Authoritative key array of all supported AI providers. */
+export const LLM_PROVIDER_KEYS = Object.keys(LLM_PROVIDERS_META) as [LlmProviderType, ...LlmProviderType[]];
+
+/** Configuration interface for tenant AI provider connections. */
+export interface LlmConfig {
+  id: string;
+  name: string;
+  provider: LlmProviderType;
+  apiKey: string;
+  model: string;
+  baseUrl?: string;
+  isDefaultText: boolean;
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
+}
 
 /** Performance and volume metrics returned by AI completion connectivity tests. */
 export interface LlmTestMetrics {
@@ -127,5 +130,6 @@ export function resolveLlmModel(model: string | undefined | null, provider: LlmP
   const trimmed = model?.trim();
   return trimmed || getLlmProviderDefaultModel(provider);
 }
+
 
 

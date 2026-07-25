@@ -1,6 +1,6 @@
 import { loadGlobalSettings } from './globalSettingsService.js';
 import { LLM_PROVIDERS_META, type LlmConfig } from '@mms/shared';
-import { OUTBOUND_FETCH_TIMEOUT_MS, safeOptionalExternalHttpUrl } from '../lib/outboundUrl.js';
+import { fetchWithTimeout, safeOptionalExternalHttpUrl } from '../lib/outboundUrl.js';
 
 interface GeminiGenerateResponse {
   candidates?: Array<{
@@ -29,13 +29,6 @@ interface AnthropicMessagesResponse {
 interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
-}
-
-function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
-  return fetch(url, {
-    ...init,
-    signal: init?.signal ?? AbortSignal.timeout(OUTBOUND_FETCH_TIMEOUT_MS),
-  });
 }
 
 /**

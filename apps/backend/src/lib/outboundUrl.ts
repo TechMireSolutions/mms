@@ -46,3 +46,11 @@ export function safeOptionalExternalHttpUrl(raw: string | undefined, label = 'UR
 }
 
 export const OUTBOUND_FETCH_TIMEOUT_MS = 15_000;
+
+export function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  return fetch(url, {
+    ...init,
+    signal: init?.signal ?? AbortSignal.timeout(OUTBOUND_FETCH_TIMEOUT_MS),
+  });
+}
+
