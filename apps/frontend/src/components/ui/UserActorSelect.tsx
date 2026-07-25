@@ -3,7 +3,8 @@ import type { SystemUser } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useLiveCollection } from '@/hooks/useLiveCollection';
-import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
+import { FORM_LABEL } from '@/components/ui/formStyles';
+import { FormSelect } from '@/components/ui/FormSelect';
 
 export interface UserActorSelectProps {
   value: string;
@@ -22,34 +23,36 @@ export function UserActorSelect({
   id,
   allowEmpty = false,
 }: UserActorSelectProps): React.JSX.Element {
+  const generatedId = React.useId();
+  const selectId = id || generatedId;
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
   const users = useLiveCollection<SystemUser>('users');
 
-  const options = useMemo(
-    () => users.slice().sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '')),
+  const selectOptions = useMemo(
+    () =>
+      users
+        .slice()
+        .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
+        .map((user) => ({ value: user.id, label: user.name })),
     [users],
   );
 
+  const selectedValue = value || authUser?.id || '';
+  const placeholder = allowEmpty ? t('registryPerson.selectUser') : undefined;
+
   return (
     <div>
-      <label htmlFor={id} className={FORM_LABEL}>
+      <label htmlFor={selectId} className={FORM_LABEL}>
         {label}{required ? ' *' : ''}
       </label>
-      <select
-        id={id}
-        className={`${FORM_INPUT} cursor-pointer`}
-        value={value || authUser?.id || ''}
-        onChange={(event) => onChange(event.target.value)}
-        required={required}
-      >
-        {allowEmpty ? <option value="">{t('registryPerson.selectUser')}</option> : null}
-        {options.map((user) => (
-          <option key={user.id} value={user.id}>
-            {user.name}
-          </option>
-        ))}
-      </select>
+      <FormSelect
+        id={selectId}
+        value={selectedValue}
+        onChange={onChange}
+        options={selectOptions}
+        placeholder={placeholder}
+      />
     </div>
   );
 }

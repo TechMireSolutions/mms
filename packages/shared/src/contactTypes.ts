@@ -257,6 +257,25 @@ export const COLOR_PALETTES = {
   destructive: { bg: "bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive/15 dark:border-destructive/25", text: "text-destructive", border: "border-destructive/20 dark:border-destructive/25" },
 };
 
+export const DEFAULT_CONTACT_PREFERENCES: ContactPreferences = {
+  defaultCountry: "Pakistan",
+  defaultProvince: "Punjab",
+  defaultCity: "Lahore",
+  duplicateDetectionFields: ["name", "phone", "email"],
+  duplicateDetectionThresholdHigh: 90,
+  duplicateDetectionThresholdMedium: 75,
+  duplicateDetectionColorHigh: COLOR_PALETTES.red.bg,
+  duplicateDetectionColorMedium: COLOR_PALETTES.amber.bg,
+  duplicateDetectionColorLow: COLOR_PALETTES.slate.bg,
+  duplicateDetectionColorWarning: COLOR_PALETTES.amber.bg,
+  duplicateDetectionColorWarningText: COLOR_PALETTES.amber.text,
+  duplicateDetectionColorSuccess: COLOR_PALETTES.emerald.bg,
+  duplicateDetectionColorSuccessText: COLOR_PALETTES.emerald.text,
+  showDetailedSolarAge: true,
+  showLunarDob: false,
+  showDetailedLunarAge: false,
+};
+
 
 
 export const DEFAULT_WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
@@ -269,14 +288,13 @@ export const DEFAULT_WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
 export const DEFAULT_PHONE_LABELS = ["Mobile", "Home", "Work", "WhatsApp", "Other"];
 export const DEFAULT_EMAIL_LABELS = ["Personal", "Work", "Other"];
 export const DEFAULT_ADDRESS_LABELS = ["Home", "Work", "Billing", "Other"];
-export const DEFAULT_SOCIAL_PLATFORMS = [
-  "WhatsApp", "Facebook", "Twitter/X", "LinkedIn", "Instagram", "YouTube", "Other"
-];
 
 export const SOCIAL_PLATFORMS = [
   "Facebook", "Twitter / X", "Instagram", "LinkedIn", "TikTok", "YouTube",
   "WhatsApp", "Telegram", "Snapchat",
 ];
+
+export const DEFAULT_SOCIAL_PLATFORMS = SOCIAL_PLATFORMS;
 
 export const COUNTRY_CODES = [
   { country: "Pakistan",              code: "+92"  },
@@ -330,26 +348,26 @@ export const INITIAL_FIELD_SEED: Record<string, FieldDefinition[]> = {
     { key: "isSyed",         label: "Is Syed",                type: "boolean", description: "Syed (Hashemite) lineage indicator. Cultural/genealogical indicator.", defaultValue: false, permissions: [], enabled: true, order: 1, required: false },
     { key: "firstName",      label: "First Name",             type: "text",    description: "First name input — required for all contacts.", defaultValue: "", permissions: [], enabled: true, order: 2, required: true },
     { key: "lastName",       label: "Last Name",              type: "text",    description: "Last name input. Combined with first name for full identification.", defaultValue: "", permissions: [], enabled: true, order: 3, required: false },
-    { key: "gender",         label: "Gender (Male / Female)", type: "select",  description: "Gender selector. Enables personalization & inclusive communication.", options: ["male", "female"], defaultValue: "", permissions: [], enabled: true, order: 4, required: false },
+    { key: "gender",         label: "Gender (Male / Female)", type: "select",  description: "Gender selector. Enables personalization & inclusive communication.", options: GENDERS, defaultValue: "", permissions: [], enabled: true, order: 4, required: false },
     { key: "dob",            label: "Date of Birth",          type: "date",    description: "Date of birth for age tracking & milestone events.", defaultValue: "", permissions: [], enabled: true, order: 5, required: false },
   ],
   phones: [
-    { key: "label",    label: "Phone Type / Label",               type: "select", description: "Select type of phone number (e.g. Mobile, Home, Work).", options: ["Mobile", "Home", "Work", "Other"], defaultValue: "Mobile", permissions: [], enabled: true, order: 0, required: false },
+    { key: "label",    label: "Phone Type / Label",               type: "select", description: "Select type of phone number (e.g. Mobile, Home, Work).", options: DEFAULT_PHONE_LABELS, defaultValue: "Mobile", permissions: [], enabled: true, order: 0, required: false },
     { key: "number",   label: "Phone Number",                     type: "text",   description: "Phone number input. Primary channel for direct communication.", defaultValue: "", permissions: [], enabled: true, order: 1, required: true },
   ],
   emails: [
-    { key: "label",   label: "Email Type / Label", type: "select", description: "Select type of email address (e.g. Personal, Work, School).", options: ["Personal", "Work", "Other"], defaultValue: "Personal", permissions: [], enabled: true, order: 0, required: false },
+    { key: "label",   label: "Email Type / Label", type: "select", description: "Select type of email address (e.g. Personal, Work, School).", options: DEFAULT_EMAIL_LABELS, defaultValue: "Personal", permissions: [], enabled: true, order: 0, required: false },
     { key: "address", label: "Email Address",      type: "email",  description: "Email input field (unique per contact). Essential for formal communication & bulk outreach.", defaultValue: "", permissions: [], enabled: true, order: 1, required: false, unique: true },
   ],
   addresses: [
-    { key: "label",   label: "Address Type / Label", type: "select", description: "Select type of address (e.g. Home, Work, Billing).", options: ["Home", "Work", "Other"], defaultValue: "Home", permissions: [], enabled: true, order: 0, required: false },
+    { key: "label",   label: "Address Type / Label", type: "select", description: "Select type of address (e.g. Home, Work, Billing).", options: DEFAULT_ADDRESS_LABELS, defaultValue: "Home", permissions: [], enabled: true, order: 0, required: false },
     { key: "line1",   label: "Street Address",       type: "text",   description: "Street/building address.", defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
     { key: "city",    label: "City",                 type: "text",   description: "City of residence.",       defaultValue: "", permissions: [], enabled: true, order: 2, required: false },
     { key: "state",   label: "State / Province",     type: "text",   description: "State or province.",       defaultValue: "", permissions: [], enabled: true, order: 3, required: false },
     { key: "country", label: "Country",              type: "text",   description: "Country of residence.",    defaultValue: "", permissions: [], enabled: true, order: 4, required: false },
   ],
   socials: [
-    { key: "platform", label: "Platform Selection",  type: "select", description: "Platform selection (Facebook, X, etc.)", options: ["Facebook", "Twitter / X", "Instagram", "LinkedIn", "TikTok", "YouTube", "WhatsApp", "Telegram", "Snapchat"], defaultValue: "Facebook", permissions: [], enabled: true, order: 0, required: false },
+    { key: "platform", label: "Platform Selection",  type: "select", description: "Platform selection (Facebook, X, etc.)", options: SOCIAL_PLATFORMS, defaultValue: "Facebook", permissions: [], enabled: true, order: 0, required: false },
     { key: "url",      label: "Social URL / Handle", type: "url",    description: "URL or handle input. Enables social media engagement & verification.", defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
   ],
   emergency: [

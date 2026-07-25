@@ -79,8 +79,8 @@ export function buildDynamicStudentSchema(
   let baseSchema = z.object(schemaObject).passthrough();
 
   if (settings.requireGuardian) {
-    baseSchema = baseSchema.refine((studentDraft: any) => {
-      return studentDraft.fatherContactId || studentDraft.motherContactId || studentDraft.guardianContactId;
+    baseSchema = baseSchema.refine((studentDraft: Record<string, unknown>) => {
+      return Boolean(studentDraft.fatherContactId || studentDraft.motherContactId || studentDraft.guardianContactId);
     }, {
       message: translateApp("students.form.guardianRequired" as AppTranslationKey, language) || "At least one guardian (father, mother, or other guardian) must be linked.",
       path: ["guardianContactId"], // Highlight guardian select if missing

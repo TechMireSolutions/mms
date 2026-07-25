@@ -114,27 +114,26 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
           : null;
       if (rawPreferences) {
         const sanitizedPreferences = rawPreferences
-          .filter((columnPreference: any) => {
+          .filter((columnPreference: Record<string, unknown>) => {
             return (
               columnPreference &&
               typeof columnPreference === 'object' &&
               typeof columnPreference.key === 'string' &&
-              columnPreference.key.trim().length > 0
+              (columnPreference.key as string).trim().length > 0
             );
           })
-          .map((columnPreference: any, index: number) => {
+          .map((columnPreference: Record<string, unknown>, index: number) => {
 
             const enabled = typeof columnPreference.enabled === 'boolean'
               ? columnPreference.enabled
               : columnPreference.enabled === 'true' || columnPreference.enabled === 1 || columnPreference.enabled === '1';
             const rawOrder = typeof columnPreference.order === 'number'
               ? columnPreference.order
-
               : parseFloat(String(columnPreference.order));
             const floored = Math.floor(rawOrder);
             const order = Number.isSafeInteger(floored) && floored >= 0 ? floored : index;
             return {
-              key: columnPreference.key.trim(),
+              key: (columnPreference.key as string).trim(),
               enabled,
               order,
             };

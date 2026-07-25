@@ -20,6 +20,7 @@ import {
   hasWhatsApp,
   formatDate,
   todayISO,
+  AppTranslationKey,
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -87,6 +88,83 @@ const DETAIL_STYLES = {
 const COLLECTION_CONTAINER_CLASS = "divide-y divide-border/50";
 
 
+function isEmptyValue(val: unknown): boolean {
+  if (val === undefined || val === null || val === "" || val === false) return true;
+  if (Array.isArray(val) && val.length === 0) return true;
+  return false;
+}
+
+interface CollectionRowItemProps {
+  label: string;
+  value: string;
+  copyable?: boolean;
+  actionHref?: string;
+  actionIcon?: LucideIcon;
+  actionTitle?: string;
+  actionColorClass?: string;
+  external?: boolean;
+}
+
+function CollectionRowItem({
+  label,
+  value,
+  copyable = true,
+  actionHref,
+  actionIcon: ActionIcon,
+  actionTitle,
+  actionColorClass = "text-primary hover:bg-primary/10",
+  external = false,
+}: CollectionRowItemProps): JSX.Element {
+  return (
+    <div className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
+            {label}
+          </span>
+        </div>
+        <span className="font-semibold text-xs text-foreground block leading-relaxed truncate">{value}</span>
+      </div>
+      {value && (
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {copyable && (
+            <CopyBtn
+              text={value}
+              showToast
+              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground p-0 flex items-center justify-center opacity-100"
+            />
+          )}
+          {actionHref && ActionIcon && (
+            <a
+              href={actionHref}
+              target={external ? "_blank" : undefined}
+              rel={external ? "noopener noreferrer" : undefined}
+              aria-label={actionTitle || value}
+              className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors ${actionColorClass}`}
+            >
+              <ActionIcon className="w-3.5 h-3.5" />
+            </a>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface DetailSectionProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+function DetailSection({ title, children }: DetailSectionProps): JSX.Element {
+  return (
+    <div className="space-y-2">
+      <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">{title}</h4>
+      <Card className={COLLECTION_CONTAINER_CLASS}>{children}</Card>
+    </div>
+  );
+}
+
 interface ContactDetailDrawerProps {
   contact: Contact;
   onClose: () => void;
@@ -109,27 +187,24 @@ function FieldGroupCard({ group, fields, formatValue }: FieldGroupCardProps): JS
   if (validFields.length === 0) return null;
 
   return (
-    <div className="space-y-2">
-      <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">{group}</h4>
-      <Card className={COLLECTION_CONTAINER_CLASS}>
-        {validFields.map(({ field, val }) => {
-          const Icon = ICON_MAP[field.key] || Tag;
-          return (
-            <div key={field.key} className="flex items-center gap-3 p-3 group/row">
-              <div className="p-2 rounded-lg bg-muted/80 group-hover/row:bg-primary/10 transition-colors">
-                <Icon className="w-3.5 h-3.5 text-muted-foreground group-hover/row:text-primary transition-colors" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight leading-none mb-1">
-                  {field.label}
-                </span>
-                <span className="text-sm font-semibold text-foreground truncate block">{val}</span>
-              </div>
+    <DetailSection title={group}>
+      {validFields.map(({ field, val }) => {
+        const Icon = ICON_MAP[field.key] || Tag;
+        return (
+          <div key={field.key} className="flex items-center gap-3 p-3 group/row">
+            <div className="p-2 rounded-lg bg-muted/80 group-hover/row:bg-primary/10 transition-colors">
+              <Icon className="w-3.5 h-3.5 text-muted-foreground group-hover/row:text-primary transition-colors" />
             </div>
-          );
-        })}
-      </Card>
-    </div>
+            <div className="flex-1 min-w-0">
+              <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight leading-none mb-1">
+                {field.label}
+              </span>
+              <span className="text-sm font-semibold text-foreground truncate block">{val}</span>
+            </div>
+          </div>
+        );
+      })}
+    </DetailSection>
   );
 }
 
@@ -164,6 +239,27 @@ export default function ContactDetailDrawer({
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const updateContactAttachments = async (
+    newAttachments: NonNullable<Contact["attachments"]>,
+    successMessageKey: AppTranslationKey,
+    failureMessageKey: AppTranslationKey,
+  ): Promise<void> => {
+    const updatedContact: Contact = { ...contactState, attachments: newAttachments };
+    const previousState = contactState;
+    setContactState(updatedContact);
+    if (onUpdateContact) {
+      try {
+        await onUpdateContact(updatedContact);
+        notify.success(t(successMessageKey));
+      } catch {
+        setContactState(previousState);
+        notify.error(t(failureMessageKey));
+      }
+    } else {
+      notify.success(t(successMessageKey));
+    }
+  };
+
   const handleFiles = async (filesList: FileList | null) => {
     if (!filesList || filesList.length === 0) return;
     setIsUploading(true);
@@ -181,22 +277,7 @@ export default function ContactDetailDrawer({
           date: todayISO(),
         });
       }
-      const updatedContact = {
-        ...contactState,
-        attachments: newAttachments,
-      };
-      const prev = contactState;
-      setContactState(updatedContact);
-      if (onUpdateContact) {
-        await onUpdateContact(updatedContact)
-          .then(() => notify.success(t("contacts.detail.uploadSuccess")))
-          .catch(() => {
-            setContactState(prev);
-            notify.error(t("contacts.detail.uploadFailed"));
-          });
-      } else {
-        notify.success(t("contacts.detail.uploadSuccess"));
-      }
+      await updateContactAttachments(newAttachments, "contacts.detail.uploadSuccess", "contacts.detail.uploadFailed");
     } catch {
       notify.error(t("contacts.detail.uploadFailed"));
     } finally {
@@ -283,8 +364,7 @@ export default function ContactDetailDrawer({
     (field) =>
       !heroFieldSet.has(field.key) &&
       isTabFieldEnabled(field.tab, field.key) &&
-      contactState[field.key] !== undefined && contactState[field.key] !== null && contactState[field.key] !== "" && contactState[field.key] !== false &&
-      !(Array.isArray(contactState[field.key]) && (contactState[field.key] as unknown[]).length === 0)
+      !isEmptyValue(contactState[field.key])
   );
 
   const grouped = fieldsToRender.reduce<Record<string, typeof fieldsToRender>>((acc, field) => {
@@ -296,8 +376,8 @@ export default function ContactDetailDrawer({
 
   const formatFieldValue = useCallback((field: { key: string; type: string }): string | null => {
     const fieldValue = (contactState as Record<string, unknown>)[field.key];
-    if (fieldValue === undefined || fieldValue === null || fieldValue === "" || fieldValue === false) return null;
-    if (Array.isArray(fieldValue)) return fieldValue.length ? (fieldValue as unknown[]).join(", ") : null;
+    if (isEmptyValue(fieldValue)) return null;
+    if (Array.isArray(fieldValue)) return fieldValue.join(", ");
     if (field.key === "dob") {
       return formatContactDobWithAge(fieldValue as string, t);
     }
@@ -500,199 +580,122 @@ export default function ContactDetailDrawer({
 
                 {/* Collection: Phone Numbers */}
                 {enabledTabIds.has("phones") && visibleCollectionFields.phones.length > 0 && contactState.phones && contactState.phones.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">
-                      {t('contacts.form.phonesLabel')}
-                    </h4>
-                    <Card className={COLLECTION_CONTAINER_CLASS}>
-                      {contactState.phones.map((phone, phoneIndex) => {
-                        const rawPhone = String(phone.number || "");
-                        return (
-                          <div key={`phone-${phone.number}-${phoneIndex}`} className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
-                                  {resolvePhoneLabel(phone.label, phoneLabels, t)}
-                                </span>
-                              </div>
-                              <span className="font-semibold text-sm text-foreground block truncate">{rawPhone}</span>
-                            </div>
-                            {rawPhone && (
-                              <div className="flex items-center gap-1 flex-shrink-0">
-                                <CopyBtn
-                                  text={rawPhone}
-                                  showToast
-                                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground p-0 flex items-center justify-center opacity-100"
-                                />
-                                <a
-                                  href={formatTelHref(rawPhone)}
-                                  aria-label={t('contacts.detail.callPhone', { phone: rawPhone })}
-                                  className="h-8 w-8 rounded-lg flex items-center justify-center text-info hover:bg-info/10 transition-colors"
-                                >
-                                  <Phone className="w-3.5 h-3.5" />
-                                </a>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </Card>
-                  </div>
+                  <DetailSection title={t('contacts.form.phonesLabel')}>
+                    {contactState.phones.map((phone, phoneIndex) => {
+                      const rawPhone = String(phone.number || "");
+                      return (
+                        <CollectionRowItem
+                          key={`phone-${phone.number}-${phoneIndex}`}
+                          label={resolvePhoneLabel(phone.label, phoneLabels, t)}
+                          value={rawPhone}
+                          actionHref={formatTelHref(rawPhone)}
+                          actionIcon={Phone}
+                          actionTitle={t('contacts.detail.callPhone', { phone: rawPhone })}
+                          actionColorClass="text-info hover:bg-info/10"
+                        />
+                      );
+                    })}
+                  </DetailSection>
                 )}
 
                 {/* Collection: Emails */}
                 {enabledTabIds.has("emails") && visibleCollectionFields.emails.length > 0 && contactState.emails && contactState.emails.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">
-                      {t('contacts.form.emailsLabel')}
-                    </h4>
-                    <Card className={COLLECTION_CONTAINER_CLASS}>
-                      {contactState.emails.map((email, emailIndex) => {
-                        const rawEmail = String(email.address || "");
-                        return (
-                          <div key={`email-${email.address}-${emailIndex}`} className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
-                                  {resolveEmailLabel(email.label, emailLabels, t)}
-                                </span>
-                              </div>
-                              <span className="font-semibold text-sm text-foreground block truncate">{rawEmail}</span>
-                            </div>
-                            {rawEmail && (
-                              <div className="flex items-center gap-1 flex-shrink-0">
-                                <CopyBtn
-                                  text={rawEmail}
-                                  showToast
-                                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground p-0 flex items-center justify-center opacity-100"
-                                />
-                                <a
-                                  href={`mailto:${rawEmail}`}
-                                  aria-label={t('contacts.detail.emailContact', { email: rawEmail })}
-                                  className="h-8 w-8 rounded-lg flex items-center justify-center text-secondary hover:bg-secondary/10 transition-colors"
-                                >
-                                  <Mail className="w-3.5 h-3.5" />
-                                </a>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </Card>
-                  </div>
+                  <DetailSection title={t('contacts.form.emailsLabel')}>
+                    {contactState.emails.map((email, emailIndex) => {
+                      const rawEmail = String(email.address || "");
+                      return (
+                        <CollectionRowItem
+                          key={`email-${email.address}-${emailIndex}`}
+                          label={resolveEmailLabel(email.label, emailLabels, t)}
+                          value={rawEmail}
+                          actionHref={`mailto:${rawEmail}`}
+                          actionIcon={Mail}
+                          actionTitle={t('contacts.detail.emailContact', { email: rawEmail })}
+                          actionColorClass="text-secondary hover:bg-secondary/10"
+                        />
+                      );
+                    })}
+                  </DetailSection>
                 )}
 
                 {/* Collection: Addresses */}
                 {enabledTabIds.has("addresses") && visibleCollectionFields.addresses.length > 0 && contactState.addresses && contactState.addresses.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">
-                      {t('contacts.detail.addresses')}
-                    </h4>
-                    <Card className={COLLECTION_CONTAINER_CLASS}>
-                      {contactState.addresses.map((address, addressIndex) => {
-                        const fullAddr = [address.line1, address.city, address.state, address.country]
-                          .filter(Boolean)
-                          .join(", ");
-                        return (
-                          <div key={addressIndex} className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
-                                  {resolveAddressLabel(address.label, addressLabels, t)}
-                                </span>
-                              </div>
-                              <span className="font-semibold text-xs text-foreground block leading-relaxed">{fullAddr || "—"}</span>
-                            </div>
-                            {fullAddr && (
-                              <a
-                                href={`https://maps.google.com/?q=${encodeURIComponent(fullAddr)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label={t('contacts.detail.openInMaps')}
-                                className="h-8 w-8 rounded-lg flex items-center justify-center text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
-                              >
-                                <MapPin className="w-3.5 h-3.5" />
-                              </a>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </Card>
-                  </div>
+                  <DetailSection title={t('contacts.detail.addresses')}>
+                    {contactState.addresses.map((address, addressIndex) => {
+                      const fullAddr = [address.line1, address.city, address.state, address.country]
+                        .filter(Boolean)
+                        .join(", ");
+                      return (
+                        <CollectionRowItem
+                          key={`address-${addressIndex}`}
+                          label={resolveAddressLabel(address.label, addressLabels, t)}
+                          value={fullAddr || "—"}
+                          copyable={Boolean(fullAddr)}
+                          actionHref={fullAddr ? `https://maps.google.com/?q=${encodeURIComponent(fullAddr)}` : undefined}
+                          actionIcon={MapPin}
+                          actionTitle={t('contacts.detail.openInMaps')}
+                          actionColorClass="text-primary hover:bg-primary/10"
+                          external
+                        />
+                      );
+                    })}
+                  </DetailSection>
                 )}
 
                 {/* Collection: Socials */}
                 {enabledTabIds.has("socials") && visibleCollectionFields.socials.length > 0 && contactState.socials && contactState.socials.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">
-                      {t('contacts.detail.socials')}
-                    </h4>
-                    <Card className={COLLECTION_CONTAINER_CLASS}>
-                      {contactState.socials.map((social, socialIndex) => {
-                        const handle = String(social.url || "");
-                        const url = handle.startsWith("http") ? handle : `https://${handle}`;
-                        return (
-                          <div key={socialIndex} className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase inline-block mb-1">
-                                {resolveSocialPlatformLabel(social.platform, socialPlatforms, t)}
-                              </span>
-                              <span className="font-semibold text-xs text-foreground block truncate">{handle || "—"}</span>
-                            </div>
-                            {handle && (
-                              <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label={t('contacts.detail.visitSocialProfile')}
-                                className="h-8 w-8 rounded-lg flex items-center justify-center text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                              </a>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </Card>
-                  </div>
+                  <DetailSection title={t('contacts.detail.socials')}>
+                    {contactState.socials.map((social, socialIndex) => {
+                      const handle = String(social.url || "");
+                      const url = handle.startsWith("http") ? handle : `https://${handle}`;
+                      return (
+                        <CollectionRowItem
+                          key={`social-${socialIndex}`}
+                          label={resolveSocialPlatformLabel(social.platform, socialPlatforms, t)}
+                          value={handle || "—"}
+                          copyable={Boolean(handle)}
+                          actionHref={handle ? url : undefined}
+                          actionIcon={ExternalLink}
+                          actionTitle={t('contacts.detail.visitSocialProfile')}
+                          actionColorClass="text-primary hover:bg-primary/10"
+                          external
+                        />
+                      );
+                    })}
+                  </DetailSection>
                 )}
 
                 {/* Collection: Emergency Contacts */}
                 {enabledTabIds.has("emergency") && visibleCollectionFields.emergency.length > 0 && contactState.emergencyContacts && contactState.emergencyContacts.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">
-                      {t('contacts.detail.emergency')}
-                    </h4>
-                    <Card className={COLLECTION_CONTAINER_CLASS}>
-                      {contactState.emergencyContacts.map((emergencyContact, emergencyContactIndex) => {
-                        const target = allContacts.find((contact) => String(contact.id) === String(emergencyContact.contactId));
-                        return (
-                          <div key={emergencyContactIndex} className="p-3 border-b border-border/50 last:border-b-0">
-                            <div className="flex items-center gap-2 mb-1.5">
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${DETAIL_STYLES.emergencyBadge}`}>
-                                {t('contacts.detail.emergencyContact')}
-                              </span>
-                            </div>
-                            <div className="text-xs space-y-1">
-                              <span className="text-[9px] font-bold text-muted-foreground uppercase block">{t('contacts.detail.relationships')}</span>
-                              {target ? (
-                                <Button
-                                  type="button"
-                                  variant="link"
-                                  onClick={() => handleNavigateToContact(target.id)}
-                                  className="font-semibold text-primary hover:underline text-start h-auto p-0 shadow-none justify-start text-xs"
-                                >
-                                  {target.name}
-                                </Button>
-                              ) : (
-                                <span className="font-semibold text-foreground">{String(emergencyContact.contactId || "")}</span>
-                              )}
-                            </div>
+                  <DetailSection title={t('contacts.detail.emergency')}>
+                    {contactState.emergencyContacts.map((emergencyContact, emergencyContactIndex) => {
+                      const target = allContacts.find((contact) => String(contact.id) === String(emergencyContact.contactId));
+                      return (
+                        <div key={emergencyContactIndex} className="p-3 border-b border-border/50 last:border-b-0">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${DETAIL_STYLES.emergencyBadge}`}>
+                              {t('contacts.detail.emergencyContact')}
+                            </span>
                           </div>
-                        );
-                      })}
-                    </Card>
-                  </div>
+                          <div className="text-xs space-y-1">
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase block">{t('contacts.detail.relationships')}</span>
+                            {target ? (
+                              <Button
+                                type="button"
+                                variant="link"
+                                onClick={() => handleNavigateToContact(target.id)}
+                                className="font-semibold text-primary hover:underline text-start h-auto p-0 shadow-none justify-start text-xs"
+                              >
+                                {target.name}
+                              </Button>
+                            ) : (
+                              <span className="font-semibold text-foreground">{String(emergencyContact.contactId || "")}</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </DetailSection>
                 )}
               </div>
             </>
@@ -902,15 +905,8 @@ export default function ContactDetailDrawer({
                             variant="ghost"
                             aria-label={t('contacts.detail.deleteFile', { name: file.name })}
                             onClick={() => {
-                              const updatedContact = {
-                                ...contactState,
-                                attachments: (contactState.attachments || []).filter((f) => f.id !== file.id)
-                              };
-                              const prev = contactState;
-                              setContactState(updatedContact);
-                              onUpdateContact(updatedContact)
-                                .then(() => notify.success(t("contacts.detail.deleteSuccess")))
-                                .catch(() => setContactState(prev));
+                              const remainingAttachments = (contactState.attachments || []).filter((f) => f.id !== file.id);
+                              void updateContactAttachments(remainingAttachments, "contacts.detail.deleteSuccess", "contacts.saveFailed");
                             }}
                             className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all shadow-none"
                             type="button"

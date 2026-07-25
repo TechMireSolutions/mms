@@ -1,5 +1,6 @@
 import React from "react";
 import { User, BookOpen, Layers, DollarSign, CheckCircle2 } from "lucide-react";
+import { formatDate } from "@mms/shared";
 import { calcAge, Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
 import { CalculatedFee } from '@/lib/data/enrollmentData';
@@ -60,10 +61,8 @@ interface Step6ConfirmationProps {
   feeResult: CalculatedFee | null | undefined;
   notes: string;
   onNotesChange: (notes: string) => void;
-  customFieldValues: Record<string, any>;
-  onCustomFieldChange: (id: string, value: any) => void;
-
-
+  customFieldValues: Record<string, unknown>;
+  onCustomFieldChange: (id: string, value: unknown) => void;
 }
 
 /**
@@ -106,8 +105,8 @@ export function Step6Confirmation({
         <Section icon={BookOpen} title="Session">
           <Row label="Session" value={session?.name} />
           <Row label="Type"    value={session?.type} />
-          <Row label="Starts"  value={session?.startDate} />
-          <Row label="Ends"    value={session?.endDate} />
+          <Row label="Starts"  value={session?.startDate ? formatDate(session.startDate) : undefined} />
+          <Row label="Ends"    value={session?.endDate ? formatDate(session.endDate) : undefined} />
         </Section>
 
         <Section icon={Layers} title="Class">
@@ -153,7 +152,9 @@ export function Step6Confirmation({
           }
 
           if (!["studentId", "sessionId", "classId", "notes"].includes(field.id)) {
-            const fieldValue = customFieldValues[field.id] ?? "";
+            const rawValue = customFieldValues[field.id];
+            const stringValue = typeof rawValue === "string" || typeof rawValue === "number" ? String(rawValue) : "";
+            const boolValue = Boolean(rawValue);
             return (
               <div key={field.id}>
                 <label className={FORM_LABEL}>
@@ -163,7 +164,7 @@ export function Step6Confirmation({
                   <Textarea
                     id={`custom-${field.id}`}
                     name={field.id}
-                    value={fieldValue}
+                    value={stringValue}
                     onChange={(event) => onCustomFieldChange(field.id, event.target.value)}
                     placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
                     required={field.required}
@@ -172,7 +173,7 @@ export function Step6Confirmation({
                   <FormSelect
                     id={`custom-${field.id}`}
                     name={field.id}
-                    value={fieldValue}
+                    value={stringValue}
                     onChange={(val) => onCustomFieldChange(field.id, val)}
                     options={field.options || []}
                     placeholder="Select option…"
@@ -182,7 +183,7 @@ export function Step6Confirmation({
                     <Checkbox
                       id={`custom-${field.id}`}
                       name={field.id}
-                      checked={!!fieldValue}
+                      checked={boolValue}
                       onCheckedChange={(checked) => onCustomFieldChange(field.id, checked)}
                     />
                     <span className="text-xs font-medium text-foreground">{field.label}</span>
@@ -192,7 +193,7 @@ export function Step6Confirmation({
                     id={`custom-${field.id}`}
                     name={field.id}
                     type={field.type === "number" ? "number" : field.type === "date" ? "date" : field.type === "email" ? "email" : field.type === "url" ? "url" : "text"}
-                    value={fieldValue}
+                    value={stringValue}
                     onChange={(event) => onCustomFieldChange(field.id, event.target.value)}
                     placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
                     required={field.required}

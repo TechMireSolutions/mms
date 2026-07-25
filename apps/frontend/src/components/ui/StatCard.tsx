@@ -146,10 +146,10 @@ export function StatCard({
   const buttonProps = onClick ? { type: "button" as const } : {};
   const isCompact = variant === "compact";
 
-  const resolvedAccentColor = (accent || color) as any;
+  const resolvedAccentColor = (accent || color) as React.ComponentProps<typeof Card>["accentColor"];
+  const formattedValue = typeof value === "number" ? formatNumber(value) : value;
 
   if (isCompact) {
-    const formattedValue = typeof value === "number" ? formatNumber(value) : value;
     return (
       <Comp
         {...buttonProps}
@@ -218,7 +218,7 @@ export function StatCard({
               {label}
             </span>
             <p className="text-lg font-black text-foreground leading-none tracking-tight">
-              {value}
+              {formattedValue}
             </p>
             {sub && (
               <p className="text-[10px] font-semibold text-muted-foreground mt-1 opacity-70 truncate">

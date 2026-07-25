@@ -7,13 +7,7 @@ const MotionCard = motion.create(Card);
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FormSelect } from "@/components/ui/FormSelect";
 import {
   CheckCircle2, XCircle, Save, Send, Users,
   WifiOff, Wifi, MapPin, Scan, UploadCloud,
@@ -49,9 +43,7 @@ export interface AttendanceRow {
   timeIn: string;
   timeOut: string;
   notes: string;
-  [key: string]: any;
-
-
+  [key: string]: unknown;
 }
 
 export interface OfflinePayload {
@@ -389,9 +381,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
     return counts;
   }, [rows]);
 
-  const setRow = (studentId: string, key: string, value: any) => {
-
-
+  const setRow = (studentId: string, key: string, value: unknown) => {
     const before = rows.find((row) => row.studentId === studentId);
     setRows((previousRows) => previousRows.map((row) => row.studentId === studentId ? { ...row, [key]: value } : row));
     // Audit
@@ -426,7 +416,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
 
   const handleSaveDraft = () => {
     const newRecords: AttendanceRecord[] = rows.map((row) => {
-      const customFieldValues: Record<string, any> = {};
+      const customFieldValues: Record<string, unknown> = {};
       customFields.forEach((customField: ModuleCustomField) => {
         customFieldValues[customField.id] = row[customField.id];
       });
@@ -457,7 +447,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
 
   const handleSubmit = () => {
     const newRecords: AttendanceRecord[] = rows.map((row) => {
-      const customFieldValues: Record<string, any> = {};
+      const customFieldValues: Record<string, unknown> = {};
       customFields.forEach((customField: ModuleCustomField) => {
         customFieldValues[customField.id] = row[customField.id];
       });
@@ -502,7 +492,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
     let updatedRecords = [...records];
     offlineQueue.forEach((payload) => {
       const newRecords: AttendanceRecord[] = payload.rows.map((row) => {
-        const customFieldValues: Record<string, any> = {};
+        const customFieldValues: Record<string, unknown> = {};
         customFields.forEach((customField: ModuleCustomField) => {
           customFieldValues[customField.id] = row[customField.id];
         });
@@ -713,34 +703,30 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
 
                       // Custom column field
                       if (!["status", "timeIn", "timeOut", "notes"].includes(field.id)) {
-                        const fieldValue = row[field.id] ?? "";
+                        const rawValue = row[field.id];
+                        const stringValue = typeof rawValue === "string" || typeof rawValue === "number" ? String(rawValue) : "";
+                        const boolValue = Boolean(rawValue);
                         return (
                           <td key={field.id} className="px-3 py-2.5">
                             {field.type === "select" ? (
-                              <Select
-                                value={fieldValue || "__empty__"}
-                                onValueChange={(value) => setRow(row.studentId, field.id, value === "__empty__" ? "" : value)}
-                              >
-                                <SelectTrigger className="h-8 text-xs py-1 px-2 w-[120px] bg-background">
-                                  <SelectValue placeholder="Select…" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="__empty__">Select…</SelectItem>
-                                  {field.options?.map((opt) => (
-                                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <FormSelect
+                                id={`custom-select-${row.studentId}-${field.id}`}
+                                value={stringValue}
+                                onChange={(value: string) => setRow(row.studentId, field.id, value)}
+                                options={field.options || []}
+                                placeholder="Select…"
+                                className="min-w-[120px]"
+                              />
                             ) : field.type === "boolean" ? (
                               <Checkbox
-                                checked={!!fieldValue}
+                                checked={boolValue}
                                 onCheckedChange={(checked) => setRow(row.studentId, field.id, !!checked)}
                                 className="w-4 h-4 rounded border border-border cursor-pointer"
                               />
                             ) : (
                               <Input
                                 type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"}
-                                value={fieldValue}
+                                value={stringValue}
                                 onChange={(event) => setRow(row.studentId, field.id, event.target.value)}
                                 placeholder={field.placeholder || "Enter…"}
                                 className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground h-8"

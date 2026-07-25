@@ -57,6 +57,12 @@ export interface UseContactsPageStateOptions {
   initialShowDeletedArchives?: boolean;
 }
 
+function safeAudit(promise: Promise<unknown>, scope: string): void {
+  void promise.catch((auditError) => {
+    reportClientError(auditError, { scope });
+  });
+}
+
 export function useContactsPageState({
   prefs,
   tableColumns,
@@ -81,6 +87,14 @@ export function useContactsPageState({
     logMergeAudit,
   } = useContactMutations();
 
+  const handleError = useCallback(
+    (err: unknown, scope: string, messageKey = "contacts.saveFailed") => {
+      notify.error(t(messageKey as any));
+      reportClientError(err, { scope });
+    },
+    [t],
+  );
+
   const saveFailed = useCallback(() => {
     notify.error(t("contacts.saveFailed"));
   }, [t]);
@@ -94,12 +108,11 @@ export function useContactsPageState({
           await updateContact.mutateAsync({ id: String(contact.id), contact });
         }
       } catch (err) {
-        saveFailed();
-        reportClientError(err, { scope: "contacts.save_contact" });
+        handleError(err, "contacts.save_contact");
         throw err;
       }
     },
-    [upsertContact, updateContact, saveFailed],
+    [upsertContact, updateContact, handleError],
   );
 
   const removeContact = useCallback(
@@ -115,11 +128,10 @@ export function useContactsPageState({
             : t("contacts.deletedDescriptionDefault"),
         });
       } catch (err) {
-        saveFailed();
-        reportClientError(err, { scope: "contacts.remove_contact" });
+        handleError(err, "contacts.remove_contact");
       }
     },
-    [deleteContact, t, saveFailed],
+    [deleteContact, t, handleError],
   );
 
   const mergeContacts = useCallback(
@@ -127,24 +139,22 @@ export function useContactsPageState({
       try {
         await updateContact.mutateAsync({ id: String(keepId), contact: merged });
         await deleteContact.mutateAsync({ id: String(deleteId) });
-        void logMergeAudit
-          .mutateAsync({
+        safeAudit(
+          logMergeAudit.mutateAsync({
             keepId,
             deleteId,
             mergedName: merged.name || merged.firstName,
-          })
-          .catch((auditError) => {
-            reportClientError(auditError, { scope: "contacts.merge_audit" });
-          });
+          }),
+          "contacts.merge_audit",
+        );
         notify.success(t("contacts.mergeSuccessTitle"), {
           description: t("contacts.mergeSuccessDesc"),
         });
       } catch (err) {
-        saveFailed();
-        reportClientError(err, { scope: "contacts.merge_contacts" });
+        handleError(err, "contacts.merge_contacts");
       }
     },
-    [updateContact, deleteContact, logMergeAudit, t, saveFailed],
+    [updateContact, deleteContact, logMergeAudit, t, handleError],
   );
 
   const importContacts = useCallback(
@@ -195,11 +205,10 @@ export function useContactsPageState({
           saveFailed();
         }
       } catch (err) {
-        saveFailed();
-        reportClientError(err, { scope: "contacts.bulk_delete" });
+        handleError(err, "contacts.bulk_delete");
       }
     },
-    [bulkDeleteMutation, t, saveFailed],
+    [bulkDeleteMutation, t, saveFailed, handleError],
   );
 
   const restoreContactAction = useCallback(
@@ -305,12 +314,6 @@ export function useContactsPageState({
     return () => window.removeEventListener(CONTACTS_WORK_DRILLDOWN_EVENT, handler);
   }, [applyDrillDown]);
 
-  useEffect(() => {
-    if (effectiveTab !== activeTab) {
-      setActiveTab(effectiveTab);
-    }
-  }, [activeTab, effectiveTab, setActiveTab]);
-
   const exportLabels = useMemo(
     () => ({ yes: t("common.yes"), no: t("common.no") }),
     [t],
@@ -321,9 +324,7 @@ export function useContactsPageState({
       const filename = t("contacts.exportFilename");
       const finish = () => {
         notify.success(t("contacts.exportSuccess"));
-        void logExportAudit.mutateAsync({ count: rows.length, scope }).catch((auditError) => {
-          reportClientError(auditError, { scope: "contacts.export_audit" });
-        });
+        safeAudit(logExportAudit.mutateAsync({ count: rows.length, scope }), "contacts.export_audit");
       };
       const fail = (err?: unknown) => {
         notify.error(t("contacts.exportFailed"));
@@ -389,8 +390,9 @@ export function useContactsPageState({
   const linkSourceContacts = useMemo(() => {
     const rows = [...workContacts];
     if (editContact) rows.push(editContact);
+    if (viewContact) rows.push(viewContact);
     return rows;
-  }, [workContacts, editContact]);
+  }, [workContacts, editContact, viewContact]);
 
   const linkedContactIds = useMemo(
     () => collectLinkedContactIds(linkSourceContacts),
@@ -408,11 +410,12 @@ export function useContactsPageState({
 
   const selectedTargets = useMemo(() => {
     if (selected.length === 0) return { waTargets: [], smsReady: [] };
-    const targets = workContacts.filter((contact) => selected.includes(contact.id));
+    const pool = showDeletedArchives ? contacts : workContacts;
+    const targets = pool.filter((contact) => selected.includes(contact.id));
     const waTargets = targets.filter((contact) => hasWhatsApp(contact));
     const smsReady = targets.filter((contact) => Boolean(getPrimaryPhone(contact)));
     return { waTargets, smsReady };
-  }, [selected, workContacts]);
+  }, [selected, workContacts, contacts, showDeletedArchives]);
 
   const shownCount = useServerWork && workPageData ? workPageData.total : filtered.length;
   const workTruncated = useServerWork && Boolean(workPageData?.hasMore);
@@ -457,8 +460,8 @@ export function useContactsPageState({
     [workContacts],
   );
 
-  const handleEdit = useCallback(
-    (contact: Contact) => {
+  const openForm = useCallback(
+    (contact: Contact | null = null) => {
       if (!canWrite) return;
       setEditContact(contact);
       setShowForm(true);
@@ -466,11 +469,8 @@ export function useContactsPageState({
     [canWrite],
   );
 
-  const handleCreateContact = useCallback(() => {
-    if (!canWrite) return;
-    setEditContact(null);
-    setShowForm(true);
-  }, [canWrite]);
+  const handleEdit = openForm;
+  const handleCreateContact = useCallback(() => openForm(null), [openForm]);
 
   const handleSave = useCallback(
     (contactDraft: Contact) => {
@@ -525,12 +525,11 @@ export function useContactsPageState({
       return updateContact.mutateAsync({ id: String(updated.id), contact: updated })
         .then(() => undefined)
         .catch((err: unknown) => {
-          notify.error(t("contacts.saveFailed"));
-          reportClientError(err, { scope: "contacts.update_contact" });
+          handleError(err, "contacts.update_contact");
           throw err;
         });
     },
-    [canWrite, updateContact, t],
+    [canWrite, updateContact, handleError],
   );
 
   const handleExportCSV = useCallback(async () => {
@@ -559,14 +558,12 @@ export function useContactsPageState({
         await downloadBackgroundJobArtifact(job.id, filename);
       }
       notify.success(t("contacts.exportSuccess"));
-      void logExportAudit
-        .mutateAsync({ count: job.progress?.total ?? 0, scope: "filtered" })
-        .catch((auditError) => {
-          reportClientError(auditError, { scope: "contacts.export_audit" });
-        });
+      safeAudit(
+        logExportAudit.mutateAsync({ count: job.progress?.total ?? 0, scope: "filtered" }),
+        "contacts.export_audit",
+      );
     } catch (err) {
-      notify.error(t("contacts.exportFailed"));
-      reportClientError(err, { scope: "contacts.server_export_csv" });
+      handleError(err, "contacts.server_export_csv", "contacts.exportFailed");
     }
   }, [
     filtered,
@@ -580,6 +577,7 @@ export function useContactsPageState({
     tableColumns,
     t,
     logExportAudit,
+    handleError,
   ]);
 
   const handleBulkExport = useCallback(() => {
@@ -589,27 +587,30 @@ export function useContactsPageState({
     runExport(rows, "selection");
   }, [workContacts, selected, runExport, canExport]);
 
+  const checkBulkAllowed = useCallback(
+    () => canDelete && selected.length > 0,
+    [canDelete, selected.length],
+  );
+
   const requestBulkDelete = useCallback(() => {
-    if (!canDelete || selected.length === 0) return;
-    setBulkDeleteOpen(true);
-  }, [canDelete, selected.length]);
+    if (checkBulkAllowed()) setBulkDeleteOpen(true);
+  }, [checkBulkAllowed]);
 
   const confirmBulkDelete = useCallback(
     (deletionReason?: string) => {
-      if (!canDelete || selected.length === 0) return;
+      if (!checkBulkAllowed()) return;
       setBulkDeleteOpen(false);
       void bulkDeleteContactsAction(selected, deletionReason).then(() => setSelected([]));
     },
-    [canDelete, selected, bulkDeleteContactsAction],
+    [checkBulkAllowed, selected, bulkDeleteContactsAction],
   );
 
   const requestBulkRestore = useCallback(() => {
-    if (!canDelete || selected.length === 0) return;
-    setBulkRestoreOpen(true);
-  }, [canDelete, selected.length]);
+    if (checkBulkAllowed()) setBulkRestoreOpen(true);
+  }, [checkBulkAllowed]);
 
   const confirmBulkRestore = useCallback(() => {
-    if (!canDelete || selected.length === 0) return;
+    if (!checkBulkAllowed()) return;
     setBulkRestoreOpen(false);
     void bulkRestoreContactsAction(selected)
       .then((result) => {
@@ -623,10 +624,9 @@ export function useContactsPageState({
         setSelected([]);
       })
       .catch((err) => {
-        notify.error(t("contacts.restoreFailed"));
-        reportClientError(err, { scope: "contacts.bulk_restore" });
+        handleError(err, "contacts.bulk_restore", "contacts.restoreFailed");
       });
-  }, [canDelete, selected, bulkRestoreContactsAction, t]);
+  }, [checkBulkAllowed, selected, bulkRestoreContactsAction, t, handleError]);
 
   const clearFilters = useCallback(() => {
     setFilterGender("");
@@ -662,24 +662,22 @@ export function useContactsPageState({
           });
         })
         .catch((err) => {
-          notify.error(t("contacts.restoreFailed"));
-          reportClientError(err, { scope: "contacts.restore_single" });
+          handleError(err, "contacts.restore_single", "contacts.restoreFailed");
         });
     },
-    [canDelete, contacts, restoreContactAction, t],
+    [canDelete, contacts, restoreContactAction, t, handleError],
   );
 
-  const handleWhatsApp = useCallback((targets: Contact[]) => {
-    setMessagingTarget({ channel: "whatsapp", contacts: targets });
-  }, []);
+  const createMessagingHandler = useCallback(
+    (channel: "sms" | "whatsapp" | "email") => (targets: Contact[]) => {
+      setMessagingTarget({ channel, contacts: targets });
+    },
+    [],
+  );
 
-  const handleSms = useCallback((targets: Contact[]) => {
-    setMessagingTarget({ channel: "sms", contacts: targets });
-  }, []);
-
-  const handleEmail = useCallback((targets: Contact[]) => {
-    setMessagingTarget({ channel: "email", contacts: targets });
-  }, []);
+  const handleWhatsApp = useMemo(() => createMessagingHandler("whatsapp"), [createMessagingHandler]);
+  const handleSms = useMemo(() => createMessagingHandler("sms"), [createMessagingHandler]);
+  const handleEmail = useMemo(() => createMessagingHandler("email"), [createMessagingHandler]);
 
   return {
     t,

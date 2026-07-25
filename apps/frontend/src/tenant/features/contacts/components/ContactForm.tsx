@@ -112,19 +112,29 @@ export default function ContactForm({
     setValidationErrors([]);
   }, [open, contact, initialDraft, defaultCity, defaultProvince, defaultCountry]);
 
-  const visibleTabs = useMemo(() => {
-    const phoneCount = (contactDraft.phones || []).filter((phone) => (phone.number || "").trim()).length;
-    const emailCount = (contactDraft.emails || []).filter((email) => (email.address || "").trim()).length;
-    const addressCount = (contactDraft.addresses || []).filter((address) => (address.line1 || address.city || "").trim()).length;
-    const socialCount = (contactDraft.socials || []).filter((social) => (social.url || "").trim()).length;
-    const emergencyCount = (contactDraft.emergencyContacts || []).filter((emergency) => emergency.contactId).length;
+  const collectionCounts = useMemo(() => {
+    const filledPhones = (contactDraft.phones || []).filter((p) => (p.number || "").trim()).length;
+    const filledEmails = (contactDraft.emails || []).filter((e) => (e.address || "").trim()).length;
+    const filledAddresses = (contactDraft.addresses || []).filter((a) => (a.line1 || a.city || "").trim()).length;
+    const filledSocials = (contactDraft.socials || []).filter((s) => (s.url || "").trim()).length;
+    const filledEmergency = (contactDraft.emergencyContacts || []).filter((e) => e.contactId).length;
 
+    return { filledPhones, filledEmails, filledAddresses, filledSocials, filledEmergency };
+  }, [
+    contactDraft.phones,
+    contactDraft.emails,
+    contactDraft.addresses,
+    contactDraft.socials,
+    contactDraft.emergencyContacts,
+  ]);
+
+  const visibleTabs = useMemo(() => {
     const countMap: Record<string, number> = {
-      phones: phoneCount,
-      emails: emailCount,
-      addresses: addressCount,
-      socials: socialCount,
-      emergency: emergencyCount,
+      phones: collectionCounts.filledPhones,
+      emails: collectionCounts.filledEmails,
+      addresses: collectionCounts.filledAddresses,
+      socials: collectionCounts.filledSocials,
+      emergency: collectionCounts.filledEmergency,
     };
 
     return CONTACT_TABS.map((tabItem) => {
@@ -136,14 +146,7 @@ export default function ContactForm({
         badge: count && count > 0 ? count : undefined,
       };
     });
-  }, [
-    contactDraft.phones,
-    contactDraft.emails,
-    contactDraft.addresses,
-    contactDraft.socials,
-    contactDraft.emergencyContacts,
-    t,
-  ]);
+  }, [collectionCounts, t]);
 
   const isFieldEnabled = useCallback(
     (tabId: string, fieldId: string) => {
@@ -221,10 +224,13 @@ export default function ContactForm({
 
   const addSubListItem = useCallback(
     <K extends SubListKey>(fieldKey: K, newItem: NonNullable<Contact[K]>[number]) => {
-      setContactDraft((prev) => ({
-        ...prev,
-        [fieldKey]: [...((prev[fieldKey] as unknown[]) || []), newItem],
-      }));
+      setContactDraft((prev) => {
+        const currentList = (prev[fieldKey] as NonNullable<Contact[K]>) || [];
+        return {
+          ...prev,
+          [fieldKey]: [...currentList, newItem],
+        };
+      });
     },
     [],
   );
@@ -236,8 +242,10 @@ export default function ContactForm({
       patch: Partial<NonNullable<Contact[K]>[number]>,
     ) => {
       setContactDraft((prev) => {
-        const list = ((prev[fieldKey] as unknown[]) || []) as Record<string, unknown>[];
-        const nextList = list.map((item, i) => (i === idx ? { ...item, ...patch } : item));
+        const currentList = (prev[fieldKey] as NonNullable<Contact[K]>) || [];
+        const nextList = currentList.map((item, i) =>
+          i === idx ? { ...item, ...patch } : item,
+        );
         return { ...prev, [fieldKey]: nextList };
       });
     },
@@ -246,10 +254,10 @@ export default function ContactForm({
 
   const removeSubListItem = useCallback((fieldKey: SubListKey, idx: number) => {
     setContactDraft((prev) => {
-      const list = (prev[fieldKey] as unknown[]) || [];
+      const currentList = (prev[fieldKey] as unknown[]) || [];
       return {
         ...prev,
-        [fieldKey]: list.filter((_, i) => i !== idx),
+        [fieldKey]: currentList.filter((_, i) => i !== idx),
       };
     });
   }, []);
@@ -409,32 +417,25 @@ export default function ContactForm({
     }
   };
 
-  const footerCounts = useMemo(() => {
-    const filledPhones = (contactDraft.phones || []).filter((p) => (p.number || "").trim()).length;
-    const filledEmails = (contactDraft.emails || []).filter((e) => (e.address || "").trim()).length;
-    const filledEmergency = (contactDraft.emergencyContacts || []).filter((e) => e.contactId).length;
-    return { filledPhones, filledEmails, filledEmergency };
-  }, [contactDraft.phones, contactDraft.emails, contactDraft.emergencyContacts]);
-
   const footerStart = contactDraft.firstName ? (
     <div className="flex flex-wrap items-center gap-2.5 text-xs">
       <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60">
         {getDisplayName(contactDraft)}
       </span>
       <div className="flex items-center gap-1.5">
-        {footerCounts.filledPhones > 0 && (
+        {collectionCounts.filledPhones > 0 && (
           <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px]">
-            {footerCounts.filledPhones} {t("contacts.form.phonesLabel")}
+            {collectionCounts.filledPhones} {t("contacts.form.phonesLabel")}
           </span>
         )}
-        {footerCounts.filledEmails > 0 && (
+        {collectionCounts.filledEmails > 0 && (
           <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold border border-amber-500/20 text-[10px]">
-            {footerCounts.filledEmails} {t("contacts.form.emailsLabel")}
+            {collectionCounts.filledEmails} {t("contacts.form.emailsLabel")}
           </span>
         )}
-        {footerCounts.filledEmergency > 0 && (
+        {collectionCounts.filledEmergency > 0 && (
           <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold border border-rose-500/20 text-[10px]">
-            {footerCounts.filledEmergency} {t("contacts.detail.emergency")}
+            {collectionCounts.filledEmergency} {t("contacts.detail.emergency")}
           </span>
         )}
       </div>

@@ -16,12 +16,14 @@ import {
 import { cn } from "@/lib/utils";
 import {
   Contact,
-  COLOR_PALETTES,
   ContactPreferences,
+  DEFAULT_CONTACT_PREFERENCES,
+  AppTranslationKey,
   applyTitleCaseToContact,
   mergeContacts,
   findContactDuplicatePairs,
   getDisplayName,
+  getDuplicateConfidenceBadgeStyle,
 } from "@mms/shared";
 
 interface DuplicatePair {
@@ -33,18 +35,35 @@ interface DuplicatePair {
 
 interface ConfidenceBadgeProps {
   score: number;
-  prefs: ContactPreferences;
+  prefs: Partial<ContactPreferences>;
 }
 
-function ConfidenceBadge({ score, prefs }: ConfidenceBadgeProps): React.JSX.Element {
+function getDuplicateThemeColors(prefs?: Partial<ContactPreferences>) {
+  return {
+    warningBg: prefs?.duplicateDetectionColorWarning ?? DEFAULT_CONTACT_PREFERENCES.duplicateDetectionColorWarning!,
+    warningText: prefs?.duplicateDetectionColorWarningText ?? DEFAULT_CONTACT_PREFERENCES.duplicateDetectionColorWarningText!,
+    successBg: prefs?.duplicateDetectionColorSuccess ?? DEFAULT_CONTACT_PREFERENCES.duplicateDetectionColorSuccess!,
+    successText: prefs?.duplicateDetectionColorSuccessText ?? DEFAULT_CONTACT_PREFERENCES.duplicateDetectionColorSuccessText!,
+    highlightBg: prefs?.duplicateDetectionColorHighlight ?? DEFAULT_CONTACT_PREFERENCES.duplicateDetectionColorHighlight!,
+  };
+}
+
+function mapPairToViewModel(
+  pair: { id: string; confidence: number; reasonKey: keyof typeof DUPLICATE_REASON_I18N; contacts: [Contact, Contact] },
+  t: (key: AppTranslationKey, params?: Record<string, string | number>) => string,
+): DuplicatePair {
+  const i18nKey = DUPLICATE_REASON_I18N[pair.reasonKey];
+  return {
+    id: pair.id,
+    confidence: pair.confidence,
+    reason: i18nKey ? t(i18nKey) : pair.reasonKey,
+    contacts: pair.contacts,
+  };
+}
+
+function ConfidenceBadge({ score, prefs }: ConfidenceBadgeProps): JSX.Element {
   const { t } = useTranslation();
-  const highThreshold = prefs.duplicateDetectionThresholdHigh ?? 90;
-  const medThreshold = prefs.duplicateDetectionThresholdMedium ?? 75;
-  const highColor = prefs.duplicateDetectionColorHigh ?? COLOR_PALETTES.red.bg;
-  const medColor = prefs.duplicateDetectionColorMedium ?? COLOR_PALETTES.amber.bg;
-  const lowColor = prefs.duplicateDetectionColorLow ?? COLOR_PALETTES.slate.bg;
-  
-  const colorClass = score >= highThreshold ? highColor : score >= medThreshold ? medColor : lowColor;
+  const { colorClass } = getDuplicateConfidenceBadgeStyle(score, prefs);
   return (
     <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", colorClass)}>
       {score}{t('contacts.duplicates.matchSuffix')}
@@ -59,14 +78,22 @@ interface ContactCardProps {
   label: string;
 }
 
-function ContactCard({ contact, selected, onSelect, label }: ContactCardProps): React.JSX.Element {
+function ContactCard({ contact, selected, onSelect, label }: ContactCardProps): JSX.Element {
   const { prefs } = useContactConfig();
   const { t } = useTranslation();
   const fields = prefs.duplicateDetectionFields || [];
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
       className={`flex-1 rounded-xl border-2 p-4 cursor-pointer transition-all text-left ${
         selected ? "border-primary bg-primary/[0.03]" : "border-border hover:border-primary/30"
       }`}
@@ -95,9 +122,10 @@ interface MergePreviewProps {
   confirming?: boolean;
 }
 
-function MergePreview({ pair, keepIndex, onClose, onConfirm, confirming }: MergePreviewProps): React.JSX.Element {
+function MergePreview({ pair, keepIndex, onClose, onConfirm, confirming }: MergePreviewProps): JSX.Element {
   const { prefs } = useContactConfig();
   const { t } = useTranslation();
+  const colors = useMemo(() => getDuplicateThemeColors(prefs), [prefs]);
   const emptyDash = t('contacts.table.emptyDash');
   const keep = pair.contacts[keepIndex];
   const other = pair.contacts[1 - keepIndex];
@@ -134,9 +162,9 @@ function MergePreview({ pair, keepIndex, onClose, onConfirm, confirming }: Merge
         </div>
 
         <div className="px-6 py-5 space-y-4">
-          <div className={`${prefs.duplicateDetectionColorWarning ?? COLOR_PALETTES.amber.bg} rounded-xl p-3 flex gap-2.5`}>
-            <AlertTriangle className={`w-4 h-4 ${prefs.duplicateDetectionColorWarningText ?? COLOR_PALETTES.amber.text} flex-shrink-0 mt-0.5`} />
-            <p className={`text-xs ${prefs.duplicateDetectionColorWarningText ?? COLOR_PALETTES.amber.text}`}>
+          <div className={`${colors.warningBg} rounded-xl p-3 flex gap-2.5`}>
+            <AlertTriangle className={`w-4 h-4 ${colors.warningText} flex-shrink-0 mt-0.5`} />
+            <p className={`text-xs ${colors.warningText}`}>
               <strong>{getDisplayName(other)}</strong> {t('contacts.duplicates.mergeWarning')} <strong>{getDisplayName(keep)}</strong>.
             </p>
           </div>
@@ -156,7 +184,7 @@ function MergePreview({ pair, keepIndex, onClose, onConfirm, confirming }: Merge
                     <span className="text-[11px] text-muted-foreground w-24 flex-shrink-0">{getDuplicateFieldLabel(field, t)}:</span>
                     <span className="text-[13px] font-medium text-foreground flex-1 truncate">{mergedValue || emptyDash}</span>
                     {fromOther && (
-                      <span className={`text-[10px] ${prefs.duplicateDetectionColorHighlight ?? COLOR_PALETTES.blue.bg} px-1.5 py-0.5 rounded-full font-medium`}>
+                      <span className={`text-[10px] ${colors.highlightBg} px-1.5 py-0.5 rounded-full font-medium`}>
                         {t('contacts.duplicates.fromDuplicate')}
                       </span>
                     )}
@@ -213,9 +241,10 @@ export default function DuplicateDetection({
   onClose,
   onMerge,
   canWrite = false,
-}: DuplicateDetectionProps): React.JSX.Element {
+}: DuplicateDetectionProps): JSX.Element {
   const { prefs } = useContactConfig();
   const { t } = useTranslation();
+  const colors = useMemo(() => getDuplicateThemeColors(prefs), [prefs]);
   const [dupPage, setDupPage] = useState(1);
   const { data: serverPairs, isLoading: pairsLoading, isFetching: pairsFetching } = useContactsDuplicatePairs({
     page: dupPage,
@@ -231,12 +260,7 @@ export default function DuplicateDetection({
 
   useEffect(() => {
     if (!serverPairs?.pairs) return;
-    const mappedPairs = serverPairs.pairs.map((pair) => ({
-      id: pair.id,
-      confidence: pair.confidence,
-      reason: t(DUPLICATE_REASON_I18N[pair.reasonKey]) || pair.reasonKey,
-      contacts: pair.contacts,
-    }));
+    const mappedPairs = serverPairs.pairs.map((pair) => mapPairToViewModel(pair, t));
     setLoadedPairs((prev) => {
       if (dupPage <= 1) return mappedPairs;
       const byId = new Map(prev.map((previousPair) => [previousPair.id, previousPair]));
@@ -247,12 +271,7 @@ export default function DuplicateDetection({
 
   const detectedPairs = useMemo<DuplicatePair[]>(() => {
     if (loadedPairs.length > 0) return loadedPairs;
-    return findContactDuplicatePairs(contacts, prefs).map((pair) => ({
-      id: pair.id,
-      confidence: pair.confidence,
-      reason: t(DUPLICATE_REASON_I18N[pair.reasonKey]) || pair.reasonKey,
-      contacts: pair.contacts,
-    }));
+    return findContactDuplicatePairs(contacts, prefs).map((pair) => mapPairToViewModel(pair, t));
   }, [loadedPairs, contacts, prefs, t]);
 
   const handleLoadMoreDuplicates = useCallback(() => {
@@ -271,15 +290,11 @@ export default function DuplicateDetection({
     const other = pair.contacts[1 - selectedKeepIndex];
 
     const mergedRaw = mergeContacts(keep, other);
-    const mergedResult = applyTitleCaseToContact(mergedRaw as Record<string, unknown>) as Contact;
+    const mergedResult = applyTitleCaseToContact(mergedRaw) as Contact;
     setConfirming(true);
     try {
       await onMerge(keep.id, other.id, mergedResult);
-      setMergedPairIds((prev) => {
-        const updatedMergedPairIds = new Set(prev);
-        updatedMergedPairIds.add(pair.id);
-        return updatedMergedPairIds;
-      });
+      setMergedPairIds((prev) => new Set(prev).add(pair.id));
       setMerging(null);
     } catch (err) {
       notify.error(t('contacts.saveFailed'));
@@ -290,11 +305,7 @@ export default function DuplicateDetection({
   };
 
   const handleDismiss = (pairId: string): void => {
-    setDismissedPairIds((prev) => {
-      const updatedDismissedPairIds = new Set(prev);
-      updatedDismissedPairIds.add(pairId);
-      return updatedDismissedPairIds;
-    });
+    setDismissedPairIds((prev) => new Set(prev).add(pairId));
   };
 
   const totalMerged = mergedPairIds.size;
@@ -307,11 +318,10 @@ export default function DuplicateDetection({
         animate={{ opacity: 1, y: 0 }}
         className="relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col z-10 text-left backdrop-blur-xl"
       >
-        
         <div className="px-6 py-4 border-b border-border flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${prefs.duplicateDetectionColorWarning ?? COLOR_PALETTES.amber.bg}`}>
-              <AlertTriangle className={`w-4 h-4 ${prefs.duplicateDetectionColorWarningText ?? COLOR_PALETTES.amber.text}`} />
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${colors.warningBg}`}>
+              <AlertTriangle className={`w-4 h-4 ${colors.warningText}`} />
             </div>
             <div>
               <h2 className="text-sm font-bold text-foreground">{t('contacts.duplicates.title')}</h2>
@@ -331,19 +341,18 @@ export default function DuplicateDetection({
           </Button>
         </div>
 
-        
         {totalMerged > 0 && (
-          <div className={`mx-6 mt-4 flex items-center gap-2 rounded-xl px-4 py-2.5 ${prefs.duplicateDetectionColorSuccess ?? COLOR_PALETTES.emerald.bg}`}>
-            <Check className={`w-4 h-4 ${prefs.duplicateDetectionColorSuccessText ?? COLOR_PALETTES.emerald.text}`} />
-            <p className={`text-xs font-medium ${prefs.duplicateDetectionColorSuccessText ?? COLOR_PALETTES.emerald.text}`}>
+          <div className={`mx-6 mt-4 flex items-center gap-2 rounded-xl px-4 py-2.5 ${colors.successBg}`}>
+            <Check className={`w-4 h-4 ${colors.successText}`} />
+            <p className={`text-xs font-medium ${colors.successText}`}>
               {totalMerged} {t('contacts.duplicates.countMerged')}
             </p>
           </div>
         )}
 
         {!canWrite && activePairs.length > 0 && (
-          <div className={`mx-6 mt-4 rounded-xl px-4 py-2.5 border ${prefs.duplicateDetectionColorWarning ?? COLOR_PALETTES.amber.bg}`}>
-            <p className={`text-xs ${prefs.duplicateDetectionColorWarningText ?? COLOR_PALETTES.amber.text}`}>
+          <div className={`mx-6 mt-4 rounded-xl px-4 py-2.5 border ${colors.warningBg}`}>
+            <p className={`text-xs ${colors.warningText}`}>
               {t("contacts.duplicatesReadOnly")}
             </p>
           </div>

@@ -39,7 +39,7 @@ import { getObject, saveObject } from "@/lib/db";
  * @returns {FieldConfig} The default field configuration.
  */
 function getSystemDefaults(): FieldConfig {
-  const fieldsClone = JSON.parse(JSON.stringify(INITIAL_FIELD_SEED));
+  const fieldsClone = structuredClone(INITIAL_FIELD_SEED);
 
   return {
     version: CONFIG_VERSION,
@@ -79,7 +79,7 @@ function migrateConfig(config: unknown): FieldConfig {
   // Populate dynamic tab fields if they are missing
   const defaults = getSystemDefaults();
   
-  const normalizeTabs = (tabs: any[] | undefined) => {
+  const normalizeTabs = <T extends { id?: string; key?: string }>(tabs: T[] | undefined): T[] | undefined => {
     if (!Array.isArray(tabs)) return undefined;
     return tabs.map((tab) => {
       if (tab && typeof tab === "object" && !tab.key && tab.id) {
@@ -97,7 +97,7 @@ function migrateConfig(config: unknown): FieldConfig {
   const normalizedFormTabs = (normalizeTabs(workingConfig.formTabs) ?? defaults.formTabs) || DEFAULT_FORM_TABS;
   const isCorruptedEnabledTabs = !workingConfig.enabledTabs || workingConfig.enabledTabs.length <= 1;
 
-  const repairedFormTabs = normalizedFormTabs.map((tab: any) => {
+  const repairedFormTabs = normalizedFormTabs.map((tab) => {
     if (isCorruptedEnabledTabs && tab && typeof tab === "object") {
       const defaultTab = DEFAULT_FORM_TABS.find((d) => d.key === tab.key);
       if (defaultTab) {
@@ -114,7 +114,10 @@ function migrateConfig(config: unknown): FieldConfig {
   workingConfig.fields = workingConfig.fields ?? defaults.fields;
 
   if (isCorruptedEnabledTabs) {
-    const activeFormTabKeys = repairedFormTabs.filter((t: any) => t.enabled !== false).map((t: any) => t.key);
+    const activeFormTabKeys = repairedFormTabs
+      .filter((t) => t && typeof t === "object" && t.enabled !== false)
+      .map((t) => t.key)
+      .filter(Boolean);
     workingConfig.enabledTabs = Array.from(new Set([...(workingConfig.enabledTabs || []), ...activeFormTabKeys]));
   }
 

@@ -4,22 +4,22 @@ import {
   mergeTabbedFields,
   getFlatFieldsConfig,
   type ModuleFieldDef,
+  type ModuleCustomField,
+  type TabDefinition,
 } from "@mms/shared";
-
 
 import { getObject, saveObject } from "@/lib/db";
 import { useLiveObject } from "@/hooks/useLiveObject";
 
 export interface ModuleSettingsShape {
   fields?: Record<string, any>;
-  customFields?: any[];
+  customFields?: ModuleCustomField[] | any[];
   fieldOrder?: string[];
-  formTabs?: any[];
+  formTabs?: TabDefinition[] | any[];
   enabledTabs?: string[];
   requiredTabs?: string[];
   [key: string]: any;
 }
-
 
 export interface UseModuleConfigOptions<T extends ModuleSettingsShape> {
   settingsObjectKey: string;
@@ -77,7 +77,7 @@ export function useModuleConfig<T extends ModuleSettingsShape>({
   }, [settingsObjectKey, mergeSettings, normalizeFn]);
 
   const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
-  const customFields = useMemo(() => settings.customFields ?? [], [settings.customFields]);
+  const customFields = useMemo(() => (settings.customFields || []) as ModuleCustomField[], [settings.customFields]);
   const fieldOrder = useMemo(() => settings.fieldOrder ?? defaultSettings.fieldOrder ?? [], [settings.fieldOrder, defaultSettings.fieldOrder]);
 
   const orderedFields = useMemo(

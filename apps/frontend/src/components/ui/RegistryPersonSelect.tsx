@@ -6,7 +6,9 @@ import {
 import { useStudentsPaginated } from '@/tenant/features/students/hooks/useStudents';
 import { useTeachersPaginated } from '@/tenant/features/teachers/hooks/useTeachers';
 import { useTranslation } from '@/hooks/useTranslation';
-import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
+import { FORM_LABEL } from '@/components/ui/formStyles';
+import { Input } from '@/components/ui/input';
+import { FormSelect } from '@/components/ui/FormSelect';
 
 export interface RegistryPersonSelectProps {
   kind: 'student' | 'teacher';
@@ -69,41 +71,43 @@ export function RegistryPersonSelect({
     : t('registryPerson.selectTeacher');
 
   const fallbackId = React.useId();
+  const selectId = id || `person-select-${fallbackId.replace(/:/g, "")}`;
   const searchInputId = `person-search-${fallbackId.replace(/:/g, "")}`;
   const searchInputName = `personSearchQuery-${fallbackId.replace(/:/g, "")}`;
 
+  const selectOptions = useMemo(() => {
+    const list: Array<{ value: string; label: string }> = [];
+    if (value && !valueInOptions) {
+      list.push({ value, label: value });
+    }
+    options.forEach((row) => {
+      list.push({ value: String(row.id), label: row.name ?? String(row.id) });
+    });
+    return list;
+  }, [value, valueInOptions, options]);
+
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className={FORM_LABEL}>
+      <label htmlFor={selectId} className={FORM_LABEL}>
         {label}{required ? ' *' : ''}
       </label>
-      <input
+      <Input
         type="search"
         id={searchInputId}
         name={searchInputName}
         value={search}
         onChange={(event) => setSearch(event.target.value)}
         placeholder={t('registryPerson.searchPlaceholder')}
-        className={`${FORM_INPUT} text-xs`}
+        className="text-xs"
         aria-label={t('registryPerson.searchPlaceholder')}
       />
-      <select
-        id={id}
-        className={`${FORM_INPUT} cursor-pointer`}
+      <FormSelect
+        id={selectId}
         value={value}
-        onChange={(event) => onChange(event.target.value)}
-        required={required}
-      >
-        <option value="">{placeholder}</option>
-        {value && !valueInOptions && (
-          <option value={value}>{value}</option>
-        )}
-        {options.map((row) => (
-          <option key={String(row.id)} value={String(row.id)}>
-            {row.name}
-          </option>
-        ))}
-      </select>
+        onChange={onChange}
+        options={selectOptions}
+        placeholder={placeholder}
+      />
       {hasMore && (
         <p className="text-[10px] text-muted-foreground">{t('registryPerson.refineSearch')}</p>
       )}

@@ -5,8 +5,9 @@ import { openDeviceSmsComposer } from '@/lib/deviceSms';
 import { FormModal } from '@/components/ui/FormModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { FormSelect } from '@/components/ui/FormPrimitives';
-import { FORM_LABEL, FORM_TEXTAREA, FORM_INPUT } from '@/components/ui/formStyles';
+import { Textarea } from '@/components/ui/textarea';
+import { FormSelect } from '@/components/ui/FormSelect';
+import { FORM_LABEL } from '@/components/ui/formStyles';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { getCollection, saveCollection } from '@/lib/db';
@@ -115,6 +116,22 @@ export default function MessageComposer({
     }
   };
 
+  const saveSentMessageHistory = (sentRecords: { recipientId: string | number; body: string }[]): void => {
+    if (sentRecords.length > 0 && user) {
+      const dbKey = `messages_u:${user.id}`;
+      const newMsgs = sentRecords.map((rec) => ({
+        id: crypto.randomUUID(),
+        userId: user.id,
+        contactId: rec.recipientId,
+        channel,
+        body: rec.body,
+        sentAt: new Date().toISOString(),
+      }));
+      const currentMsgs = getCollection<unknown>(dbKey) || [];
+      saveCollection(dbKey, [...newMsgs, ...currentMsgs]);
+    }
+  };
+
   const handleSendAll = (): void => {
     if (eligibleRecipients.length === 0 || !message.trim()) return;
 
@@ -142,21 +159,7 @@ export default function MessageComposer({
             if (index === eligibleRecipients.length - 1) {
               setOpening(false);
               onSent?.(sentRecords);
-              
-              // Save to local message history log if user is logged in
-              if (sentRecords.length > 0 && user) {
-                const dbKey = `messages_u:${user.id}`;
-                const newMsgs = sentRecords.map((rec) => ({
-                  id: crypto.randomUUID(),
-                  userId: user.id,
-                  contactId: rec.recipientId,
-                  channel,
-                  body: rec.body,
-                  sentAt: new Date().toISOString(),
-                }));
-                const currentMsgs = getCollection<unknown>(dbKey) || [];
-                saveCollection(dbKey, [...newMsgs, ...currentMsgs]);
-              }
+              saveSentMessageHistory(sentRecords);
               onClose();
             }
           }, index * 600); // 600ms delay to prevent browser blockages
@@ -165,21 +168,7 @@ export default function MessageComposer({
       }
     }
 
-    // Save to local message history log if user is logged in
-    if (sentRecords.length > 0 && user) {
-      const dbKey = `messages_u:${user.id}`;
-      const newMsgs = sentRecords.map((rec) => ({
-        id: crypto.randomUUID(),
-        userId: user.id,
-        contactId: rec.recipientId,
-        channel,
-        body: rec.body,
-        sentAt: new Date().toISOString(),
-      }));
-      const currentMsgs = getCollection<unknown>(dbKey) || [];
-      saveCollection(dbKey, [...newMsgs, ...currentMsgs]);
-    }
-
+    saveSentMessageHistory(sentRecords);
     onClose();
   };
 
@@ -257,7 +246,6 @@ export default function MessageComposer({
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="e.g. Important Announcement"
-              className={FORM_INPUT}
               required
             />
             <div className="text-[10px] text-muted-foreground mt-1">
@@ -284,9 +272,8 @@ export default function MessageComposer({
           <label className={FORM_LABEL} htmlFor="messageBody">
             {t('contacts.messageBody')}
           </label>
-          <textarea
+          <Textarea
             id="messageBody"
-            className={FORM_TEXTAREA}
             rows={4}
             value={message}
             onChange={(e) => setMessage(e.target.value)}

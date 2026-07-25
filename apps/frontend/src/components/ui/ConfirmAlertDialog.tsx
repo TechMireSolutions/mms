@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,8 +9,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { buttonVariants } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
-import { FORM_LABEL, FORM_TEXTAREA } from "@/components/ui/formStyles";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Textarea } from "@/components/ui/textarea";
 
 export interface ConfirmAlertDialogOptionalReason {
   label: string;
@@ -44,6 +46,7 @@ export function ConfirmAlertDialog({
 }: ConfirmAlertDialogProps): React.JSX.Element {
   const { t } = useTranslation();
   const [reason, setReason] = useState("");
+  const reasonInputId = useId();
 
   useEffect(() => {
     if (!open) setReason("");
@@ -63,12 +66,11 @@ export function ConfirmAlertDialog({
         </AlertDialogHeader>
         {optionalReason && (
           <div className="px-1 pb-1">
-            <label className={FORM_LABEL} htmlFor="confirm-reason-input">
+            <label className={FORM_LABEL} htmlFor={reasonInputId}>
               {optionalReason.label}
             </label>
-            <textarea
-              id="confirm-reason-input"
-              className={FORM_TEXTAREA}
+            <Textarea
+              id={reasonInputId}
               rows={2}
               value={reason}
               maxLength={optionalReason.maxLength ?? 500}
@@ -81,7 +83,7 @@ export function ConfirmAlertDialog({
           <AlertDialogCancel>{cancelLabel ?? t("common.cancel")}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
-            className={destructive ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : undefined}
+            className={buttonVariants({ variant: destructive ? "destructive" : "default" })}
           >
             {confirmLabel ?? t("common.yes")}
           </AlertDialogAction>

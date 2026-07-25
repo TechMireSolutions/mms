@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { 
-  MessageSquare, MessageCircle, Send, Search, 
+  MessageSquare, MessageCircle, Send, 
   Trash2, User, Clock, Plus, Tag, Filter, Check, Mail, BarChart2
 } from 'lucide-react';
 import { 
@@ -18,13 +18,16 @@ import { ActionButton } from "@/components/ui/ActionButton";
 import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { SearchBar } from '@/components/ui/SearchBar';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { getCollection, saveCollection } from '@/lib/db';
 import { useContactsCollection } from '@/tenant/features/contacts/hooks/useContacts';
 import { getDisplayName, getPrimaryPhone, getPrimaryEmail, formatDate, type Message } from '@mms/shared';
 import MessageComposer, { type MessagingRecipient, type MessageTemplate } from '@/components/ui/MessageComposer';
 import { notify } from '@/lib/notify';
-import { FORM_LABEL, FORM_INPUT, FORM_TEXTAREA } from '@/components/ui/formStyles';
+import { FORM_LABEL } from '@/components/ui/formStyles';
 
 const DEFAULT_TEMPLATES: MessageTemplate[] = [
   { id: 't1', label: 'General Announcement', body: 'Dear {name}, we would like to inform you that...' },
@@ -62,6 +65,10 @@ export default function MessagingPage(): React.JSX.Element {
   // Custom templates form state
   const [templateLabel, setTemplateLabel] = useState('');
   const [templateBody, setTemplateBody] = useState('');
+
+  // Dialog states for confirmations
+  const [deleteTemplateId, setDeleteTemplateId] = useState<string | null>(null);
+  const [confirmClearLogsOpen, setConfirmClearLogsOpen] = useState(false);
 
   const [selectedRecipients, setSelectedRecipients] = useState<Record<string | number, boolean>>({});
   const [composerTarget, setComposerTarget] = useState<{ channel: 'sms' | 'whatsapp' | 'email'; recipients: MessagingRecipient[] } | null>(null);
@@ -101,16 +108,15 @@ export default function MessagingPage(): React.JSX.Element {
     notify.success('Custom message template saved successfully');
   };
 
-  // Handle template deletion
-  const handleDeleteTemplate = (id: string): void => {
-    if (!user) return;
-    if (window.confirm('Are you sure you want to delete this template?')) {
-      const dbKey = `messages_templates_u:${user.id}`;
-      const custom = getCollection<MessageTemplate>(dbKey) || [];
-      const updated = custom.filter((tpl) => tpl.id !== id);
-      saveCollection(dbKey, updated);
-      notify.success('Template deleted successfully');
-    }
+  // Handle template deletion confirm action
+  const confirmDeleteTemplate = (): void => {
+    if (!user || !deleteTemplateId) return;
+    const dbKey = `messages_templates_u:${user.id}`;
+    const custom = getCollection<MessageTemplate>(dbKey) || [];
+    const updated = custom.filter((tpl) => tpl.id !== deleteTemplateId);
+    saveCollection(dbKey, updated);
+    setDeleteTemplateId(null);
+    notify.success('Template deleted successfully');
   };
 
   // Load sent messages history from DB
@@ -121,13 +127,12 @@ export default function MessagingPage(): React.JSX.Element {
     return getCollection<Message>(dbKey) || [];
   }, [user, localTick]);
 
-  // Handle clearing log history
-  const handleClearLogs = (): void => {
+  // Handle clearing log history confirm action
+  const confirmClearLogs = (): void => {
     if (!user) return;
-    if (window.confirm('Are you sure you want to clear all message logs?')) {
-      saveCollection(`messages_u:${user.id}`, []);
-      notify.success('Message logs cleared successfully');
-    }
+    saveCollection(`messages_u:${user.id}`, []);
+    setConfirmClearLogsOpen(false);
+    notify.success('Message logs cleared successfully');
   };
 
   // Filter contacts to find eligible recipients (those with phone numbers or email address and matching filters)
@@ -291,15 +296,11 @@ export default function MessagingPage(): React.JSX.Element {
                 </div>
               </div>
 
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search recipients by name..."
-                  value={searchContact}
-                  onChange={(e) => setSearchContact(e.target.value)}
-                  className="pl-9 h-9"
-                />
-              </div>
+              <SearchBar
+                placeholder="Search recipients by name..."
+                value={searchContact}
+                onChange={setSearchContact}
+              />
 
               <div className="border border-border/60 rounded-lg overflow-hidden max-h-[380px] overflow-y-auto">
                 <table className="w-full text-xs text-left">
@@ -409,15 +410,12 @@ export default function MessagingPage(): React.JSX.Element {
             <div className="lg:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4">
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-3 flex-grow">
-                  <div className="relative flex-grow max-w-sm">
-                    <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      placeholder={t('messaging.search.placeholder')}
-                      value={searchLog}
-                      onChange={(e) => setSearchLog(e.target.value)}
-                      className="pl-9 h-9"
-                    />
-                  </div>
+                  <SearchBar
+                    placeholder={t('messaging.search.placeholder')}
+                    value={searchLog}
+                    onChange={setSearchLog}
+                    className="flex-grow max-w-sm"
+                  />
 
                   {/* Channel Filter Selector */}
                   <div className="flex rounded-lg border border-border bg-muted/40 p-0.5 text-xs">
@@ -441,7 +439,7 @@ export default function MessagingPage(): React.JSX.Element {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={handleClearLogs}
+                    onClick={() => setConfirmClearLogsOpen(true)}
                     className="text-destructive hover:bg-destructive/10"
                   >
                     <Trash2 className="w-4 h-4 mr-1.5" />
@@ -563,19 +561,17 @@ export default function MessagingPage(): React.JSX.Element {
                     value={templateLabel}
                     onChange={(e) => setTemplateLabel(e.target.value)}
                     placeholder="e.g., Absent Notification"
-                    className={FORM_INPUT}
                     required
                   />
                 </div>
 
                 <div>
                   <label className={FORM_LABEL} htmlFor="tplBody">{t('contacts.messageBody')}</label>
-                  <textarea
+                  <Textarea
                     id="tplBody"
                     value={templateBody}
                     onChange={(e) => setTemplateBody(e.target.value)}
                     placeholder="Hello {name}, we missed you today at the session..."
-                    className={FORM_TEXTAREA}
                     rows={4}
                     required
                   />
@@ -618,7 +614,7 @@ export default function MessagingPage(): React.JSX.Element {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleDeleteTemplate(tpl.id)}
+                              onClick={() => setDeleteTemplateId(tpl.id)}
                               className="h-7 w-7 text-destructive hover:bg-destructive/10"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -649,6 +645,28 @@ export default function MessagingPage(): React.JSX.Element {
           }}
         />
       )}
+
+      {/* Confirm dialog for deleting custom template */}
+      <ConfirmAlertDialog
+        open={Boolean(deleteTemplateId)}
+        onOpenChange={(open) => { if (!open) setDeleteTemplateId(null); }}
+        title="Delete Message Template"
+        description="Are you sure you want to delete this template? This action cannot be undone."
+        confirmLabel={t('common.delete')}
+        destructive
+        onConfirm={confirmDeleteTemplate}
+      />
+
+      {/* Confirm dialog for clearing all message logs */}
+      <ConfirmAlertDialog
+        open={confirmClearLogsOpen}
+        onOpenChange={setConfirmClearLogsOpen}
+        title={t('messaging.clearLogs')}
+        description="Are you sure you want to clear all message logs? This action cannot be undone."
+        confirmLabel={t('common.delete')}
+        destructive
+        onConfirm={confirmClearLogs}
+      />
     </ModulePageShell>
   );
 }

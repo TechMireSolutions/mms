@@ -9,7 +9,6 @@ import {
   DEFAULT_FORM_TABS,
   DEFAULT_REQUIRED_TABS,
   filterActiveContacts,
-  normalizeToE164,
   paginateContacts,
   parsePhoneNumber,
   type Contact,
@@ -83,9 +82,11 @@ function firstCollectionString(rows: unknown[] | null): string {
 }
 
 function firstCountryCode(rows: unknown[] | null): string {
-  const first = rows?.find((entry) => {
-    return entry && typeof entry === 'object' && typeof (entry as { code?: unknown }).code === 'string';
-  }) as { code?: string } | undefined;
+  if (!rows || !Array.isArray(rows)) return '';
+  const first = rows.find(
+    (entry): entry is { code: string } =>
+      Boolean(entry) && typeof entry === 'object' && typeof (entry as { code?: unknown }).code === 'string',
+  );
   return first?.code ?? '';
 }
 
@@ -161,7 +162,7 @@ export async function getContactById(id: string, includeDeleted = false): Promis
 
 export async function normalizeContactPhones(contact: Contact): Promise<Contact> {
   let phones = contact.phones;
-  const scalarPhone = typeof (contact as Record<string, unknown>).phone === 'string' ? String((contact as Record<string, unknown>).phone).trim() : '';
+  const scalarPhone = typeof contact.phone === 'string' ? contact.phone.trim() : '';
 
   if ((!phones || !phones.length) && scalarPhone) {
     phones = [{ label: 'Mobile', number: scalarPhone, countryCode: '+92', isPrimary: true }];
@@ -173,21 +174,15 @@ export async function normalizeContactPhones(contact: Contact): Promise<Contact>
   const { defaultPhoneCountryCode } = await loadContactRuntimeDefaults();
   const countryCodes = (await fetchCollection('countryCodes')) || [];
   const knownCodes = countryCodes
-    .map((row) => (row && typeof row === 'object' && typeof (row as { code?: unknown }).code === 'string' ? (row as { code: string }).code : ''))
+    .map((row) => (row && typeof row === 'object' && typeof (row as { code?: unknown }).code === 'string' ? String((row as { code: string }).code) : ''))
     .filter(Boolean);
 
   return {
     ...contact,
     phones: phones.map((phone) => {
       const fallbackCode = phone.countryCode || defaultPhoneCountryCode;
-      const trimmedNumber = (phone.number || "").trim();
-      let parsed;
-      if (trimmedNumber.startsWith("+") || trimmedNumber.startsWith("00")) {
-        parsed = parsePhoneNumber(trimmedNumber, fallbackCode, knownCodes);
-      } else {
-        const e164 = normalizeToE164(fallbackCode, phone.number);
-        parsed = parsePhoneNumber(e164, fallbackCode, knownCodes);
-      }
+      const trimmedNumber = (phone.number || '').trim();
+      const parsed = parsePhoneNumber(trimmedNumber, fallbackCode, knownCodes);
       return {
         ...phone,
         countryCode: parsed.countryCode,

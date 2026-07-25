@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState, useId } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Search, Plus, User, Mail, Phone, Camera } from "lucide-react";
 import { type Contact, getPrimaryPhone, getPrimaryEmail, getPrimaryAddress } from "@mms/shared";
@@ -72,7 +72,7 @@ export default function ContactPicker({
   const [createQuery, setCreateQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const serverMode = contacts === undefined;
-  const fallbackId = React.useId();
+  const fallbackId = useId();
   const resolvedId = id || fallbackId;
   const resolvedName = name || fallbackId;
 
@@ -97,13 +97,18 @@ export default function ContactPicker({
     [serverMode, searchPage?.contacts, contacts],
   );
 
+  const closeDropdown = useCallback(() => {
+    setQuery('');
+    setOpen(false);
+  }, []);
+
   const matches = useMemo(() => {
     const lowerQuery = query.trim().toLowerCase();
     return directory
       .filter((contact) => {
         const contactPhone = getPrimaryPhone(contact) || "";
         if (normalizedExcludeIds.includes(String(contact.id))) return false;
-        if (hasPhone && (!contactPhone || String(contactPhone).trim().length === 0)) return false;
+        if (hasPhone && !contactPhone.trim()) return false;
         if (serverMode) return true;
         if (!lowerQuery) return true;
         return (
@@ -113,14 +118,15 @@ export default function ContactPicker({
       .slice(0, 8);
   }, [directory, normalizedExcludeIds, hasPhone, serverMode, query]);
 
-  const selected = useMemo(
-    () =>
-      (serverMode
-        ? selectedFromServer
-        : contacts?.find((contact) => String(contact.id) === String(value))) ??
-      directory.find((contact) => String(contact.id) === String(value)),
-    [serverMode, selectedFromServer, contacts, value, directory],
-  );
+  const selected = useMemo(() => {
+    if (value == null) return null;
+    const valStr = String(value);
+    const matchById = (contact: Contact) => String(contact.id) === valStr;
+    return (
+      (serverMode ? selectedFromServer : contacts?.find(matchById)) ??
+      directory.find(matchById)
+    );
+  }, [serverMode, selectedFromServer, contacts, value, directory]);
 
   const handleFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -267,7 +273,7 @@ export default function ContactPicker({
                     key={contact.id}
                     type="button"
                     variant="ghost"
-                    onMouseDown={() => { onChange(contact.id, contact); setQuery(''); setOpen(false); }}
+                    onMouseDown={() => { onChange(contact.id, contact); closeDropdown(); }}
                     className="w-full flex items-center h-auto font-normal justify-start gap-3 px-3.5 py-2.5 hover:bg-muted transition-colors text-left focus:outline-none rounded-none shadow-none text-foreground"
                   >
                     <UserAvatar
@@ -294,8 +300,7 @@ export default function ContactPicker({
                   onMouseDown={(e) => {
                     e.preventDefault();
                     openCreateFlow(query);
-                    setQuery('');
-                    setOpen(false);
+                    closeDropdown();
                   }}
                   className="w-full flex items-center h-auto justify-start gap-2 px-4 py-3 hover:bg-primary/5 hover:text-primary text-primary font-semibold text-xs text-left transition-colors border-t border-border rounded-none shadow-none"
                 >
