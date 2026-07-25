@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { 
   MessageSquare, MessageCircle, Send, 
-  Trash2, User, Clock, Plus, Tag, Filter, Check, Mail, BarChart2, Download, Edit3, Copy, CheckSquare, XSquare
+  Trash2, User, Clock, Plus, Tag, Filter, Check, Mail, BarChart2, Download, Edit3, Copy, CheckSquare, XSquare, RotateCcw
 } from 'lucide-react';
 import { 
   PieChart, Pie, Cell, Legend, Tooltip 
@@ -30,6 +30,7 @@ import {
   getPrimaryPhone, 
   getPrimaryEmail, 
   formatDate, 
+  MESSAGING_VARIABLE_TOKENS,
   type Message, 
   type MessageCategory,
   type MessageTemplate
@@ -45,14 +46,13 @@ const DEFAULT_TEMPLATES: MessageTemplate[] = [
   { id: 't4', label: 'Attendance Alert', category: 'attendance', channel: 'whatsapp', body: 'Respected {name|Parent}, student {first_name} was marked absent today.' },
 ];
 
-const CHART_COLORS = ['var(--color-info)', 'var(--color-success)', 'var(--color-warning)']; // Info (SMS), Success (WA), Warning (Email)
+const CHART_COLORS = ['var(--color-info)', 'var(--color-success)', 'var(--color-warning)'];
 
 export default function MessagingPage(): React.JSX.Element {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { can } = usePermissions();
 
-  // Load all system contacts using the contacts hook
   const contactsCollectionRaw = useContactsCollection();
   const allContacts = useMemo(() => contactsCollectionRaw || [], [contactsCollectionRaw]);
 
@@ -63,40 +63,40 @@ export default function MessagingPage(): React.JSX.Element {
     return () => window.removeEventListener('local-database-update', handler);
   }, []);
 
-  // Local state
   const [activeTab, setActiveTab] = usePersistedTabState<'work' | 'reports' | 'setup'>("messaging_active_tab", "work");
   const [searchContact, setSearchContact] = useState('');
   const [searchLog, setSearchLog] = useState('');
   const [searchTemplate, setSearchTemplate] = useState('');
   
-  // Advanced filters
   const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female' | 'unspecified'>('all');
   const [roleFilter, setRoleFilter] = useState<'all' | 'students' | 'teachers' | 'staff' | 'contacts'>('all');
   const [channelFilter, setChannelFilter] = useState<'all' | 'sms' | 'whatsapp' | 'email'>('all');
+  const [logCategoryFilter, setLogCategoryFilter] = useState<string>('all');
   const [templateCategoryFilter, setTemplateCategoryFilter] = useState<string>('all');
   
-  // Custom templates form state
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [templateLabel, setTemplateLabel] = useState('');
   const [templateBody, setTemplateBody] = useState('');
   const [templateCategory, setTemplateCategory] = useState<MessageCategory>('general');
   const [templateChannel, setTemplateChannel] = useState<'all' | 'sms' | 'whatsapp' | 'email'>('all');
 
-  // Dialog states for confirmations
   const [deleteTemplateId, setDeleteTemplateId] = useState<string | null>(null);
   const [confirmClearLogsOpen, setConfirmClearLogsOpen] = useState(false);
 
   const [selectedRecipients, setSelectedRecipients] = useState<Record<string | number, boolean>>({});
-  const [composerTarget, setComposerTarget] = useState<{ channel: 'sms' | 'whatsapp' | 'email'; recipients: MessagingRecipient[] } | null>(null);
+  const [composerTarget, setComposerTarget] = useState<{ 
+    channel: 'sms' | 'whatsapp' | 'email'; 
+    recipients: MessagingRecipient[];
+    initialMessage?: string;
+    initialSubject?: string;
+  } | null>(null);
 
-  // Hide the setup tab if the user has no configuration permissions
   const visibleTabs = useFilteredModuleTierTabs({
     canViewSetup: can('configuration.view'),
   });
 
-  // Load templates from DB (merged with defaults)
   const templates = useMemo(() => {
-    const _tick = localTick; // re-evaluate on local database update
+    const _tick = localTick;
     if (!user) return DEFAULT_TEMPLATES;
     const dbKey = `messages_templates_u:${user.id}`;
     const custom = getCollection<MessageTemplate>(dbKey) || [];
@@ -111,7 +111,6 @@ export default function MessagingPage(): React.JSX.Element {
     });
   }, [templates, searchTemplate, templateCategoryFilter]);
 
-  // Handle template creation or update
   const handleSaveTemplate = (e: React.FormEvent): void => {
     e.preventDefault();
     if (!user) return;
@@ -174,6 +173,11 @@ export default function MessagingPage(): React.JSX.Element {
     notify.success(t('messaging.duplicateSuccess'));
   };
 
+  const handleCopyTemplateBody = (body: string): void => {
+    navigator.clipboard.writeText(body);
+    notify.success(t('messaging.copySuccess'));
+  };
+
   const handleCancelTemplateEdit = (): void => {
     setEditingTemplateId(null);
     setTemplateLabel('');
@@ -186,7 +190,6 @@ export default function MessagingPage(): React.JSX.Element {
     setTemplateBody((prev) => (prev ? `${prev} ${tag}` : tag));
   };
 
-  // Handle template deletion confirm action
   const confirmDeleteTemplate = (): void => {
     if (!user || !deleteTemplateId) return;
     const dbKey = `messages_templates_u:${user.id}`;
@@ -197,15 +200,13 @@ export default function MessagingPage(): React.JSX.Element {
     notify.success(t('common.delete'));
   };
 
-  // Load sent messages history from DB
   const messageLogs = useMemo(() => {
-    const _tick = localTick; // re-evaluate on local database update
+    const _tick = localTick;
     if (!user) return [];
     const dbKey = `messages_u:${user.id}`;
     return getCollection<Message>(dbKey) || [];
   }, [user, localTick]);
 
-  // Handle clearing log history confirm action
   const confirmClearLogs = (): void => {
     if (!user) return;
     saveCollection(`messages_u:${user.id}`, []);
@@ -213,7 +214,6 @@ export default function MessagingPage(): React.JSX.Element {
     notify.success(t('messaging.clearLogs'));
   };
 
-  // Filter contacts to find eligible recipients
   const filteredContacts = useMemo(() => {
     return allContacts.filter((c) => {
       const nameMatch = getDisplayName(c).toLowerCase().includes(searchContact.toLowerCase());
@@ -232,20 +232,19 @@ export default function MessagingPage(): React.JSX.Element {
     });
   }, [allContacts, searchContact, genderFilter, roleFilter]);
 
-  // Filter message history logs
   const filteredLogs = useMemo(() => {
     return messageLogs.filter((log) => {
       const channelMatch = channelFilter === 'all' || log.channel === channelFilter;
+      const categoryMatch = logCategoryFilter === 'all' || (log.category || 'general') === logCategoryFilter;
       const bodyMatch = log.body.toLowerCase().includes(searchLog.toLowerCase());
       const recipientName = allContacts.find((c) => c.id === log.contactId);
       const nameMatch = recipientName 
         ? getDisplayName(recipientName).toLowerCase().includes(searchLog.toLowerCase())
         : false;
-      return channelMatch && (bodyMatch || nameMatch);
+      return channelMatch && categoryMatch && (bodyMatch || nameMatch);
     });
-  }, [messageLogs, allContacts, searchLog, channelFilter]);
+  }, [messageLogs, allContacts, searchLog, channelFilter, logCategoryFilter]);
 
-  // Toggle single recipient select state
   const handleToggleRecipient = (id: string | number): void => {
     setSelectedRecipients((prev) => ({
       ...prev,
@@ -253,7 +252,6 @@ export default function MessagingPage(): React.JSX.Element {
     }));
   };
 
-  // Select/Deselect all filtered contacts
   const handleToggleAllVisible = (checked: boolean): void => {
     const nextState = { ...selectedRecipients };
     filteredContacts.forEach((c) => {
@@ -290,7 +288,6 @@ export default function MessagingPage(): React.JSX.Element {
     setSelectedRecipients({});
   };
 
-  // Map selected IDs back to recipient details
   const currentSelectedList = useMemo(() => {
     return allContacts
       .filter((c) => selectedRecipients[c.id])
@@ -304,19 +301,38 @@ export default function MessagingPage(): React.JSX.Element {
 
   const allVisibleSelected = filteredContacts.length > 0 && filteredContacts.every((c) => selectedRecipients[c.id]);
 
-  // Open Composer Dialog
-  const triggerCompose = (channel: 'sms' | 'whatsapp' | 'email'): void => {
-    if (currentSelectedList.length === 0) {
+  const triggerCompose = (channel: 'sms' | 'whatsapp' | 'email', overrideRecipients?: MessagingRecipient[], initialMsg?: string, initialSubj?: string): void => {
+    const targets = overrideRecipients || currentSelectedList;
+    if (targets.length === 0) {
       notify.error(t('messaging.selectRecipientsDesc'));
       return;
     }
     setComposerTarget({
       channel,
-      recipients: currentSelectedList,
+      recipients: targets,
+      initialMessage: initialMsg,
+      initialSubject: initialSubj,
     });
   };
 
-  // Metrics
+  const handleResendLog = (log: Message): void => {
+    const recipient = allContacts.find((c) => c.id === log.contactId);
+    const targetRecipient: MessagingRecipient = recipient ? {
+      id: recipient.id,
+      name: getDisplayName(recipient),
+      phone: getPrimaryPhone(recipient) || '',
+      email: getPrimaryEmail(recipient) || '',
+    } : {
+      id: log.contactId,
+      name: `Contact #${log.contactId}`,
+      phone: '',
+      email: '',
+    };
+
+    triggerCompose(log.channel, [targetRecipient], log.body, log.subject);
+    notify.success(t('messaging.resendSuccess'));
+  };
+
   const stats = useMemo(() => {
     const total = messageLogs.length;
     const sms = messageLogs.filter((l) => l.channel === 'sms').length;
@@ -325,7 +341,6 @@ export default function MessagingPage(): React.JSX.Element {
     return { total, sms, wa, email };
   }, [messageLogs]);
 
-  // Chart Data
   const chartData = useMemo(() => {
     return [
       { name: 'SMS', value: stats.sms },
@@ -369,7 +384,6 @@ export default function MessagingPage(): React.JSX.Element {
       }
     >
 
-      {/* Accordion Tabs Wrapper */}
       <ResponsiveAccordionTabs
         tabs={visibleTabs}
         activeTab={activeTab}
@@ -378,8 +392,7 @@ export default function MessagingPage(): React.JSX.Element {
       >
         {activeTab === 'work' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Recipient Selector list */}
-            <div className="lg:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4">
+            <div className="lg:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4 shadow-xs">
               <div className="flex justify-between items-start flex-wrap gap-4">
                 <div className="space-y-1">
                   <h4 className="text-sm font-bold text-foreground">1. {t('messaging.selectRecipients')}</h4>
@@ -387,7 +400,6 @@ export default function MessagingPage(): React.JSX.Element {
                 </div>
 
                 <div className="flex items-center gap-3 flex-wrap">
-                  {/* Role Filter */}
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs text-muted-foreground flex items-center gap-1"><Filter className="w-3 h-3" /> {t('messaging.filterByRole')}:</span>
                     <div className="flex rounded-lg border border-border bg-muted/40 p-0.5 text-[11px]">
@@ -397,7 +409,7 @@ export default function MessagingPage(): React.JSX.Element {
                           onClick={() => setRoleFilter(role)}
                           className={`px-2 py-0.5 rounded-md font-bold uppercase transition-all ${
                             roleFilter === role 
-                              ? 'bg-background shadow-sm text-foreground' 
+                              ? 'bg-background shadow-xs text-foreground' 
                               : 'text-muted-foreground hover:text-foreground'
                           }`}
                         >
@@ -407,7 +419,6 @@ export default function MessagingPage(): React.JSX.Element {
                     </div>
                   </div>
 
-                  {/* Gender Filter Segmented Controls */}
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs text-muted-foreground">{t('contacts.reportFields.gender')}:</span>
                     <div className="flex rounded-lg border border-border bg-muted/40 p-0.5 text-[11px]">
@@ -417,7 +428,7 @@ export default function MessagingPage(): React.JSX.Element {
                           onClick={() => setGenderFilter(gender)}
                           className={`px-2 py-0.5 rounded-md font-bold uppercase transition-all ${
                             genderFilter === gender 
-                              ? 'bg-background shadow-sm text-foreground' 
+                              ? 'bg-background shadow-xs text-foreground' 
                               : 'text-muted-foreground hover:text-foreground'
                           }`}
                         >
@@ -437,7 +448,6 @@ export default function MessagingPage(): React.JSX.Element {
                   className="flex-grow max-w-sm"
                 />
 
-                {/* Quick Selection Actions */}
                 <div className="flex items-center gap-1.5 text-xs">
                   <Button variant="outline" size="sm" onClick={handleSelectAllPhone} className="h-8 text-[11px] font-semibold">
                     <CheckSquare className="w-3.5 h-3.5 mr-1 text-info" />
@@ -519,8 +529,7 @@ export default function MessagingPage(): React.JSX.Element {
               </div>
             </div>
 
-            {/* Action Campaign Panel */}
-            <div className="border border-border rounded-xl bg-card p-4 space-y-4 flex flex-col justify-between">
+            <div className="border border-border rounded-xl bg-card p-4 space-y-4 flex flex-col justify-between shadow-xs">
               <div className="space-y-4">
                 <div className="space-y-1">
                   <h4 className="text-sm font-bold text-foreground">2. {t('messaging.confirmRecipients')}</h4>
@@ -549,7 +558,7 @@ export default function MessagingPage(): React.JSX.Element {
                 <Button
                   onClick={() => triggerCompose('whatsapp')}
                   disabled={currentSelectedList.length === 0}
-                  className="w-full bg-success hover:bg-success/90 text-success-foreground font-semibold"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-xs"
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
                   {t('messaging.sendWhatsapp')}
@@ -557,7 +566,7 @@ export default function MessagingPage(): React.JSX.Element {
                 <Button
                   onClick={() => triggerCompose('sms')}
                   disabled={currentSelectedList.length === 0}
-                  className="w-full bg-info hover:bg-info/90 text-info-foreground font-semibold"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-xs"
                 >
                   <MessageSquare className="w-4 h-4 mr-2" />
                   {t('messaging.sendSms')}
@@ -565,7 +574,7 @@ export default function MessagingPage(): React.JSX.Element {
                 <Button
                   onClick={() => triggerCompose('email')}
                   disabled={currentSelectedList.length === 0}
-                  className="w-full bg-warning hover:bg-warning/90 text-warning-foreground font-semibold"
+                  className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-xs"
                 >
                   <Mail className="w-4 h-4 mr-2" />
                   {t('messaging.sendEmail')}
@@ -577,18 +586,16 @@ export default function MessagingPage(): React.JSX.Element {
 
         {activeTab === 'reports' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Message history log table */}
-            <div className="lg:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4">
+            <div className="lg:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4 shadow-xs">
               <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-3 flex-grow">
+                <div className="flex items-center gap-2 flex-grow flex-wrap">
                   <SearchBar
                     placeholder={t('messaging.search.placeholder')}
                     value={searchLog}
                     onChange={setSearchLog}
-                    className="flex-grow max-w-sm"
+                    className="flex-grow max-w-xs"
                   />
 
-                  {/* Channel Filter Selector */}
                   <div className="flex rounded-lg border border-border bg-muted/40 p-0.5 text-xs">
                     {(['all', 'sms', 'whatsapp', 'email'] as const).map((ch) => (
                       <button
@@ -596,7 +603,7 @@ export default function MessagingPage(): React.JSX.Element {
                         onClick={() => setChannelFilter(ch)}
                         className={`px-2.5 py-1 rounded-md font-bold uppercase transition-all ${
                           channelFilter === ch 
-                            ? 'bg-background shadow-sm text-foreground' 
+                            ? 'bg-background shadow-xs text-foreground' 
                             : 'text-muted-foreground hover:text-foreground'
                         }`}
                       >
@@ -604,6 +611,20 @@ export default function MessagingPage(): React.JSX.Element {
                       </button>
                     ))}
                   </div>
+
+                  <FormSelect
+                    id="logCategory"
+                    value={logCategoryFilter}
+                    onChange={setLogCategoryFilter}
+                    options={[
+                      { value: 'all', label: t('messaging.category.all') },
+                      { value: 'general', label: t('messaging.category.general') },
+                      { value: 'academic', label: t('messaging.category.academic') },
+                      { value: 'financial', label: t('messaging.category.financial') },
+                      { value: 'attendance', label: t('messaging.category.attendance') },
+                      { value: 'emergency', label: t('messaging.category.emergency') },
+                    ]}
+                  />
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -612,13 +633,14 @@ export default function MessagingPage(): React.JSX.Element {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        const headers = ["Recipient", "Channel", "Body", "Sent At"];
+                        const headers = ["Recipient", "Channel", "Category", "Body", "Sent At"];
                         const rows = filteredLogs.map((log) => {
                           const recipient = allContacts.find((c) => c.id === log.contactId);
                           const name = recipient ? getDisplayName(recipient) : `Contact #${log.contactId}`;
                           return [
                             `"${name.replace(/"/g, '""')}"`,
                             log.channel,
+                            log.category || 'general',
                             `"${log.body.replace(/"/g, '""')}"`,
                             log.sentAt,
                           ].join(",");
@@ -662,6 +684,7 @@ export default function MessagingPage(): React.JSX.Element {
                         <th className="px-4 py-3">{t('messaging.channel')}</th>
                         <th className="px-4 py-3">{t('messaging.messageBody')}</th>
                         <th className="px-4 py-3">{t('messaging.dateSent')}</th>
+                        <th className="px-4 py-3 text-center">{t('common.actions')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/60">
@@ -686,11 +709,23 @@ export default function MessagingPage(): React.JSX.Element {
                                 {log.channel}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-muted-foreground max-w-md truncate" title={log.body}>
+                            <td className="px-4 py-3 text-muted-foreground max-w-xs truncate" title={log.body}>
                               {log.body}
                             </td>
                             <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
                               {formatDate(log.sentAt)}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleResendLog(log)}
+                                className="h-7 text-xs text-primary font-semibold hover:bg-primary/10"
+                                title={t('messaging.resend')}
+                              >
+                                <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                                {t('messaging.resend')}
+                              </Button>
                             </td>
                           </tr>
                         );
@@ -706,8 +741,7 @@ export default function MessagingPage(): React.JSX.Element {
               )}
             </div>
 
-            {/* Volume Breakdown Recharts PieChart */}
-            <div className="border border-border rounded-xl bg-card p-4 flex flex-col justify-between">
+            <div className="border border-border rounded-xl bg-card p-4 flex flex-col justify-between shadow-xs">
               <div className="space-y-1">
                 <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
                   <BarChart2 className="w-4 h-4 text-primary" /> {t('messaging.volumeBreakdown')}
@@ -749,8 +783,7 @@ export default function MessagingPage(): React.JSX.Element {
 
         {activeTab === 'setup' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Create / Edit Template Form */}
-            <div className="border border-border rounded-xl bg-card p-4 space-y-4">
+            <div className="border border-border rounded-xl bg-card p-4 space-y-4 shadow-xs">
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
@@ -815,7 +848,7 @@ export default function MessagingPage(): React.JSX.Element {
                     <label className={FORM_LABEL} htmlFor="tplBody">{t('messaging.messageBody')}</label>
                   </div>
                   <div className="flex flex-wrap items-center gap-1 mb-2">
-                    {['{name}', '{first_name}', '{phone}', '{email}', '{date}', '{due_date}', '{amount}', '{madrasa_name}'].map((token) => (
+                    {MESSAGING_VARIABLE_TOKENS.map(({ token }) => (
                       <button
                         key={token}
                         type="button"
@@ -846,8 +879,7 @@ export default function MessagingPage(): React.JSX.Element {
               </form>
             </div>
 
-            {/* Existing Templates Listing */}
-            <div className="md:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4">
+            <div className="md:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4 shadow-xs">
               <div className="flex justify-between items-center flex-wrap gap-3">
                 <div className="space-y-1">
                   <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
@@ -886,7 +918,7 @@ export default function MessagingPage(): React.JSX.Element {
                       <th className="px-4 py-2.5">{t('messaging.templateLabel')}</th>
                       <th className="px-4 py-2.5">{t('messaging.category')}</th>
                       <th className="px-4 py-2.5">{t('messaging.templateCopy')}</th>
-                      <th className="px-4 py-2.5 w-28 text-center">{t('common.actions')}</th>
+                      <th className="px-4 py-2.5 w-32 text-center">{t('common.actions')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
@@ -913,11 +945,20 @@ export default function MessagingPage(): React.JSX.Element {
                             <Button
                               variant="ghost"
                               size="icon"
+                              onClick={() => handleCopyTemplateBody(tpl.body)}
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
+                              title={t('messaging.copyTemplate')}
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => handleDuplicateTemplate(tpl)}
                               className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
                               title={t('messaging.duplicateTemplate')}
                             >
-                              <Copy className="w-3.5 h-3.5" />
+                              <Copy className="w-3.5 h-3.5 text-primary/70" />
                             </Button>
                             {tpl.id.startsWith('custom_') ? (
                               <>
@@ -964,12 +1005,13 @@ export default function MessagingPage(): React.JSX.Element {
         )}
       </ResponsiveAccordionTabs>
 
-      {/* Shared composer modal */}
       {composerTarget && (
         <MessageComposer
           channel={composerTarget.channel}
           recipients={composerTarget.recipients}
           templates={templates}
+          initialMessage={composerTarget.initialMessage}
+          initialSubject={composerTarget.initialSubject}
           onClose={() => {
             setComposerTarget(null);
             setSelectedRecipients({});
@@ -977,7 +1019,6 @@ export default function MessagingPage(): React.JSX.Element {
         />
       )}
 
-      {/* Confirm dialog for deleting custom template */}
       <ConfirmAlertDialog
         open={Boolean(deleteTemplateId)}
         onOpenChange={(open) => { if (!open) setDeleteTemplateId(null); }}
@@ -988,7 +1029,6 @@ export default function MessagingPage(): React.JSX.Element {
         onConfirm={confirmDeleteTemplate}
       />
 
-      {/* Confirm dialog for clearing all message logs */}
       <ConfirmAlertDialog
         open={confirmClearLogsOpen}
         onOpenChange={setConfirmClearLogsOpen}
@@ -1001,4 +1041,3 @@ export default function MessagingPage(): React.JSX.Element {
     </ModulePageShell>
   );
 }
-

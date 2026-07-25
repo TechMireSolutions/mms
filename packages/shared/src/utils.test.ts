@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { calculateSmsSegments } from "./smsUtils.js";
-import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray, personalizeMessage } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray, personalizeMessage, validateRecipientAddress, MESSAGING_VARIABLE_TOKENS } from "./utils.js";
+
 
 
 
@@ -534,6 +535,53 @@ describe("calculateSmsSegments", () => {
     expect(res.remainingInSegment).toBe(38); // 67 - (96 % 67) = 38
   });
 });
+
+describe("validateRecipientAddress", () => {
+  it("validates email addresses correctly", () => {
+    expect(validateRecipientAddress({ email: "user@example.com" }, "email")).toEqual({
+      isValid: true,
+      address: "user@example.com",
+    });
+
+    expect(validateRecipientAddress({ email: "invalid-email" }, "email")).toEqual({
+      isValid: false,
+      address: "invalid-email",
+      reason: "invalid_email_format",
+    });
+
+    expect(validateRecipientAddress({}, "email")).toEqual({
+      isValid: false,
+      address: "",
+      reason: "missing_email",
+    });
+  });
+
+  it("validates phone numbers correctly for sms/whatsapp", () => {
+    expect(validateRecipientAddress({ phone: "+92 300 1234567" }, "whatsapp")).toEqual({
+      isValid: true,
+      address: "+92 300 1234567",
+    });
+
+    expect(validateRecipientAddress({ phone: "123" }, "sms")).toEqual({
+      isValid: false,
+      address: "123",
+      reason: "invalid_phone_format",
+    });
+
+    expect(validateRecipientAddress({}, "sms")).toEqual({
+      isValid: false,
+      address: "",
+      reason: "missing_phone",
+    });
+  });
+
+  it("exports MESSAGING_VARIABLE_TOKENS with standard keys", () => {
+    expect(MESSAGING_VARIABLE_TOKENS.length).toBeGreaterThan(5);
+    const hasNameToken = MESSAGING_VARIABLE_TOKENS.some((t) => t.token === "{name}");
+    expect(hasNameToken).toBe(true);
+  });
+});
+
 
 
 

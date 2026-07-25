@@ -1543,5 +1543,46 @@ export function personalizeMessage(
   });
 }
 
+export interface VariableToken {
+  token: string;
+  labelKey: string;
+  fallbackExample: string;
+}
+
+export const MESSAGING_VARIABLE_TOKENS: VariableToken[] = [
+  { token: '{name}', labelKey: 'messaging.tokenFullName', fallbackExample: '{name|Valued Parent}' },
+  { token: '{first_name}', labelKey: 'messaging.tokenFirstName', fallbackExample: '{first_name|Parent}' },
+  { token: '{phone}', labelKey: 'messaging.tokenPhone', fallbackExample: '{phone}' },
+  { token: '{email}', labelKey: 'messaging.tokenEmail', fallbackExample: '{email}' },
+  { token: '{date}', labelKey: 'messaging.tokenDate', fallbackExample: '{date}' },
+  { token: '{due_date}', labelKey: 'messaging.tokenDueDate', fallbackExample: '{due_date}' },
+  { token: '{amount}', labelKey: 'messaging.tokenAmount', fallbackExample: '{amount|0 PKR}' },
+  { token: '{madrasa_name}', labelKey: 'messaging.tokenMadrasaName', fallbackExample: '{madrasa_name|Madrasa}' },
+  { token: '{salutation}', labelKey: 'messaging.tokenSalutation', fallbackExample: '{salutation|Respected}' },
+  { token: '{time}', labelKey: 'messaging.tokenTime', fallbackExample: '{time}' },
+];
+
+/**
+ * Validates whether a recipient has a valid contact address for the chosen dispatch channel.
+ */
+export function validateRecipientAddress(
+  recipient: PersonalizeRecipient,
+  channel: 'sms' | 'whatsapp' | 'email'
+): { isValid: boolean; address: string; reason?: 'missing_email' | 'invalid_email_format' | 'missing_phone' | 'invalid_phone_format' } {
+  if (channel === 'email') {
+    const email = recipient.email?.trim() || '';
+    if (!email) return { isValid: false, address: '', reason: 'missing_email' };
+    const isValidFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    return { isValid: isValidFormat, address: email, reason: isValidFormat ? undefined : 'invalid_email_format' };
+  } else {
+    const phone = recipient.phone?.trim() || '';
+    if (!phone) return { isValid: false, address: '', reason: 'missing_phone' };
+    const cleanDigits = phone.replace(/\D/g, '');
+    const isValidLength = cleanDigits.length >= 7 && cleanDigits.length <= 15;
+    return { isValid: isValidLength, address: phone, reason: isValidLength ? undefined : 'invalid_phone_format' };
+  }
+}
+
+
 
 
