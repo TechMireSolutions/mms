@@ -14,6 +14,49 @@ const REQUIRED_TAB_I18N: Partial<Record<string, AppTranslationKey>> = {
 
 const EMAIL_RE = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
 
+const TEXT_LIKE_FIELD_TYPES: ReadonlySet<FieldDefinition['type']> = new Set([
+  "text",
+  "textarea",
+  "email",
+  "url",
+  "date",
+  "datetime",
+  "select",
+  "single_select",
+  "currency",
+]);
+
+const LIST_TABS_PROP_MAP: Record<string, string> = {
+  phones: "phones",
+  emails: "emails",
+  addresses: "addresses",
+  socials: "socials",
+  emergency: "emergencyContacts",
+};
+
+const LIST_TAB_TO_TAB_ID: Record<string, string> = {
+  phones: "phones",
+  emails: "emails",
+  addresses: "addresses",
+  socials: "socials",
+  emergencyContacts: "emergency",
+  relationships: "relationships",
+};
+
+const LIST_TAB_PREFIX_MAP: Record<string, string> = {
+  phones: "Phone",
+  emails: "Email",
+  addresses: "Address",
+  socials: "Social Link",
+  emergencyContacts: "Emergency Contact",
+  relationships: "Relationship",
+};
+
+function isValidOption(options: unknown[], targetValue: string): boolean {
+  const normalizedTarget = targetValue.trim().toLowerCase();
+  return options.some((opt) => typeof opt === "string" && opt.trim().toLowerCase() === normalizedTarget);
+}
+
 /**
  * Compiles a dynamic custom field validation schema based on custom field configuration parameters.
  *
@@ -96,11 +139,7 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
       if (fieldDefinition.options && fieldDefinition.options.length > 0) {
         baseSchema = z.string().refine((value) => {
           if (!value) return true;
-          const valLower = value.trim().toLowerCase();
-          return fieldDefinition.options!.some(opt => {
-            if (typeof opt !== "string") return false;
-            return opt.trim().toLowerCase() === valLower;
-          });
+          return isValidOption(fieldDefinition.options!, value);
         }, {
           message: `${fieldDefinition.label} must be one of the allowed options.`,
         });
@@ -113,13 +152,7 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
     case "multi_select": {
       if (fieldDefinition.options && fieldDefinition.options.length > 0) {
         baseSchema = z.array(z.string()).refine((values) => {
-          return values.every(valueOption => {
-            const valOptLower = valueOption.trim().toLowerCase();
-            return fieldDefinition.options!.some(opt => {
-              if (typeof opt !== "string") return false;
-              return opt.trim().toLowerCase() === valOptLower;
-            });
-          });
+          return values.every((valOpt) => isValidOption(fieldDefinition.options!, valOpt));
         }, {
           message: `${fieldDefinition.label} contains invalid options.`,
         });
@@ -166,7 +199,7 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
   }
 
   if (fieldDefinition.required) {
-    if (fieldDefinition.type === "text" || fieldDefinition.type === "textarea" || fieldDefinition.type === "email" || fieldDefinition.type === "url" || fieldDefinition.type === "date" || fieldDefinition.type === "datetime" || fieldDefinition.type === "select" || fieldDefinition.type === "single_select" || fieldDefinition.type === "currency") {
+    if (TEXT_LIKE_FIELD_TYPES.has(fieldDefinition.type)) {
       baseSchema = baseSchema.refine((value) => typeof value === "string" && value.trim() !== "", {
         message: `${fieldDefinition.label} is required.`,
       });
@@ -248,18 +281,9 @@ export function buildDynamicContactSchema(
     date: z.string()
   })).optional().nullable();
 
-  // List Tabs (nested array properties of Contact)
-  const listTabsMapping: Record<string, string> = {
-    phones: "phones",
-    emails: "emails",
-    addresses: "addresses",
-    socials: "socials",
-    emergency: "emergencyContacts",
-  };
-
   // 1. Fields for tabs that map to top-level properties of Contact (basic + custom tabs)
   Object.keys(fields).forEach((tabId) => {
-    if (listTabsMapping[tabId]) return;
+    if (LIST_TABS_PROP_MAP[tabId]) return;
     if (!enabledTabIds.has(tabId) && tabId !== "basic") return;
 
     if (viewerRole) {
@@ -279,7 +303,7 @@ export function buildDynamicContactSchema(
   });
 
   // 2. List Tabs (nested array properties of Contact)
-  Object.entries(listTabsMapping).forEach(([tabId, propKey]) => {
+  Object.entries(LIST_TABS_PROP_MAP).forEach(([tabId, propKey]) => {
     if (!enabledTabIds.has(tabId)) {
       return;
     }
@@ -337,31 +361,13 @@ export function formatZodIssues(error: z.ZodError, submittedValue: unknown, fiel
     const path = issue.path;
     const message = issue.message;
 
-    const listTabKeys = ["phones", "emails", "addresses", "socials", "emergencyContacts", "relationships"];
-    if (listTabKeys.includes(path[0] as string) && typeof path[1] === "number") {
-      const arrayName = path[0] as string;
+    if (path[0] && typeof path[0] === "string" && LIST_TAB_TO_TAB_ID[path[0]] && typeof path[1] === "number") {
+      const arrayName = path[0];
       const index = path[1];
       const fieldId = path[2] as string;
       
-      const tabIdMap: Record<string, string> = {
-        phones: "phones",
-        emails: "emails",
-        addresses: "addresses",
-        socials: "socials",
-        emergencyContacts: "emergency",
-        relationships: "relationships",
-      };
-      const prefixMap: Record<string, string> = {
-        phones: "Phone",
-        emails: "Email",
-        addresses: "Address",
-        socials: "Social Link",
-        emergencyContacts: "Emergency Contact",
-        relationships: "Relationship",
-      };
-      
-      const tabId = tabIdMap[arrayName];
-      const prefix = prefixMap[arrayName];
+      const tabId = LIST_TAB_TO_TAB_ID[arrayName] || arrayName;
+      const prefix = LIST_TAB_PREFIX_MAP[arrayName] || "Item";
       
       errors.push({
         fieldId,
@@ -434,7 +440,7 @@ export function getDefaultFieldValue(field: FieldDefinition): unknown {
 export function getDefaultModuleFieldValue(field: { id: string; type?: string; defaultValue?: unknown }): unknown {
   return getDefaultFieldValue({
     key: field.id,
-    type: (field.type || "text") as any,
+    type: (field.type || "text") as FieldDefinition['type'],
     defaultValue: field.defaultValue,
     enabled: true,
     order: 0,

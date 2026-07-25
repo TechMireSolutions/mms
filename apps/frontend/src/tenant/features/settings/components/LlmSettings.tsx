@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Brain,
   Sparkles,
@@ -27,14 +27,30 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
+import { useOverlayBehavior } from '@/hooks/useOverlayBehavior';
 import { apiJson } from '@/lib/apiClient';
 import { SettingsCallout, SettingsPanel } from '@/components/ui/SettingsShell';
 import { LLM_PROVIDERS_META, type LlmProviderType, type LlmConfig } from '@mms/shared';
 import { Slider } from '@/components/ui/slider';
 
+export interface LlmTestMetrics {
+  latencyMs: number;
+  characterCount: number;
+  wordCount: number;
+}
 
+export interface LlmTestResult {
+  configId?: string;
+  success: boolean;
+  response?: string;
+  message?: string;
+  metrics?: LlmTestMetrics;
+}
 
-
+function formatLlmSpeed(wordCount: number, latencyMs: number): string {
+  if (latencyMs <= 0) return 'N/A';
+  return `${(wordCount / (latencyMs / 1000)).toFixed(1)} W/s`;
+}
 
 export default function LlmSettings(): React.JSX.Element {
   const { t } = useTranslation();
@@ -52,6 +68,14 @@ export default function LlmSettings(): React.JSX.Element {
   // Modal open states
   const [modalOpen, setModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<LlmConfig | null>(null);
+
+  const modalRef = useOverlayBehavior<HTMLDivElement>({
+    open: modalOpen,
+    onClose: () => setModalOpen(false),
+  });
+
+
+
 
   // Form states
   const [formName, setFormName] = useState('');
@@ -125,16 +149,7 @@ export default function LlmSettings(): React.JSX.Element {
   const dragControls = useDragControls();
 
   const [modalTesting, setModalTesting] = useState(false);
-  const [modalTestResult, setModalTestResult] = useState<{
-    success: boolean;
-    response?: string;
-    message?: string;
-    metrics?: {
-      latencyMs: number;
-      characterCount: number;
-      wordCount: number;
-    };
-  } | null>(null);
+  const [modalTestResult, setModalTestResult] = useState<LlmTestResult | null>(null);
 
   const handleModalTestConnection = async () => {
     setModalTesting(true);
@@ -159,16 +174,7 @@ export default function LlmSettings(): React.JSX.Element {
     };
 
     try {
-      const res = await apiJson<{
-        success: boolean;
-        response?: string;
-        message?: string;
-        metrics?: {
-          latencyMs: number;
-          characterCount: number;
-          wordCount: number;
-        };
-      }>(
+      const res = await apiJson<LlmTestResult>(
         '/api/ai/test',
         {
           method: 'POST',
@@ -192,17 +198,7 @@ export default function LlmSettings(): React.JSX.Element {
   // Connection testing state (can test within modal or globally)
   const testPrompt = 'Write a short greeting for a school portal.';
   const [testingId, setTestingId] = useState<string | null>(null);
-  const [testResult, setTestResult] = useState<{
-    configId: string;
-    success: boolean;
-    response?: string;
-    message?: string;
-    metrics?: {
-      latencyMs: number;
-      characterCount: number;
-      wordCount: number;
-    };
-  } | null>(null);
+  const [testResult, setTestResult] = useState<LlmTestResult | null>(null);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -213,7 +209,7 @@ export default function LlmSettings(): React.JSX.Element {
   >({});
 
   // Background health check logic
-  const runHealthCheck = async (configId: string) => {
+  const runHealthCheck = useCallback(async (configId: string) => {
     setHealthStatuses((prev) => ({ ...prev, [configId]: 'testing' }));
     try {
       const res = await apiJson<{ success: boolean }>(
@@ -230,7 +226,7 @@ export default function LlmSettings(): React.JSX.Element {
     } catch {
       setHealthStatuses((prev) => ({ ...prev, [configId]: 'failed' }));
     }
-  };
+  }, []);
 
   useEffect(() => {
     // Run silent health checks for all configs when they are loaded or changed
@@ -239,19 +235,14 @@ export default function LlmSettings(): React.JSX.Element {
         void runHealthCheck(config.id);
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [configs]);
+  }, [configs, healthStatuses, runHealthCheck]);
 
   // Sandbox states (conversational)
   interface SandboxMessage {
     id: string;
     role: 'user' | 'assistant';
     content: string;
-    metrics?: {
-      latencyMs: number;
-      characterCount: number;
-      wordCount: number;
-    };
+    metrics?: LlmTestMetrics;
     error?: boolean;
   }
 
@@ -285,16 +276,7 @@ export default function LlmSettings(): React.JSX.Element {
     }));
 
     try {
-      const res = await apiJson<{
-        success: boolean;
-        response?: string;
-        message?: string;
-        metrics?: {
-          latencyMs: number;
-          characterCount: number;
-          wordCount: number;
-        };
-      }>(
+      const res = await apiJson<LlmTestResult>(
         '/api/ai/test',
         {
           method: 'POST',
@@ -440,7 +422,7 @@ export default function LlmSettings(): React.JSX.Element {
     setTestResult(null);
 
     try {
-      const payload: Record<string, any> = { prompt: testPrompt };
+      const payload: Record<string, unknown> = { prompt: testPrompt };
       if (customConfig) {
         payload.configId = customConfig.id;
       } else {
@@ -449,16 +431,7 @@ export default function LlmSettings(): React.JSX.Element {
 
       setHealthStatuses((prev) => ({ ...prev, [configId]: 'testing' }));
 
-      const res = await apiJson<{
-        success: boolean;
-        response?: string;
-        message?: string;
-        metrics?: {
-          latencyMs: number;
-          characterCount: number;
-          wordCount: number;
-        };
-      }>(
+      const res = await apiJson<LlmTestResult>(
         '/api/ai/test',
         {
           method: 'POST',
@@ -581,11 +554,11 @@ export default function LlmSettings(): React.JSX.Element {
                                 {status === 'testing' ? (
                                   <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />
                                 ) : status === 'verified' ? (
-                                  <span className="h-2 w-2 rounded-full bg-success shadow-[0_0_8px_var(--color-success)] shrink-0" title="Active Connection" />
+                                  <span className="h-2 w-2 rounded-full bg-success shadow-[0_0_8px_var(--color-success)] shrink-0" title={t('settings.llmTestSuccess')} />
                                 ) : status === 'failed' ? (
-                                  <span className="h-2 w-2 rounded-full bg-destructive shadow-[0_0_8px_var(--color-destructive)] shrink-0" title="Connection Failed" />
+                                  <span className="h-2 w-2 rounded-full bg-destructive shadow-[0_0_8px_var(--color-destructive)] shrink-0" title={t('settings.llmTestFailed')} />
                                 ) : (
-                                  <span className="h-2 w-2 rounded-full bg-warning shadow-[0_0_8px_var(--color-warning)] shrink-0" title="Untested" />
+                                  <span className="h-2 w-2 rounded-full bg-warning shadow-[0_0_8px_var(--color-warning)] shrink-0" title={t('settings.llmTestResultDesc')} />
                                 )}
                               </span>
                               <h4 className="font-bold text-sm truncate">{config.name}</h4>
@@ -694,11 +667,7 @@ export default function LlmSettings(): React.JSX.Element {
                       </div>
                       <div>
                         <span className="block font-normal text-muted-foreground/85">{t('settings.llmSpeed')}</span>
-                        <span>
-                          {testResult.metrics.latencyMs > 0
-                            ? `${(testResult.metrics.wordCount / (testResult.metrics.latencyMs / 1000)).toFixed(1)} W/s`
-                            : 'N/A'}
-                        </span>
+                        <span>{formatLlmSpeed(testResult.metrics.wordCount, testResult.metrics.latencyMs)}</span>
                       </div>
                     </div>
                   )}
@@ -795,7 +764,7 @@ export default function LlmSettings(): React.JSX.Element {
                               <span>•</span>
                               <span>{t('settings.llmWordCount')}: {msg.metrics.wordCount}</span>
                               <span>•</span>
-                              <span>{t('settings.llmSpeed')}: {msg.metrics.latencyMs > 0 ? `${(msg.metrics.wordCount / (msg.metrics.latencyMs / 1000)).toFixed(1)} W/s` : 'N/A'}</span>
+                              <span>{t('settings.llmSpeed')}: {formatLlmSpeed(msg.metrics.wordCount, msg.metrics.latencyMs)}</span>
                             </div>
                           )}
                         </div>
@@ -848,6 +817,7 @@ export default function LlmSettings(): React.JSX.Element {
           <div className="fixed inset-0 bg-black/10 backdrop-blur-[1px] z-40 pointer-events-none" />
 
           <motion.div
+            ref={modalRef}
             drag
             dragControls={dragControls}
             dragListener={false}
@@ -855,6 +825,9 @@ export default function LlmSettings(): React.JSX.Element {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label={editingConfig ? t('settings.llmModalEditTitle') : t('settings.llmModalAddTitle')}
             className="fixed top-4 left-4 right-4 sm:left-1/2 sm:-ml-64 sm:right-auto z-50 w-auto sm:w-[512px] bg-card border border-border shadow-2xl rounded-2xl flex flex-col overflow-hidden max-h-[85vh]"
           >
             {/* Grab Handle Header */}
@@ -1084,7 +1057,7 @@ export default function LlmSettings(): React.JSX.Element {
                       <div className="flex items-center gap-4 text-[9px] font-semibold text-success/80 border-t border-success/10 pt-2">
                         <span>{t('settings.llmLatency')}: {modalTestResult.metrics.latencyMs} ms</span>
                         <span>{t('settings.llmWordCount')}: {modalTestResult.metrics.wordCount}</span>
-                        <span>{t('settings.llmSpeed')}: {modalTestResult.metrics.latencyMs > 0 ? `${(modalTestResult.metrics.wordCount / (modalTestResult.metrics.latencyMs / 1000)).toFixed(1)} W/s` : 'N/A'}</span>
+                        <span>{t('settings.llmSpeed')}: {formatLlmSpeed(modalTestResult.metrics.wordCount, modalTestResult.metrics.latencyMs)}</span>
                       </div>
                     )}
                   </div>

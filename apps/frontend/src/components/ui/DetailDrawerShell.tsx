@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useId } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useOverlayBehavior } from "@/hooks/useOverlayBehavior";
+import { useTranslation } from "@/hooks/useTranslation";
+import { cn } from "@/lib/utils";
 
 export interface DetailDrawerShellProps {
   open?: boolean;
@@ -14,6 +17,7 @@ export interface DetailDrawerShellProps {
   footer?: React.ReactNode;
   children: React.ReactNode;
   ariaLabel?: string;
+  className?: string;
 }
 
 /**
@@ -31,7 +35,12 @@ export function DetailDrawerShell({
   footer,
   children,
   ariaLabel,
+  className,
 }: DetailDrawerShellProps): React.JSX.Element {
+  const { t } = useTranslation();
+  const containerRef = useOverlayBehavior<HTMLElement>({ open, onClose });
+  const titleId = useId();
+
   return (
     <AnimatePresence>
       {open && (
@@ -48,11 +57,18 @@ export function DetailDrawerShell({
           
           {/* Drawer content panel */}
           <motion.aside
+            ref={containerRef}
             initial={{ x: "100%", opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0 }}
             transition={{ type: "spring", damping: 28, stiffness: 260 }}
-            className="relative w-full max-w-sm h-full bg-card/90 border-l border-border/80 shadow-2xl flex flex-col z-10 backdrop-blur-xl text-left"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            className={cn(
+              "relative w-full max-w-sm h-full bg-card/90 border-l border-border/80 shadow-2xl flex flex-col z-10 backdrop-blur-xl text-left",
+              className
+            )}
             aria-label={ariaLabel}
           >
             {/* Sticky Header */}
@@ -65,7 +81,7 @@ export function DetailDrawerShell({
                     </div>
                   )}
                   <div className="min-w-0">
-                    <h2 className="text-[13px] font-bold text-foreground leading-tight truncate">
+                    <h2 id={titleId} className="text-[13px] font-bold text-foreground leading-tight truncate">
                       {title}
                     </h2>
                     {subtitle && (
@@ -84,7 +100,7 @@ export function DetailDrawerShell({
                     size="icon"
                     onClick={onClose}
                     className="h-8 w-8 p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors shadow-none"
-                    aria-label="Close details"
+                    aria-label={t("common.close")}
                   >
                     <X className="w-4 h-4" />
                   </Button>

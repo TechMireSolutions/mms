@@ -1,11 +1,10 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { X, AlertTriangle, GitMerge, Check, Loader2 } from "lucide-react";
 import { notify } from "@/lib/notify";
 import { reportClientError } from "@/lib/clientErrorReporting";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsDuplicatePairs } from "@/tenant/features/contacts/hooks/useContacts";
 import {
@@ -25,6 +24,7 @@ import {
   getDisplayName,
   getDuplicateConfidenceBadgeStyle,
 } from "@mms/shared";
+import { Modal } from "@/components/ui/Modal";
 
 interface DuplicatePair {
   id: string;
@@ -133,69 +133,15 @@ function MergePreview({ pair, keepIndex, onClose, onConfirm, confirming }: Merge
   const fields = prefs.duplicateDetectionFields || [];
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
-    >
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <motion.div
-        initial={{ scale: 0.95, y: 16 }}
-        animate={{ scale: 1, y: 0 }}
-        className="relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full max-w-lg z-10 text-left backdrop-blur-xl"
-      >
-        <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <GitMerge className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-bold text-foreground">{t('contacts.duplicates.mergePreview')}</h3>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground min-w-[44px] min-h-[44px] p-0 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
-            aria-label={t('common.close')}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <div className="px-6 py-5 space-y-4">
-          <div className={`${colors.warningBg} rounded-xl p-3 flex gap-2.5`}>
-            <AlertTriangle className={`w-4 h-4 ${colors.warningText} flex-shrink-0 mt-0.5`} />
-            <p className={`text-xs ${colors.warningText}`}>
-              <strong>{getDisplayName(other)}</strong> {t('contacts.duplicates.mergeWarning')} <strong>{getDisplayName(keep)}</strong>.
-            </p>
-          </div>
-
-          <div>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t('contacts.duplicates.mergedResult')}</p>
-            <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-2 text-foreground">
-              {fields.map((field) => {
-                const keepValue = getDuplicateFieldValue(field, keep, t);
-                const otherValue = getDuplicateFieldValue(field, other, t);
-                const mergedValue = getDuplicateFieldValue(field, mergedResult, t);
-
-                const fromOther = (!keepValue || keepValue === emptyDash || keepValue === "") && (otherValue && otherValue !== emptyDash && otherValue !== "");
-
-                return (
-                  <div key={field} className="flex items-center gap-2">
-                    <span className="text-[11px] text-muted-foreground w-24 flex-shrink-0">{getDuplicateFieldLabel(field, t)}:</span>
-                    <span className="text-[13px] font-medium text-foreground flex-1 truncate">{mergedValue || emptyDash}</span>
-                    {fromOther && (
-                      <span className={`text-[10px] ${colors.highlightBg} px-1.5 py-0.5 rounded-full font-medium`}>
-                        {t('contacts.duplicates.fromDuplicate')}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        <div className="px-6 py-4 border-t border-border flex gap-3 justify-end">
+    <Modal
+      open={true}
+      onClose={onClose}
+      title={t('contacts.duplicates.mergePreview')}
+      icon={GitMerge}
+      priority
+      size="lg"
+      footer={
+        <>
           <Button
             type="button"
             variant="outline"
@@ -217,9 +163,43 @@ function MergePreview({ pair, keepIndex, onClose, onConfirm, confirming }: Merge
             )}
             <span>{confirming ? t('common.loading') : t('contacts.duplicates.confirmMerge')}</span>
           </Button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div className={`${colors.warningBg} rounded-xl p-3 flex gap-2.5`}>
+          <AlertTriangle className={`w-4 h-4 ${colors.warningText} flex-shrink-0 mt-0.5`} />
+          <p className={`text-xs ${colors.warningText}`}>
+            <strong>{getDisplayName(other)}</strong> {t('contacts.duplicates.mergeWarning')} <strong>{getDisplayName(keep)}</strong>.
+          </p>
         </div>
-      </motion.div>
-    </motion.div>
+
+        <div>
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t('contacts.duplicates.mergedResult')}</p>
+          <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-2 text-foreground">
+            {fields.map((field) => {
+              const keepValue = getDuplicateFieldValue(field, keep, t);
+              const otherValue = getDuplicateFieldValue(field, other, t);
+              const mergedValue = getDuplicateFieldValue(field, mergedResult, t);
+
+              const fromOther = (!keepValue || keepValue === emptyDash || keepValue === "") && (otherValue && otherValue !== emptyDash && otherValue !== "");
+
+              return (
+                <div key={field} className="flex items-center gap-2">
+                  <span className="text-[11px] text-muted-foreground w-24 flex-shrink-0">{getDuplicateFieldLabel(field, t)}:</span>
+                  <span className="text-[13px] font-medium text-foreground flex-1 truncate">{mergedValue || emptyDash}</span>
+                  {fromOther && (
+                    <span className={`text-[10px] ${colors.highlightBg} px-1.5 py-0.5 rounded-full font-medium`}>
+                      {t('contacts.duplicates.fromDuplicate')}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
@@ -233,8 +213,6 @@ interface DuplicateDetectionProps {
 /**
  * DuplicateDetection component that finds duplicate contacts dynamically
  * and allows the user to merge them.
- * @param props Component properties.
- * @returns React element.
  */
 export default function DuplicateDetection({
   contacts = [],
@@ -250,7 +228,6 @@ export default function DuplicateDetection({
     page: dupPage,
     limit: 50,
   });
-  useBodyScrollLock();
   const [dismissedPairIds, setDismissedPairIds] = useState<Set<string>>(new Set());
   const [mergedPairIds, setMergedPairIds] = useState<Set<string>>(new Set());
   const [keepIndex, setKeepIndex] = useState<Record<string, number>>({});
@@ -311,55 +288,43 @@ export default function DuplicateDetection({
   const totalMerged = mergedPairIds.size;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col z-10 text-left backdrop-blur-xl"
-      >
-        <div className="px-6 py-4 border-b border-border flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${colors.warningBg}`}>
-              <AlertTriangle className={`w-4 h-4 ${colors.warningText}`} />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-foreground">{t('contacts.duplicates.title')}</h2>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                {activePairs.length} {t('contacts.duplicates.potentialFound')}
-              </p>
-            </div>
-          </div>
+    <>
+      <Modal
+        open={true}
+        onClose={onClose}
+        title={t('contacts.duplicates.title')}
+        subtitle={`${activePairs.length} ${t('contacts.duplicates.potentialFound')}`}
+        icon={AlertTriangle}
+        size="lg"
+        footer={
           <Button
             type="button"
             variant="ghost"
             onClick={onClose}
-            className="min-w-[44px] min-h-[44px] p-0 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors"
-            aria-label={t('common.close')}
+            className="min-h-[44px] px-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-transparent hover:bg-muted"
           >
-            <X className="w-4 h-4" />
+            {t('common.close')}
           </Button>
-        </div>
+        }
+      >
+        <div className="space-y-5">
+          {totalMerged > 0 && (
+            <div className={`flex items-center gap-2 rounded-xl px-4 py-2.5 ${colors.successBg}`}>
+              <Check className={`w-4 h-4 ${colors.successText}`} />
+              <p className={`text-xs font-medium ${colors.successText}`}>
+                {totalMerged} {t('contacts.duplicates.countMerged')}
+              </p>
+            </div>
+          )}
 
-        {totalMerged > 0 && (
-          <div className={`mx-6 mt-4 flex items-center gap-2 rounded-xl px-4 py-2.5 ${colors.successBg}`}>
-            <Check className={`w-4 h-4 ${colors.successText}`} />
-            <p className={`text-xs font-medium ${colors.successText}`}>
-              {totalMerged} {t('contacts.duplicates.countMerged')}
-            </p>
-          </div>
-        )}
+          {!canWrite && activePairs.length > 0 && (
+            <div className={`rounded-xl px-4 py-2.5 border ${colors.warningBg}`}>
+              <p className={`text-xs ${colors.warningText}`}>
+                {t("contacts.duplicatesReadOnly")}
+              </p>
+            </div>
+          )}
 
-        {!canWrite && activePairs.length > 0 && (
-          <div className={`mx-6 mt-4 rounded-xl px-4 py-2.5 border ${colors.warningBg}`}>
-            <p className={`text-xs ${colors.warningText}`}>
-              {t("contacts.duplicatesReadOnly")}
-            </p>
-          </div>
-        )}
-
-        
-        <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-5 space-y-5">
           {pairsLoading ? (
             <div className="py-12 flex flex-col items-center gap-2 text-muted-foreground">
               <Loader2 className="w-8 h-8 animate-spin" />
@@ -376,7 +341,6 @@ export default function DuplicateDetection({
               const selectedKeepIndex = keepIndex[pair.id] ?? 0;
               return (
                 <div key={pair.id} className="rounded-xl border border-border bg-muted/10 overflow-hidden">
-                  
                   <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <ConfidenceBadge score={pair.confidence} prefs={prefs} />
@@ -384,14 +348,14 @@ export default function DuplicateDetection({
                     </div>
                     <div className="flex items-center gap-2">
                       {canWrite && (
-                      <Button
-                        type="button"
-                        onClick={() => setMerging(pair)}
-                        className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-lg text-[12px] font-semibold"
-                      >
-                        <GitMerge className="w-3.5 h-3.5" />
-                        <span>{t('contacts.duplicates.merge')}</span>
-                      </Button>
+                        <Button
+                          type="button"
+                          onClick={() => setMerging(pair)}
+                          className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-lg text-[12px] font-semibold"
+                        >
+                          <GitMerge className="w-3.5 h-3.5" />
+                          <span>{t('contacts.duplicates.merge')}</span>
+                        </Button>
                       )}
                       <Button
                         type="button"
@@ -405,7 +369,6 @@ export default function DuplicateDetection({
                     </div>
                   </div>
 
-                  
                   <div className="p-4">
                     <p className="text-[11px] text-muted-foreground mb-3 font-medium">{t('contacts.duplicates.selectKeep')}</p>
                     <div className="flex gap-3">
@@ -439,20 +402,8 @@ export default function DuplicateDetection({
             </div>
           )}
         </div>
+      </Modal>
 
-        <div className="px-6 py-4 border-t border-border flex-shrink-0">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onClose}
-            className="min-h-[44px] px-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-transparent hover:bg-muted"
-          >
-            {t('common.close')}
-          </Button>
-        </div>
-      </motion.div>
-
-      
       <AnimatePresence>
         {merging && (
           <MergePreview
@@ -464,6 +415,6 @@ export default function DuplicateDetection({
           />
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 }

@@ -15,7 +15,11 @@ const FOCUSABLE_SELECTORS_QUERY = [
 ].join(",");
 
 function getFocusableElements(container: HTMLElement): HTMLElement[] {
-  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS_QUERY));
+  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS_QUERY)).filter(
+    (el) =>
+      (el.offsetWidth > 0 || el.offsetHeight > 0 || el.getClientRects().length > 0) &&
+      el.getAttribute("aria-hidden") !== "true"
+  );
 }
 
 /**
@@ -25,7 +29,9 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
  * @param active - Whether focus trapping is active.
  * @returns Ref object to be attached to the modal/overlay container.
  */
-export function useFocusTrap<T extends HTMLElement = HTMLElement>(active: boolean) {
+export function useFocusTrap<T extends HTMLElement = HTMLElement>(
+  active: boolean
+): React.RefObject<T | null> {
   const containerRef = useRef<T | null>(null);
 
   useEffect(() => {
@@ -35,10 +41,13 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(active: boolea
     if (!container) return;
 
     const previouslyFocusedElement = document.activeElement as HTMLElement | null;
+    let frameId: number | null = null;
 
     const elements = getFocusableElements(container);
     if (elements.length > 0) {
-      elements[0].focus();
+      frameId = requestAnimationFrame(() => {
+        elements[0]?.focus();
+      });
     }
 
     const handleKeyDown = (event: KeyboardEvent): void => {
@@ -69,8 +78,11 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(active: boolea
     container.addEventListener("keydown", handleKeyDown);
 
     return () => {
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+      }
       container.removeEventListener("keydown", handleKeyDown);
-      if (previouslyFocusedElement) {
+      if (previouslyFocusedElement && typeof previouslyFocusedElement.focus === "function") {
         previouslyFocusedElement.focus();
       }
     };

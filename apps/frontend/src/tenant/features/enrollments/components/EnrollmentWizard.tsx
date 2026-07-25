@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User, BookOpen, CheckCircle2, Layers, DollarSign, ClipboardCheck,
@@ -17,16 +17,8 @@ import { Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
 import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
 import { useEnrollmentConfig } from "@/hooks/useStandardModuleConfig";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
-
-const STEPS: Step[] = [
-  { id: "student",     label: "Student",     icon: User },
-  { id: "session",     label: "Session",     icon: BookOpen },
-  { id: "eligibility", label: "Eligibility", icon: CheckCircle2 },
-  { id: "class",       label: "Class",       icon: Layers },
-  { id: "fee",         label: "Fee",         icon: DollarSign },
-  { id: "confirm",     label: "Confirm",     icon: ClipboardCheck },
-];
 
 interface EnrollmentWizardProps {
   onComplete: (enrollment: Enrollment) => void;
@@ -42,6 +34,7 @@ interface EnrollmentWizardProps {
  * @returns The EnrollmentWizard component.
  */
 export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps): React.ReactElement {
+  const { t } = useTranslation();
   const sessions = useSessionsCollection();
   const [step, setStep] = useState<number>(0);
   const [student, setStudent]       = useState<Student | null>(null);
@@ -49,11 +42,20 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
   const [classInfo, setClassInfo]   = useState<Class | null>(null);
   const [feeResult, setFeeResult]   = useState<CalculatedFee | null>(null);
   const [notes, setNotes]           = useState<string>("");
-  const [customFieldValues, setCustomFieldValues] = useState<Record<string, any>>({});
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>({});
   const [done, setDone]             = useState<boolean>(false);
   const [direction, setDirection]   = useState<number>(1);
 
   const { fields, customFields } = useEnrollmentConfig();
+
+  const steps: Step[] = useMemo(() => [
+    { id: "student",     label: t("enrollments.columns.student"), icon: User },
+    { id: "session",     label: t("enrollments.columns.session"), icon: BookOpen },
+    { id: "eligibility", label: t("enrollments.eligibility"), icon: CheckCircle2 },
+    { id: "class",       label: t("enrollments.columns.class"), icon: Layers },
+    { id: "fee",         label: t("enrollments.columns.finalFee"), icon: DollarSign },
+    { id: "confirm",     label: t("enrollments.new"), icon: ClipboardCheck },
+  ], [t]);
 
   const suggested = student && session ? suggestClass(student, session) : null;
 
@@ -62,7 +64,7 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
     if (step === 1) return !!session;
     if (step === 2) {
       const checks = student && session ? runFullEligibility(student, session, suggested, []) : [];
-      return checks.filter((check) => check.status === "fail").length === 0;
+      return checks.every((check) => check.status !== "fail");
     }
     if (step === 3) return !!classInfo;
     if (step === 4) return !!feeResult;
@@ -70,11 +72,10 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
   };
 
   const canConfirm = (): boolean => {
-    if (fields.notes?.required && !notes) return false;
-    for (const customField of customFields) {
-      if (customField.required && !customFieldValues[customField.id]) return false;
-    }
-    return true;
+    if (fields.notes?.required && !notes.trim()) return false;
+    return customFields.every(
+      (customField) => !customField.required || Boolean(customFieldValues[customField.id])
+    );
   };
 
   const go = (directionDelta: number) => {
@@ -92,6 +93,7 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
   const handleSubmit = () => {
     if (!student || !session || !feeResult) return;
 
+    const nowISO = new Date().toISOString();
     const enrollment: Enrollment = {
       id: `enr${Date.now()}`,
       studentId: student.id,
@@ -112,8 +114,8 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
       notes,
       customFields: customFieldValues,
       timeline: [
-        { ts: new Date().toISOString(), event: "Enrollment created", by: "Admin" },
-        { ts: new Date().toISOString(), event: `Invoice generated (${formatMoney(feeResult.finalFee)})`, by: "System" },
+        { ts: nowISO, event: "Enrollment created", by: "Admin" },
+        { ts: nowISO, event: `Invoice generated (${formatMoney(feeResult.finalFee)})`, by: "System" },
       ],
     } as unknown as Enrollment;
     setDone(true);
@@ -143,7 +145,7 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
     <article className="space-y-6" aria-label="Enrollment Wizard Form">
       {/* Step indicator */}
       <div className="overflow-x-auto pb-1">
-        <StepIndicator steps={STEPS} current={step} />
+        <StepIndicator steps={steps} current={step} />
       </div>
 
       {/* Step content */}
@@ -190,7 +192,7 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
               variant="outline"
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors h-auto"
             >
-              <X className="w-3.5 h-3.5" aria-hidden="true" /> Cancel
+              <X className="w-3.5 h-3.5" aria-hidden="true" /> {t('common.cancel')}
             </Button>
           ) : (
             <Button
@@ -198,19 +200,19 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
               variant="outline"
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-foreground hover:bg-muted transition-colors h-auto"
             >
-              <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" /> Back
+              <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" /> {t('common.previous')}
             </Button>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground" aria-live="polite">Step {step + 1} of {STEPS.length}</span>
-          {step < STEPS.length - 1 ? (
+          <span className="text-xs text-muted-foreground" aria-live="polite">Step {step + 1} of {steps.length}</span>
+          {step < steps.length - 1 ? (
             <Button
               onClick={handleNext}
               disabled={!canNext()}
               className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors h-auto"
             >
-              Next <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+              {t('common.next')} <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
             </Button>
           ) : (
             <Button
@@ -218,7 +220,7 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
               disabled={!canConfirm()}
               className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors h-auto"
             >
-              <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Confirm Enrollment
+              <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> {t('enrollments.new')}
             </Button>
           )}
         </div>

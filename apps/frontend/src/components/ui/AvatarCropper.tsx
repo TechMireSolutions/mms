@@ -1,11 +1,10 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { motion } from "framer-motion";
-import { X, Check, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
+import { Check, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
 import { uploadCanvasImage } from "@/lib/imageUpload";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Modal } from "@/components/ui/Modal";
 
 interface AvatarCropperProps {
   src: string;
@@ -22,7 +21,6 @@ interface DragCoordinate {
  * AvatarCropper component that displays a modal circular crop UI.
  */
 export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): React.JSX.Element {
-  useBodyScrollLock();
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [scale, setScale] = useState<number>(1);
@@ -37,19 +35,6 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
   const RADIUS = SIZE / 2;
 
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === "Escape") {
-        event.stopPropagation();
-        event.stopImmediatePropagation?.();
-        event.preventDefault();
-        onCancel();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown, true);
-    return () => window.removeEventListener("keydown", handleKeyDown, true);
-  }, [onCancel]);
-
-  useEffect(() => {
     const img = new Image();
     img.onload = () => {
       setImgEl(img);
@@ -58,6 +43,7 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
     };
     img.src = src;
   }, [src]);
+
   useEffect(() => {
     if (!imgEl || !canvasRef.current) return;
     const canvasContext = canvasRef.current.getContext("2d");
@@ -88,6 +74,7 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
     canvasContext.fill();
     canvasContext.restore();
   }, [imgEl, scale, rotation, offset]);
+
   const onMouseDown = (event: React.MouseEvent<HTMLCanvasElement>): void => {
     setDragging(true);
     setDragStart({ x: event.clientX - offset.x, y: event.clientY - offset.y });
@@ -104,6 +91,7 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
   const onMouseUp = (): void => {
     setDragging(false);
   };
+
   const onTouchStart = (event: React.TouchEvent<HTMLCanvasElement>): void => {
     const touch = event.touches[0];
     setDragging(true);
@@ -149,40 +137,16 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
-          event.stopPropagation();
-          event.nativeEvent.stopImmediatePropagation();
-          onCancel();
-        }
-      }}
+    <Modal
+      open={true}
+      onClose={onCancel}
+      title={t("contacts.form.cropProfilePhoto")}
+      subtitle={t("contacts.form.cropperInstructions")}
+      priority
+      size="sm"
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="relative bg-card rounded-2xl border border-border shadow-2xl z-10 w-full max-w-sm overflow-hidden"
-      >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border text-left">
-          <div>
-            <h3 className="text-sm font-bold text-foreground">{t("contacts.form.cropProfilePhoto")}</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">{t("contacts.form.cropperInstructions")}</p>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onCancel}
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors shadow-none"
-            aria-label={t("contacts.form.closeCropper")}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <div className="flex items-center justify-center bg-neutral-900 py-6">
+      <div className="space-y-4">
+        <div className="flex items-center justify-center bg-neutral-900 py-6 rounded-xl overflow-hidden">
           <canvas
             ref={canvasRef}
             width={SIZE}
@@ -207,7 +171,7 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
           />
         </div>
 
-        <div className="px-5 py-3 border-t border-border space-y-3">
+        <div className="space-y-3">
           <div className="flex items-center gap-3">
             <ZoomOut className="w-4 h-4 text-muted-foreground flex-shrink-0" />
             <Slider
@@ -254,7 +218,7 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
             </Button>
           </div>
         </div>
-      </motion.div>
-    </div>
+      </div>
+    </Modal>
   );
 }

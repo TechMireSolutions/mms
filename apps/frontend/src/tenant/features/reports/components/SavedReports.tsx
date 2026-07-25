@@ -41,8 +41,8 @@ const CATEGORY_COLOR: Record<string, string> = {
 
 interface SavedReportsProps {
   category: string;
-  filters?: Record<string, any>;
-  onApplyFilters?: (filters: Record<string, any>) => void;
+  filters?: Record<string, unknown>;
+  onApplyFilters?: (filters: Record<string, unknown>) => void;
 }
 
 /**
@@ -84,11 +84,11 @@ export default function SavedReports({
 
       const updatedCollection = [...allSaved, newReport];
       saveCollection("reports_saved_reports", updatedCollection);
-      notify.success(t("contacts.savedReports.saveSuccess") || "Report preset saved successfully");
+      notify.success(t("contacts.savedReports.saveSuccess"));
       setName("");
       setSaveOpen(false);
     } catch {
-      notify.error(t("settings.serverSaveFailed") || "Failed to save preset");
+      notify.error(t("contacts.savedReports.saveDialogTitle"));
     } finally {
       setSaving(false);
     }
@@ -109,12 +109,9 @@ export default function SavedReports({
         );
 
         saveCollection("reports_saved_reports", updated);
-        notify.success(
-          t("contacts.savedReports.runSuccess") || `Running report: ${report.name}`
-        );
-      } catch (error) {
-        console.error("Failed to run preset:", error);
-        notify.error("Failed to execute report preset");
+        notify.success(t("contacts.savedReports.runSuccess"));
+      } catch {
+        notify.error(t("contacts.savedReports.staleWarningTitle"));
       }
     },
     [onApplyFilters, allSaved, t]
@@ -125,9 +122,9 @@ export default function SavedReports({
       try {
         const filtered = allSaved.filter((report) => report.id !== id);
         saveCollection("reports_saved_reports", filtered);
-        notify.info(t("contacts.savedReports.deleteSuccess") || "Report preset deleted");
+        notify.info(t("contacts.savedReports.deleteSuccess"));
       } catch {
-        notify.error("Failed to delete report preset");
+        notify.error(t("contacts.savedReports.delete"));
       }
     },
     [allSaved, t]
@@ -144,9 +141,9 @@ export default function SavedReports({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="text-left">
-          <h3 className="text-sm font-semibold text-foreground">{t("reports.saved.title") || "Saved Reports"}</h3>
+          <h3 className="text-sm font-semibold text-foreground">{t("reports.saved.title")}</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {t("reports.saved.subtitle") || "Saved filter presets — re-run against live data"}
+            {t("reports.saved.subtitle")}
           </p>
         </div>
         {onApplyFilters && (
@@ -155,7 +152,7 @@ export default function SavedReports({
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider h-9 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            {t("reports.saved.saveCurrent") || "Save Current"}
+            {t("reports.saved.saveCurrent")}
           </Button>
         )}
       </div>
@@ -163,8 +160,8 @@ export default function SavedReports({
       {saved.length === 0 ? (
         <EmptyState
           icon={Bookmark}
-          title={t("reports.saved.emptyTitle") || "No saved reports"}
-          description={t("reports.saved.emptyDescription") || "Save current filters as a preset to quickly re-run them later."}
+          title={t("reports.saved.emptyTitle")}
+          description={t("reports.saved.emptyDescription")}
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -198,21 +195,25 @@ export default function SavedReports({
                 </div>
                 <div className="flex items-center gap-2 pt-1 border-t border-border">
                   {onApplyFilters && (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleRun(report)}
-                      className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                      className="h-7 px-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10 gap-1 cursor-pointer"
                       type="button"
                     >
-                      <Play className="w-3 h-3" /> {t("reports.saved.run") || "Run"}
-                    </button>
+                      <Play className="w-3 h-3" /> {t("reports.saved.run")}
+                    </Button>
                   )}
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => handleDelete(report.id)}
-                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors ml-auto"
+                    className="h-7 px-2 text-xs font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1 ml-auto cursor-pointer"
                     type="button"
                   >
-                    <Trash2 className="w-3 h-3" /> {t("reports.saved.delete") || "Delete"}
-                  </button>
+                    <Trash2 className="w-3 h-3" /> {t("reports.saved.delete")}
+                  </Button>
                 </div>
               </MotionCard>
             ))}
@@ -223,22 +224,22 @@ export default function SavedReports({
       <FormModal
         open={saveOpen}
         onClose={() => setSaveOpen(false)}
-        title={t("contacts.savedReports.saveDialogTitle") || "Save report preset"}
+        title={t("contacts.savedReports.saveDialogTitle")}
         size="sm"
-        cancelLabel={t("common.cancel") || "Cancel"}
-        saveLabel={t("contacts.savedReports.save") || "Save"}
+        cancelLabel={t("common.cancel")}
+        saveLabel={t("contacts.savedReports.save")}
         onSave={() => void handleSave()}
         saving={saving}
         saveDisabled={!name.trim()}
       >
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="saved-report-name">{t("contacts.savedReports.nameLabel") || "Report Name"}</Label>
+            <Label htmlFor="saved-report-name">{t("contacts.savedReports.nameLabel")}</Label>
             <Input
               id="saved-report-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder={t("contacts.savedReports.namePlaceholder") || "e.g. Current Month Active"}
+              placeholder={t("contacts.savedReports.namePlaceholder")}
             />
           </div>
         </div>

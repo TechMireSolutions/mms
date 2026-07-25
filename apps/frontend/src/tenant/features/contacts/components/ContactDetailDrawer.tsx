@@ -36,7 +36,6 @@ import {
   resolveAddressLabel,
   resolveSocialPlatformLabel,
 } from "@/lib/contacts/contactI18n";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { apiJson } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
@@ -208,6 +207,54 @@ function FieldGroupCard({ group, fields, formatValue }: FieldGroupCardProps): JS
   );
 }
 
+interface QuickActionButtonProps {
+  label: string;
+  icon: LucideIcon;
+  onClick?: () => void;
+  href?: string;
+  disabled?: boolean;
+  className?: string;
+  ariaLabel?: string;
+}
+
+function QuickActionButton({
+  label,
+  icon: Icon,
+  onClick,
+  href,
+  disabled = false,
+  className = "",
+  ariaLabel,
+}: QuickActionButtonProps): JSX.Element {
+  const baseClasses = `flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-all ${className}`;
+  if (href && !disabled) {
+    return (
+      <a
+        href={href}
+        aria-label={ariaLabel || label}
+        className={baseClasses}
+      >
+        <Icon className="w-5 h-5" />
+        <span className="text-[10px] font-bold">{label}</span>
+      </a>
+    );
+  }
+
+  return (
+    <Button
+      variant="ghost"
+      disabled={disabled}
+      onClick={onClick}
+      aria-label={ariaLabel || label}
+      className={`h-auto font-normal shadow-none ${baseClasses}`}
+      type="button"
+    >
+      <Icon className="w-5 h-5" />
+      <span className="text-[10px] font-bold">{label}</span>
+    </Button>
+  );
+}
+
 export default function ContactDetailDrawer({
   contact: initialContact,
   onClose,
@@ -223,7 +270,6 @@ export default function ContactDetailDrawer({
   const { role } = usePermissions();
   const viewerRole = role ?? '';
   const { t } = useTranslation();
-  useBodyScrollLock();
   const noteInputId = useId();
   const [contactState, setContactState] = useState<Contact>(initialContact);
   const [noteText, setNoteText] = useState<string>("");
@@ -516,50 +562,38 @@ export default function ContactDetailDrawer({
               {/* Quick Communication Actions Bar */}
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {enabledTabIds.has("phones") && (
-                  <Button
-                    variant="ghost"
+                  <QuickActionButton
+                    label={t('contacts.whatsapp')}
+                    icon={MessageCircle}
                     disabled={!hasWhatsApp(contactState)}
                     onClick={() => onWhatsApp([contactState])}
-                    className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border h-auto font-normal transition-all shadow-none ${
-                      hasWhatsApp(contactState) ? DETAIL_STYLES.whatsappActive : DETAIL_STYLES.whatsappDisabled
-                    }`}
-                    type="button"
-                  >
-                    <MessageCircle className="w-5 h-5" />
-                    <span className="text-[10px] font-bold">{t('contacts.whatsapp')}</span>
-                  </Button>
+                    className={hasWhatsApp(contactState) ? DETAIL_STYLES.whatsappActive : DETAIL_STYLES.whatsappDisabled}
+                  />
                 )}
                 {primaryPhone && (
-                  <Button
-                    variant="ghost"
+                  <QuickActionButton
+                    label={t('contacts.sms')}
+                    icon={MessageSquare}
                     onClick={() => onSms([contactState])}
-                    className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border h-auto font-normal transition-all shadow-none ${DETAIL_STYLES.smsAction}`}
-                    type="button"
-                  >
-                    <MessageSquare className="w-5 h-5" />
-                    <span className="text-[10px] font-bold">{t('contacts.sms')}</span>
-                  </Button>
+                    className={DETAIL_STYLES.smsAction}
+                  />
                 )}
                 {primaryPhone && (
-                  <a
+                  <QuickActionButton
+                    label={t('contacts.detail.call')}
+                    icon={Phone}
                     href={formatTelHref(primaryPhone)}
-                    aria-label={`${t('contacts.detail.call')} ${primaryPhone}`}
-                    className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-all ${DETAIL_STYLES.callAction}`}
-                  >
-                    <Phone className="w-5 h-5" />
-                    <span className="text-[10px] font-bold">{t('contacts.detail.call')}</span>
-                  </a>
+                    ariaLabel={`${t('contacts.detail.call')} ${primaryPhone}`}
+                    className={DETAIL_STYLES.callAction}
+                  />
                 )}
                 {primaryEmail && (
-                  <Button
-                    variant="ghost"
+                  <QuickActionButton
+                    label={t('contacts.detail.emailAction')}
+                    icon={Mail}
                     onClick={() => onEmail([contactState])}
-                    className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border h-auto font-normal transition-all shadow-none ${DETAIL_STYLES.emailAction}`}
-                    type="button"
-                  >
-                    <Mail className="w-5 h-5" />
-                    <span className="text-[10px] font-bold">{t('contacts.detail.emailAction')}</span>
-                  </Button>
+                    className={DETAIL_STYLES.emailAction}
+                  />
                 )}
               </div>
 

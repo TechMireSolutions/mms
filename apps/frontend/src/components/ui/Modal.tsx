@@ -1,8 +1,10 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
-import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useOverlayBehavior } from "@/hooks/useOverlayBehavior";
+import { useTranslation } from "@/hooks/useTranslation";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export interface ModalProps {
   open: boolean;
@@ -50,25 +52,14 @@ export function Modal({
   priority = false,
   children,
 }: ModalProps): React.ReactElement {
-  useBodyScrollLock(open);
-  const containerRef = useFocusTrap<HTMLDivElement>(open);
+  const { t } = useTranslation();
+  const containerRef = useOverlayBehavior<HTMLDivElement>({ open, onClose });
   const titleId = React.useId();
-
-  React.useEffect(() => {
-    if (!open) return;
-    const handleKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
 
   return (
     <AnimatePresence>
       {open && (
-        <div className={`fixed inset-0 flex items-center justify-center p-4 ${priority ? "z-[60]" : "z-50"}`}>
+        <div className={cn("fixed inset-0 flex items-center justify-center p-4", priority ? "z-[60]" : "z-50")}>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -85,7 +76,11 @@ export function Modal({
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            className={`relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full ${SIZE[size]} z-10 max-h-[90vh] flex flex-col backdrop-blur-xl ${panelClassName ?? ""}`}
+            className={cn(
+              "relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full z-10 max-h-[90vh] flex flex-col backdrop-blur-xl",
+              SIZE[size],
+              panelClassName
+            )}
           >
             {/* Header */}
             <div className="flex-shrink-0 border-b border-border/40 px-5 py-4 bg-muted/5">
@@ -103,14 +98,16 @@ export function Modal({
                 </div>
                 <div className="flex items-center gap-2">
                   {headerActions}
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={onClose}
-                    aria-label="Close"
-                    className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    aria-label={t("common.close")}
+                    className="h-8 w-8 p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none"
                   >
                     <X className="w-4 h-4" />
-                  </button>
+                  </Button>
                 </div>
               </div>
               {headerExtra ? <div className="mt-3">{headerExtra}</div> : null}
