@@ -9,6 +9,8 @@ import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import {
   DEFAULT_STUDENT_ENABLED_TABS,
   type FieldDefinition,
+  type Student,
+  calcAge,
   formatDate,
   formatDateTime,
   getInitials,
@@ -17,10 +19,10 @@ import {
 } from "@mms/shared";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
 import { useContactsByIds } from '@/tenant/features/contacts/hooks/useContacts';
-import { calcAge, type Student } from '@/lib/data/studentsData';
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface StudentDetailProps {
   student: Student;
@@ -34,6 +36,7 @@ const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
  * Detailed slide-over panel displaying student records, guardian profiles, and enrolled courses.
  */
 export default function StudentDetail({ student, onClose, onEdit }: StudentDetailProps): React.JSX.Element {
+  const { t } = useTranslation();
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const sessions = useSessionsCollection();
   const linkedIds = useMemo(
@@ -99,7 +102,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
 
   // Determine avatar initials and color
   const initials = getInitials(student.name);
-  const avatarGradient = getAvatarColor(student.id);
+  const avatarGradient = getAvatarColor(String(student.id));
 
   const primaryPhone = (studentContact ? getPrimaryPhone(studentContact) : null) || student.phone;
 
@@ -111,7 +114,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
     <>
       <DetailDrawerShell
         onClose={onClose}
-        title="Student Profile"
+        title={t("students.detail.title")}
         subtitle={`GR: ${student.grNumber || "N/A"}`}
         icon={GraduationCap}
         ariaLabel="Student Details Drawer"
@@ -122,8 +125,8 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
             size="icon"
             onClick={() => onEdit(student)}
             className="h-8 w-8 p-1.5 rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-            title="Edit Student"
-            aria-label="Edit Student"
+            title={t("students.detail.editTitle")}
+            aria-label={t("students.detail.editTitle")}
           >
             <Edit2 className="w-4 h-4" />
           </Button>
@@ -132,11 +135,11 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
           <>
             <div className="flex items-center gap-2 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
               <Clock className="w-3 h-3" />
-              <span>Last Active 2026-05-30</span>
+              <span>{t("students.detail.lastActive")} 2026-05-30</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-success" />
-              <span className="text-[9px] font-bold text-success uppercase">Synced</span>
+              <span className="text-[9px] font-bold text-success uppercase">{t("students.detail.synced")}</span>
             </div>
           </>
         }
@@ -149,7 +152,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-bold text-foreground truncate leading-tight">{student.name}</h3>
             <div className="flex flex-wrap gap-1.5 mt-2 items-center">
-              <StatusBadge status={student.status} />
+              <StatusBadge status={student.status || "active"} />
               {student.grNumber && (
                 <span className="text-[9px] font-black px-2 py-0.5 rounded-full border border-primary/20 bg-primary/5 text-primary uppercase tracking-wider">
                   GR: {student.grNumber}
@@ -169,7 +172,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
             >
               <a href={`tel:${primaryPhone.replace(/[^\d+]/g, "")}`}>
                 <Phone className="w-4 h-4 mx-auto" />
-                <span className="text-[10px] font-bold">Call</span>
+                <span className="text-[10px] font-bold">{t("students.detail.call")}</span>
               </a>
             </Button>
           )}
@@ -178,8 +181,8 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
               type="button"
               variant="ghost"
               onClick={() => openComposer("whatsapp", [{
-                id: student.id,
-                name: student.name,
+                id: String(student.id),
+                name: student.name || "",
                 phone: primaryPhone,
               }])}
               className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-success/10 hover:border-success/30 transition-all text-success text-center cursor-pointer shadow-none"
@@ -193,8 +196,8 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
               type="button"
               variant="ghost"
               onClick={() => openComposer("sms", [{
-                id: student.id,
-                name: student.name,
+                id: String(student.id),
+                name: student.name || "",
                 phone: primaryPhone,
               }])}
               className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-amber-500/10 hover:border-amber-500/30 transition-all text-amber-600 dark:text-amber-500 text-center cursor-pointer shadow-none"
@@ -208,7 +211,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
         {/* Ordered Attributes & Connections list */}
         {sortedEnabledFields.some((field) => field.key === "fatherLink" ? (fatherContact || student.fatherName) : field.key === "motherLink" ? (motherContact || student.motherName) : field.key === "guardianLink" ? (guardianContact || student.guardianName) : true) && (
           <div className="space-y-4">
-            <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">Student Details</h4>
+            <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">{t("students.detail.sectionDetails")}</h4>
             <div className="space-y-2.5">
               {sortedEnabledFields.map((field) => {
                 if (field.key === "gender") {
@@ -219,7 +222,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                         <User className="w-3.5 h-3.5" />
                       </div>
                       <div className="flex-1 min-w-0 text-start">
-                        <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">Gender</span>
+                        <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">{t("students.gender")}</span>
                         <span className="text-xs font-semibold text-foreground capitalize">{student.gender || "Not specified"}</span>
                       </div>
                     </div>
@@ -234,7 +237,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                         <Calendar className="w-3.5 h-3.5" />
                       </div>
                       <div className="flex-1 min-w-0 text-start">
-                        <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">DOB & Age</span>
+                        <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">{t("students.columns.dob")}</span>
                         <span className="text-xs font-semibold text-foreground">
                           {student.dob ? formatDate(student.dob, true) : "—"} {age ? `(${age} yrs)` : ""}
                         </span>
@@ -251,7 +254,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                         <Clock className="w-3.5 h-3.5" />
                       </div>
                       <div className="flex-1 min-w-0 text-start">
-                        <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">Registered Date</span>
+                        <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">{t("students.form.registeredDate")}</span>
                         <span className="text-xs font-semibold text-foreground">
                           {student.registeredDate ? formatDateTime(student.registeredDate, true) : "—"}
                         </span>
@@ -269,7 +272,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                           FA
                         </div>
                         <div className="min-w-0">
-                          <span className="text-[8px] font-black uppercase tracking-widest text-info mb-0.5 block">Father</span>
+                          <span className="text-[8px] font-black uppercase tracking-widest text-info mb-0.5 block">{t("students.detail.father")}</span>
                           <h5 className="text-xs font-bold text-foreground truncate">{student.fatherName || fatherContact?.name}</h5>
                           {fatherPhone && <p className="text-[10px] text-muted-foreground mt-0.5">{fatherPhone}</p>}
                         </div>
@@ -295,7 +298,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                           MO
                         </div>
                         <div className="min-w-0">
-                          <span className="text-[8px] font-black uppercase tracking-widest text-secondary mb-0.5 block">Mother</span>
+                          <span className="text-[8px] font-black uppercase tracking-widest text-secondary mb-0.5 block">{t("students.detail.mother")}</span>
                           <h5 className="text-xs font-bold text-foreground truncate">{student.motherName || motherContact?.name}</h5>
                           {motherPhone && <p className="text-[10px] text-muted-foreground mt-0.5">{motherPhone}</p>}
                         </div>
@@ -321,7 +324,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                           GU
                         </div>
                         <div className="min-w-0">
-                          <span className="text-[8px] font-black uppercase tracking-widest text-primary mb-0.5 block">Guardian</span>
+                          <span className="text-[8px] font-black uppercase tracking-widest text-primary mb-0.5 block">{t("students.detail.guardian")}</span>
                           <h5 className="text-xs font-bold text-foreground truncate">{student.guardianName || guardianContact?.name}</h5>
                           {guardianPhone && <p className="text-[10px] text-muted-foreground mt-0.5">{guardianPhone}</p>}
                         </div>
@@ -344,7 +347,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
 
                   let displayVal = "";
                   if (typeof fieldValue === "boolean") {
-                    displayVal = fieldValue ? "Yes" : "No";
+                    displayVal = fieldValue ? t("students.list.yes") : t("students.list.no");
                   } else {
                     displayVal = String(fieldValue);
                   }
@@ -371,12 +374,12 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
 
         {/* Sessions details */}
         <div className="space-y-3">
-          <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">Enrolled Sessions ({enrolledSessionDetails.length})</h4>
+          <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">{t("students.detail.enrolledSessions", { count: enrolledSessionDetails.length })}</h4>
           {enrolledSessionDetails.length === 0 ? (
             <div className="p-6 rounded-2xl border border-dashed border-border bg-muted/10 text-center">
               <BookOpen className="w-8 h-8 mx-auto text-muted-foreground/30 mb-2" />
-              <p className="text-xs font-bold text-muted-foreground">Not Enrolled</p>
-              <p className="text-[10px] text-muted-foreground mt-1">This student is not registered in any active session.</p>
+              <p className="text-xs font-bold text-muted-foreground">{t("students.detail.notEnrolled")}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">{t("students.detail.notEnrolledDesc")}</p>
             </div>
           ) : (
             <div className="space-y-2.5">
@@ -397,7 +400,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                   <h5 className="text-xs font-bold text-foreground ms-1">{session.name}</h5>
                   {session.classes && session.classes.length > 0 ? (
                     <div className="text-[10px] text-muted-foreground space-y-1 bg-muted/40 p-2 rounded-lg ms-1">
-                      <p className="font-semibold uppercase tracking-wider text-[8px] text-muted-foreground/80">Class Assignments</p>
+                      <p className="font-semibold uppercase tracking-wider text-[8px] text-muted-foreground/80">{t("students.detail.classAssignments")}</p>
                       {session.classes.map((sessionClass: { id: string; name?: string; teacherName?: string; room?: string; schedule?: string }) => (
                         <div key={sessionClass.id} className="flex justify-between gap-1.5">
                           <span className="font-medium text-foreground">{sessionClass.name} (by {sessionClass.teacherName})</span>
@@ -406,7 +409,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                       ))}
                     </div>
                   ) : (
-                    <p className="text-[10px] text-muted-foreground italic ms-1">No classes configured for this session</p>
+                    <p className="text-[10px] text-muted-foreground italic ms-1">{t("students.detail.noClassesConfigured")}</p>
                   )}
                 </Card>
               ))}
@@ -416,17 +419,17 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
 
         {/* Attendance Performance Grid */}
         <div className="space-y-3">
-          <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">Engagement & Analytics</h4>
+          <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">{t("students.detail.engagementAnalytics")}</h4>
           <div className="grid grid-cols-2 gap-3">
             <Card accentColor="primary" className="p-3.5 text-center">
-              <span className="block text-[8px] font-black uppercase tracking-wider text-muted-foreground mb-1">Attendance Rate</span>
+              <span className="block text-[8px] font-black uppercase tracking-wider text-muted-foreground mb-1">{t("students.detail.attendanceRate")}</span>
               <p className="text-lg font-black text-success">94.8%</p>
-              <span className="text-[9px] text-muted-foreground">Last 30 days</span>
+              <span className="text-[9px] text-muted-foreground">{t("students.detail.last30Days")}</span>
             </Card>
             <Card accentColor="primary" className="p-3.5 text-center">
-              <span className="block text-[8px] font-black uppercase tracking-wider text-muted-foreground mb-1">Conduct Rating</span>
+              <span className="block text-[8px] font-black uppercase tracking-wider text-muted-foreground mb-1">{t("students.detail.conductRating")}</span>
               <p className="text-lg font-black text-primary">Excellent</p>
-              <span className="text-[9px] text-muted-foreground">Term Review</span>
+              <span className="text-[9px] text-muted-foreground">{t("students.detail.termReview")}</span>
             </Card>
           </div>
         </div>

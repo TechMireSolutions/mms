@@ -1,12 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { normalizeStoredStudent, STUDENTS_MODULE_CONTRACT, type StudentDuplicateCheckInput, type StudentDuplicateReason, type StudentsCommandMetricsSnapshot, type StudentsListPageResult, studentsWidgetQueryFromWidget, type StudentsWidgetAggregateResult } from '@mms/shared';
+import { normalizeStoredStudent, STUDENTS_MODULE_CONTRACT, type Student, type StudentDuplicateCheckInput, type StudentDuplicateReason, type StudentsCommandMetricsSnapshot, type StudentsListPageResult, studentsWidgetQueryFromWidget, type StudentsWidgetAggregateResult } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { STUDENT_COUNT_QUERY_KEY } from '@/tenant/features/students/hooks/useStudentCount';
 import { uniqueRegistryIds } from '@/lib/registryResolve';
-import type { Student } from '@/lib/data/studentsData';
 
 export const STUDENTS_QUERY_KEY = ['students', 'list'] as const;
 export const STUDENTS_METRICS_QUERY_KEY = ['students', 'metrics'] as const;

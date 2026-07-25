@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MoreHorizontal, Edit2, Trash2, GraduationCap,
-  ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Eye,
+  ChevronUp, ChevronDown, Eye,
   MessageSquare, MessageCircle, Mail
 } from "lucide-react";
 import {
@@ -11,23 +11,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { calcAge, type Student } from '@/lib/data/studentsData';
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
-import { type FieldDefinition, formatDate } from "@mms/shared";
+import { type FieldDefinition, type Student, calcAge, formatDate } from "@mms/shared";
 import { useTranslation } from '@/hooks/useTranslation';
 import StudentDetail from "@/tenant/features/students/components/StudentDetail";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { ListPagination } from "@/components/ui/ListPagination";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
@@ -37,83 +30,6 @@ export interface StudentListServerPagination {
   page: number;
   limit: number;
   hasMore: boolean;
-}
-
-interface ListPaginationFooterProps {
-  totalItems: number;
-  currentPage: number;
-  pageSize: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
-  pageSizeOptions: number[];
-  itemLabel: string;
-  className?: string;
-}
-
-function ListPaginationFooter({
-  totalItems,
-  currentPage,
-  pageSize,
-  totalPages,
-  onPageChange,
-  onPageSizeChange,
-  pageSizeOptions,
-  itemLabel,
-  className,
-}: ListPaginationFooterProps) {
-  return (
-    <div className={className}>
-      <div>
-        Showing {Math.min(totalItems, (currentPage - 1) * pageSize + 1)}-
-        {Math.min(totalItems, currentPage * pageSize)} of {totalItems} {itemLabel}
-      </div>
-
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1.5">
-          <span>Rows per page:</span>
-          <Select value={String(pageSize)} onValueChange={(val) => onPageSizeChange(Number(val))}>
-            <SelectTrigger className="h-7 w-[60px] bg-background border border-border rounded px-1.5 py-0.5 text-foreground cursor-pointer">
-              <SelectValue placeholder={String(pageSize)} />
-            </SelectTrigger>
-            <SelectContent>
-              {pageSizeOptions.map((size) => (
-                <SelectItem key={size} value={String(size)}>
-                  {size}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            disabled={currentPage === 1}
-            onClick={() => onPageChange(currentPage - 1)}
-            className="h-7 w-7 p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            disabled={currentPage === totalPages}
-            onClick={() => onPageChange(currentPage + 1)}
-            className="h-7 w-7 p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export interface StudentListProps {
@@ -232,8 +148,8 @@ export default function StudentList({
       let secondSortValue = "";
 
       if (sortField === "name") {
-        firstSortValue = firstStudent.name.toLowerCase();
-        secondSortValue = secondStudent.name.toLowerCase();
+        firstSortValue = (firstStudent.name || "").toLowerCase();
+        secondSortValue = (secondStudent.name || "").toLowerCase();
       } else if (sortField === "age") {
         firstSortValue = firstStudent.dob || "";
         secondSortValue = secondStudent.dob || "";
@@ -244,8 +160,8 @@ export default function StudentList({
         firstSortValue = (firstStudent.fatherName || "").toLowerCase();
         secondSortValue = (secondStudent.fatherName || "").toLowerCase();
       } else if (sortField === "status") {
-        firstSortValue = firstStudent.status.toLowerCase();
-        secondSortValue = secondStudent.status.toLowerCase();
+        firstSortValue = (firstStudent.status || "").toLowerCase();
+        secondSortValue = (secondStudent.status || "").toLowerCase();
       } else if (sortField === "grNumber") {
         firstSortValue = firstStudent.grNumber || "";
         secondSortValue = secondStudent.grNumber || "";
@@ -270,7 +186,7 @@ export default function StudentList({
     if (selectedIds.length === paginatedStudents.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(paginatedStudents.map((student) => student.id));
+      setSelectedIds(paginatedStudents.map((student) => String(student.id)));
     }
   };
 
@@ -302,17 +218,18 @@ export default function StudentList({
         {paginatedStudents.length === 0 ? (
           <EmptyState
             icon={GraduationCap}
-            title="No students found"
-            description="Try adjusting your search or filters, or register a new student."
+            title={t("students.list.emptyTitle")}
+            description={t("students.list.emptyDesc")}
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
             {paginatedStudents.map((studentCard) => {
-              const isSelected = selectedIds.includes(studentCard.id);
+              const studentIdStr = String(studentCard.id);
+              const isSelected = selectedIds.includes(studentIdStr);
               const age = calcAge(studentCard.dob);
               return (
                 <motion.div
-                  key={studentCard.id}
+                  key={studentIdStr}
                   onClick={(event) => handleRowClick(event, studentCard)}
                   className={`relative rounded-2xl border bg-card/40 backdrop-blur-xl p-5 hover:shadow-md transition-all group cursor-pointer ${
                     isSelected ? "border-primary bg-primary/[0.015]" : "border-border/50 hover:border-primary/20"
@@ -321,7 +238,7 @@ export default function StudentList({
                   <div className="absolute top-3 left-3">
                     <Checkbox
                       checked={isSelected}
-                      onCheckedChange={() => handleSelectOne(studentCard.id)}
+                      onCheckedChange={() => handleSelectOne(studentIdStr)}
                     />
                   </div>
                   <div className="absolute top-3 end-3">
@@ -333,24 +250,24 @@ export default function StudentList({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-40">
                         <DropdownMenuItem onClick={() => setViewStudent(studentCard)}>
-                          <Eye className="w-3.5 h-3.5 me-2" /> View profile
+                          <Eye className="w-3.5 h-3.5 me-2" /> {t("students.list.viewProfile")}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onEdit(studentCard)}>
-                          <Edit2 className="w-3.5 h-3.5 me-2" /> Edit student
+                          <Edit2 className="w-3.5 h-3.5 me-2" /> {t("students.list.editStudent")}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => onDelete(studentCard.id)}
+                          onClick={() => onDelete(studentIdStr)}
                           className="text-destructive focus:text-destructive"
                         >
-                          <Trash2 className="w-3.5 h-3.5 me-2" /> Remove
+                          <Trash2 className="w-3.5 h-3.5 me-2" /> {t("students.list.remove")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
 
                   <div className="flex flex-col items-center text-center mt-3 mb-4">
-                    <UserAvatar id={studentCard.id} name={studentCard.name} className="w-8 h-8 rounded-full text-[11px] font-bold" />
+                    <UserAvatar id={studentIdStr} name={studentCard.name || ""} className="w-8 h-8 rounded-full text-[11px] font-bold" />
                     <h4 className="text-sm font-bold text-foreground mt-2 group-hover:text-primary transition-colors truncate w-full max-w-[150px]">
                       {studentCard.name}
                     </h4>
@@ -364,31 +281,31 @@ export default function StudentList({
                   <div className="space-y-2 border-t border-border/40 pt-3 text-[11px]">
                     {isFieldEnabled("gender") && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Gender:</span>
+                        <span className="text-muted-foreground">{t("students.gender")}:</span>
                         <span className="font-semibold text-foreground capitalize">{studentCard.gender || "—"}</span>
                       </div>
                     )}
                     {isFieldEnabled("dob") && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Age / DOB:</span>
-                        <span className="font-semibold text-foreground">{age ? `${age} yrs` : "—"}</span>
+                        <span className="text-muted-foreground">{t("students.columns.dob")}:</span>
+                        <span className="font-semibold text-foreground">{age ? t("students.list.ageYears", { age }) : "—"}</span>
                       </div>
                     )}
                     {isFieldEnabled("fatherLink") && studentCard.fatherName && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Father:</span>
+                        <span className="text-muted-foreground">{t("students.detail.father")}:</span>
                         <span className="font-semibold text-foreground truncate max-w-[100px]">{studentCard.fatherName}</span>
                       </div>
                     )}
                     {isFieldEnabled("guardianLink") && studentCard.guardianName && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Guardian:</span>
+                        <span className="text-muted-foreground">{t("students.detail.guardian")}:</span>
                         <span className="font-semibold text-foreground truncate max-w-[100px]">{studentCard.guardianName}</span>
                       </div>
                     )}
                     <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">Status:</span>
-                      <StatusBadge status={studentCard.status} />
+                      <span className="text-muted-foreground">{t("students.columns.status")}:</span>
+                      <StatusBadge status={studentCard.status || "active"} />
                     </div>
                   </div>
                 </motion.div>
@@ -399,16 +316,13 @@ export default function StudentList({
 
         {/* Footer with pagination */}
         {students.length > 0 && !serverPagination && (
-          <ListPaginationFooter
-            totalItems={students.length}
-            currentPage={currentPage}
-            pageSize={pageSize}
-            totalPages={totalPages}
+          <ListPagination
+            page={currentPage}
+            total={students.length}
+            limit={pageSize}
             onPageChange={setCurrentPage}
-            onPageSizeChange={setPageSize}
-            pageSizeOptions={[8, 16, 24, 48]}
-            itemLabel="students"
-            className="px-5 py-3 border border-border bg-muted/10 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground"
+            i18nNamespace="students"
+            variant="range"
           />
         )}
 
@@ -446,7 +360,7 @@ export default function StudentList({
                   className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none"
                 >
                   <div className="flex items-center gap-1">
-                    Student {renderSortIcon("name")}
+                    {t("students.columns.name")} {renderSortIcon("name")}
                   </div>
                 </th>
                 {showDob && (
@@ -455,7 +369,7 @@ export default function StudentList({
                     className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden sm:table-cell"
                   >
                     <div className="flex items-center gap-1">
-                      Age / DOB {renderSortIcon("age")}
+                      {t("students.columns.dob")} {renderSortIcon("age")}
                     </div>
                   </th>
                 )}
@@ -465,13 +379,13 @@ export default function StudentList({
                     className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden md:table-cell"
                   >
                     <div className="flex items-center gap-1">
-                      Parent {renderSortIcon("fatherName")}
+                      {t("students.columns.parents")} {renderSortIcon("fatherName")}
                     </div>
                   </th>
                 )}
                 {showSessions && (
                 <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">
-                  Sessions
+                  {t("students.columns.sessions")}
                 </th>
                 )}
                 {visibleCustomFields.map((field) => (
@@ -485,7 +399,7 @@ export default function StudentList({
                   className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden sm:table-cell"
                 >
                   <div className="flex items-center gap-1">
-                    Status {renderSortIcon("status")}
+                    {t("students.columns.status")} {renderSortIcon("status")}
                   </div>
                 </th>
                 )}
@@ -498,15 +412,16 @@ export default function StudentList({
                   <td colSpan={colSpanCount} className="py-8">
                     <EmptyState
                       icon={GraduationCap}
-                      title="No students found"
-                      description="Try adjusting your search or filters, or register a new student."
+                      title={t("students.list.emptyTitle")}
+                      description={t("students.list.emptyDesc")}
                     />
                   </td>
                 </tr>
               ) : (
                 <AnimatePresence>
                   {paginatedStudents.map((studentRow, rowIndex) => {
-                    const isSelected = selectedIds.includes(studentRow.id);
+                    const studentIdStr = String(studentRow.id);
+                    const isSelected = selectedIds.includes(studentIdStr);
                     const age = calcAge(studentRow.dob);
                     const sessionNames = sessions
                       .filter((session) => studentRow.enrolledSessions?.includes(session.id))
@@ -514,7 +429,7 @@ export default function StudentList({
 
                     return (
                       <motion.tr
-                        key={studentRow.id}
+                        key={studentIdStr}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: Math.min(rowIndex * 0.03, 0.2) }}
@@ -526,12 +441,12 @@ export default function StudentList({
                         <td className="px-4 py-3">
                           <Checkbox
                             checked={isSelected}
-                            onCheckedChange={() => handleSelectOne(studentRow.id)}
+                            onCheckedChange={() => handleSelectOne(studentIdStr)}
                           />
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <UserAvatar id={studentRow.id} name={studentRow.name} className="w-8 h-8 rounded-full text-[11px] font-bold" />
+                            <UserAvatar id={studentIdStr} name={studentRow.name || ""} className="w-8 h-8 rounded-full text-[11px] font-bold" />
                             <div>
                               <div className="flex items-center gap-1.5">
                                 <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors">
@@ -544,7 +459,7 @@ export default function StudentList({
                                 )}
                               </div>
                               <p className="text-[11px] text-muted-foreground">
-                                {isFieldEnabled("gender") && studentRow.gender ? `${studentRow.gender} · ` : ""}{studentRow.phone || "No phone"}
+                                {isFieldEnabled("gender") && studentRow.gender ? `${studentRow.gender} · ` : ""}{studentRow.phone || t("students.list.noPhone")}
                               </p>
                             </div>
                           </div>
@@ -552,7 +467,7 @@ export default function StudentList({
                         {showDob && (
                           <td className="px-4 py-3 hidden sm:table-cell">
                             <p className="text-[13px] font-medium text-foreground">
-                              {age ? `${age} yrs` : "—"}
+                              {age ? t("students.list.ageYears", { age }) : "—"}
                             </p>
                             <p className="text-[11px] text-muted-foreground">
                               {formatDate(studentRow.dob, true)}
@@ -583,7 +498,7 @@ export default function StudentList({
                           <div className="flex flex-wrap gap-1">
                             {sessionNames.length === 0 ? (
                               <span className="text-[11px] text-muted-foreground italic">
-                                Not enrolled
+                                {t("students.list.notEnrolled")}
                               </span>
                             ) : (
                               sessionNames.map((sessionName) => (
@@ -603,7 +518,7 @@ export default function StudentList({
                           let displayValue = "—";
                           if (fieldValue !== undefined && fieldValue !== null && fieldValue !== "") {
                             if (typeof fieldValue === "boolean") {
-                              displayValue = fieldValue ? "Yes" : "No";
+                              displayValue = fieldValue ? t("students.list.yes") : t("students.list.no");
                             } else {
                               displayValue = String(fieldValue);
                             }
@@ -616,7 +531,7 @@ export default function StudentList({
                         })}
                         {showStatus && (
                         <td className="px-4 py-3 hidden sm:table-cell">
-                          <StatusBadge status={studentRow.status} />
+                          <StatusBadge status={studentRow.status || "active"} />
                         </td>
                         )}
                         <td className="px-4 py-3">
@@ -628,29 +543,29 @@ export default function StudentList({
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-44">
                               <DropdownMenuItem onClick={() => setViewStudent(studentRow)}>
-                                <Eye className="w-3.5 h-3.5 me-2" /> View profile
+                                <Eye className="w-3.5 h-3.5 me-2" /> {t("students.list.viewProfile")}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => onEdit(studentRow)}>
-                                <Edit2 className="w-3.5 h-3.5 me-2" /> Edit student
+                                <Edit2 className="w-3.5 h-3.5 me-2" /> {t("students.list.editStudent")}
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => openComposer("whatsapp", [{ id: studentRow.id, name: studentRow.name, phone: studentRow.phone || "", email: studentRow.email || "" }])}>
+                              <DropdownMenuItem onClick={() => openComposer("whatsapp", [{ id: studentIdStr, name: studentRow.name || "", phone: studentRow.phone || "", email: studentRow.email || "" }])}>
                                 <MessageCircle className="w-3.5 h-3.5 me-2 text-success" /> WhatsApp
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => openComposer("sms", [{ id: studentRow.id, name: studentRow.name, phone: studentRow.phone || "", email: studentRow.email || "" }])}>
+                              <DropdownMenuItem onClick={() => openComposer("sms", [{ id: studentIdStr, name: studentRow.name || "", phone: studentRow.phone || "", email: studentRow.email || "" }])}>
                                 <MessageSquare className="w-3.5 h-3.5 me-2 text-info" /> Send SMS
                               </DropdownMenuItem>
                               {studentRow.email && (
-                                <DropdownMenuItem onClick={() => openComposer("email", [{ id: studentRow.id, name: studentRow.name, phone: studentRow.phone || "", email: studentRow.email }])}>
+                                <DropdownMenuItem onClick={() => openComposer("email", [{ id: studentIdStr, name: studentRow.name || "", phone: studentRow.phone || "", email: studentRow.email }])}>
                                   <Mail className="w-3.5 h-3.5 me-2 text-primary" /> Send Email
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
-                                onClick={() => onDelete(studentRow.id)}
+                                onClick={() => onDelete(studentIdStr)}
                                 className="text-destructive focus:text-destructive"
                               >
-                                <Trash2 className="w-3.5 h-3.5 me-2" /> Remove
+                                <Trash2 className="w-3.5 h-3.5 me-2" /> {t("students.list.remove")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -666,16 +581,13 @@ export default function StudentList({
 
         {/* Footer with pagination */}
         {students.length > 0 && !serverPagination && (
-          <ListPaginationFooter
-            totalItems={students.length}
-            currentPage={currentPage}
-            pageSize={pageSize}
-            totalPages={totalPages}
+          <ListPagination
+            page={currentPage}
+            total={students.length}
+            limit={pageSize}
             onPageChange={setCurrentPage}
-            onPageSizeChange={setPageSize}
-            pageSizeOptions={[5, 10, 25, 50]}
-            itemLabel="students"
-            className="p-3 border-t border-border bg-muted/20 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground"
+            i18nNamespace="students"
+            variant="range"
           />
         )}
       </div>
@@ -690,7 +602,7 @@ export default function StudentList({
             className="fixed bottom-6 end-6 z-40 bg-card/95 border border-primary/20 backdrop-blur-xl shadow-2xl rounded-2xl p-3 flex items-center gap-3 border-s-4 border-s-primary"
           >
             <span className="text-xs font-bold text-foreground ps-1">
-              {selectedIds.length} {selectedIds.length === 1 ? "student" : "students"} selected
+              {t("students.selectedCount", { count: selectedIds.length })}
             </span>
 
             <div className="h-4 w-px bg-border" />
@@ -700,8 +612,8 @@ export default function StudentList({
               variant="outline"
               onClick={() => {
                 const selectedRecipients = students
-                  .filter((s) => selectedIds.includes(s.id))
-                  .map((s) => ({ id: s.id, name: s.name, phone: s.phone || "", email: s.email || "" }));
+                  .filter((s) => selectedIds.includes(String(s.id)))
+                  .map((s) => ({ id: String(s.id), name: s.name || "", phone: s.phone || "", email: s.email || "" }));
                 openComposer("whatsapp", selectedRecipients);
               }}
               className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
@@ -714,8 +626,8 @@ export default function StudentList({
               variant="outline"
               onClick={() => {
                 const selectedRecipients = students
-                  .filter((s) => selectedIds.includes(s.id))
-                  .map((s) => ({ id: s.id, name: s.name, phone: s.phone || "", email: s.email || "" }));
+                  .filter((s) => selectedIds.includes(String(s.id)))
+                  .map((s) => ({ id: String(s.id), name: s.name || "", phone: s.phone || "", email: s.email || "" }));
                 openComposer("sms", selectedRecipients);
               }}
               className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
@@ -728,9 +640,9 @@ export default function StudentList({
               variant="outline"
               onClick={() => {
                 const selectedRecipients = students
-                  .filter((s) => selectedIds.includes(s.id))
+                  .filter((s) => selectedIds.includes(String(s.id)))
                   .filter((s) => s.email)
-                  .map((s) => ({ id: s.id, name: s.name, phone: s.phone || "", email: s.email! }));
+                  .map((s) => ({ id: String(s.id), name: s.name || "", phone: s.phone || "", email: s.email! }));
                 openComposer("email", selectedRecipients);
               }}
               className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
@@ -744,14 +656,14 @@ export default function StudentList({
               type="button"
               variant="destructive"
               onClick={() => {
-                if (onBulkDelete && window.confirm(`Are you sure you want to remove these ${selectedIds.length} students?`)) {
+                if (onBulkDelete && window.confirm(t("students.list.confirmRemoveSelected", { count: selectedIds.length }))) {
                   onBulkDelete(selectedIds);
                   setSelectedIds([]);
                 }
               }}
               className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-[11px] font-semibold hover:bg-destructive/90 transition-colors h-auto"
             >
-              Delete
+              {t("students.list.remove")}
             </Button>
           </motion.div>
         )}
@@ -784,3 +696,4 @@ export default function StudentList({
     </div>
   );
 }
+

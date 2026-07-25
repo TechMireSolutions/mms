@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { SubTabBar, type SubTab as UINavTab } from "@/components/ui/SubTabBar";
 import { Users, UserCheck, UserX, TrendingUp } from "lucide-react";
-import { STUDENTS_MODULE_CONTRACT } from "@mms/shared";
-import type { Student } from '@/lib/data/studentsData';
+import { STUDENTS_MODULE_CONTRACT, type Student, calcAge } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import {
@@ -58,16 +57,10 @@ interface StudentReportProps {
 
 
 function mapStudentRow(student: Student): ReportStudent {
-  let age = 0;
-  if (student.dob) {
-    const birthDate = new Date(student.dob);
-    if (!isNaN(birthDate.getTime())) {
-      age = Math.floor((Date.now() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25));
-    }
-  }
+  const age = calcAge(student.dob) ?? 0;
   return {
     id: String(student.id),
-    name: student.name,
+    name: student.name || "",
     gender: student.gender || "male",
     status: student.status || "inactive",
     session: student.enrolledSessions?.[0] || "—",

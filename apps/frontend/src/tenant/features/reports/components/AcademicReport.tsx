@@ -87,7 +87,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
 
       const percentage = Math.round((examResult.marksObtained / exam.totalMarks) * 100);
       academicResults.push({
-        studentName: student.name,
+        studentName: student.name || "",
         class: exam.name, // using exam name as proxy for class group context here
         subject: exam.subject,
         marks: percentage,

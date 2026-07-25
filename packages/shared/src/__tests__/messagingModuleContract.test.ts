@@ -6,6 +6,7 @@ import {
   MESSAGING_STATUS_OPTIONS,
   getChannelBadgeStyle,
   getChannelLabelKey,
+  getMessageCategoryLabelKey,
   toMessagingRecipient,
 } from '../messagingModuleContract.js';
 
@@ -49,9 +50,11 @@ describe('messagingModuleContract', () => {
     expect(getChannelBadgeStyle('unknown')).toContain('text-success');
   });
 
-  it('returns appropriate i18n label keys for channels', () => {
+  it('returns appropriate i18n label keys for channels and categories', () => {
     expect(getChannelLabelKey('sms')).toBe('messaging.channel.sms');
     expect(getChannelLabelKey('whatsapp')).toBe('messaging.channel.whatsapp');
+    expect(getMessageCategoryLabelKey('general')).toBe('messaging.category.general');
+    expect(getMessageCategoryLabelKey('academic')).toBe('messaging.category.academic');
   });
 
   it('converts objects into standardized messaging recipients via toMessagingRecipient', () => {

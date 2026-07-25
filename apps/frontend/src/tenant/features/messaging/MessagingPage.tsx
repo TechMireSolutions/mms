@@ -27,6 +27,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { ExportToolbar } from '@/components/ui/ExportToolbar';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { ChannelBadge } from '@/components/ui/ChannelBadge';
 import { useContactsCollection } from '@/tenant/features/contacts/hooks/useContacts';
 import { 
   getDisplayName, 
@@ -36,8 +37,9 @@ import {
   getInitials,
   mergeMessageTemplates,
   MESSAGING_MODULE_CONTRACT,
-  getChannelBadgeStyle,
+  getMessageCategoryLabelKey,
   toMessagingRecipient,
+  appendVariableToken,
   type Message, 
   type MessageCategory,
   type MessageTemplate
@@ -226,7 +228,7 @@ export default function MessagingPage(): React.JSX.Element {
   };
 
   const insertVariableTag = (tag: string): void => {
-    setTemplateBody((prev) => (prev ? `${prev} ${tag}` : tag));
+    setTemplateBody((prev) => appendVariableToken(prev, tag));
   };
 
   const confirmDeleteTemplate = (): void => {
@@ -267,18 +269,20 @@ export default function MessagingPage(): React.JSX.Element {
     });
   }, [allContacts, searchContact, genderFilter, roleFilter]);
 
+  const getLogRecipientName = (contactId: string | number): string => {
+    const recipient = contactMap.get(contactId);
+    return recipient ? getDisplayName(recipient) : t('messaging.contactFallback', { id: contactId });
+  };
+
   const filteredLogs = useMemo(() => {
     return messageLogs.filter((log) => {
       const channelMatch = channelFilter === 'all' || log.channel === channelFilter;
       const categoryMatch = logCategoryFilter === 'all' || (log.category || 'general') === logCategoryFilter;
       const bodyMatch = log.body.toLowerCase().includes(searchLog.toLowerCase());
-      const recipientName = contactMap.get(log.contactId);
-      const nameMatch = recipientName 
-        ? getDisplayName(recipientName).toLowerCase().includes(searchLog.toLowerCase())
-        : false;
+      const nameMatch = getLogRecipientName(log.contactId).toLowerCase().includes(searchLog.toLowerCase());
       return channelMatch && categoryMatch && (bodyMatch || nameMatch);
     });
-  }, [messageLogs, contactMap, searchLog, channelFilter, logCategoryFilter]);
+  }, [messageLogs, contactMap, searchLog, channelFilter, logCategoryFilter, t]);
 
   const handleToggleRecipient = (id: string | number): void => {
     setSelectedRecipients((prev) => ({
@@ -346,7 +350,7 @@ export default function MessagingPage(): React.JSX.Element {
       ? toMessagingRecipient(recipient, { getDisplayName, getPrimaryPhone, getPrimaryEmail })
       : {
           id: log.contactId,
-          name: t('messaging.contactFallback', { id: log.contactId }),
+          name: getLogRecipientName(log.contactId),
           phone: '',
           email: '',
         };
@@ -660,17 +664,13 @@ export default function MessagingPage(): React.JSX.Element {
                         { header: t('messaging.messageBody'), key: 'body' },
                         { header: t('messaging.dateSent'), key: 'sentAt' },
                       ]}
-                      rows={filteredLogs.map((log) => {
-                        const recipient = contactMap.get(log.contactId);
-                        const name = recipient ? getDisplayName(recipient) : t('messaging.contactFallback', { id: log.contactId });
-                        return {
-                          recipient: name,
-                          channel: log.channel,
-                          category: log.category || 'general',
-                          body: log.body,
-                          sentAt: formatDateTime(log.sentAt),
-                        };
-                      })}
+                      rows={filteredLogs.map((log) => ({
+                        recipient: getLogRecipientName(log.contactId),
+                        channel: log.channel,
+                        category: log.category || 'general',
+                        body: log.body,
+                        sentAt: formatDateTime(log.sentAt),
+                      }))}
                       filename="message_history"
                     />
                   )}
@@ -702,8 +702,7 @@ export default function MessagingPage(): React.JSX.Element {
                     </thead>
                     <tbody className="divide-y divide-border/60">
                       {filteredLogs.map((log) => {
-                        const recipient = contactMap.get(log.contactId);
-                        const name = recipient ? getDisplayName(recipient) : t('messaging.contactFallback', { id: log.contactId });
+                        const name = getLogRecipientName(log.contactId);
                         return (
                           <tr key={log.id} className="hover:bg-muted/10 transition-colors">
                             <td className="px-4 py-3 font-semibold text-foreground flex items-center gap-2">
@@ -714,10 +713,7 @@ export default function MessagingPage(): React.JSX.Element {
                             </td>
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-1.5">
-                                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${getChannelBadgeStyle(log.channel)}`}>
-                                  {log.channel === 'email' ? <Mail className="w-3 h-3" /> : log.channel === 'sms' ? <MessageSquare className="w-3 h-3" /> : <MessageCircle className="w-3 h-3" />}
-                                  {t(`messaging.channel.${log.channel}` as const)}
-                                </span>
+                                <ChannelBadge channel={log.channel} />
                                 <StatusBadge status={log.status || 'sent'} size="sm" />
                               </div>
                             </td>
@@ -916,17 +912,15 @@ export default function MessagingPage(): React.JSX.Element {
                   <tbody className="divide-y divide-border/60">
                     {filteredTemplates.map((tpl) => (
                       <tr key={tpl.id} className="hover:bg-muted/5 transition-colors">
-                        <td className="px-4 py-3 font-semibold text-foreground">
-                          {tpl.label}
+                        <td className="px-4 py-3 font-semibold text-foreground flex items-center gap-1.5">
+                          <span>{tpl.label}</span>
                           {tpl.channel && tpl.channel !== 'all' && (
-                            <span className="ml-1.5 text-[9px] uppercase font-mono px-1 py-0.2 bg-muted text-muted-foreground rounded">
-                              {t(`messaging.channel.${tpl.channel}` as const)}
-                            </span>
+                            <ChannelBadge channel={tpl.channel} className="text-[9px]" />
                           )}
                         </td>
                         <td className="px-4 py-3">
                           <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">
-                            {t(`messaging.category.${tpl.category || 'general'}` as const)}
+                            {t(getMessageCategoryLabelKey(tpl.category || 'general'))}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-muted-foreground max-w-sm truncate" title={tpl.body}>

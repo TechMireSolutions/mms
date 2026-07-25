@@ -11,12 +11,14 @@ import {
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 
 export default function StudentsSettings({ mode }: { mode?: "fields" | "preferences" }): React.ReactElement {
+  const { t } = useTranslation();
   const config = useStudentConfig();
   const {
     settings,
@@ -49,27 +51,33 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
         <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
           <GraduationCap className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         </div>
-        <h3 id="students-settings-title" className="text-[13px] font-bold text-foreground">Students Module Settings</h3>
+        <h3 id="students-settings-title" className="text-[13px] font-bold text-foreground">
+          {t("students.settings.title")}
+        </h3>
       </div>
 
       {showPrefs && (
         <div className="space-y-4">
           <div className="space-y-3">
-            <h4 className="text-[11px] font-bold text-foreground uppercase tracking-wider">General Register (GR) Number Settings</h4>
+            <h4 className="text-[11px] font-bold text-foreground uppercase tracking-wider">
+              {t("students.settings.grSectionTitle")}
+            </h4>
             <div className="grid grid-cols-2 gap-3 text-left">
               <div>
-                <label htmlFor="gr-template" className={FORM_LABEL}>GR Number Template</label>
+                <label htmlFor="gr-template" className={FORM_LABEL}>{t("students.settings.grTemplate")}</label>
                 <Input
                   id="gr-template"
                   className={FORM_INPUT}
                   value={settingsDraft.grNumberTemplate || ""}
                   onChange={(event) => upd("grNumberTemplate", event.target.value)}
-                  placeholder="e.g. {seq}-{year}"
+                  placeholder={t("students.settings.grTemplatePlaceholder", { seq: "{seq}", year: "{year}" })}
                 />
-                <span className="text-[9px] text-muted-foreground mt-1 block">Use placeholders: <code>{`{seq}`}</code>, <code>{`{year}`}</code></span>
+                <span className="text-[9px] text-muted-foreground mt-1 block">
+                  {t("students.settings.grTemplateHint", { seq: "{seq}", year: "{year}" })}
+                </span>
               </div>
               <div>
-                <label htmlFor="gr-digits" className={FORM_LABEL}>Sequence Digits</label>
+                <label htmlFor="gr-digits" className={FORM_LABEL}>{t("students.settings.grDigits")}</label>
                 <Input
                   id="gr-digits"
                   type="number"
@@ -79,27 +87,29 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
                   value={settingsDraft.grNumberDigits || 4}
                   onChange={(event) => upd("grNumberDigits", Number(event.target.value))}
                 />
-                <span className="text-[9px] text-muted-foreground mt-1 block">e.g., 4 is "0001", 3 is "001"</span>
+                <span className="text-[9px] text-muted-foreground mt-1 block">
+                  {t("students.settings.grDigitsHint")}
+                </span>
               </div>
             </div>
             <ToggleRow
-              label="Restart Sequence Annually"
-              description="Reset GR number sequence to 0001 at the beginning of each calendar year"
+              label={t("students.settings.restartAnnually")}
+              description={t("students.settings.restartAnnuallyDesc")}
               value={settingsDraft.grNumberRestartAnnually ?? true}
               onChange={(v) => upd("grNumberRestartAnnually", v)}
             />
           </div>
 
           <div className="space-y-2 pt-1 border-t border-border/40" role="group" aria-label="Student registry feature flags toggles">
-            <ToggleRow label="Auto-generate Student ID" description="System assigns unique ID on registration" value={settingsDraft.autoGenerateId} onChange={(v) => upd("autoGenerateId", v)} />
-            <ToggleRow label="Require Guardian Contact" description="Student must have at least one guardian linked" value={settingsDraft.requireGuardian} onChange={(v) => upd("requireGuardian", v)} />
-            <ToggleRow label="Require Photo" description="Student profile photo is mandatory" value={settingsDraft.requirePhoto} onChange={(v) => upd("requirePhoto", v)} />
+            <ToggleRow label={t("students.settings.autoGenerateId")} description={t("students.settings.autoGenerateIdDesc")} value={settingsDraft.autoGenerateId} onChange={(v) => upd("autoGenerateId", v)} />
+            <ToggleRow label={t("students.settings.requireGuardian")} description={t("students.settings.requireGuardianDesc")} value={settingsDraft.requireGuardian} onChange={(v) => upd("requireGuardian", v)} />
+            <ToggleRow label={t("students.settings.requirePhoto")} description={t("students.settings.requirePhotoDesc")} value={settingsDraft.requirePhoto} onChange={(v) => upd("requirePhoto", v)} />
           </div>
 
           <div className="py-3 border-t border-border mt-3 flex items-center justify-between">
             <div className="text-left">
-              <p className="text-[13px] font-semibold text-foreground">Default View Layout</p>
-              <p className="text-[11px] text-muted-foreground">Select how students are displayed in work view</p>
+              <p className="text-[13px] font-semibold text-foreground">{t("students.settings.defaultViewLayout")}</p>
+              <p className="text-[11px] text-muted-foreground">{t("students.settings.defaultViewLayoutDesc")}</p>
             </div>
             <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
               <Button
@@ -112,7 +122,7 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                List View
+                {t("students.settings.listView")}
               </Button>
               <Button
                 type="button"
@@ -124,7 +134,7 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Card Grid
+                {t("students.settings.cardGrid")}
               </Button>
             </div>
           </div>
@@ -139,16 +149,16 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
         />
       )}
 
-
       <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
         <Button
           type="button"
           onClick={handleSave}
           className={saved ? "bg-success hover:bg-success/90 text-success-foreground ml-auto" : "ml-auto"}
         >
-          <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? "Saved!" : "Save Settings"}
+          <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? t("students.settings.saveSuccess") : t("students.settings.saveSettings")}
         </Button>
       </footer>
     </section>
   );
 }
+

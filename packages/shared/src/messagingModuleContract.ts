@@ -1,5 +1,6 @@
 import type { Permission } from './permissions.js';
 import type { PersonalizeRecipient } from './utils.js';
+import type { AppTranslationKey } from './appTranslations.js';
 import { MESSAGE_CATEGORIES, MESSAGE_CHANNELS, MESSAGE_CATEGORY_OPTIONS, MESSAGE_CHANNEL_OPTIONS } from './messagingSchemas.js';
 
 export const MESSAGING_ROLE_FILTERS = ['all', 'students', 'teachers', 'staff', 'contacts'] as const;
@@ -65,9 +66,17 @@ export function getChannelBadgeStyle(channel: 'sms' | 'whatsapp' | 'email' | str
 /**
  * Helper to get the i18n label key for a message channel.
  */
-export function getChannelLabelKey(channel: string): string {
-  return `messaging.channel.${channel}`;
+export function getChannelLabelKey(channel: string): AppTranslationKey {
+  return `messaging.channel.${channel}` as AppTranslationKey;
 }
+
+/**
+ * Helper to get the i18n label key for a message category.
+ */
+export function getMessageCategoryLabelKey(category: string): AppTranslationKey {
+  return `messaging.category.${category}` as AppTranslationKey;
+}
+
 
 /** Standardized messaging recipient object interface. */
 export interface StandardMessagingRecipient extends PersonalizeRecipient {

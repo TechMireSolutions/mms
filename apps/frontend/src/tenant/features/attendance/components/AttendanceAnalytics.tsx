@@ -107,10 +107,13 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
   interface StudentRateEntry { name: string; rate: number; }
 
   const studentRates = useMemo<StudentRateEntry[]>(() =>
-    students.map((student) => ({
-      name: student.name.split(" ")[0] + " " + (student.name.split(" ")[1]?.[0] ?? "") + ".",
-      rate: calcStudentRate(student.id, records),
-    })).sort((firstStudent, secondStudent) => firstStudent.rate - secondStudent.rate),
+    students.map((student) => {
+      const sName = student.name || "Unknown";
+      return {
+        name: sName.split(" ")[0] + " " + (sName.split(" ")[1]?.[0] ?? "") + ".",
+        rate: calcStudentRate(student.id, records),
+      };
+    }).sort((firstStudent, secondStudent) => firstStudent.rate - secondStudent.rate),
     [students, records]
   );
 

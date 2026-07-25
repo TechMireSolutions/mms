@@ -22,8 +22,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import StudentList from "@/tenant/features/students/components/StudentList";
 import StudentForm from "@/tenant/features/students/components/StudentForm";
 import StudentsSettingsPanel from "@/tenant/features/students/components/StudentsSettings";
-import { Student } from '@/lib/data/studentsData';
-import { type Student as SharedStudent, type StudentsSettings, STUDENTS_MODULE_CONTRACT, todayISO, toTitleCase } from "@mms/shared";
+import { type Student, type StudentsSettings, STUDENTS_MODULE_CONTRACT, todayISO, toTitleCase } from "@mms/shared";
 
 
 import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
@@ -183,7 +182,7 @@ export default function Students() {
 
   const filteredStudents = workStudents;
 
-  const handleSaveStudent = async (studentToSave: SharedStudent) => {
+  const handleSaveStudent = async (studentToSave: Student) => {
     if (editStudent) {
       await updateStudent.mutateAsync({
         id: String(studentToSave.id),
@@ -429,7 +428,7 @@ export default function Students() {
       <AnimatePresence>
         {showStudentForm && (
           <StudentForm
-            student={editStudent as unknown as Partial<SharedStudent> | null}
+            student={editStudent as unknown as Partial<Student> | null}
             onClose={() => { setShowStudentForm(false); setEditStudent(null); }}
             onSave={handleSaveStudent}
           />

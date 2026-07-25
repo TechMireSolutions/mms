@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { personalizeMessage, validateRecipientAddress, MESSAGING_VARIABLE_TOKENS } from '../utils.js';
+import { personalizeMessage, validateRecipientAddress, MESSAGING_VARIABLE_TOKENS, appendVariableToken } from '../utils.js';
 import { calculateSmsSegments } from '../smsUtils.js';
 import { mergeMessageTemplates, DEFAULT_MESSAGE_TEMPLATES } from '../contactTypes.js';
 import { getMessagesDbKey, getMessageTemplatesDbKey } from '../messagingSchemas.js';
@@ -128,5 +128,16 @@ describe('messagingUtils', () => {
       });
     });
   });
+
+  describe('appendVariableToken', () => {
+    it('appends token with space when body is non-empty', () => {
+      expect(appendVariableToken('Hello', '{name}')).toBe('Hello {name}');
+    });
+
+    it('returns token directly when body is empty', () => {
+      expect(appendVariableToken('', '{name}')).toBe('{name}');
+    });
+  });
 });
+
 

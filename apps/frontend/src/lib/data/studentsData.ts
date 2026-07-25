@@ -1,3 +1,8 @@
+import { type Student, calcAge } from "@mms/shared";
+
+export type { Student };
+export { calcAge };
+
 export interface StudentSession {
   id: string;
   name: string;
@@ -16,39 +21,7 @@ export interface StudentSession {
 }
 
 export const SESSIONS: StudentSession[] = [];
-
-export interface Student {
-  id: string;
-  contactId: number;
-  name: string;
-  cnic: string;
-  gender: string;
-  dob: string;
-  phone: string;
-  email: string;
-  fatherName: string;
-  motherName: string;
-  fatherContactId: number | null;
-  motherContactId: number | null;
-  guardianName?: string;
-  guardianContactId?: number | null;
-  enrolledSessions: string[];
-  status: string;
-  registeredDate: string;
-  discountType: "none" | "sibling" | "financial_aid" | "staff" | "scholarship";
-  discountPct: number;
-  city: string;
-  grNumber?: string;
-  registrationType?: "regular" | "private" | "transfer" | "other";
-}
-
 export const STUDENTS: Student[] = [];
-
-export function calcAge(dob: string | null | undefined): number | null {
-  if (!dob) return null;
-  const diff = Date.now() - new Date(dob).getTime();
-  return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
-}
 
 export interface EligibilityResult {
   id: string;

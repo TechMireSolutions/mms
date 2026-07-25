@@ -22,12 +22,14 @@ import {
   mergeMessageTemplates,
   parsePhoneNumber,
   toMessagingRecipient,
+  appendVariableToken,
   type StandardMessagingRecipient as MessagingRecipient,
   type MessageTemplate,
   type Message
 } from '@mms/shared';
 import { MessagingVariableTokensBar } from '@/components/ui/MessagingVariableTokensBar';
 import { SegmentedPillFilter } from '@/components/ui/SegmentedPillFilter';
+import { ChannelBadge } from '@/components/ui/ChannelBadge';
 import { useMessageTemplates, useMessagingMutations } from '@/tenant/features/messaging/hooks/useMessaging';
 
 export type { MessagingRecipient, MessageTemplate };
@@ -293,7 +295,7 @@ export default function MessageComposer({
   }, [message, currentPreviewRecipient]);
 
   const insertVariableTag = (tag: string): void => {
-    setMessage((prev) => (prev ? `${prev} ${tag}` : tag));
+    setMessage((prev) => appendVariableToken(prev, tag));
   };
 
   const [modalSearch, setModalSearch] = useState<string>('');
@@ -550,7 +552,7 @@ export default function MessageComposer({
                       </Button>
                     </div>
                   )}
-                  <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{t(`messaging.channel.${channel}` as const)}</span>
+                  <ChannelBadge channel={channel} className="text-[9px]" />
                 </div>
               </h5>
 
@@ -600,37 +602,16 @@ export default function MessageComposer({
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 {t('messaging.confirmRecipients')} ({displayedRecipients.length})
               </span>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => setRecipientTab('all')}
-                  className={`px-2 py-0.5 text-[10px] rounded font-medium transition-colors cursor-pointer ${
-                    recipientTab === 'all' ? 'bg-primary text-primary-foreground font-bold' : 'text-muted-foreground hover:bg-muted'
-                  }`}
-                >
-                  {t('messaging.filter.all')} ({validatedRecipients.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRecipientTab('eligible')}
-                  className={`px-2 py-0.5 text-[10px] rounded font-medium transition-colors cursor-pointer ${
-                    recipientTab === 'eligible' ? 'bg-success text-success-foreground font-bold' : 'text-muted-foreground hover:bg-muted'
-                  }`}
-                >
-                  {t('messaging.filter.eligible')} ({eligibleRecipients.length})
-                </button>
-                {skippedCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setRecipientTab('skipped')}
-                    className={`px-2 py-0.5 text-[10px] rounded font-medium transition-colors cursor-pointer ${
-                      recipientTab === 'skipped' ? 'bg-warning text-warning-foreground font-bold' : 'text-muted-foreground hover:bg-muted'
-                    }`}
-                  >
-                    {t('messaging.filter.skipped')} ({skippedCount})
-                  </button>
-                )}
-              </div>
+              <SegmentedPillFilter
+                options={[
+                  { value: 'all', label: `${t('messaging.filter.all')} (${validatedRecipients.length})` },
+                  { value: 'eligible', label: `${t('messaging.filter.eligible')} (${eligibleRecipients.length})` },
+                  ...(skippedCount > 0 ? [{ value: 'skipped', label: `${t('messaging.filter.skipped')} (${skippedCount})` }] : []),
+                ]}
+                value={recipientTab}
+                onChange={(v) => setRecipientTab(v as 'all' | 'eligible' | 'skipped')}
+                size="sm"
+              />
             </div>
 
             {recipients.length > 3 && (

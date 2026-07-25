@@ -1563,6 +1563,17 @@ export const MESSAGING_VARIABLE_TOKENS: VariableToken[] = [
   { token: '{time}', labelKey: 'messaging.tokenTime', fallbackExample: '{time}' },
 ];
 
+/**
+ * Appends or inserts a variable token tag into a message body string.
+ * @param body Current message body string
+ * @param token Variable token tag to append (e.g., '{name}')
+ * @returns Updated message body string
+ */
+export function appendVariableToken(body: string, token: string): string {
+  return body ? `${body} ${token}` : token;
+}
+
+
 
 /**
  * Validates whether a recipient has a valid contact address for the chosen dispatch channel.

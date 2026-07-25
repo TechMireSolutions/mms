@@ -96,7 +96,7 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                     student.gender === "male" ? "bg-info/15 text-info" : "bg-secondary/15 text-secondary"
                   }`}>{student.gender}</span>
-                  <StatusBadge status={student.status} size="sm" />
+                  <StatusBadge status={student.status || "active"} size="sm" />
                 </div>
                 <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
                   <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" aria-hidden="true" /> Age {age ?? "?"}</span>
