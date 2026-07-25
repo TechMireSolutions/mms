@@ -153,18 +153,25 @@ export function createGenericRepository<
 
       if (list.length === 0) return;
 
-      const values = list.map((record) => {
+      const processedList = applyTitleCaseRecursive(list) as T[];
+      const seenIds = new Set<string>();
+      const values = [];
+      for (const record of processedList) {
         const id = String(record.id);
+        if (seenIds.has(id)) continue;
+        seenIds.add(id);
         const { id: _, ...extra } = record;
-        return {
+        values.push({
           id,
           workspaceSubdomain: subdomain,
           customData: extra,
           updatedAt: new Date(),
-        };
-      });
+        });
+      }
 
-      await tx.insert(dbTable).values(values);
+      if (values.length > 0) {
+        await tx.insert(dbTable).values(values);
+      }
     });
   }
 

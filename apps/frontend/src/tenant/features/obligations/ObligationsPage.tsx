@@ -33,6 +33,9 @@ import {
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ObligationsCommandMetrics } from "@/tenant/features/obligations/components/ObligationsCommandMetrics";
 import { useObligationColumnLayout } from "@/tenant/features/obligations/hooks/useObligationColumnLayout";
+import { useMessageComposerState } from "@/hooks/useMessageComposerState";
+
+const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
 /**
  * Obligations — Khums, Zakat, and collections. Work | Reports | Setup.
@@ -72,6 +75,20 @@ export default function Obligations() {
   const [viewCollection, setViewCollection] = useState<ObligationCollection | null>(null);
   const [filteredCount, setFilteredCount] = useState(0);
   const columnLayout = useObligationColumnLayout();
+
+  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
+
+  const handleMessageCollections = (channel: 'sms' | 'whatsapp' | 'email', collectionList: ObligationCollection[]) => {
+    openComposer(
+      channel,
+      collectionList.map((col) => ({
+        id: col.id,
+        name: col.receipt_no ? `Receipt ${col.receipt_no}` : 'Donor',
+        phone: (col as unknown as { phone?: string }).phone || '',
+        email: (col as unknown as { email?: string }).email || '',
+      }))
+    );
+  };
 
   useEffect(() => {
     setFilteredCount(collections.length);
@@ -160,6 +177,7 @@ export default function Obligations() {
                   updateUserColumnLayout: columnLayout.updateUserColumnLayout,
                   labels: columnLayout.customizerLabels,
                 }}
+                onMessage={handleMessageCollections}
               />
             </div>
           )}
@@ -217,6 +235,16 @@ export default function Obligations() {
           />
         )}
       </AnimatePresence>
+
+      {messagingTarget && (
+        <React.Suspense fallback={null}>
+          <MessageComposer
+            channel={messagingTarget.channel}
+            recipients={messagingTarget.recipients}
+            onClose={closeComposer}
+          />
+        </React.Suspense>
+      )}
     </ModulePageShell>
   );
 }

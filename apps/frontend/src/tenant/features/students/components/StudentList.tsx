@@ -2,7 +2,8 @@ import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MoreHorizontal, Edit2, Trash2, GraduationCap,
-  ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Eye
+  ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Eye,
+  MessageSquare, MessageCircle, Mail
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -21,13 +22,14 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { calcAge, type Student } from '@/lib/data/studentsData';
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
-import { type AppTranslationKey, type FieldDefinition, toTitleCase, formatDate } from "@mms/shared";
-import { runCsvDownloadJob } from '@/lib/backgroundJobs/runCsvDownloadJob';
+import { type FieldDefinition, formatDate } from "@mms/shared";
 import { useTranslation } from '@/hooks/useTranslation';
 import StudentDetail from "@/tenant/features/students/components/StudentDetail";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
-
+import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+
+const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
 
 export interface StudentListServerPagination {
@@ -192,6 +194,9 @@ export default function StudentList({
 
   // Preview State
   const [viewStudent, setViewStudent] = useState<Student | null>(null);
+
+  // Messaging State
+  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
 
   // Reset page and selection on data changes
   useEffect(() => {
@@ -629,6 +634,18 @@ export default function StudentList({
                                 <Edit2 className="w-3.5 h-3.5 me-2" /> Edit student
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => openComposer("whatsapp", [{ id: studentRow.id, name: studentRow.name, phone: studentRow.phone || "", email: studentRow.email || "" }])}>
+                                <MessageCircle className="w-3.5 h-3.5 me-2 text-success" /> WhatsApp
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openComposer("sms", [{ id: studentRow.id, name: studentRow.name, phone: studentRow.phone || "", email: studentRow.email || "" }])}>
+                                <MessageSquare className="w-3.5 h-3.5 me-2 text-info" /> Send SMS
+                              </DropdownMenuItem>
+                              {studentRow.email && (
+                                <DropdownMenuItem onClick={() => openComposer("email", [{ id: studentRow.id, name: studentRow.name, phone: studentRow.phone || "", email: studentRow.email }])}>
+                                  <Mail className="w-3.5 h-3.5 me-2 text-primary" /> Send Email
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => onDelete(studentRow.id)}
                                 className="text-destructive focus:text-destructive"
@@ -658,90 +675,67 @@ export default function StudentList({
             onPageSizeChange={setPageSize}
             pageSizeOptions={[5, 10, 25, 50]}
             itemLabel="students"
-            className="px-5 py-3 border-t border-border/50 bg-muted/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground"
+            className="p-3 border-t border-border bg-muted/20 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground"
           />
         )}
       </div>
 
-      {/* Floating Bulk Actions Bar */}
+      {/* Floating Selection Bar */}
       <AnimatePresence>
         {selectedIds.length > 0 && (
           <motion.div
-            initial={{ y: 20, opacity: 0, scale: 0.95 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 20, opacity: 0, scale: 0.95 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-3 rounded-2xl border border-primary/20 bg-card/90 backdrop-blur-xl shadow-2xl"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-6 end-6 z-40 bg-card/95 border border-primary/20 backdrop-blur-xl shadow-2xl rounded-2xl p-3 flex items-center gap-3 border-s-4 border-s-primary"
           >
-            <span className="text-xs font-bold text-foreground">
-              {t("students.selectedCount", { count: selectedIds.length })}
+            <span className="text-xs font-bold text-foreground ps-1">
+              {selectedIds.length} {selectedIds.length === 1 ? "student" : "students"} selected
             </span>
-            <div className="h-4 w-px bg-border" />
 
-            {statuses.map((status) => {
-              const statusKey = `students.form.status.${status}` as AppTranslationKey;
-              const translatedStatus = t(statusKey);
-              const displayStatus = translatedStatus === statusKey
-                ? toTitleCase(status)
-                : translatedStatus;
-              return (
-                <Button
-                  key={status}
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    if (onBulkStatusChange) {
-                      onBulkStatusChange(selectedIds, status);
-                      setSelectedIds([]);
-                    }
-                  }}
-                  className="px-3 py-1.5 rounded-lg border border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto"
-                >
-                  {t("students.list.bulk.setStatus", { status: displayStatus })}
-                </Button>
-              );
-            })}
+            <div className="h-4 w-px bg-border" />
 
             <Button
               type="button"
               variant="outline"
               onClick={() => {
-                const selectedStudents = students.filter((student) => selectedIds.includes(student.id));
-                const headers = [
-                  "GR Number",
-                  "Name",
-                  "Gender",
-                  "DOB",
-                  "Phone",
-                  "Email",
-                  "Father Name",
-                  "Mother Name",
-                  "Guardian Name",
-                  "Status",
-                  "Registered Date",
-                ];
-                const rows = selectedStudents.map((student) => [
-                  student.grNumber || "",
-                  student.name,
-                  student.gender,
-                  student.dob,
-                  student.phone,
-                  student.email,
-                  student.fatherName || "",
-                  student.motherName || "",
-                  student.guardianName || "",
-                  student.status,
-                  student.registeredDate,
-                ]);
-                runCsvDownloadJob({
-                  moduleId: 'students',
-                  label: t('backgroundJobs.exportStudents', { count: selectedStudents.length }),
-                  filename: `mms_students_export_${Date.now()}.csv`,
-                  rows: [headers, ...rows],
-                });
+                const selectedRecipients = students
+                  .filter((s) => selectedIds.includes(s.id))
+                  .map((s) => ({ id: s.id, name: s.name, phone: s.phone || "", email: s.email || "" }));
+                openComposer("whatsapp", selectedRecipients);
               }}
-              className="px-3 py-1.5 rounded-lg border border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto"
+              className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
             >
-              Export CSV
+              <MessageCircle className="w-3.5 h-3.5 text-success" /> WhatsApp
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                const selectedRecipients = students
+                  .filter((s) => selectedIds.includes(s.id))
+                  .map((s) => ({ id: s.id, name: s.name, phone: s.phone || "", email: s.email || "" }));
+                openComposer("sms", selectedRecipients);
+              }}
+              className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-info" /> SMS
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                const selectedRecipients = students
+                  .filter((s) => selectedIds.includes(s.id))
+                  .filter((s) => s.email)
+                  .map((s) => ({ id: s.id, name: s.name, phone: s.phone || "", email: s.email! }));
+                openComposer("email", selectedRecipients);
+              }}
+              className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
+            >
+              <Mail className="w-3.5 h-3.5 text-primary" /> Email
             </Button>
 
             <div className="h-4 w-px bg-border" />
@@ -776,6 +770,17 @@ export default function StudentList({
           />
         )}
       </AnimatePresence>
+
+      {/* Message Composer Modal */}
+      {messagingTarget && (
+        <React.Suspense fallback={null}>
+          <MessageComposer
+            channel={messagingTarget.channel}
+            recipients={messagingTarget.recipients}
+            onClose={closeComposer}
+          />
+        </React.Suspense>
+      )}
     </div>
   );
 }

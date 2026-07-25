@@ -27,6 +27,9 @@ import {
   useHasanatDistributionsCollection,
   useHasanatMutations,
 } from "@/tenant/features/hasanat/hooks/useHasanatApi";
+import { useMessageComposerState } from "@/hooks/useMessageComposerState";
+
+const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
 /**
  * Hasanat Cards — denominations, stock, and redemptions. Work | Reports | Setup.
@@ -63,6 +66,20 @@ export default function HasanatCards() {
   const [filteredCount, setFilteredCount] = useState(0);
   const distributionColumnLayout = useHasanatDistributionColumnLayout();
   const redemptionColumnLayout = useHasanatRedemptionColumnLayout();
+
+  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
+
+  const handleMessageDistributions = (channel: 'sms' | 'whatsapp' | 'email', distList: Array<{ id: string; recipientName?: string }>) => {
+    openComposer(
+      channel,
+      distList.map((d) => ({
+        id: d.id,
+        name: d.recipientName || 'Recipient',
+        phone: (d as unknown as { phone?: string }).phone || '',
+        email: (d as unknown as { email?: string }).email || '',
+      }))
+    );
+  };
 
   const effectiveTab = resolveModuleTierTab(
     activeTab,
@@ -145,6 +162,7 @@ export default function HasanatCards() {
                 updateUserColumnLayout: distributionColumnLayout.updateUserColumnLayout,
                 labels: distributionColumnLayout.customizerLabels,
               }}
+              onMessage={handleMessageDistributions}
             />
           )}
           {effectiveTab === "work" && effectiveSubTab === "redemptions"   && (
@@ -164,6 +182,16 @@ export default function HasanatCards() {
         </motion.div>
       </AnimatePresence>
       </ResponsiveAccordionTabs>
+
+      {messagingTarget && (
+        <React.Suspense fallback={null}>
+          <MessageComposer
+            channel={messagingTarget.channel}
+            recipients={messagingTarget.recipients}
+            onClose={closeComposer}
+          />
+        </React.Suspense>
+      )}
     </ModulePageShell>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Plus, Trash2, Edit2, Users, GraduationCap } from "lucide-react";
+import { Plus, Trash2, Edit2, Users, GraduationCap, MessageCircle, MessageSquare } from "lucide-react";
 import { Session, Class } from '@/lib/data/sessionsData';
 import type { Teacher, AppTranslationKey } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -17,6 +17,9 @@ import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { useMessageComposerState } from "@/hooks/useMessageComposerState";
+
+const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
 const GENDER_COLORS: Record<string, string> = {
   male:   "bg-info/10 text-info border-info/20",
@@ -31,9 +34,10 @@ interface ClassCardProps {
   teachers: Teacher[];
   onEdit: (sessionClass: Class) => void;
   onDelete: (id: string) => void;
+  onMessage?: (channel: 'sms' | 'whatsapp' | 'email', sessionClass: Class) => void;
 }
 
-function ClassCard({ sessionClass, teachers, onEdit, onDelete }: ClassCardProps) {
+function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage }: ClassCardProps) {
   const { t } = useTranslation();
   const capacityPercent = Math.round((sessionClass.enrolled / sessionClass.capacity) * 100);
   const barColor = capacityPercent >= 100 ? "bg-destructive" : capacityPercent >= 80 ? "bg-warning" : "bg-success";
@@ -56,6 +60,26 @@ function ClassCard({ sessionClass, teachers, onEdit, onDelete }: ClassCardProps)
           </div>
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`WhatsApp ${sessionClass.name}`}
+            onClick={() => onMessage?.("whatsapp", sessionClass)}
+            className="p-1.5 rounded-lg hover:bg-muted text-success hover:text-success transition-colors w-7 h-7"
+            title="WhatsApp Class Teacher"
+          >
+            <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`SMS ${sessionClass.name}`}
+            onClick={() => onMessage?.("sms", sessionClass)}
+            className="p-1.5 rounded-lg hover:bg-muted text-info hover:text-info transition-colors w-7 h-7"
+            title="SMS Class Teacher"
+          >
+            <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+          </Button>
           <Button variant="ghost" size="icon" aria-label={`Edit ${sessionClass.name}`} onClick={() => onEdit(sessionClass)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors w-7 h-7">
             <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
           </Button>
@@ -255,8 +279,18 @@ export function ClassesTab({ session, onUpdate }: ClassesTabProps) {
     [session.classes],
   );
   const { data: teachers = [] } = useTeachersByIds(teacherIds);
+  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const [showModal, setShowModal] = useState(false);
   const [classBeingEdited, setClassBeingEdited] = useState<Class | null>(null);
+
+  const handleClassMessage = (channel: 'sms' | 'whatsapp' | 'email', sessionClass: Class) => {
+    const teacher = teachers.find((t) => t.id === sessionClass.teacherId);
+    const recipientName = (teacher ? teacher.name : sessionClass.teacherName || sessionClass.name) || "Class";
+    const teacherObj = teacher as unknown as { phone?: string; email?: string } | undefined;
+    const phoneStr: string = teacherObj?.phone ?? "";
+    const emailStr: string | undefined = teacherObj?.email ?? undefined;
+    openComposer(channel, [{ id: sessionClass.id, name: recipientName, phone: phoneStr, email: emailStr }]);
+  };
 
   const handleSave = (sessionClass: Class) => {
     const teacherFields = sessionClass.teacherId
@@ -299,7 +333,7 @@ export function ClassesTab({ session, onUpdate }: ClassesTabProps) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {session.classes.map((sessionClass) => (
-            <ClassCard key={sessionClass.id} sessionClass={sessionClass} teachers={teachers} onEdit={handleEdit} onDelete={handleDelete} />
+            <ClassCard key={sessionClass.id} sessionClass={sessionClass} teachers={teachers} onEdit={handleEdit} onDelete={handleDelete} onMessage={handleClassMessage} />
           ))}
         </div>
       )}
@@ -310,6 +344,17 @@ export function ClassesTab({ session, onUpdate }: ClassesTabProps) {
         onClose={() => { setShowModal(false); setClassBeingEdited(null); }}
         onSave={handleSave}
       />
+
+      {/* Message Composer Modal */}
+      {messagingTarget && (
+        <React.Suspense fallback={null}>
+          <MessageComposer
+            channel={messagingTarget.channel}
+            recipients={messagingTarget.recipients}
+            onClose={closeComposer}
+          />
+        </React.Suspense>
+      )}
     </section>
   );
 }

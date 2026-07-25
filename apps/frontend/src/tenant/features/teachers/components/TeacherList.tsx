@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { MoreHorizontal, Edit2, Trash2, School, ChevronUp, ChevronDown } from 'lucide-react';
+import { MoreHorizontal, Edit2, Trash2, School, ChevronUp, ChevronDown, MessageSquare, MessageCircle, Mail } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -20,6 +20,9 @@ export interface TeacherListProps {
   teachers: Teacher[];
   onEdit: (teacher: Teacher) => void;
   onDelete: (id: string) => void;
+  onSms?: (teachers: Teacher[]) => void;
+  onWhatsApp?: (teachers: Teacher[]) => void;
+  onEmail?: (teachers: Teacher[]) => void;
   canWrite?: boolean;
   isColumnVisible?: (key: string) => boolean;
 }
@@ -28,6 +31,9 @@ export function TeacherList({
   teachers,
   onEdit,
   onDelete,
+  onSms,
+  onWhatsApp,
+  onEmail,
   canWrite = true,
   isColumnVisible,
 }: TeacherListProps): React.JSX.Element {
@@ -220,6 +226,22 @@ export function TeacherList({
                         <DropdownMenuItem onClick={() => onEdit(teacher)}>
                           <Edit2 className="w-3.5 h-3.5 me-2" /> {t('common.edit')}
                         </DropdownMenuItem>
+                        {(onWhatsApp || onSms || onEmail) && <DropdownMenuSeparator />}
+                        {onWhatsApp && (
+                          <DropdownMenuItem onClick={() => onWhatsApp([teacher])}>
+                            <MessageCircle className="w-3.5 h-3.5 me-2 text-success" /> WhatsApp
+                          </DropdownMenuItem>
+                        )}
+                        {onSms && (
+                          <DropdownMenuItem onClick={() => onSms([teacher])}>
+                            <MessageSquare className="w-3.5 h-3.5 me-2 text-info" /> SMS
+                          </DropdownMenuItem>
+                        )}
+                        {onEmail && (
+                          <DropdownMenuItem onClick={() => onEmail([teacher])}>
+                            <Mail className="w-3.5 h-3.5 me-2 text-primary" /> Email
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete(String(teacher.id))}>
                           <Trash2 className="w-3.5 h-3.5 me-2" /> {t('common.delete')}

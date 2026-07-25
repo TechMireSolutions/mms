@@ -32,6 +32,9 @@ import { ListPagination } from "@/components/ui/ListPagination";
 import { TableSkeleton } from "@/components/ui/LoadingState";
 import { useTeacherConfig } from '@/hooks/useStandardModuleConfig';
 import { notify } from '@/lib/notify';
+import { useMessageComposerState } from '@/hooks/useMessageComposerState';
+
+const MessageComposer = React.lazy(() => import('@/components/ui/MessageComposer'));
 
 function teacherStatusLabel(t: (key: AppTranslationKey) => string, status: string): string {
   const key = `teachers.status.${status}` as AppTranslationKey;
@@ -77,6 +80,44 @@ export default function Teachers(): React.JSX.Element {
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterSpecialization, setFilterSpecialization] = useState('');
   const [editTeacher, setEditTeacher] = useState<Teacher | null>(null);
+
+  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
+
+  const handleWhatsApp = (teachersList: Teacher[]) => {
+    openComposer(
+      'whatsapp',
+      teachersList.map((tr) => ({
+        id: tr.id,
+        name: tr.name || '',
+        phone: (tr as unknown as { phone?: string }).phone || '',
+        email: (tr as unknown as { email?: string }).email || '',
+      }))
+    );
+  };
+
+  const handleSms = (teachersList: Teacher[]) => {
+    openComposer(
+      'sms',
+      teachersList.map((tr) => ({
+        id: tr.id,
+        name: tr.name || '',
+        phone: (tr as unknown as { phone?: string }).phone || '',
+        email: (tr as unknown as { email?: string }).email || '',
+      }))
+    );
+  };
+
+  const handleEmail = (teachersList: Teacher[]) => {
+    openComposer(
+      'email',
+      teachersList.map((tr) => ({
+        id: tr.id,
+        name: tr.name || '',
+        phone: (tr as unknown as { phone?: string }).phone || '',
+        email: (tr as unknown as { email?: string }).email || '',
+      }))
+    );
+  };
 
   const useServerWork = activeTab === 'work';
   const { data: workPageData, isFetching: isWorkPageFetching, isLoading: isWorkPageLoading } = useTeachersPaginated({
@@ -296,6 +337,9 @@ export default function Teachers(): React.JSX.Element {
                       teachers={filteredTeachers}
                       onEdit={(teacher) => { setEditTeacher(teacher); setShowForm(true); }}
                       onDelete={handleDelete}
+                      onWhatsApp={handleWhatsApp}
+                      onSms={handleSms}
+                      onEmail={handleEmail}
                       canWrite={canWrite}
                       isColumnVisible={isColumnVisible}
                     />
@@ -357,6 +401,16 @@ export default function Teachers(): React.JSX.Element {
           />
         )}
       </AnimatePresence>
+
+      {messagingTarget && (
+        <React.Suspense fallback={null}>
+          <MessageComposer
+            channel={messagingTarget.channel}
+            recipients={messagingTarget.recipients}
+            onClose={closeComposer}
+          />
+        </React.Suspense>
+      )}
     </ModulePageShell>
   );
 }

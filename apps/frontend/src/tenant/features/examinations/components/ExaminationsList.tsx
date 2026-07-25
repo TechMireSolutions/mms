@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Edit2, BookOpen, Calendar, Clock, Users, CheckCircle, AlertCircle, Circle,
-  Search, Filter, ChevronDown,
+  Search, Filter, ChevronDown, MessageCircle, MessageSquare
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
@@ -16,6 +16,9 @@ import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessi
 import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useMessageComposerState } from "@/hooks/useMessageComposerState";
+
+const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -54,6 +57,7 @@ export default function ExamsList({
   columnCustomizer,
 }: ExamsListProps): React.ReactElement {
   const { t } = useTranslation();
+  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
 
@@ -379,15 +383,35 @@ export default function ExamsList({
                           </td>
                         )}
                         <td className="px-4 py-3 text-right">
-                          <Button
-                            variant="ghost"
-                            type="button"
-                            onClick={() => onEdit(exam)}
-                            aria-label={t("examinations.editExamAria", { name: exam.name })}
-                            className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-                          </Button>
+                          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              variant="ghost"
+                              type="button"
+                              onClick={() => openComposer("whatsapp", [{ id: exam.id, name: exam.name, phone: "" }])}
+                              title="WhatsApp Exam Schedule Alert"
+                              className="p-1.5 rounded-lg hover:bg-muted text-success hover:text-success transition-all"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              type="button"
+                              onClick={() => openComposer("sms", [{ id: exam.id, name: exam.name, phone: "" }])}
+                              title="SMS Exam Alert"
+                              className="p-1.5 rounded-lg hover:bg-muted text-info hover:text-info transition-all"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              type="button"
+                              onClick={() => onEdit(exam)}
+                              aria-label={t("examinations.editExamAria", { name: exam.name })}
+                              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-all focus:opacity-100"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
+                            </Button>
+                          </div>
                         </td>
                       </motion.tr>
                     );
@@ -397,6 +421,17 @@ export default function ExamsList({
             </div>
           </div>
         </>
+      )}
+
+      {/* Message Composer Modal */}
+      {messagingTarget && (
+        <React.Suspense fallback={null}>
+          <MessageComposer
+            channel={messagingTarget.channel}
+            recipients={messagingTarget.recipients}
+            onClose={closeComposer}
+          />
+        </React.Suspense>
       )}
     </section>
   );

@@ -98,6 +98,7 @@ interface CollectionRowItemProps {
   value: string;
   copyable?: boolean;
   actionHref?: string;
+  onAction?: () => void;
   actionIcon?: LucideIcon;
   actionTitle?: string;
   actionColorClass?: string;
@@ -109,6 +110,7 @@ function CollectionRowItem({
   value,
   copyable = true,
   actionHref,
+  onAction,
   actionIcon: ActionIcon,
   actionTitle,
   actionColorClass = "text-primary hover:bg-primary/10",
@@ -133,7 +135,16 @@ function CollectionRowItem({
               className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground p-0 flex items-center justify-center opacity-100"
             />
           )}
-          {actionHref && ActionIcon && (
+          {onAction && ActionIcon ? (
+            <button
+              type="button"
+              onClick={onAction}
+              aria-label={actionTitle || value}
+              className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors ${actionColorClass}`}
+            >
+              <ActionIcon className="w-3.5 h-3.5" />
+            </button>
+          ) : actionHref && ActionIcon ? (
             <a
               href={actionHref}
               target={external ? "_blank" : undefined}
@@ -143,7 +154,7 @@ function CollectionRowItem({
             >
               <ActionIcon className="w-3.5 h-3.5" />
             </a>
-          )}
+          ) : null}
         </div>
       )}
     </div>
@@ -630,7 +641,7 @@ export default function ContactDetailDrawer({
                           key={`email-${email.address}-${emailIndex}`}
                           label={resolveEmailLabel(email.label, emailLabels, t)}
                           value={rawEmail}
-                          actionHref={`mailto:${rawEmail}`}
+                          onAction={() => onEmail([{ ...contactState, email: rawEmail }])}
                           actionIcon={Mail}
                           actionTitle={t('contacts.detail.emailContact', { email: rawEmail })}
                           actionColorClass="text-secondary hover:bg-secondary/10"

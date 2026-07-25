@@ -1482,3 +1482,39 @@ export function paginateArray<T>(items: T[], page = 1, limit = 50, maxLimit = 50
   };
 }
 
+/** Recipient object interface for message personalization */
+export interface PersonalizeRecipient {
+  name?: string;
+  phone?: string;
+  email?: string;
+}
+
+/**
+ * Centralized message personalization logic.
+ * Replaces placeholders like {name}, {first_name}, {phone}, {email}, and {date} with recipient details.
+ * @param body Template body text containing placeholders
+ * @param recipient Target recipient object with name, phone, email
+ * @param options Optional overrides (e.g., date)
+ * @returns Interpolated message text
+ */
+export function personalizeMessage(
+  body: string,
+  recipient: PersonalizeRecipient,
+  options?: { date?: string }
+): string {
+  if (!body) return "";
+  const name = recipient.name || "";
+  const firstName = name.trim().split(/\s+/)[0] || "";
+  const phone = recipient.phone || "";
+  const email = recipient.email || "";
+  const dateStr = options?.date || new Date().toISOString().split("T")[0];
+
+  return body
+    .replace(/{name}/gi, name)
+    .replace(/{first_name}/gi, firstName)
+    .replace(/{phone}/gi, phone)
+    .replace(/{email}/gi, email)
+    .replace(/{date}/gi, dateStr);
+}
+
+

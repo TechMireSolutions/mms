@@ -32,6 +32,9 @@ import { useAttendanceColumnLayout } from '@/tenant/features/attendance/hooks/us
 import { useQueryClient } from '@tanstack/react-query';
 import { useViewerRole } from "@/tenant/hooks/useViewerRole";
 import { usePermissions, useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { useMessageComposerState } from "@/hooks/useMessageComposerState";
+
+const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
 const DEFAULT_FILTERS = {
   sessionId: "",
@@ -63,6 +66,19 @@ export default function Attendance() {
   const attendanceRecords = useAttendanceRecordsCollection();
   const { replaceAll } = useAttendanceMutations();
   const columnLayout = useAttendanceColumnLayout();
+  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
+
+  const handleMessageAttendance = (channel: 'sms' | 'whatsapp' | 'email', attRecords: AttendanceRecord[]) => {
+    openComposer(
+      channel,
+      attRecords.map((r) => ({
+        id: r.studentId || r.id,
+        name: r.studentName || 'Student',
+        phone: (r as unknown as { phone?: string }).phone || '',
+        email: (r as unknown as { email?: string }).email || '',
+      }))
+    );
+  };
 
   const pageFilteredCount = useMemo(() => {
     return attendanceRecords.filter((attendanceRecord) => {
@@ -143,7 +159,7 @@ export default function Attendance() {
       <div className="space-y-5">
         {visibleOperationsTabs.length > 1 && (
           <SubTabBar
-            tabs={visibleOperationsTabs.map((tab) => ({ key: tab.id, label: tab.label }))}
+            tabs={visibleOperationsTabs.map((tab) => ({ key: tab.id, label: tab.label, icon: tab.icon }))}
             value={effectiveOpsTab}
             onChange={setActiveOpsTab}
           />
@@ -163,6 +179,7 @@ export default function Attendance() {
                   updateUserColumnLayout: columnLayout.updateUserColumnLayout,
                   labels: columnLayout.customizerLabels,
                 }}
+                onMessage={handleMessageAttendance}
               />
             );
             case "audit":   return <AuditLog filters={filters} />;
@@ -223,6 +240,16 @@ export default function Attendance() {
         </motion.div>
       </AnimatePresence>
       </ResponsiveAccordionTabs>
+
+      {messagingTarget && (
+        <React.Suspense fallback={null}>
+          <MessageComposer
+            channel={messagingTarget.channel}
+            recipients={messagingTarget.recipients}
+            onClose={closeComposer}
+          />
+        </React.Suspense>
+      )}
     </ModulePageShell>
   );
 }

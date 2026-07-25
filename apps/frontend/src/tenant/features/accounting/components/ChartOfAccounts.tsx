@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Plus, Pencil, Download, EyeOff, Eye } from "lucide-react";
+import { Plus, Pencil, Download, EyeOff, Eye, MessageCircle, MessageSquare } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { AnimatePresence } from "framer-motion";
 import { ACCOUNT_TYPES, ACCOUNT_TYPE_META, Account, AccountType } from '@/lib/data/accountingData';
@@ -10,6 +10,9 @@ import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/comp
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { type AppTranslationKey } from "@mms/shared";
+import { useMessageComposerState } from "@/hooks/useMessageComposerState";
+
+const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
 
 
@@ -37,6 +40,7 @@ export function ChartOfAccounts({
   columnCustomizer,
 }: ChartOfAccountsProps) {
   const { t } = useTranslation();
+  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const [search,      setSearch]     = useState("");
   const [typeFilter,  setTypeFilter] = useState<AccountType | "all">("all");
   const [showInactive, setShowInactive] = useState(false);
@@ -248,6 +252,28 @@ export function ChartOfAccounts({
                             type="button"
                             variant="ghost"
                             size="icon"
+                            aria-label={`WhatsApp ${account.name}`}
+                            onClick={() => openComposer("whatsapp", [{ id: account.id, name: account.name, phone: "" }])}
+                            title="WhatsApp Account Statement"
+                            className="h-8 w-8 text-muted-foreground hover:text-success"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`SMS ${account.name}`}
+                            onClick={() => openComposer("sms", [{ id: account.id, name: account.name, phone: "" }])}
+                            title="SMS Account Statement"
+                            className="h-8 w-8 text-muted-foreground hover:text-info"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
                             aria-label={`Edit ${account.name}`}
                             onClick={() => setModal({ ...account })}
                             className="h-8 w-8 text-muted-foreground hover:text-foreground"
@@ -295,6 +321,17 @@ export function ChartOfAccounts({
           <AccountModal initial={modal as Account} onSave={handleSave} onClose={() => setModal(null)} existingCodes={existingCodes} />
         )}
       </AnimatePresence>
+
+      {/* Message Composer Modal */}
+      {messagingTarget && (
+        <React.Suspense fallback={null}>
+          <MessageComposer
+            channel={messagingTarget.channel}
+            recipients={messagingTarget.recipients}
+            onClose={closeComposer}
+          />
+        </React.Suspense>
+      )}
     </section>
   );
 }

@@ -36,6 +36,9 @@ import {
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { notify } from '@/lib/notify';
+import { useMessageComposerState } from '@/hooks/useMessageComposerState';
+
+const MessageComposer = React.lazy(() => import('@/components/ui/MessageComposer'));
 
 /**
  * Users and roles — Work | Reports | Setup.
@@ -177,6 +180,20 @@ export default function Users(): React.JSX.Element {
   );
   const effectiveSubTab = SUB_TABS.find((tab) => tab.id === activeSubTab) ? activeSubTab : 'users';
 
+  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
+
+  const handleMessageUsers = (channel: 'sms' | 'whatsapp' | 'email', targetUsers: SystemUser[]) => {
+    openComposer(
+      channel,
+      targetUsers.map((u) => ({
+        id: u.id,
+        name: u.name,
+        phone: (u as unknown as { phone?: string }).phone || '',
+        email: u.email || '',
+      }))
+    );
+  };
+
   return (
     <ModulePageShell
       seoTitle={`MMS - ${t('page.users.title')}`}
@@ -253,6 +270,7 @@ export default function Users(): React.JSX.Element {
                   onToggleStatus={handleToggleStatus}
                   onResetPassword={handleResetPassword}
                   onAddUser={() => setShowAddUser(true)}
+                  onMessage={handleMessageUsers}
                 />
               )}
 
@@ -286,6 +304,16 @@ export default function Users(): React.JSX.Element {
           />
         ) : null}
       </AnimatePresence>
+
+      {messagingTarget && (
+        <React.Suspense fallback={null}>
+          <MessageComposer
+            channel={messagingTarget.channel}
+            recipients={messagingTarget.recipients}
+            onClose={closeComposer}
+          />
+        </React.Suspense>
+      )}
     </ModulePageShell>
   );
 }

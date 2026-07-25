@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { Search, Eye, XCircle } from "lucide-react";
+import { Search, Eye, XCircle, MessageCircle, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ListPagination } from "@/components/ui/ListPagination";
@@ -14,6 +14,9 @@ import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { formatDate } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
+import { useMessageComposerState } from "@/hooks/useMessageComposerState";
+
+const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
 const PAGE_SIZE = 12;
 
@@ -43,6 +46,7 @@ export function EnrollmentList({
 }: EnrollmentListProps): React.ReactElement {
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
+  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const [statusFilter, setStatus]   = useState<string>("all");
   const [sessionFilter, setSession] = useState<string>("all");
 
@@ -249,6 +253,30 @@ export function EnrollmentList({
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => {
+                              const phone = student?.phone || "";
+                              openComposer("whatsapp", [{ id: enrollment.id, name: enrollment.studentName, phone, email: student?.email }]);
+                            }}
+                            className="p-1.5 w-8 h-8 rounded-lg hover:bg-muted text-success hover:text-success transition-colors"
+                            title="WhatsApp Applicant"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              const phone = student?.phone || "";
+                              openComposer("sms", [{ id: enrollment.id, name: enrollment.studentName, phone, email: student?.email }]);
+                            }}
+                            className="p-1.5 w-8 h-8 rounded-lg hover:bg-muted text-info hover:text-info transition-colors"
+                            title="Send SMS"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => onView(enrollment)}
                             className="p-1.5 w-8 h-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
                             aria-label={t("enrollments.actions.view", { name: enrollment.studentName })}
@@ -287,6 +315,17 @@ export function EnrollmentList({
         i18nNamespace="enrollments"
         variant="summary"
       />
+
+      {/* Message Composer Modal */}
+      {messagingTarget && (
+        <React.Suspense fallback={null}>
+          <MessageComposer
+            channel={messagingTarget.channel}
+            recipients={messagingTarget.recipients}
+            onClose={closeComposer}
+          />
+        </React.Suspense>
+      )}
     </section>
   );
 }

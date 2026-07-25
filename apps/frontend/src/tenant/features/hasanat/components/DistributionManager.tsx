@@ -361,6 +361,7 @@ export interface DistributionManagerProps {
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
   columnCustomizer?: ModuleColumnCustomizerProps;
+  onMessage?: (channel: 'sms' | 'whatsapp' | 'email', distributions: Distribution[]) => void;
 }
 
 /**
@@ -381,6 +382,7 @@ export function DistributionManager({
   onFilteredCountChange,
   isColumnVisible,
   columnCustomizer,
+  onMessage,
 }: DistributionManagerProps) {
   const { t } = useTranslation();
   const statusLabels = useMemo(
@@ -583,7 +585,7 @@ export function DistributionManager({
                                 <Eye className="w-3.5 h-3.5" aria-hidden="true" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-36">
+                            <DropdownMenuContent align="end" className="w-40">
                               <DropdownMenuLabel className="text-xs">{t("hasanat.changeStatus")}</DropdownMenuLabel>
                               <DropdownMenuSeparator />
                               {Object.keys(statusConfig).map((status) => (
@@ -591,6 +593,18 @@ export function DistributionManager({
                                   {statusLabels[status as keyof typeof statusLabels]}
                                 </DropdownMenuCheckboxItem>
                               ))}
+                              {onMessage && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuLabel className="text-xs">Notify Recipient</DropdownMenuLabel>
+                                  <DropdownMenuCheckboxItem checked={false} onCheckedChange={() => onMessage('whatsapp', [distribution])}>
+                                    WhatsApp
+                                  </DropdownMenuCheckboxItem>
+                                  <DropdownMenuCheckboxItem checked={false} onCheckedChange={() => onMessage('sms', [distribution])}>
+                                    SMS
+                                  </DropdownMenuCheckboxItem>
+                                </>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>

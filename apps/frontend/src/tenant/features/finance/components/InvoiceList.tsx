@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
-import { Filter, ChevronDown, Eye, ReceiptText, X } from "lucide-react";
+import { Filter, ChevronDown, Eye, ReceiptText, X, MessageCircle, MessageSquare } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
@@ -16,6 +16,9 @@ import { formatDate, type AppTranslationKey } from "@mms/shared";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
+import { useMessageComposerState } from "@/hooks/useMessageComposerState";
+
+const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
 
 
@@ -36,6 +39,7 @@ export function InvoiceList({
 }: InvoiceListProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
+  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
 
@@ -248,16 +252,39 @@ export function InvoiceList({
                         </td>
                       )}
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" onClick={() => onView(invoice)} aria-label={t("finance.viewInvoice", { id: invoice.id })} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
-                            <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-                          </Button>
-                          {invoice.status !== "paid" && (
-                            <Button variant="ghost" onClick={() => onRecord(invoice)} aria-label={t("finance.recordPaymentFor", { id: invoice.id })} className="p-1.5 rounded-lg hover:bg-success/10 text-muted-foreground hover:text-success transition-colors">
-                              <ReceiptText className="w-3.5 h-3.5" aria-hidden="true" />
-                            </Button>
-                          )}
-                        </div>
+                        {(() => {
+                          const invRec = invoice as unknown as Record<string, unknown>;
+                          const phone = typeof invRec.phone === "string" ? invRec.phone : "";
+                          const email = typeof invRec.email === "string" ? invRec.email : undefined;
+                          return (
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                variant="ghost"
+                                onClick={() => openComposer("whatsapp", [{ id: invoice.id, name: invoice.studentName, phone, email }])}
+                                title="WhatsApp Invoice"
+                                className="p-1.5 rounded-lg hover:bg-muted text-success hover:text-success transition-colors"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                onClick={() => openComposer("sms", [{ id: invoice.id, name: invoice.studentName, phone, email }])}
+                                title="SMS Invoice Reminder"
+                                className="p-1.5 rounded-lg hover:bg-muted text-info hover:text-info transition-colors"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+                              </Button>
+                              <Button variant="ghost" onClick={() => onView(invoice)} aria-label={t("finance.viewInvoice", { id: invoice.id })} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                                <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+                              </Button>
+                              {invoice.status !== "paid" && (
+                                <Button variant="ghost" onClick={() => onRecord(invoice)} aria-label={t("finance.recordPaymentFor", { id: invoice.id })} className="p-1.5 rounded-lg hover:bg-success/10 text-muted-foreground hover:text-success transition-colors">
+                                  <ReceiptText className="w-3.5 h-3.5" aria-hidden="true" />
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </td>
                     </motion.tr>
                   );
@@ -267,6 +294,17 @@ export function InvoiceList({
           </table>
         </div>
       </Card>
+
+      {/* Message Composer Modal */}
+      {messagingTarget && (
+        <React.Suspense fallback={null}>
+          <MessageComposer
+            channel={messagingTarget.channel}
+            recipients={messagingTarget.recipients}
+            onClose={closeComposer}
+          />
+        </React.Suspense>
+      )}
     </section>
   );
 }

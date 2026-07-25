@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { 
   MessageSquare, MessageCircle, Send, 
-  Trash2, User, Clock, Plus, Tag, Filter, Check, Mail, BarChart2
+  Trash2, User, Clock, Plus, Tag, Filter, Check, Mail, BarChart2, Download, Edit3
 } from 'lucide-react';
 import { 
   PieChart, Pie, Cell, Legend, Tooltip 
@@ -57,12 +57,14 @@ export default function MessagingPage(): React.JSX.Element {
   const [activeTab, setActiveTab] = usePersistedTabState<'work' | 'reports' | 'setup'>("messaging_active_tab", "work");
   const [searchContact, setSearchContact] = useState('');
   const [searchLog, setSearchLog] = useState('');
+  const [searchTemplate, setSearchTemplate] = useState('');
   
   // Advanced filters
   const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female' | 'unspecified'>('all');
   const [channelFilter, setChannelFilter] = useState<'all' | 'sms' | 'whatsapp' | 'email'>('all');
   
   // Custom templates form state
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [templateLabel, setTemplateLabel] = useState('');
   const [templateBody, setTemplateBody] = useState('');
 
@@ -87,8 +89,14 @@ export default function MessagingPage(): React.JSX.Element {
     return [...DEFAULT_TEMPLATES, ...custom];
   }, [user, localTick]);
 
-  // Handle template creation
-  const handleCreateTemplate = (e: React.FormEvent): void => {
+  const filteredTemplates = useMemo(() => {
+    if (!searchTemplate.trim()) return templates;
+    const q = searchTemplate.toLowerCase();
+    return templates.filter((tpl) => tpl.label.toLowerCase().includes(q) || tpl.body.toLowerCase().includes(q));
+  }, [templates, searchTemplate]);
+
+  // Handle template creation or update
+  const handleSaveTemplate = (e: React.FormEvent): void => {
     e.preventDefault();
     if (!user) return;
     if (!templateLabel.trim() || !templateBody.trim()) {
@@ -97,16 +105,46 @@ export default function MessagingPage(): React.JSX.Element {
     }
     const dbKey = `messages_templates_u:${user.id}`;
     const custom = getCollection<MessageTemplate>(dbKey) || [];
-    const newTpl: MessageTemplate = {
-      id: `custom_${Date.now()}`,
-      label: templateLabel.trim(),
-      body: templateBody.trim(),
-    };
-    saveCollection(dbKey, [...custom, newTpl]);
+
+    if (editingTemplateId) {
+      const updated = custom.map((tpl) => 
+        tpl.id === editingTemplateId 
+          ? { ...tpl, label: templateLabel.trim(), body: templateBody.trim() }
+          : tpl
+      );
+      saveCollection(dbKey, updated);
+      notify.success('Template updated successfully');
+    } else {
+      const newTpl: MessageTemplate = {
+        id: `custom_${Date.now()}`,
+        label: templateLabel.trim(),
+        body: templateBody.trim(),
+      };
+      saveCollection(dbKey, [...custom, newTpl]);
+      notify.success('Custom message template saved successfully');
+    }
+
+    setEditingTemplateId(null);
     setTemplateLabel('');
     setTemplateBody('');
-    notify.success('Custom message template saved successfully');
   };
+
+  const handleEditTemplateClick = (tpl: MessageTemplate): void => {
+    setEditingTemplateId(tpl.id);
+    setTemplateLabel(tpl.label);
+    setTemplateBody(tpl.body);
+  };
+
+  const handleCancelTemplateEdit = (): void => {
+    setEditingTemplateId(null);
+    setTemplateLabel('');
+    setTemplateBody('');
+  };
+
+  const insertVariableTag = (tag: string): void => {
+    setTemplateBody((prev) => (prev ? `${prev} ${tag}` : tag));
+  };
+
 
   // Handle template deletion confirm action
   const confirmDeleteTemplate = (): void => {
@@ -239,11 +277,11 @@ export default function MessagingPage(): React.JSX.Element {
             if (currentSelectedList.length > 0) {
               triggerCompose('whatsapp');
             } else {
-              notify.info('Please select recipients from the checklist below to compose a campaign.');
+              notify.info(t('messaging.selectRecipientsDesc'));
             }
           }}
         >
-          New Campaign
+          {t('messaging.newCampaign')}
         </ActionButton>
       }
       metricsStrip={
@@ -252,7 +290,7 @@ export default function MessagingPage(): React.JSX.Element {
             { icon: Send, label: t('messaging.stats.total'), value: stats.total, accent: 'primary' },
             { icon: MessageSquare, label: t('messaging.stats.sms'), value: stats.sms, accent: 'info' },
             { icon: MessageCircle, label: t('messaging.stats.whatsapp'), value: stats.wa, accent: 'success' },
-            { icon: Mail, label: 'Emails Dispatched', value: stats.email, accent: 'warning' },
+            { icon: Mail, label: t('messaging.stats.email'), value: stats.email, accent: 'warning' },
           ]}
         />
       }
@@ -297,7 +335,7 @@ export default function MessagingPage(): React.JSX.Element {
               </div>
 
               <SearchBar
-                placeholder="Search recipients by name..."
+                placeholder={t('messaging.search.placeholder')}
                 value={searchContact}
                 onChange={setSearchContact}
               />
@@ -310,12 +348,13 @@ export default function MessagingPage(): React.JSX.Element {
                         <Checkbox
                           checked={allVisibleSelected}
                           onCheckedChange={handleToggleAllVisible}
-                          aria-label="Select all visible"
+                          aria-label={t('common.search')}
                         />
                       </th>
-                      <th className="px-4 py-2">Name</th>
-                      <th className="px-4 py-2">Phone Number</th>
-                      <th className="px-4 py-2">Email Address</th>
+                      <th className="px-4 py-2">{t('messaging.recipient')}</th>
+                      <th className="px-4 py-2">{t('contacts.form.primaryPhone')}</th>
+                      <th className="px-4 py-2">{t('contacts.form.primaryEmail')}</th>
+
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
@@ -339,7 +378,7 @@ export default function MessagingPage(): React.JSX.Element {
                     {filteredContacts.length === 0 && (
                       <tr>
                         <td colSpan={4} className="text-center py-6 text-muted-foreground">
-                          No active contacts with valid phone numbers or emails match your filters.
+                          {t('messaging.selectRecipientsDesc')}
                         </td>
                       </tr>
                     )}
@@ -358,7 +397,7 @@ export default function MessagingPage(): React.JSX.Element {
 
                 <div className="p-3 bg-muted/40 rounded-xl space-y-2 border border-border/40">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground">Contacts Checked:</span>
+                    <span className="text-muted-foreground">{t('messaging.contactsChecked')}:</span>
                     <span className="font-bold text-foreground">{currentSelectedList.length}</span>
                   </div>
                   {currentSelectedList.length > 0 && (
@@ -381,7 +420,7 @@ export default function MessagingPage(): React.JSX.Element {
                   className="w-full bg-success hover:bg-success/90 text-success-foreground font-semibold"
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
-                  Send WhatsApp Campaign
+                  {t('messaging.sendWhatsapp')}
                 </Button>
                 <Button
                   onClick={() => triggerCompose('sms')}
@@ -389,7 +428,7 @@ export default function MessagingPage(): React.JSX.Element {
                   className="w-full bg-info hover:bg-info/90 text-info-foreground font-semibold"
                 >
                   <MessageSquare className="w-4 h-4 mr-2" />
-                  Send SMS Campaign
+                  {t('messaging.sendSms')}
                 </Button>
                 <Button
                   onClick={() => triggerCompose('email')}
@@ -397,7 +436,7 @@ export default function MessagingPage(): React.JSX.Element {
                   className="w-full bg-warning hover:bg-warning/90 text-warning-foreground font-semibold"
                 >
                   <Mail className="w-4 h-4 mr-2" />
-                  Send Email Campaign
+                  {t('messaging.sendEmail')}
                 </Button>
               </div>
             </div>
@@ -435,17 +474,51 @@ export default function MessagingPage(): React.JSX.Element {
                   </div>
                 </div>
 
-                {messageLogs.length > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setConfirmClearLogsOpen(true)}
-                    className="text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="w-4 h-4 mr-1.5" />
-                    {t('messaging.clearLogs')}
-                  </Button>
-                )}
+                <div className="flex items-center gap-2">
+                  {filteredLogs.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const headers = ["Recipient", "Channel", "Body", "Sent At"];
+                        const rows = filteredLogs.map((log) => {
+                          const recipient = allContacts.find((c) => c.id === log.contactId);
+                          const name = recipient ? getDisplayName(recipient) : `Contact #${log.contactId}`;
+                          return [
+                            `"${name.replace(/"/g, '""')}"`,
+                            log.channel,
+                            `"${log.body.replace(/"/g, '""')}"`,
+                            log.sentAt,
+                          ].join(",");
+                        });
+                        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
+                        const encodedUri = encodeURI(csvContent);
+                        const link = document.createElement("a");
+                        link.setAttribute("href", encodedUri);
+                        link.setAttribute("download", `message_history_${new Date().toISOString().split("T")[0]}.csv`);
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        notify.success(t('messaging.exportLogs'));
+                      }}
+                      className="font-semibold text-foreground"
+                    >
+                      <Download className="w-4 h-4 mr-1.5 text-primary" />
+                      {t('common.export')}
+                    </Button>
+                  )}
+                  {messageLogs.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setConfirmClearLogsOpen(true)}
+                      className="text-destructive hover:bg-destructive/10 font-semibold"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1.5" />
+                      {t('messaging.clearLogs')}
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {filteredLogs.length > 0 ? (
@@ -453,10 +526,10 @@ export default function MessagingPage(): React.JSX.Element {
                   <table className="w-full text-sm text-left">
                     <thead className="bg-muted/40 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
                       <tr>
-                        <th className="px-4 py-3">Recipient</th>
-                        <th className="px-4 py-3">Channel</th>
-                        <th className="px-4 py-3">Message Body</th>
-                        <th className="px-4 py-3">Date Sent</th>
+                        <th className="px-4 py-3">{t('messaging.recipient')}</th>
+                        <th className="px-4 py-3">{t('messaging.channel')}</th>
+                        <th className="px-4 py-3">{t('messaging.messageBody')}</th>
+                        <th className="px-4 py-3">{t('messaging.dateSent')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/60">
@@ -496,7 +569,7 @@ export default function MessagingPage(): React.JSX.Element {
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                   <Clock className="w-8 h-8 opacity-40 mb-2" />
-                  <p className="text-sm font-medium">No sent message records found</p>
+                  <p className="text-sm font-medium">{t('messaging.noLogs')}</p>
                 </div>
               )}
             </div>
@@ -505,9 +578,9 @@ export default function MessagingPage(): React.JSX.Element {
             <div className="border border-border rounded-xl bg-card p-4 flex flex-col justify-between">
               <div className="space-y-1">
                 <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                  <BarChart2 className="w-4 h-4 text-primary" /> Volume Breakdown
+                  <BarChart2 className="w-4 h-4 text-primary" /> {t('messaging.volumeBreakdown')}
                 </h4>
-                <p className="text-xs text-muted-foreground">Campaign distribution by communications channel.</p>
+                <p className="text-xs text-muted-foreground">{t('messaging.volumeBreakdownDesc')}</p>
               </div>
 
               {chartData.length > 0 ? (
@@ -535,7 +608,7 @@ export default function MessagingPage(): React.JSX.Element {
               ) : (
                 <div className="flex flex-col items-center justify-center h-[240px] text-muted-foreground">
                   <BarChart2 className="w-8 h-8 opacity-45 mb-2" />
-                  <p className="text-xs font-semibold">No dispatches to chart</p>
+                  <p className="text-xs font-semibold">{t('messaging.noDispatches')}</p>
                 </div>
               )}
             </div>
@@ -544,34 +617,56 @@ export default function MessagingPage(): React.JSX.Element {
 
         {activeTab === 'setup' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Create Template Form */}
+            {/* Create / Edit Template Form */}
             <div className="border border-border rounded-xl bg-card p-4 space-y-4">
-              <div className="space-y-1">
-                <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                  <Plus className="w-4 h-4 text-primary" /> {t('messaging.createPreset')}
-                </h4>
-                <p className="text-xs text-muted-foreground">{t('messaging.createPresetDesc', { name: '{name}' })}</p>
+              <div className="flex justify-between items-center">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                    {editingTemplateId ? <Edit3 className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
+                    {editingTemplateId ? t('messaging.editPreset') : t('messaging.createPreset')}
+                  </h4>
+                  <p className="text-xs text-muted-foreground">{t('messaging.createPresetDesc')}</p>
+                </div>
+                {editingTemplateId && (
+                  <Button variant="ghost" size="sm" onClick={handleCancelTemplateEdit} className="text-xs">
+                    {t('common.cancel')}
+                  </Button>
+                )}
               </div>
 
-              <form onSubmit={handleCreateTemplate} className="space-y-3">
+              <form onSubmit={handleSaveTemplate} className="space-y-3">
                 <div>
-                  <label className={FORM_LABEL} htmlFor="tplLabel">Template Label / Title</label>
+                  <label className={FORM_LABEL} htmlFor="tplLabel">{t('messaging.templateLabel')}</label>
                   <Input
                     id="tplLabel"
                     value={templateLabel}
                     onChange={(e) => setTemplateLabel(e.target.value)}
-                    placeholder="e.g., Absent Notification"
+                    placeholder="e.g. Absent Notification"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className={FORM_LABEL} htmlFor="tplBody">{t('contacts.messageBody')}</label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className={FORM_LABEL} htmlFor="tplBody">{t('messaging.messageBody')}</label>
+                    <div className="flex items-center gap-1">
+                      {['{name}', '{first_name}', '{phone}', '{email}', '{date}'].map((token) => (
+                        <button
+                          key={token}
+                          type="button"
+                          onClick={() => insertVariableTag(token)}
+                          className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted hover:bg-primary/10 hover:text-primary border border-border/40 transition-colors"
+                        >
+                          {token}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <Textarea
                     id="tplBody"
                     value={templateBody}
                     onChange={(e) => setTemplateBody(e.target.value)}
-                    placeholder="Hello {name}, we missed you today at the session..."
+                    placeholder="Hello {name}, we missed you today..."
                     rows={4}
                     required
                   />
@@ -579,31 +674,39 @@ export default function MessagingPage(): React.JSX.Element {
 
                 <Button type="submit" className="w-full font-bold">
                   <Check className="w-4 h-4 mr-1.5" />
-                  {t('messaging.saveTemplate')}
+                  {editingTemplateId ? t('messaging.updateTemplate') : t('messaging.saveTemplate')}
                 </Button>
               </form>
             </div>
 
             {/* Existing Templates Listing */}
             <div className="md:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4">
-              <div className="space-y-1">
-                <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                  <Tag className="w-4 h-4 text-muted-foreground" /> {t('messaging.configuredPresets')}
-                </h4>
-                <p className="text-xs text-muted-foreground">{t('messaging.configuredPresetsDesc')}</p>
+              <div className="flex justify-between items-center flex-wrap gap-3">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                    <Tag className="w-4 h-4 text-muted-foreground" /> {t('messaging.configuredPresets')}
+                  </h4>
+                  <p className="text-xs text-muted-foreground">{t('messaging.configuredPresetsDesc')}</p>
+                </div>
+                <SearchBar
+                  placeholder={t('messaging.search.placeholder')}
+                  value={searchTemplate}
+                  onChange={setSearchTemplate}
+                  className="max-w-xs"
+                />
               </div>
 
               <div className="overflow-x-auto border border-border/50 rounded-lg">
                 <table className="w-full text-xs text-left">
                   <thead className="bg-muted/40 text-muted-foreground uppercase tracking-wider font-semibold">
                     <tr className="border-b border-border/60">
-                      <th className="px-4 py-2.5">Template Label</th>
-                      <th className="px-4 py-2.5">Message Copy</th>
-                      <th className="px-4 py-2.5 w-16 text-center">Action</th>
+                      <th className="px-4 py-2.5">{t('messaging.templateLabel')}</th>
+                      <th className="px-4 py-2.5">{t('messaging.templateCopy')}</th>
+                      <th className="px-4 py-2.5 w-24 text-center">{t('common.actions')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
-                    {templates.map((tpl) => (
+                    {filteredTemplates.map((tpl) => (
                       <tr key={tpl.id} className="hover:bg-muted/5 transition-colors">
                         <td className="px-4 py-3 font-semibold text-foreground">{tpl.label}</td>
                         <td className="px-4 py-3 text-muted-foreground max-w-sm truncate" title={tpl.body}>
@@ -611,20 +714,41 @@ export default function MessagingPage(): React.JSX.Element {
                         </td>
                         <td className="px-4 py-3 text-center">
                           {tpl.id.startsWith('custom_') ? (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setDeleteTemplateId(tpl.id)}
-                              className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
+                            <div className="flex items-center justify-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEditTemplateClick(tpl)}
+                                className="h-7 w-7 text-primary hover:bg-primary/10"
+                                title={t('common.edit')}
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setDeleteTemplateId(tpl.id)}
+                                className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                                title={t('common.delete')}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
                           ) : (
-                            <span className="text-[10px] text-muted-foreground/60 italic font-mono uppercase bg-muted/65 px-1.5 py-0.5 rounded border border-border/30">system</span>
+                            <span className="text-[10px] text-muted-foreground/60 italic font-mono uppercase bg-muted/65 px-1.5 py-0.5 rounded border border-border/30">
+                              {t('messaging.tagSystem')}
+                            </span>
                           )}
                         </td>
                       </tr>
                     ))}
+                    {filteredTemplates.length === 0 && (
+                      <tr>
+                        <td colSpan={3} className="text-center py-6 text-muted-foreground">
+                          {t('messaging.noLogs')}
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -650,8 +774,8 @@ export default function MessagingPage(): React.JSX.Element {
       <ConfirmAlertDialog
         open={Boolean(deleteTemplateId)}
         onOpenChange={(open) => { if (!open) setDeleteTemplateId(null); }}
-        title="Delete Message Template"
-        description="Are you sure you want to delete this template? This action cannot be undone."
+        title={t('messaging.deleteTemplateTitle')}
+        description={t('messaging.deleteTemplateDesc')}
         confirmLabel={t('common.delete')}
         destructive
         onConfirm={confirmDeleteTemplate}
@@ -662,7 +786,7 @@ export default function MessagingPage(): React.JSX.Element {
         open={confirmClearLogsOpen}
         onOpenChange={setConfirmClearLogsOpen}
         title={t('messaging.clearLogs')}
-        description="Are you sure you want to clear all message logs? This action cannot be undone."
+        description={t('messaging.clearLogsDesc')}
         confirmLabel={t('common.delete')}
         destructive
         onConfirm={confirmClearLogs}
@@ -670,3 +794,4 @@ export default function MessagingPage(): React.JSX.Element {
     </ModulePageShell>
   );
 }
+

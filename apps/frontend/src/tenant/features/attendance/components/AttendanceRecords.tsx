@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Pencil, Trash2, X } from "lucide-react";
+import { Pencil, Trash2, X, MessageSquare, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ interface AttendanceRecordsProps {
   setRecords: React.Dispatch<React.SetStateAction<AttendanceRecord[]>>;
   isColumnVisible?: (key: string) => boolean;
   columnCustomizer?: ModuleColumnCustomizerProps;
+  onMessage?: (channel: 'sms' | 'whatsapp' | 'email', records: AttendanceRecord[]) => void;
 }
 
 export function AttendanceRecords({
@@ -39,6 +40,7 @@ export function AttendanceRecords({
   setRecords,
   isColumnVisible,
   columnCustomizer,
+  onMessage,
 }: AttendanceRecordsProps) {
   const { statuses } = useAttendanceConfig();
   const { t } = useTranslation();
@@ -270,6 +272,32 @@ export function AttendanceRecords({
                   )}
                   <td className="px-3 py-2.5 text-right">
                     <div className="flex items-center justify-end gap-1">
+                      {onMessage && (
+                        <>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onMessage('whatsapp', [attendanceRecord])}
+                            aria-label="Send WhatsApp"
+                            title="Send WhatsApp message"
+                            className="h-8 w-8 text-muted-foreground hover:text-success"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onMessage('sms', [attendanceRecord])}
+                            aria-label="Send SMS"
+                            title="Send SMS message"
+                            className="h-8 w-8 text-muted-foreground hover:text-info"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                          </Button>
+                        </>
+                      )}
                       {canWriteAttendance && (
                         <Button
                           type="button"

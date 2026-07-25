@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback, lazy, Suspense } from "react";
-import { Plus, Eye, Search, Receipt, Printer } from "lucide-react";
+import { Plus, Eye, Search, Receipt, Printer, MessageSquare, MessageCircle } from "lucide-react";
 import {
   ObligationCollection, ObligationType, MujtahidRep, Mujtahid
 } from '@/lib/data/obligationsData';
@@ -24,6 +24,7 @@ export interface ObligationCollectionListProps {
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
   columnCustomizer?: ModuleColumnCustomizerProps;
+  onMessage?: (channel: 'sms' | 'whatsapp' | 'email', collections: ObligationCollection[]) => void;
 }
 
 export function ObligationCollectionList({
@@ -36,6 +37,7 @@ export function ObligationCollectionList({
   onFilteredCountChange,
   isColumnVisible,
   columnCustomizer,
+  onMessage,
 }: ObligationCollectionListProps) {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
@@ -225,6 +227,22 @@ export function ObligationCollectionList({
                         )}
                         <td className="px-3 py-2.5 text-right">
                           <div className="flex items-center justify-end gap-1">
+                            {onMessage && (
+                              <>
+                                <Button type="button" onClick={() => onMessage('whatsapp', [collection])}
+                                  variant="ghost"
+                                  className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-success shadow-none transition-colors"
+                                  title="Send WhatsApp Message">
+                                  <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                                </Button>
+                                <Button type="button" onClick={() => onMessage('sms', [collection])}
+                                  variant="ghost"
+                                  className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-info shadow-none transition-colors"
+                                  title="Send SMS Message">
+                                  <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+                                </Button>
+                              </>
+                            )}
                             <Button type="button" onClick={() => onView(collection)}
                               variant="ghost"
                               className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary shadow-none transition-colors"

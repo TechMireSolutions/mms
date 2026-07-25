@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserPlus, Eye, Pencil, KeyRound,
   CheckCircle2, XCircle,
-  Power,
+  Power, Mail, MessageCircle, MessageSquare,
 } from 'lucide-react';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { FormSelect } from '@/components/ui/FormSelect';
@@ -40,6 +40,7 @@ export interface UsersListProps {
   onToggleStatus: (id: string, status: 'active' | 'inactive') => void;
   onResetPassword: (user: SystemUser) => void;
   onAddUser: () => void;
+  onMessage?: (channel: 'sms' | 'whatsapp' | 'email', users: SystemUser[]) => void;
 }
 
 export function UsersList({
@@ -49,6 +50,7 @@ export function UsersList({
   onToggleStatus,
   onResetPassword,
   onAddUser,
+  onMessage,
 }: UsersListProps): React.JSX.Element {
   const { t } = useTranslation();
   const globalSettings = useGlobalSettings();
@@ -84,6 +86,11 @@ export function UsersList({
       if (selectedUser) onToggleStatus(userId, action === 'activate' ? 'active' : 'inactive');
     });
     setSelected([]);
+  };
+
+  const handleBulkMessage = (channel: 'sms' | 'whatsapp' | 'email') => {
+    const selectedUsers = users.filter((u) => selected.includes(u.id));
+    onMessage?.(channel, selectedUsers);
   };
 
   const fmtDate = (ts: string): string => {
@@ -142,7 +149,23 @@ export function UsersList({
             <span className="text-sm font-semibold text-foreground">
               {t('users.selectedCount', { count: selected.length })}
             </span>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center flex-wrap">
+              {onMessage && (
+                <>
+                  <Button type="button" size="sm" variant="outline" onClick={() => handleBulkMessage('email')}>
+                    <Mail className="h-3 w-3 me-1 text-primary" />
+                    Email
+                  </Button>
+                  <Button type="button" size="sm" variant="outline" onClick={() => handleBulkMessage('whatsapp')}>
+                    <MessageCircle className="h-3 w-3 me-1 text-success" />
+                    WhatsApp
+                  </Button>
+                  <Button type="button" size="sm" variant="outline" onClick={() => handleBulkMessage('sms')}>
+                    <MessageSquare className="h-3 w-3 me-1 text-info" />
+                    SMS
+                  </Button>
+                </>
+              )}
               <Button type="button" size="sm" variant="secondary" onClick={() => bulkAction('activate')}>
                 <CheckCircle2 className="h-3 w-3" />
                 {t('users.bulkActivate')}

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray, personalizeMessage } from "./utils.js";
+
 
 import type { Contact } from "./contactTypes.js";
 
@@ -452,6 +453,29 @@ describe("paginateArray", () => {
     expect(capped.items.length).toBe(50);
   });
 });
+
+describe("personalizeMessage", () => {
+  it("replaces {name}, {first_name}, {phone}, {email}, and {date} placeholders case-insensitively", () => {
+    const body = "Dear {NAME}, your first name is {first_name}. Contact: {phone}, {email} on {DATE}.";
+    const recipient = {
+      name: "Syed Muhammad Ali",
+      phone: "+92 300 1234567",
+      email: "ali@example.com",
+    };
+    const result = personalizeMessage(body, recipient, { date: "2026-07-25" });
+    expect(result).toBe("Dear Syed Muhammad Ali, your first name is Syed. Contact: +92 300 1234567, ali@example.com on 2026-07-25.");
+  });
+
+  it("handles missing recipient fields gracefully", () => {
+    const body = "Hello {name} ({email})";
+    expect(personalizeMessage(body, {})).toBe("Hello  ()");
+  });
+
+  it("returns empty string when body is empty", () => {
+    expect(personalizeMessage("", { name: "Ali" })).toBe("");
+  });
+});
+
 
 
 
