@@ -853,9 +853,7 @@ export function getLunarAgeComponents(dob: string, relativeTo = new Date()): Lun
 
     if (days < 0) {
       months--;
-      const prevHijriDate = new Date(Date.UTC(relativeTo.getFullYear(), relativeTo.getMonth(), relativeTo.getDate() - nowParts.day));
-      const prevHijriDays = getHijriParts(prevHijriDate).day;
-      days += prevHijriDays > 0 ? prevHijriDays : 30;
+      days += 30;
     }
     if (months < 0) {
       years--;

@@ -4,6 +4,9 @@ import type { MessagingRecipient } from "@/components/ui/MessageComposer";
 export interface MessagingTarget {
   channel: "sms" | "whatsapp" | "email";
   recipients: MessagingRecipient[];
+  initialMessage?: string;
+  initialSubject?: string;
+  templateId?: string;
 }
 
 /**
@@ -13,9 +16,22 @@ export interface MessagingTarget {
 export function useMessageComposerState() {
   const [messagingTarget, setMessagingTarget] = useState<MessagingTarget | null>(null);
 
-  const openComposer = useCallback((channel: "sms" | "whatsapp" | "email", recipients: MessagingRecipient[]) => {
-    setMessagingTarget({ channel, recipients });
-  }, []);
+  const openComposer = useCallback(
+    (
+      channel: "sms" | "whatsapp" | "email",
+      recipients: MessagingRecipient[],
+      options?: { initialMessage?: string; initialSubject?: string; templateId?: string }
+    ) => {
+      setMessagingTarget({
+        channel,
+        recipients,
+        initialMessage: options?.initialMessage,
+        initialSubject: options?.initialSubject,
+        templateId: options?.templateId,
+      });
+    },
+    []
+  );
 
   const closeComposer = useCallback(() => {
     setMessagingTarget(null);

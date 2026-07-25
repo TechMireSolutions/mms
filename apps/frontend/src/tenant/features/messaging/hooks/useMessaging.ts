@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { MessageTemplate, Message } from '@mms/shared';
+import { type MessageTemplate, type Message, getMessagesDbKey, getMessageTemplatesDbKey } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
 import { getCollection, saveCollection } from '@/lib/db';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -11,7 +11,7 @@ const MESSAGING_METRICS_QUERY_KEY = ['messaging', 'metrics'] as const;
 
 export function useMessageTemplates(options?: { enabled?: boolean }) {
   const { user } = useAuth();
-  const dbKey = user ? `messages_templates_u:${user.id}` : null;
+  const dbKey = user ? getMessageTemplatesDbKey(user.id) : null;
 
   const query = useQuery({
     queryKey: MESSAGING_TEMPLATES_QUERY_KEY,
@@ -42,16 +42,30 @@ export function useMessageTemplates(options?: { enabled?: boolean }) {
   return { ...query, templates };
 }
 
-export function useMessageLogs(options?: { enabled?: boolean }) {
+export function useMessageLogs(options?: {
+  enabled?: boolean;
+  channel?: string;
+  category?: string;
+  search?: string;
+  status?: string;
+}) {
   const { user } = useAuth();
-  const dbKey = user ? `messages_u:${user.id}` : null;
+  const dbKey = user ? getMessagesDbKey(user.id) : null;
+
+  const queryParams = new URLSearchParams();
+  if (options?.channel && options.channel !== 'all') queryParams.set('channel', options.channel);
+  if (options?.category && options.category !== 'all') queryParams.set('category', options.category);
+  if (options?.search) queryParams.set('search', options.search);
+  if (options?.status && options.status !== 'all') queryParams.set('status', options.status);
+  const queryString = queryParams.toString();
+  const endpoint = `/api/messaging/logs${queryString ? `?${queryString}` : ''}`;
 
   const query = useQuery({
-    queryKey: MESSAGING_LOGS_QUERY_KEY,
+    queryKey: [...MESSAGING_LOGS_QUERY_KEY, options?.channel, options?.category, options?.search, options?.status],
     queryFn: async () => {
       try {
-        const res = await apiJson<{ logs: Message[] }>('/api/messaging/logs');
-        if (dbKey && res.logs) {
+        const res = await apiJson<{ logs: Message[] }>(endpoint);
+        if (dbKey && res.logs && !queryString) {
           saveCollection(dbKey, res.logs);
         }
         return res.logs || [];
@@ -68,11 +82,43 @@ export function useMessageLogs(options?: { enabled?: boolean }) {
 
   const logs = useMemo(() => {
     if (query.data && query.data.length > 0) return query.data;
-    if (dbKey) return getCollection<Message>(dbKey) || [];
+    if (dbKey && !queryString) return getCollection<Message>(dbKey) || [];
     return [];
-  }, [query.data, dbKey]);
+  }, [query.data, dbKey, queryString]);
 
   return { ...query, logs };
+}
+
+export function useMessagingMetrics(options?: { enabled?: boolean }) {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: MESSAGING_METRICS_QUERY_KEY,
+    queryFn: async () => {
+      try {
+        const res = await apiJson<{
+          metrics: {
+            total: number;
+            smsCount: number;
+            whatsappCount: number;
+            emailCount: number;
+            sentCount: number;
+            deliveredCount?: number;
+            failedCount: number;
+            skippedCount: number;
+            queuedCount?: number;
+            successRate: number;
+            categoryBreakdown?: Record<string, number>;
+          };
+        }>('/api/messaging/metrics');
+        return res.metrics;
+      } catch (err) {
+        return null;
+      }
+    },
+    staleTime: 15_000,
+    enabled: options?.enabled !== false && Boolean(user),
+  });
 }
 
 export function useMessagingMutations() {
@@ -94,7 +140,7 @@ export function useMessagingMutations() {
     },
     onSuccess: (res) => {
       if (user && res.template) {
-        const dbKey = `messages_templates_u:${user.id}`;
+        const dbKey = getMessageTemplatesDbKey(user.id);
         const current = getCollection<MessageTemplate>(dbKey) || [];
         const updated = [...current.filter((t) => t.id !== res.template.id), res.template];
         saveCollection(dbKey, updated);
@@ -111,7 +157,7 @@ export function useMessagingMutations() {
     },
     onSuccess: (_, id) => {
       if (user) {
-        const dbKey = `messages_templates_u:${user.id}`;
+        const dbKey = getMessageTemplatesDbKey(user.id);
         const current = getCollection<MessageTemplate>(dbKey) || [];
         saveCollection(dbKey, current.filter((t) => t.id !== id));
       }
@@ -128,7 +174,7 @@ export function useMessagingMutations() {
     },
     onSuccess: (_, logs) => {
       if (user) {
-        const dbKey = `messages_u:${user.id}`;
+        const dbKey = getMessagesDbKey(user.id);
         const current = getCollection<Message>(dbKey) || [];
         saveCollection(dbKey, [...logs, ...current]);
       }
@@ -144,7 +190,7 @@ export function useMessagingMutations() {
     },
     onSuccess: () => {
       if (user) {
-        saveCollection(`messages_u:${user.id}`, []);
+        saveCollection(getMessagesDbKey(user.id), []);
       }
       invalidate();
     },
@@ -157,3 +203,4 @@ export function useMessagingMutations() {
     clearLogs,
   };
 }
+

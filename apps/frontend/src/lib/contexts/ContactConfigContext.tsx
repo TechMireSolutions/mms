@@ -120,7 +120,7 @@ export interface ContactConfigContextType {
   systemSortOptions: Array<{ field: string; label: string }>;
 }
 
-const ContactConfigContext = createContext<ContactConfigContextType | null>(null);
+export const ContactConfigContext = createContext<ContactConfigContextType | null>(null);
 
 /**
  * Context Provider component that loads contact configuration arrays

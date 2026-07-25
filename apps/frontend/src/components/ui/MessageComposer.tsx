@@ -1,28 +1,34 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useContext } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageCircle, MessageSquare, User, Info, Sparkles, Mail, CheckCheck, AlertCircle, Clock, ChevronLeft, ChevronRight, Play, Pause, XCircle, Zap, ShieldCheck
 } from 'lucide-react';
-import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
+import { ContactConfigContext } from '@/lib/contexts/ContactConfigContext';
 import { openDeviceSmsComposer } from '@/lib/deviceSms';
 import { FormModal } from '@/components/ui/FormModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FormSelect } from '@/components/ui/FormSelect';
+import { SearchBar } from '@/components/ui/SearchBar';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { getCollection, saveCollection } from '@/lib/db';
 import { 
   personalizeMessage, 
   calculateSmsSegments, 
   validateRecipientAddress,
-  MESSAGING_VARIABLE_TOKENS,
+  getInitials,
+  formatDate,
+  mergeMessageTemplates,
+  parsePhoneNumber,
   type PersonalizeRecipient, 
   type MessageTemplate,
   type Message
 } from '@mms/shared';
-import { useMessagingMutations } from '@/tenant/features/messaging/hooks/useMessaging';
+import { MessagingVariableTokensBar } from '@/components/ui/MessagingVariableTokensBar';
+import { SegmentedPillFilter } from '@/components/ui/SegmentedPillFilter';
+import { useMessageTemplates, useMessagingMutations } from '@/tenant/features/messaging/hooks/useMessaging';
 
 export interface MessagingRecipient extends PersonalizeRecipient {
   id: string | number;
@@ -69,14 +75,8 @@ export default function MessageComposer({
   const { user } = useAuth();
 
   // Safely resolve whatsappTemplates from context if mounted
-  const contextTemplates = (() => {
-    try {
-      const config = useContactConfig();
-      return config?.whatsappTemplates || [];
-    } catch {
-      return [];
-    }
-  })();
+  const contactConfig = useContext(ContactConfigContext);
+  const contextTemplates = contactConfig?.whatsappTemplates || [];
 
   // Evaluate recipients eligibility and validation
   const validatedRecipients = useMemo(() => {
@@ -104,26 +104,19 @@ export default function MessageComposer({
   // Recipient list filter tab inside modal
   const [recipientTab, setRecipientTab] = useState<'all' | 'eligible' | 'skipped'>('all');
 
-  // Load custom templates saved in user settings/messaging setup
-  const userSavedTemplates = useMemo(() => {
-    if (!user) return [];
-    const dbKey = `messages_templates_u:${user.id}`;
-    return getCollection<MessageTemplate>(dbKey) || [];
-  }, [user]);
+  const { templates: fetchedTemplates } = useMessageTemplates();
 
   const activeTemplates = useMemo(() => {
     if (templates) return templates;
-    const base: MessageTemplate[] = contextTemplates.map((t) => ({
+    const mappedContext: MessageTemplate[] = contextTemplates.map((t) => ({
       id: t.id,
       label: t.label,
       body: t.body,
-      category: 'general',
-      channel: 'whatsapp',
+      category: 'general' as const,
+      channel: 'whatsapp' as const,
     }));
-    const existingIds = new Set(base.map((t) => t.id));
-    const uniqueUserTemplates = userSavedTemplates.filter((t) => !existingIds.has(t.id));
-    return [...base, ...uniqueUserTemplates];
-  }, [templates, contextTemplates, userSavedTemplates]);
+    return mergeMessageTemplates(fetchedTemplates, mappedContext);
+  }, [templates, contextTemplates, fetchedTemplates]);
 
   const channelFilteredTemplates = useMemo(() => {
     return activeTemplates.filter((tpl) => !tpl.channel || tpl.channel === 'all' || tpl.channel === channel);
@@ -162,7 +155,7 @@ export default function MessageComposer({
     if (channel === 'email') {
       const email = recipient.email;
       if (!email) return false;
-      const personalizedSubject = personalizeMessage(subject || 'Announcement', recipient);
+      const personalizedSubject = personalizeMessage(subject || t('messaging.defaultSubject'), recipient);
       window.open(`mailto:${email}?subject=${encodeURIComponent(personalizedSubject)}&body=${encodeURIComponent(personalizedBody)}`, '_blank');
       return true;
     } else {
@@ -172,7 +165,8 @@ export default function MessageComposer({
       if (channel === 'sms') {
         return openDeviceSmsComposer(phone, personalizedBody);
       } else {
-        const cleanNum = phone.replace(/\D/g, '');
+        const parsed = parsePhoneNumber(phone);
+        const cleanNum = `${parsed.countryCode}${parsed.number}`.replace(/\D/g, '');
         window.open(`https://wa.me/${cleanNum}?text=${encodeURIComponent(personalizedBody)}`, '_blank');
         return true;
       }
@@ -320,11 +314,20 @@ export default function MessageComposer({
     setMessage((prev) => (prev ? `${prev} ${tag}` : tag));
   };
 
-  const displayedRecipients = recipientTab === 'eligible' 
-    ? eligibleRecipients 
-    : recipientTab === 'skipped' 
-    ? skippedRecipients 
-    : validatedRecipients;
+  const [modalSearch, setModalSearch] = useState<string>('');
+
+  const displayedRecipients = useMemo(() => {
+    const list = recipientTab === 'eligible' 
+      ? eligibleRecipients 
+      : recipientTab === 'skipped' 
+      ? skippedRecipients 
+      : validatedRecipients;
+
+    if (!modalSearch.trim()) return list;
+    const query = modalSearch.toLowerCase();
+    return list.filter((r) => r.name.toLowerCase().includes(query) || (r.phone && r.phone.includes(query)) || (r.email && r.email.toLowerCase().includes(query)));
+  }, [recipientTab, eligibleRecipients, skippedRecipients, validatedRecipients, modalSearch]);
+
 
   return (
     <FormModal
@@ -344,65 +347,81 @@ export default function MessageComposer({
         </p>
 
         {/* Skipped contact warning alert */}
-        {skippedCount > 0 && (
-          <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span>
-                {skippedCount} contact{skippedCount > 1 ? 's' : ''} skipped (missing or invalid {isEmail ? 'email address' : 'phone number'}).
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setRecipientTab('skipped')}
-              className="text-[11px] font-semibold underline hover:opacity-80 flex-shrink-0"
+        <AnimatePresence>
+          {skippedCount > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              className="flex items-center justify-between gap-2 p-2.5 rounded-lg text-xs bg-warning/10 text-warning border border-warning/20"
             >
-              View Skipped
-            </button>
-          </div>
-        )}
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>
+                  {t('messaging.skippedNotice', { count: String(skippedCount), type: isEmail ? t('messaging.emailAddress') : t('messaging.phoneNumber') })}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRecipientTab('skipped')}
+                className="text-[11px] font-semibold underline hover:opacity-80 flex-shrink-0 cursor-pointer"
+              >
+                {t('messaging.viewSkipped')}
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Bulk Dispatch Progress Indicator & Controls */}
-        {dispatchProgress && (
-          <div className="p-3 border border-primary/30 bg-primary/5 rounded-xl space-y-2.5 shadow-sm">
-            <div className="flex items-center justify-between text-xs font-semibold text-primary">
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 animate-spin" />
-                {t('messaging.dispatchProgress', { current: String(dispatchProgress.current), total: String(dispatchProgress.total) })}
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="font-mono">{Math.round((dispatchProgress.current / dispatchProgress.total) * 100)}%</span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-6 w-6 text-xs"
-                  onClick={() => setIsPaused((p) => !p)}
-                  title={isPaused ? t('messaging.resume') : t('messaging.pause')}
-                >
-                  {isPaused ? <Play className="w-3 h-3 text-success" /> : <Pause className="w-3 h-3 text-warning" />}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-destructive hover:bg-destructive/10"
-                  onClick={handleCancelDispatch}
-                  title={t('messaging.cancelDispatch')}
-                >
-                  <XCircle className="w-3.5 h-3.5" />
-                </Button>
+        <AnimatePresence>
+          {dispatchProgress && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="p-3 border border-primary/30 bg-primary/5 rounded-xl space-y-2.5 shadow-sm"
+            >
+              <div className="flex items-center justify-between text-xs font-semibold text-primary">
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 animate-spin" />
+                  {t('messaging.dispatchProgress', { current: String(dispatchProgress.current), total: String(dispatchProgress.total) })}
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono">{Math.round((dispatchProgress.current / dispatchProgress.total) * 100)}%</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-6 w-6 text-xs"
+                    onClick={() => setIsPaused((p) => !p)}
+                    title={isPaused ? t('messaging.resume') : t('messaging.pause')}
+                  >
+                    {isPaused ? <Play className="w-3 h-3 text-success" /> : <Pause className="w-3 h-3 text-warning" />}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-destructive hover:bg-destructive/10"
+                    onClick={handleCancelDispatch}
+                    title={t('messaging.cancelDispatch')}
+                  >
+                    <XCircle className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
               </div>
-            </div>
 
-            <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-              <div 
-                className={`h-full transition-all duration-300 rounded-full ${isPaused ? 'bg-amber-500' : 'bg-primary'}`}
-                style={{ width: `${(dispatchProgress.current / dispatchProgress.total) * 100}%` }}
-              />
-            </div>
-          </div>
-        )}
+              <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                <motion.div 
+                  className={`h-full rounded-full ${isPaused ? 'bg-warning' : 'bg-primary'}`}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(dispatchProgress.current / dispatchProgress.total) * 100}%` }}
+                  transition={{ duration: 0.2 }}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Speed settings toggle for bulk campaigns */}
         {isBulk && !opening && (
@@ -411,22 +430,16 @@ export default function MessageComposer({
               <Zap className="w-3.5 h-3.5 text-primary" />
               {t('messaging.dispatchSpeed')}:
             </span>
-            <div className="flex items-center gap-1">
-              {(['safe', 'normal', 'express'] as DispatchSpeed[]).map((spd) => (
-                <button
-                  key={spd}
-                  type="button"
-                  onClick={() => setDispatchSpeed(spd)}
-                  className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
-                    dispatchSpeed === spd
-                      ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
-                      : 'text-muted-foreground hover:bg-muted'
-                  }`}
-                >
-                  {t(`messaging.speed.${spd}`)}
-                </button>
-              ))}
-            </div>
+            <SegmentedPillFilter
+              options={[
+                { value: 'safe', label: t('messaging.speed.safe') },
+                { value: 'normal', label: t('messaging.speed.normal') },
+                { value: 'express', label: t('messaging.speed.express') },
+              ]}
+              value={dispatchSpeed}
+              onChange={(v) => setDispatchSpeed(v as DispatchSpeed)}
+              size="sm"
+            />
           </div>
         )}
 
@@ -439,7 +452,7 @@ export default function MessageComposer({
               id="emailSubject"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="e.g. Important Announcement"
+              placeholder={t('messaging.subjectPlaceholder')}
               required
             />
           </div>
@@ -469,21 +482,10 @@ export default function MessageComposer({
             </label>
           </div>
 
-          {/* Dynamic tokens toolbar */}
-          <div className="flex flex-wrap items-center gap-1 mb-1.5">
-            <span className="text-[10px] text-muted-foreground font-semibold me-1">{t('messaging.insertVariable')}:</span>
-            {MESSAGING_VARIABLE_TOKENS.map(({ token, labelKey, fallbackExample }) => (
-              <button
-                key={token}
-                type="button"
-                onClick={() => insertVariableTag(token)}
-                title={`Example: ${fallbackExample}`}
-                className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted hover:bg-primary/10 hover:text-primary border border-border/40 transition-colors"
-              >
-                {token}
-              </button>
-            ))}
-          </div>
+          <MessagingVariableTokensBar
+            onSelectToken={insertVariableTag}
+            className="mb-1.5"
+          />
 
           <p className="text-[10px] text-muted-foreground/80 mb-2 italic flex items-center gap-1">
             <Info className="w-3 h-3 text-primary/70 inline flex-shrink-0" />
@@ -506,7 +508,7 @@ export default function MessageComposer({
             <div className="flex items-center gap-2 font-mono">
               {isSms && (
                 <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
-                  smsStats.isUnicode ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30' : 'bg-muted text-foreground'
+                  smsStats.isUnicode ? 'bg-warning/15 text-warning border border-warning/30' : 'bg-muted text-foreground'
                 }`}>
                   {smsStats.isUnicode ? 'Unicode' : 'GSM 7-bit'} • {smsStats.totalSegments} seg ({smsStats.remainingInSegment} left)
                 </span>
@@ -516,93 +518,103 @@ export default function MessageComposer({
           </div>
 
           {isSms && smsStats.isUnicode && (
-            <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium mt-1">
-              ⚠️ {t('messaging.unicodeWarning')}
+            <p className="text-[10px] text-warning font-medium mt-1 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3 text-warning inline flex-shrink-0" />
+              {t('messaging.unicodeWarning')}
             </p>
           )}
         </div>
 
         {/* Live Personalization Interactive Mobile Chat Bubble Mockup */}
-        {previewText && currentPreviewRecipient && (
-          <div className="border border-border/80 rounded-xl p-3.5 bg-muted/20">
-            <h5 className="text-[11px] font-bold text-muted-foreground mb-2.5 flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-foreground">
-                <Sparkles className="w-3.5 h-3.5 text-primary" />
-                {t('messaging.livePreview', { name: currentPreviewRecipient.name })}
-              </span>
+        <AnimatePresence mode="wait">
+          {previewText && currentPreviewRecipient && (
+            <motion.div 
+              key={`${previewIndex}-${channel}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.15 }}
+              className="border border-border/80 rounded-xl p-3.5 bg-muted/20 backdrop-blur-xs"
+            >
+              <h5 className="text-[11px] font-bold text-muted-foreground mb-2.5 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-foreground">
+                  <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
+                  {t('messaging.livePreview', { name: currentPreviewRecipient.name })}
+                </span>
 
-              <div className="flex items-center gap-2">
-                {isBulk && eligibleRecipients.length > 1 && (
-                  <div className="flex items-center gap-1 text-[10px]">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-5 w-5"
-                      disabled={previewIndex <= 0}
-                      onClick={() => setPreviewIndex((i) => Math.max(0, i - 1))}
-                    >
-                      <ChevronLeft className="w-3 h-3" />
-                    </Button>
-                    <span className="font-mono text-muted-foreground">{previewIndex + 1}/{eligibleRecipients.length}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-5 w-5"
-                      disabled={previewIndex >= eligibleRecipients.length - 1}
-                      onClick={() => setPreviewIndex((i) => Math.min(eligibleRecipients.length - 1, i + 1))}
-                    >
-                      <ChevronRight className="w-3 h-3" />
-                    </Button>
-                  </div>
-                )}
-                <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{channel}</span>
-              </div>
-            </h5>
+                <div className="flex items-center gap-2">
+                  {isBulk && eligibleRecipients.length > 1 && (
+                    <div className="flex items-center gap-1 text-[10px]">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5"
+                        disabled={previewIndex <= 0}
+                        onClick={() => setPreviewIndex((i) => Math.max(0, i - 1))}
+                      >
+                        <ChevronLeft className="w-3 h-3" />
+                      </Button>
+                      <span className="font-mono text-muted-foreground">{previewIndex + 1}/{eligibleRecipients.length}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5"
+                        disabled={previewIndex >= eligibleRecipients.length - 1}
+                        onClick={() => setPreviewIndex((i) => Math.min(eligibleRecipients.length - 1, i + 1))}
+                      >
+                        <ChevronRight className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  )}
+                  <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{channel}</span>
+                </div>
+              </h5>
 
-            {isEmail ? (
-              <div className="p-3 rounded-xl bg-card border border-border text-xs space-y-2 shadow-xs">
-                <div className="border-b border-border/50 pb-2 text-[11px]">
-                  <div className="text-muted-foreground">
-                    <span className="font-semibold text-foreground me-1">To:</span> {currentPreviewRecipient.name} &lt;{currentPreviewRecipient.email}&gt;
+              {isEmail ? (
+                <div className="p-3 rounded-xl bg-card border border-border text-xs space-y-2 shadow-xs">
+                  <div className="border-b border-border/50 pb-2 text-[11px]">
+                    <div className="text-muted-foreground">
+                      <span className="font-semibold text-foreground me-1">{t('messaging.to')}:</span> {currentPreviewRecipient.name} &lt;{currentPreviewRecipient.email}&gt;
+                    </div>
+                    <div className="text-muted-foreground mt-0.5">
+                      <span className="font-semibold text-foreground me-1">{t('messaging.subjectLabel')}:</span> {personalizeMessage(subject || t('messaging.defaultSubject'), currentPreviewRecipient)}
+                    </div>
                   </div>
-                  <div className="text-muted-foreground mt-0.5">
-                    <span className="font-semibold text-foreground me-1">Subject:</span> {personalizeMessage(subject || 'Announcement', currentPreviewRecipient)}
+                  <div className="text-xs text-foreground whitespace-pre-wrap leading-relaxed">
+                    {previewText}
                   </div>
                 </div>
-                <div className="text-xs text-foreground whitespace-pre-wrap leading-relaxed">
-                  {previewText}
+              ) : isSms ? (
+                <div className="max-w-[88%] p-3 rounded-2xl text-xs bg-info/10 text-foreground border border-info/20 rounded-tl-none space-y-1 shadow-xs">
+                  <div className="whitespace-pre-wrap leading-relaxed">{previewText}</div>
+                  <div className="flex items-center justify-between text-[9px] opacity-70 font-mono pt-1 border-t border-info/10">
+                    <span>{currentPreviewRecipient.phone}</span>
+                    <span>{t('messaging.smsSegmentBadge', { count: String(smsStats.totalSegments) })}</span>
+                  </div>
                 </div>
-              </div>
-            ) : isSms ? (
-              <div className="max-w-[88%] p-3 rounded-2xl text-xs bg-info/10 text-foreground border border-info/20 rounded-tl-none space-y-1 shadow-xs">
-                <div className="whitespace-pre-wrap leading-relaxed">{previewText}</div>
-                <div className="flex items-center justify-between text-[9px] opacity-70 font-mono pt-1 border-t border-info/10">
-                  <span>{currentPreviewRecipient.phone}</span>
-                  <span>SMS • {smsStats.totalSegments} seg</span>
+              ) : (
+                <div className="max-w-[88%] p-3 rounded-2xl text-xs bg-success/10 text-foreground border border-success/20 rounded-tl-none space-y-1.5 shadow-xs">
+                  <div className="text-[10px] font-semibold text-success border-b border-success/15 pb-1 flex items-center justify-between">
+                    <span>{t('messaging.whatsappBroadcast')}</span>
+                    <span>{currentPreviewRecipient.phone}</span>
+                  </div>
+                  <div className="whitespace-pre-wrap leading-relaxed">{previewText}</div>
+                  <div className="flex items-center justify-end gap-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-mono">
+                    <span>{formatDate(new Date())}</span>
+                    <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="max-w-[88%] p-3 rounded-2xl text-xs bg-emerald-500/10 dark:bg-emerald-950/40 text-foreground border border-emerald-500/20 rounded-tl-none space-y-1.5 shadow-xs">
-                <div className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 border-b border-emerald-500/15 pb-1 flex items-center justify-between">
-                  <span>WhatsApp Broadcast</span>
-                  <span>{currentPreviewRecipient.phone}</span>
-                </div>
-                <div className="whitespace-pre-wrap leading-relaxed">{previewText}</div>
-                <div className="flex items-center justify-end gap-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-mono">
-                  <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Recipients listing & filter tabs */}
         {isBulk && recipients.length > 0 && (
           <div className="space-y-2">
-            <div className="flex items-center justify-between border-b border-border/50 pb-1">
+            <div className="flex items-center justify-between border-b border-border/50 pb-1 flex-wrap gap-2">
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 {t('messaging.confirmRecipients')} ({displayedRecipients.length})
               </span>
@@ -610,7 +622,7 @@ export default function MessageComposer({
                 <button
                   type="button"
                   onClick={() => setRecipientTab('all')}
-                  className={`px-2 py-0.5 text-[10px] rounded font-medium transition-colors ${
+                  className={`px-2 py-0.5 text-[10px] rounded font-medium transition-colors cursor-pointer ${
                     recipientTab === 'all' ? 'bg-primary text-primary-foreground font-bold' : 'text-muted-foreground hover:bg-muted'
                   }`}
                 >
@@ -619,8 +631,8 @@ export default function MessageComposer({
                 <button
                   type="button"
                   onClick={() => setRecipientTab('eligible')}
-                  className={`px-2 py-0.5 text-[10px] rounded font-medium transition-colors ${
-                    recipientTab === 'eligible' ? 'bg-emerald-600 text-white font-bold' : 'text-muted-foreground hover:bg-muted'
+                  className={`px-2 py-0.5 text-[10px] rounded font-medium transition-colors cursor-pointer ${
+                    recipientTab === 'eligible' ? 'bg-success text-success-foreground font-bold' : 'text-muted-foreground hover:bg-muted'
                   }`}
                 >
                   {t('messaging.filter.eligible')} ({eligibleRecipients.length})
@@ -629,8 +641,8 @@ export default function MessageComposer({
                   <button
                     type="button"
                     onClick={() => setRecipientTab('skipped')}
-                    className={`px-2 py-0.5 text-[10px] rounded font-medium transition-colors ${
-                      recipientTab === 'skipped' ? 'bg-amber-600 text-white font-bold' : 'text-muted-foreground hover:bg-muted'
+                    className={`px-2 py-0.5 text-[10px] rounded font-medium transition-colors cursor-pointer ${
+                      recipientTab === 'skipped' ? 'bg-warning text-warning-foreground font-bold' : 'text-muted-foreground hover:bg-muted'
                     }`}
                   >
                     {t('messaging.filter.skipped')} ({skippedCount})
@@ -639,23 +651,35 @@ export default function MessageComposer({
               </div>
             </div>
 
+            {recipients.length > 3 && (
+              <SearchBar
+                placeholder={t('messaging.search.placeholder')}
+                value={modalSearch}
+                onChange={setModalSearch}
+                className="h-8 text-xs"
+              />
+            )}
+
             <ul className="space-y-1 max-h-36 overflow-y-auto border border-border/50 rounded-lg p-2 bg-muted/10">
               {displayedRecipients.map((recipient) => {
                 const isItemEligible = recipient.isValid;
-                const displayContactVal = recipient.address || (isEmail ? recipient.email : recipient.phone) || 'Missing';
+                const displayContactVal = recipient.address || (isEmail ? recipient.email : recipient.phone) || (isEmail ? t('messaging.missingEmail') : t('messaging.missingPhone'));
+                const initials = getInitials(recipient.name);
 
                 return (
                   <li 
                     key={recipient.id} 
                     className={`flex items-center gap-2 text-xs p-1.5 rounded transition-colors ${
                       !isItemEligible 
-                        ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300' 
+                        ? 'bg-warning/10 text-warning border border-warning/20' 
                         : previewIndex === eligibleRecipients.findIndex((e) => e.id === recipient.id)
                         ? 'bg-primary/10 text-foreground font-semibold' 
                         : 'text-muted-foreground hover:bg-muted/30'
                     }`}
                   >
-                    <User className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground/60" />
+                    <span className="w-5 h-5 rounded-full bg-primary/15 text-primary text-[9px] font-extrabold flex items-center justify-center flex-shrink-0">
+                      {initials}
+                    </span>
                     <span 
                       className="truncate cursor-pointer flex-1" 
                       onClick={() => {
@@ -676,13 +700,18 @@ export default function MessageComposer({
                         {isEmail ? t('messaging.sendEmail') : isSms ? t('contacts.openSmsApp') : t('contacts.whatsapp.open')}
                       </Button>
                     ) : (
-                      <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 ms-auto">
-                        Skipped
+                      <span className="text-[10px] font-semibold text-warning ms-auto">
+                        {t('messaging.skippedStatus')}
                       </span>
                     )}
                   </li>
                 );
               })}
+              {displayedRecipients.length === 0 && (
+                <li className="text-center text-muted-foreground text-xs py-2">
+                  {t('messaging.noRecipientsFound')}
+                </li>
+              )}
             </ul>
           </div>
         )}

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { personalizeMessage, validateRecipientAddress } from '../utils.js';
 import { calculateSmsSegments } from '../smsUtils.js';
+import { mergeMessageTemplates, DEFAULT_MESSAGE_TEMPLATES } from '../contactTypes.js';
+import { getMessagesDbKey, getMessageTemplatesDbKey } from '../messagingSchemas.js';
 
 describe('messagingUtils', () => {
   describe('personalizeMessage', () => {
@@ -88,6 +90,31 @@ describe('messagingUtils', () => {
       expect(res.isUnicode).toBe(true);
       expect(res.segmentLimit).toBe(70);
       expect(res.totalSegments).toBe(1);
+    });
+  });
+
+  describe('mergeMessageTemplates', () => {
+    it('merges default templates with custom and context templates cleanly', () => {
+      const customTemplates = [
+        { id: 't1', label: 'Overridden Announcement', body: 'Custom body' }, // Duplicate ID, should be ignored
+        { id: 'custom_100', label: 'Custom Notice', body: 'Custom Notice Body' },
+      ];
+      const contextTemplates = [
+        { id: 'ctx_1', label: 'Context Template', body: 'Context Body' },
+      ];
+
+      const merged = mergeMessageTemplates(customTemplates, contextTemplates);
+      expect(merged).toHaveLength(DEFAULT_MESSAGE_TEMPLATES.length + 2);
+      expect(merged.find((t: any) => t.id === 't1')?.label).toBe('General Announcement'); // Preserves base t1
+      expect(merged.find((t: any) => t.id === 'custom_100')?.label).toBe('Custom Notice');
+      expect(merged.find((t: any) => t.id === 'ctx_1')?.label).toBe('Context Template');
+    });
+  });
+
+  describe('dbStorageKeys', () => {
+    it('formats user-scoped message and template DB keys correctly', () => {
+      expect(getMessagesDbKey('usr_123')).toBe('messages_u:usr_123');
+      expect(getMessageTemplatesDbKey('usr_123')).toBe('messages_templates_u:usr_123');
     });
   });
 });

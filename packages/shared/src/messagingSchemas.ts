@@ -1,8 +1,22 @@
 import { z } from 'zod';
 
-export const messageCategorySchema = z.enum(['general', 'academic', 'financial', 'attendance', 'emergency']);
+export const MESSAGE_CATEGORIES = ['general', 'academic', 'financial', 'attendance', 'emergency'] as const;
 
-export const messageChannelSchema = z.enum(['all', 'sms', 'whatsapp', 'email']);
+export const MESSAGE_CHANNELS = ['all', 'sms', 'whatsapp', 'email'] as const;
+
+export const MESSAGE_CATEGORY_OPTIONS = MESSAGE_CATEGORIES.map((cat) => ({
+  value: cat,
+  labelKey: `messaging.category.${cat}` as const,
+}));
+
+export const MESSAGE_CHANNEL_OPTIONS = MESSAGE_CHANNELS.map((ch) => ({
+  value: ch,
+  labelKey: `messaging.channel.${ch}` as const,
+}));
+
+export const messageCategorySchema = z.enum(MESSAGE_CATEGORIES);
+
+export const messageChannelSchema = z.enum(MESSAGE_CHANNELS);
 
 export const messageTemplateSchema = z.object({
   id: z.string(),
@@ -21,7 +35,7 @@ export const messageTemplateInputSchema = z.object({
   channel: messageChannelSchema.default('all'),
 });
 
-export const messageStatusSchema = z.enum(['sent', 'failed', 'skipped']);
+export const messageStatusSchema = z.enum(['queued', 'sent', 'delivered', 'failed', 'skipped']);
 
 export const messageRecordSchema = z.object({
   id: z.string(),
@@ -44,10 +58,47 @@ export const messagingLogsQuerySchema = z.object({
   channel: z.string().optional(),
   category: z.string().optional(),
   search: z.string().optional(),
+  status: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
   page: z.number().optional().default(1),
   pageSize: z.number().optional().default(50),
+});
+
+export const messagingMetricsSchema = z.object({
+  total: z.number(),
+  smsCount: z.number(),
+  whatsappCount: z.number(),
+  emailCount: z.number(),
+  sentCount: z.number(),
+  deliveredCount: z.number(),
+  failedCount: z.number(),
+  skippedCount: z.number(),
+  queuedCount: z.number().optional(),
+  successRate: z.number(),
+  categoryBreakdown: z.record(messageCategorySchema, z.number()).optional(),
 });
 
 export type MessageTemplateDto = z.infer<typeof messageTemplateSchema>;
 export type MessageTemplateInputDto = z.infer<typeof messageTemplateInputSchema>;
 export type MessageRecordDto = z.infer<typeof messageRecordSchema>;
+export type MessagingLogsQueryDto = z.infer<typeof messagingLogsQuerySchema>;
+export type MessagingMetricsDto = z.infer<typeof messagingMetricsSchema>;
+
+/**
+ * Helper to generate the local storage database key for user-scoped message logs.
+ * @param userId User identifier
+ */
+export function getMessagesDbKey(userId: string): string {
+  return `messages_u:${userId}`;
+}
+
+/**
+ * Helper to generate the local storage database key for user-scoped message templates.
+ * @param userId User identifier
+ */
+export function getMessageTemplatesDbKey(userId: string): string {
+  return `messages_templates_u:${userId}`;
+}
+
+

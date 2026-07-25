@@ -8,11 +8,12 @@ import {
   saveMessageTemplate,
   removeMessageTemplate,
   loadMessageLogs,
+  loadFilteredMessageLogs,
   recordMessageLogs,
   clearAllMessageLogs,
   computeMessagingMetrics,
 } from '../../services/messagingService.js';
-import { type MessageTemplate, type Message, messageTemplateInputSchema, recordMessageLogsSchema, type User } from '@mms/shared';
+import { type MessageTemplate, type Message, messageTemplateInputSchema, recordMessageLogsSchema, messagingLogsQuerySchema, type User } from '@mms/shared';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
 export default async function messagingRoutes(
@@ -78,8 +79,13 @@ export default async function messagingRoutes(
   fastify.get('/logs', async (req: FastifyRequest, reply: FastifyReply) => {
     const user = req.user as User;
     if (!canReadMessaging(user)) return sendForbidden(reply);
+    const parsedQuery = parseRequest(messagingLogsQuerySchema, req.query);
+    const query = parsedQuery.ok ? parsedQuery.data : (req.query as Record<string, string>);
+    const tenantSubdomain = getRequestTenant();
     try {
-      const logs = await loadMessageLogs();
+      const logs = tenantSubdomain
+        ? await loadFilteredMessageLogs(tenantSubdomain, query)
+        : await loadMessageLogs();
       return reply.send({ logs });
     } catch (err) {
       return sendDatabaseError(reply, String(err));
@@ -121,11 +127,13 @@ export default async function messagingRoutes(
   fastify.get('/metrics', async (req: FastifyRequest, reply: FastifyReply) => {
     const user = req.user as User;
     if (!canReadMessaging(user)) return sendForbidden(reply);
+    const tenantSubdomain = getRequestTenant();
     try {
-      const metrics = await computeMessagingMetrics();
+      const metrics = await computeMessagingMetrics(tenantSubdomain || undefined);
       return reply.send({ metrics });
     } catch (err) {
       return sendDatabaseError(reply, String(err));
     }
   });
 }
+

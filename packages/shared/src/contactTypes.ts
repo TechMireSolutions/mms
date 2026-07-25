@@ -502,6 +502,29 @@ export interface MessageTemplate {
   updatedAt?: string;
 }
 
+export const DEFAULT_MESSAGE_TEMPLATES: MessageTemplate[] = [
+  { id: 't1', label: 'General Announcement', category: 'general', channel: 'all', body: 'Dear {name|Valued Parent}, we would like to inform you that...' },
+  { id: 't2', label: 'Payment Reminder', category: 'financial', channel: 'all', body: 'Dear {name|Valued Parent}, this is a friendly reminder that your balance payment of {amount|0 PKR} is due.' },
+  { id: 't3', label: 'Holiday Announcement', category: 'general', channel: 'all', body: 'Dear {name|Valued Parent}, please note that the madrasa will remain closed on {date}.' },
+  { id: 't4', label: 'Attendance Alert', category: 'attendance', channel: 'whatsapp', body: 'Respected {name|Parent}, student {first_name} was marked absent today.' },
+];
+
+/**
+ * Merges default templates with user/custom templates and context templates without duplicate template IDs.
+ */
+export function mergeMessageTemplates(
+  customTemplates?: MessageTemplate[],
+  contextTemplates?: MessageTemplate[]
+): MessageTemplate[] {
+  const base: MessageTemplate[] = [
+    ...DEFAULT_MESSAGE_TEMPLATES,
+    ...(contextTemplates || []),
+  ];
+  const existingIds = new Set(base.map((t) => t.id));
+  const uniqueCustom = (customTemplates || []).filter((t) => !existingIds.has(t.id));
+  return [...base, ...uniqueCustom];
+}
+
 /** Sent message record for SMS, WhatsApp, or Email communications. */
 export interface Message {
   id: string;
@@ -510,7 +533,7 @@ export interface Message {
   channel: 'sms' | 'whatsapp' | 'email';
   body: string;
   sentAt: string;
-  status?: 'sent' | 'failed' | 'skipped';
+  status?: 'queued' | 'sent' | 'delivered' | 'failed' | 'skipped';
   subject?: string;
   category?: MessageCategory;
   errorMessage?: string;

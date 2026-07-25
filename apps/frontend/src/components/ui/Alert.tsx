@@ -54,7 +54,7 @@ export function Alert({
           "rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-foreground",
           className
         )}
-        role={role}
+        role={role ?? "status"}
       >
         {message}
       </div>

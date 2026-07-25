@@ -111,4 +111,5 @@ export * from './sessionTypes.js';
 export * from './platformSettingsTypes.js';
 export * from './platformSchemas.js';
 export * from './messagingSchemas.js';
+export * from './messagingModuleContract.js';
 export * from './vcardUtils.js';
