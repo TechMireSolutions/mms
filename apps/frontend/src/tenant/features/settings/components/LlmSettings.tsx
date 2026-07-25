@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Brain,
   Sparkles,
@@ -30,27 +30,17 @@ import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
 import { useOverlayBehavior } from '@/hooks/useOverlayBehavior';
 import { apiJson } from '@/lib/apiClient';
 import { SettingsCallout, SettingsPanel } from '@/components/ui/SettingsShell';
-import { LLM_PROVIDERS_META, type LlmProviderType, type LlmConfig } from '@mms/shared';
 import { Slider } from '@/components/ui/slider';
-
-export interface LlmTestMetrics {
-  latencyMs: number;
-  characterCount: number;
-  wordCount: number;
-}
-
-export interface LlmTestResult {
-  configId?: string;
-  success: boolean;
-  response?: string;
-  message?: string;
-  metrics?: LlmTestMetrics;
-}
-
-function formatLlmSpeed(wordCount: number, latencyMs: number): string {
-  if (latencyMs <= 0) return 'N/A';
-  return `${(wordCount / (latencyMs / 1000)).toFixed(1)} W/s`;
-}
+import {
+  LLM_PROVIDERS_META,
+  formatLlmSpeed,
+  getLlmProviderDefaultModel,
+  resolveLlmModel,
+  type LlmProviderType,
+  type LlmConfig,
+  type LlmTestMetrics,
+  type LlmTestResult,
+} from '@mms/shared';
 
 export default function LlmSettings(): React.JSX.Element {
   const { t } = useTranslation();
@@ -63,7 +53,7 @@ export default function LlmSettings(): React.JSX.Element {
     handleSaveGlobal,
   } = useSettingsGlobalDraft();
 
-  const configs = data.llmConfigs ?? [];
+  const configs = useMemo(() => data.llmConfigs ?? [], [data.llmConfigs]);
 
   // Modal open states
   const [modalOpen, setModalOpen] = useState(false);
@@ -73,9 +63,6 @@ export default function LlmSettings(): React.JSX.Element {
     open: modalOpen,
     onClose: () => setModalOpen(false),
   });
-
-
-
 
   // Form states
   const [formName, setFormName] = useState('');
@@ -123,7 +110,7 @@ export default function LlmSettings(): React.JSX.Element {
             setShowCustomModelInput(false);
             if (formModel.trim() === '' || !res.models.includes(formModel)) {
               // select default model if current is empty
-              const defaultModel = LLM_PROVIDERS_META[formProvider]?.defaultModel ?? '';
+              const defaultModel = getLlmProviderDefaultModel(formProvider);
               if (res.models.includes(defaultModel)) {
                 setFormModel(defaultModel);
               } else if (!formModel) {
@@ -155,7 +142,7 @@ export default function LlmSettings(): React.JSX.Element {
     setModalTesting(true);
     setModalTestResult(null);
 
-    const targetModel = formModel.trim() || (LLM_PROVIDERS_META[formProvider]?.defaultModel ?? '');
+    const targetModel = resolveLlmModel(formModel, formProvider);
     const targetApiKey = formApiKey.trim() === '' && editingConfig
       ? editingConfig.apiKey
       : formApiKey.trim();
@@ -329,7 +316,7 @@ export default function LlmSettings(): React.JSX.Element {
     setEditingConfig(null);
     setFormName('');
     setFormProvider('gemini');
-    setFormModel(LLM_PROVIDERS_META.gemini.defaultModel);
+    setFormModel(getLlmProviderDefaultModel('gemini'));
     setFormBaseUrl('');
     setFormApiKey('');
     setFormIsDefaultText(configs.length === 0);
@@ -364,7 +351,7 @@ export default function LlmSettings(): React.JSX.Element {
   const handleSaveModalConfig = () => {
     if (!formName.trim()) return;
 
-    const targetModel = formModel.trim() || (LLM_PROVIDERS_META[formProvider]?.defaultModel ?? '');
+    const targetModel = resolveLlmModel(formModel, formProvider);
     const targetApiKey = formApiKey.trim() === '' && editingConfig
       ? editingConfig.apiKey
       : formApiKey.trim();
@@ -396,7 +383,7 @@ export default function LlmSettings(): React.JSX.Element {
 
     // Ensure at least one default if configurations exist
     if (updatedConfigs.length > 0 && !updatedConfigs.some((config) => config.isDefaultText)) {
-      updatedConfigs[0].isDefaultText = true;
+      updatedConfigs[0] = { ...updatedConfigs[0], isDefaultText: true };
     }
 
     upd('llmConfigs', updatedConfigs);
@@ -408,7 +395,7 @@ export default function LlmSettings(): React.JSX.Element {
 
     // If deleted config was default, reassign default to the first remaining
     if (configs.find((config) => config.id === configId)?.isDefaultText && updatedConfigs.length > 0) {
-      updatedConfigs[0].isDefaultText = true;
+      updatedConfigs[0] = { ...updatedConfigs[0], isDefaultText: true };
     }
 
     upd('llmConfigs', updatedConfigs);
@@ -417,17 +404,12 @@ export default function LlmSettings(): React.JSX.Element {
     }
   };
 
-  const handleTestConnection = async (configId: string, customConfig?: LlmConfig) => {
+  const handleTestConnection = async (configId: string) => {
     setTestingId(configId);
     setTestResult(null);
 
     try {
-      const payload: Record<string, unknown> = { prompt: testPrompt };
-      if (customConfig) {
-        payload.configId = customConfig.id;
-      } else {
-        payload.configId = configId;
-      }
+      const payload = { prompt: testPrompt, configId };
 
       setHealthStatuses((prev) => ({ ...prev, [configId]: 'testing' }));
 
@@ -704,7 +686,7 @@ export default function LlmSettings(): React.JSX.Element {
                     id="sandboxSystem"
                     value={sandboxSystemInstruction}
                     onChange={(event) => setSandboxSystemInstruction(event.target.value)}
-                    placeholder="e.g. Respond only in short bullet points"
+                    placeholder={t('settings.llmSystemInstructionPlaceholder')}
                   />
                 </div>
               </div>

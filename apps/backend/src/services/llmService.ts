@@ -130,20 +130,9 @@ export async function generateCompletion(
   }
 
   // Group all OpenAI-compatible API providers to keep codebase DRY
-  const openAiCompatibleProviders: Record<
-    'openai' | 'deepseek' | 'openrouter' | 'groq' | 'alibaba',
-    { defaultUrl: string; defaultModel: string }
-  > = {
-    openai: { defaultUrl: LLM_PROVIDERS_META.openai.defaultUrl, defaultModel: LLM_PROVIDERS_META.openai.defaultModel },
-    deepseek: { defaultUrl: LLM_PROVIDERS_META.deepseek.defaultUrl, defaultModel: LLM_PROVIDERS_META.deepseek.defaultModel },
-    openrouter: { defaultUrl: LLM_PROVIDERS_META.openrouter.defaultUrl, defaultModel: LLM_PROVIDERS_META.openrouter.defaultModel },
-    groq: { defaultUrl: LLM_PROVIDERS_META.groq.defaultUrl, defaultModel: LLM_PROVIDERS_META.groq.defaultModel },
-    alibaba: { defaultUrl: LLM_PROVIDERS_META.alibaba.defaultUrl, defaultModel: LLM_PROVIDERS_META.alibaba.defaultModel }
-  };
-
-  if (provider in openAiCompatibleProviders) {
-    const providerKey = provider as keyof typeof openAiCompatibleProviders;
-    const providerMeta = openAiCompatibleProviders[providerKey];
+  const isOpenAiCompatible = provider === 'openai' || provider === 'deepseek' || provider === 'openrouter' || provider === 'groq' || provider === 'alibaba';
+  if (isOpenAiCompatible && provider in LLM_PROVIDERS_META) {
+    const providerMeta = LLM_PROVIDERS_META[provider as keyof typeof LLM_PROVIDERS_META];
     const url = baseUrl?.trim() || providerMeta.defaultUrl;
     const selectedModel = model.trim() || providerMeta.defaultModel;
 

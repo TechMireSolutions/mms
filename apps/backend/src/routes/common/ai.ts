@@ -5,7 +5,7 @@ import { loadGlobalSettings } from '../../services/globalSettingsService.js';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { sendForbidden } from '../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import type { User } from '@mms/shared';
+import { getLlmProviderModelsUrl, type User, type LlmTestResult } from '@mms/shared';
 import { OUTBOUND_FETCH_TIMEOUT_MS, safeOptionalExternalHttpUrl } from '../../lib/outboundUrl.js';
 
 const modelsBodySchema = z.object({
@@ -98,16 +98,15 @@ export default async function aiRoutes(
       const safeBaseUrl = safeOptionalExternalHttpUrl(resolvedBaseUrl, 'AI base URL');
 
       if (provider === 'gemini') {
-        const url = safeBaseUrl
-          ? `${safeBaseUrl}/models?key=${resolvedApiKey}`
-          : `https://generativelanguage.googleapis.com/v1beta/models?key=${resolvedApiKey}`;
+        const modelsEndpoint = getLlmProviderModelsUrl('gemini', safeBaseUrl);
+        const url = `${modelsEndpoint}?key=${resolvedApiKey}`;
         const res = await fetchWithTimeout(url);
         if (res.ok) {
           const json = (await res.json()) as GeminiModelsResponse;
           models = (json.models || []).map((model) => model.name.replace('models/', ''));
         }
       } else if (provider === 'anthropic') {
-        const url = safeBaseUrl || 'https://api.anthropic.com/v1/models';
+        const url = getLlmProviderModelsUrl('anthropic', safeBaseUrl);
         const res = await fetchWithTimeout(url, {
           headers: {
             'x-api-key': resolvedApiKey,
@@ -121,17 +120,8 @@ export default async function aiRoutes(
           models = ['claude-3-5-haiku-20241022', 'claude-3-5-sonnet-20241022', 'claude-3-opus-20240229'];
         }
       } else {
-        const openAiCompatibleUrls = {
-          openai: 'https://api.openai.com/v1/models',
-          deepseek: 'https://api.deepseek.com/models',
-          openrouter: 'https://openrouter.ai/api/v1/models',
-          groq: 'https://api.groq.com/openai/v1/models',
-          alibaba: 'https://dashscope.aliyuncs.com/compatible-mode/v1/models'
-        };
-
-        const defaultUrl = openAiCompatibleUrls[provider as keyof typeof openAiCompatibleUrls];
-        if (defaultUrl || safeBaseUrl) {
-          const url = safeBaseUrl ? `${safeBaseUrl}/models` : defaultUrl;
+        const url = getLlmProviderModelsUrl(provider, safeBaseUrl);
+        if (url) {
           const headers: Record<string, string> = {
             'Authorization': `Bearer ${resolvedApiKey}`
           };
@@ -178,7 +168,7 @@ export default async function aiRoutes(
       const characterCount = response.length;
       const wordCount = response.split(/\s+/).filter(Boolean).length;
 
-      return reply.send({
+      const resultPayload: LlmTestResult = {
         success: true,
         response,
         metrics: {
@@ -186,7 +176,8 @@ export default async function aiRoutes(
           characterCount,
           wordCount,
         },
-      });
+      };
+      return reply.send(resultPayload);
     } catch (caughtError: unknown) {
       const errorMessage = caughtError instanceof Error ? caughtError.message : 'Failed to generate content';
       return replyValidationError(reply, errorMessage, { success: false });

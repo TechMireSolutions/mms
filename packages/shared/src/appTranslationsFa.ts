@@ -3153,6 +3153,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "settings.llmSpeed": "سرعت",
   "settings.llmSubtitle": "افزودن و مدیریت چندین پیکربندی API برای مدل‌ها و ویژگی‌های مختلف.",
   "settings.llmSystemInstruction": "دستورالعمل سیستم (اختیاری)",
+  "settings.llmSystemInstructionPlaceholder": "به عنوان مثال: فقط با بالت پوینت پاسخ دهید",
   "settings.llmTestApi": "تست API",
   "settings.llmTestFailed": "تأیید اتصال ناموفق بود",
   "settings.llmTestResultDesc": "خروجی تست اتصال API برای پیکربندی مشخص شده.",

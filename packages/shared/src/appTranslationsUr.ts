@@ -72,6 +72,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "settings.llmSandboxSubtitle": "ایک پریمیم انٹرایکٹو چیٹ سیشن کے اندر محفوظ کردہ ماڈل کنفیگریشنز کی جانچ کریں۔",
   "settings.llmActiveConfig": "فعال ماڈل کنفیگریشن",
   "settings.llmSystemInstruction": "سسٹم کی ہدایات (اختیاری)",
+  "settings.llmSystemInstructionPlaceholder": "مثلاً صرف مختصر بلٹ پوائنٹس میں جواب دیں",
   "settings.llmSandboxHistory": "سینڈ باکس سیشن کی ہسٹری",
   "settings.llmClearHistory": "ہسٹری صاف کریں",
   "settings.llmSandboxReady": "سینڈ باکس تیار ہے",

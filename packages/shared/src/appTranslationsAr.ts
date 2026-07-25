@@ -72,6 +72,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "settings.llmSandboxSubtitle": "اختبار تكوينات النماذج المحفوظة داخل جلسة دردشة تفاعلية متميزة.",
   "settings.llmActiveConfig": "تكوين النموذج النشط",
   "settings.llmSystemInstruction": "تعليمات النظام (اختياري)",
+  "settings.llmSystemInstructionPlaceholder": "على سبيل المثال: الرد بنقاط موجزة فقط",
   "settings.llmSandboxHistory": "سجل جلسة البيئة التجريبية",
   "settings.llmClearHistory": "مسح السجل",
   "settings.llmSandboxReady": "البيئة التجريبية جاهزة",

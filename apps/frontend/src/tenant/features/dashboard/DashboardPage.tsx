@@ -40,13 +40,7 @@ function getAttendanceRateForDate(records: AttendanceRecord[], dateStr: string):
   return (present / dayRecords.length) * 100;
 }
 
-function getHasanatPointsInPeriod(
-  distributions: Distribution[],
-  pointsMap: Map<string, number>,
-  daysStart: number,
-  daysEnd: number
-): number {
-  let sum = 0;
+function getPeriodBoundaries(daysStart: number, daysEnd: number): { startTime: string; endTime: string } {
   const startD = new Date();
   startD.setDate(startD.getDate() - daysStart);
   const startTime = formatDateToIso(startD);
@@ -54,6 +48,18 @@ function getHasanatPointsInPeriod(
   const endD = new Date();
   endD.setDate(endD.getDate() - daysEnd);
   const endTime = formatDateToIso(endD);
+
+  return { startTime, endTime };
+}
+
+function getHasanatPointsInPeriod(
+  distributions: Distribution[],
+  pointsMap: Map<string, number>,
+  daysStart: number,
+  daysEnd: number
+): number {
+  let sum = 0;
+  const { startTime, endTime } = getPeriodBoundaries(daysStart, daysEnd);
 
   distributions.forEach((d) => {
     if (!d.issuedDate) return;
@@ -66,13 +72,7 @@ function getHasanatPointsInPeriod(
 }
 
 function getSessionsInPeriod(sessions: Session[], daysStart: number, daysEnd: number): number {
-  const startD = new Date();
-  startD.setDate(startD.getDate() - daysStart);
-  const startTime = formatDateToIso(startD);
-
-  const endD = new Date();
-  endD.setDate(endD.getDate() - daysEnd);
-  const endTime = formatDateToIso(endD);
+  const { startTime, endTime } = getPeriodBoundaries(daysStart, daysEnd);
 
   return sessions.filter((s) => {
     if (!s.startDate) return false;

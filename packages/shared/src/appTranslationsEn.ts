@@ -70,6 +70,7 @@ export const APP_TRANSLATIONS_EN = {
   "settings.llmSandboxSubtitle": "Test saved model configurations inside a premium interactive chat session.",
   "settings.llmActiveConfig": "Active Model Config",
   "settings.llmSystemInstruction": "System Instruction (Optional)",
+  "settings.llmSystemInstructionPlaceholder": "e.g. Respond only in short bullet points",
   "settings.llmSandboxHistory": "Sandbox Session History",
   "settings.llmClearHistory": "Clear History",
   "settings.llmSandboxReady": "Sandbox is Ready",
