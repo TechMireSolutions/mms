@@ -18,8 +18,9 @@
 import {
   formatDateParts,
   formatDatePartsWithMonthName,
+  normalizeDateFormat,
+  type DateFormatId,
 } from "./dateFormatUtils.js";
-import { normalizeDateFormat, type DateFormatId } from "./dateFormatUtils.js";
 import type { AppTranslationKey } from "./appTranslations.js";
 import type { TabDefinition, FieldDefinition, ColumnRegistryEntry } from "./contactTypes.js";
 import {
@@ -364,7 +365,7 @@ export interface AttendanceModuleSettings {
   offlineEnabled: boolean;
   geoTagging: boolean;
   defaultViewLayout?: string;
-  fields?: Record<string, any>;
+  fields?: Record<string, unknown>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
@@ -423,7 +424,7 @@ export interface FinanceSettings {
   reminderDaysBefore: string;
   feeReminders: boolean;
   defaultViewLayout?: string;
-  fields?: Record<string, any>;
+  fields?: Record<string, unknown>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
@@ -494,7 +495,7 @@ export interface ExaminationsSettings {
   /** Whether exam reminder notifications are sent to students/guardians. */
   examReminders: boolean;
   defaultViewLayout?: string;
-  fields?: Record<string, any>;
+  fields?: Record<string, unknown>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
@@ -538,7 +539,7 @@ export interface QuestionBankSettings {
   questionTypes?: import('./questionBankTypes.js').QuestionTypeRegistryEntry[];
   difficultyLevels?: import('./questionBankTypes.js').QuestionDifficultyRegistryEntry[];
   defaultViewLayout?: string;
-  fields?: Record<string, any>;
+  fields?: Record<string, unknown>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
@@ -626,7 +627,7 @@ export const DEFAULT_QUESTION_BANK_FIELD_DEFS: ModuleFieldDef[] = [
   { id: 'sourceNotes', label: 'Source notes', type: 'textarea' },
 ];
 
-function isTabbedQuestionBankFields(fields: Record<string, any> | undefined): boolean {
+function isTabbedQuestionBankFields(fields: Record<string, unknown> | undefined): boolean {
   if (!fields) return false;
   return Object.values(fields).some(Array.isArray);
 }
@@ -641,7 +642,7 @@ function questionBankFieldTypeForEditor(type: ModuleFieldDef['type'] | undefined
 }
 
 function readQuestionBankFlatFieldConfig(
-  storedFields: Record<string, any> | undefined,
+  storedFields: Record<string, unknown> | undefined,
 ): Record<string, { enabled: boolean; required: boolean }> {
   const result: Record<string, { enabled: boolean; required: boolean }> = {};
   const fields = {
@@ -660,7 +661,7 @@ function readQuestionBankFlatFieldConfig(
 }
 
 function normalizeQuestionBankFieldsForEditor(
-  storedFields: Record<string, any> | undefined,
+  storedFields: Record<string, unknown> | undefined,
 ): Record<string, FieldDefinition[]> {
   if (isTabbedQuestionBankFields(storedFields)) {
     const normalized: Record<string, FieldDefinition[]> = {};
@@ -720,8 +721,8 @@ function normalizeQuestionBankFieldsForEditor(
         key: fieldId,
         label: fieldDef?.label ?? fieldId,
         type: questionBankFieldTypeForEditor(fieldDef?.type),
-        enabled: storedFields?.[fieldId]?.enabled ?? true,
-        required: storedFields?.[fieldId]?.required ?? false,
+        enabled: (storedFields?.[fieldId] as { enabled?: boolean } | undefined)?.enabled ?? true,
+        required: (storedFields?.[fieldId] as { required?: boolean } | undefined)?.required ?? false,
         order: normalized.options?.length ?? 0,
       },
     ];
@@ -816,7 +817,7 @@ export interface SessionsSettings {
   /** Month in which the academic session starts, e.g. "april". */
   sessionStart: string;
   defaultViewLayout?: string;
-  fields?: Record<string, any>;
+  fields?: Record<string, unknown>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
@@ -882,7 +883,7 @@ export interface EnrollmentsSettings {
   /** Whether guardians receive a reminder when re-enrollment opens. */
   reenrollmentReminder: boolean;
   defaultViewLayout?: string;
-  fields?: Record<string, any>;
+  fields?: Record<string, unknown>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
@@ -959,7 +960,7 @@ export interface StudentsSettings {
   grNumberRestartAnnually: boolean;
   defaultViewLayout?: string;
   /** Field level customization visibility/requirement toggles */
-  fields?: Record<string, any>;
+  fields?: Record<string, unknown>;
   /** User defined dynamic custom fields */
   customFields?: StudentCustomField[];
   /** Sequence ordering of the default and custom fields in the form/views */
@@ -1099,7 +1100,7 @@ export interface TeachersSettings {
   requireContactLink: boolean;
   defaultSpecialization: string;
   defaultViewLayout?: string;
-  fields?: Record<string, any>;
+  fields?: Record<string, unknown>;
   customFields?: TeacherCustomField[];
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
@@ -1229,7 +1230,7 @@ export interface AccountingSettings {
   retainedEarningsAccount: string;
   organizationName: string;
   defaultViewLayout?: string;
-  fields?: Record<string, any>;
+  fields?: Record<string, unknown>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
@@ -1273,7 +1274,7 @@ export interface HasanatSettings {
   pointsPerUnit: number;
   autoApprovePayouts: boolean;
   defaultViewLayout?: string;
-  fields?: Record<string, any>;
+  fields?: Record<string, unknown>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
@@ -1310,7 +1311,7 @@ export interface UsersSettings {
   allowSelfRegistration: boolean;
   requireEmailVerification: boolean;
   defaultViewLayout?: string;
-  fields?: Record<string, any>;
+  fields?: Record<string, unknown>;
   customFields?: ModuleCustomField[];
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
@@ -1772,17 +1773,17 @@ export function prepareImageForUpload(
 // ─── Fields Setup & Tabbed Fields Utilities ───────────────────────────────────
 
 export function mergeTabbedFields(
-  defaults: Record<string, any>,
-  input?: Record<string, any>
-): Record<string, any> {
+  defaults: Record<string, unknown>,
+  input?: Record<string, unknown>
+): Record<string, unknown> {
   if (!input) return defaults;
-  const merged = { ...defaults };
+  const merged: Record<string, unknown> = { ...defaults };
   for (const [tab, fields] of Object.entries(input)) {
     if (Array.isArray(fields)) {
       merged[tab] = fields;
     } else if (fields && typeof fields === "object") {
       merged[tab] = {
-        ...(merged[tab] || {}),
+        ...((merged[tab] as Record<string, unknown>) || {}),
         ...fields,
       };
     }
@@ -1791,7 +1792,7 @@ export function mergeTabbedFields(
 }
 
 export function getFlatFieldsConfig(
-  fields?: Record<string, any>
+  fields?: Record<string, unknown>
 ): Record<string, { enabled: boolean; required: boolean }> {
   const result: Record<string, { enabled: boolean; required: boolean }> = {};
   if (!fields) return result;
@@ -1809,8 +1810,8 @@ export function getFlatFieldsConfig(
       for (const [key, moduleFieldConfig] of Object.entries(list)) {
         if (moduleFieldConfig && typeof moduleFieldConfig === "object") {
           result[key] = {
-            enabled: (moduleFieldConfig as any).enabled !== false,
-            required: !!(moduleFieldConfig as any).required,
+            enabled: (moduleFieldConfig as { enabled?: boolean }).enabled !== false,
+            required: !!(moduleFieldConfig as { required?: boolean }).required,
           };
         }
       }

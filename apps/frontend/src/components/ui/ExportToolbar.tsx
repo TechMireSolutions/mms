@@ -30,11 +30,35 @@ export interface ExportToolbarProps {
 }
 
 function downloadExcelFallback(columns: ExportColumn[], rows: Record<string, unknown>[], filename: string) {
-  const csvHeaders = columns.map((col) => col.header);
-  const csvData = rows.map((row) => columns.map((col) => row[col.key]));
-  const csv = buildCsvContent([csvHeaders, ...csvData]);
+  const { headers, data } = extractExportTable(columns, rows);
+  const csv = buildCsvContent([headers, ...data]);
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
   triggerFileDownload(blob, `${filename}.csv`);
+}
+
+function extractExportTable(
+  columns?: ExportColumn[],
+  rows: Record<string, unknown>[] = [],
+  headers?: string[]
+) {
+  if (columns && columns.length > 0) {
+    const tableHeaders = columns.map((col) => col.header);
+    const tableData = rows.map((row) =>
+      columns.map((col) => (row[col.key] != null ? (row[col.key] as string | number | boolean) : ""))
+    );
+    const mappedObjects = rows.map((row) => {
+      const obj: Record<string, unknown> = {};
+      columns.forEach((col) => {
+        obj[col.header] = row[col.key] ?? "";
+      });
+      return obj;
+    });
+    return { headers: tableHeaders, data: tableData, mappedObjects };
+  }
+
+  const tableHeaders = headers || (rows.length > 0 ? Object.keys(rows[0]) : []);
+  const tableData = rows.map((row) => Object.values(row) as (string | number | boolean)[]);
+  return { headers: tableHeaders, data: tableData, mappedObjects: rows };
 }
 
 export function ExportToolbar({
@@ -57,6 +81,21 @@ export function ExportToolbar({
 
   const resolvedVariant = variant || (data ? "default" : "compact");
   const resolvedFilename = useMemo(() => filename || title.toLowerCase().replace(/\s+/g, "_"), [filename, title]);
+
+  const [titlePrefix, titleSuffix] = useMemo(() => {
+    const parts = t("reports.export.title", { name: "||TITLE||" }).split("||TITLE||");
+    return [parts[0] || "", parts[1] || ""];
+  }, [t]);
+
+  const pageSizeOptions = useMemo(
+    () => [
+      { value: "a4", label: t("reports.builder.formatA4") },
+      { value: "letter", label: t("reports.builder.formatLetter") },
+      { value: "a3", label: t("reports.builder.formatA3") },
+      { value: "legal", label: t("reports.builder.formatLegal") },
+    ],
+    [t]
+  );
 
   // Determine underlying data and columns
   const finalRows = useMemo(() => rows || (data as Record<string, unknown>[]) || [], [rows, data]);
@@ -89,21 +128,8 @@ export function ExportToolbar({
 
     try {
       const XLSX = await import("xlsx");
-      let worksheet;
-
-      if (columns && columns.length > 0) {
-        // Map rows to column headers
-        const mapped = finalRows.map(row => {
-          const obj: Record<string, unknown> = {};
-          columns.forEach(col => {
-            obj[col.header] = row[col.key] ?? "";
-          });
-          return obj;
-        });
-        worksheet = XLSX.utils.json_to_sheet(mapped);
-      } else {
-        worksheet = XLSX.utils.json_to_sheet(finalRows);
-      }
+      const { mappedObjects } = extractExportTable(columns, finalRows, headers);
+      const worksheet = XLSX.utils.json_to_sheet(mappedObjects);
 
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
@@ -144,19 +170,7 @@ export function ExportToolbar({
     doc.text(`Generated: ${formatDate(new Date())}  |  ${finalRows.length} record${finalRows.length !== 1 ? "s" : ""}`, 14, 20);
     doc.setTextColor(0);
 
-    // Extract table headers and cells
-    let tableHeaders: string[] = [];
-    let tableData: (string | number | boolean)[][] = [];
-
-    if (columns && columns.length > 0) {
-      tableHeaders = columns.map(col => col.header);
-      tableData = finalRows.map(row =>
-        columns.map(col => String(row[col.key] ?? ""))
-      );
-    } else {
-      tableHeaders = headers || (finalRows.length > 0 ? Object.keys(finalRows[0]) : []);
-      tableData = finalRows.map(row => Object.values(row) as (string | number | boolean)[]);
-    }
+    const { headers: tableHeaders, data: tableData } = extractExportTable(columns, finalRows, headers);
 
     autoTable(doc, {
       head: [tableHeaders],
@@ -208,9 +222,9 @@ export function ExportToolbar({
   return (
     <div className="flex items-center justify-between gap-3 flex-wrap py-2 text-left relative">
       <p className="text-xs text-muted-foreground">
-        {t("reports.export.title", { name: "{name}" }).split("{name}")[0]}
+        {titlePrefix}
         <span className="font-semibold text-foreground">{title}</span>
-        {t("reports.export.title", { name: "{name}" }).split("{name}")[1]}
+        {titleSuffix}
       </p>
       
       <div className="flex items-center gap-2">
@@ -219,19 +233,19 @@ export function ExportToolbar({
              <div className="space-y-1.5">
                <label htmlFor="export-orientation" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.export.orientation")}</label>
                <div className="flex gap-1 p-1 bg-muted rounded-lg">
-                 <button 
-                  id="export-orientation"
-                  onClick={() => setOrientation("p")}
-                  className={`flex-1 px-2 py-1 rounded-md text-[10px] font-bold transition-all ${orientation === "p" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                 >
-                   {t("reports.export.portrait")}
-                 </button>
-                 <button 
-                  onClick={() => setOrientation("l")}
-                  className={`flex-1 px-2 py-1 rounded-md text-[10px] font-bold transition-all ${orientation === "l" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                 >
-                   {t("reports.export.landscape")}
-                 </button>
+                 {[
+                   { id: "p", label: t("reports.export.portrait") },
+                   { id: "l", label: t("reports.export.landscape") },
+                 ].map((opt) => (
+                   <button
+                     key={opt.id}
+                     id={opt.id === "p" ? "export-orientation" : undefined}
+                     onClick={() => setOrientation(opt.id as "p" | "l")}
+                     className={`flex-1 px-2 py-1 rounded-md text-[10px] font-bold transition-all ${orientation === opt.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                   >
+                     {opt.label}
+                   </button>
+                 ))}
                </div>
              </div>
               <div className="space-y-1.5">
@@ -240,12 +254,7 @@ export function ExportToolbar({
                   id="export-page-size"
                   value={formatSize}
                   onChange={setFormatSize}
-                  options={[
-                    { value: "a4", label: t("reports.builder.formatA4") },
-                    { value: "letter", label: t("reports.builder.formatLetter") },
-                    { value: "a3", label: t("reports.builder.formatA3") },
-                    { value: "legal", label: t("reports.builder.formatLegal") },
-                  ]}
+                  options={pageSizeOptions}
                 />
               </div>
           </div>

@@ -36,10 +36,30 @@ import {
   formatDate,
   formatDateTime,
   todayISO,
+  type FieldDefinition,
 } from "@mms/shared";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function getInitialStudentDraft(student?: Partial<Student> | null): Partial<Student> {
+  return {
+    contactId: student?.contactId ?? "",
+    fatherContactId: student?.fatherContactId ?? null,
+    motherContactId: student?.motherContactId ?? null,
+    guardianContactId: student?.guardianContactId ?? null,
+    fatherName: student?.fatherName ?? "",
+    motherName: student?.motherName ?? "",
+    guardianName: student?.guardianName ?? "",
+    status: student?.status ?? "active",
+    grNumber: student?.grNumber ?? "",
+    registeredDate: student?.registeredDate ?? new Date().toISOString(),
+    discountType: student?.discountType ?? "",
+    discountPct: student?.discountPct ?? 0,
+    registrationType: student?.registrationType ?? "",
+    notes: student?.notes ?? "",
+  };
 }
 
 export interface StudentFormProps {
@@ -68,41 +88,11 @@ export default function StudentForm({
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [manualError, setManualError] = useState("");
 
-  const [studentDraft, setStudentDraft] = useState<Partial<Student>>(() => ({
-    contactId: student?.contactId ?? "",
-    fatherContactId: student?.fatherContactId ?? null,
-    motherContactId: student?.motherContactId ?? null,
-    guardianContactId: student?.guardianContactId ?? null,
-    fatherName: student?.fatherName ?? "",
-    motherName: student?.motherName ?? "",
-    guardianName: student?.guardianName ?? "",
-    status: student?.status ?? "active",
-    grNumber: student?.grNumber ?? "",
-    registeredDate: student?.registeredDate ?? new Date().toISOString(),
-    discountType: student?.discountType ?? "",
-    discountPct: student?.discountPct ?? 0,
-    registrationType: student?.registrationType ?? "",
-    notes: student?.notes ?? "",
-  }));
+  const [studentDraft, setStudentDraft] = useState<Partial<Student>>(() => getInitialStudentDraft(student));
 
   // Re-sync draft when editing another student record
   useEffect(() => {
-    setStudentDraft({
-      contactId: student?.contactId ?? "",
-      fatherContactId: student?.fatherContactId ?? null,
-      motherContactId: student?.motherContactId ?? null,
-      guardianContactId: student?.guardianContactId ?? null,
-      fatherName: student?.fatherName ?? "",
-      motherName: student?.motherName ?? "",
-      guardianName: student?.guardianName ?? "",
-      status: student?.status ?? "active",
-      grNumber: student?.grNumber ?? "",
-      registeredDate: student?.registeredDate ?? new Date().toISOString(),
-      discountType: student?.discountType ?? "",
-      discountPct: student?.discountPct ?? 0,
-      registrationType: student?.registrationType ?? "",
-      notes: student?.notes ?? "",
-    });
+    setStudentDraft(getInitialStudentDraft(student));
     setValidationErrors([]);
     setManualError("");
   }, [student]);
@@ -182,11 +172,12 @@ export default function StudentForm({
     setManualError("");
 
     const requiredTabs = new Set(settings.requiredTabs || []);
+    const fields = (settings.fields || {}) as unknown as Record<string, FieldDefinition[]>;
     const schema = buildDynamicStudentSchema(
       settings,
       enabledTabs,
       requiredTabs,
-      settings.fields || {},
+      fields,
       language
     );
 
@@ -197,7 +188,7 @@ export default function StudentForm({
     };
     const parseResult = schema.safeParse(validationDraft);
     if (!parseResult.success) {
-      const zodErrors = formatStudentZodIssues(parseResult.error, validationDraft, settings.fields || {});
+      const zodErrors = formatStudentZodIssues(parseResult.error, validationDraft, fields);
       setValidationErrors(zodErrors);
 
       notify.error(t("contacts.form.pleaseFixErrors") || "Please fix validation errors");
@@ -256,7 +247,7 @@ export default function StudentForm({
     return validationErrors.map((validationError) => validationError.message);
   }, [validationErrors]);
 
-  const renderContactOwnedFieldError = (message?: string) => {
+  const renderFieldError = (message?: string) => {
     if (!message) return null;
     return <p className="text-[10px] text-destructive mt-1 font-medium">{message}</p>;
   };
@@ -281,7 +272,7 @@ export default function StudentForm({
             {hasValue ? value : t("students.form.notSetOnContact")}
           </span>
         </div>
-        {renderContactOwnedFieldError(error)}
+        {renderFieldError(error)}
       </Field>
     );
   };
@@ -305,17 +296,30 @@ export default function StudentForm({
     });
   };
 
-  const handleFatherSelect = (id: string | number | null, contactObj?: Contact | null): void => {
-    updateDraft({ fatherContactId: id ? String(id) : null, fatherName: contactObj?.name ?? "" });
+  const handleParentSelect = (
+    role: "father" | "mother" | "guardian",
+    id: string | number | null,
+    contactObj?: Contact | null,
+  ): void => {
+    updateDraft({
+      [`${role}ContactId`]: id ? String(id) : null,
+      [`${role}Name`]: contactObj?.name ?? "",
+    });
   };
 
-  const handleMotherSelect = (id: string | number | null, contactObj?: Contact | null): void => {
-    updateDraft({ motherContactId: id ? String(id) : null, motherName: contactObj?.name ?? "" });
-  };
-
-  const handleGuardianSelect = (id: string | number | null, contactObj?: Contact | null): void => {
-    updateDraft({ guardianContactId: id ? String(id) : null, guardianName: contactObj?.name ?? "" });
-  };
+  const getParentExcludeIds = useCallback(
+    (selfRole: "father" | "mother" | "guardian") => {
+      return [
+        studentDraft.contactId,
+        selfRole !== "father" ? studentDraft.fatherContactId : null,
+        selfRole !== "mother" ? studentDraft.motherContactId : null,
+        selfRole !== "guardian" ? studentDraft.guardianContactId : null,
+      ]
+        .filter(Boolean)
+        .map(String);
+    },
+    [studentDraft.contactId, studentDraft.fatherContactId, studentDraft.motherContactId, studentDraft.guardianContactId],
+  );
 
   const excludeIds = useMemo(() => {
     const list = [studentDraft.fatherContactId, studentDraft.motherContactId, studentDraft.guardianContactId]
@@ -371,9 +375,7 @@ export default function StudentForm({
               emptyHint={t("teachers.form.noContactsHint")}
               error={!!getFieldError("contactId")}
             />
-            {getFieldError("contactId") && (
-              <p className="text-[10px] text-destructive mt-1 font-medium">{getFieldError("contactId")}</p>
-            )}
+            {renderFieldError(getFieldError("contactId"))}
 
             {studentDraft.contactId && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border/40">
@@ -452,16 +454,14 @@ export default function StudentForm({
                 <ContactPicker
                   label={t("students.form.fatherLink") || "Father"}
                   value={studentDraft.fatherContactId ? String(studentDraft.fatherContactId) : null}
-                  onChange={handleFatherSelect}
+                  onChange={(id, contactObj) => handleParentSelect("father", id, contactObj)}
                   filterGender="Male"
-                  excludeIds={[studentDraft.contactId, studentDraft.motherContactId, studentDraft.guardianContactId].filter(Boolean).map(String)}
+                  excludeIds={getParentExcludeIds("father")}
                   searchPlaceholder={t("teachers.form.searchContact")}
                   emptyTitle={t("teachers.form.noContacts")}
                   error={!!getFieldError("fatherLink")}
                 />
-                {getFieldError("fatherLink") && (
-                  <p className="text-[10px] text-destructive mt-1 font-medium">{getFieldError("fatherLink")}</p>
-                )}
+                {renderFieldError(getFieldError("fatherLink"))}
               </div>
             )}
 
@@ -470,16 +470,14 @@ export default function StudentForm({
                 <ContactPicker
                   label={t("students.form.motherLink") || "Mother"}
                   value={studentDraft.motherContactId ? String(studentDraft.motherContactId) : null}
-                  onChange={handleMotherSelect}
+                  onChange={(id, contactObj) => handleParentSelect("mother", id, contactObj)}
                   filterGender="Female"
-                  excludeIds={[studentDraft.contactId, studentDraft.fatherContactId, studentDraft.guardianContactId].filter(Boolean).map(String)}
+                  excludeIds={getParentExcludeIds("mother")}
                   searchPlaceholder={t("teachers.form.searchContact")}
                   emptyTitle={t("teachers.form.noContacts")}
                   error={!!getFieldError("motherLink")}
                 />
-                {getFieldError("motherLink") && (
-                  <p className="text-[10px] text-destructive mt-1 font-medium">{getFieldError("motherLink")}</p>
-                )}
+                {renderFieldError(getFieldError("motherLink"))}
               </div>
             )}
 
@@ -488,15 +486,13 @@ export default function StudentForm({
                 <ContactPicker
                   label={t("students.form.guardianLink") || "Guardian (Other)"}
                   value={studentDraft.guardianContactId ? String(studentDraft.guardianContactId) : null}
-                  onChange={handleGuardianSelect}
-                  excludeIds={[studentDraft.contactId, studentDraft.fatherContactId, studentDraft.motherContactId].filter(Boolean).map(String)}
+                  onChange={(id, contactObj) => handleParentSelect("guardian", id, contactObj)}
+                  excludeIds={getParentExcludeIds("guardian")}
                   searchPlaceholder={t("teachers.form.searchContact")}
                   emptyTitle={t("teachers.form.noContacts")}
                   error={!!getFieldError("guardianLink")}
                 />
-                {getFieldError("guardianLink") && (
-                  <p className="text-[10px] text-destructive mt-1 font-medium">{getFieldError("guardianLink")}</p>
-                )}
+                {renderFieldError(getFieldError("guardianLink"))}
               </div>
             )}
           </div>

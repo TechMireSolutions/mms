@@ -97,8 +97,8 @@ const DEFAULT_ATTENDANCE_STATUSES: AttendanceStatus[] = [
 // Helper hook to fetch multiple collections and objects in a single React state & effect.
 // Avoids dynamic loop hook calls, completely adhering to the rules of hooks.
 export function useLiveCollectionsAndObjects(
-  collections?: Record<string, { dbKey: string; default: () => any[] }>,
-  objects?: Record<string, { dbKey: string; default: () => any }>,
+  collections?: Record<string, { dbKey: string; default: () => unknown[] }>,
+  objects?: Record<string, { dbKey: string; default: () => unknown }>,
 ) {
   const collectionsRef = useRef(collections);
   collectionsRef.current = collections;
@@ -106,8 +106,8 @@ export function useLiveCollectionsAndObjects(
   objectsRef.current = objects;
 
   const [state, setState] = useState(() => {
-    const initialCollections: Record<string, any[]> = {};
-    const initialObjects: Record<string, any> = {};
+    const initialCollections: Record<string, unknown[]> = {};
+    const initialObjects: Record<string, unknown> = {};
 
     if (collections) {
       for (const [key, conf] of Object.entries(collections)) {
@@ -128,8 +128,8 @@ export function useLiveCollectionsAndObjects(
 
     const handleUpdate = (): void => {
       setState(() => {
-        const nextCollections: Record<string, any[]> = {};
-        const nextObjects: Record<string, any> = {};
+        const nextCollections: Record<string, unknown[]> = {};
+        const nextObjects: Record<string, unknown> = {};
 
         if (collectionsRef.current) {
           for (const [key, conf] of Object.entries(collectionsRef.current)) {
@@ -322,32 +322,36 @@ export function useStandardModuleConfig<M extends StandardModuleId>(
   moduleId: M,
 ): ReturnType<typeof useModuleConfig<StandardModuleSettingsMap[M]>> &
   StandardModuleConfigExtraMap[M] {
-  const config = STANDARD_MODULES_CONFIG_REGISTRY[moduleId] as any;
+  const config = STANDARD_MODULES_CONFIG_REGISTRY[moduleId];
 
   const defaultFieldDefs = useMemo(() => {
     if (moduleId === 'teachers') {
-      return (config.defaultFieldDefs as ModuleFieldDef[]).map((field) => ({
+      return (config.defaultFieldDefs as unknown as ModuleFieldDef[]).map((field) => ({
         ...field,
-        label: field.label || (field as any).labelKey || field.id,
+        label: field.label || (field as { labelKey?: string }).labelKey || field.id,
       }));
     }
-    return config.defaultFieldDefs as ModuleFieldDef[];
+    return config.defaultFieldDefs as unknown as ModuleFieldDef[];
   }, [moduleId, config.defaultFieldDefs]);
 
   const moduleConfigResult = useModuleConfig<StandardModuleSettingsMap[M]>({
     settingsObjectKey: config.settingsObjectKey,
-    defaultSettings: config.defaultSettings as any,
+    defaultSettings: config.defaultSettings as unknown as StandardModuleSettingsMap[M],
     defaultFieldDefs,
-    normalizeFn: 'normalizeFn' in config ? (config.normalizeFn as any) : undefined,
+    normalizeFn: 'normalizeFn' in config ? (config.normalizeFn as unknown as (settings: unknown) => StandardModuleSettingsMap[M]) : undefined,
   });
 
-  const aux = useLiveCollectionsAndObjects(config.collections, config.objects);
+  const aux = useLiveCollectionsAndObjects(
+    'collections' in config ? (config.collections as Record<string, { dbKey: string; default: () => unknown[] }>) : undefined,
+    'objects' in config ? (config.objects as Record<string, { dbKey: string; default: () => unknown }>) : undefined,
+  );
 
   return {
     ...moduleConfigResult,
     ...aux.collections,
     ...aux.objects,
-  } as any;
+  } as ReturnType<typeof useModuleConfig<StandardModuleSettingsMap[M]>> &
+    StandardModuleConfigExtraMap[M];
 }
 
 export function useUsersConfig() {

@@ -3,11 +3,15 @@ import {
   buildDynamicStudentSchema,
   normalizeStudentsSettings,
   verifyBlueprintVersion,
+  getPrimaryPhone,
+  getPrimaryEmail,
   type StudentsSettings,
   type Contact,
+  type FieldDefinition,
 } from '@mms/shared';
 import { fetchObject } from './dbSyncService.js';
 import { loadContacts } from './contactService.js';
+import { validateOrThrow } from '../lib/zodRequest.js';
 
 const CONFIG_KEY = 'students_settings';
 
@@ -46,8 +50,8 @@ async function hydrateStudentValidationSubject(
     name: studentRecord.name ?? contact.name,
     gender: studentRecord.gender ?? contact.gender,
     dob: studentRecord.dob ?? contact.dob,
-    phone: studentRecord.phone ?? contact.phones?.[0]?.number,
-    email: studentRecord.email ?? contact.emails?.[0]?.address,
+    phone: studentRecord.phone ?? getPrimaryPhone(contact),
+    email: studentRecord.email ?? getPrimaryEmail(contact),
     city: studentRecord.city ?? contact.city,
   };
 }
@@ -81,7 +85,7 @@ export async function validateStudentDynamic(
   if (!schema) {
     const enabledTabIds = new Set(settings.enabledTabs || []);
     const requiredTabIds = new Set(settings.requiredTabs || []);
-    const fields = settings.fields || {};
+    const fields = (settings.fields || {}) as unknown as Record<string, FieldDefinition[]>;
 
     schema = buildDynamicStudentSchema(
       settings,
@@ -105,6 +109,5 @@ export async function validateStudentDynamic(
     ? await Promise.all(student.map((item) => hydrateStudentValidationSubject(item, getContacts)))
     : await hydrateStudentValidationSubject(student, getContacts);
 
-  const { validateOrThrow } = await import('../lib/zodRequest.js');
   validateOrThrow(schema, validationSubject);
 }

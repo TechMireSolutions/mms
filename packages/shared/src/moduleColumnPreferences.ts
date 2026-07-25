@@ -51,7 +51,7 @@ export function buildStudentWorkColumnRegistry(
   settings: StudentsSettings,
   labels: StudentWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  const fields = settings.fields ?? DEFAULT_STUDENTS_SETTINGS.fields ?? {};
+  const fields = (settings.fields ?? DEFAULT_STUDENTS_SETTINGS.fields ?? {}) as Record<string, { enabled?: boolean }>;
   const customFields = settings.customFields ?? [];
   const registryColumns: ModuleColumnRegistryEntry[] = [
     { key: 'name', label: labels.name, enabled: true, order: 0, fixed: true },
@@ -106,7 +106,7 @@ export function buildTeacherWorkColumnRegistry(
   settings: TeachersSettings,
   labels: TeacherWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  const fields = settings.fields ?? DEFAULT_TEACHERS_SETTINGS.fields ?? {};
+  const fields = (settings.fields ?? DEFAULT_TEACHERS_SETTINGS.fields ?? {}) as Record<string, { enabled?: boolean }>;
   const customFields = settings.customFields ?? [];
   const registryColumns: ModuleColumnRegistryEntry[] = [
     { key: 'name', label: labels.name, enabled: true, order: 0, fixed: true },
@@ -136,6 +136,21 @@ export function buildTeacherWorkColumnRegistry(
   return registryColumns;
 }
 
+/** Helper to build a standard module column registry array from an ordered list of keys and labels. */
+export function createColumnRegistry<T extends object>(
+  keys: (keyof T & string)[],
+  labels: T,
+  fixedFirst = true,
+): ModuleColumnRegistryEntry[] {
+  return keys.map((key, index) => ({
+    key,
+    label: String(labels[key as keyof T] ?? ''),
+    enabled: true,
+    order: index,
+    ...(index === 0 && fixedFirst ? { fixed: true } : {}),
+  }));
+}
+
 export interface FinanceInvoiceWorkColumnLabels {
   invoice: string;
   student: string;
@@ -151,16 +166,10 @@ export interface FinanceInvoiceWorkColumnLabels {
 export function buildFinanceInvoiceWorkColumnRegistry(
   labels: FinanceInvoiceWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  return [
-    { key: 'invoice', label: labels.invoice, enabled: true, order: 0, fixed: true },
-    { key: 'student', label: labels.student, enabled: true, order: 1 },
-    { key: 'sessionClass', label: labels.sessionClass, enabled: true, order: 2 },
-    { key: 'baseFee', label: labels.baseFee, enabled: true, order: 3 },
-    { key: 'discount', label: labels.discount, enabled: true, order: 4 },
-    { key: 'final', label: labels.final, enabled: true, order: 5 },
-    { key: 'status', label: labels.status, enabled: true, order: 6 },
-    { key: 'dueDate', label: labels.dueDate, enabled: true, order: 7 },
-  ];
+  return createColumnRegistry(
+    ['invoice', 'student', 'sessionClass', 'baseFee', 'discount', 'final', 'status', 'dueDate'],
+    labels,
+  );
 }
 
 export interface FinancePaymentWorkColumnLabels {
@@ -177,15 +186,10 @@ export interface FinancePaymentWorkColumnLabels {
 export function buildFinancePaymentWorkColumnRegistry(
   labels: FinancePaymentWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  return [
-    { key: 'date', label: labels.date, enabled: true, order: 0, fixed: true },
-    { key: 'student', label: labels.student, enabled: true, order: 1 },
-    { key: 'invoice', label: labels.invoice, enabled: true, order: 2 },
-    { key: 'amount', label: labels.amount, enabled: true, order: 3 },
-    { key: 'method', label: labels.method, enabled: true, order: 4 },
-    { key: 'receivedBy', label: labels.receivedBy, enabled: true, order: 5 },
-    { key: 'note', label: labels.note, enabled: true, order: 6 },
-  ];
+  return createColumnRegistry(
+    ['date', 'student', 'invoice', 'amount', 'method', 'receivedBy', 'note'],
+    labels,
+  );
 }
 
 export interface AttendanceWorkColumnLabels {
@@ -202,15 +206,10 @@ export interface AttendanceWorkColumnLabels {
 export function buildAttendanceWorkColumnRegistry(
   labels: AttendanceWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  return [
-    { key: 'date', label: labels.date, enabled: true, order: 0, fixed: true },
-    { key: 'class', label: labels.class, enabled: true, order: 1 },
-    { key: 'student', label: labels.student, enabled: true, order: 2 },
-    { key: 'status', label: labels.status, enabled: true, order: 3 },
-    { key: 'timeIn', label: labels.timeIn, enabled: true, order: 4 },
-    { key: 'timeOut', label: labels.timeOut, enabled: true, order: 5 },
-    { key: 'notes', label: labels.notes, enabled: true, order: 6 },
-  ];
+  return createColumnRegistry(
+    ['date', 'class', 'student', 'status', 'timeIn', 'timeOut', 'notes'],
+    labels,
+  );
 }
 
 export interface SessionWorkColumnLabels {
@@ -226,14 +225,10 @@ export interface SessionWorkColumnLabels {
 export function buildSessionWorkColumnRegistry(
   labels: SessionWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  return [
-    { key: 'name', label: labels.name, enabled: true, order: 0, fixed: true },
-    { key: 'type', label: labels.type, enabled: true, order: 1 },
-    { key: 'duration', label: labels.duration, enabled: true, order: 2 },
-    { key: 'fee', label: labels.fee, enabled: true, order: 3 },
-    { key: 'enrolled', label: labels.enrolled, enabled: true, order: 4 },
-    { key: 'status', label: labels.status, enabled: true, order: 5 },
-  ];
+  return createColumnRegistry(
+    ['name', 'type', 'duration', 'fee', 'enrolled', 'status'],
+    labels,
+  );
 }
 
 export interface EnrollmentWorkColumnLabels {
@@ -250,15 +245,10 @@ export interface EnrollmentWorkColumnLabels {
 export function buildEnrollmentWorkColumnRegistry(
   labels: EnrollmentWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  return [
-    { key: 'student', label: labels.student, enabled: true, order: 0, fixed: true },
-    { key: 'session', label: labels.session, enabled: true, order: 1 },
-    { key: 'class', label: labels.class, enabled: true, order: 2 },
-    { key: 'enrolledDate', label: labels.enrolledDate, enabled: true, order: 3 },
-    { key: 'finalFee', label: labels.finalFee, enabled: true, order: 4 },
-    { key: 'status', label: labels.status, enabled: true, order: 5 },
-    { key: 'payment', label: labels.payment, enabled: true, order: 6 },
-  ];
+  return createColumnRegistry(
+    ['student', 'session', 'class', 'enrolledDate', 'finalFee', 'status', 'payment'],
+    labels,
+  );
 }
 
 export interface ObligationCollectionWorkColumnLabels {
@@ -275,15 +265,10 @@ export interface ObligationCollectionWorkColumnLabels {
 export function buildObligationCollectionWorkColumnRegistry(
   labels: ObligationCollectionWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  return [
-    { key: 'receiptNo', label: labels.receiptNo, enabled: true, order: 0, fixed: true },
-    { key: 'receivedDate', label: labels.receivedDate, enabled: true, order: 1 },
-    { key: 'sender', label: labels.sender, enabled: true, order: 2 },
-    { key: 'obligationType', label: labels.obligationType, enabled: true, order: 3 },
-    { key: 'repMujtahid', label: labels.repMujtahid, enabled: true, order: 4 },
-    { key: 'amount', label: labels.amount, enabled: true, order: 5 },
-    { key: 'paymentMode', label: labels.paymentMode, enabled: true, order: 6 },
-  ];
+  return createColumnRegistry(
+    ['receiptNo', 'receivedDate', 'sender', 'obligationType', 'repMujtahid', 'amount', 'paymentMode'],
+    labels,
+  );
 }
 
 export interface AccountingJournalWorkColumnLabels {
@@ -300,15 +285,10 @@ export interface AccountingJournalWorkColumnLabels {
 export function buildAccountingJournalWorkColumnRegistry(
   labels: AccountingJournalWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  return [
-    { key: 'ref', label: labels.ref, enabled: true, order: 0, fixed: true },
-    { key: 'date', label: labels.date, enabled: true, order: 1 },
-    { key: 'description', label: labels.description, enabled: true, order: 2 },
-    { key: 'tags', label: labels.tags, enabled: true, order: 3 },
-    { key: 'debit', label: labels.debit, enabled: true, order: 4 },
-    { key: 'credit', label: labels.credit, enabled: true, order: 5 },
-    { key: 'status', label: labels.status, enabled: true, order: 6 },
-  ];
+  return createColumnRegistry(
+    ['ref', 'date', 'description', 'tags', 'debit', 'credit', 'status'],
+    labels,
+  );
 }
 
 export interface AccountingAccountWorkColumnLabels {
@@ -323,13 +303,10 @@ export interface AccountingAccountWorkColumnLabels {
 export function buildAccountingAccountWorkColumnRegistry(
   labels: AccountingAccountWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  return [
-    { key: 'code', label: labels.code, enabled: true, order: 0, fixed: true },
-    { key: 'name', label: labels.name, enabled: true, order: 1 },
-    { key: 'subtype', label: labels.subtype, enabled: true, order: 2 },
-    { key: 'description', label: labels.description, enabled: true, order: 3 },
-    { key: 'normalBalance', label: labels.normalBalance, enabled: true, order: 4 },
-  ];
+  return createColumnRegistry(
+    ['code', 'name', 'subtype', 'description', 'normalBalance'],
+    labels,
+  );
 }
 
 export interface HasanatDistributionWorkColumnLabels {
@@ -347,16 +324,10 @@ export interface HasanatDistributionWorkColumnLabels {
 export function buildHasanatDistributionWorkColumnRegistry(
   labels: HasanatDistributionWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  return [
-    { key: 'card', label: labels.card, enabled: true, order: 0, fixed: true },
-    { key: 'recipient', label: labels.recipient, enabled: true, order: 1 },
-    { key: 'recipientClass', label: labels.recipientClass, enabled: true, order: 2 },
-    { key: 'quantity', label: labels.quantity, enabled: true, order: 3 },
-    { key: 'reason', label: labels.reason, enabled: true, order: 4 },
-    { key: 'issuedDate', label: labels.issuedDate, enabled: true, order: 5 },
-    { key: 'issuedBy', label: labels.issuedBy, enabled: true, order: 6 },
-    { key: 'status', label: labels.status, enabled: true, order: 7 },
-  ];
+  return createColumnRegistry(
+    ['card', 'recipient', 'recipientClass', 'quantity', 'reason', 'issuedDate', 'issuedBy', 'status'],
+    labels,
+  );
 }
 
 export interface HasanatRedemptionWorkColumnLabels {
@@ -371,13 +342,10 @@ export interface HasanatRedemptionWorkColumnLabels {
 export function buildHasanatRedemptionWorkColumnRegistry(
   labels: HasanatRedemptionWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  return [
-    { key: 'student', label: labels.student, enabled: true, order: 0, fixed: true },
-    { key: 'reward', label: labels.reward, enabled: true, order: 1 },
-    { key: 'pointsUsed', label: labels.pointsUsed, enabled: true, order: 2 },
-    { key: 'date', label: labels.date, enabled: true, order: 3 },
-    { key: 'approvedBy', label: labels.approvedBy, enabled: true, order: 4 },
-  ];
+  return createColumnRegistry(
+    ['student', 'reward', 'pointsUsed', 'date', 'approvedBy'],
+    labels,
+  );
 }
 
 export interface ExaminationExamWorkColumnLabels {
@@ -395,16 +363,10 @@ export interface ExaminationExamWorkColumnLabels {
 export function buildExaminationExamWorkColumnRegistry(
   labels: ExaminationExamWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  return [
-    { key: 'name', label: labels.name, enabled: true, order: 0, fixed: true },
-    { key: 'subject', label: labels.subject, enabled: true, order: 1 },
-    { key: 'date', label: labels.date, enabled: true, order: 2 },
-    { key: 'duration', label: labels.duration, enabled: true, order: 3 },
-    { key: 'status', label: labels.status, enabled: true, order: 4 },
-    { key: 'totalMarks', label: labels.totalMarks, enabled: true, order: 5 },
-    { key: 'passingMarks', label: labels.passingMarks, enabled: true, order: 6 },
-    { key: 'classes', label: labels.classes, enabled: true, order: 7 },
-  ];
+  return createColumnRegistry(
+    ['name', 'subject', 'date', 'duration', 'status', 'totalMarks', 'passingMarks', 'classes'],
+    labels,
+  );
 }
 
 export interface ExaminationResultsWorkColumnLabels {
@@ -421,15 +383,10 @@ export interface ExaminationResultsWorkColumnLabels {
 export function buildExaminationResultsWorkColumnRegistry(
   labels: ExaminationResultsWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  return [
-    { key: 'rank', label: labels.rank, enabled: true, order: 0, fixed: true },
-    { key: 'student', label: labels.student, enabled: true, order: 1 },
-    { key: 'classRoll', label: labels.classRoll, enabled: true, order: 2 },
-    { key: 'marks', label: labels.marks, enabled: true, order: 3 },
-    { key: 'percentage', label: labels.percentage, enabled: true, order: 4 },
-    { key: 'grade', label: labels.grade, enabled: true, order: 5 },
-    { key: 'passFail', label: labels.passFail, enabled: true, order: 6 },
-  ];
+  return createColumnRegistry(
+    ['rank', 'student', 'classRoll', 'marks', 'percentage', 'grade', 'passFail'],
+    labels,
+  );
 }
 
 export interface QuestionBankWorkColumnLabels {
@@ -445,12 +402,8 @@ export interface QuestionBankWorkColumnLabels {
 export function buildQuestionBankWorkColumnRegistry(
   labels: QuestionBankWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  return [
-    { key: 'text', label: labels.text, enabled: true, order: 0, fixed: true },
-    { key: 'category', label: labels.category, enabled: true, order: 1 },
-    { key: 'language', label: labels.language, enabled: true, order: 2 },
-    { key: 'type', label: labels.type, enabled: true, order: 3 },
-    { key: 'difficulty', label: labels.difficulty, enabled: true, order: 4 },
-    { key: 'source', label: labels.source, enabled: true, order: 5 },
-  ];
+  return createColumnRegistry(
+    ['text', 'category', 'language', 'type', 'difficulty', 'source'],
+    labels,
+  );
 }
