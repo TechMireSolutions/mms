@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 
 export interface UseLocalPaginationOptions<T> {
   items: T[];
@@ -16,10 +16,10 @@ export function useLocalPagination<T>({
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const handleSearchChange = (val: string) => {
+  const handleSearchChange = useCallback((val: string) => {
     setSearchQuery(val);
     setCurrentPage(1);
-  };
+  }, []);
 
   useEffect(() => {
     setCurrentPage(1);

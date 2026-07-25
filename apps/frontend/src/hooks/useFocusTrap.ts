@@ -1,5 +1,23 @@
 import { useEffect, useRef } from "react";
 
+const FOCUSABLE_SELECTORS_QUERY = [
+  "a[href]",
+  "area[href]",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "button:not([disabled])",
+  "iframe",
+  "object",
+  "embed",
+  "[contenteditable]",
+  '[tabindex]:not([tabindex^="-"])',
+].join(",");
+
+function getFocusableElements(container: HTMLElement): HTMLElement[] {
+  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS_QUERY));
+}
+
 /**
  * Traps keyboard Tab focus inside a target HTML element, restoring focus
  * to the previously active element on unmount.
@@ -18,25 +36,7 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(active: boolea
 
     const previouslyFocusedElement = document.activeElement as HTMLElement | null;
 
-    const focusableSelectors = [
-      "a[href]",
-      "area[href]",
-      "input:not([disabled])",
-      "select:not([disabled])",
-      "textarea:not([disabled])",
-      "button:not([disabled])",
-      "iframe",
-      "object",
-      "embed",
-      "[contenteditable]",
-      '[tabindex]:not([tabindex^="-"])',
-    ];
-
-    const getFocusableElements = (): HTMLElement[] => {
-      return Array.from(container.querySelectorAll<HTMLElement>(focusableSelectors.join(",")));
-    };
-
-    const elements = getFocusableElements();
+    const elements = getFocusableElements(container);
     if (elements.length > 0) {
       elements[0].focus();
     }
@@ -44,7 +44,7 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(active: boolea
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.key !== "Tab") return;
 
-      const items = getFocusableElements();
+      const items = getFocusableElements(container);
       if (items.length === 0) {
         event.preventDefault();
         return;

@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { getCollection, hasCollectionInCache, saveCollectionCacheOnly } from "@/lib/db";
 import { apiFetch } from "@/lib/apiClient";
+import { reportClientError } from "@/lib/clientErrorReporting";
 
 const EMPTY_ARRAY: unknown[] = [];
 
@@ -16,13 +17,17 @@ const EMPTY_ARRAY: unknown[] = [];
  */
 export function useLiveCollection<T = unknown>(
   dbKey: string,
-  defaultData: T[] = [] as T[],
+  defaultData: T[] = EMPTY_ARRAY as T[],
   options?: { enabled?: boolean; serverSync?: boolean },
 ): T[] {
   const enabled = options?.enabled ?? true;
   const serverSync = options?.serverSync ?? true;
   const defaultDataRef = useRef(defaultData);
   defaultDataRef.current = defaultData;
+
+  const handleUpdate = useCallback((): void => {
+    setData(getCollection<T>(dbKey, defaultDataRef.current));
+  }, [dbKey]);
 
   const [data, setData] = useState<T[]>(() =>
     enabled ? getCollection<T>(dbKey, defaultDataRef.current) : (EMPTY_ARRAY as T[]),
@@ -34,10 +39,6 @@ export function useLiveCollection<T = unknown>(
       return;
     }
 
-    const handleUpdate = (): void => {
-      setData(getCollection<T>(dbKey, defaultDataRef.current));
-    };
-
     handleUpdate();
 
     const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
@@ -45,14 +46,12 @@ export function useLiveCollection<T = unknown>(
       apiFetch(`/api/db/collections/${dbKey}`)
         .then(async (res) => {
           if (res.ok) {
-            const fetched = await res.json() as T[];
+            const fetched = (await res.json()) as T[];
             saveCollectionCacheOnly(dbKey, fetched);
-          } else {
-            console.warn(`Failed to fetch collection "${dbKey}" on-demand (status: ${res.status})`);
           }
         })
         .catch((error) => {
-          console.error(`Error fetching collection "${dbKey}" on-demand:`, error);
+          reportClientError(error, { scope: "useLiveCollection.fetch", dbKey });
         });
     }
 
@@ -62,7 +61,7 @@ export function useLiveCollection<T = unknown>(
       window.removeEventListener("local-database-update", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
     };
-  }, [dbKey, enabled, serverSync]);
+  }, [dbKey, enabled, serverSync, handleUpdate]);
 
   if (!enabled) return EMPTY_ARRAY as T[];
   return data;

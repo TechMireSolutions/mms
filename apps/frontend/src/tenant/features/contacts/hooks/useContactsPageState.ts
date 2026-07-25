@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
-import type { Contact } from "@mms/shared";
+import type { Contact, AppTranslationKey } from "@mms/shared";
 import {
   getPrimaryPhone,
   hasWhatsApp,
@@ -88,8 +88,8 @@ export function useContactsPageState({
   } = useContactMutations();
 
   const handleError = useCallback(
-    (err: unknown, scope: string, messageKey = "contacts.saveFailed") => {
-      notify.error(t(messageKey as any));
+    (err: unknown, scope: string, messageKey: AppTranslationKey = "contacts.saveFailed") => {
+      notify.error(t(messageKey));
       reportClientError(err, { scope });
     },
     [t],
@@ -472,6 +472,12 @@ export function useContactsPageState({
   const handleEdit = openForm;
   const handleCreateContact = useCallback(() => openForm(null), [openForm]);
 
+  const findContactById = useCallback(
+    (id: string | number): Contact | undefined =>
+      workContacts.find((contact) => contact.id === id) ?? contacts.find((contact) => contact.id === id),
+    [workContacts, contacts],
+  );
+
   const handleSave = useCallback(
     (contactDraft: Contact) => {
       if (!canWrite) return;
@@ -482,12 +488,12 @@ export function useContactsPageState({
         ...(editContact || {}),
         ...contactDraft,
         ...basePayload,
-        phones: contactDraft.phones || [],
-        emails: contactDraft.emails || [],
-        addresses: contactDraft.addresses || [],
-        socials: contactDraft.socials || [],
-        emergencyContacts: contactDraft.emergencyContacts || [],
-      } as Contact;
+        phones: contactDraft.phones ?? [],
+        emails: contactDraft.emails ?? [],
+        addresses: contactDraft.addresses ?? [],
+        socials: contactDraft.socials ?? [],
+        emergencyContacts: contactDraft.emergencyContacts ?? [],
+      };
 
       void saveContact(payload, isCreatingContact)
         .then(() => {
@@ -504,10 +510,10 @@ export function useContactsPageState({
   const handleDelete = useCallback(
     (id: string | number) => {
       if (!canDelete) return;
-      const selectedContact = workContacts.find((contact) => contact.id === id) ?? contacts.find((contact) => contact.id === id);
+      const selectedContact = findContactById(id);
       setDeleteTarget({ id, name: selectedContact?.name || selectedContact?.firstName });
     },
-    [workContacts, contacts, canDelete],
+    [findContactById, canDelete],
   );
 
   const confirmSingleDelete = useCallback(
@@ -668,16 +674,18 @@ export function useContactsPageState({
     [canDelete, contacts, restoreContactAction, t, handleError],
   );
 
-  const createMessagingHandler = useCallback(
-    (channel: "sms" | "whatsapp" | "email") => (targets: Contact[]) => {
-      setMessagingTarget({ channel, contacts: targets });
-    },
+  const handleWhatsApp = useCallback(
+    (contacts: Contact[]) => setMessagingTarget({ channel: "whatsapp", contacts }),
     [],
   );
-
-  const handleWhatsApp = useMemo(() => createMessagingHandler("whatsapp"), [createMessagingHandler]);
-  const handleSms = useMemo(() => createMessagingHandler("sms"), [createMessagingHandler]);
-  const handleEmail = useMemo(() => createMessagingHandler("email"), [createMessagingHandler]);
+  const handleSms = useCallback(
+    (contacts: Contact[]) => setMessagingTarget({ channel: "sms", contacts }),
+    [],
+  );
+  const handleEmail = useCallback(
+    (contacts: Contact[]) => setMessagingTarget({ channel: "email", contacts }),
+    [],
+  );
 
   return {
     t,

@@ -21,13 +21,10 @@ export function useSyncedCollection<T>({
   queryData,
   isSuccess,
   collectionName,
-  defaultData = [],
+  defaultData = EMPTY_ARRAY as T[],
   enabled = true,
 }: UseSyncedCollectionOptions<T>): T[] {
   const localData = useLiveCollection<T>(collectionName, defaultData, { enabled });
   if (!enabled) return EMPTY_ARRAY as T[];
-  if (isSuccess && queryData) {
-    return queryData;
-  }
-  return localData;
+  return isSuccess && queryData ? queryData : localData;
 }
