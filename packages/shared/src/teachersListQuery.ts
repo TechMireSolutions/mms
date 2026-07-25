@@ -1,4 +1,5 @@
 import type { Teacher } from './teacherTypes.js';
+import { compareByField, paginateArray } from './utils.js';
 
 export interface TeachersListQuery {
   page?: number;
@@ -46,37 +47,24 @@ export function filterTeachersForQuery(teachers: Teacher[], query: TeachersListQ
   return teacherRows;
 }
 
-function compareTeachers(leftTeacher: Teacher, rightTeacher: Teacher, field: string, direction: 'asc' | 'desc'): number {
-  const leftValue = leftTeacher[field as keyof Teacher];
-  const rightValue = rightTeacher[field as keyof Teacher];
-  const leftString = leftValue == null ? '' : String(leftValue);
-  const rightString = rightValue == null ? '' : String(rightValue);
-  const comparison = leftString.localeCompare(rightString, undefined, { numeric: true, sensitivity: 'base' });
-  return direction === 'desc' ? -comparison : comparison;
-}
-
 /** Paginates an in-memory teacher list (server-side data source). */
 export function paginateTeachers(teachers: Teacher[], query: TeachersListQuery): TeachersListPageResult {
-  const page = Math.max(1, query.page ?? 1);
-  const limit = Math.min(Math.max(1, query.limit ?? 50), 500);
   let teacherRows = filterTeachersForQuery(teachers, query);
 
   const sortField = query.sortField?.trim();
   if (sortField) {
     const sortDirection = query.sortDir === 'desc' ? 'desc' : 'asc';
     teacherRows = [...teacherRows].sort((leftTeacher, rightTeacher) =>
-      compareTeachers(leftTeacher, rightTeacher, sortField, sortDirection),
+      compareByField(leftTeacher, rightTeacher, sortField, sortDirection),
     );
   }
 
-  const total = teacherRows.length;
-  const start = (page - 1) * limit;
-  const pageTeachers = teacherRows.slice(start, start + limit);
+  const result = paginateArray(teacherRows, query.page ?? 1, query.limit ?? 50, 500);
   return {
-    teachers: pageTeachers,
-    total,
-    page,
-    limit,
-    hasMore: start + pageTeachers.length < total,
+    teachers: result.items,
+    total: result.total,
+    page: result.page,
+    limit: result.limit,
+    hasMore: result.hasMore,
   };
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { parsePhoneNumber, normalizeToE164, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray } from "./utils.js";
+
 import type { Contact } from "./contactTypes.js";
 
 
@@ -376,6 +377,50 @@ describe("getPrimaryAddress", () => {
     expect(getPrimaryAddress({ addresses: [] })).toBeNull();
   });
 });
+
+describe("compareByField", () => {
+  it("sorts objects by string property ascending and descending", () => {
+    const items = [{ name: "Zaid" }, { name: "Ali" }, { name: "Bilal" }];
+    const asc = [...items].sort((a, b) => compareByField(a, b, "name", "asc"));
+    expect(asc.map((i) => i.name)).toEqual(["Ali", "Bilal", "Zaid"]);
+
+    const desc = [...items].sort((a, b) => compareByField(a, b, "name", "desc"));
+    expect(desc.map((i) => i.name)).toEqual(["Zaid", "Bilal", "Ali"]);
+  });
+
+  it("handles nullish properties gracefully", () => {
+    const items = [{ role: null }, { role: "Teacher" }, { role: "Admin" }];
+    const asc = [...items].sort((a, b) => compareByField(a, b, "role", "asc"));
+    expect(asc.map((i) => i.role)).toEqual([null, "Admin", "Teacher"]);
+  });
+});
+
+describe("paginateArray", () => {
+  it("slices array correctly with metadata", () => {
+    const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    const page1 = paginateArray(data, 1, 3);
+    expect(page1.items).toEqual([1, 2, 3]);
+    expect(page1.total).toBe(10);
+    expect(page1.page).toBe(1);
+    expect(page1.limit).toBe(3);
+    expect(page1.hasMore).toBe(true);
+
+    const page4 = paginateArray(data, 4, 3);
+    expect(page4.items).toEqual([10]);
+    expect(page4.hasMore).toBe(false);
+  });
+
+  it("enforces safe page and max limit bounds", () => {
+    const data = Array.from({ length: 100 }, (_, i) => i + 1);
+    const capped = paginateArray(data, 0, 1000, 50);
+    expect(capped.page).toBe(1);
+    expect(capped.limit).toBe(50);
+    expect(capped.items.length).toBe(50);
+  });
+});
+
+
+
 
 
 

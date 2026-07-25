@@ -28,6 +28,7 @@ export interface UseModuleConfigOptions<T extends ModuleSettingsShape> {
   normalizeFn?: (settings: unknown) => T;
 }
 
+
 /**
  * Authoritative hook for managing module dynamic field configurations, settings persistence, and field ordering.
  */

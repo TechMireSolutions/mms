@@ -5,6 +5,7 @@ const progressSchema = z.object({
   total: z.number().int().min(0),
 });
 
+/** Validation schema for background job creation and status update payloads. */
 export const backgroundJobUpsertSchema = z.object({
   id: z.string().min(1),
   moduleId: z.string().min(1).max(64),
@@ -35,5 +36,8 @@ export interface BackgroundJobRecord {
   completedAt?: string;
 }
 
+/** REST API base endpoint route for managing background job states and downloads. */
 export const BACKGROUND_JOBS_API_PATH = '/api/background-jobs' as const;
+
+/** Maximum allowed active or retained background jobs per tenant user. */
 export const BACKGROUND_JOBS_MAX_PER_USER = 50;

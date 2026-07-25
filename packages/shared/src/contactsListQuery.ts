@@ -1,6 +1,7 @@
 import type { Contact } from './contactTypes.js';
 import { contactMatchesSearch } from './contactsSearchUtils.js';
 import { filterActiveContacts, isContactDeleted } from './contactSoftDelete.js';
+import { compareByField, paginateArray } from './utils.js';
 
 export interface ContactsListQuery {
   page?: number;
@@ -38,36 +39,23 @@ export function filterContactsForQuery(contacts: Contact[], query: ContactsListQ
   return rows;
 }
 
-function compareContacts(leftContact: Contact, rightContact: Contact, field: string, dir: 'asc' | 'desc'): number {
-  const leftValue = leftContact[field as keyof Contact];
-  const rightValue = rightContact[field as keyof Contact];
-  const leftText = leftValue == null ? '' : String(leftValue);
-  const rightText = rightValue == null ? '' : String(rightValue);
-  const comparison = leftText.localeCompare(rightText, undefined, { numeric: true, sensitivity: 'base' });
-  return dir === 'desc' ? -comparison : comparison;
-}
-
 /** Paginates an in-memory contact list (server-side data source). */
 export function paginateContacts(contacts: Contact[], query: ContactsListQuery): ContactsListPageResult {
-  const page = Math.max(1, query.page ?? 1);
-  const limit = Math.min(Math.max(1, query.limit ?? 50), 500);
   let rows = filterContactsForQuery(contacts, query);
 
   const sortField = query.sortField?.trim();
   if (sortField) {
     const dir = query.sortDir === 'desc' ? 'desc' : 'asc';
-    rows = [...rows].sort((leftContact, rightContact) => compareContacts(leftContact, rightContact, sortField, dir));
+    rows = [...rows].sort((leftContact, rightContact) => compareByField(leftContact, rightContact, sortField, dir));
   }
 
-  const total = rows.length;
-  const start = (page - 1) * limit;
-  const slice = rows.slice(start, start + limit);
+  const result = paginateArray(rows, query.page ?? 1, query.limit ?? 50, 500);
   return {
-    contacts: slice,
-    total,
-    page,
-    limit,
-    hasMore: start + slice.length < total,
+    contacts: result.items,
+    total: result.total,
+    page: result.page,
+    limit: result.limit,
+    hasMore: result.hasMore,
   };
 }
 
@@ -81,7 +69,7 @@ export function listAllContactsForQuery(contacts: Contact[], query: ContactsList
   const sortField = query.sortField?.trim();
   if (sortField) {
     const dir = query.sortDir === 'desc' ? 'desc' : 'asc';
-    rows = [...rows].sort((leftContact, rightContact) => compareContacts(leftContact, rightContact, sortField, dir));
+    rows = [...rows].sort((leftContact, rightContact) => compareByField(leftContact, rightContact, sortField, dir));
   }
   return rows;
 }

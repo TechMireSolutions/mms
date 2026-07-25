@@ -31,8 +31,9 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     try {
       const output = execSync('npx tsx src/scripts/reset-platform-users.ts', { cwd: backendDir, encoding: 'utf8' });
       console.log(output);
-    } catch (err: any) {
-      console.error('Failed to reset platform users:', err.stdout || err.stderr || err.message);
+    } catch (err: unknown) {
+      const errorObj = err as { stdout?: string; stderr?: string; message?: string };
+      console.error('Failed to reset platform users:', errorObj.stdout || errorObj.stderr || errorObj.message);
       throw err;
     }
   });
@@ -268,12 +269,12 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     await page.waitForSelector('tbody tr:has-text("John Doe") >> visible=true');
     console.log('Contact John Doe successfully created.');
 
-    // 13. Navigate to Students Page
+    // 15. Navigate to Students Page
     console.log('Navigating to Students Page...');
     await page.goto(`http://${subdomain}.localhost:5173/students`);
     await page.waitForLoadState('networkidle');
 
-    // 14. Create a new Student linking to the Contact
+    // 16. Create a new Student linking to the Contact
     await page.click('button:has-text("Add Student")');
     await page.waitForSelector('input[placeholder="Search contacts…"]');
     await page.fill('input[placeholder="Search contacts…"]', 'Jane Doe');
@@ -295,40 +296,42 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     // Wait for the modal dialog to close completely
     await expect(page.getByRole('dialog', { name: 'Register student' })).toBeHidden();
 
-    // 15. Verify Student successfully created and listed
+    // 17. Verify Student successfully created and listed
     await page.waitForSelector('tbody tr:has-text("Jane Doe") >> visible=true');
     console.log('Student Jane Doe successfully created and linked.');
 
-    // 16. Seed a test class and enrollment for Jane Doe via the backend script
+    // 18. Seed a test class and enrollment for Jane Doe via the backend script
     console.log('Seeding session, class, and enrollment for student...');
     const backendDir = path.resolve(__dirname, '../../apps/backend');
     try {
       const output = execSync(`npx tsx src/scripts/seed-test-class.ts ${subdomain}`, { cwd: backendDir, encoding: 'utf8' });
       console.log(output);
-    } catch (err: any) {
-      console.error('Failed to seed class/enrollment:', err.stdout || err.stderr || err.message);
+    } catch (err: unknown) {
+      const errorObj = err as { stdout?: string; stderr?: string; message?: string };
+      console.error('Failed to seed class/enrollment:', errorObj.stdout || errorObj.stderr || errorObj.message);
       throw err;
     }
 
-    // 17. Navigate to Attendance Page
+    // 19. Navigate to Attendance Page
     console.log('Navigating to Attendance Page...');
     await page.goto(`http://${subdomain}.localhost:5173/attendance`);
     await page.waitForLoadState('networkidle');
 
-    // 18. Select Class in filters
+    // 20. Select Class in filters
     await page.waitForSelector('#filter-class >> visible=true');
     await page.selectOption('#filter-class >> visible=true', { label: 'Morning Quran Class' });
     await page.waitForLoadState('networkidle');
 
-    // 19. Verify Jane Doe is listed in the roster
+    // 21. Verify Jane Doe is listed in the roster
     await page.waitForSelector('text=Jane Doe >> visible=true');
     console.log('Jane Doe is visible in the class attendance list.');
 
-    // 20. Click submit attendance button
+    // 22. Click submit attendance button
     await page.click('button:has-text("Submit Attendance") >> visible=true');
 
-    // 21. Assert submitted success badge is visible
+    // 23. Assert submitted success badge is visible
     await page.waitForSelector('text=Submitted >> visible=true');
+
     console.log('Attendance successfully marked and submitted.');
 
     expect(browserFailures, browserFailures.join('\n')).toEqual([]);

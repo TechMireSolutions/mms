@@ -11,4 +11,5 @@ export interface AuditLogEntry {
   summary?: string;
 }
 
+/** Collection key identifier for the audit log trail. */
 export const AUDIT_LOG_COLLECTION = "audit_log" as const;
