@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import type { Contact } from "@mms/shared";
 import {
@@ -23,7 +24,7 @@ import {
 import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
 import { reportClientError } from "@/lib/clientErrorReporting";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
-import { startServerContactsCsvExport } from "@/lib/backgroundJobs/startServerContactsCsvExport";
+import { startServerContactsCsvExport, startContactsDuplicateScan } from "@/lib/backgroundJobs/startServerContactsCsvExport";
 import {
   CONTACTS_WORK_DRILLDOWN_EVENT,
   consumeContactsWorkDrillDown,
@@ -37,7 +38,9 @@ import {
   useContactsCollectionState,
   useContactsPaginated,
   useContactsByIds,
+  CONTACTS_DUPLICATES_QUERY_KEY,
 } from "@/tenant/features/contacts/hooks/useContacts";
+import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
 
 export interface UseContactsPageStateOptions {
   prefs: {
@@ -218,6 +221,22 @@ export function useContactsPageState({
     canViewReports,
   });
 
+  const queryClient = useQueryClient();
+  const [viewModeOverride, setViewModeOverride] = useState<"table" | "cards" | null>(null);
+  const [conflictPanelOpen, setConflictPanelOpen] = useState(false);
+  const [openingDuplicates, setOpeningDuplicates] = useState(false);
+  const { conflictCount } = useContactsSyncOutbox();
+  const prevConflictCount = useRef(conflictCount);
+  const openConflictReview = useCallback(() => setConflictPanelOpen(true), []);
+  const closeConflictReview = useCallback(() => setConflictPanelOpen(false), []);
+
+  useEffect(() => {
+    if (prevConflictCount.current === 0 && conflictCount > 0) {
+      setConflictPanelOpen(true);
+    }
+    prevConflictCount.current = conflictCount;
+  }, [conflictCount]);
+
   const [search, setSearch] = useState("");
   const [filterGender, setFilterGender] = useState("");
   const [sortField, setSortField] = useState("name");
@@ -397,6 +416,26 @@ export function useContactsPageState({
 
   const shownCount = useServerWork && workPageData ? workPageData.total : filtered.length;
   const workTruncated = useServerWork && Boolean(workPageData?.hasMore);
+
+  const handleOpenDuplicates = useCallback(async () => {
+    if (openingDuplicates) return;
+    const needsAsyncScan = shownCount >= CONTACTS_MODULE_CONTRACT.duplicateScanAsyncMinContacts;
+    if (needsAsyncScan) {
+      setOpeningDuplicates(true);
+      try {
+        const job = await startContactsDuplicateScan(t("contacts.jobs.duplicateScanLabel"));
+        await queryClient.invalidateQueries({ queryKey: CONTACTS_DUPLICATES_QUERY_KEY });
+        const pairCount = job.progress?.current ?? 0;
+        notify.success(t("contacts.duplicates.scanComplete", { count: pairCount }));
+      } catch {
+        notify.error(t("contacts.duplicates.scanFailed"));
+        return;
+      } finally {
+        setOpeningDuplicates(false);
+      }
+    }
+    setShowDuplicates(true);
+  }, [openingDuplicates, shownCount, queryClient, t, setShowDuplicates]);
 
   const hasActiveFilters = !!(filterGender || search);
   const activeFilterCount = filterGender ? 1 : 0;
@@ -702,6 +741,14 @@ export function useContactsPageState({
     handleImport,
     handleMerge,
     handleRestore,
+    viewModeOverride,
+    setViewModeOverride,
+    conflictPanelOpen,
+    setConflictPanelOpen,
+    openConflictReview,
+    closeConflictReview,
+    openingDuplicates,
+    handleOpenDuplicates,
     showDeletedArchives,
     setShowDeletedArchives,
     needsFullContactsList,

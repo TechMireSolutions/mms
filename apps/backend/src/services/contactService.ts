@@ -266,26 +266,18 @@ export async function updateContactById(id: string, contact: Contact): Promise<C
   });
 }
 
-export async function restoreContactById(id: string, _restoredBy: string): Promise<Contact | null> {
-  return runInTransaction(async () => {
-    const tenant = getRequestTenant();
-    if (!tenant) return null;
-    const existing = await findContactById(tenant, id);
-    if (!existing) return null;
-    if (!existing.deletedAt) return existing;
+export async function restoreContactById(id: string, restoredBy: string): Promise<Contact | null> {
+  const tenant = getRequestTenant();
+  if (!tenant) return null;
+  const existing = await findContactById(tenant, id);
+  if (!existing) return null;
+  if (!existing.deletedAt) return existing;
 
-    const now = new Date().toISOString();
-    const restored: Contact = {
-      ...existing,
-      deletedAt: undefined,
-      deletedBy: undefined,
-      deletionReason: undefined,
-      updatedAt: now,
-    };
-    await saveContact(tenant, restored);
-    await invalidateDuplicateScanCache();
-    return restored;
-  });
+  const result = await bulkRestoreContacts([id], restoredBy);
+  if (result.succeeded === 1) {
+    return findContactById(tenant, id);
+  }
+  return null;
 }
 
 export async function bulkRestoreContacts(
@@ -333,24 +325,8 @@ export async function softDeleteContactById(
   deletedBy: string,
   deletionReason?: string,
 ): Promise<boolean> {
-  return runInTransaction(async () => {
-    const tenant = getRequestTenant();
-    if (!tenant) return false;
-    const existing = await findContactById(tenant, id);
-    if (!existing || existing.deletedAt) {
-      return false;
-    }
-    const trimmedReason = deletionReason?.trim();
-    const updated: Contact = {
-      ...existing,
-      deletedAt: new Date().toISOString(),
-      deletedBy,
-      deletionReason: trimmedReason || undefined,
-    };
-    await saveContact(tenant, updated);
-    await invalidateDuplicateScanCache();
-    return true;
-  });
+  const result = await bulkSoftDeleteContacts([id], deletedBy, deletionReason);
+  return result.succeeded === 1;
 }
 
 export async function bulkSoftDeleteContacts(

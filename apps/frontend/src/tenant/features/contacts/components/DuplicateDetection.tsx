@@ -101,7 +101,7 @@ function MergePreview({ pair, keepIndex, onClose, onConfirm, confirming }: Merge
   const emptyDash = t('contacts.table.emptyDash');
   const keep = pair.contacts[keepIndex];
   const other = pair.contacts[1 - keepIndex];
-  const mergedResult = mergeContacts(keep, other);
+  const mergedResult = useMemo(() => mergeContacts(keep, other), [keep, other]);
   const fields = prefs.duplicateDetectionFields || [];
 
   return (

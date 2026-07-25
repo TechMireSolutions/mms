@@ -129,22 +129,25 @@ function savedReportViewer(user: User): ContactsSavedReportViewer {
   };
 }
 
-async function sanitizeForUser(contacts: Contact[], user: User): Promise<Contact[]> {
+async function getFieldConfigViewerOptions() {
   const fieldConfig = await loadContactFieldConfig();
-  if (!fieldConfig) return contacts;
-  return sanitizeContactsForViewer(contacts, user.role, {
+  if (!fieldConfig) return null;
+  return {
     fields: fieldConfig.fields,
     tabs: fieldConfig.formTabs ?? [],
-  });
+  };
+}
+
+async function sanitizeForUser(contacts: Contact[], user: User): Promise<Contact[]> {
+  const options = await getFieldConfigViewerOptions();
+  if (!options) return contacts;
+  return sanitizeContactsForViewer(contacts, user.role, options);
 }
 
 async function sanitizeOneForUser(contact: Contact, user: User): Promise<Contact> {
-  const fieldConfig = await loadContactFieldConfig();
-  if (!fieldConfig) return contact;
-  return sanitizeContactForViewer(contact, user.role, {
-    fields: fieldConfig.fields,
-    tabs: fieldConfig.formTabs ?? [],
-  });
+  const options = await getFieldConfigViewerOptions();
+  if (!options) return contact;
+  return sanitizeContactForViewer(contact, user.role, options);
 }
 
 async function auditContact(

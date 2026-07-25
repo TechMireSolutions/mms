@@ -1,12 +1,9 @@
-import React, { useMemo, useState, lazy, Suspense, useCallback, useEffect, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import React, { useMemo, lazy, Suspense, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserPlus, AlertTriangle, Download, Users, UserX, Loader2, Trash2, X, MessageCircle, MessageSquare, RotateCcw, RefreshCw } from "lucide-react";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { CONTACTS_MODULE_CONTRACT, getDisplayName, getPrimaryPhone, getPrimaryEmail } from "@mms/shared";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { CONTACTS_DUPLICATES_QUERY_KEY } from "@/tenant/features/contacts/hooks/useContacts";
-import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
 import { useContactsPageState } from "@/tenant/features/contacts/hooks/useContactsPageState";
 import { useContactConfig, useContactColumns } from "@/lib/contexts/ContactConfigContext";
 import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
@@ -25,8 +22,6 @@ import { ListPagination } from "@/components/ui/ListPagination";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { TableSkeleton } from "@/components/ui/LoadingState";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { startContactsDuplicateScan } from "@/lib/backgroundJobs/startServerContactsCsvExport";
-import { notify } from "@/lib/notify";
 import { useGoogleContactsOAuthListener } from "@/lib/contacts/googleContactsOAuthListener";
 
 import ContactsSettingsPanel from "@/tenant/features/contacts/components/ContactsSettingsPanel";
@@ -38,7 +33,6 @@ const ContactDetailDrawer = lazy(() => import("@/tenant/features/contacts/compon
 
 
 function ContactsInner() {
-  const queryClient = useQueryClient();
   const {
     canWrite,
     canDelete,
@@ -50,11 +44,6 @@ function ContactsInner() {
   const bulkActions = CONTACTS_MODULE_CONTRACT.work.bulkActions;
   const { prefs } = useContactConfig();
   const tableColumns = useContactColumns();
-  const [viewModeOverride, setViewModeOverride] = useState<"table" | "cards" | null>(null);
-  const [conflictPanelOpen, setConflictPanelOpen] = useState(false);
-  const { conflictCount } = useContactsSyncOutbox();
-  const prevConflictCount = useRef(conflictCount);
-  const openConflictReview = useCallback(() => setConflictPanelOpen(true), []);
 
   const state = useContactsPageState({
     prefs,
@@ -124,6 +113,13 @@ function ContactsInner() {
     handleImport,
     handleMerge,
     handleRestore,
+    viewModeOverride,
+    setViewModeOverride,
+    conflictPanelOpen,
+    setConflictPanelOpen,
+    openConflictReview,
+    openingDuplicates,
+    handleOpenDuplicates,
     showDeletedArchives: viewingDeleted,
     setShowDeletedArchives,
     needsFullContactsList,
@@ -139,38 +135,9 @@ function ContactsInner() {
     workTruncated,
   } = state;
 
-  useEffect(() => {
-    if (prevConflictCount.current === 0 && conflictCount > 0) {
-      setConflictPanelOpen(true);
-    }
-    prevConflictCount.current = conflictCount;
-  }, [conflictCount]);
-
   useGoogleContactsOAuthListener(useCallback(() => {
     setActiveTab("setup");
   }, [setActiveTab]));
-
-  const [openingDuplicates, setOpeningDuplicates] = useState(false);
-
-  const handleOpenDuplicates = useCallback(async () => {
-    if (openingDuplicates) return;
-    const needsAsyncScan = shownCount >= CONTACTS_MODULE_CONTRACT.duplicateScanAsyncMinContacts;
-    if (needsAsyncScan) {
-      setOpeningDuplicates(true);
-      try {
-        const job = await startContactsDuplicateScan(t("contacts.jobs.duplicateScanLabel"));
-        await queryClient.invalidateQueries({ queryKey: CONTACTS_DUPLICATES_QUERY_KEY });
-        const pairCount = job.progress?.current ?? 0;
-        notify.success(t("contacts.duplicates.scanComplete", { count: pairCount }));
-      } catch {
-        notify.error(t("contacts.duplicates.scanFailed"));
-        return;
-      } finally {
-        setOpeningDuplicates(false);
-      }
-    }
-    setShowDuplicates(true);
-  }, [openingDuplicates, shownCount, queryClient, t, setShowDuplicates]);
 
   const commonDirectoryProps = useMemo(() => ({
     contacts: workContacts,
