@@ -32,6 +32,7 @@ import { getCollection, getObject, saveObject } from "@/lib/db";
 import { METADATA_FIELDS, VisualizerConfig, type ReportCollection, getFieldLabel, getCollectionLabel } from "@/tenant/features/reports/components/reportMetadata";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface CollectionMeta {
   name: string;
@@ -806,29 +807,23 @@ export default function DynamicChartVisualizer({
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-2">{t("reports.visualizer.displayCustomizations")}</span>
               <div className="grid grid-cols-3 gap-2">
                 <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-[11px] font-semibold text-foreground">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={showGrid}
-                    onChange={(event) => setShowGrid(event.target.checked)}
-                    className="rounded text-primary focus:ring-primary/10 cursor-pointer"
+                    onCheckedChange={(checked) => setShowGrid(Boolean(checked))}
                   />
                   {t("reports.visualizer.gridLines")}
                 </label>
                 <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-[11px] font-semibold text-foreground">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={showLegend}
-                    onChange={(event) => setShowLegend(event.target.checked)}
-                    className="rounded text-primary focus:ring-primary/10 cursor-pointer"
+                    onCheckedChange={(checked) => setShowLegend(Boolean(checked))}
                   />
                   {t("reports.visualizer.legends")}
                 </label>
                 <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-[11px] font-semibold text-foreground">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={showTooltip}
-                    onChange={(event) => setShowTooltip(event.target.checked)}
-                    className="rounded text-primary focus:ring-primary/10 cursor-pointer"
+                    onCheckedChange={(checked) => setShowTooltip(Boolean(checked))}
                   />
                   {t("reports.visualizer.tooltips")}
                 </label>
@@ -866,34 +861,33 @@ export default function DynamicChartVisualizer({
               filters.map((rule) => (
                 <div key={rule.id} className="flex gap-2 items-center bg-card/30 border border-border p-2.5 rounded-2xl">
                   {/* Field Selector */}
-                  <select
+                  <FormSelect
                     value={rule.field}
-                    onChange={(event) => handleUpdateFilter(rule.id, { field: event.target.value })}
-                    className="flex-1 min-w-0 px-2 py-1 text-[11px] rounded-lg border border-border bg-card/60 text-foreground focus:outline-none"
-                  >
-                    {activeMeta.fields.map((metadataField) => (
-                      <option key={metadataField.value} value={metadataField.value}>
-                        {getFieldLabel(metadataField.value, metadataField.label, t)}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => handleUpdateFilter(rule.id, { field: val })}
+                    className="flex-1 min-w-0"
+                    options={activeMeta.fields.map((metadataField) => ({
+                      value: metadataField.value,
+                      label: getFieldLabel(metadataField.value, metadataField.label, t),
+                    }))}
+                  />
 
                   {/* Operator */}
-                  <select
+                  <FormSelect
                     value={rule.operator}
-                    onChange={(event) => handleUpdateFilter(rule.id, { operator: event.target.value as FilterRule["operator"] })}
-                    className="w-20 px-1 py-1 text-[11px] rounded-lg border border-border bg-card/60 text-foreground focus:outline-none font-medium"
-                  >
-                    <option value="equals">=</option>
-                    <option value="contains">like</option>
-                    <option value="startsWith">starts</option>
-                    {activeMeta.fields.find((field) => field.value === rule.field)?.isNumeric && (
-                      <>
-                        <option value="gt">&gt;</option>
-                        <option value="lt">&lt;</option>
-                      </>
-                    )}
-                  </select>
+                    onChange={(val) => handleUpdateFilter(rule.id, { operator: val as FilterRule["operator"] })}
+                    className="w-24 font-medium"
+                    options={[
+                      { value: "equals", label: "=" },
+                      { value: "contains", label: "like" },
+                      { value: "startsWith", label: "starts" },
+                      ...(activeMeta.fields.find((field) => field.value === rule.field)?.isNumeric
+                        ? [
+                            { value: "gt", label: ">" },
+                            { value: "lt", label: "<" },
+                          ]
+                        : []),
+                    ]}
+                  />
 
                   <Input
                     type="text"

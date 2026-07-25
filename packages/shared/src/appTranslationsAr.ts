@@ -1659,6 +1659,10 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "enrollments.pagination.summary": "{count} تسجيل · صفحة {page} من {totalPages}",
   "enrollments.pagination.previous": "الصفحة السابقة",
   "enrollments.pagination.next": "الصفحة التالية",
+  "enrollments.wizard.step1Title": "اختر طالباً",
+  "enrollments.wizard.step1Desc": "اختر طالباً مسجلاً للتسجيل.",
+  "enrollments.wizard.searchPlaceholder": "ابحث عن الطالب بالاسم…",
+  "enrollments.wizard.noStudents": "لم يتم العثور على طلاب",
 
   "users.list": "قائمة المستخدمين",
   "users.activity": "سجل النشاط",

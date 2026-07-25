@@ -8,6 +8,7 @@ import { WIZARD_SELECTION_DOT } from "@/lib/semanticTone";
 import { useStudentsByIds, useStudentsPaginated } from "@/tenant/features/students/hooks/useStudents";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 interface Step1SelectStudentProps {
   value: Student | null | undefined;
@@ -52,20 +53,20 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
   return (
     <section className="space-y-4" aria-labelledby="step1-title">
       <div>
-        <h3 id="step1-title" className="text-base font-bold text-foreground">Select Student</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">Choose a registered student to enroll.</p>
+        <h3 id="step1-title" className="text-base font-bold text-foreground">{t("enrollments.wizard.step1Title")}</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">{t("enrollments.wizard.step1Desc")}</p>
       </div>
 
       <SearchBar
         value={search}
         onChange={setSearch}
-        placeholder="Search students by name…"
+        placeholder={t("enrollments.wizard.searchPlaceholder")}
         className="w-full"
       />
 
       <div className="space-y-2 max-h-80 overflow-y-auto pr-1" role="radiogroup" aria-label="Students list">
         {!isFetching && students.length === 0 && (
-          <div className="text-center py-10 text-muted-foreground text-sm" role="status">No students found</div>
+          <div className="text-center py-10 text-muted-foreground text-sm" role="status">{t("enrollments.wizard.noStudents")}</div>
         )}
         {students.map((student) => {
           const age = calcAge(student.dob);
@@ -95,13 +96,11 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                     student.gender === "male" ? "bg-info/15 text-info" : "bg-secondary/15 text-secondary"
                   }`}>{student.gender}</span>
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                    student.status === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
-                  }`}>{student.status}</span>
+                  <StatusBadge status={student.status} size="sm" />
                 </div>
                 <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
                   <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" aria-hidden="true" /> Age {age ?? "?"}</span>
-                  <span>Father: {student.fatherName}</span>
+                  <span>{t("students.form.fatherLink")}: {student.fatherName}</span>
                   {student.city && <span>{student.city}</span>}
                 </div>
                 {student.enrolledSessions && student.enrolledSessions.length > 0 && (

@@ -1662,6 +1662,10 @@ export const APP_TRANSLATIONS_EN = {
   "enrollments.pagination.summary": "{count} enrollments · Page {page} of {totalPages}",
   "enrollments.pagination.previous": "Previous page",
   "enrollments.pagination.next": "Next page",
+  "enrollments.wizard.step1Title": "Select Student",
+  "enrollments.wizard.step1Desc": "Choose a registered student to enroll.",
+  "enrollments.wizard.searchPlaceholder": "Search students by name…",
+  "enrollments.wizard.noStudents": "No students found",
 
   "users.list": "Users List",
   "users.activity": "Activity Logs",

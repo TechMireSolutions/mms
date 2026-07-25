@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Download, FileSpreadsheet, FileText, Printer, Settings as SettingsIcon } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { Button } from "@/components/ui/button";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { formatDate, todayISO, buildCsvContent } from "@mms/shared";
 import { triggerFileDownload } from "@/lib/download";
 
@@ -55,11 +56,14 @@ export function ExportToolbar({
   const [compactFormat, setCompactFormat] = useState<"excel" | "pdf">("excel");
 
   const resolvedVariant = variant || (data ? "default" : "compact");
-  const resolvedFilename = filename || title.toLowerCase().replace(/\s+/g, "_");
+  const resolvedFilename = useMemo(() => filename || title.toLowerCase().replace(/\s+/g, "_"), [filename, title]);
 
   // Determine underlying data and columns
-  const finalRows = rows || (data as Record<string, unknown>[]) || [];
-  const finalColumns = columns || (headers ? headers.map(h => ({ header: h, key: h })) : []);
+  const finalRows = useMemo(() => rows || (data as Record<string, unknown>[]) || [], [rows, data]);
+  const finalColumns = useMemo(
+    () => columns || (headers ? headers.map((h) => ({ header: h, key: h })) : []),
+    [columns, headers]
+  );
 
   const handlePrint = (): void => {
     if (onPrint) {
@@ -230,59 +234,63 @@ export function ExportToolbar({
                  </button>
                </div>
              </div>
-             <div className="space-y-1.5">
-               <label htmlFor="export-page-size" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.export.pageSize")}</label>
-               <select 
-                id="export-page-size"
-                value={formatSize}
-                onChange={(event) => setFormatSize(event.target.value)}
-                className="w-full text-xs rounded-lg border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20"
-               >
-                 <option value="a4">{t("reports.builder.formatA4")}</option>
-                 <option value="letter">{t("reports.builder.formatLetter")}</option>
-                 <option value="a3">{t("reports.builder.formatA3")}</option>
-                 <option value="legal">{t("reports.builder.formatLegal")}</option>
-               </select>
-             </div>
+              <div className="space-y-1.5">
+                <label htmlFor="export-page-size" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.export.pageSize")}</label>
+                <FormSelect
+                  id="export-page-size"
+                  value={formatSize}
+                  onChange={setFormatSize}
+                  options={[
+                    { value: "a4", label: t("reports.builder.formatA4") },
+                    { value: "letter", label: t("reports.builder.formatLetter") },
+                    { value: "a3", label: t("reports.builder.formatA3") },
+                    { value: "legal", label: t("reports.builder.formatLegal") },
+                  ]}
+                />
+              </div>
           </div>
         )}
 
-        <button
+        <Button
           onClick={handlePrint}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          variant="outline"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors h-auto"
           type="button"
         >
-          <Printer className="w-3.5 h-3.5" />
+          <Printer className="w-3.5 h-3.5" aria-hidden="true" />
           {t("reports.export.print")}
-        </button>
-        <button 
+        </Button>
+        <Button
           onClick={handleExcelExport}
           disabled={finalRows.length === 0}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50" 
+          variant="outline"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 h-auto"
           type="button"
         >
-          <FileSpreadsheet className="w-3.5 h-3.5 text-success" />
+          <FileSpreadsheet className="w-3.5 h-3.5 text-success" aria-hidden="true" />
           {t("reports.export.excel")}
-        </button>
-        
+        </Button>
+
         <div className="flex rounded-lg border border-border bg-card overflow-hidden">
-          <button 
+          <Button
             onClick={handlePdfExport}
             disabled={finalRows.length === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 border-r border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50" 
+            variant="ghost"
+            className="flex items-center gap-1.5 px-3 py-1.5 border-r border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 h-auto rounded-none"
             type="button"
           >
-            <FileText className="w-3.5 h-3.5 text-destructive" />
+            <FileText className="w-3.5 h-3.5 text-destructive" aria-hidden="true" />
             {t("reports.export.pdf")}
-          </button>
-          <button 
+          </Button>
+          <Button
             onClick={() => setShowPdfSettings(!showPdfSettings)}
-            className={`px-2 py-1.5 hover:bg-muted transition-colors ${showPdfSettings ? "text-primary bg-primary/5" : "text-muted-foreground"}`}
+            variant="ghost"
+            className={`px-2 py-1.5 hover:bg-muted transition-colors h-auto rounded-none ${showPdfSettings ? "text-primary bg-primary/5" : "text-muted-foreground"}`}
             title={t("reports.export.settings")}
             type="button"
           >
-            <SettingsIcon className="w-3.5 h-3.5" />
-          </button>
+            <SettingsIcon className="w-3.5 h-3.5" aria-hidden="true" />
+          </Button>
         </div>
       </div>
     </div>

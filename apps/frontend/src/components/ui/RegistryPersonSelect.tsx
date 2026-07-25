@@ -7,7 +7,7 @@ import { useStudentsPaginated } from '@/tenant/features/students/hooks/useStuden
 import { useTeachersPaginated } from '@/tenant/features/teachers/hooks/useTeachers';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FORM_LABEL } from '@/components/ui/formStyles';
-import { Input } from '@/components/ui/input';
+import { SearchBar } from '@/components/ui/SearchBar';
 import { FormSelect } from '@/components/ui/FormSelect';
 
 export interface RegistryPersonSelectProps {
@@ -49,6 +49,8 @@ export function RegistryPersonSelect({
     enabled: teachersEnabled,
   });
 
+  const excludeIdsKey = excludeIds.join(',');
+
   const options = useMemo(() => {
     const rows = kind === 'student'
       ? (studentPage?.students ?? [])
@@ -56,9 +58,8 @@ export function RegistryPersonSelect({
     const excluded = new Set(excludeIds.map(String));
     return rows
       .filter((row) => !excluded.has(String(row.id)))
-      .slice()
       .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
-  }, [kind, studentPage, teacherPage, excludeIds]);
+  }, [kind, studentPage, teacherPage, excludeIdsKey]);
 
   const hasMore = kind === 'student'
     ? Boolean(studentPage?.hasMore)
@@ -71,18 +72,19 @@ export function RegistryPersonSelect({
     : t('registryPerson.selectTeacher');
 
   const fallbackId = React.useId();
-  const selectId = id || `person-select-${fallbackId.replace(/:/g, "")}`;
-  const searchInputId = `person-search-${fallbackId.replace(/:/g, "")}`;
-  const searchInputName = `personSearchQuery-${fallbackId.replace(/:/g, "")}`;
+  const sanitizedId = fallbackId.replace(/:/g, '');
+  const selectId = id || `person-select-${sanitizedId}`;
+  const searchInputId = `person-search-${sanitizedId}`;
+  const searchInputName = `personSearchQuery-${sanitizedId}`;
 
   const selectOptions = useMemo(() => {
-    const list: Array<{ value: string; label: string }> = [];
+    const list = options.map((row) => ({
+      value: String(row.id),
+      label: row.name ?? String(row.id),
+    }));
     if (value && !valueInOptions) {
-      list.push({ value, label: value });
+      list.unshift({ value, label: value });
     }
-    options.forEach((row) => {
-      list.push({ value: String(row.id), label: row.name ?? String(row.id) });
-    });
     return list;
   }, [value, valueInOptions, options]);
 
@@ -91,15 +93,12 @@ export function RegistryPersonSelect({
       <label htmlFor={selectId} className={FORM_LABEL}>
         {label}{required ? ' *' : ''}
       </label>
-      <Input
-        type="search"
+      <SearchBar
         id={searchInputId}
         name={searchInputName}
         value={search}
-        onChange={(event) => setSearch(event.target.value)}
+        onChange={setSearch}
         placeholder={t('registryPerson.searchPlaceholder')}
-        className="text-xs"
-        aria-label={t('registryPerson.searchPlaceholder')}
       />
       <FormSelect
         id={selectId}

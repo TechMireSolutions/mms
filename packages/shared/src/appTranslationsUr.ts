@@ -1659,6 +1659,10 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "enrollments.pagination.summary": "{count} داخلے · صفحہ {page} از {totalPages}",
   "enrollments.pagination.previous": "پچھلا صفحہ",
   "enrollments.pagination.next": "اگلا صفحہ",
+  "enrollments.wizard.step1Title": "طالب علم منتخب کریں",
+  "enrollments.wizard.step1Desc": "داخلے کے لیے ایک رجسٹرڈ طالب علم منتخب کریں۔",
+  "enrollments.wizard.searchPlaceholder": "طالب علم کا نام تلاش کریں…",
+  "enrollments.wizard.noStudents": "کوئی طالب علم نہیں ملا",
 
   "users.list": "صارفین کی فہرست",
   "users.activity": "سرگرمی کے لاگ",

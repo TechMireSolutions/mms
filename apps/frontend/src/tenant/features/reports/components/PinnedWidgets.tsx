@@ -38,8 +38,9 @@ import {
   COLOR_MAP,
   ICONS_LIST,
 } from "@/tenant/features/reports/components/pinnedWidgets/types";
-import { FORM_INPUT_BUILDER, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
+import { FormSelect } from "@/components/ui/FormSelect";
 import {
   Table,
   TableHeader,
@@ -50,7 +51,7 @@ import {
 } from "@/components/ui/table";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { Input } from "@/components/ui/input";
-import { FormSelect } from "@/components/ui/FormSelect";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   getWidgetCollections,
   getFilteredRecords,
@@ -835,15 +836,11 @@ function CustomWidgetRenderer({
           : "surface-glass"
       }`}
     >
-      <div className={`absolute start-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] ${
+      <div className={`absolute start-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] transition-colors duration-300 ${
         isAlert
-          ? "bg-destructive"
-          : colorTheme.bar
-      }/60 group-hover:${
-        isAlert
-          ? "bg-destructive"
-          : colorTheme.bar
-      } transition-colors duration-300`} />
+          ? "bg-destructive/60 group-hover:bg-destructive"
+          : `${colorTheme.bar}/60`
+      }`} />
       <div className={`absolute -right-8 -top-8 w-24 h-24 rounded-full ${colorTheme.glow} transition-all duration-500`} />
       {/* Widget Card Header */}
       <div className="flex items-center justify-between">
@@ -1407,11 +1404,10 @@ export default function PinnedWidgets({ category }: { category: string }): React
             {category === "students" && (
               <>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={!disabledCardIds.includes("students")}
-                    onChange={() => toggleCardVisibility("students")}
-                    className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                    onCheckedChange={() => toggleCardVisibility("students")}
+                    className="mt-0.5"
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.studentsCard")}</p>
@@ -1419,11 +1415,10 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={!!sectionSettings.enrollmentChart}
-                    onChange={() => toggleSectionSetting("enrollmentChart")}
-                    className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                    onCheckedChange={() => toggleSectionSetting("enrollmentChart")}
+                    className="mt-0.5"
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.enrollmentChart")}</p>
@@ -1436,11 +1431,10 @@ export default function PinnedWidgets({ category }: { category: string }): React
             {category === "sessions" && (
               <>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={!disabledCardIds.includes("sessions")}
-                    onChange={() => toggleCardVisibility("sessions")}
-                    className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                    onCheckedChange={() => toggleCardVisibility("sessions")}
+                    className="mt-0.5"
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.sessionsCard")}</p>
@@ -1448,11 +1442,10 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={!disabledCardIds.includes("classes")}
-                    onChange={() => toggleCardVisibility("classes")}
-                    className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                    onCheckedChange={() => toggleCardVisibility("classes")}
+                    className="mt-0.5"
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.classesCard")}</p>
@@ -1460,11 +1453,10 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={!!sectionSettings.sessionsTable}
-                    onChange={() => toggleSectionSetting("sessionsTable")}
-                    className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                    onCheckedChange={() => toggleSectionSetting("sessionsTable")}
+                    className="mt-0.5"
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.sessionsTable")}</p>
@@ -1477,11 +1469,10 @@ export default function PinnedWidgets({ category }: { category: string }): React
             {category === "attendance" && (
               <>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={!disabledCardIds.includes("attendance")}
-                    onChange={() => toggleCardVisibility("attendance")}
-                    className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                    onCheckedChange={() => toggleCardVisibility("attendance")}
+                    className="mt-0.5"
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.attendanceCard")}</p>
@@ -1489,11 +1480,10 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={!!sectionSettings.attendanceChart}
-                    onChange={() => toggleSectionSetting("attendanceChart")}
-                    className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                    onCheckedChange={() => toggleSectionSetting("attendanceChart")}
+                    className="mt-0.5"
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.attendanceChart")}</p>
@@ -1506,11 +1496,10 @@ export default function PinnedWidgets({ category }: { category: string }): React
             {(category === "financial" || category === "accounting") && (
               <>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={!disabledCardIds.includes("fees")}
-                    onChange={() => toggleCardVisibility("fees")}
-                    className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                    onCheckedChange={() => toggleCardVisibility("fees")}
+                    className="mt-0.5"
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.feeCard")}</p>
@@ -1518,11 +1507,10 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={!disabledCardIds.includes("outstanding")}
-                    onChange={() => toggleCardVisibility("outstanding")}
-                    className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                    onCheckedChange={() => toggleCardVisibility("outstanding")}
+                    className="mt-0.5"
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.outstandingInvoicesCard")}</p>
@@ -1530,11 +1518,10 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={!!sectionSettings.revenueChart}
-                    onChange={() => toggleSectionSetting("revenueChart")}
-                    className="mt-0.5 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                    onCheckedChange={() => toggleSectionSetting("revenueChart")}
+                    className="mt-0.5"
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.revenueChart")}</p>
@@ -1950,15 +1937,15 @@ export function WidgetBuilder({
             {widgetType === "card" && mode === "dashboard" && (
               <div className="space-y-1">
                 <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.dashboardRole")}</label>
-                <select
+                <FormSelect
                   value={builderRole}
-                  onChange={(event) => setBuilderRole(event.target.value)}
-                  className={`${FORM_INPUT_BUILDER} font-sans`}
-                >
-                  <option value="admin" className="bg-background text-foreground">{t("reports.widgets.builder.roleAdmin")}</option>
-                  <option value="teacher" className="bg-background text-foreground">{t("reports.widgets.builder.roleTeacher")}</option>
-                  <option value="accountant" className="bg-background text-foreground">{t("reports.widgets.builder.roleAccountant")}</option>
-                </select>
+                  onChange={setBuilderRole}
+                  options={[
+                    { value: "admin", label: t("reports.widgets.builder.roleAdmin") },
+                    { value: "teacher", label: t("reports.widgets.builder.roleTeacher") },
+                    { value: "accountant", label: t("reports.widgets.builder.roleAccountant") },
+                  ]}
+                />
               </div>
             )}
 
@@ -1967,32 +1954,29 @@ export function WidgetBuilder({
                 {/* Data collection select */}
                 <div className="space-y-1">
                   <label className={FORM_LABEL}>{t("reports.widgets.builder.dataCollection")}</label>
-                  <select
+                  <FormSelect
                     value={builderCollection}
-                    onChange={(event) => setBuilderCollection(event.target.value as CustomWidget["collection"])}
-                    className={FORM_INPUT_BUILDER}
-                  >
-                    {COLLECTION_OPTIONS.map((collectionOption) => (
-                      <option key={collectionOption.value} value={collectionOption.value} className="bg-background text-foreground">
-                        {getCollectionLabel(collectionOption.value, collectionOption.label, t)}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => setBuilderCollection(val as CustomWidget["collection"])}
+                    options={COLLECTION_OPTIONS.map((collectionOption) => ({
+                      value: collectionOption.value,
+                      label: getCollectionLabel(collectionOption.value, collectionOption.label, t),
+                    }))}
+                  />
                 </div>
 
                 {/* Operation type */}
                 <div className="space-y-1">
                   <label className={FORM_LABEL}>{t("reports.widgets.builder.calcFormula")}</label>
-                  <select
+                  <FormSelect
                     value={builderOperation}
-                    onChange={(event) => setBuilderOperation(event.target.value as CustomWidget["operation"])}
-                    className={FORM_INPUT_BUILDER}
-                  >
-                    <option value="count" className="bg-background text-foreground">{t("reports.widgets.builder.formulaCount")}</option>
-                    <option value="percentage" className="bg-background text-foreground">{t("reports.widgets.builder.formulaPercentage")}</option>
-                    <option value="sum" className="bg-background text-foreground">{t("reports.widgets.builder.formulaSum")}</option>
-                    <option value="avg" className="bg-background text-foreground">{t("reports.widgets.builder.formulaAvg")}</option>
-                  </select>
+                    onChange={(val) => setBuilderOperation(val as CustomWidget["operation"])}
+                    options={[
+                      { value: "count", label: t("reports.widgets.builder.formulaCount") },
+                      { value: "percentage", label: t("reports.widgets.builder.formulaPercentage") },
+                      { value: "sum", label: t("reports.widgets.builder.formulaSum") },
+                      { value: "avg", label: t("reports.widgets.builder.formulaAvg") },
+                    ]}
+                  />
                 </div>
 
                 {/* Target fields for numeric values */}
@@ -2000,56 +1984,52 @@ export function WidgetBuilder({
                   <label className={FORM_LABEL}>
                     {t("reports.widgets.builder.targetField")} {["count", "percentage"].includes(builderOperation) && t("reports.widgets.builder.deactivated")}
                   </label>
-                  <select
+                  <FormSelect
                     disabled={["count", "percentage"].includes(builderOperation)}
                     value={builderTargetField}
-                    onChange={(event) => setBuilderTargetField(event.target.value)}
-                    className={`${FORM_INPUT_BUILDER} disabled:opacity-40 disabled:cursor-not-allowed`}
-                  >
-                    {METADATA_FIELDS[builderCollection].numericFields.length === 0 ? (
-                      <option value="" className="bg-background text-foreground">{t("reports.widgets.builder.noNumericFields")}</option>
-                    ) : (
-                      METADATA_FIELDS[builderCollection].numericFields.map((numericField) => (
-                        <option key={numericField.value} value={numericField.value} className="bg-background text-foreground">
-                          {getFieldLabel(numericField.value, numericField.label, t)}
-                        </option>
-                      ))
-                    )}
-                  </select>
+                    onChange={setBuilderTargetField}
+                    options={
+                      METADATA_FIELDS[builderCollection].numericFields.length === 0
+                        ? [{ value: "", label: t("reports.widgets.builder.noNumericFields") }]
+                        : METADATA_FIELDS[builderCollection].numericFields.map((numericField) => ({
+                            value: numericField.value,
+                            label: getFieldLabel(numericField.value, numericField.label, t),
+                          }))
+                    }
+                  />
                 </div>
 
                 {/* Filter fields options */}
                 <div className="space-y-1">
                   <label className={FORM_LABEL}>{t("reports.widgets.builder.filterField")}</label>
-                  <select
+                  <FormSelect
                     value={builderFilterField}
-                    onChange={(event) => setBuilderFilterField(event.target.value)}
-                    className={FORM_INPUT_BUILDER}
-                  >
-                    <option value="" className="bg-background text-foreground">{t("reports.widgets.builder.noFilter")}</option>
-                    {METADATA_FIELDS[builderCollection].fields.map((metadataField) => (
-                      <option key={metadataField.value} value={metadataField.value} className="bg-background text-foreground">
-                        {getFieldLabel(metadataField.value, metadataField.label, t)}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setBuilderFilterField}
+                    options={[
+                      { value: "", label: t("reports.widgets.builder.noFilter") },
+                      ...METADATA_FIELDS[builderCollection].fields.map((metadataField) => ({
+                        value: metadataField.value,
+                        label: getFieldLabel(metadataField.value, metadataField.label, t),
+                      })),
+                    ]}
+                  />
                 </div>
 
                 {/* Query filter condition inputs */}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
                     <label className={FORM_LABEL}>{t("reports.widgets.builder.operator")}</label>
-                    <select
+                    <FormSelect
                       disabled={!builderFilterField}
-                      value={builderFilterOperator}
-                      onChange={(event) => setBuilderFilterOperator(event.target.value as CustomWidget["filterOperator"])}
-                      className={`${FORM_INPUT_BUILDER} disabled:opacity-40 disabled:cursor-not-allowed`}
-                    >
-                      <option value="equals" className="bg-background text-foreground">{t("reports.widgets.builder.opEquals")}</option>
-                      <option value="contains" className="bg-background text-foreground">{t("reports.widgets.builder.opContains")}</option>
-                      <option value="gt" className="bg-background text-foreground">&gt; {t("reports.widgets.builder.opGt")}</option>
-                      <option value="lt" className="bg-background text-foreground">&lt; {t("reports.widgets.builder.opLt")}</option>
-                    </select>
+                      value={builderFilterOperator ?? ""}
+                      onChange={(val) => setBuilderFilterOperator(val as CustomWidget["filterOperator"])}
+                      options={[
+                        { value: "equals", label: t("reports.widgets.builder.opEquals") },
+                        { value: "contains", label: t("reports.widgets.builder.opContains") },
+                        { value: "gt", label: `> ${t("reports.widgets.builder.opGt")}` },
+                        { value: "lt", label: `< ${t("reports.widgets.builder.opLt")}` },
+                      ]}
+                    />
                   </div>
                   <div className="space-y-1">
                     <label className={FORM_LABEL}>{t("reports.widgets.builder.matchValue")}</label>
@@ -2068,14 +2048,14 @@ export function WidgetBuilder({
                   <>
                     <div className="space-y-1">
                       <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.subtextStyle")}</label>
-                      <select
+                      <FormSelect
                         value={subTextType}
-                        onChange={(event) => setSubTextType(event.target.value as "fixed" | "dynamic")}
-                        className={`${FORM_INPUT_BUILDER} font-sans`}
-                      >
-                        <option value="dynamic" className="bg-background text-foreground">{t("reports.widgets.builder.subtextDynamic")}</option>
-                        <option value="fixed" className="bg-background text-foreground">{t("reports.widgets.builder.subtextFixed")}</option>
-                      </select>
+                        onChange={(val) => setSubTextType(val as "fixed" | "dynamic")}
+                        options={[
+                          { value: "dynamic", label: t("reports.widgets.builder.subtextDynamic") },
+                          { value: "fixed", label: t("reports.widgets.builder.subtextFixed") },
+                        ]}
+                      />
                     </div>
 
                     {subTextType === "fixed" && (
@@ -2165,66 +2145,61 @@ export function WidgetBuilder({
                 {/* Switch options fields */}
                 <div className="space-y-1">
                   <label className={FORM_LABEL}>{t("reports.widgets.builder.switchTarget")}</label>
-                  <select
+                  <FormSelect
                     value={switchActionType}
-                    onChange={(event) => setSwitchActionType(event.target.value as "app_setting" | "db_record")}
-                    className={FORM_INPUT_BUILDER}
-                  >
-                    <option value="app_setting" className="bg-background text-foreground">{t("reports.widgets.builder.switchTargetApp")}</option>
-                    <option value="db_record" className="bg-background text-foreground">{t("reports.widgets.builder.switchTargetDb")}</option>
-                  </select>
+                    onChange={(val) => setSwitchActionType(val as "app_setting" | "db_record")}
+                    options={[
+                      { value: "app_setting", label: t("reports.widgets.builder.switchTargetApp") },
+                      { value: "db_record", label: t("reports.widgets.builder.switchTargetDb") },
+                    ]}
+                  />
                 </div>
 
                 {switchActionType === "app_setting" ? (
                   <div className="space-y-1">
                     <label className={FORM_LABEL}>{t("reports.widgets.builder.selectParameter")}</label>
-                    <select
+                    <FormSelect
                       value={switchStateKey}
-                      onChange={(event) => setSwitchStateKey(event.target.value)}
-                      className={FORM_INPUT_BUILDER}
-                    >
-                      <option value="section_enrollmentChart" className="bg-background text-foreground">{t("reports.widgets.builder.paramEnrollmentChart")}</option>
-                      <option value="section_revenueChart" className="bg-background text-foreground">{t("reports.widgets.builder.paramRevenueChart")}</option>
-                      <option value="section_attendanceChart" className="bg-background text-foreground">{t("reports.widgets.builder.paramAttendanceChart")}</option>
-                      <option value="section_hasanatChart" className="bg-background text-foreground">{t("reports.widgets.builder.paramHasanatChart")}</option>
-                      <option value="section_sessionsTable" className="bg-background text-foreground">{t("reports.widgets.builder.paramSessionsTable")}</option>
-                      <option value="app_setting_attendance_lock" className="bg-background text-foreground">{t("reports.widgets.builder.paramAttendanceLock")}</option>
-                      <option value="app_setting_mute_notifications" className="bg-background text-foreground">{t("reports.widgets.builder.paramMuteNotifications")}</option>
-                    </select>
+                      onChange={setSwitchStateKey}
+                      options={[
+                        { value: "section_enrollmentChart", label: t("reports.widgets.builder.paramEnrollmentChart") },
+                        { value: "section_revenueChart", label: t("reports.widgets.builder.paramRevenueChart") },
+                        { value: "section_attendanceChart", label: t("reports.widgets.builder.paramAttendanceChart") },
+                        { value: "section_hasanatChart", label: t("reports.widgets.builder.paramHasanatChart") },
+                        { value: "section_sessionsTable", label: t("reports.widgets.builder.paramSessionsTable") },
+                        { value: "app_setting_attendance_lock", label: t("reports.widgets.builder.paramAttendanceLock") },
+                        { value: "app_setting_mute_notifications", label: t("reports.widgets.builder.paramMuteNotifications") },
+                      ]}
+                    />
                   </div>
                 ) : (
                   <>
                     <div className="space-y-1">
                       <label className={FORM_LABEL}>{t("reports.widgets.builder.recordCollection")}</label>
-                      <select
+                      <FormSelect
                         value={switchCollection}
-                        onChange={(event) => {
-                          setSwitchCollection(event.target.value as CustomWidget["collection"]);
+                        onChange={(val) => {
+                          setSwitchCollection(val as CustomWidget["collection"]);
                           setSwitchRecordId("");
                         }}
-                        className={FORM_INPUT_BUILDER}
-                      >
-                        {COLLECTION_OPTIONS.map((collectionOption) => (
-                          <option key={collectionOption.value} value={collectionOption.value} className="bg-background text-foreground">{getCollectionLabel(collectionOption.value, collectionOption.label, t)}</option>
-                        ))}
-                      </select>
+                        options={COLLECTION_OPTIONS.map((collectionOption) => ({
+                          value: collectionOption.value,
+                          label: getCollectionLabel(collectionOption.value, collectionOption.label, t),
+                        }))}
+                      />
                     </div>
 
                     <div className="space-y-1">
                       <label className={FORM_LABEL}>{t("reports.widgets.builder.selectRecord")}</label>
-                      <select
+                      <FormSelect
                         value={switchRecordId}
-                        onChange={(event) => setSwitchRecordId(event.target.value)}
-                        className={FORM_INPUT_BUILDER}
-                      >
-                        {dbRecordsList.length === 0 ? (
-                          <option value="" className="bg-background text-foreground">{t("reports.widgets.builder.noRecordsLoaded")}</option>
-                        ) : (
-                          dbRecordsList.map(rec => (
-                            <option key={rec.id} value={rec.id} className="bg-background text-foreground">{rec.label}</option>
-                          ))
-                        )}
-                      </select>
+                        onChange={setSwitchRecordId}
+                        options={
+                          dbRecordsList.length === 0
+                            ? [{ value: "", label: t("reports.widgets.builder.noRecordsLoaded") }]
+                            : dbRecordsList.map((rec) => ({ value: rec.id, label: rec.label }))
+                        }
+                      />
                     </div>
                   </>
                 )}
@@ -2259,11 +2234,9 @@ export function WidgetBuilder({
           {widgetType !== "switch" && !["sessions-list", "attendance-summary", "fee-summary", "outstanding-list", "overdue-obligations"].includes(widgetType || "") && (
             <div className="p-4 rounded-2xl border border-border bg-card/20 space-y-3">
               <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={thresholdEnabled}
-                  onChange={(event) => setThresholdEnabled(event.target.checked)}
-                  className="rounded text-primary focus:ring-primary/20 cursor-pointer"
+                  onCheckedChange={(checked) => setThresholdEnabled(Boolean(checked))}
                 />
                 <span className="text-xs font-bold text-foreground">{t("reports.widgets.builder.enableThreshold")}</span>
               </label>
