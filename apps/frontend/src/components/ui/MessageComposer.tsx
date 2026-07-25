@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { MessageCircle, MessageSquare, User, Info, Sparkles, Mail } from 'lucide-react';
+import { MessageCircle, MessageSquare, User, Info, Sparkles, Mail, CheckCheck, AlertCircle, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { openDeviceSmsComposer } from '@/lib/deviceSms';
 import { FormModal } from '@/components/ui/FormModal';
@@ -11,20 +11,22 @@ import { FORM_LABEL } from '@/components/ui/formStyles';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { getCollection, saveCollection } from '@/lib/db';
-import { personalizeMessage } from '@mms/shared';
+import { 
+  personalizeMessage, 
+  calculateSmsSegments, 
+  type PersonalizeRecipient, 
+  type MessageTemplate,
+  type Message
+} from '@mms/shared';
 
-export interface MessagingRecipient {
+export interface MessagingRecipient extends PersonalizeRecipient {
   id: string | number;
   name: string;
   phone: string;
   email?: string;
 }
 
-export interface MessageTemplate {
-  id: string;
-  label: string;
-  body: string;
-}
+export type { MessageTemplate };
 
 export interface MessageComposerProps {
   channel: 'sms' | 'whatsapp' | 'email';
@@ -36,9 +38,19 @@ export interface MessageComposerProps {
 
 export { personalizeMessage };
 
+const VARIABLE_TOKENS = [
+  { token: '{name}', label: 'Full Name' },
+  { token: '{first_name}', label: 'First Name' },
+  { token: '{phone}', label: 'Phone' },
+  { token: '{email}', label: 'Email' },
+  { token: '{date}', label: 'Date' },
+  { token: '{due_date}', label: 'Due Date' },
+  { token: '{amount}', label: 'Amount' },
+  { token: '{madrasa_name}', label: 'Madrasa Name' },
+];
 
 /**
- * Reusable and decoupled Message Composer for SMS, WhatsApp, and Email.
+ * Reusable and decoupled Central Message Composer for SMS, WhatsApp, and Email.
  */
 export default function MessageComposer({
   channel,
@@ -68,6 +80,8 @@ export default function MessageComposer({
     return recipients.filter((r) => Boolean(r.phone?.trim()));
   }, [recipients, channel]);
 
+  const skippedCount = recipients.length - eligibleRecipients.length;
+
   // Load custom templates saved in user settings/messaging setup
   const userSavedTemplates = useMemo(() => {
     if (!user) return [];
@@ -77,10 +91,12 @@ export default function MessageComposer({
 
   const activeTemplates = useMemo(() => {
     if (templates) return templates;
-    const base = contextTemplates.map((t) => ({
+    const base: MessageTemplate[] = contextTemplates.map((t) => ({
       id: t.id,
       label: t.label,
       body: t.body,
+      category: 'general',
+      channel: 'whatsapp',
     }));
     // Merge base with user saved templates, avoiding duplicates by id
     const existingIds = new Set(base.map((t) => t.id));
@@ -88,10 +104,17 @@ export default function MessageComposer({
     return [...base, ...uniqueUserTemplates];
   }, [templates, contextTemplates, userSavedTemplates]);
 
-  const [template, setTemplate] = useState<string>(() => activeTemplates[0]?.id || 'custom');
+  // Filter templates matching current channel or 'all'
+  const channelFilteredTemplates = useMemo(() => {
+    return activeTemplates.filter((tpl) => !tpl.channel || tpl.channel === 'all' || tpl.channel === channel);
+  }, [activeTemplates, channel]);
+
+  const [template, setTemplate] = useState<string>(() => channelFilteredTemplates[0]?.id || activeTemplates[0]?.id || 'custom');
   const [subject, setSubject] = useState<string>('');
-  const [message, setMessage] = useState<string>(() => activeTemplates[0]?.body || '');
+  const [message, setMessage] = useState<string>(() => channelFilteredTemplates[0]?.body || activeTemplates[0]?.body || '');
   const [opening, setOpening] = useState<boolean>(false);
+  const [dispatchProgress, setDispatchProgress] = useState<{ current: number; total: number } | null>(null);
+  const [previewIndex, setPreviewIndex] = useState<number>(0);
 
   const handleTemplateChange = (templateId: string): void => {
     setTemplate(templateId);
@@ -100,6 +123,11 @@ export default function MessageComposer({
       setMessage(selectedTemplate.body);
     }
   };
+
+  // Compute SMS segment statistics
+  const smsStats = useMemo(() => {
+    return calculateSmsSegments(message);
+  }, [message]);
 
   const executeSend = (recipient: MessagingRecipient, text: string): boolean => {
     const personalizedBody = personalizeMessage(text, recipient);
@@ -127,15 +155,19 @@ export default function MessageComposer({
   const saveSentMessageHistory = (sentRecords: { recipientId: string | number; body: string }[]): void => {
     if (sentRecords.length > 0 && user) {
       const dbKey = `messages_u:${user.id}`;
-      const newMsgs = sentRecords.map((rec) => ({
+      const activeTplObj = activeTemplates.find((t) => t.id === template);
+      const newMsgs: Message[] = sentRecords.map((rec) => ({
         id: crypto.randomUUID(),
         userId: user.id,
         contactId: rec.recipientId,
         channel,
         body: rec.body,
         sentAt: new Date().toISOString(),
+        status: 'sent',
+        subject: channel === 'email' ? subject || undefined : undefined,
+        category: activeTplObj?.category || 'general',
       }));
-      const currentMsgs = getCollection<unknown>(dbKey) || [];
+      const currentMsgs = getCollection<Message>(dbKey) || [];
       saveCollection(dbKey, [...newMsgs, ...currentMsgs]);
       window.dispatchEvent(new CustomEvent('local-database-update'));
     }
@@ -160,13 +192,17 @@ export default function MessageComposer({
         onSent?.(sentRecords);
       } else {
         setOpening(true);
+        setDispatchProgress({ current: 1, total: eligibleRecipients.length });
+
         eligibleRecipients.forEach((recipient, index) => {
           window.setTimeout(() => {
             executeSend(recipient, message);
             sentRecords.push({ recipientId: recipient.id, body: personalizeMessage(message, recipient) });
+            setDispatchProgress({ current: index + 1, total: eligibleRecipients.length });
 
             if (index === eligibleRecipients.length - 1) {
               setOpening(false);
+              setDispatchProgress(null);
               onSent?.(sentRecords);
               saveSentMessageHistory(sentRecords);
               onClose();
@@ -222,11 +258,13 @@ export default function MessageComposer({
     ? `${t('contacts.whatsapp.openAll')} (${eligibleRecipients.length})`
     : t('contacts.whatsapp.open');
 
-  // Preview message personalization using the first recipient
+  const currentPreviewRecipient = eligibleRecipients[previewIndex] || eligibleRecipients[0];
+
+  // Preview message personalization using selected recipient
   const previewText = useMemo(() => {
-    if (!message.trim() || eligibleRecipients.length === 0) return '';
-    return personalizeMessage(message, eligibleRecipients[0]);
-  }, [message, eligibleRecipients]);
+    if (!message.trim() || !currentPreviewRecipient) return '';
+    return personalizeMessage(message, currentPreviewRecipient);
+  }, [message, currentPreviewRecipient]);
 
   const insertVariableTag = (tag: string): void => {
     setMessage((prev) => (prev ? `${prev} ${tag}` : tag));
@@ -249,6 +287,35 @@ export default function MessageComposer({
           {note}
         </p>
 
+        {/* Skipped contact warning alert */}
+        {skippedCount > 0 && (
+          <div className="flex items-center gap-2 p-2.5 rounded-lg text-xs bg-amber-500/10 text-amber-600 border border-amber-500/20">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>
+              {skippedCount} contact{skippedCount > 1 ? 's' : ''} skipped (missing {isEmail ? 'email address' : 'phone number'}).
+            </span>
+          </div>
+        )}
+
+        {/* Active Dispatch Progress Indicator */}
+        {dispatchProgress && (
+          <div className="p-3 border border-primary/20 bg-primary/5 rounded-xl space-y-2">
+            <div className="flex items-center justify-between text-xs font-semibold text-primary">
+              <span className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 animate-spin" />
+                {t('messaging.dispatchProgress', { current: String(dispatchProgress.current), total: String(dispatchProgress.total) })}
+              </span>
+              <span>{Math.round((dispatchProgress.current / dispatchProgress.total) * 100)}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-300 rounded-full"
+                style={{ width: `${(dispatchProgress.current / dispatchProgress.total) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         {isEmail && (
           <div>
             <label className={FORM_LABEL} htmlFor="emailSubject">
@@ -261,9 +328,6 @@ export default function MessageComposer({
               placeholder="e.g. Important Announcement"
               required
             />
-            <div className="text-[10px] text-muted-foreground mt-1">
-              {t('messaging.insertVariable')}: <code className="bg-muted px-1 py-0.5 rounded text-foreground font-mono">{`{name}`}</code>
-            </div>
           </div>
         )}
 
@@ -276,7 +340,10 @@ export default function MessageComposer({
               id="messageTemplate"
               value={template}
               onChange={handleTemplateChange}
-              options={activeTemplates.map((tpl) => ({ value: tpl.id, label: tpl.label }))}
+              options={activeTemplates.map((tpl) => ({ 
+                value: tpl.id, 
+                label: tpl.category ? `${tpl.label} [${tpl.category}]` : tpl.label 
+              }))}
             />
           </div>
         )}
@@ -286,20 +353,27 @@ export default function MessageComposer({
             <label className={FORM_LABEL} htmlFor="messageBody">
               {t('contacts.messageBody')}
             </label>
-            <div className="flex items-center gap-1">
-              <span className="text-[10px] text-muted-foreground font-semibold me-1">{t('messaging.insertVariable')}:</span>
-              {['{name}', '{first_name}', '{phone}', '{email}', '{date}'].map((token) => (
-                <button
-                  key={token}
-                  type="button"
-                  onClick={() => insertVariableTag(token)}
-                  className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted hover:bg-primary/10 hover:text-primary border border-border/40 transition-colors"
-                >
-                  {token}
-                </button>
-              ))}
-            </div>
           </div>
+
+          {/* Tokens chips bar */}
+          <div className="flex flex-wrap items-center gap-1 mb-1.5">
+            <span className="text-[10px] text-muted-foreground font-semibold me-1">{t('messaging.insertVariable')}:</span>
+            {VARIABLE_TOKENS.map(({ token }) => (
+              <button
+                key={token}
+                type="button"
+                onClick={() => insertVariableTag(token)}
+                className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted hover:bg-primary/10 hover:text-primary border border-border/40 transition-colors"
+              >
+                {token}
+              </button>
+            ))}
+          </div>
+
+          <p className="text-[10px] text-muted-foreground/80 mb-2 italic">
+            💡 {t('messaging.fallbackHint')}
+          </p>
+
           <Textarea
             id="messageBody"
             rows={4}
@@ -307,31 +381,87 @@ export default function MessageComposer({
             onChange={(e) => setMessage(e.target.value)}
             placeholder={isSms ? t('contacts.smsMessagePlaceholder') : t('contacts.whatsapp.typeMessagePlaceholder')}
           />
-          <div className="flex justify-between items-center mt-1">
-            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+
+          <div className="flex justify-between items-center mt-1 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1">
               <Info className="w-3 h-3 text-primary/70" />
               {t('messaging.createPresetDesc')}
             </span>
-            <span className="text-[10px] text-muted-foreground">
-              {message.length} {t('contacts.whatsapp.chars')}
-            </span>
+            <div className="flex items-center gap-2 font-mono">
+              {isSms && (
+                <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
+                  smsStats.isUnicode ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' : 'bg-muted text-foreground'
+                }`}>
+                  {smsStats.isUnicode ? 'Unicode' : 'GSM 7-bit'} • {smsStats.totalSegments} seg ({smsStats.remainingInSegment} left)
+                </span>
+              )}
+              <span>{message.length} {t('contacts.whatsapp.chars')}</span>
+            </div>
           </div>
         </div>
 
-        {/* Live Personalization Chat Bubble Preview */}
-        {previewText && (
+        {/* Live Personalization Preview */}
+        {previewText && currentPreviewRecipient && (
           <div className="border border-border/80 rounded-xl p-3 bg-muted/30">
-            <h5 className="text-[11px] font-bold text-muted-foreground mb-2 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-primary" />
-              {t('messaging.livePreview', { name: eligibleRecipients[0].name })}
+            <h5 className="text-[11px] font-bold text-muted-foreground mb-2 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-primary" />
+                {t('messaging.livePreview', { name: currentPreviewRecipient.name })}
+              </span>
+
+              <div className="flex items-center gap-2">
+                {isBulk && eligibleRecipients.length > 1 && (
+                  <div className="flex items-center gap-1 text-[10px]">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5"
+                      disabled={previewIndex <= 0}
+                      onClick={() => setPreviewIndex((i) => Math.max(0, i - 1))}
+                    >
+                      <ChevronLeft className="w-3 h-3" />
+                    </Button>
+                    <span className="font-mono text-muted-foreground">{previewIndex + 1}/{eligibleRecipients.length}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5"
+                      disabled={previewIndex >= eligibleRecipients.length - 1}
+                      onClick={() => setPreviewIndex((i) => Math.min(eligibleRecipients.length - 1, i + 1))}
+                    >
+                      <ChevronRight className="w-3 h-3" />
+                    </Button>
+                  </div>
+                )}
+                <span className="text-[10px] font-mono uppercase text-muted-foreground">{channel} channel</span>
+              </div>
             </h5>
-            <div className={`p-2.5 rounded-2xl text-xs max-w-[85%] break-words ${
-              isSms 
-                ? 'bg-info/10 text-info-foreground border border-info/20 rounded-tl-none' 
-                : 'bg-success/15 text-foreground border border-success/20 rounded-tl-none'
-            }`}>
-              {previewText}
-            </div>
+
+            {isEmail ? (
+              <div className="p-3 rounded-xl bg-card border border-border/70 text-xs space-y-1.5 shadow-sm">
+                <div className="border-b border-border/40 pb-1.5 text-[11px] text-muted-foreground">
+                  <span className="font-bold text-foreground me-1">Subject:</span> {personalizeMessage(subject || 'Announcement', currentPreviewRecipient)}
+                </div>
+                <div className="text-xs text-foreground whitespace-pre-wrap leading-relaxed">
+                  {previewText}
+                </div>
+              </div>
+            ) : isSms ? (
+              <div className="p-2.5 rounded-2xl text-xs max-w-[85%] break-words bg-info/10 text-info-foreground border border-info/20 rounded-tl-none space-y-1">
+                <div className="whitespace-pre-wrap">{previewText}</div>
+                <div className="text-[9px] opacity-70 text-right font-mono">SMS Message</div>
+              </div>
+            ) : (
+              <div className="p-2.5 rounded-2xl text-xs max-w-[85%] break-words bg-success/15 text-foreground border border-success/20 rounded-tl-none space-y-1">
+                <div className="whitespace-pre-wrap">{previewText}</div>
+                <div className="flex items-center justify-end gap-1 text-[9px] text-success-foreground/80 font-mono">
+                  <span>WhatsApp</span>
+                  <CheckCheck className="w-3 h-3 text-success" />
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -341,12 +471,12 @@ export default function MessageComposer({
               {t('messaging.confirmRecipients')} ({eligibleRecipients.length})
             </span>
             <ul className="space-y-1 max-h-32 overflow-y-auto border border-border/50 rounded-lg p-2 bg-muted/10">
-              {eligibleRecipients.map((recipient) => {
+              {eligibleRecipients.map((recipient, idx) => {
                 const displayContactVal = isEmail ? recipient.email : recipient.phone;
                 return (
-                  <li key={recipient.id} className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <li key={recipient.id} className={`flex items-center gap-2 text-xs p-1 rounded transition-colors ${previewIndex === idx ? 'bg-primary/10 text-foreground font-semibold' : 'text-muted-foreground'}`}>
                     <User className="w-3 h-3 flex-shrink-0 text-muted-foreground/60" />
-                    <span className="truncate">{recipient.name}</span>
+                    <span className="truncate cursor-pointer" onClick={() => setPreviewIndex(idx)}>{recipient.name}</span>
                     <span className="text-[10px] font-mono text-muted-foreground/60">({displayContactVal})</span>
                     <Button
                       type="button"
@@ -372,4 +502,5 @@ export default function MessageComposer({
     </FormModal>
   );
 }
+
 

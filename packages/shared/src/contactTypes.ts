@@ -491,6 +491,17 @@ export const COLUMN_FIELD_MAPPING: Record<string, { tabId: string; fieldId: stri
   emergency_relationship: { tabId: "emergency", fieldId: "relationship" },
 };
 
+export type MessageCategory = 'general' | 'academic' | 'financial' | 'attendance' | 'emergency';
+
+export interface MessageTemplate {
+  id: string;
+  label: string;
+  body: string;
+  category?: MessageCategory;
+  channel?: 'all' | 'sms' | 'whatsapp' | 'email';
+  updatedAt?: string;
+}
+
 /** Sent message record for SMS, WhatsApp, or Email communications. */
 export interface Message {
   id: string;
@@ -499,6 +510,10 @@ export interface Message {
   channel: 'sms' | 'whatsapp' | 'email';
   body: string;
   sentAt: string;
+  status?: 'sent' | 'failed' | 'skipped';
+  subject?: string;
+  category?: MessageCategory;
+  errorMessage?: string;
 }
 
 /** Client configuration model for Google Contacts OAuth and synchronization. */

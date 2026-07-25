@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { calculateSmsSegments } from "./smsUtils.js";
 import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray, personalizeMessage } from "./utils.js";
+
 
 
 import type { Contact } from "./contactTypes.js";
@@ -466,15 +468,74 @@ describe("personalizeMessage", () => {
     expect(result).toBe("Dear Syed Muhammad Ali, your first name is Syed. Contact: +92 300 1234567, ali@example.com on 2026-07-25.");
   });
 
+  it("replaces extended dynamic placeholders like {due_date}, {amount}, {madrasa_name}, and {salutation}", () => {
+    const body = "{salutation} {name}, payment of {amount} is due by {due_date} at {madrasa_name}.";
+    const recipient = {
+      salutation: "Respected",
+      name: "Ahmad Raza",
+      amount: "5,000 PKR",
+      dueDate: "2026-08-01",
+      madrasaName: "Madrasa Anwar-ul-Uloom",
+    };
+    const result = personalizeMessage(body, recipient);
+    expect(result).toBe("Respected Ahmad Raza, payment of 5,000 PKR is due by 2026-08-01 at Madrasa Anwar-ul-Uloom.");
+  });
+
   it("handles missing recipient fields gracefully", () => {
     const body = "Hello {name} ({email})";
     expect(personalizeMessage(body, {})).toBe("Hello  ()");
+  });
+
+  it("supports default fallback syntax {token|default_value} when recipient field is missing", () => {
+    const body = "Dear {name|Valued Parent}, your balance of {amount|0 PKR} is due at {madrasa_name|Madrasa}.";
+    const recipientWithoutName = { amount: "1,500 PKR" };
+    expect(personalizeMessage(body, recipientWithoutName)).toBe(
+      "Dear Valued Parent, your balance of 1,500 PKR is due at Madrasa."
+    );
   });
 
   it("returns empty string when body is empty", () => {
     expect(personalizeMessage("", { name: "Ali" })).toBe("");
   });
 });
+
+describe("calculateSmsSegments", () => {
+  it("calculates GSM 7-bit single segment correctly", () => {
+    const res = calculateSmsSegments("Hello world");
+    expect(res.isUnicode).toBe(false);
+    expect(res.charCount).toBe(11);
+    expect(res.totalSegments).toBe(1);
+    expect(res.remainingInSegment).toBe(149);
+  });
+
+  it("calculates GSM 7-bit multi-segment correctly", () => {
+    const text = "A".repeat(170);
+    const res = calculateSmsSegments(text);
+    expect(res.isUnicode).toBe(false);
+    expect(res.charCount).toBe(170);
+    expect(res.totalSegments).toBe(2);
+    expect(res.remainingInSegment).toBe(136); // 153 - 17
+  });
+
+  it("detects Unicode text and calculates Unicode segments correctly", () => {
+    const res = calculateSmsSegments("مرحبا بكم في المدرسة");
+    expect(res.isUnicode).toBe(true);
+    expect(res.charCount).toBe(20);
+    expect(res.totalSegments).toBe(1);
+    expect(res.remainingInSegment).toBe(50); // 70 - 20
+  });
+
+  it("calculates Unicode multi-segment correctly", () => {
+    const text = "السلام عليكم ورحمة الله وبركاته ".repeat(3); // 96 chars
+    const res = calculateSmsSegments(text);
+    expect(res.isUnicode).toBe(true);
+    expect(res.charCount).toBe(96);
+    expect(res.totalSegments).toBe(2);
+    expect(res.remainingInSegment).toBe(38); // 67 - (96 % 67) = 38
+  });
+});
+
+
 
 
 

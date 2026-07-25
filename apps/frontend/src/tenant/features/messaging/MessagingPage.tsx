@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { 
   MessageSquare, MessageCircle, Send, 
-  Trash2, User, Clock, Plus, Tag, Filter, Check, Mail, BarChart2, Download, Edit3
+  Trash2, User, Clock, Plus, Tag, Filter, Check, Mail, BarChart2, Download, Edit3, Copy, CheckSquare, XSquare
 } from 'lucide-react';
 import { 
   PieChart, Pie, Cell, Legend, Tooltip 
@@ -19,20 +19,30 @@ import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGr
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { FormSelect } from '@/components/ui/FormSelect';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { getCollection, saveCollection } from '@/lib/db';
 import { useContactsCollection } from '@/tenant/features/contacts/hooks/useContacts';
-import { getDisplayName, getPrimaryPhone, getPrimaryEmail, formatDate, type Message } from '@mms/shared';
-import MessageComposer, { type MessagingRecipient, type MessageTemplate } from '@/components/ui/MessageComposer';
+import { 
+  getDisplayName, 
+  getPrimaryPhone, 
+  getPrimaryEmail, 
+  formatDate, 
+  type Message, 
+  type MessageCategory,
+  type MessageTemplate
+} from '@mms/shared';
+import MessageComposer, { type MessagingRecipient } from '@/components/ui/MessageComposer';
 import { notify } from '@/lib/notify';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 
 const DEFAULT_TEMPLATES: MessageTemplate[] = [
-  { id: 't1', label: 'General Announcement', body: 'Dear {name}, we would like to inform you that...' },
-  { id: 't2', label: 'Payment Reminder', body: 'Dear {name}, this is a friendly reminder that your balance payment is due.' },
-  { id: 't3', label: 'Holiday Announcement', body: 'Dear {name}, please note that the madrasa will remain closed on...' },
+  { id: 't1', label: 'General Announcement', category: 'general', channel: 'all', body: 'Dear {name|Valued Parent}, we would like to inform you that...' },
+  { id: 't2', label: 'Payment Reminder', category: 'financial', channel: 'all', body: 'Dear {name|Valued Parent}, this is a friendly reminder that your balance payment of {amount|0 PKR} is due.' },
+  { id: 't3', label: 'Holiday Announcement', category: 'general', channel: 'all', body: 'Dear {name|Valued Parent}, please note that the madrasa will remain closed on {date}.' },
+  { id: 't4', label: 'Attendance Alert', category: 'attendance', channel: 'whatsapp', body: 'Respected {name|Parent}, student {first_name} was marked absent today.' },
 ];
 
 const CHART_COLORS = ['var(--color-info)', 'var(--color-success)', 'var(--color-warning)']; // Info (SMS), Success (WA), Warning (Email)
@@ -61,12 +71,16 @@ export default function MessagingPage(): React.JSX.Element {
   
   // Advanced filters
   const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female' | 'unspecified'>('all');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'students' | 'teachers' | 'staff' | 'contacts'>('all');
   const [channelFilter, setChannelFilter] = useState<'all' | 'sms' | 'whatsapp' | 'email'>('all');
+  const [templateCategoryFilter, setTemplateCategoryFilter] = useState<string>('all');
   
   // Custom templates form state
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [templateLabel, setTemplateLabel] = useState('');
   const [templateBody, setTemplateBody] = useState('');
+  const [templateCategory, setTemplateCategory] = useState<MessageCategory>('general');
+  const [templateChannel, setTemplateChannel] = useState<'all' | 'sms' | 'whatsapp' | 'email'>('all');
 
   // Dialog states for confirmations
   const [deleteTemplateId, setDeleteTemplateId] = useState<string | null>(null);
@@ -90,17 +104,19 @@ export default function MessagingPage(): React.JSX.Element {
   }, [user, localTick]);
 
   const filteredTemplates = useMemo(() => {
-    if (!searchTemplate.trim()) return templates;
-    const q = searchTemplate.toLowerCase();
-    return templates.filter((tpl) => tpl.label.toLowerCase().includes(q) || tpl.body.toLowerCase().includes(q));
-  }, [templates, searchTemplate]);
+    return templates.filter((tpl) => {
+      const matchSearch = !searchTemplate.trim() || tpl.label.toLowerCase().includes(searchTemplate.toLowerCase()) || tpl.body.toLowerCase().includes(searchTemplate.toLowerCase());
+      const matchCategory = templateCategoryFilter === 'all' || (tpl.category || 'general') === templateCategoryFilter;
+      return matchSearch && matchCategory;
+    });
+  }, [templates, searchTemplate, templateCategoryFilter]);
 
   // Handle template creation or update
   const handleSaveTemplate = (e: React.FormEvent): void => {
     e.preventDefault();
     if (!user) return;
     if (!templateLabel.trim() || !templateBody.trim()) {
-      notify.error('Please specify both template label and body');
+      notify.error(t('messaging.createPresetDesc'));
       return;
     }
     const dbKey = `messages_templates_u:${user.id}`;
@@ -109,42 +125,66 @@ export default function MessagingPage(): React.JSX.Element {
     if (editingTemplateId) {
       const updated = custom.map((tpl) => 
         tpl.id === editingTemplateId 
-          ? { ...tpl, label: templateLabel.trim(), body: templateBody.trim() }
+          ? { ...tpl, label: templateLabel.trim(), body: templateBody.trim(), category: templateCategory, channel: templateChannel, updatedAt: new Date().toISOString() }
           : tpl
       );
       saveCollection(dbKey, updated);
-      notify.success('Template updated successfully');
+      notify.success(t('messaging.saveTemplate'));
     } else {
       const newTpl: MessageTemplate = {
         id: `custom_${Date.now()}`,
         label: templateLabel.trim(),
         body: templateBody.trim(),
+        category: templateCategory,
+        channel: templateChannel,
+        updatedAt: new Date().toISOString(),
       };
       saveCollection(dbKey, [...custom, newTpl]);
-      notify.success('Custom message template saved successfully');
+      notify.success(t('messaging.saveTemplate'));
     }
 
     setEditingTemplateId(null);
     setTemplateLabel('');
     setTemplateBody('');
+    setTemplateCategory('general');
+    setTemplateChannel('all');
   };
 
   const handleEditTemplateClick = (tpl: MessageTemplate): void => {
     setEditingTemplateId(tpl.id);
     setTemplateLabel(tpl.label);
     setTemplateBody(tpl.body);
+    setTemplateCategory(tpl.category || 'general');
+    setTemplateChannel(tpl.channel || 'all');
+  };
+
+  const handleDuplicateTemplate = (tpl: MessageTemplate): void => {
+    if (!user) return;
+    const dbKey = `messages_templates_u:${user.id}`;
+    const custom = getCollection<MessageTemplate>(dbKey) || [];
+    const newTpl: MessageTemplate = {
+      id: `custom_${Date.now()}`,
+      label: `${tpl.label} (Copy)`,
+      body: tpl.body,
+      category: tpl.category || 'general',
+      channel: tpl.channel || 'all',
+      updatedAt: new Date().toISOString(),
+    };
+    saveCollection(dbKey, [...custom, newTpl]);
+    notify.success(t('messaging.duplicateSuccess'));
   };
 
   const handleCancelTemplateEdit = (): void => {
     setEditingTemplateId(null);
     setTemplateLabel('');
     setTemplateBody('');
+    setTemplateCategory('general');
+    setTemplateChannel('all');
   };
 
   const insertVariableTag = (tag: string): void => {
     setTemplateBody((prev) => (prev ? `${prev} ${tag}` : tag));
   };
-
 
   // Handle template deletion confirm action
   const confirmDeleteTemplate = (): void => {
@@ -154,7 +194,7 @@ export default function MessagingPage(): React.JSX.Element {
     const updated = custom.filter((tpl) => tpl.id !== deleteTemplateId);
     saveCollection(dbKey, updated);
     setDeleteTemplateId(null);
-    notify.success('Template deleted successfully');
+    notify.success(t('common.delete'));
   };
 
   // Load sent messages history from DB
@@ -170,18 +210,27 @@ export default function MessagingPage(): React.JSX.Element {
     if (!user) return;
     saveCollection(`messages_u:${user.id}`, []);
     setConfirmClearLogsOpen(false);
-    notify.success('Message logs cleared successfully');
+    notify.success(t('messaging.clearLogs'));
   };
 
-  // Filter contacts to find eligible recipients (those with phone numbers or email address and matching filters)
+  // Filter contacts to find eligible recipients
   const filteredContacts = useMemo(() => {
     return allContacts.filter((c) => {
       const nameMatch = getDisplayName(c).toLowerCase().includes(searchContact.toLowerCase());
       const hasContactInfo = Boolean(getPrimaryPhone(c)) || Boolean(getPrimaryEmail(c));
       const genderMatch = genderFilter === 'all' || (c.gender || 'unspecified').toLowerCase() === genderFilter;
-      return nameMatch && hasContactInfo && genderMatch;
+      
+      const cObj = c as Record<string, unknown>;
+      const cCategory = String(cObj.category || cObj.role || '').toLowerCase();
+      let roleMatch = true;
+      if (roleFilter === 'students') roleMatch = cCategory.includes('student');
+      else if (roleFilter === 'teachers') roleMatch = cCategory.includes('teacher');
+      else if (roleFilter === 'staff') roleMatch = cCategory.includes('staff');
+      else if (roleFilter === 'contacts') roleMatch = !cCategory.includes('student') && !cCategory.includes('teacher');
+
+      return nameMatch && hasContactInfo && genderMatch && roleMatch;
     });
-  }, [allContacts, searchContact, genderFilter]);
+  }, [allContacts, searchContact, genderFilter, roleFilter]);
 
   // Filter message history logs
   const filteredLogs = useMemo(() => {
@@ -217,6 +266,30 @@ export default function MessagingPage(): React.JSX.Element {
     setSelectedRecipients(nextState);
   };
 
+  const handleSelectAllPhone = (): void => {
+    const nextState: Record<string | number, boolean> = {};
+    filteredContacts.forEach((c) => {
+      if (getPrimaryPhone(c)) {
+        nextState[c.id] = true;
+      }
+    });
+    setSelectedRecipients(nextState);
+  };
+
+  const handleSelectAllEmail = (): void => {
+    const nextState: Record<string | number, boolean> = {};
+    filteredContacts.forEach((c) => {
+      if (getPrimaryEmail(c)) {
+        nextState[c.id] = true;
+      }
+    });
+    setSelectedRecipients(nextState);
+  };
+
+  const handleClearSelection = (): void => {
+    setSelectedRecipients({});
+  };
+
   // Map selected IDs back to recipient details
   const currentSelectedList = useMemo(() => {
     return allContacts
@@ -234,7 +307,7 @@ export default function MessagingPage(): React.JSX.Element {
   // Open Composer Dialog
   const triggerCompose = (channel: 'sms' | 'whatsapp' | 'email'): void => {
     if (currentSelectedList.length === 0) {
-      notify.error('Please select at least one recipient first.');
+      notify.error(t('messaging.selectRecipientsDesc'));
       return;
     }
     setComposerTarget({
@@ -313,32 +386,75 @@ export default function MessagingPage(): React.JSX.Element {
                   <p className="text-xs text-muted-foreground">{t('messaging.selectRecipientsDesc')}</p>
                 </div>
 
-                {/* Gender Filter Segmented Controls */}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground flex items-center gap-1"><Filter className="w-3 h-3" /> {t('contacts.reportFields.gender')}:</span>
-                  <div className="flex rounded-lg border border-border bg-muted/40 p-0.5 text-[11px]">
-                    {(['all', 'male', 'female', 'unspecified'] as const).map((gender) => (
-                      <button
-                        key={gender}
-                        onClick={() => setGenderFilter(gender)}
-                        className={`px-2 py-0.5 rounded-md font-bold uppercase transition-all ${
-                          genderFilter === gender 
-                            ? 'bg-background shadow-sm text-foreground' 
-                            : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        {gender}
-                      </button>
-                    ))}
+                <div className="flex items-center gap-3 flex-wrap">
+                  {/* Role Filter */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1"><Filter className="w-3 h-3" /> {t('messaging.filterByRole')}:</span>
+                    <div className="flex rounded-lg border border-border bg-muted/40 p-0.5 text-[11px]">
+                      {(['all', 'students', 'teachers', 'staff', 'contacts'] as const).map((role) => (
+                        <button
+                          key={role}
+                          onClick={() => setRoleFilter(role)}
+                          className={`px-2 py-0.5 rounded-md font-bold uppercase transition-all ${
+                            roleFilter === role 
+                              ? 'bg-background shadow-sm text-foreground' 
+                              : 'text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          {t(`messaging.role.${role}` as const)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Gender Filter Segmented Controls */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground">{t('contacts.reportFields.gender')}:</span>
+                    <div className="flex rounded-lg border border-border bg-muted/40 p-0.5 text-[11px]">
+                      {(['all', 'male', 'female', 'unspecified'] as const).map((gender) => (
+                        <button
+                          key={gender}
+                          onClick={() => setGenderFilter(gender)}
+                          className={`px-2 py-0.5 rounded-md font-bold uppercase transition-all ${
+                            genderFilter === gender 
+                              ? 'bg-background shadow-sm text-foreground' 
+                              : 'text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          {gender}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <SearchBar
-                placeholder={t('messaging.search.placeholder')}
-                value={searchContact}
-                onChange={setSearchContact}
-              />
+              <div className="flex items-center gap-2 flex-wrap justify-between">
+                <SearchBar
+                  placeholder={t('messaging.search.placeholder')}
+                  value={searchContact}
+                  onChange={setSearchContact}
+                  className="flex-grow max-w-sm"
+                />
+
+                {/* Quick Selection Actions */}
+                <div className="flex items-center gap-1.5 text-xs">
+                  <Button variant="outline" size="sm" onClick={handleSelectAllPhone} className="h-8 text-[11px] font-semibold">
+                    <CheckSquare className="w-3.5 h-3.5 mr-1 text-info" />
+                    {t('messaging.selectAllValidPhone')}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleSelectAllEmail} className="h-8 text-[11px] font-semibold">
+                    <CheckSquare className="w-3.5 h-3.5 mr-1 text-warning" />
+                    {t('messaging.selectAllValidEmail')}
+                  </Button>
+                  {currentSelectedList.length > 0 && (
+                    <Button variant="ghost" size="sm" onClick={handleClearSelection} className="h-8 text-[11px] text-destructive">
+                      <XSquare className="w-3.5 h-3.5 mr-1" />
+                      {t('messaging.clearSelection')}
+                    </Button>
+                  )}
+                </div>
+              </div>
 
               <div className="border border-border/60 rounded-lg overflow-hidden max-h-[380px] overflow-y-auto">
                 <table className="w-full text-xs text-left">
@@ -354,12 +470,12 @@ export default function MessagingPage(): React.JSX.Element {
                       <th className="px-4 py-2">{t('messaging.recipient')}</th>
                       <th className="px-4 py-2">{t('contacts.form.primaryPhone')}</th>
                       <th className="px-4 py-2">{t('contacts.form.primaryEmail')}</th>
-
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
                     {filteredContacts.map((c) => {
                       const phone = getPrimaryPhone(c);
+                      const email = getPrimaryEmail(c);
                       return (
                         <tr key={c.id} className="hover:bg-muted/10">
                           <td className="px-4 py-2">
@@ -370,8 +486,24 @@ export default function MessagingPage(): React.JSX.Element {
                             />
                           </td>
                           <td className="px-4 py-2 font-medium text-foreground">{getDisplayName(c)}</td>
-                          <td className="px-4 py-2 font-mono text-muted-foreground">{phone || '-'}</td>
-                          <td className="px-4 py-2 text-muted-foreground">{getPrimaryEmail(c) || '-'}</td>
+                          <td className="px-4 py-2 font-mono">
+                            {phone ? (
+                              <span className="text-muted-foreground">{phone}</span>
+                            ) : (
+                              <span className="text-[10px] text-amber-600 bg-amber-500/10 px-1.5 py-0.5 rounded font-mono">
+                                {t('messaging.missingPhone')}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2">
+                            {email ? (
+                              <span className="text-muted-foreground">{email}</span>
+                            ) : (
+                              <span className="text-[10px] text-amber-600 bg-amber-500/10 px-1.5 py-0.5 rounded font-mono">
+                                {t('messaging.missingEmail')}
+                              </span>
+                            )}
+                          </td>
                         </tr>
                       );
                     })}
@@ -401,7 +533,7 @@ export default function MessagingPage(): React.JSX.Element {
                     <span className="font-bold text-foreground">{currentSelectedList.length}</span>
                   </div>
                   {currentSelectedList.length > 0 && (
-                    <div className="max-h-24 overflow-y-auto border border-border/30 rounded p-1.5 bg-background space-y-1">
+                    <div className="max-h-36 overflow-y-auto border border-border/30 rounded p-1.5 bg-background space-y-1">
                       {currentSelectedList.map((rec) => (
                         <div key={rec.id} className="flex justify-between text-[10px] text-muted-foreground">
                           <span className="truncate max-w-[120px]">{rec.name}</span>
@@ -646,30 +778,65 @@ export default function MessagingPage(): React.JSX.Element {
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className={FORM_LABEL} htmlFor="tplCategory">{t('messaging.category')}</label>
+                    <FormSelect
+                      id="tplCategory"
+                      value={templateCategory}
+                      onChange={(v) => setTemplateCategory(v as MessageCategory)}
+                      options={[
+                        { value: 'general', label: t('messaging.category.general') },
+                        { value: 'academic', label: t('messaging.category.academic') },
+                        { value: 'financial', label: t('messaging.category.financial') },
+                        { value: 'attendance', label: t('messaging.category.attendance') },
+                        { value: 'emergency', label: t('messaging.category.emergency') },
+                      ]}
+                    />
+                  </div>
+                  <div>
+                    <label className={FORM_LABEL} htmlFor="tplChannel">{t('messaging.targetChannel')}</label>
+                    <FormSelect
+                      id="tplChannel"
+                      value={templateChannel}
+                      onChange={(v) => setTemplateChannel(v as 'all' | 'sms' | 'whatsapp' | 'email')}
+                      options={[
+                        { value: 'all', label: t('messaging.channel.all') },
+                        { value: 'whatsapp', label: 'WhatsApp' },
+                        { value: 'sms', label: 'SMS' },
+                        { value: 'email', label: 'Email' },
+                      ]}
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <div className="flex justify-between items-center mb-1">
                     <label className={FORM_LABEL} htmlFor="tplBody">{t('messaging.messageBody')}</label>
-                    <div className="flex items-center gap-1">
-                      {['{name}', '{first_name}', '{phone}', '{email}', '{date}'].map((token) => (
-                        <button
-                          key={token}
-                          type="button"
-                          onClick={() => insertVariableTag(token)}
-                          className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted hover:bg-primary/10 hover:text-primary border border-border/40 transition-colors"
-                        >
-                          {token}
-                        </button>
-                      ))}
-                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1 mb-2">
+                    {['{name}', '{first_name}', '{phone}', '{email}', '{date}', '{due_date}', '{amount}', '{madrasa_name}'].map((token) => (
+                      <button
+                        key={token}
+                        type="button"
+                        onClick={() => insertVariableTag(token)}
+                        className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted hover:bg-primary/10 hover:text-primary border border-border/40 transition-colors"
+                      >
+                        {token}
+                      </button>
+                    ))}
                   </div>
                   <Textarea
                     id="tplBody"
                     value={templateBody}
                     onChange={(e) => setTemplateBody(e.target.value)}
-                    placeholder="Hello {name}, we missed you today..."
+                    placeholder="Hello {name|Valued Parent}, we missed you today..."
                     rows={4}
                     required
                   />
+                  <p className="text-[10px] text-muted-foreground/80 mt-1 italic">
+                    💡 {t('messaging.fallbackHint')}
+                  </p>
                 </div>
 
                 <Button type="submit" className="w-full font-bold">
@@ -688,12 +855,28 @@ export default function MessagingPage(): React.JSX.Element {
                   </h4>
                   <p className="text-xs text-muted-foreground">{t('messaging.configuredPresetsDesc')}</p>
                 </div>
-                <SearchBar
-                  placeholder={t('messaging.search.placeholder')}
-                  value={searchTemplate}
-                  onChange={setSearchTemplate}
-                  className="max-w-xs"
-                />
+
+                <div className="flex items-center gap-2">
+                  <FormSelect
+                    id="filterCategory"
+                    value={templateCategoryFilter}
+                    onChange={setTemplateCategoryFilter}
+                    options={[
+                      { value: 'all', label: t('messaging.category.all') },
+                      { value: 'general', label: t('messaging.category.general') },
+                      { value: 'academic', label: t('messaging.category.academic') },
+                      { value: 'financial', label: t('messaging.category.financial') },
+                      { value: 'attendance', label: t('messaging.category.attendance') },
+                      { value: 'emergency', label: t('messaging.category.emergency') },
+                    ]}
+                  />
+                  <SearchBar
+                    placeholder={t('messaging.search.placeholder')}
+                    value={searchTemplate}
+                    onChange={setSearchTemplate}
+                    className="max-w-xs"
+                  />
+                </div>
               </div>
 
               <div className="overflow-x-auto border border-border/50 rounded-lg">
@@ -701,50 +884,74 @@ export default function MessagingPage(): React.JSX.Element {
                   <thead className="bg-muted/40 text-muted-foreground uppercase tracking-wider font-semibold">
                     <tr className="border-b border-border/60">
                       <th className="px-4 py-2.5">{t('messaging.templateLabel')}</th>
+                      <th className="px-4 py-2.5">{t('messaging.category')}</th>
                       <th className="px-4 py-2.5">{t('messaging.templateCopy')}</th>
-                      <th className="px-4 py-2.5 w-24 text-center">{t('common.actions')}</th>
+                      <th className="px-4 py-2.5 w-28 text-center">{t('common.actions')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
                     {filteredTemplates.map((tpl) => (
                       <tr key={tpl.id} className="hover:bg-muted/5 transition-colors">
-                        <td className="px-4 py-3 font-semibold text-foreground">{tpl.label}</td>
+                        <td className="px-4 py-3 font-semibold text-foreground">
+                          {tpl.label}
+                          {tpl.channel && tpl.channel !== 'all' && (
+                            <span className="ml-1.5 text-[9px] uppercase font-mono px-1 py-0.2 bg-muted text-muted-foreground rounded">
+                              {tpl.channel}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">
+                            {tpl.category || 'general'}
+                          </span>
+                        </td>
                         <td className="px-4 py-3 text-muted-foreground max-w-sm truncate" title={tpl.body}>
                           {tpl.body}
                         </td>
                         <td className="px-4 py-3 text-center">
-                          {tpl.id.startsWith('custom_') ? (
-                            <div className="flex items-center justify-center gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEditTemplateClick(tpl)}
-                                className="h-7 w-7 text-primary hover:bg-primary/10"
-                                title={t('common.edit')}
-                              >
-                                <Edit3 className="w-3.5 h-3.5" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setDeleteTemplateId(tpl.id)}
-                                className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                                title={t('common.delete')}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <span className="text-[10px] text-muted-foreground/60 italic font-mono uppercase bg-muted/65 px-1.5 py-0.5 rounded border border-border/30">
-                              {t('messaging.tagSystem')}
-                            </span>
-                          )}
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDuplicateTemplate(tpl)}
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
+                              title={t('messaging.duplicateTemplate')}
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </Button>
+                            {tpl.id.startsWith('custom_') ? (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleEditTemplateClick(tpl)}
+                                  className="h-7 w-7 text-primary hover:bg-primary/10"
+                                  title={t('common.edit')}
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setDeleteTemplateId(tpl.id)}
+                                  className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                                  title={t('common.delete')}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              </>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground/60 italic font-mono uppercase bg-muted/65 px-1.5 py-0.5 rounded border border-border/30">
+                                {t('messaging.tagSystem')}
+                              </span>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
                     {filteredTemplates.length === 0 && (
                       <tr>
-                        <td colSpan={3} className="text-center py-6 text-muted-foreground">
+                        <td colSpan={4} className="text-center py-6 text-muted-foreground">
                           {t('messaging.noLogs')}
                         </td>
                       </tr>

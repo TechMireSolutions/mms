@@ -1487,20 +1487,25 @@ export interface PersonalizeRecipient {
   name?: string;
   phone?: string;
   email?: string;
+  dueDate?: string;
+  amount?: string | number;
+  madrasaName?: string;
+  salutation?: string;
+  time?: string;
 }
 
 /**
  * Centralized message personalization logic.
- * Replaces placeholders like {name}, {first_name}, {phone}, {email}, and {date} with recipient details.
+ * Replaces placeholders like {name}, {first_name}, {phone}, {email}, {date}, {due_date}, {amount}, {madrasa_name}, {salutation}, {time} with recipient details.
  * @param body Template body text containing placeholders
- * @param recipient Target recipient object with name, phone, email
- * @param options Optional overrides (e.g., date)
+ * @param recipient Target recipient object with name, phone, email, etc.
+ * @param options Optional overrides (e.g., date, dueDate, amount, madrasaName)
  * @returns Interpolated message text
  */
 export function personalizeMessage(
   body: string,
   recipient: PersonalizeRecipient,
-  options?: { date?: string }
+  options?: { date?: string; dueDate?: string; amount?: string | number; madrasaName?: string }
 ): string {
   if (!body) return "";
   const name = recipient.name || "";
@@ -1508,13 +1513,35 @@ export function personalizeMessage(
   const phone = recipient.phone || "";
   const email = recipient.email || "";
   const dateStr = options?.date || new Date().toISOString().split("T")[0];
+  const dueDateStr = recipient.dueDate || options?.dueDate || "";
+  const amountStr = recipient.amount !== undefined ? String(recipient.amount) : (options?.amount !== undefined ? String(options.amount) : "");
+  const madrasaNameStr = recipient.madrasaName || options?.madrasaName || "Madrasa";
+  const salutationStr = recipient.salutation || "Respected";
+  const timeStr = recipient.time || "";
 
-  return body
-    .replace(/{name}/gi, name)
-    .replace(/{first_name}/gi, firstName)
-    .replace(/{phone}/gi, phone)
-    .replace(/{email}/gi, email)
-    .replace(/{date}/gi, dateStr);
+  const tokenValues: Record<string, string> = {
+    name,
+    first_name: firstName,
+    phone,
+    email,
+    date: dateStr,
+    due_date: dueDateStr,
+    amount: amountStr,
+    madrasa_name: madrasaNameStr,
+    school_name: madrasaNameStr,
+    salutation: salutationStr,
+    time: timeStr,
+  };
+
+  return body.replace(/\{([a-z_]+)(?:\|([^}]+))?\}/gi, (match, key, fallback) => {
+    const lowerKey = String(key).toLowerCase();
+    const val = tokenValues[lowerKey];
+    if (val !== undefined && val !== "") {
+      return val;
+    }
+    return fallback !== undefined ? fallback : "";
+  });
 }
+
 
 

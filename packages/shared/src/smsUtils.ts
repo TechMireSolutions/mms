@@ -1,3 +1,90 @@
+export interface SmsSegmentResult {
+  charCount: number;
+  isUnicode: boolean;
+  segmentLimit: number;
+  totalSegments: number;
+  remainingInSegment: number;
+}
+
+/** GSM 7-bit basic character set regex */
+const GSM_7BIT_BASIC_REGEX = /^[A-Za-z0-9 @£$¥èéùìòÇØøÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ!"#%&'()*+,\-./:;<=>?¡¿\r\n\t]*$/;
+/** GSM 7-bit extended characters: [ ] { } \ ~ ^ | € */
+const GSM_7BIT_EXT_REGEX = /[^{}\[\]~^|€]/g;
+
+/**
+ * Calculates SMS character length, detects Unicode vs GSM 7-bit encoding,
+ * and computes total SMS segments according to international telecommunication standards.
+ */
+export function calculateSmsSegments(text: string): SmsSegmentResult {
+  if (!text) {
+    return {
+      charCount: 0,
+      isUnicode: false,
+      segmentLimit: 160,
+      totalSegments: 1,
+      remainingInSegment: 160,
+    };
+  }
+
+  // Remove GSM extension characters to test if the rest is basic GSM 7-bit
+  const stripped = text.replace(/[^{}\[\]~^|€]/g, '');
+  // A string is GSM 7-bit if all characters without extension chars match the basic set
+  const nonExtText = text.replace(/[{}[\]~^|€]/g, '');
+  const isUnicode = !GSM_7BIT_BASIC_REGEX.test(nonExtText);
+
+  if (isUnicode) {
+    // UTF-16 encoding calculation
+    const charCount = Array.from(text).length; // Handles multi-byte Unicode surrogate pairs / emojis
+    if (charCount <= 70) {
+      return {
+        charCount,
+        isUnicode: true,
+        segmentLimit: 70,
+        totalSegments: 1,
+        remainingInSegment: 70 - charCount,
+      };
+    }
+    const totalSegments = Math.ceil(charCount / 67);
+    const usedInCurrent = charCount % 67 === 0 ? 67 : charCount % 67;
+    return {
+      charCount,
+      isUnicode: true,
+      segmentLimit: 67,
+      totalSegments,
+      remainingInSegment: 67 - usedInCurrent,
+    };
+  } else {
+    // GSM 7-bit encoding calculation (extension characters count as 2)
+    let gsmCharLength = 0;
+    for (const ch of text) {
+      if ('{}[\]~^|€'.includes(ch)) {
+        gsmCharLength += 2;
+      } else {
+        gsmCharLength += 1;
+      }
+    }
+
+    if (gsmCharLength <= 160) {
+      return {
+        charCount: gsmCharLength,
+        isUnicode: false,
+        segmentLimit: 160,
+        totalSegments: 1,
+        remainingInSegment: 160 - gsmCharLength,
+      };
+    }
+    const totalSegments = Math.ceil(gsmCharLength / 153);
+    const usedInCurrent = gsmCharLength % 153 === 0 ? 153 : gsmCharLength % 153;
+    return {
+      charCount: gsmCharLength,
+      isUnicode: false,
+      segmentLimit: 153,
+      totalSegments,
+      remainingInSegment: 153 - usedInCurrent,
+    };
+  }
+}
+
 /**
  * Builds a `sms:` URI that opens the device Messages app with recipient and body pre-filled.
  * The user must tap Send — the app cannot send SMS silently.
@@ -14,3 +101,4 @@ export function buildDeviceSmsUri(phone: string, body = ''): string | null {
 
   return `sms:${address}?body=${encodeURIComponent(body.trim())}`;
 }
+
