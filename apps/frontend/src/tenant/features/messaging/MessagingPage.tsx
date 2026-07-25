@@ -40,11 +40,12 @@ import {
   getMessageCategoryLabelKey,
   toMessagingRecipient,
   appendVariableToken,
+  type StandardMessagingRecipient as MessagingRecipient,
   type Message, 
   type MessageCategory,
   type MessageTemplate
 } from '@mms/shared';
-import MessageComposer, { type MessagingRecipient } from '@/components/ui/MessageComposer';
+import MessageComposer from '@/components/ui/MessageComposer';
 import { MessagingVariableTokensBar } from '@/components/ui/MessagingVariableTokensBar';
 import { SegmentedPillFilter } from '@/components/ui/SegmentedPillFilter';
 import { notify } from '@/lib/notify';

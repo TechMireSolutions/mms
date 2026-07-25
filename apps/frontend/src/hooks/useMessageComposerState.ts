@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import type { MessagingRecipient } from "@/components/ui/MessageComposer";
+import type { StandardMessagingRecipient as MessagingRecipient } from "@mms/shared";
 
 export interface MessagingTarget {
   channel: "sms" | "whatsapp" | "email";

@@ -38,6 +38,7 @@ import {
   todayISO,
   type FieldDefinition,
 } from "@mms/shared";
+import { GrBadge } from "@/tenant/features/students/components/GrBadge";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -340,9 +341,7 @@ export default function StudentForm({
         {linkedContact.name}
       </span>
       <div className="flex items-center gap-1.5">
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px]">
-          GR: {studentDraft.grNumber || "—"}
-        </span>
+        <GrBadge grNumber={studentDraft.grNumber} />
         <StatusBadge status={studentDraft.status || "active"} size="sm" />
       </div>
     </div>

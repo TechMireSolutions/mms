@@ -1187,6 +1187,8 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "students.selectedCount": "{count} محدد",
   "students.gender": "الجنس",
   "students.allGenders": "كل الأجناس",
+  "students.searchPlaceholder": "البحث في دليل الطلاب\u2026",
+  "students.filterByStatus": "تصفية حسب الحالة",
   "students.columns.trigger": "الأعمدة",
   "students.columns.title": "الأعمدة",
   "students.columns.visibleAndOrder": "الظاهرة والترتيب",

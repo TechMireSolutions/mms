@@ -1187,6 +1187,8 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "students.selectedCount": "{count} منتخب",
   "students.gender": "جنس",
   "students.allGenders": "تمام جنسیں",
+  "students.searchPlaceholder": "طلباء کی ڈائریکٹری میں تلاش کریں\u2026",
+  "students.filterByStatus": "حیثیت کے مطابق فلٹر کریں",
   "students.columns.trigger": "کالم",
   "students.columns.title": "کالم",
   "students.columns.visibleAndOrder": "ظاہر اور ترتیب",

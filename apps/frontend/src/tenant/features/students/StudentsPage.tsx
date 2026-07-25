@@ -251,7 +251,7 @@ export default function Students() {
               <SearchBar
                 value={studentSearch}
                 onChange={setStudentSearch}
-                placeholder="Search students directory…"
+                placeholder={t("students.searchPlaceholder")}
                 className="flex-1"
               />
 
@@ -276,7 +276,7 @@ export default function Students() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
-                  <DropdownMenuLabel className="text-xs">Filter by status</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-xs">{t("students.filterByStatus")}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {studentStatusOptions.map((status) => (
                     <DropdownMenuCheckboxItem

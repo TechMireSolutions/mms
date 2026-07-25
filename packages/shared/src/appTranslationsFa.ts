@@ -3294,6 +3294,8 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "settings.title": "تنظیمات",
   "settings.unsavedChanges": "تغییرات ذخیره‌نشده",
   "students.allGenders": "همه جنسیت‌ها",
+  "students.searchPlaceholder": "جستجو در فهرست دانش‌آموزان\u2026",
+  "students.filterByStatus": "فیلتر بر اساس وضعیت",
   "students.columns.dob": "سن / تاریخ تولد",
   "students.columns.fixed": "ثابت شده",
   "students.columns.hidden": "پنهان شده",

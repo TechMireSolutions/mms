@@ -23,6 +23,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useTranslation } from "@/hooks/useTranslation";
+import { GrBadge } from "@/tenant/features/students/components/GrBadge";
 
 interface StudentDetailProps {
   student: Student;
@@ -132,16 +133,10 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
           </Button>
         }
         footer={
-          <>
-            <div className="flex items-center gap-2 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-              <Clock className="w-3 h-3" />
-              <span>{t("students.detail.lastActive")} 2026-05-30</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-success" />
-              <span className="text-[9px] font-bold text-success uppercase">{t("students.detail.synced")}</span>
-            </div>
-          </>
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-success" />
+            <span className="text-[9px] font-bold text-success uppercase">{t("students.detail.synced")}</span>
+          </div>
         }
       >
         {/* Hero card */}
@@ -153,11 +148,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
             <h3 className="text-base font-bold text-foreground truncate leading-tight">{student.name}</h3>
             <div className="flex flex-wrap gap-1.5 mt-2 items-center">
               <StatusBadge status={student.status || "active"} />
-              {student.grNumber && (
-                <span className="text-[9px] font-black px-2 py-0.5 rounded-full border border-primary/20 bg-primary/5 text-primary uppercase tracking-wider">
-                  GR: {student.grNumber}
-                </span>
-              )}
+              <GrBadge grNumber={student.grNumber} />
             </div>
           </div>
         </div>
@@ -417,22 +408,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
           )}
         </div>
 
-        {/* Attendance Performance Grid */}
-        <div className="space-y-3">
-          <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">{t("students.detail.engagementAnalytics")}</h4>
-          <div className="grid grid-cols-2 gap-3">
-            <Card accentColor="primary" className="p-3.5 text-center">
-              <span className="block text-[8px] font-black uppercase tracking-wider text-muted-foreground mb-1">{t("students.detail.attendanceRate")}</span>
-              <p className="text-lg font-black text-success">94.8%</p>
-              <span className="text-[9px] text-muted-foreground">{t("students.detail.last30Days")}</span>
-            </Card>
-            <Card accentColor="primary" className="p-3.5 text-center">
-              <span className="block text-[8px] font-black uppercase tracking-wider text-muted-foreground mb-1">{t("students.detail.conductRating")}</span>
-              <p className="text-lg font-black text-primary">Excellent</p>
-              <span className="text-[9px] text-muted-foreground">{t("students.detail.termReview")}</span>
-            </Card>
-          </div>
-        </div>
+
       </DetailDrawerShell>
 
       {messagingTarget && (

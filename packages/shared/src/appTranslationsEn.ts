@@ -1184,6 +1184,8 @@ export const APP_TRANSLATIONS_EN = {
   "students.selectedCount": "{count} selected",
   "students.gender": "Gender",
   "students.allGenders": "All genders",
+  "students.searchPlaceholder": "Search students directory\u2026",
+  "students.filterByStatus": "Filter by status",
   "students.columns.trigger": "Columns",
   "students.columns.title": "Columns",
   "students.columns.visibleAndOrder": "Visible & order",

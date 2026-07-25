@@ -21,8 +21,14 @@ import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { ListPagination } from "@/components/ui/ListPagination";
+import { GrBadge } from "@/tenant/features/students/components/GrBadge";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
+
+/** Maps a Student to the MessageComposer recipient shape. */
+function toStudentRecipient(s: Student) {
+  return { id: String(s.id), name: s.name || "", phone: s.phone || "", email: s.email || "" };
+}
 
 
 export interface StudentListServerPagination {
@@ -211,6 +217,7 @@ export default function StudentList({
 
   const allSelected = paginatedStudents.length > 0 && selectedIds.length === paginatedStudents.length;
   const someSelected = selectedIds.length > 0 && selectedIds.length < paginatedStudents.length;
+  const selectedStudents = students.filter((s) => selectedIds.includes(String(s.id)));
 
   if (layout === "cards") {
     return (
@@ -271,11 +278,7 @@ export default function StudentList({
                     <h4 className="text-sm font-bold text-foreground mt-2 group-hover:text-primary transition-colors truncate w-full max-w-[150px]">
                       {studentCard.name}
                     </h4>
-                    {studentCard.grNumber && (
-                      <span className="bg-primary/5 text-primary text-[9px] px-1.5 py-0.5 rounded border border-primary/10 font-bold uppercase tracking-wider mt-1">
-                        GR: {studentCard.grNumber}
-                      </span>
-                    )}
+                    <GrBadge grNumber={studentCard.grNumber} className="mt-1" />
                   </div>
 
                   <div className="space-y-2 border-t border-border/40 pt-3 text-[11px]">
@@ -452,11 +455,7 @@ export default function StudentList({
                                 <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors">
                                   {studentRow.name}
                                 </p>
-                                {studentRow.grNumber && (
-                                  <span className="bg-primary/5 text-primary text-[9px] px-1.5 py-0.5 rounded border border-primary/10 font-bold uppercase tracking-wider">
-                                    GR: {studentRow.grNumber}
-                                  </span>
-                                )}
+                                <GrBadge grNumber={studentRow.grNumber} />
                               </div>
                               <p className="text-[11px] text-muted-foreground">
                                 {isFieldEnabled("gender") && studentRow.gender ? `${studentRow.gender} · ` : ""}{studentRow.phone || t("students.list.noPhone")}
@@ -549,14 +548,14 @@ export default function StudentList({
                                 <Edit2 className="w-3.5 h-3.5 me-2" /> {t("students.list.editStudent")}
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => openComposer("whatsapp", [{ id: studentIdStr, name: studentRow.name || "", phone: studentRow.phone || "", email: studentRow.email || "" }])}>
+                              <DropdownMenuItem onClick={() => openComposer("whatsapp", [toStudentRecipient(studentRow)])}>
                                 <MessageCircle className="w-3.5 h-3.5 me-2 text-success" /> WhatsApp
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => openComposer("sms", [{ id: studentIdStr, name: studentRow.name || "", phone: studentRow.phone || "", email: studentRow.email || "" }])}>
+                              <DropdownMenuItem onClick={() => openComposer("sms", [toStudentRecipient(studentRow)])}>
                                 <MessageSquare className="w-3.5 h-3.5 me-2 text-info" /> Send SMS
                               </DropdownMenuItem>
                               {studentRow.email && (
-                                <DropdownMenuItem onClick={() => openComposer("email", [{ id: studentIdStr, name: studentRow.name || "", phone: studentRow.phone || "", email: studentRow.email }])}>
+                                <DropdownMenuItem onClick={() => openComposer("email", [toStudentRecipient(studentRow)])}>
                                   <Mail className="w-3.5 h-3.5 me-2 text-primary" /> Send Email
                                 </DropdownMenuItem>
                               )}
@@ -610,12 +609,7 @@ export default function StudentList({
             <Button
               type="button"
               variant="outline"
-              onClick={() => {
-                const selectedRecipients = students
-                  .filter((s) => selectedIds.includes(String(s.id)))
-                  .map((s) => ({ id: String(s.id), name: s.name || "", phone: s.phone || "", email: s.email || "" }));
-                openComposer("whatsapp", selectedRecipients);
-              }}
+              onClick={() => openComposer("whatsapp", selectedStudents.map(toStudentRecipient))}
               className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
             >
               <MessageCircle className="w-3.5 h-3.5 text-success" /> WhatsApp
@@ -624,12 +618,7 @@ export default function StudentList({
             <Button
               type="button"
               variant="outline"
-              onClick={() => {
-                const selectedRecipients = students
-                  .filter((s) => selectedIds.includes(String(s.id)))
-                  .map((s) => ({ id: String(s.id), name: s.name || "", phone: s.phone || "", email: s.email || "" }));
-                openComposer("sms", selectedRecipients);
-              }}
+              onClick={() => openComposer("sms", selectedStudents.map(toStudentRecipient))}
               className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
             >
               <MessageSquare className="w-3.5 h-3.5 text-info" /> SMS
@@ -638,13 +627,7 @@ export default function StudentList({
             <Button
               type="button"
               variant="outline"
-              onClick={() => {
-                const selectedRecipients = students
-                  .filter((s) => selectedIds.includes(String(s.id)))
-                  .filter((s) => s.email)
-                  .map((s) => ({ id: String(s.id), name: s.name || "", phone: s.phone || "", email: s.email! }));
-                openComposer("email", selectedRecipients);
-              }}
+              onClick={() => openComposer("email", selectedStudents.filter((s) => s.email).map(toStudentRecipient))}
               className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
             >
               <Mail className="w-3.5 h-3.5 text-primary" /> Email

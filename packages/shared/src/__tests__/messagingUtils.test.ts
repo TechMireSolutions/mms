@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { personalizeMessage, validateRecipientAddress, MESSAGING_VARIABLE_TOKENS, appendVariableToken } from '../utils.js';
 import { calculateSmsSegments } from '../smsUtils.js';
-import { mergeMessageTemplates, DEFAULT_MESSAGE_TEMPLATES } from '../contactTypes.js';
+import { mergeMessageTemplates, DEFAULT_MESSAGE_TEMPLATES, type MessageTemplate } from '../contactTypes.js';
 import { getMessagesDbKey, getMessageTemplatesDbKey } from '../messagingSchemas.js';
 
 describe('messagingUtils', () => {
@@ -105,9 +105,9 @@ describe('messagingUtils', () => {
 
       const merged = mergeMessageTemplates(customTemplates, contextTemplates);
       expect(merged).toHaveLength(DEFAULT_MESSAGE_TEMPLATES.length + 2);
-      expect(merged.find((t: any) => t.id === 't1')?.label).toBe('General Announcement'); // Preserves base t1
-      expect(merged.find((t: any) => t.id === 'custom_100')?.label).toBe('Custom Notice');
-      expect(merged.find((t: any) => t.id === 'ctx_1')?.label).toBe('Context Template');
+      expect(merged.find((t: MessageTemplate) => t.id === 't1')?.label).toBe('General Announcement'); // Preserves base t1
+      expect(merged.find((t: MessageTemplate) => t.id === 'custom_100')?.label).toBe('Custom Notice');
+      expect(merged.find((t: MessageTemplate) => t.id === 'ctx_1')?.label).toBe('Context Template');
     });
   });
 

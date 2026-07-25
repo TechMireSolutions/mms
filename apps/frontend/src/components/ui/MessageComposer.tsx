@@ -32,7 +32,8 @@ import { SegmentedPillFilter } from '@/components/ui/SegmentedPillFilter';
 import { ChannelBadge } from '@/components/ui/ChannelBadge';
 import { useMessageTemplates, useMessagingMutations } from '@/tenant/features/messaging/hooks/useMessaging';
 
-export type { MessagingRecipient, MessageTemplate };
+
+
 
 export interface MessageComposerProps {
   channel: 'sms' | 'whatsapp' | 'email';
@@ -43,8 +44,6 @@ export interface MessageComposerProps {
   initialSubject?: string;
   onSent?: (sent: { recipientId: string | number; body: string }[]) => void;
 }
-
-export { personalizeMessage, toMessagingRecipient };
 
 export type DispatchSpeed = 'safe' | 'normal' | 'express';
 
