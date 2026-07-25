@@ -34,21 +34,24 @@ export function useModuleConfig<T extends ModuleSettingsShape>({
   defaultFieldDefs,
   normalizeFn,
 }: UseModuleConfigOptions<T>) {
-  const mergeSettings = useCallback((settingsDraft: Partial<T> | null | undefined): T => {
-    return {
-      ...defaultSettings,
-      ...(settingsDraft ?? {}),
-      formTabs: settingsDraft?.formTabs ?? defaultSettings.formTabs ?? [],
-      enabledTabs: settingsDraft?.enabledTabs ?? defaultSettings.enabledTabs ?? [],
-      requiredTabs: settingsDraft?.requiredTabs ?? defaultSettings.requiredTabs ?? [],
-      fields: mergeTabbedFields(
-        defaultSettings.fields || {},
-        settingsDraft?.fields
-      ),
-      customFields: settingsDraft?.customFields ?? defaultSettings.customFields ?? [],
-      fieldOrder: settingsDraft?.fieldOrder ?? defaultSettings.fieldOrder ?? [],
-    } as T;
-  }, [defaultSettings]);
+  const mergeSettings = useCallback(
+    (settingsDraft: Partial<T> | null | undefined): T => {
+      return {
+        ...defaultSettings,
+        ...(settingsDraft ?? {}),
+        formTabs: settingsDraft?.formTabs ?? defaultSettings.formTabs ?? [],
+        enabledTabs: settingsDraft?.enabledTabs ?? defaultSettings.enabledTabs ?? [],
+        requiredTabs: settingsDraft?.requiredTabs ?? defaultSettings.requiredTabs ?? [],
+        fields: mergeTabbedFields(
+          defaultSettings.fields || {},
+          settingsDraft?.fields
+        ),
+        customFields: settingsDraft?.customFields ?? defaultSettings.customFields ?? [],
+        fieldOrder: settingsDraft?.fieldOrder ?? defaultSettings.fieldOrder ?? [],
+      } as T;
+    },
+    [defaultSettings]
+  );
 
   const resolveSettings = useCallback(
     (raw: Partial<T> | null | undefined): T => {
@@ -72,14 +75,20 @@ export function useModuleConfig<T extends ModuleSettingsShape>({
     loadSettings();
   }, [loadSettings]);
 
-  const updateSettings = useCallback((settingsDraft: T) => {
-    const merged = resolveSettings(settingsDraft);
-    saveObject(settingsObjectKey, merged);
-  }, [settingsObjectKey, resolveSettings]);
+  const updateSettings = useCallback(
+    (settingsDraft: T) => {
+      const merged = resolveSettings(settingsDraft);
+      saveObject(settingsObjectKey, merged);
+    },
+    [settingsObjectKey, resolveSettings]
+  );
 
   const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
   const customFields = useMemo(() => (settings.customFields || []) as ModuleCustomField[], [settings.customFields]);
-  const fieldOrder = useMemo(() => settings.fieldOrder ?? defaultSettings.fieldOrder ?? [], [settings.fieldOrder, defaultSettings.fieldOrder]);
+  const fieldOrder = useMemo(
+    () => settings.fieldOrder ?? defaultSettings.fieldOrder ?? [],
+    [settings.fieldOrder, defaultSettings.fieldOrder]
+  );
 
   const orderedFields = useMemo(
     () => getSortedFields(defaultFieldDefs, fieldOrder, fields, customFields),
@@ -109,3 +118,5 @@ export function useModuleConfig<T extends ModuleSettingsShape>({
     isFieldRequired,
   };
 }
+
+

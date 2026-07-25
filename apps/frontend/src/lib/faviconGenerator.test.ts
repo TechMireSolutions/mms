@@ -6,12 +6,24 @@ vi.mock('@/lib/imageUpload', () => ({
   uploadCanvasImage: vi.fn().mockResolvedValue('https://mock.localhost/uploads/favicon.png'),
 }));
 
+interface MockCanvas {
+  width: number;
+  height: number;
+  getContext: (contextId: string) => {
+    drawImage: ReturnType<typeof vi.fn>;
+    clearRect: ReturnType<typeof vi.fn>;
+    getImageData: ReturnType<typeof vi.fn>;
+    imageSmoothingEnabled: boolean;
+    imageSmoothingQuality: string;
+  };
+}
+
 describe('generateFaviconFromLogoUrl', () => {
   it('loads image, draws to canvas, and uploads favicon url', async () => {
-    const canvasInstances: any[] = [];
+    const canvasInstances: MockCanvas[] = [];
 
     const originalCreateElement = document.createElement;
-    document.createElement = vi.fn().mockImplementation((tag) => {
+    document.createElement = vi.fn().mockImplementation((tag: string) => {
       if (tag === 'canvas') {
         const mockCtx = {
           drawImage: vi.fn(),
@@ -22,13 +34,13 @@ describe('generateFaviconFromLogoUrl', () => {
           imageSmoothingEnabled: false,
           imageSmoothingQuality: 'low',
         };
-        const mockCanvas = {
+        const mockCanvas: MockCanvas = {
           width: 0,
           height: 0,
           getContext: vi.fn().mockReturnValue(mockCtx),
         };
         canvasInstances.push(mockCanvas);
-        return mockCanvas;
+        return mockCanvas as unknown as HTMLCanvasElement;
       }
       return originalCreateElement.call(document, tag);
     });
@@ -45,11 +57,9 @@ describe('generateFaviconFromLogoUrl', () => {
       },
     };
 
-    const originalImage = window.Image;
-    // @ts-expect-error Mocking Image constructor
-    window.Image = function () {
+    vi.stubGlobal('Image', function () {
       return mockImage;
-    };
+    });
 
     try {
       const url = await generateFaviconFromLogoUrl('https://mock.localhost/logo.png');
@@ -71,10 +81,14 @@ describe('generateFaviconFromLogoUrl', () => {
         48,  // dWidth
         48   // dHeight
       );
-      expect(imageUpload.uploadCanvasImage).toHaveBeenCalledWith(destCanvas, 'favicon');
+      expect(imageUpload.uploadCanvasImage).toHaveBeenCalledWith(
+        destCanvas as unknown as HTMLCanvasElement,
+        'favicon'
+      );
     } finally {
       document.createElement = originalCreateElement;
-      window.Image = originalImage;
+      vi.unstubAllGlobals();
     }
   });
 });
+

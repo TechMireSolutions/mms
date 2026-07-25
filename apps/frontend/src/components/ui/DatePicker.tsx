@@ -1,15 +1,16 @@
 import * as React from "react"
 import { Calendar as CalendarIcon, X } from "lucide-react"
+import type { Matcher } from "react-day-picker"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings"
 import {
-  type GlobalSettings,
   DEFAULT_GLOBAL_SETTINGS,
   formatIsoDateToDisplay,
   normalizeDateFormat,
   parseDisplayDateToIso,
+  formatDateToIso,
   type DateFormatId,
 } from "@mms/shared"
 
@@ -24,6 +25,19 @@ export interface DatePickerProps {
   id?: string
   name?: string
   required?: boolean
+}
+
+function parseIsoDate(isoStr?: string): Date | undefined {
+  if (!isoStr) return undefined
+  const [year, month, day] = isoStr.split("-").map(Number)
+  if (isNaN(year) || isNaN(month) || isNaN(day)) return undefined
+  return new Date(year, month - 1, day)
+}
+
+function parseIsoYear(isoStr?: string): number | undefined {
+  if (!isoStr) return undefined
+  const [year] = isoStr.split("-").map(Number)
+  return isNaN(year) ? undefined : year
 }
 
 export function DatePicker({
@@ -74,44 +88,25 @@ export function DatePicker({
     }
   }, [value, dateFormat, formatValueToDisplay])
 
-  const dateValue = React.useMemo(() => {
-    if (!value) return undefined
-    const [year, month, day] = value.split("-").map(Number)
-    if (isNaN(year) || isNaN(month) || isNaN(day)) return undefined
-    return new Date(year, month - 1, day)
-  }, [value])
+  const dateValue = React.useMemo(() => parseIsoDate(value), [value])
 
   const disabledDays = React.useMemo(() => {
-    const rules: any[] = []
-    if (min) {
-      const [y, m, d] = min.split("-").map(Number)
-      if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
-        rules.push({ before: new Date(y, m - 1, d) })
-      }
-    }
-    if (max) {
-      const [y, m, d] = max.split("-").map(Number)
-      if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
-        rules.push({ after: new Date(y, m - 1, d) })
-      }
-    }
+    const rules: Matcher[] = []
+    const minDate = parseIsoDate(min)
+    if (minDate) rules.push({ before: minDate })
+    const maxDate = parseIsoDate(max)
+    if (maxDate) rules.push({ after: maxDate })
     return rules.length > 0 ? rules : undefined
   }, [min, max])
 
   const startMonth = React.useMemo(() => {
-    if (min) {
-      const [y] = min.split("-").map(Number)
-      if (!isNaN(y)) return new Date(y, 0)
-    }
-    return new Date(new Date().getFullYear() - 100, 0)
+    const year = parseIsoYear(min)
+    return year !== undefined ? new Date(year, 0) : new Date(new Date().getFullYear() - 100, 0)
   }, [min])
 
   const endMonth = React.useMemo(() => {
-    if (max) {
-      const [y] = max.split("-").map(Number)
-      if (!isNaN(y)) return new Date(y, 11)
-    }
-    return new Date(new Date().getFullYear() + 10, 11)
+    const year = parseIsoYear(max)
+    return year !== undefined ? new Date(year, 11) : new Date(new Date().getFullYear() + 10, 11)
   }, [max])
 
   const handleSelect = (date: Date | undefined) => {
@@ -122,10 +117,7 @@ export function DatePicker({
       setOpen(false)
       return
     }
-    const y = date.getFullYear()
-    const m = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    const formatted = `${y}-${m}-${day}`
+    const formatted = formatDateToIso(date)
     lastParsedRef.current = formatted
     onChange?.(formatted)
     setInputValue(formatValueToDisplay(formatted, dateFormat))
@@ -138,10 +130,13 @@ export function DatePicker({
 
     const parsed = parseDisplayToValue(nextInputValue, dateFormat)
     if (parsed) {
-      const [year, month, day] = parsed.split("-").map(Number)
-      const parsedDate = new Date(year, month - 1, day)
-      if (min && parsedDate < new Date(min)) return
-      if (max && parsedDate > new Date(max)) return
+      const parsedDate = parseIsoDate(parsed)
+      if (parsedDate) {
+        const minDate = parseIsoDate(min)
+        if (minDate && parsedDate < minDate) return
+        const maxDate = parseIsoDate(max)
+        if (maxDate && parsedDate > maxDate) return
+      }
       lastParsedRef.current = parsed
       onChange?.(parsed)
     } else if (nextInputValue === "") {
@@ -159,13 +154,18 @@ export function DatePicker({
     
     const parsed = parseDisplayToValue(inputValue, dateFormat)
     if (parsed) {
-      if (min && new Date(parsed) < new Date(min)) {
-        setInputValue(formatValueToDisplay(value || "", dateFormat))
-        return
-      }
-      if (max && new Date(parsed) > new Date(max)) {
-        setInputValue(formatValueToDisplay(value || "", dateFormat))
-        return
+      const parsedDate = parseIsoDate(parsed)
+      if (parsedDate) {
+        const minDate = parseIsoDate(min)
+        if (minDate && parsedDate < minDate) {
+          setInputValue(formatValueToDisplay(value || "", dateFormat))
+          return
+        }
+        const maxDate = parseIsoDate(max)
+        if (maxDate && parsedDate > maxDate) {
+          setInputValue(formatValueToDisplay(value || "", dateFormat))
+          return
+        }
       }
       lastParsedRef.current = parsed
       onChange?.(parsed)
@@ -254,3 +254,4 @@ export function DatePicker({
     </div>
   )
 }
+

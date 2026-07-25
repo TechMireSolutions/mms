@@ -13,13 +13,17 @@ import { useFinanceInvoicesCollection } from '@/tenant/features/finance/hooks/us
 import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from '@/tenant/features/hasanat/hooks/useHasanatApi';
 import { useQuestionBankQuestionsCollection, useQuestionBankTestsCollection, useQuestionBankResultsCollection } from '@/tenant/features/question-bank/hooks/useQuestionBankApi';
 import type { Invoice } from '@/lib/data/financeData';
-import type { Distribution } from '@/lib/data/hasanatData';
-import type { QuestionBankQuestion, QuestionBankTest, QuestionBankResult } from '@mms/shared';
+import type { Distribution, Denomination } from '@/lib/data/hasanatData';
 import type { Student } from '@/lib/data/studentsData';
-import type { Teacher } from '@mms/shared';
 import type { Session } from '@/lib/data/sessionsData';
-import type { Contact } from '@mms/shared';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
+import type {
+  QuestionBankQuestion,
+  QuestionBankTest,
+  QuestionBankResult,
+  Teacher,
+  Contact,
+} from '@mms/shared';
 
 export interface DashboardCollectionData {
   students: Student[];
@@ -30,7 +34,7 @@ export interface DashboardCollectionData {
   invoices: Invoice[];
   attendanceRecords: AttendanceRecord[];
   hasanatDistributions: Distribution[];
-  denoms: any[];
+  denoms: Denomination[];
   contacts: Contact[];
   contactsTotal: number;
   questions: QuestionBankQuestion[];
@@ -43,6 +47,17 @@ export interface DashboardCollectionData {
   contactMetricsNew: number;
 }
 
+function filterDashboardWidgetsByCollection(
+  widgets: CustomWidget[],
+  collection: ReportCollection,
+  dashboardRole: DashboardRole,
+): CustomWidget[] {
+  return widgets.filter(
+    (widget) =>
+      widget.collection === collection &&
+      (widget.isPinnedToDashboard || (widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole))),
+  );
+}
 
 /** Loads only collections referenced by dashboard cards and pinned widgets. */
 export function useDashboardData(
@@ -61,30 +76,15 @@ export function useDashboardData(
   const shouldLoadTeachers = requiresCollection('teachers');
 
   const contactWidgets = useMemo(
-    () =>
-      widgets.filter(
-        (widget) =>
-          widget.collection === 'contacts' &&
-          (widget.isPinnedToDashboard || (widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole))),
-      ),
+    () => filterDashboardWidgetsByCollection(widgets, 'contacts', dashboardRole),
     [widgets, dashboardRole],
   );
   const studentWidgets = useMemo(
-    () =>
-      widgets.filter(
-        (widget) =>
-          widget.collection === 'students' &&
-          (widget.isPinnedToDashboard || (widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole))),
-      ),
+    () => filterDashboardWidgetsByCollection(widgets, 'students', dashboardRole),
     [widgets, dashboardRole],
   );
   const teacherWidgets = useMemo(
-    () =>
-      widgets.filter(
-        (widget) =>
-          widget.collection === 'teachers' &&
-          (widget.isPinnedToDashboard || (widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole))),
-      ),
+    () => filterDashboardWidgetsByCollection(widgets, 'teachers', dashboardRole),
     [widgets, dashboardRole],
   );
 
@@ -157,3 +157,4 @@ export function useDashboardData(
     contactMetricsNew: contactMetrics?.newThisPeriod ?? 0,
   };
 }
+
