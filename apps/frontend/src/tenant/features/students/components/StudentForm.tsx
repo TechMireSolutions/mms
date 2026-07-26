@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback } from "react";
+import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { Calendar, Clock, FileText, GraduationCap, Hash, User, Users } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
@@ -55,7 +55,7 @@ function getInitialStudentDraft(student?: Partial<Student> | null): Partial<Stud
     guardianName: student?.guardianName ?? "",
     status: student?.status ?? "active",
     grNumber: student?.grNumber ?? "",
-    registeredDate: student?.registeredDate ?? new Date().toISOString(),
+    registeredDate: student?.registeredDate ?? todayISO(),
     discountType: student?.discountType ?? "",
     discountPct: student?.discountPct ?? 0,
     registrationType: student?.registrationType ?? "",
@@ -91,11 +91,16 @@ export default function StudentForm({
 
   const [studentDraft, setStudentDraft] = useState<Partial<Student>>(() => getInitialStudentDraft(student));
 
+  /** Tracks whether the user has manually typed in the GR field — prevents the
+   *  auto-fill effect from overwriting a value the user deliberately cleared. */
+  const grManuallyEdited = useRef(false);
+
   // Re-sync draft when editing another student record
   useEffect(() => {
     setStudentDraft(getInitialStudentDraft(student));
     setValidationErrors([]);
     setManualError("");
+    grManuallyEdited.current = false;
   }, [student]);
 
   const updateDraft = (patch: Partial<Student>) => {
@@ -144,10 +149,15 @@ export default function StudentForm({
 
   useEffect(() => {
     if (student?.id || !nextGrNumber) return;
-    if (!studentDraft.grNumber) {
+    if (!studentDraft.grNumber && !grManuallyEdited.current) {
       updateDraft({ grNumber: nextGrNumber });
     }
   }, [nextGrNumber, student?.id, studentDraft.grNumber]);
+
+  const handleGrNumberChange = (value: string) => {
+    grManuallyEdited.current = true;
+    updateDraft({ grNumber: value });
+  };
 
   const commitSave = async (data: Partial<Student>) => {
     const saved = {
@@ -404,7 +414,7 @@ export default function StudentForm({
                 <Input
                   required
                   value={studentDraft.grNumber || ""}
-                  onChange={(event) => updateDraft({ grNumber: event.target.value })}
+                  onChange={(event) => handleGrNumberChange(event.target.value)}
                   placeholder={t("students.form.grNumberPlaceholder") || "Enter GR Number"}
                   className={`${FORM_INPUT} ps-10`}
                 />
@@ -505,7 +515,7 @@ export default function StudentForm({
       <div className="space-y-6">
         {/* Notes */}
         <SectionCard
-          title={t("teachers.field.notes") || "Notes"}
+          title={t("students.form.notesSection")}
           icon={FileText}
           accentColor="emerald"
         >
@@ -532,7 +542,7 @@ export default function StudentForm({
         icon={GraduationCap}
         lang={language}
         cancelLabel={t("common.cancel") || "Cancel"}
-        saveLabel={saving ? (t("students.form.saving") || "Saving...") : (student ? (t("students.form.saveUpdate") || "Update") : (t("students.form.saveRegister") || "Register"))}
+        saveLabel={saving ? t("students.form.saving") : student ? t("students.form.saveUpdate") : t("students.form.saveRegister")}
         onSave={handleSave}
         saving={saving}
         saveDisabled={!studentDraft.contactId}

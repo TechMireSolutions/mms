@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
-import { type FieldDefinition, type Student, calcAge, formatDate } from "@mms/shared";
+import { type FieldDefinition, type Student, calcAge, formatDate, toMessagingRecipient } from "@mms/shared";
 import { useTranslation } from '@/hooks/useTranslation';
 import StudentDetail from "@/tenant/features/students/components/StudentDetail";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
@@ -22,13 +22,10 @@ import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { GrBadge } from "@/tenant/features/students/components/GrBadge";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
-/** Maps a Student to the MessageComposer recipient shape. */
-function toStudentRecipient(s: Student) {
-  return { id: String(s.id), name: s.name || "", phone: s.phone || "", email: s.email || "" };
-}
 
 
 export interface StudentListServerPagination {
@@ -119,6 +116,7 @@ export default function StudentList({
 
   // Messaging State
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
+  const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
 
   // Reset page and selection on data changes
   useEffect(() => {
@@ -548,15 +546,15 @@ export default function StudentList({
                                 <Edit2 className="w-3.5 h-3.5 me-2" /> {t("students.list.editStudent")}
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => openComposer("whatsapp", [toStudentRecipient(studentRow)])}>
-                                <MessageCircle className="w-3.5 h-3.5 me-2 text-success" /> WhatsApp
+                              <DropdownMenuItem onClick={() => openComposer("whatsapp", [toMessagingRecipient(studentRow)])}>
+                                <MessageCircle className="w-3.5 h-3.5 me-2 text-success" /> {t("students.list.actionWhatsApp")}
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => openComposer("sms", [toStudentRecipient(studentRow)])}>
-                                <MessageSquare className="w-3.5 h-3.5 me-2 text-info" /> Send SMS
+                              <DropdownMenuItem onClick={() => openComposer("sms", [toMessagingRecipient(studentRow)])}>
+                                <MessageSquare className="w-3.5 h-3.5 me-2 text-info" /> {t("students.list.actionSms")}
                               </DropdownMenuItem>
                               {studentRow.email && (
-                                <DropdownMenuItem onClick={() => openComposer("email", [toStudentRecipient(studentRow)])}>
-                                  <Mail className="w-3.5 h-3.5 me-2 text-primary" /> Send Email
+                                <DropdownMenuItem onClick={() => openComposer("email", [toMessagingRecipient(studentRow)])}>
+                                  <Mail className="w-3.5 h-3.5 me-2 text-primary" /> {t("students.list.actionEmail")}
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuSeparator />
@@ -609,28 +607,28 @@ export default function StudentList({
             <Button
               type="button"
               variant="outline"
-              onClick={() => openComposer("whatsapp", selectedStudents.map(toStudentRecipient))}
+              onClick={() => openComposer("whatsapp", selectedStudents.map((s) => toMessagingRecipient(s)))}
               className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
             >
-              <MessageCircle className="w-3.5 h-3.5 text-success" /> WhatsApp
+              <MessageCircle className="w-3.5 h-3.5 text-success" /> {t("students.list.actionWhatsApp")}
             </Button>
 
             <Button
               type="button"
               variant="outline"
-              onClick={() => openComposer("sms", selectedStudents.map(toStudentRecipient))}
+              onClick={() => openComposer("sms", selectedStudents.map((s) => toMessagingRecipient(s)))}
               className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
             >
-              <MessageSquare className="w-3.5 h-3.5 text-info" /> SMS
+              <MessageSquare className="w-3.5 h-3.5 text-info" /> {t("students.list.actionSms")}
             </Button>
 
             <Button
               type="button"
               variant="outline"
-              onClick={() => openComposer("email", selectedStudents.filter((s) => s.email).map(toStudentRecipient))}
+              onClick={() => openComposer("email", selectedStudents.filter((s) => s.email).map((s) => toMessagingRecipient(s)))}
               className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
             >
-              <Mail className="w-3.5 h-3.5 text-primary" /> Email
+              <Mail className="w-3.5 h-3.5 text-primary" /> {t("students.list.actionEmail")}
             </Button>
 
             <div className="h-4 w-px bg-border" />
@@ -638,12 +636,7 @@ export default function StudentList({
             <Button
               type="button"
               variant="destructive"
-              onClick={() => {
-                if (onBulkDelete && window.confirm(t("students.list.confirmRemoveSelected", { count: selectedIds.length }))) {
-                  onBulkDelete(selectedIds);
-                  setSelectedIds([]);
-                }
-              }}
+              onClick={() => { if (onBulkDelete) setConfirmBulkDeleteOpen(true); }}
               className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-[11px] font-semibold hover:bg-destructive/90 transition-colors h-auto"
             >
               {t("students.list.remove")}
@@ -676,7 +669,20 @@ export default function StudentList({
           />
         </React.Suspense>
       )}
+
+      <ConfirmAlertDialog
+        open={confirmBulkDeleteOpen}
+        onOpenChange={setConfirmBulkDeleteOpen}
+        title={t("students.list.remove")}
+        description={t("students.list.confirmRemoveSelected", { count: selectedIds.length })}
+        confirmLabel={t("students.list.remove")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={() => {
+          onBulkDelete?.(selectedIds);
+          setSelectedIds([]);
+          setConfirmBulkDeleteOpen(false);
+        }}
+      />
     </div>
   );
 }
-

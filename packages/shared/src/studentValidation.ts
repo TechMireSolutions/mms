@@ -29,11 +29,11 @@ export function buildDynamicStudentSchema(
     message: translateApp("students.form.contactRequired" as AppTranslationKey, language) || "Contact is required.",
   });
 
-  schemaObject.grNumber = z.string({
-    message: "GR Number is required.",
-  }).min(1, "GR Number is required.");
+  const grRequiredMsg = translateApp("students.form.grNumberRequired" as AppTranslationKey, language) || "GR Number is required.";
+  schemaObject.grNumber = z.string({ message: grRequiredMsg }).min(1, grRequiredMsg);
 
-  schemaObject.status = z.string().min(1, "Status is required.");
+  const statusRequiredMsg = translateApp("students.form.statusRequired" as AppTranslationKey, language) || "Status is required.";
+  schemaObject.status = z.string().min(1, statusRequiredMsg);
 
   // Process dynamic tab fields
   Object.keys(fields).forEach((tabId) => {

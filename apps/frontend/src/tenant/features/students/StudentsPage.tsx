@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
@@ -22,68 +22,20 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import StudentList from "@/tenant/features/students/components/StudentList";
 import StudentForm from "@/tenant/features/students/components/StudentForm";
 import StudentsSettingsPanel from "@/tenant/features/students/components/StudentsSettings";
-import { type Student, type StudentsSettings, STUDENTS_MODULE_CONTRACT, todayISO, toTitleCase } from "@mms/shared";
+import { type Student, type StudentsSettings, STUDENTS_MODULE_CONTRACT, toTitleCase } from "@mms/shared";
 
 
 import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { useStudentCount } from "@/tenant/features/students/hooks/useStudentCount";
-import { useStudentsPaginated, useStudentMutations, fetchAllStudentsForQuery, type StudentRecord } from "@/tenant/features/students/hooks/useStudents";
+import { useStudentsPaginated, useStudentMutations, type StudentRecord } from "@/tenant/features/students/hooks/useStudents";
 import { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { StudentsCommandMetrics } from "@/tenant/features/students/components/StudentsCommandMetrics";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { TableSkeleton } from "@/components/ui/LoadingState";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
-
-const STUDENTS_GR_MIGRATION_KEY = "mms_students_gr_migration_v1";
-
-function grMigrationAlreadyDone(): boolean {
-  try {
-    return localStorage.getItem(STUDENTS_GR_MIGRATION_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function applyGrNumberMigration(
-  rawStudents: StudentRecord[],
-  settings: StudentsSettings,
-): { students: Student[]; didMigrate: boolean } {
-  const template = settings.grNumberTemplate || "{seq}-{year}";
-  const digits = settings.grNumberDigits || 4;
-  const restartAnnually = settings.grNumberRestartAnnually !== false;
-
-  let didMigrate = false;
-  const migratedStudents = rawStudents.map((studentRecord, studentIndex) => {
-    if (!studentRecord.grNumber) {
-      didMigrate = true;
-      const registeredDate = (studentRecord.registeredDate as string | undefined) || todayISO();
-
-      const year = registeredDate ? new Date(registeredDate).getFullYear() : new Date().getFullYear();
-
-      let nextSeq = 1;
-      if (restartAnnually) {
-        const yearlyStudents = rawStudents.slice(0, studentIndex).filter((previousStudent) => {
-          const previousRegisteredDate = (previousStudent.registeredDate as string | undefined) || "";
-          if (previousRegisteredDate.startsWith(String(year))) return true;
-          if (previousStudent.grNumber && String(previousStudent.grNumber).includes(String(year))) return true;
-          return false;
-        });
-        nextSeq = yearlyStudents.length + 1;
-      } else {
-        nextSeq = studentIndex + 1;
-      }
-
-      const seqStr = String(nextSeq).padStart(digits, "0");
-      const autoGr = template.replace("{seq}", seqStr).replace("{year}", String(year));
-      return { ...studentRecord, grNumber: autoGr } as unknown as Student;
-    }
-    return studentRecord as unknown as Student;
-  });
-
-  return { students: migratedStudents, didMigrate };
-}
+import { useGrMigration } from "@/tenant/features/students/hooks/useGrMigration";
 
 /**
  * Students Directory and Records Page.
@@ -105,9 +57,10 @@ export default function Students() {
   const { createStudent, updateStudent, deleteStudent } = useStudentMutations();
   const { settings, statuses: studentStatusOptions, genderFilters } = useStudentConfig();
   const [activeTab, setActiveTab] = usePersistedTabState<string>("students_active_tab", "work");
-  const [needsMigrationScan, setNeedsMigrationScan] = useState(() => !grMigrationAlreadyDone());
   const [showStudentForm, setShowStudentForm] = useState(false);
   const [listPage, setListPage] = useState(1);
+
+  useGrMigration(settings, updateStudent, activeTab);
 
   const {
     columnRegistry,
@@ -115,39 +68,6 @@ export default function Students() {
     updateUserColumnLayout,
     customizerLabels,
   } = useStudentColumnLayout(settings);
-
-  const migrationAppliedRef = useRef(false);
-  useEffect(() => {
-    if (!needsMigrationScan || activeTab !== "work") return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const rawForMigration = await fetchAllStudentsForQuery({});
-        if (cancelled) return;
-        const { students: migratedForGr, didMigrate } = applyGrNumberMigration(rawForMigration, settings);
-        if (didMigrate && !migrationAppliedRef.current) {
-          migrationAppliedRef.current = true;
-          await Promise.all(
-            migratedForGr.map((student) =>
-              updateStudent.mutateAsync({ id: String(student.id), student: student as unknown as StudentRecord }),
-            ),
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          try {
-            localStorage.setItem(STUDENTS_GR_MIGRATION_KEY, "1");
-          } catch {
-            /* ignore */
-          }
-          setNeedsMigrationScan(false);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [needsMigrationScan, activeTab, settings, updateStudent]);
 
   const [studentSearch, setStudentSearch] = useState("");
   const [studentFilterStatus, setStudentFilterStatus] = useState<string[]>([]);

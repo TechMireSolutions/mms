@@ -2,6 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
 import type { Account, JournalEntry, FiscalYear } from '@mms/shared';
 
+/** Returns an ISO date string for N days before today (time-independent). */
+function daysAgo(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
   pingDatabase: vi.fn().mockResolvedValue(true),
@@ -66,7 +73,7 @@ const sampleAccount: Account = {
 
 const sampleEntry: JournalEntry = {
   id: 'je-1',
-  date: '2026-06-26',
+  date: daysAgo(5),
   ref: 'JE-0001',
   description: 'Initial Seed',
   status: 'posted',

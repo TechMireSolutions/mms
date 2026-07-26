@@ -13,6 +13,7 @@ import {
   calcAge,
   formatDate,
   formatDateTime,
+  formatMoney,
   getInitials,
   getPrimaryPhone,
   getAvatarColor,
@@ -116,7 +117,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
       <DetailDrawerShell
         onClose={onClose}
         title={t("students.detail.title")}
-        subtitle={`GR: ${student.grNumber || "N/A"}`}
+        subtitle={t("students.detail.grSubtitle", { gr: student.grNumber || t("common.notSpecified") })}
         icon={GraduationCap}
         ariaLabel="Student Details Drawer"
         headerActions={
@@ -214,7 +215,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                       </div>
                       <div className="flex-1 min-w-0 text-start">
                         <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">{t("students.gender")}</span>
-                        <span className="text-xs font-semibold text-foreground capitalize">{student.gender || "Not specified"}</span>
+                        <span className="text-xs font-semibold text-foreground capitalize">{student.gender || t("common.notSpecified")}</span>
                       </div>
                     </div>
                   );
@@ -230,7 +231,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                       <div className="flex-1 min-w-0 text-start">
                         <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">{t("students.columns.dob")}</span>
                         <span className="text-xs font-semibold text-foreground">
-                          {student.dob ? formatDate(student.dob, true) : "—"} {age ? `(${age} yrs)` : ""}
+                          {student.dob ? formatDate(student.dob, true) : "—"} {age ? t("students.list.ageYears", { age }) : ""}
                         </span>
                       </div>
                     </div>
@@ -385,7 +386,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                       {session.type}
                     </span>
                     <span className="text-[10px] font-bold text-muted-foreground">
-                      Fee: {session.currency} {session.baseFee}
+                      {t("students.detail.sessionFee", { amount: formatMoney(session.baseFee ?? 0, session.currency) })}
                     </span>
                   </div>
                   <h5 className="text-xs font-bold text-foreground ms-1">{session.name}</h5>
@@ -394,8 +395,8 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                       <p className="font-semibold uppercase tracking-wider text-[8px] text-muted-foreground/80">{t("students.detail.classAssignments")}</p>
                       {session.classes.map((sessionClass: { id: string; name?: string; teacherName?: string; room?: string; schedule?: string }) => (
                         <div key={sessionClass.id} className="flex justify-between gap-1.5">
-                          <span className="font-medium text-foreground">{sessionClass.name} (by {sessionClass.teacherName})</span>
-                          <span>Room: {sessionClass.room || "—"}</span>
+                          <span className="font-medium text-foreground">{t("students.detail.classByTeacher", { name: sessionClass.name ?? "", teacher: sessionClass.teacherName ?? "" })}</span>
+                          <span>{t("students.detail.classRoom", { room: sessionClass.room || "—" })}</span>
                         </div>
                       ))}
                     </div>
