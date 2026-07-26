@@ -44,6 +44,7 @@ interface GuardianContactCardProps {
 }
 
 function GuardianContactCard({ label, badgeCode, badgeBg, badgeText, name, phone, onWhatsApp, onSms }: GuardianContactCardProps) {
+  const { t } = useTranslation();
   return (
     <Card accentColor="indigo" className="p-3">
       <div className="flex items-center justify-between">
@@ -66,9 +67,10 @@ function GuardianContactCard({ label, badgeCode, badgeBg, badgeText, name, phone
                 size="icon"
                 onClick={onWhatsApp}
                 className="h-7 w-7 p-1 rounded-lg border border-border hover:bg-success/10 hover:border-success/30 text-success transition-colors"
-                title="WhatsApp"
+                title={t("students.list.actionWhatsApp")}
+                aria-label={t("students.list.actionWhatsApp")}
               >
-                <MessageCircle className="w-3.5 h-3.5" />
+                <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
               </Button>
             )}
             {onSms && (
@@ -78,16 +80,19 @@ function GuardianContactCard({ label, badgeCode, badgeBg, badgeText, name, phone
                 size="icon"
                 onClick={onSms}
                 className="h-7 w-7 p-1 rounded-lg border border-border hover:bg-info/10 hover:border-info/30 text-info transition-colors"
-                title="SMS"
+                title={t("students.list.actionSms")}
+                aria-label={t("students.list.actionSms")}
               >
-                <MessageSquare className="w-3.5 h-3.5" />
+                <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
               </Button>
             )}
             <a
               href={cleanTelUri(phone)}
               className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              aria-label={t("students.detail.callPhone", { phone })}
+              title={t("students.detail.callPhone", { phone })}
             >
-              <Phone className="w-3.5 h-3.5" />
+              <Phone className="w-3.5 h-3.5" aria-hidden="true" />
             </a>
           </div>
         )}
@@ -120,7 +125,7 @@ function StudentDetailAttributeRow({ icon: Icon, label, value }: StudentDetailAt
 interface StudentDetailProps {
   student: Student;
   onClose: () => void;
-  onEdit: (student: Student) => void;
+  onEdit?: (student: Student) => void;
 }
 
 const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
@@ -207,19 +212,21 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
         title={t("students.detail.title")}
         subtitle={t("students.detail.grSubtitle", { gr: student.grNumber || t("common.notSpecified") })}
         icon={GraduationCap}
-        ariaLabel="Student Details Drawer"
+        ariaLabel={t("students.detail.ariaLabel")}
         headerActions={
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => onEdit(student)}
-            className="h-8 w-8 p-1.5 rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-            title={t("students.detail.editTitle")}
-            aria-label={t("students.detail.editTitle")}
-          >
-            <Edit2 className="w-4 h-4" />
-          </Button>
+          onEdit ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => onEdit(student)}
+              className="h-8 w-8 p-1.5 rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              title={t("students.detail.editTitle")}
+              aria-label={t("students.detail.editTitle")}
+            >
+              <Edit2 className="w-4 h-4" />
+            </Button>
+          ) : undefined
         }
         footer={
           <div className="flex items-center gap-1.5">
@@ -270,7 +277,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
               type="button"
               variant="ghost"
               onClick={() => openComposer("sms", [toMessagingRecipient({ ...student, phone: primaryPhone })])}
-              className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-amber-500/10 hover:border-amber-500/30 transition-all text-amber-600 dark:text-amber-500 text-center cursor-pointer shadow-none"
+              className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-warning/10 hover:border-warning/30 transition-all text-warning text-center cursor-pointer shadow-none"
             >
               <MessageSquare className="w-4 h-4 mx-auto" />
               <span className="text-[10px] font-bold">{t("students.list.actionSms")}</span>

@@ -2,11 +2,13 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useConfigSubTabs } from '@/tenant/hooks/useConfigSubTabs';
+import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserCog, Users as UsersIcon, Activity, UserPlus } from 'lucide-react';
 import {
   normalizeWorkspaceUser,
   resolveModuleTierTab,
+  USERS_MODULE_CONTRACT,
   type ActivityLog,
   type SystemUser,
   type UserStatus,
@@ -26,7 +28,6 @@ import ModuleReports from '@/tenant/features/reports/components/ModuleReports';
 import KPISummary from '@/tenant/features/reports/components/KPISummary';
 import { UsersCommandMetrics } from '@/tenant/features/users/components/UsersCommandMetrics';
 import { SubTabBar } from '@/components/ui/SubTabBar';
-import { useIsAdminViewer } from '@/tenant/hooks/useViewerRole';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import {
   useUsersCollection,
@@ -47,6 +48,11 @@ export default function Users(): React.JSX.Element {
   const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
+  const {
+    canWrite,
+    canReports: canViewReports,
+    canViewSetup,
+  } = useModulePermissions(USERS_MODULE_CONTRACT);
   const USERS_CONFIG_TABS = useMemo(
     () => [
       { id: 'permissions' as const, label: t('users.permissions') },
@@ -67,7 +73,6 @@ export default function Users(): React.JSX.Element {
     'users_config_subtab',
     'permissions',
   );
-  const isAdmin = useIsAdminViewer();
   const rawUsers = useUsersCollection();
   const users = useMemo(
     () => rawUsers.map((u) => normalizeWorkspaceUser(u as Partial<SystemUser> & { roles?: string[]; role?: string })),
@@ -94,10 +99,10 @@ export default function Users(): React.JSX.Element {
   );
 
   useEffect(() => {
-    if (!isAdmin && (activeTab === 'setup' || activeTab === 'reports')) {
-      setActiveTab('');
+    if ((!canViewSetup && activeTab === 'setup') || (!canViewReports && activeTab === 'reports')) {
+      setActiveTab('work');
     }
-  }, [isAdmin, activeTab, setActiveTab]);
+  }, [canViewSetup, canViewReports, activeTab, setActiveTab]);
 
   const [viewing, setViewing] = useState<SystemUser | null>(null);
   const [editing, setEditing] = useState<SystemUser | null>(null);
@@ -170,8 +175,8 @@ export default function Users(): React.JSX.Element {
   };
 
   const visibleTopTabs = useFilteredModuleTierTabs({
-    canViewSetup: isAdmin,
-    canViewReports: isAdmin,
+    canViewSetup,
+    canViewReports,
   });
 
   const effectiveTab = resolveModuleTierTab(
@@ -202,7 +207,7 @@ export default function Users(): React.JSX.Element {
       headerTitle={t('page.users.title')}
       headerSubtitle={t('page.users.subtitle')}
       headerActions={
-        isAdmin ? (
+        canWrite ? (
           <div className="flex items-center gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => setShowInvite(true)}>
               <UserPlus className="h-3.5 w-3.5" />
@@ -213,7 +218,7 @@ export default function Users(): React.JSX.Element {
               {t('users.add')}
             </Button>
           </div>
-        ) : null
+        ) : undefined
       }
       metricsStrip={
         <UsersCommandMetrics users={users} shown={users.length} />
@@ -271,6 +276,7 @@ export default function Users(): React.JSX.Element {
                   onResetPassword={handleResetPassword}
                   onAddUser={() => setShowAddUser(true)}
                   onMessage={handleMessageUsers}
+                  canWrite={canWrite}
                 />
               )}
 
@@ -286,17 +292,17 @@ export default function Users(): React.JSX.Element {
         {viewing ? (
           <UserDetailModal user={viewing} onClose={() => setViewing(null)} />
         ) : null}
-        {editing ? (
+        {editing && canWrite ? (
           <EditUserModal user={editing} onClose={() => setEditing(null)} onSave={handleSaveEdit} />
         ) : null}
-        {showAddUser ? (
+        {showAddUser && canWrite ? (
           <AddUserModal
             onClose={() => setShowAddUser(false)}
             onAdd={handleAddUser}
             existingEmails={users.map((u) => u.email.toLowerCase())}
           />
         ) : null}
-        {showInvite ? (
+        {showInvite && canWrite ? (
           <InviteUserModal
             onClose={() => setShowInvite(false)}
             onInvite={handleInvite}

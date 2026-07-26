@@ -11,12 +11,13 @@ Colocate in `apps/frontend/src/hooks/`. Pure logic used in 2+ modules → extrac
 | Hook | Purpose |
 |------|---------|
 | `useWorkspaceRegistry()` | Apex workspace list |
-| `useStudentsPaginated()` / `useStudentMutations()` | Paginated Work directory + CRUD |
+| `useStudentsPaginated()` / `useStudentMutations()` | Paginated Work directory + CRUD + soft-delete restore |
 | `useStudentsByIds()` / `useStudentById()` | Batch/single resolve (§10 cross-module) |
 | `useStudentsMetrics()` / `useStudentsWidgetAggregates()` | Command centre + dashboard aggregates |
 | `useStudentCount()` | `GET /api/students/count` |
-| `useContacts()` / `useContactMutations()` | Contact REST CRUD |
+| `useContacts()` / `useContactMutations()` | Contact REST CRUD + soft-delete/restore |
 | `useContactsPaginated()` / `useContactsByIds()` | Paginated directory + resolve |
+| `useTeachersPaginated()` / `useTeacherMutations()` | Teachers directory + CRUD + soft-delete restore |
 
 Pattern: `enabled: isAuthenticated`, export `QUERY_KEY` constant, use `apiJson` in `queryFn`, `saveCollection` in fetch when hybrid (`mms-data-layer.md`).
 
@@ -79,10 +80,10 @@ Provider at `App.tsx` root only — never nest on child pages.
 | Hook | Purpose |
 |------|---------|
 | `usePermissions()` / `can()` | `@mms/shared` permission matrix — **prefer over `role ===`** |
-| `useViewerRole()` / `useIsAdminViewer()` | Legacy role normalization — migrate when touching module |
+| `useModulePermissions(contract)` | Resolves `canWrite` / `canDelete` / `canExport` / setup/reports from `{Module}ModuleContract.permissions` — **default for module pages** |
+| `useViewerRole()` / `useIsAdminViewer()` | Legacy role normalization — prefer contract/`can()` when touching write surfaces |
 
-Hotspots still on `role ===`: `Dashboard.tsx`, `WelcomeBanner.tsx`, `KPISummary.tsx`, `Attendance.tsx`, `MarkAttendance.tsx` (`mms-auth-security.md`).
-
+Do **not** add new tenant-module write gates via `role ===`. Residual non-gate uses (platform `super_user`, LLM chat `msg.role`, counting admins in metrics, teacher→staff alias in `useViewerRole`) are fine.
 ## UI shell & UX
 
 | Hook | Purpose |

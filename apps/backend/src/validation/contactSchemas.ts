@@ -90,6 +90,7 @@ export const contactsListQuerySchema = baseListQuerySchema.extend({
       return val === 'true' || val === true;
     }, z.boolean())
     .optional(),
+  quickFilter: z.enum(['all', 'whatsapp', 'syed', 'missingInfo']).optional(),
 });
 
 export const contactSetupAuditSchema = z.object({
@@ -106,6 +107,10 @@ export const contactsCsvExportBodySchema = z.object({
   query: contactsListQuerySchema.optional(),
   columns: z.array(exportColumnSchema).max(50).optional(),
   filename: z.string().min(1).max(200).optional(),
+  label: z.string().min(1).max(500).optional(),
+});
+
+export const contactsDuplicateScanBodySchema = z.object({
   label: z.string().min(1).max(500).optional(),
 });
 

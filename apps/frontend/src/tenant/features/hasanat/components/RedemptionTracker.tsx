@@ -125,6 +125,7 @@ export interface RedemptionTrackerProps {
   distributions: Distribution[];
   onUpdateDistributions: (distributions: Distribution[]) => void;
   onFilteredCountChange?: (count: number) => void;
+  canWrite?: boolean;
   isColumnVisible?: (key: string) => boolean;
   columnCustomizer?: ModuleColumnCustomizerProps;
 }
@@ -133,6 +134,7 @@ export function RedemptionTracker({
   distributions,
   onUpdateDistributions,
   onFilteredCountChange,
+  canWrite = true,
   isColumnVisible,
   columnCustomizer,
 }: RedemptionTrackerProps) {
@@ -181,13 +183,15 @@ export function RedemptionTracker({
               labels={columnCustomizer.labels}
             />
           )}
-          <Button
-            type="button"
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("hasanat.recordRedemption")}
-          </Button>
+          {canWrite && (
+            <Button
+              type="button"
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("hasanat.recordRedemption")}
+            </Button>
+          )}
         </div>
       </header>
 
@@ -261,7 +265,9 @@ export function RedemptionTracker({
         </Card>
       )}
 
-      <RedeemModal open={showModal} distributions={distributions} onClose={() => setShowModal(false)} onSave={handleSave} />
+      {canWrite && (
+        <RedeemModal open={showModal} distributions={distributions} onClose={() => setShowModal(false)} onSave={handleSave} />
+      )}
     </section>
   );
 }

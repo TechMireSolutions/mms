@@ -35,26 +35,34 @@ app.ts
 | Side effects (contacts WhatsApp, email) | Dedicated route + service |
 | **New domain module** | REST plugin + Zod + Query on FE |
 
-**Shipped REST pilots:** `students.ts`, `contacts.ts`
+**Shipped REST:** students, contacts, teachers, finance, enrollments, obligations, accounting, hasanat, examinations, question-bank, users, attendance, sessions, messaging (see `routes/tenant/`).
+
+## Soft delete on REST resources
+
+When the entity supports archives (Contacts / Students / Teachers pattern):
+
+- Prefer `registerStandardTenantRoutes` with `deleteFn` + `restoreFn` (`POST :id/restore`)
+- List queries accept `includeDeleted`; default responses exclude soft-deleted rows
+- FE Work trash UI is required for full parity (skill `mms-module-work`) — do not leave restore API orphaned without UI when shipping soft-delete
 
 ## Add a REST resource (preferred for new work)
 
-1. **`validation/{resource}Schemas.ts`** — Zod list + record schemas; export inferred types
-2. **`routes/{resource}.ts`**
+1. **`validation/{resource}Schemas.ts`** — Zod list + record schemas; export inferred types (or shared contract schemas in `@mms/shared`)
+2. **`routes/tenant/{resource}.ts`**
    ```ts
    fastify.addHook('preHandler', authenticateTenant);
-   // GET list, GET /count, GET :id (optional), POST, PUT :id, DELETE :id
+   // Prefer registerStandardTenantRoutes (+ registerBulkPutRoute when needed)
    // canWriteCollection(user, '{resource}') on mutations
-   // fetchCollection / persistCollection from dbSyncService
    ```
-3. Register in `app.ts`: `app.register(xRoutes, { prefix: '/api/{resource}' })`
+3. Register in `routes/index.ts` under `/api/{resource}`
 4. **Tests** — `app.inject()` with `host: 'tenant.localhost'` header
-5. **Frontend** — `useQuery` / `useMutation` + invalidation (`mms-data-layer.md`)
+5. **Frontend** — Query hooks + `useModulePermissions(contract)` (`mms-frontend`, `mms-data-layer.md`)
 
 Reference implementations:
 
-- `apps/backend/src/routes/students.ts` — minimal CRUD
-- `apps/backend/src/routes/contacts.ts` — CRUD + E.164 + WhatsApp side effects
+- `apps/backend/src/routes/tenant/students.ts` — CRUD + soft-delete/restore
+- `apps/backend/src/routes/tenant/contacts.ts` — CRUD + soft-delete + E.164 + WhatsApp side effects
+- `apps/backend/src/routes/tenant/teachers.ts` — CRUD + soft-delete/restore
 
 ## Add a document-store write (legacy path)
 

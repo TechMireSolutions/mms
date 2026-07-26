@@ -4,7 +4,7 @@ import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserPlus, School, Filter, ChevronDown } from 'lucide-react';
+import { UserPlus, School, Filter, ChevronDown, Archive } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -59,9 +59,17 @@ export default function Teachers(): React.JSX.Element {
   });
 
   const { data: serverCount } = useTeacherCount();
-  const { createTeacher, updateTeacher, deleteTeacher } = useTeacherMutations();
+  const {
+    createTeacher,
+    updateTeacher,
+    deleteTeacher,
+    bulkDeleteTeachers,
+    restoreTeacher,
+    bulkRestoreTeachers,
+  } = useTeacherMutations();
   const [listPage, setListPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
 
   const { settings, statuses, specializations } = useTeacherConfig();
 
@@ -126,18 +134,19 @@ export default function Teachers(): React.JSX.Element {
     search,
     status: filterStatus.length > 0 ? filterStatus.join(',') : undefined,
     specialization: filterSpecialization || undefined,
+    includeDeleted: showDeleted,
     enabled: useServerWork,
   });
 
   useEffect(() => {
     setListPage(1);
-  }, [search, filterStatus, filterSpecialization]);
+  }, [search, filterStatus, filterSpecialization, showDeleted]);
 
-  const workTeachers = useMemo(
-    () => (workPageData?.teachers ?? []) as unknown as Teacher[],
-    [workPageData],
-  );
-  const shownCount = workPageData?.total ?? 0;
+  const workTeachers = useMemo(() => {
+    const rows = (workPageData?.teachers ?? []) as unknown as Teacher[];
+    return showDeleted ? rows.filter((row) => Boolean(row.deletedAt)) : rows;
+  }, [workPageData, showDeleted]);
+  const shownCount = showDeleted ? workTeachers.length : (workPageData?.total ?? 0);
 
   const filteredTeachers = workTeachers;
 
@@ -192,6 +201,24 @@ export default function Teachers(): React.JSX.Element {
     });
   };
 
+  const handleRestore = (id: string) => {
+    restoreTeacher.mutate(id, {
+      onSuccess: () => notify.success(t('teachers.restoreSuccess')),
+    });
+  };
+
+  const handleBulkDelete = (ids: string[]) => {
+    bulkDeleteTeachers.mutate(ids, {
+      onSuccess: () => notify.info(t('teachers.toast.deleted')),
+    });
+  };
+
+  const handleBulkRestore = (ids: string[]) => {
+    bulkRestoreTeachers.mutate(ids, {
+      onSuccess: () => notify.success(t('teachers.restoreSuccess')),
+    });
+  };
+
   return (
     <ModulePageShell
       seoTitle={`MMS - ${t('nav.teachers')}`}
@@ -204,7 +231,7 @@ export default function Teachers(): React.JSX.Element {
           : t('page.teachers.subtitle')
       }
       headerActions={
-        canWrite ? (
+        canWrite && !showDeleted ? (
           <ActionButton
             variant="primary"
             icon={UserPlus}
@@ -318,6 +345,23 @@ export default function Teachers(): React.JSX.Element {
                   updateUserColumnLayout={updateUserColumnLayout}
                   labels={customizerLabels}
                 />
+
+                {canWrite && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setShowDeleted((previous) => !previous)}
+                    aria-pressed={showDeleted}
+                    className={`flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
+                      showDeleted
+                        ? 'border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10'
+                        : 'border-border bg-card text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Archive className="w-3.5 h-3.5" />
+                    <span>{showDeleted ? t('teachers.showActive') : t('teachers.showDeleted')}</span>
+                  </Button>
+                )}
               </div>
 
               <FilterChips
@@ -337,13 +381,17 @@ export default function Teachers(): React.JSX.Element {
                       teachers={filteredTeachers}
                       onEdit={(teacher) => { setEditTeacher(teacher); setShowForm(true); }}
                       onDelete={handleDelete}
-                      onWhatsApp={handleWhatsApp}
-                      onSms={handleSms}
-                      onEmail={handleEmail}
+                      onRestore={handleRestore}
+                      onBulkDelete={handleBulkDelete}
+                      onBulkRestore={handleBulkRestore}
+                      onWhatsApp={showDeleted ? undefined : handleWhatsApp}
+                      onSms={showDeleted ? undefined : handleSms}
+                      onEmail={showDeleted ? undefined : handleEmail}
                       canWrite={canWrite}
+                      showDeleted={showDeleted}
                       isColumnVisible={isColumnVisible}
                     />
-                    {useServerWork && workPageData && (
+                    {useServerWork && workPageData && !showDeleted && (
                       <ListPagination
                         page={workPageData.page}
                         total={workPageData.total}

@@ -13,7 +13,6 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
-import { useIsAdminViewer } from '@/tenant/hooks/useViewerRole';
 import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
 import { formatDate } from '@mms/shared';
 import { Button } from '@/components/ui/button';
@@ -41,6 +40,7 @@ export interface UsersListProps {
   onResetPassword: (user: SystemUser) => void;
   onAddUser: () => void;
   onMessage?: (channel: 'sms' | 'whatsapp' | 'email', users: SystemUser[]) => void;
+  canWrite?: boolean;
 }
 
 export function UsersList({
@@ -51,10 +51,10 @@ export function UsersList({
   onResetPassword,
   onAddUser,
   onMessage,
+  canWrite = true,
 }: UsersListProps): React.JSX.Element {
   const { t } = useTranslation();
   const globalSettings = useGlobalSettings();
-  const isAdmin = useIsAdminViewer();
   const workspaceRoles = useWorkspaceRoles();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -166,14 +166,18 @@ export function UsersList({
                   </Button>
                 </>
               )}
-              <Button type="button" size="sm" variant="secondary" onClick={() => bulkAction('activate')}>
-                <CheckCircle2 className="h-3 w-3" />
-                {t('users.bulkActivate')}
-              </Button>
-              <Button type="button" size="sm" variant="outline" onClick={() => bulkAction('deactivate')}>
-                <XCircle className="h-3 w-3" />
-                {t('users.bulkDeactivate')}
-              </Button>
+              {canWrite && (
+                <>
+                  <Button type="button" size="sm" variant="secondary" onClick={() => bulkAction('activate')}>
+                    <CheckCircle2 className="h-3 w-3" />
+                    {t('users.bulkActivate')}
+                  </Button>
+                  <Button type="button" size="sm" variant="outline" onClick={() => bulkAction('deactivate')}>
+                    <XCircle className="h-3 w-3" />
+                    {t('users.bulkDeactivate')}
+                  </Button>
+                </>
+              )}
               <Button type="button" size="sm" variant="ghost" onClick={() => setSelected([])}>
                 {t('users.bulkClear')}
               </Button>
@@ -195,7 +199,7 @@ export function UsersList({
                 : t('users.emptyHint')}
             </p>
           </div>
-          {isAdmin && !search && roleFilter === 'all' && statusFilter === 'all' && (
+          {canWrite && !search && roleFilter === 'all' && statusFilter === 'all' && (
             <Button type="button" onClick={onAddUser}>
               <UserPlus className="h-3.5 w-3.5" />
               {t('users.addFirst')}
@@ -208,7 +212,7 @@ export function UsersList({
             <table className="w-full text-sm">
               <thead className="border-b border-border bg-muted/60">
                 <tr>
-                  {isAdmin && (
+                  {canWrite && (
                     <th className="w-8 px-3 py-2.5">
                       <input
                         type="checkbox"
@@ -245,7 +249,7 @@ export function UsersList({
               <tbody className="divide-y divide-border">
                 {filtered.map((user) => (
                   <motion.tr key={user.id} layout className="transition-colors hover:bg-muted/20">
-                    {isAdmin && (
+                    {canWrite && (
                       <td className="px-3 py-2.5">
                         <input
                           type="checkbox"
@@ -293,7 +297,7 @@ export function UsersList({
                         >
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
-                        {isAdmin && (
+                        {canWrite && (
                           <>
                             <Button
                               type="button"

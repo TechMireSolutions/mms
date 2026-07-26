@@ -12,6 +12,7 @@ interface InvoiceDetailProps {
   invoice: Invoice;
   onClose: () => void;
   onRecord: (invoice: Invoice) => void;
+  canWrite?: boolean;
 }
 
 /**
@@ -23,7 +24,7 @@ interface InvoiceDetailProps {
  * @param {InvoiceDetailProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export function InvoiceDetail({ invoice, onClose, onRecord }: InvoiceDetailProps) {
+export function InvoiceDetail({ invoice, onClose, onRecord, canWrite = true }: InvoiceDetailProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
 
@@ -56,7 +57,7 @@ export function InvoiceDetail({ invoice, onClose, onRecord }: InvoiceDetailProps
       icon={ReceiptText}
       size="sm"
       footer={
-        invoice.status !== "paid" && invoice.status !== "cancelled" ? (
+        canWrite && invoice.status !== "paid" && invoice.status !== "cancelled" ? (
           <Button
             onClick={() => { onRecord(invoice); onClose(); }}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"

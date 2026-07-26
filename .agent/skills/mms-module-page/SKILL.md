@@ -32,11 +32,11 @@ work  |  reports  |  setup
 
 | Module | Architecture alignment | Data layer | Primary hooks |
 |--------|-------------------------|------------|---------------|
-| **Contacts** | **Full globle1 reference** — contract, metrics, dedup, soft delete, field RBAC, cards, drill-down, sync outbox, saved reports | REST + Query + hybrid cache | `useContactsPageState`, `useContacts`, `useContactMutations`, `useContactsSyncOutbox` |
-| Students | REST + three-tier shell | REST + Query | `useStudents`, `useStudentMutations` |
-| Finance | Legacy collection | localStorage | `useLiveCollection` |
+| **Contacts** | **Full reference** — contract, metrics, dedup, soft delete + trash UI, field RBAC, cards, drill-down, sync outbox, saved reports | REST + Query | `useContactsPageState`, `useContacts`, `useContactMutations` |
+| **Students / Teachers** | Three-tier + soft-delete Work trash (restore/bulk restore) + `useModulePermissions` | REST + Query | `useStudents` / `useTeachers` mutations |
+| Finance / Accounting | Three-tier + write gates via contract | REST + Query | `useFinanceApi` / `useAccountingApi` |
 
-**Before building a new module:** read `ContactsPage.tsx`, `contactsModuleContract.ts`, and skill `mms-module-work`.
+**Before building a new module:** read `ContactsPage.tsx` (or Students for soft-delete), `{module}ModuleContract.ts`, and skill `mms-module-work`.
 
 ## Module contract (§1.1 — required for new modules)
 
@@ -73,10 +73,10 @@ Hooks and pages import constants — no duplicated collection names or tier ids.
 - [ ] Work mobile: card layout where appropriate (Contacts: ContactCards)
 - [ ] Reports: KPISummary(moduleCategory) + ModuleReports — reports tier only
 - [ ] Setup: SubTabBar → Fields + Preferences (+ contract setupSubTabs)
-- [ ] can() UI gates + API RBAC on writes
+- [ ] can() / useModulePermissions(contract) UI gates + API RBAC on writes
 - [ ] Field/tab/column RBAC when registry-driven (Contacts pattern)
-- [ ] Soft delete in contract + API when REST CRUD exists
-- [ ] Data: Query-first if REST exists; else useLiveCollection
+- [ ] Soft delete in API when REST CRUD exists; Work trash UI (Contacts/Students/Teachers) or documented hard-delete
+- [ ] Data: Query-first if REST exists; else useLiveCollection (do not expand legacy)
 - [ ] ErrorBoundary on Work + Reports
 - [ ] i18n via t(); no new uiStrings keys
 - [ ] Audit on sensitive writes (Contacts REST + setup-audit shipped)

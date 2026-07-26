@@ -1,11 +1,12 @@
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
+import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
+import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Library, ClipboardList, FileText, Plus } from 'lucide-react';
-import { resolveModuleTierTab } from '@mms/shared';
+import { QUESTION_BANK_MODULE_CONTRACT, resolveModuleTierTab } from '@mms/shared';
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { SubTabBar } from '@/components/ui/SubTabBar';
@@ -34,8 +35,13 @@ import {
  * Question Bank — Work | Reports | Setup.
  */
 export default function QuestionBankPage(): React.JSX.Element {
-  const PAGE_TABS = useModuleTierTabs();
   const { t } = useTranslation();
+  const {
+    canWrite,
+    canReports: canViewReports,
+    canViewSetup,
+  } = useModulePermissions(QUESTION_BANK_MODULE_CONTRACT);
+  const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const questions = useQuestionBankQuestionsCollection();
   const tests = useQuestionBankTestsCollection();
   const questionBankResults = useQuestionBankResultsCollection();
@@ -43,9 +49,9 @@ export default function QuestionBankPage(): React.JSX.Element {
   const OPS_SUB_TABS = useMemo(
     () => [
       { id: 'questions', label: t('questionBank.questions'), icon: ClipboardList },
-      { id: 'generate', label: t('questionBank.generator'), icon: FileText },
+      ...(canWrite ? [{ id: 'generate', label: t('questionBank.generator'), icon: FileText }] : []),
     ],
-    [t],
+    [t, canWrite],
   );
   const PAPER_BUILDER_TABS = useMemo<FormModalTab<PaperBuilderTab>[]>(
     () => [
@@ -129,16 +135,18 @@ export default function QuestionBankPage(): React.JSX.Element {
       headerTitle={t('nav.questionBank')}
       headerSubtitle={t('page.questionBank.subtitle')}
       headerActions={
-        <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" size="sm" variant="outline" onClick={openCreatePaper}>
-            <FileText className="h-3.5 w-3.5" />
-            {t('questionBank.generator')}
-          </Button>
-          <Button type="button" size="sm" onClick={openAddQuestion}>
-            <Plus className="h-3.5 w-3.5" />
-            {t('questionBank.addQuestion')}
-          </Button>
-        </div>
+        canWrite ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" size="sm" variant="outline" onClick={openCreatePaper}>
+              <FileText className="h-3.5 w-3.5" />
+              {t('questionBank.generator')}
+            </Button>
+            <Button type="button" size="sm" onClick={openAddQuestion}>
+              <Plus className="h-3.5 w-3.5" />
+              {t('questionBank.addQuestion')}
+            </Button>
+          </div>
+        ) : undefined
       }
       metricsStrip={
         <QuestionBankCommandMetrics total={questions.length} shown={filteredCount} />
@@ -197,6 +205,7 @@ export default function QuestionBankPage(): React.JSX.Element {
                   onModalOpenChange={setShowQuestionModal}
                   onEditQuestionChange={setEditQuestion}
                   hideToolbarAdd
+                  canWrite={canWrite}
                   listLayout={listLayout}
                   onFilteredCountChange={setFilteredCount}
                   isColumnVisible={columnLayout.isColumnVisible}
@@ -208,7 +217,7 @@ export default function QuestionBankPage(): React.JSX.Element {
                 />
               )}
 
-              {effectiveTab === 'work' && effectiveSubTab === 'generate' && (
+              {effectiveTab === 'work' && effectiveSubTab === 'generate' && canWrite && (
                 <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
@@ -227,42 +236,46 @@ export default function QuestionBankPage(): React.JSX.Element {
         </ErrorBoundary>
       </ResponsiveAccordionTabs>
 
-      <FormModal
-        open={paperBuilderOpen}
-        onClose={() => setPaperBuilderOpen(false)}
-        title={t('questionBank.generatorTitle')}
-        subtitle={t('questionBank.manualPaperGeneratorSubtitle')}
-        icon={FileText}
-        size="xl"
-        hideFooter
-        tabs={PAPER_BUILDER_TABS}
-        activeTab={paperBuilderTab}
-        onTabChange={setPaperBuilderTab}
-        panelClassName="h-[94vh] max-w-[calc(100vw-1rem)] rounded-xl sm:h-[92vh] sm:max-w-[calc(100vw-2rem)] sm:rounded-2xl xl:max-w-6xl"
-      >
-        <PaperBuilder
-          key={paperBuilderSession}
-          questions={questions}
-          tests={tests}
+      {canWrite && (
+        <FormModal
+          open={paperBuilderOpen}
+          onClose={() => setPaperBuilderOpen(false)}
+          title={t('questionBank.generatorTitle')}
+          subtitle={t('questionBank.manualPaperGeneratorSubtitle')}
+          icon={FileText}
+          size="xl"
+          hideFooter
+          tabs={PAPER_BUILDER_TABS}
           activeTab={paperBuilderTab}
-          showHeader={false}
-          onSaveTest={async (test: QuestionBankTest) => {
-            await replaceTests.mutateAsync(
-              tests.some((paper) => paper.id === test.id)
-                ? tests.map((paper) => (paper.id === test.id ? test : paper))
-                : [...tests, test],
-            );
-          }}
-        />
-      </FormModal>
+          onTabChange={setPaperBuilderTab}
+          panelClassName="h-[94vh] max-w-[calc(100vw-1rem)] rounded-xl sm:h-[92vh] sm:max-w-[calc(100vw-2rem)] sm:rounded-2xl xl:max-w-6xl"
+        >
+          <PaperBuilder
+            key={paperBuilderSession}
+            questions={questions}
+            tests={tests}
+            activeTab={paperBuilderTab}
+            showHeader={false}
+            onSaveTest={async (test: QuestionBankTest) => {
+              await replaceTests.mutateAsync(
+                tests.some((paper) => paper.id === test.id)
+                  ? tests.map((paper) => (paper.id === test.id ? test : paper))
+                  : [...tests, test],
+              );
+            }}
+          />
+        </FormModal>
+      )}
 
-      <QuestionForm
-        open={showQuestionModal}
-        question={editQuestion}
-        questions={questions}
-        onClose={closeQuestionModal}
-        onSave={handleQuestionSave}
-      />
+      {canWrite && (
+        <QuestionForm
+          open={showQuestionModal}
+          question={editQuestion}
+          questions={questions}
+          onClose={closeQuestionModal}
+          onSave={handleQuestionSave}
+        />
+      )}
     </ModulePageShell>
   );
 }

@@ -13,7 +13,7 @@ interface JournalEntryDetailProps {
   entry: JournalEntry;
   accounts: Account[];
   onClose: () => void;
-  onEdit: () => void;
+  onEdit?: () => void;
   onReverse?: () => void;
 }
 
@@ -55,7 +55,7 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
       }
       headerActions={
         <div className="flex items-center gap-2">
-          {entry.status === "draft" && (
+          {entry.status === "draft" && onEdit && (
             <Button type="button" variant="outline" size="sm" onClick={onEdit} className="flex items-center gap-1 text-xs font-semibold">
               <Pencil className="w-3 h-3" aria-hidden="true" /> {t("accounting.journal.detail.edit")}
             </Button>

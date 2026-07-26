@@ -20,6 +20,7 @@ interface ChartOfAccountsProps {
   accounts: Account[];
   onChange: (accounts: Account[]) => void;
   onFilteredCountChange?: (count: number) => void;
+  canWrite?: boolean;
   isColumnVisible?: (key: string) => boolean;
   columnCustomizer?: ModuleColumnCustomizerProps;
 }
@@ -36,6 +37,7 @@ export function ChartOfAccounts({
   accounts,
   onChange,
   onFilteredCountChange,
+  canWrite = true,
   isColumnVisible,
   columnCustomizer,
 }: ChartOfAccountsProps) {
@@ -146,14 +148,16 @@ export function ChartOfAccounts({
             labels={columnCustomizer.labels}
           />
         )}
-        <Button 
-          type="button"
-          variant="default"
-          onClick={() => setModal({ id: "", code: "", name: "", type: "Asset", subtype: "", description: "", isActive: true })}
-          className="flex items-center gap-1.5 rounded-xl text-sm font-semibold ml-auto"
-        >
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.coa.addAccount")}
-        </Button>
+        {canWrite && (
+          <Button 
+            type="button"
+            variant="default"
+            onClick={() => setModal({ id: "", code: "", name: "", type: "Asset", subtype: "", description: "", isActive: true })}
+            className="flex items-center gap-1.5 rounded-xl text-sm font-semibold ml-auto"
+          >
+            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.coa.addAccount")}
+          </Button>
+        )}
       </nav>
 
       {/* Summary stats */}
@@ -270,17 +274,19 @@ export function ChartOfAccounts({
                           >
                             <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
                           </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            aria-label={`Edit ${account.name}`}
-                            onClick={() => setModal({ ...account })}
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                          >
-                            <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
-                          </Button>
-                          {account.isActive === false ? (
+                          {canWrite && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Edit ${account.name}`}
+                              onClick={() => setModal({ ...account })}
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            >
+                              <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
+                            </Button>
+                          )}
+                          {canWrite && (account.isActive === false ? (
                             <Button
                               type="button"
                               variant="ghost"
@@ -302,7 +308,7 @@ export function ChartOfAccounts({
                             >
                               <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />
                             </Button>
-                          )}
+                          ))}
                         </div>
                       </td>
                     </tr>
@@ -317,7 +323,7 @@ export function ChartOfAccounts({
       <p className="text-xs text-muted-foreground" aria-live="polite">{t("accounting.coa.accountsShown", { count: filtered.length })}</p>
 
       <AnimatePresence>
-        {modal !== null && (
+        {canWrite && modal !== null && (
           <AccountModal initial={modal as Account} onSave={handleSave} onClose={() => setModal(null)} existingCodes={existingCodes} />
         )}
       </AnimatePresence>

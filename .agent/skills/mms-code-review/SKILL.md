@@ -14,7 +14,7 @@ cd apps/frontend && pnpm lint
 cd apps/backend && pnpm lint
 ```
 
-E2E when touching auth/routing: `pnpm exec playwright test`
+E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical path: `e2e/tests/onboarding-login.spec.ts`)
 
 ## Checklist
 
@@ -54,8 +54,14 @@ E2E when touching auth/routing: `pnpm exec playwright test`
 - [ ] Brand colour previews use derived tokens (`brandingTheme`) — not raw hex on surfaces
 
 ### RBAC (frontend)
-- [ ] New gates use `can()` — not `role ===` / `disabled={role === '…'}`
+- [ ] Module pages use `useModulePermissions(X_MODULE_CONTRACT)` (or `can()`) — not `role ===` / `disabled={role === '…'}`
 - [ ] Forbidden actions omitted — not disabled placeholders
+- [ ] Soft-delete modules: trash toggle + restore omit delete/messaging in archive mode (Contacts / Students / Teachers pattern)
+
+### Soft delete (when entity supports it)
+- [ ] `DELETE` soft-deletes; `POST :id/restore` restores
+- [ ] List supports `includeDeleted`; Work default excludes deleted
+- [ ] FE trash UI or documented intentional hard-delete
 
 ### Field persistence (new/changed fields)
 - [ ] Field on `@mms/shared` type + `DEFAULT_*` + merge helper

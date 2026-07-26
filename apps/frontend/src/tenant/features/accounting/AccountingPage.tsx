@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp, List, BookMarked, Scale,
@@ -24,6 +25,7 @@ import { useAccountingJournalColumnLayout } from "@/tenant/features/accounting/h
 import { useAccountingAccountColumnLayout } from "@/tenant/features/accounting/hooks/useAccountingAccountColumnLayout";
 import { useAccountingConfig } from "@/hooks/useStandardModuleConfig";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
+import { ACCOUNTING_MODULE_CONTRACT } from "@mms/shared";
 import {
   useAccountingAccountsCollection,
   useAccountingEntriesCollection,
@@ -56,8 +58,14 @@ const SUB_TAB_KEYS: Record<SubTabId, "accounting.tabs.overview" | "accounting.ta
  * @returns {React.ReactElement} The Accounting page component.
  */
 export default function Accounting() {
-  const PAGE_TABS = useModuleTierTabs();
   const { t } = useTranslation();
+  const {
+    canWrite,
+    canDelete,
+    canReports: canViewReports,
+    canViewSetup,
+  } = useModulePermissions(ACCOUNTING_MODULE_CONTRACT);
+  const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const SUB_TABS = useMemo(
     () => SUB_TAB_IDS.map((subTabId) => ({
       id: subTabId,
@@ -167,6 +175,8 @@ export default function Accounting() {
               fiscalYears={fiscalYears}
               onChange={setEntries}
               onFilteredCountChange={setFilteredCount}
+              canWrite={canWrite}
+              canDelete={canDelete}
               isColumnVisible={journalColumnLayout.isColumnVisible}
               columnCustomizer={{
                 columnRegistry: journalColumnLayout.columnRegistry,
@@ -186,6 +196,7 @@ export default function Accounting() {
               accounts={accounts}
               onChange={setAccounts}
               onFilteredCountChange={setFilteredCount}
+              canWrite={canWrite}
               isColumnVisible={accountColumnLayout.isColumnVisible}
               columnCustomizer={{
                 columnRegistry: accountColumnLayout.columnRegistry,
@@ -200,6 +211,8 @@ export default function Accounting() {
               fiscalYears={fiscalYears}
               onSaveFiscalYears={setFiscalYears}
               mode="preferences"
+              canWrite={canWrite}
+              canDelete={canDelete}
             />
           )}
           </ErrorBoundary>

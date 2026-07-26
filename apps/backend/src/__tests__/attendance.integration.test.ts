@@ -80,4 +80,68 @@ describe('attendance REST routes integration', () => {
     expect(res.json()).toEqual({ records: [] });
     await app.close();
   });
+
+  it('PUT /api/attendance/bulk replaces attendance records', async () => {
+    const { replaceAttendanceRecords } = await import('../services/attendanceService.js');
+    const replaceMock = vi.mocked(replaceAttendanceRecords);
+    replaceMock.mockResolvedValueOnce([
+      {
+        id: 'c1-2026-07-27-s1',
+        classId: 'c1',
+        date: '2026-07-27',
+        studentId: 's1',
+        studentName: 'Jane Doe',
+        rollNo: '0001',
+        status: 'present',
+        timeIn: '07:00',
+        timeOut: '08:30',
+        notes: '',
+      },
+    ]);
+
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'PUT',
+      url: '/api/attendance/bulk',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+      payload: {
+        records: [
+          {
+            id: 'c1-2026-07-27-s1',
+            classId: 'c1',
+            date: '2026-07-27',
+            studentId: 's1',
+            studentName: 'Jane Doe',
+            rollNo: '0001',
+            status: 'present',
+            timeIn: '07:00',
+            timeOut: '08:30',
+            notes: '',
+          },
+        ],
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(replaceMock).toHaveBeenCalledOnce();
+    expect(res.json()).toEqual({
+      records: [
+        {
+          id: 'c1-2026-07-27-s1',
+          classId: 'c1',
+          date: '2026-07-27',
+          studentId: 's1',
+          studentName: 'Jane Doe',
+          rollNo: '0001',
+          status: 'present',
+          timeIn: '07:00',
+          timeOut: '08:30',
+          notes: '',
+        },
+      ],
+    });
+    await app.close();
+  });
 });

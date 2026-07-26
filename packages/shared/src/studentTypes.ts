@@ -2,6 +2,11 @@
 export const STUDENT_STATUS_VALUES = ['active', 'inactive', 'suspended', 'graduated', 'transferred'] as const;
 export type StudentStatus = (typeof STUDENT_STATUS_VALUES)[number];
 
+/** Prefer configured status options; fall back to the shared default list. */
+export function resolveStudentStatuses(statuses?: readonly string[] | null): readonly string[] {
+  return statuses && statuses.length > 0 ? statuses : STUDENT_STATUS_VALUES;
+}
+
 /**
  * Student profile in the `students` collection.
  * Identity fields are hydrated from linked contacts — not persisted when contact ids are set.
@@ -28,6 +33,7 @@ export interface Student {
   guardianName?: string;
   cnic?: string;
   grNumber?: string;
+  studentId?: string;
   status?: StudentStatus;
   registeredDate?: string;
   enrollmentDate?: string;

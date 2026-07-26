@@ -5,7 +5,7 @@ description: Addresses known MMS technical debt from mms-migration-status — re
 
 # MMS Migration Fixes
 
-Only implement items **in scope** for the current task. Full register: `.cursor/rules/mms-migration-status.md`.
+Only implement items **in scope** for the current task. Full register: `.cursor/rules/mms-migration-status.mdc` (synced to `.agent` / `.claude`).
 
 ## Resolved (do not reintroduce)
 
@@ -32,36 +32,43 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 | Unified Phone & Zero-Click Form | Unified phone inputs & zero-click form sublist auto-population in ContactForm and Branding |
 | Wrapper files removal | Removed redundant wrapper/alias files for StatCard, ExportToolbar, and SafeResponsiveContainer |
 | Column Customizer Props DRY | Consolidated duplicate local ColumnCustomizerProps interfaces into ModuleColumnCustomizerProps |
-| REST collections migration | Migrated remaining frontend useLiveCollection lookups to TanStack Query REST endpoints |
+| REST collections migration | Major modules on dedicated REST + TanStack Query (see migration-status resolved list) |
 | Sentry client-side error reporting | Configured and integrated Sentry with global React ErrorBoundary fallback rendering in `main.tsx` |
 | RBAC read hardening | Hardened `rbacService.ts` mapping and logic by explicitly checking permissions for `user_activity_logs` and `backups` collection reads/writes |
-| Date & Money formatting consistency DRY | Refactored raw date string renderings and manual `.toLocaleString()` calls on currency values in the frontend to resolve through settings-aware `formatDate` and `formatMoney` helpers, eliminating duplicate formatting code |
-| Settings-Aware Currency Formatting DRY | Refactored the frontend's accounting and finance feature modules to use settings-aware hooks (`useAccountingCurrency` and `useFinanceCurrency`), eliminating hardcoded `"PKR"` defaults and currency prop-drilling |
-| Unified Date Filters | Consolidated duplicate date range input fields, labels, and fiscal-year presets across reporting subpanels into the reusable `<AccountingDateFilterBar>` component |
-| Students Module DRY & Interactive Enhancements | Refactored the Students feature module for 100% DRY compliance, decoupled cross-module translation keys, added floating bar bulk status updates, page keyboard shortcuts (⌘N), interactive report StatCard filters, and completely purged legacy custom dynamic field overhead |
-
+| Date & Money formatting consistency DRY | Settings-aware `formatDate` / `formatMoney` |
+| Settings-Aware Currency Formatting DRY | `useAccountingCurrency` / `useFinanceCurrency`; no hardcoded `"PKR"` |
+| Unified Date Filters | `<AccountingDateFilterBar>` |
+| Module write-surface `can()` gates | `useModulePermissions(contract)` on major modules — omit forbidden CTAs |
+| Students & Teachers soft-delete Work UI | Trash toggle + restore/bulk restore (Contacts-style) |
+| Onboarding E2E critical path | `e2e/tests/onboarding-login.spec.ts` |
 
 ## Open priorities
 
-### P1 — Per-entity REST migration
+### P1 — Soft-delete FE parity (remaining REST modules)
 
-**Problem:** Most modules still use `/api/db/collections/:name`.
+**Problem:** Enrollments, attendance, finance invoices/payments (and others) may soft-delete on the API without Contacts/Students/Teachers-style Work trash UI.
 
-**Fix:** Add REST route + Query hooks per module (**students** and **contacts** pilots done).
+**Fix:** When touching those modules, add `includeDeleted` + restore mutations + Show deleted toggle (or document intentional hard-delete). Reference: Contacts / Students / Teachers.
 
-**Skills:** `mms-backend-api`, `mms-data-sync`, `mms-frontend`
+**Skills:** `mms-module-work`, `mms-frontend`, `mms-backend-api`
 
-### P2 — `can()` registry coverage
+### P2 — Residual permission / role special cases
 
-**Problem:** Inline `role ===` checks remain (~8 files: Dashboard, KPI, Attendance, WelcomeBanner).
+**Problem:** Platform `super_user` checks, setup matrices (`RolesPermissions`), and a few non-gate `role` comparisons remain outside module write surfaces.
 
-**Fix:** Wire `usePermissions()` / `can()` when touching modules (`mms-auth-security.md`).
+**Fix:** Prefer `can()` / contract permissions when touching those UIs; do not add new tenant-module `role ===` write gates (`mms-auth-security.md`).
 
 ### P3 — Relational custom fields
 
 **Problem:** Document store only for custom tabs.
 
 **Fix:** `pgTable` + migration per `mms-fields.md`.
+
+### P4 — Report drill-down & saved reports
+
+**Problem:** Contacts-only maturity for chart→Work drill-down and saved-report re-run.
+
+**Fix:** Same patterns on other module reports (`mms-reports.md`, skill `mms-reports-export`).
 
 ## After each fix
 
@@ -71,14 +78,12 @@ cd apps/backend && pnpm lint   # if BE touched
 cd apps/frontend && pnpm lint  # if FE touched
 ```
 
-Update `mms-migration-status.md` **Recently resolved** row when fully done.
+Update `mms-migration-status` **Recently resolved** when fully done.
 
 ## Rules sync
 
-After changing standards: edit `.cursor/rules/*.md`, then:
+After changing standards:
 
 ```bash
-bash .agent/scripts/sync-rules.sh
+bash .agent/scripts/sync-all.sh
 ```
-
-Copy skill changes to both `.cursor/skills/` and `.agent/skills/`.

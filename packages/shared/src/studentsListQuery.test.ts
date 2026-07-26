@@ -3,15 +3,17 @@ import { filterStudentsForQuery, paginateStudents, studentMatchesSearch } from '
 import type { Student } from './studentTypes.js';
 
 const sample: Student[] = [
-  { id: '1', contactId: 'c1', name: 'Ali Khan', status: 'active', gender: 'male', cnic: '12345' },
+  { id: '1', contactId: 'c1', name: 'Ali Khan', status: 'active', gender: 'male', cnic: '12345', grNumber: '0001-2026', studentId: 'ST-9' },
   { id: '2', contactId: 'c2', name: 'Sara Ahmed', status: 'inactive', gender: 'female', fatherName: 'Ahmed' },
   { id: '3', contactId: 'c3', name: 'Hassan Ali', status: 'suspended', gender: 'male', guardianName: 'Uncle Bob' },
 ];
 
 describe('studentMatchesSearch', () => {
-  it('matches name, cnic, father, and guardian', () => {
+  it('matches name, cnic, grNumber, studentId, father, and guardian', () => {
     expect(studentMatchesSearch(sample[0], 'ali')).toBe(true);
     expect(studentMatchesSearch(sample[0], '12345')).toBe(true);
+    expect(studentMatchesSearch(sample[0], '0001-2026')).toBe(true);
+    expect(studentMatchesSearch(sample[0], 'st-9')).toBe(true);
     expect(studentMatchesSearch(sample[1], 'ahmed')).toBe(true);
     expect(studentMatchesSearch(sample[2], 'uncle')).toBe(true);
     expect(studentMatchesSearch(sample[0], 'zzz')).toBe(false);

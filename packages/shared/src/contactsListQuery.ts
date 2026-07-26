@@ -1,7 +1,10 @@
 import type { Contact } from './contactTypes.js';
 import { contactMatchesSearch } from './contactsSearchUtils.js';
 import { filterActiveContacts, isContactDeleted } from './contactSoftDelete.js';
-import { compareByField, paginateArray } from './utils.js';
+import { compareByField, getPrimaryEmail, getPrimaryPhone, hasWhatsApp, paginateArray } from './utils.js';
+
+/** Work-directory quick presets (toolbar chips). */
+export type ContactsQuickFilter = 'all' | 'whatsapp' | 'syed' | 'missingInfo';
 
 export interface ContactsListQuery {
   page?: number;
@@ -12,6 +15,8 @@ export interface ContactsListQuery {
   sortField?: string;
   sortDir?: 'asc' | 'desc';
   hasPhone?: boolean;
+  /** Toolbar quick filter; omit or `all` means no preset. */
+  quickFilter?: ContactsQuickFilter;
 }
 
 export interface ContactsListPageResult {
@@ -22,16 +27,30 @@ export interface ContactsListPageResult {
   hasMore: boolean;
 }
 
+function matchesContactsQuickFilter(contact: Contact, quickFilter: ContactsQuickFilter | undefined): boolean {
+  if (!quickFilter || quickFilter === 'all') return true;
+  if (quickFilter === 'whatsapp') return hasWhatsApp(contact);
+  if (quickFilter === 'syed') return Boolean(contact.isSyed);
+  if (quickFilter === 'missingInfo') return !getPrimaryPhone(contact) || !getPrimaryEmail(contact);
+  return true;
+}
+
 export function filterContactsForQuery(contacts: Contact[], query: ContactsListQuery): Contact[] {
   let rows = query.includeDeleted ? contacts : filterActiveContacts(contacts);
   if (query.gender) {
-    rows = rows.filter((contact) => contact.gender === query.gender);
+    const genderFilter = query.gender.trim().toLowerCase();
+    rows = rows.filter(
+      (contact) => (contact.gender ?? '').trim().toLowerCase() === genderFilter,
+    );
   }
   if (query.hasPhone) {
     rows = rows.filter((contact) => {
       const contactPhone = contact.phones?.[0]?.number;
       return contactPhone != null && String(contactPhone).trim().length > 0;
     });
+  }
+  if (query.quickFilter && query.quickFilter !== 'all') {
+    rows = rows.filter((contact) => matchesContactsQuickFilter(contact, query.quickFilter));
   }
   if (query.search?.trim()) {
     rows = rows.filter((contact) => contactMatchesSearch(contact, query.search!));

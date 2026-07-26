@@ -11,11 +11,9 @@ import {
   type StudentsListQuery,
   type StudentsWidgetQuery,
   type Student,
-} from '@mms/shared';
-import {
   type StudentRecord,
   studentRecordSchema,
-} from '../validation/studentSchemas.js';
+} from '@mms/shared';
 import { loadContacts } from './contactService.js';
 import {
   createGenericRelationalService,
@@ -28,6 +26,7 @@ import {
   findStudentsByIds,
   saveStudent,
 } from '../db/repositories/studentRepository.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
 
 type StudentRepo = GenericServiceOptions<StudentRecord>['repo'];
 const crud = createGenericRelationalService<StudentRecord>({
@@ -46,6 +45,32 @@ export const createStudent = crud.create;
 export const updateStudentById = crud.updateById;
 export const deleteStudentById = crud.deleteById;
 export const restoreStudentById = crud.restoreById;
+export const bulkSoftDeleteStudents = crud.bulkDeleteByIds;
+export const bulkRestoreStudents = crud.bulkRestoreByIds;
+
+export async function bulkUpdateStudentStatus(
+  ids: string[],
+  status: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const tenant = getRequestTenant();
+  if (!tenant) return { succeeded: 0, failed: ids.length };
+
+  const outcomes = await Promise.all(
+    ids.map(async (id) => {
+      const existing = await findStudentById(tenant, id);
+      if (!existing || existing.deletedAt) return false;
+      const updated = await updateStudentById(id, {
+        ...(existing as StudentRecord),
+        status,
+        id,
+      });
+      return Boolean(updated);
+    }),
+  );
+
+  const succeeded = outcomes.filter(Boolean).length;
+  return { succeeded, failed: ids.length - succeeded };
+}
 
 const hydrated = createContactHydratedService<Student, StudentRecord>({
   listByWorkspaceFn: listStudentsByWorkspace,

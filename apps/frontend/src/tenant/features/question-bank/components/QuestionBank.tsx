@@ -31,6 +31,7 @@ interface QuestionBankProps {
   onModalOpenChange?: (open: boolean) => void;
   onEditQuestionChange?: (question: Question | null) => void;
   hideToolbarAdd?: boolean;
+  canWrite?: boolean;
   listLayout?: boolean;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
@@ -45,6 +46,7 @@ export function QuestionBank({
   onModalOpenChange,
   onEditQuestionChange,
   hideToolbarAdd = false,
+  canWrite = true,
   listLayout: _listLayout = true,
   onFilteredCountChange,
   isColumnVisible,
@@ -255,7 +257,7 @@ export function QuestionBank({
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-        {!hideToolbarAdd && (
+        {!hideToolbarAdd && canWrite && (
           <Button
             type="button"
             onClick={() => { setEditingQuestion(null); setShowModal(true); }}
@@ -381,26 +383,30 @@ export function QuestionBank({
                       })}
                   </div>
                   <div className="flex flex-shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => { setEditingQuestion(question); setShowModal(true); }}
-                      className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                      aria-label={t('questionBank.editQuestionAria', { text: question.text })}
-                    >
-                      <Edit2 className="h-3.5 w-3.5" aria-hidden />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onUpdate(questions.filter((candidateQuestion) => candidateQuestion.id !== question.id))}
-                      className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                      aria-label={t('questionBank.deleteQuestionAria', { text: question.text })}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                    </Button>
+                    {canWrite && (
+                      <>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => { setEditingQuestion(question); setShowModal(true); }}
+                          className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                          aria-label={t('questionBank.editQuestionAria', { text: question.text })}
+                        >
+                          <Edit2 className="h-3.5 w-3.5" aria-hidden />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onUpdate(questions.filter((candidateQuestion) => candidateQuestion.id !== question.id))}
+                          className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          aria-label={t('questionBank.deleteQuestionAria', { text: question.text })}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -510,6 +516,7 @@ export function QuestionBank({
                           </td>
                         )}
                         <td className="px-4 py-3 text-right">
+                          {canWrite && (
                           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                             <Button
                               type="button"
@@ -532,6 +539,7 @@ export function QuestionBank({
                               <Trash2 className="h-3.5 w-3.5" aria-hidden />
                             </Button>
                           </div>
+                          )}
                         </td>
                       </motion.tr>
                     );

@@ -19,6 +19,8 @@ import {
   cleanContactDraft,
   normalizeContactForEdit,
   syncContactScalarFields,
+  DEFAULT_FORM_TABS,
+  type AppTranslationKey,
 } from "@mms/shared";
 
 import { ContactBasicTab } from "./formTabs/ContactBasicTab";
@@ -40,14 +42,23 @@ interface ContactFormProps {
   lockGender?: boolean;
 }
 
-const CONTACT_TABS = [
-  { key: "basic", labelKey: "contacts.form.tabBasic", icon: User },
-  { key: "phones", labelKey: "contacts.form.tabPhones", icon: Phone },
-  { key: "emails", labelKey: "contacts.form.tabEmails", icon: Mail },
-  { key: "addresses", labelKey: "contacts.form.tabAddresses", icon: MapPin },
-  { key: "socials", labelKey: "contacts.form.tabSocials", icon: Share2 },
-  { key: "emergency", labelKey: "contacts.form.tabEmergency", icon: Heart },
-] as const;
+const CONTACT_TAB_META: Record<string, { labelKey: AppTranslationKey; icon: typeof User }> = {
+  basic: { labelKey: "contacts.form.tabBasic", icon: User },
+  phones: { labelKey: "contacts.form.tabPhones", icon: Phone },
+  emails: { labelKey: "contacts.form.tabEmails", icon: Mail },
+  addresses: { labelKey: "contacts.form.tabAddresses", icon: MapPin },
+  socials: { labelKey: "contacts.form.tabSocials", icon: Share2 },
+  emergency: { labelKey: "contacts.form.tabEmergency", icon: Heart },
+};
+
+const CONTACT_TABS = DEFAULT_FORM_TABS
+  .slice()
+  .sort((left, right) => left.order - right.order)
+  .flatMap((tab) => {
+    const meta = CONTACT_TAB_META[tab.key];
+    if (!meta) return [];
+    return [{ key: tab.key, labelKey: meta.labelKey, icon: meta.icon }];
+  });
 
 type TabKey = (typeof CONTACT_TABS)[number]["key"];
 

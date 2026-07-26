@@ -51,13 +51,11 @@ function savePreferences(preferences: ContactPreferences): void {
   saveObject(PREFERENCES_OBJECT_KEY, preferences);
 }
 
-const DEFAULT_PREFERENCES = DEFAULT_CONTACT_PREFERENCES;
-
 export {
   syncOptionsInConfig,
   loadPreferences,
   savePreferences,
-  DEFAULT_PREFERENCES,
+  DEFAULT_CONTACT_PREFERENCES as DEFAULT_PREFERENCES,
   PREFERENCES_KEY,
   CONFIG_KEY,
 };

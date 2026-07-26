@@ -78,6 +78,7 @@ export default function ContactPicker({
   const fallbackId = useId();
   const resolvedId = id || fallbackId;
   const resolvedName = name || fallbackId;
+  const avatarInputId = `${resolvedId}-avatar`;
 
   const debouncedQuery = useDebounce(query, 250);
   const { data: searchPage, isFetching: isSearching } = useContactsPaginated({
@@ -156,7 +157,7 @@ export default function ContactPicker({
 
     return (
       <div className="relative">
-        <span className={FORM_LABEL}>{label}</span>
+        <label htmlFor={resolvedId} className={FORM_LABEL}>{label}</label>
         <div className="group relative flex items-center gap-3.5 p-4 rounded-xl border border-primary/20 bg-gradient-to-r from-primary/[0.01] to-primary/[0.04] dark:from-primary/[0.02] dark:to-primary/[0.06] shadow-sm hover:shadow-md transition-all duration-200">
           <div
             onClick={() => onAvatarChange && fileInputRef.current?.click()}
@@ -177,8 +178,8 @@ export default function ContactPicker({
               </div>
             )}
             <input
-              id="contact-picker-avatar-file-input"
-              name="contactPickerAvatarFile"
+              id={avatarInputId}
+              name={`${resolvedName}-avatar`}
               type="file"
               ref={fileInputRef}
               accept="image/*"
@@ -227,7 +228,7 @@ export default function ContactPicker({
 
   return (
     <div className="relative" ref={containerRef}>
-      <span className={FORM_LABEL}>{label}</span>
+      <label htmlFor={resolvedId} className={FORM_LABEL}>{label}</label>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/75 pointer-events-none" />
         <Input
@@ -238,6 +239,7 @@ export default function ContactPicker({
           value={query}
           onChange={(event) => { setQuery(event.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
+          autoComplete="off"
           onBlur={(e) => {
             if (!containerRef.current?.contains(e.relatedTarget as Node)) {
               setOpen(false);

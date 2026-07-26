@@ -9,6 +9,7 @@ import {
   type ContactsDuplicatePairsPageResult,
   type ContactsListPageResult,
   type ContactsMonthlyYearCounts,
+  type ContactsQuickFilter,
   type ContactsReportAnalyticsSnapshot,
   type ContactsWidgetAggregateResult,
   type ContactsWidgetQuery,
@@ -44,6 +45,7 @@ export interface ContactsPaginatedParams {
   sortField?: string;
   sortDir?: 'asc' | 'desc';
   hasPhone?: boolean;
+  quickFilter?: ContactsQuickFilter;
   enabled?: boolean;
 }
 
@@ -55,6 +57,9 @@ function buildContactsPageUrl(params: ContactsPaginatedParams): string {
   if (params.gender) queryParams.set('gender', params.gender);
   if (params.includeDeleted) queryParams.set('includeDeleted', 'true');
   if (params.hasPhone) queryParams.set('hasPhone', 'true');
+  if (params.quickFilter && params.quickFilter !== 'all') {
+    queryParams.set('quickFilter', params.quickFilter);
+  }
   if (params.sortField) queryParams.set('sortField', params.sortField);
   if (params.sortDir) queryParams.set('sortDir', params.sortDir);
   return `${CONTACTS_API}?${queryParams.toString()}`;
@@ -195,11 +200,8 @@ export function useContactsDuplicatePairs(params: ContactsDuplicatesParams = {})
 export function useContactById(contactId: string | undefined, enabled = true) {
   const { isAuthenticated } = useAuth();
   return useQuery({
-    queryKey: [...CONTACTS_QUERY_KEY, 'detail', contactId] as const,
-    queryFn: async () => {
-      const contactResponse = await apiJson<{ contact: Contact }>(`${CONTACTS_API}/${contactId}`);
-      return contactResponse.contact;
-    },
+    queryKey: contactDetailQueryKey(contactId ?? ''),
+    queryFn: () => fetchContactById(contactId!),
     enabled: isAuthenticated && enabled && Boolean(contactId),
     staleTime: 10_000,
   });
@@ -296,6 +298,15 @@ export function contactsListQueryKey(includeDeleted = false) {
     : CONTACTS_QUERY_KEY;
 }
 
+export function contactDetailQueryKey(contactId: string) {
+  return [...CONTACTS_QUERY_KEY, 'detail', contactId] as const;
+}
+
+export async function fetchContactById(contactId: string): Promise<Contact> {
+  const contactResponse = await apiJson<{ contact: Contact }>(`${CONTACTS_API}/${contactId}`);
+  return contactResponse.contact;
+}
+
 async function fetchContacts(includeDeleted = false): Promise<Contact[]> {
   const url = includeDeleted ? `${CONTACTS_API}?includeDeleted=true` : CONTACTS_API;
   const contactsResponse = await apiJson<{ contacts: Contact[] }>(url);
@@ -317,8 +328,8 @@ export function useContacts(options?: { enabled?: boolean; includeDeleted?: bool
 export function useInvalidateContactsQueries() {
   const queryClient = useQueryClient();
   return () => {
-    void queryClient.invalidateQueries({ queryKey: CONTACTS_QUERY_KEY });
-    void queryClient.invalidateQueries({ queryKey: [...CONTACTS_QUERY_KEY, 'with-deleted'] });
+    void queryClient.invalidateQueries({ queryKey: contactsListQueryKey(false) });
+    void queryClient.invalidateQueries({ queryKey: contactsListQueryKey(true) });
     void queryClient.invalidateQueries({ queryKey: CONTACTS_METRICS_QUERY_KEY });
     void queryClient.invalidateQueries({ queryKey: CONTACTS_REPORT_ANALYTICS_QUERY_KEY });
     void queryClient.invalidateQueries({ queryKey: CONTACTS_WIDGET_AGGREGATES_QUERY_KEY });
@@ -441,10 +452,10 @@ export function useContactColumnPrefs(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: CONTACT_COLUMN_PREFERENCES_QUERY_KEY,
     queryFn: async () => {
-      const preferencesResponse = await apiJson<{ preferences: ContactColumnPreference[]; prefs?: ContactColumnPreference[] }>(
+      const preferencesResponse = await apiJson<{ preferences: ContactColumnPreference[] }>(
         `${CONTACTS_API}/column-preferences`,
       );
-      return preferencesResponse.preferences ?? preferencesResponse.prefs ?? [];
+      return preferencesResponse.preferences ?? [];
     },
     enabled: isAuthenticated && enabled,
     staleTime: 60_000,
@@ -467,7 +478,7 @@ export function useContactColumnPrefsMutation() {
             order: Number.isSafeInteger(floored) && floored >= 0 ? floored : index,
           };
         });
-      return apiJson<{ success: boolean; preferences: ContactColumnPreference[]; prefs?: ContactColumnPreference[] }>(
+      return apiJson<{ success: boolean; preferences: ContactColumnPreference[] }>(
         `${CONTACTS_API}/column-preferences`,
         {
         method: 'PUT',
@@ -478,7 +489,7 @@ export function useContactColumnPrefsMutation() {
     onSuccess: (preferencesResponse) => {
       queryClient.setQueryData(
         CONTACT_COLUMN_PREFERENCES_QUERY_KEY,
-        preferencesResponse.preferences ?? preferencesResponse.prefs ?? [],
+        preferencesResponse.preferences ?? [],
       );
     },
   });
@@ -546,15 +557,7 @@ export interface UseContactsCollectionResult {
 
 /** Query-first contacts; falls back to localStorage only before the first successful fetch. */
 export function useContactsCollection(options?: { enabled?: boolean; includeDeleted?: boolean }): Contact[] {
-  const enabled = options?.enabled ?? true;
-  const includeDeleted = options?.includeDeleted ?? false;
-  const queryResult = useContacts({ enabled, includeDeleted });
-  return useSyncedCollection<Contact>({
-    queryData: queryResult.data,
-    isSuccess: queryResult.isSuccess,
-    collectionName: CONTACTS_MODULE_CONTRACT.collectionKey,
-    enabled,
-  });
+  return useContactsCollectionState(options).contacts;
 }
 
 /** Returns synced contacts along with query loading and fetching state. */

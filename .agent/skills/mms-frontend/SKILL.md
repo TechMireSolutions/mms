@@ -51,34 +51,32 @@ const { students } = await apiJson<{ students: Student[] }>('/api/students');
 ## Data layer decision
 
 ```
-Does the module have dedicated REST routes (/api/students, /api/contacts)?
-├── YES → TanStack Query hooks in hooks/
-│         Page reads via useXxx() or useXxxCollection() (hybrid)
-│         Mutations via useXxxMutations()
-│         queryFn may saveCollection() for KPI widgets still on localStorage
-└── NO  → useLiveCollection + saveCollection (finance, obligations, …)
+Does the module have dedicated REST routes (/api/students, /api/contacts, …)?
+├── YES → TanStack Query hooks in feature hooks/
+│         Page reads via useXxx() / useXxxPaginated() / useXxxCollection()
+│         Mutations via useXxxMutations() (include soft-delete restore when shipped)
+└── NO  → useLiveCollection + saveCollection (legacy only — do not expand)
 ```
 
-| Pattern | Modules |
+| Pattern | Modules (examples) |
 |---------|---------|
-| Query-first | Students, Contacts (page), Workspace registry |
-| Hybrid collection | `useStudentsCollection`, `useContactsCollection` |
-| Live collection only | Finance, Accounting, Obligations, Sessions, Users, Attendance, Enrollments, … |
-| Dashboard | Hybrid + many live collections |
+| Query-first / hybrid | Students, Teachers, Contacts, Attendance, Sessions, Enrollments, Users, Finance, Accounting, … |
+| Dashboard | Hybrid + metrics endpoints |
 
-Reference: `hooks/useStudents.ts`, `hooks/useContacts.ts`, `pages/Students.tsx`.
+Reference: `tenant/features/students/hooks/useStudents.ts`, `tenant/features/contacts/hooks/useContacts.ts`.
 
 ## New page checklist
 
 ```
-- [ ] Page in src/pages/ — lazy import in HostRoutes.tsx
+- [ ] Feature page under `tenant/features/{module}/` — lazy import in HostRoutes
 - [ ] Nav in `lib/config/navConfig.tsx` + SYSTEM_MODULES in @mms/shared
-- [ ] Three-tier tabs: useModuleTierTabs + ResponsiveAccordionTabs
-- [ ] PageHeader actions unconditional (not gated on activeTab)
+- [ ] Three-tier tabs: useFilteredModuleTierTabs + ResponsiveAccordionTabs
+- [ ] PageHeader actions unconditional (not gated on activeTab); omit when !canWrite
 - [ ] ErrorBoundary on Work/Reports
 - [ ] Copy via t() — mms-settings-i18n.md (no new uiStrings outside Contacts)
 - [ ] Internal API via apiClient
-- [ ] RBAC via can() — not role === (mms-auth-security.md)
+- [ ] RBAC via useModulePermissions(contract) / can() — not role === (mms-auth-security.md)
+- [ ] Soft-delete: trash UI when REST supports restore (Contacts/Students/Teachers pattern)
 - [ ] Status via StatusBadge — not text-green-500 (mms-ui-ux-design.md)
 ```
 
@@ -146,9 +144,10 @@ Re-export from the original entry file for stable imports.
 
 | Debt | Where |
 |------|-------|
-| Contacts `uiStrings` | ~24 files — migrate to `t('contacts.*')` when touching |
-| Inline `role ===` | Dashboard widget role filter only |
+| Contacts `uiStrings` | Legacy — migrate to `t('contacts.*')` when touching |
+| Soft-delete FE trash | Remaining REST modules without Contacts/Students/Teachers parity |
 | Inline status colours | Chart color maps — KPI/PinnedWidgets palettes |
+| Report drill-down / saved reports | Contacts-mature; other modules lag |
 
 Full register: `mms-migration-status.md`. Skill: `mms-migration-fixes`.
 
@@ -156,12 +155,12 @@ Full register: `mms-migration-status.md`. Skill: `mms-migration-fixes`.
 
 | Layer | Config |
 |-------|--------|
-| Unit | `vitest.config.ts` — `happy-dom`, `src/**/*.test.ts` |
-| E2E | `e2e/smoke.spec.ts`, `e2e/interactive.spec.ts` |
+| Unit | `vitest.config.ts` — `happy-dom`, colocated `*.test.ts(x)` |
+| E2E | `e2e/tests/*.spec.ts` — onboard/login, Contacts, navigation |
 
 - Colocate `*.test.ts` next to source
-- Mock `fetch` when testing hooks that call `apiClient`
-- Existing: `lib/apiClient.test.ts`, `hooks/hooks.test.ts`
+- Mock `fetch` / `apiClient` when testing hooks
+- After Playwright version bumps: `pnpm exec playwright install`
 
 ## Rules index (frontend)
 

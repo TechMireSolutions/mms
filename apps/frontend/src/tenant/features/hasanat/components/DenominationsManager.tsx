@@ -114,6 +114,7 @@ function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
 export interface DenominationsManagerProps {
   denoms: Denomination[];
   onUpdate: (denoms: Denomination[]) => void;
+  canWrite?: boolean;
 }
 
 /**
@@ -126,7 +127,7 @@ export interface DenominationsManagerProps {
  * @param props - Component properties.
  * @returns React element representing the reward card denominations manager UI.
  */
-export function DenominationsManager({ denoms, onUpdate }: DenominationsManagerProps) {
+export function DenominationsManager({ denoms, onUpdate, canWrite = true }: DenominationsManagerProps) {
   const [showModal, setShowModal] = useState(false);
   const [editDenom, setEditDenom] = useState<Denomination | null>(null);
 
@@ -143,13 +144,15 @@ export function DenominationsManager({ denoms, onUpdate }: DenominationsManagerP
     <section aria-label="Denominations Manager" className="space-y-4">
       <header className="flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground m-0">{denoms.length} denomination{denoms.length !== 1 ? "s" : ""}</p>
-        <Button
-          type="button"
-          onClick={() => { setEditDenom(null); setShowModal(true); }}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> New Denomination
-        </Button>
+        {canWrite && (
+          <Button
+            type="button"
+            onClick={() => { setEditDenom(null); setShowModal(true); }}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> New Denomination
+          </Button>
+        )}
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -178,28 +181,32 @@ export function DenominationsManager({ denoms, onUpdate }: DenominationsManagerP
 
             <footer className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-foreground px-2 py-1 rounded-lg bg-muted">{denomination.points} pts</span>
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button variant="ghost" type="button" onClick={() => toggleActive(denomination.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground" title={denomination.active ? "Deactivate" : "Activate"} aria-label={denomination.active ? "Deactivate" : "Activate"}>
-                  {denomination.active ? <ToggleRight className="w-4 h-4 text-primary" aria-hidden="true" /> : <ToggleLeft className="w-4 h-4" aria-hidden="true" />}
-                </Button>
-                <Button variant="ghost" type="button" aria-label={`Edit ${denomination.name}`} onClick={() => { setEditDenom(denomination); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
-                  <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-                </Button>
-                <Button variant="ghost" type="button" aria-label={`Delete ${denomination.name}`} onClick={() => handleDelete(denomination.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
-                  <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                </Button>
-              </div>
+              {canWrite && (
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button variant="ghost" type="button" onClick={() => toggleActive(denomination.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground" title={denomination.active ? "Deactivate" : "Activate"} aria-label={denomination.active ? "Deactivate" : "Activate"}>
+                    {denomination.active ? <ToggleRight className="w-4 h-4 text-primary" aria-hidden="true" /> : <ToggleLeft className="w-4 h-4" aria-hidden="true" />}
+                  </Button>
+                  <Button variant="ghost" type="button" aria-label={`Edit ${denomination.name}`} onClick={() => { setEditDenom(denomination); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
+                    <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
+                  </Button>
+                  <Button variant="ghost" type="button" aria-label={`Delete ${denomination.name}`} onClick={() => handleDelete(denomination.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+                    <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                  </Button>
+                </div>
+              )}
             </footer>
           </MotionCard>
         ))}
       </div>
 
-      <DenomModal
-        open={showModal}
-        denom={editDenom}
-        onClose={() => { setShowModal(false); setEditDenom(null); }}
-        onSave={handleSave}
-      />
+      {canWrite && (
+        <DenomModal
+          open={showModal}
+          denom={editDenom}
+          onClose={() => { setShowModal(false); setEditDenom(null); }}
+          onSave={handleSave}
+        />
+      )}
     </section>
   );
 }

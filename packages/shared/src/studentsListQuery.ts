@@ -26,6 +26,8 @@ export function studentMatchesSearch(student: Student, search: string): boolean 
   return (
     (student.name ?? '').toLowerCase().includes(normalizedSearch) ||
     (student.cnic ?? '').includes(normalizedSearch) ||
+    (student.grNumber ?? '').toLowerCase().includes(normalizedSearch) ||
+    (student.studentId ?? '').toLowerCase().includes(normalizedSearch) ||
     (student.fatherName ?? '').toLowerCase().includes(normalizedSearch) ||
     (student.guardianName ?? '').toLowerCase().includes(normalizedSearch)
   );
@@ -40,7 +42,10 @@ export function filterStudentsForQuery(students: Student[], query: StudentsListQ
     }
   }
   if (query.gender) {
-    studentRows = studentRows.filter((student) => student.gender === query.gender);
+    const genderFilter = query.gender.trim().toLowerCase();
+    studentRows = studentRows.filter(
+      (student) => (student.gender ?? '').trim().toLowerCase() === genderFilter,
+    );
   }
   if (query.search?.trim()) {
     studentRows = studentRows.filter((student) => studentMatchesSearch(student, query.search!));

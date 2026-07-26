@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, FileText, PenTool, Layers } from "lucide-react";
-import { resolveModuleTierTab } from "@mms/shared";
+import { EXAMINATIONS_MODULE_CONTRACT, resolveModuleTierTab } from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -32,8 +33,13 @@ import {
  * Examinations — formal exams, marking, and results. Work | Reports | Setup.
  */
 export default function Examinations(): React.JSX.Element {
-  const PAGE_TABS = useModuleTierTabs();
   const { t } = useTranslation();
+  const {
+    canWrite,
+    canReports: canViewReports,
+    canViewSetup,
+  } = useModulePermissions(EXAMINATIONS_MODULE_CONTRACT);
+  const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const OPS_SUB_TABS = useMemo(
     () => [
       { id: "exams", label: t("examinations.exams"), icon: BookOpen },
@@ -92,13 +98,15 @@ export default function Examinations(): React.JSX.Element {
       headerTitle={t("nav.examinations")}
       headerSubtitle={t("page.examinations.subtitle")}
       headerActions={
-        <ActionButton
-          variant="ghost"
-          icon={PenTool}
-          onClick={() => setShowMarksModal(true)}
-        >
-          {t("examinations.marks")}
-        </ActionButton>
+        canWrite ? (
+          <ActionButton
+            variant="ghost"
+            icon={PenTool}
+            onClick={() => setShowMarksModal(true)}
+          >
+            {t("examinations.marks")}
+          </ActionButton>
+        ) : undefined
       }
       metricsStrip={
         <ExaminationsCommandMetrics total={exams.length} shown={filteredCount} />
@@ -143,6 +151,7 @@ export default function Examinations(): React.JSX.Element {
                 <ExamsList
                   exams={exams}
                   listLayout={listLayout}
+                  canWrite={canWrite}
                   onNew={() => {
                     setEditExam(null);
                     setShowExamForm(true);
@@ -179,26 +188,30 @@ export default function Examinations(): React.JSX.Element {
       </ResponsiveAccordionTabs>
 
       <AnimatePresence>
-        <ExamForm
-          open={showExamForm}
-          exam={editExam}
-          onClose={() => {
-            setShowExamForm(false);
-            setEditExam(null);
-          }}
-          onSave={handleSaveExam}
-        />
+        {showExamForm && canWrite && (
+          <ExamForm
+            open={showExamForm}
+            exam={editExam}
+            onClose={() => {
+              setShowExamForm(false);
+              setEditExam(null);
+            }}
+            onSave={handleSaveExam}
+          />
+        )}
       </AnimatePresence>
 
-      <Modal
-        open={showMarksModal}
-        onClose={() => setShowMarksModal(false)}
-        title={t("examinations.marks")}
-        size="xl"
-        panelClassName="h-[88vh] max-h-[700px]"
-      >
-        <EnterMarks exams={exams} results={examResults} onSaveResults={handleSaveResults} />
-      </Modal>
+      {canWrite && (
+        <Modal
+          open={showMarksModal}
+          onClose={() => setShowMarksModal(false)}
+          title={t("examinations.marks")}
+          size="xl"
+          panelClassName="h-[88vh] max-h-[700px]"
+        >
+          <EnterMarks exams={exams} results={examResults} onSaveResults={handleSaveResults} />
+        </Modal>
+      )}
     </ModulePageShell>
   );
 }

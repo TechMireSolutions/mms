@@ -1,14 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { normalizeStoredStudent, STUDENTS_MODULE_CONTRACT, type Student, type StudentDuplicateCheckInput, type StudentDuplicateReason, type StudentsCommandMetricsSnapshot, type StudentsListPageResult, studentsWidgetQueryFromWidget, type StudentsWidgetAggregateResult } from '@mms/shared';
+import {
+  normalizeStoredStudent,
+  STUDENTS_MODULE_CONTRACT,
+  type Student,
+  type StudentDuplicateCheckInput,
+  type StudentDuplicateReason,
+  type StudentRecord,
+  type StudentsCommandMetricsSnapshot,
+  type StudentsListPageResult,
+  studentsWidgetQueryFromWidget,
+  type StudentsWidgetAggregateResult,
+} from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { STUDENT_COUNT_QUERY_KEY } from '@/tenant/features/students/hooks/useStudentCount';
 import { uniqueRegistryIds } from '@/lib/registryResolve';
 
-export const STUDENTS_QUERY_KEY = ['students', 'list'] as const;
-export const STUDENTS_METRICS_QUERY_KEY = ['students', 'metrics'] as const;
+export type { StudentRecord };
+
+export const STUDENTS_QUERY_KEY = [STUDENTS_MODULE_CONTRACT.collectionKey, 'list'] as const;
+export const STUDENTS_METRICS_QUERY_KEY = [STUDENTS_MODULE_CONTRACT.collectionKey, 'metrics'] as const;
 export const STUDENTS_WIDGET_AGGREGATES_QUERY_KEY = [STUDENTS_MODULE_CONTRACT.collectionKey, 'widget-aggregates'] as const;
 
 const STUDENTS_API = STUDENTS_MODULE_CONTRACT.restBasePath;
@@ -21,6 +34,7 @@ export interface StudentsPaginatedParams {
   gender?: string;
   sortField?: string;
   sortDir?: 'asc' | 'desc';
+  includeDeleted?: boolean;
   enabled?: boolean;
 }
 
@@ -33,11 +47,16 @@ function buildStudentsPageUrl(params: StudentsPaginatedParams): string {
   if (params.gender?.trim()) queryParams.set('gender', params.gender.trim());
   if (params.sortField?.trim()) queryParams.set('sortField', params.sortField.trim());
   if (params.sortDir?.trim()) queryParams.set('sortDir', params.sortDir.trim());
+  if (params.includeDeleted) queryParams.set('includeDeleted', 'true');
   return `${STUDENTS_API}?${queryParams.toString()}`;
 }
 
 export function studentsPaginatedQueryKey(params: StudentsPaginatedParams) {
   return [...STUDENTS_QUERY_KEY, 'page', params] as const;
+}
+
+export function studentDetailQueryKey(studentId: string) {
+  return [...STUDENTS_QUERY_KEY, 'by-id', studentId] as const;
 }
 
 /** Performs server-authoritative paginated query for Student directory views. */
@@ -75,11 +94,6 @@ export async function fetchAllStudentsForQuery(
   return all;
 }
 
-export interface StudentRecord {
-  id: string | number;
-  [key: string]: unknown;
-}
-
 /** Server mutations for Student records (create, update, delete, bulk delete, bulk status). */
 export function useStudentMutations() {
   const queryClient = useQueryClient();
@@ -94,7 +108,7 @@ export function useStudentMutations() {
   const createStudent = useMutation({
     mutationFn: async (student: StudentRecord) => {
       const normalized = normalizeStoredStudent(student);
-      return apiJson<{ student: StudentRecord }>('/api/students', {
+      return apiJson<{ student: StudentRecord }>(STUDENTS_API, {
         method: 'POST',
         body: JSON.stringify(normalized),
       });
@@ -105,7 +119,7 @@ export function useStudentMutations() {
   const updateStudent = useMutation({
     mutationFn: async ({ id, student }: { id: string; student: StudentRecord }) => {
       const normalized = normalizeStoredStudent(student);
-      return apiJson<{ student: StudentRecord }>(`/api/students/${id}`, {
+      return apiJson<{ student: StudentRecord }>(`${STUDENTS_API}/${id}`, {
         method: 'PUT',
         body: JSON.stringify(normalized),
       });
@@ -115,36 +129,58 @@ export function useStudentMutations() {
 
   const deleteStudent = useMutation({
     mutationFn: async (id: string) =>
-      apiFetch(`/api/students/${id}`, { method: 'DELETE' }),
+      apiFetch(`${STUDENTS_API}/${id}`, { method: 'DELETE' }),
     onSuccess: invalidate,
   });
 
   const bulkDeleteStudents = useMutation({
     mutationFn: async (ids: string[]) =>
-      Promise.all(ids.map((id) => apiFetch(`/api/students/${id}`, { method: 'DELETE' }))),
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${STUDENTS_API}/bulk-delete`, {
+        method: 'POST',
+        body: JSON.stringify({ ids }),
+      }),
+    onSuccess: invalidate,
+  });
+
+  const restoreStudent = useMutation({
+    mutationFn: async (id: string) =>
+      apiFetch(`${STUDENTS_API}/${encodeURIComponent(id)}/restore`, { method: 'POST' }),
+    onSuccess: invalidate,
+  });
+
+  const bulkRestoreStudents = useMutation({
+    mutationFn: async (ids: string[]) =>
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${STUDENTS_API}/bulk-restore`, {
+        method: 'POST',
+        body: JSON.stringify({ ids }),
+      }),
     onSuccess: invalidate,
   });
 
   const bulkUpdateStudentStatus = useMutation({
     mutationFn: async ({ ids, status }: { ids: string[]; status: string }) =>
-      Promise.all(
-        ids.map((id) =>
-          apiJson<{ student: StudentRecord }>(`/api/students/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify({ status }),
-          }),
-        ),
-      ),
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${STUDENTS_API}/bulk-status`, {
+        method: 'POST',
+        body: JSON.stringify({ ids, status }),
+      }),
     onSuccess: invalidate,
   });
 
-  return { createStudent, updateStudent, deleteStudent, bulkDeleteStudents, bulkUpdateStudentStatus };
+  return {
+    createStudent,
+    updateStudent,
+    deleteStudent,
+    bulkDeleteStudents,
+    restoreStudent,
+    bulkRestoreStudents,
+    bulkUpdateStudentStatus,
+  };
 }
 
 export function useStudentById(studentId: string | undefined, enabled = true) {
   const { isAuthenticated } = useAuth();
   return useQuery({
-    queryKey: [...STUDENTS_QUERY_KEY, 'by-id', studentId] as const,
+    queryKey: studentDetailQueryKey(studentId ?? ''),
     queryFn: async () => {
       const studentResponse = await apiJson<{ student: StudentRecord }>(`${STUDENTS_API}/${studentId}`);
       return studentResponse.student as unknown as Student;

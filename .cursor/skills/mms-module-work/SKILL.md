@@ -11,11 +11,10 @@ Use this skill when changing a module command centre, Work tab, directory, row a
 
 ## Reference Files
 
-- Contacts reference page: `apps/frontend/src/pages/Contacts.tsx`
-- Contacts state/actions: `useContactsPageState.ts`, `useContactsPageActions.ts`
-- Contacts directory: `ContactsToolbar`, `ContactsTable`, `ContactCards`, `ContactKanban`
+- Contacts reference page: `apps/frontend/src/tenant/features/contacts/ContactsPage.tsx`
+- Students / Teachers soft-delete Work: `StudentsPage.tsx`, `TeachersPage.tsx` + list components
 - Contacts REST hooks: `useContacts.ts`
-- Shared contract pattern: `packages/shared/src/contactsModuleContract.ts`
+- Shared contract pattern: `packages/shared/src/contactsModuleContract.ts` (also `studentsModuleContract`, `teachersModuleContract`)
 
 ## Workflow
 
@@ -23,18 +22,20 @@ Use this skill when changing a module command centre, Work tab, directory, row a
 2. Keep `PageHeader` as the always-visible command centre. Put module metrics, add, export, and integrity tools there.
 3. Keep Work module-scoped: directory, CRUD, detail drawer, filters, sorting, view switch, selection, and bulk actions only.
 4. Use Query hooks when REST exists; use `useLiveCollection` only for legacy collection modules.
-5. Enforce permissions in both UI and backend. UI hiding is not security.
-6. Persist column/field preferences per user and module when permitted.
-7. Add or preserve mobile card layouts for dense directories.
-8. Report validation, permission, sync, and partial-bulk failures clearly through `notify` and inline states.
+5. Enforce permissions with `useModulePermissions(contract)` / `can()` in UI and `rbacService` on the backend. UI hiding is not security — omit forbidden actions.
+6. Soft-delete entities: default list excludes deleted; trash toggle uses `includeDeleted` + filter `deletedAt`; restore/bulk restore; hide Add and messaging in trash mode.
+7. Persist column/field preferences per user and module when permitted.
+8. Add or preserve mobile card layouts for dense directories.
+9. Report validation, permission, sync, and partial-bulk failures clearly through `notify` and inline states.
 
 ## Work Checklist
 
 ```
 - [ ] PageHeader command centre stays visible on all tiers
 - [ ] Metrics are permission-scoped
-- [ ] Create action uses approved fields/defaults
+- [ ] Create action uses approved fields/defaults; omitted when !canWrite
 - [ ] Export respects filters, RBAC, field visibility, and soft-delete policy
+- [ ] Soft-delete trash toggle + restore when API supports it
 - [ ] Dedup/merge requires explicit confirmation
 - [ ] Search/filter/sort use approved keys
 - [ ] Detail drawer uses registry tabs/fields and RBAC

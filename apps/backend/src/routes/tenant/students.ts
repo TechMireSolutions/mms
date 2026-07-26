@@ -1,10 +1,13 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { canReadCollection, canWriteCollection } from '../../services/rbacService.js';
+import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../services/rbacService.js';
 import {
   createStudent,
   deleteStudentById,
   restoreStudentById,
+  bulkSoftDeleteStudents,
+  bulkRestoreStudents,
+  bulkUpdateStudentStatus,
   loadStudents,
   loadStudentsPage,
   loadStudentsByIds,
@@ -16,9 +19,15 @@ import {
   updateStudentById,
 } from '../../services/studentService.js';
 import type { User } from '@mms/shared';
-import { STUDENTS_MODULE_CONTRACT, computeStudentsCommandMetrics } from '@mms/shared';
-import { sendForbidden } from '../../lib/httpErrors.js';
-import { studentRecordSchema, studentsListQuerySchema, studentsNextGrNumberQuerySchema, studentsDuplicateCheckBodySchema } from '../../validation/studentSchemas.js';
+import { STUDENTS_MODULE_CONTRACT, computeStudentsCommandMetrics, studentRecordSchema } from '@mms/shared';
+import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
+import {
+  studentsListQuerySchema,
+  studentsNextGrNumberQuerySchema,
+  studentsDuplicateCheckBodySchema,
+  studentsBulkIdsSchema,
+  studentsBulkStatusSchema,
+} from '../../validation/studentSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { validateStudentDynamic } from '../../services/studentValidationService.js';
 import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
@@ -54,6 +63,50 @@ export default async function studentsRoutes(
     loadLinkedContactIdsFn: loadStudentLinkedContactIds,
     columnPreferencesObjectKey: STUDENTS_MODULE_CONTRACT.columnPreferencesObjectKey,
     validateDynamicFn: validateStudentDynamic,
+    canWriteDeletedCheck: (user) => canDeleteCollection(user, 'students'),
+  });
+
+  fastify.post('/bulk-delete', async (request, reply) => {
+    const user = request.user as User;
+    if (!canDeleteCollection(user, 'students')) return sendForbidden(reply);
+    const parsed = parseRequest(studentsBulkIdsSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const result = await bulkSoftDeleteStudents(
+        parsed.data.ids.map(String),
+        String(user.id),
+        parsed.data.deletionReason,
+      );
+      return reply.send({ success: true, ...result });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to bulk delete students');
+    }
+  });
+
+  fastify.post('/bulk-restore', async (request, reply) => {
+    const user = request.user as User;
+    if (!canDeleteCollection(user, 'students')) return sendForbidden(reply);
+    const parsed = parseRequest(studentsBulkIdsSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const result = await bulkRestoreStudents(parsed.data.ids.map(String));
+      return reply.send({ success: true, ...result });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to bulk restore students');
+    }
+  });
+
+  fastify.post('/bulk-status', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, 'students')) return sendForbidden(reply);
+    const parsed = parseRequest(studentsBulkStatusSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const result = await bulkUpdateStudentStatus(parsed.data.ids.map(String), parsed.data.status);
+      return reply.send({ success: true, ...result });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to bulk update student status');
+    }
   });
 
   // --- Custom GET Next GR Number ---

@@ -94,12 +94,40 @@ export function createGenericRelationalService<
     return true;
   }
 
+  async function bulkDeleteByIds(
+    ids: string[],
+    deletedBy: string,
+    deletionReason?: string,
+  ): Promise<{ succeeded: number; failed: number }> {
+    let succeeded = 0;
+    let failed = 0;
+    for (const id of ids) {
+      const ok = await deleteById(id, deletedBy, deletionReason);
+      if (ok) succeeded += 1;
+      else failed += 1;
+    }
+    return { succeeded, failed };
+  }
+
+  async function bulkRestoreByIds(ids: string[]): Promise<{ succeeded: number; failed: number }> {
+    let succeeded = 0;
+    let failed = 0;
+    for (const id of ids) {
+      const ok = await restoreById(id);
+      if (ok) succeeded += 1;
+      else failed += 1;
+    }
+    return { succeeded, failed };
+  }
+
   return {
     loadAll,
     create,
     updateById,
     deleteById,
     restoreById,
+    bulkDeleteByIds,
+    bulkRestoreByIds,
   };
 }
 

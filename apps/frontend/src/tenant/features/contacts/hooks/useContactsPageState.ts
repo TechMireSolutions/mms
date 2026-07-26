@@ -1,16 +1,16 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
-import type { Contact, AppTranslationKey } from "@mms/shared";
+import type { Contact, AppTranslationKey, ContactsQuickFilter } from "@mms/shared";
 import {
   getDisplayName,
   getPrimaryPhone,
-  getPrimaryEmail,
   hasWhatsApp,
   resolveModuleTierTab,
-  contactMatchesSearch,
   filterActiveContacts,
   isContactDeleted,
+  filterContactsForQuery,
+  sortContacts,
   CONTACTS_MODULE_CONTRACT,
   syncContactScalarFields,
 } from "@mms/shared";
@@ -32,7 +32,6 @@ import {
   type ContactsWorkDrillDown,
 } from "@/lib/contacts/contactsWorkDrillDown";
 import { collectLinkedContactIds, mergeContactLinkDirectory } from "@/lib/contacts/contactLinkIds";
-import { sortContacts } from "@/lib/contacts/contactSortUtils";
 import { notify } from "@/lib/notify";
 import {
   useContactMutations,
@@ -249,7 +248,7 @@ export function useContactsPageState({
 
   const [search, setSearch] = useState("");
   const [filterGender, setFilterGender] = useState("");
-  const [quickFilter, setQuickFilter] = useState<"all" | "whatsapp" | "syed" | "missingInfo">("all");
+  const [quickFilter, setQuickFilter] = useState<ContactsQuickFilter>("all");
   const [sortField, setSortField] = useState("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [selected, setSelected] = useState<(string | number)[]>([]);
@@ -286,6 +285,7 @@ export function useContactsPageState({
     gender: filterGender,
     sortField,
     sortDir,
+    quickFilter,
     enabled: useServerWork,
   });
 
@@ -371,13 +371,11 @@ export function useContactsPageState({
   const defaultProvince = prefs.defaultProvince || "";
 
   const filtered = useMemo(() => {
-    const list = contacts.filter((contact) => {
-      if (!contactMatchesSearch(contact, search)) return false;
-      if (filterGender && contact.gender !== filterGender) return false;
-      if (quickFilter === "whatsapp" && !hasWhatsApp(contact)) return false;
-      if (quickFilter === "syed" && !contact.isSyed) return false;
-      if (quickFilter === "missingInfo" && (getPrimaryPhone(contact) && getPrimaryEmail(contact))) return false;
-      return true;
+    const list = filterContactsForQuery(contacts, {
+      search,
+      gender: filterGender || undefined,
+      includeDeleted: true,
+      quickFilter,
     });
     return sortContacts(list, sortField, sortDir);
   }, [contacts, search, filterGender, quickFilter, sortField, sortDir]);
@@ -561,6 +559,7 @@ export function useContactsPageState({
           gender: filterGender || undefined,
           sortField,
           sortDir,
+          quickFilter,
         },
         columns: tableColumns,
         filename,

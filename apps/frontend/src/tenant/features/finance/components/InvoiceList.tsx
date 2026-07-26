@@ -26,6 +26,7 @@ interface InvoiceListProps {
   invoices: Invoice[];
   onView: (invoice: Invoice) => void;
   onRecord: (invoice: Invoice) => void;
+  canWrite?: boolean;
   isColumnVisible?: (key: string) => boolean;
   columnCustomizer?: ModuleColumnCustomizerProps;
 }
@@ -34,6 +35,7 @@ export function InvoiceList({
   invoices,
   onView,
   onRecord,
+  canWrite = true,
   isColumnVisible,
   columnCustomizer,
 }: InvoiceListProps) {
@@ -277,7 +279,7 @@ export function InvoiceList({
                               <Button variant="ghost" onClick={() => onView(invoice)} aria-label={t("finance.viewInvoice", { id: invoice.id })} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                                 <Eye className="w-3.5 h-3.5" aria-hidden="true" />
                               </Button>
-                              {invoice.status !== "paid" && (
+                              {canWrite && invoice.status !== "paid" && (
                                 <Button variant="ghost" onClick={() => onRecord(invoice)} aria-label={t("finance.recordPaymentFor", { id: invoice.id })} className="p-1.5 rounded-lg hover:bg-success/10 text-muted-foreground hover:text-success transition-colors">
                                   <ReceiptText className="w-3.5 h-3.5" aria-hidden="true" />
                                 </Button>

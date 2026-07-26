@@ -28,6 +28,7 @@ import {
   contactFieldUsageParamsSchema,
   contactsDuplicatesQuerySchema,
   contactsCsvExportBodySchema,
+  contactsDuplicateScanBodySchema,
   contactsListQuerySchema,
   contactsReportAnalyticsQuerySchema,
   contactDuplicateCheckBodySchema,
@@ -295,16 +296,20 @@ export async function contactRoutes(
     const user = request.user as User;
     if (!canReadContacts(user)) return sendForbidden(reply);
 
+    const parsed = parseRequest(contactsDuplicateScanBodySchema, request.body ?? {});
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+
     const tenant = getRequestTenant()!;
 
     const jobId = crypto.randomUUID();
     const userId = String(user.id);
+    const label = parsed.data.label?.trim() || 'Scanning for duplicate contacts…';
     const runningJob: BackgroundJobRecord = {
       id: jobId,
       moduleId: CONTACTS_MODULE_CONTRACT.moduleId,
       kind: 'duplicate-scan',
       status: 'running',
-      label: 'Scanning for duplicate contacts…',
+      label,
       createdAt: new Date().toISOString(),
     };
 

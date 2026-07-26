@@ -5,6 +5,7 @@ export type Permission =
   | "contacts.delete"
   | "students.read"
   | "students.write"
+  | "students.delete"
   | "teachers.read"
   | "teachers.write"
   | "users.manage"
@@ -24,6 +25,7 @@ const ADMIN: Permission[] = [
   "contacts.delete",
   "students.read",
   "students.write",
+  "students.delete",
   "teachers.read",
   "teachers.write",
   "users.manage",

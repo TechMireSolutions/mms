@@ -1,4 +1,5 @@
 import type { Permission } from './permissions.js';
+import { DEFAULT_SETTINGS_SUB_TABS } from './contactTypes.js';
 import { z } from 'zod';
 
 export const phoneNumberSchema = z
@@ -129,7 +130,10 @@ export const CONTACTS_MODULE_CONTRACT = {
     bulkActions: ['whatsapp', 'sms', 'export', 'delete'] as const,
     integrityTools: ['duplicates'] as const,
   },
-  setupSubTabs: ['preferences', 'sync'] as const,
+  setupSubTabs: DEFAULT_SETTINGS_SUB_TABS
+    .slice()
+    .sort((left, right) => left.order - right.order)
+    .map((tab) => tab.key) as ['fields', 'preferences', 'sync'],
   defaultExportFilename: 'contacts.csv',
   defaultLifecycleStage: 'Lead',
   heroFieldKeys: ['avatar', 'firstName', 'lastName', 'dob', 'gender', 'isSyed'] as const,

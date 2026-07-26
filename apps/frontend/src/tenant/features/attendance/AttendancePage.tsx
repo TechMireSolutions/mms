@@ -22,6 +22,7 @@ import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { saveCollection } from "@/lib/db";
+import { notify } from "@/lib/notify";
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import {
   useAttendanceRecordsCollection,
@@ -92,8 +93,12 @@ export default function Attendance() {
     const nextAttendanceRecords = typeof updater === "function" ? updater(attendanceRecords) : updater;
     saveCollection("attendance_records", nextAttendanceRecords);
     queryClient.setQueryData(ATTENDANCE_QUERY_KEY, nextAttendanceRecords);
-    replaceAll.mutate(nextAttendanceRecords);
-  }, [attendanceRecords, replaceAll, queryClient]);
+    void replaceAll.mutateAsync(nextAttendanceRecords).catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : t("settings.serverSaveFailed");
+      notify.error(message);
+    });
+  }, [attendanceRecords, replaceAll, queryClient, t]);
+
 
   const canSeeAttendanceAnalytics = canAnalyticsView
     && (can("users.manage") || canWriteAttendance || can("enrollments.write") || !can("finance.write"));

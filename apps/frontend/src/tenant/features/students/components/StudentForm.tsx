@@ -24,7 +24,7 @@ import {
   Student,
   Contact,
   StudentStatus,
-  STUDENT_STATUS_VALUES,
+  resolveStudentStatuses,
   normalizeStoredStudent,
   toTitleCase,
   getPrimaryEmail,
@@ -38,6 +38,7 @@ import {
   todayISO,
   type FieldDefinition,
   GENDERS,
+  DEFAULT_STUDENT_ENABLED_TABS,
 } from "@mms/shared";
 import { GrBadge } from "@/tenant/features/students/components/GrBadge";
 
@@ -102,7 +103,7 @@ export default function StudentForm({
     setStudentDraft((prev) => ({ ...prev, ...patch }));
   };
 
-  const enabledTabs = useMemo(() => new Set(settings.enabledTabs || ["guardian", "academic"]), [settings.enabledTabs]);
+  const enabledTabs = useMemo(() => new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS), [settings.enabledTabs]);
 
 
   const getFieldError = (fieldId: string) => {
@@ -158,7 +159,7 @@ export default function StudentForm({
     await onSave(
       normalizeStoredStudent({
         ...saved,
-        id: student?.id || `st${Date.now()}`,
+        ...(student?.id != null ? { id: student.id } : {}),
         enrolledSessions: student?.enrolledSessions || [],
         ...(settings.version != null ? { _blueprintId: String(settings.version) } : {}),
       }) as Student,
@@ -436,7 +437,7 @@ export default function StudentForm({
                   <FormSelect
                     value={studentDraft.status || "active"}
                     onChange={(val) => updateDraft({ status: val as StudentStatus })}
-                    options={(configStatuses.length > 0 ? configStatuses : STUDENT_STATUS_VALUES).map((status) => ({
+                    options={resolveStudentStatuses(configStatuses).map((status) => ({
                       value: status,
                       label: t(`students.form.status.${status}` as AppTranslationKey) || status,
                     }))}

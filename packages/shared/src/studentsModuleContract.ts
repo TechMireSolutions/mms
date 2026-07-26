@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { normalizeStoredStudent } from './studentUtils.js';
 
 export const studentCoreSchema = z.object({
-  id: z.union([z.string(), z.number()]),
+  id: z.union([z.string(), z.number()]).optional(),
   contactId: z.union([z.string(), z.number()]).nullish().transform(v => v === null ? undefined : v),
   fatherContactId: z.union([z.string(), z.number()]).nullish().transform(v => v === null ? undefined : v),
   motherContactId: z.union([z.string(), z.number()]).nullish().transform(v => v === null ? undefined : v),
@@ -47,7 +47,7 @@ export const STUDENTS_MODULE_CONTRACT = {
   permissions: {
     read: 'students.read',
     write: 'students.write',
-    delete: 'students.write',
+    delete: 'students.delete',
     setupView: 'configuration.view',
     setupWrite: 'settings.global.write',
     export: 'students.read',
@@ -56,6 +56,13 @@ export const STUDENTS_MODULE_CONTRACT = {
   work: {
     directoryViews: ['list', 'cards'] as const,
     bulkActions: ['export', 'delete', 'status'] as const,
+  },
+  setupSubTabs: ['fields', 'preferences'] as const,
+  softDelete: {
+    workExcludesDeleted: true,
+    reportsIncludeDeleted: false,
+    exportsIncludeDeleted: false,
+    captureDeletionReason: true,
   },
   /** Default Work directory page size when using server pagination (globle1 §10). */
   defaultPageSize: 50,

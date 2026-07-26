@@ -14,6 +14,7 @@ import {
   ContactActivity,
   canViewContactField,
   CONTACTS_MODULE_CONTRACT,
+  DEFAULT_DETAIL_TABS,
   getDisplayName,
   getPrimaryPhone,
   formatPhoneWithCountryCode,
@@ -23,6 +24,7 @@ import {
   todayISO,
   AppTranslationKey,
 } from "@mms/shared";
+import { useQueryClient } from "@tanstack/react-query";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
@@ -37,7 +39,7 @@ import {
   resolveAddressLabel,
   resolveSocialPlatformLabel,
 } from "@/lib/contacts/contactI18n";
-import { apiJson } from "@/lib/apiClient";
+import { contactDetailQueryKey, fetchContactById } from "@/tenant/features/contacts/hooks/useContacts";
 import { Button } from "@/components/ui/button";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { Input } from "@/components/ui/input";
@@ -63,6 +65,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   whatsapp: MessageCircle,
   call: Phone,
 };
+
+const DETAIL_SYSTEM_TAB_KEYS = new Set(DEFAULT_DETAIL_TABS.map((tab) => tab.key));
 
 const DETAIL_STYLES = {
   whatsappActive: "bg-success/10 text-success border-success/30 hover:bg-success/20",
@@ -184,6 +188,7 @@ interface ContactDetailDrawerProps {
   onEmail: (contacts: Contact[]) => void;
   allContacts?: Contact[];
   onUpdateContact?: (contact: Contact) => Promise<void>;
+  canWrite?: boolean;
 }
 
 interface FieldGroupCardProps {
@@ -275,12 +280,14 @@ export default function ContactDetailDrawer({
   onEmail,
   allContacts = [],
   onUpdateContact,
+  canWrite = false,
 }: ContactDetailDrawerProps): JSX.Element {
   const { enabledTabIds, isTabFieldEnabled, fieldConfig, fields, phoneLabels, emailLabels, addressLabels, socialPlatforms } = useContactConfig();
   const { user } = useAuth();
   const { role } = usePermissions();
   const viewerRole = role ?? '';
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const noteInputId = useId();
   const [contactState, setContactState] = useState<Contact>(initialContact);
   const [noteText, setNoteText] = useState<string>("");
@@ -342,7 +349,7 @@ export default function ContactDetailDrawer({
     const tabsFromConfig = fieldConfig.detailTabs || [];
     const sorted = [...tabsFromConfig]
       .sort((a, b) => a.order - b.order)
-      .filter((tab) => tab.enabled && (["overview", "timeline", "network", "files"].includes(tab.key) || enabledTabIds.has(tab.key)));
+      .filter((tab) => tab.enabled && (DETAIL_SYSTEM_TAB_KEYS.has(tab.key) || enabledTabIds.has(tab.key)));
 
     return sorted.map((tab) => ({
       key: tab.key,
@@ -455,16 +462,25 @@ export default function ContactDetailDrawer({
     }
   };
 
-  const handleNavigateToContact = (targetId: string | number): void => {
+  const handleNavigateToContact = useCallback((targetId: string | number): void => {
     const target = allContacts.find((contact) => String(contact.id) === String(targetId));
     if (target) {
       setContactState(target);
       return;
     }
-    void apiJson<{ contact: Contact }>(`${CONTACTS_MODULE_CONTRACT.restBasePath}/${targetId}`)
-      .then((body) => setContactState(body.contact))
-      .catch(() => undefined);
-  };
+    const contactId = String(targetId);
+    void queryClient
+      .fetchQuery({
+        queryKey: contactDetailQueryKey(contactId),
+        queryFn: () => fetchContactById(contactId),
+      })
+      .then((contact) => {
+        setContactState(contact);
+      })
+      .catch(() => {
+        notify.error(t("contacts.detail.loadFailed"));
+      });
+  }, [allContacts, queryClient, t]);
 
   return (
     <DetailDrawerShell
@@ -472,15 +488,17 @@ export default function ContactDetailDrawer({
       title={t('contacts.detail.title')}
       ariaLabel={t('contacts.detail.title')}
       headerActions={
-        <Button
-          variant="outline"
-          onClick={() => onEdit(contactState)}
-          aria-label={t('contacts.detail.editProfile')}
-          className="h-8 w-8 p-1.5 rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shadow-none"
-          title={t('contacts.detail.editProfile')}
-        >
-          <Edit2 className="w-4 h-4" />
-        </Button>
+        canWrite ? (
+          <Button
+            variant="outline"
+            onClick={() => onEdit(contactState)}
+            aria-label={t('contacts.detail.editProfile')}
+            className="h-8 w-8 p-1.5 rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shadow-none"
+            title={t('contacts.detail.editProfile')}
+          >
+            <Edit2 className="w-4 h-4" />
+          </Button>
+        ) : undefined
       }
       headerExtra={
         <div className="flex border-b border-border py-1 overflow-x-auto w-full">
@@ -956,7 +974,7 @@ export default function ContactDetailDrawer({
           )}
 
           {/* Dynamic Custom Tabs (DRY FieldGroupCard component) */}
-          {!["overview", "timeline", "network", "files"].includes(activeTab) && (
+          {!DETAIL_SYSTEM_TAB_KEYS.has(activeTab) && (
             <div className="space-y-4">
               {Object.entries(grouped)
                 .filter(([, fieldsList]) => fieldsList.some((field) => field.tab === activeTab))

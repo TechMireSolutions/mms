@@ -359,6 +359,7 @@ export interface DistributionManagerProps {
   batches: StockBatch[];
   onUpdate: (dists: Distribution[]) => void;
   onFilteredCountChange?: (count: number) => void;
+  canWrite?: boolean;
   isColumnVisible?: (key: string) => boolean;
   columnCustomizer?: ModuleColumnCustomizerProps;
   onMessage?: (channel: 'sms' | 'whatsapp' | 'email', distributions: Distribution[]) => void;
@@ -380,6 +381,7 @@ export function DistributionManager({
   batches,
   onUpdate,
   onFilteredCountChange,
+  canWrite = true,
   isColumnVisible,
   columnCustomizer,
   onMessage,
@@ -470,9 +472,11 @@ export function DistributionManager({
             labels={columnCustomizer.labels}
           />
         )}
-        <Button type="button" onClick={() => setShowModal(true)} className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap">
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("hasanat.distributeCards")}
-        </Button>
+        {canWrite && (
+          <Button type="button" onClick={() => setShowModal(true)} className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap">
+            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("hasanat.distributeCards")}
+          </Button>
+        )}
       </header>
 
       <Card accentColor="primary" className="shadow-sm hover:shadow-md border-border/80 p-0 overflow-hidden bg-card/45 backdrop-blur-sm">
@@ -578,6 +582,7 @@ export function DistributionManager({
                         </td>
                       )}
                       <td className="px-4 py-3">
+                        {(canWrite || onMessage) && (
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -586,16 +591,20 @@ export function DistributionManager({
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-40">
-                              <DropdownMenuLabel className="text-xs">{t("hasanat.changeStatus")}</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              {Object.keys(statusConfig).map((status) => (
-                                <DropdownMenuCheckboxItem key={status} checked={distribution.status === status} onCheckedChange={() => changeStatus(distribution.id, status as "active" | "redeemed" | "returned")}>
-                                  {statusLabels[status as keyof typeof statusLabels]}
-                                </DropdownMenuCheckboxItem>
-                              ))}
+                              {canWrite && (
+                                <>
+                                  <DropdownMenuLabel className="text-xs">{t("hasanat.changeStatus")}</DropdownMenuLabel>
+                                  <DropdownMenuSeparator />
+                                  {Object.keys(statusConfig).map((status) => (
+                                    <DropdownMenuCheckboxItem key={status} checked={distribution.status === status} onCheckedChange={() => changeStatus(distribution.id, status as "active" | "redeemed" | "returned")}>
+                                      {statusLabels[status as keyof typeof statusLabels]}
+                                    </DropdownMenuCheckboxItem>
+                                  ))}
+                                </>
+                              )}
                               {onMessage && (
                                 <>
-                                  <DropdownMenuSeparator />
+                                  {canWrite && <DropdownMenuSeparator />}
                                   <DropdownMenuLabel className="text-xs">Notify Recipient</DropdownMenuLabel>
                                   <DropdownMenuCheckboxItem checked={false} onCheckedChange={() => onMessage('whatsapp', [distribution])}>
                                     WhatsApp
@@ -608,6 +617,7 @@ export function DistributionManager({
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
+                        )}
                       </td>
                     </motion.tr>
                   );
@@ -618,13 +628,15 @@ export function DistributionManager({
         </div>
       </Card>
 
-      <DistributeModal
-        open={showModal}
-        denoms={denoms}
-        batches={batches}
-        onClose={() => setShowModal(false)}
-        onSave={handleDistribute}
-      />
+      {canWrite && (
+        <DistributeModal
+          open={showModal}
+          denoms={denoms}
+          batches={batches}
+          onClose={() => setShowModal(false)}
+          onSave={handleDistribute}
+        />
+      )}
     </section>
   );
 }

@@ -38,6 +38,7 @@ interface ExamsListProps {
   exams: Exam[];
   onNew: () => void;
   onEdit: (exam: Exam) => void;
+  canWrite?: boolean;
   listLayout?: boolean;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
@@ -51,6 +52,7 @@ export default function ExamsList({
   exams,
   onNew,
   onEdit,
+  canWrite = true,
   listLayout: _listLayout = false,
   onFilteredCountChange,
   isColumnVisible,
@@ -181,13 +183,15 @@ export default function ExamsList({
               labels={columnCustomizer.labels}
             />
           )}
-          <Button
-            type="button"
-            onClick={onNew}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap"
-          >
-            {t("examinations.newExam")}
-          </Button>
+          {canWrite && (
+            <Button
+              type="button"
+              onClick={onNew}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap"
+            >
+              {t("examinations.newExam")}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -235,15 +239,17 @@ export default function ExamsList({
                         <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{exam.subject}</p>
                       )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      type="button"
-                      onClick={() => onEdit(exam)}
-                      aria-label={t("examinations.editExamAria", { name: exam.name })}
-                      className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-                    </Button>
+                    {canWrite && (
+                      <Button
+                        variant="ghost"
+                        type="button"
+                        onClick={() => onEdit(exam)}
+                        aria-label={t("examinations.editExamAria", { name: exam.name })}
+                        className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
+                      </Button>
+                    )}
                   </div>
 
                   {exam.description && (
@@ -402,15 +408,17 @@ export default function ExamsList({
                             >
                               <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              type="button"
-                              onClick={() => onEdit(exam)}
-                              aria-label={t("examinations.editExamAria", { name: exam.name })}
-                              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-all focus:opacity-100"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-                            </Button>
+                            {canWrite && (
+                              <Button
+                                variant="ghost"
+                                type="button"
+                                onClick={() => onEdit(exam)}
+                                aria-label={t("examinations.editExamAria", { name: exam.name })}
+                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-all focus:opacity-100"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </motion.tr>

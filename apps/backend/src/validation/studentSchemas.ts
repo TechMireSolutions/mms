@@ -1,18 +1,5 @@
 import { z } from 'zod';
 import { baseListQuerySchema } from './commonSchemas.js';
-import {
-  studentCoreSchema,
-  studentRecordSchema,
-  studentListSchema,
-  type StudentRecord,
-} from '@mms/shared';
-
-export {
-  studentCoreSchema,
-  studentRecordSchema,
-  studentListSchema,
-  type StudentRecord,
-};
 
 export const studentsListQuerySchema = baseListQuerySchema.extend({
   status: z.string().max(200).optional(),
@@ -35,4 +22,14 @@ export const studentsDuplicateCheckBodySchema = z.object({
   email: z.string().max(320).optional(),
   name: z.string().max(500).optional(),
   dob: z.string().max(32).optional(),
+});
+
+export const studentsBulkIdsSchema = z.object({
+  ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),
+  deletionReason: z.string().max(500).optional(),
+});
+
+export const studentsBulkStatusSchema = z.object({
+  ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),
+  status: z.string().min(1).max(64),
 });

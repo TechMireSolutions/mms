@@ -109,6 +109,7 @@ export interface StockManagerProps {
   batches: StockBatch[];
   denoms: Denomination[];
   onUpdate: (batches: StockBatch[]) => void;
+  canWrite?: boolean;
 }
 
 /**
@@ -121,7 +122,7 @@ export interface StockManagerProps {
  * @param props - Component properties.
  * @returns React element representing the stock manager UI.
  */
-export function StockManager({ batches, denoms, onUpdate }: StockManagerProps) {
+export function StockManager({ batches, denoms, onUpdate, canWrite = true }: StockManagerProps) {
   const [showModal, setShowModal] = useState(false);
 
   const handleAdd = (batch: StockBatch) => { onUpdate([...batches, batch]); setShowModal(false); };
@@ -137,13 +138,15 @@ export function StockManager({ batches, denoms, onUpdate }: StockManagerProps) {
     <section aria-label="Stock Manager" className="space-y-5">
       <header className="flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground m-0">{batches.length} batch{batches.length !== 1 ? "es" : ""}</p>
-        <Button
-          type="button"
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Batch
-        </Button>
+        {canWrite && (
+          <Button
+            type="button"
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Batch
+          </Button>
+        )}
       </header>
 
       {(Object.values(grouped) as { den: Denomination; batches: StockBatch[] }[]).map(({ den, batches: denominationBatches }) => {
@@ -201,7 +204,9 @@ export function StockManager({ batches, denoms, onUpdate }: StockManagerProps) {
         </div>
       )}
 
-      <AddBatchModal open={showModal} denoms={denoms} onClose={() => setShowModal(false)} onSave={handleAdd} />
+      {canWrite && (
+        <AddBatchModal open={showModal} denoms={denoms} onClose={() => setShowModal(false)} onSave={handleAdd} />
+      )}
     </section>
   );
 }

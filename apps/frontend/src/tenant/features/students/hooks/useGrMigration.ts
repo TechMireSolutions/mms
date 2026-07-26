@@ -51,19 +51,20 @@ function applyGrNumberMigration(
 }
 
 /**
- * Runs a one-time GR number back-fill migration on the Work tab.
- * Records completion in localStorage so it only runs once per device.
+ * One-shot GR number backfill for legacy students missing `grNumber`.
+ * Runs only for writers on the Work tab; records completion in localStorage.
  */
 export function useGrMigration(
   settings: StudentsSettings,
   updateStudent: ReturnType<typeof useStudentMutations>['updateStudent'],
   activeTab: string,
+  canWrite: boolean,
 ): void {
   const [needsMigrationScan, setNeedsMigrationScan] = useState(() => !grMigrationAlreadyDone());
   const migrationAppliedRef = useRef(false);
 
   useEffect(() => {
-    if (!needsMigrationScan || activeTab !== 'work') return;
+    if (!canWrite || !needsMigrationScan || activeTab !== 'work') return;
     let cancelled = false;
 
     void (async () => {
@@ -74,9 +75,9 @@ export function useGrMigration(
         if (didMigrate && !migrationAppliedRef.current) {
           migrationAppliedRef.current = true;
           await Promise.all(
-            migratedForGr.map((student) =>
-              updateStudent.mutateAsync({ id: String(student.id), student }),
-            ),
+            migratedForGr
+              .filter((student) => Boolean(student.grNumber))
+              .map((student) => updateStudent.mutateAsync({ id: String(student.id), student })),
           );
         }
       } finally {
@@ -94,5 +95,5 @@ export function useGrMigration(
     return () => {
       cancelled = true;
     };
-  }, [needsMigrationScan, activeTab, settings, updateStudent]);
+  }, [activeTab, canWrite, needsMigrationScan, settings, updateStudent]);
 }

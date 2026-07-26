@@ -56,4 +56,6 @@ Operations that exceed direct interaction limits or process massive records must
 ## 6. Security Boundaries & Isolation
 - **Row-Level Security (RLS)**: Enforce transaction-scoped tenant RLS context using `set_config` with `is_local: true` (SET LOCAL) on pooled connections, as defined in **`mms-data-layer.md`**. Prohibit global config settings.
 - **RBAC**: Apply `can('module.action')` checks globally. Render options based on permissions (forbidden actions must be omitted entirely from the DOM, never rendered as disabled placeholders).
-- **Soft Deletion**: Use `deletedAt` and `deletedBy` instead of raw `DELETE` SQL operations. Filter deleted rows from standard queries while permitting admins to view/restore archives.
+- **Soft Deletion**: Use `deletedAt` and `deletedBy` instead of raw `DELETE` SQL operations. Filter deleted rows from standard queries while permitting permitted users to view/restore archives.
+  - **Reference FE**: Contacts, Students, and Teachers — Work trash toggle (`includeDeleted` + client filter `deletedAt`), row restore, bulk restore, omit messaging/delete in trash mode.
+  - **When adding REST CRUD**: Ship `DELETE` soft-delete + `POST :id/restore`, list `includeDeleted`, and Work trash UI (or document intentional hard-delete).

@@ -7,12 +7,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
-import { DEFAULT_COLUMN_REGISTRY } from "@mms/shared";
+import { DEFAULT_COLUMN_REGISTRY, type AppTranslationKey, type ContactsQuickFilter } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 
-export type QuickFilterPreset = "all" | "whatsapp" | "syed" | "missingInfo";
+export type QuickFilterPreset = ContactsQuickFilter;
 
 interface ContactsToolbarProps {
   search: string;
@@ -92,7 +92,11 @@ export default function ContactsToolbar({
     [t],
   );
 
-  const quickFilterPresets: Array<{ id: QuickFilterPreset; labelKey: string; icon: React.ComponentType<{ className?: string }> }> = useMemo(
+  const quickFilterPresets: Array<{
+    id: QuickFilterPreset;
+    labelKey: AppTranslationKey;
+    icon: React.ComponentType<{ className?: string }>;
+  }> = useMemo(
     () => [
       { id: "all", labelKey: "contacts.filtersAll", icon: Users },
       { id: "whatsapp", labelKey: "contacts.filtersWhatsApp", icon: MessageCircle },
@@ -203,7 +207,7 @@ export default function ContactsToolbar({
           )}
 
           {onViewModeChange && (
-            <div className="flex items-center p-0.5 rounded-xl border border-border/50 bg-card/60 backdrop-blur-md shadow-xs" role="group" aria-label="View Mode">
+            <div className="flex items-center p-0.5 rounded-xl border border-border/50 bg-card/60 backdrop-blur-md shadow-xs" role="group" aria-label={t("contacts.viewMode.group")}>
               <Button
                 type="button"
                 variant="ghost"
@@ -213,7 +217,7 @@ export default function ContactsToolbar({
                     ? "bg-primary text-primary-foreground shadow-xs"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
-                aria-label="Table View"
+                aria-label={t("contacts.viewMode.table")}
               >
                 <Table className="w-3.5 h-3.5" />
               </Button>
@@ -226,7 +230,7 @@ export default function ContactsToolbar({
                     ? "bg-primary text-primary-foreground shadow-xs"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
-                aria-label="Cards View"
+                aria-label={t("contacts.viewMode.cards")}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
               </Button>
@@ -260,7 +264,7 @@ export default function ContactsToolbar({
                 }`}
               >
                 <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
-                <span>{t(preset.labelKey as any) || preset.id}</span>
+                <span>{t(preset.labelKey) || preset.id}</span>
               </button>
             );
           })}

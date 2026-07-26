@@ -514,13 +514,14 @@ function ContactsInner() {
               onClose={() => setViewContact(null)}
               onEdit={(contactToEdit) => {
                 setViewContact(null);
-                if (canWrite) handleEdit(contactToEdit);
+                handleEdit(contactToEdit);
               }}
               onWhatsApp={handleWhatsApp}
               onSms={handleSms}
               onEmail={handleEmail}
               allContacts={allContactsForLinks}
               onUpdateContact={canWrite ? handleUpdateContact : undefined}
+              canWrite={canWrite}
             />
           )}
         </AnimatePresence>

@@ -13,7 +13,7 @@ Governs testing patterns (unit, API integration, E2E), system diagnostics, loggi
 - **`@mms/shared`**: Unit tests for validation schemas, pure utilities, and permission calculations.
 - **`mms-backend`**: Integration tests utilizing Fastify's `inject()`. Focus on authentication endpoints, token rotation, RBAC constraints, and tenant context resolution.
 - **`mms-frontend`**: Client and hook tests run in a **`happy-dom`** environment (configured in `vitest.config.ts`) to support `localStorage` and DOM mocks. Mock API endpoints at the network boundary.
-- **E2E Playwright**: Smoke tests and critical UI flows (e.g., login, onboarding, record creation) reside in the `e2e/` folder. Test files must use the suffix `.spec.ts` (or `.ui.spec.ts` for UI tests). Execute E2E tests using `pnpm exec playwright test`. Auth states should be seeded programmatically via test API helpers rather than recreating login steps in UI setup hooks.
+- **E2E Playwright**: Critical UI flows live in `e2e/tests/*.spec.ts` (e.g. `onboarding-login.spec.ts` for platform setup → tenant onboard → contacts → student → attendance; Contacts UI and navigation specs). Run via `pnpm exec playwright test` or `pnpm test:e2e`. Prefer `getByLabel` / role queries; after bumping `@playwright/test`, run `pnpm exec playwright install`. Auth states may be seeded via scripts (e.g. `reset-platform-users.ts`) rather than recreating every login step.
 
 ### When to Write Tests
 1. **Shared Package**: All new non-trivial pure function exports in `@mms/shared` must include unit tests.

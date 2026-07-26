@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   MoreHorizontal, Edit2, Trash2, GraduationCap,
   ChevronUp, ChevronDown, Eye,
-  MessageSquare, MessageCircle, Mail, Tag
+  MessageSquare, MessageCircle, Mail, Tag, RotateCcw,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
-import { type Student, STUDENT_STATUS_VALUES, calcAge, formatDate, toMessagingRecipient, toTitleCase } from "@mms/shared";
+import { type Student, resolveStudentStatuses, calcAge, formatDate, toMessagingRecipient, toTitleCase } from "@mms/shared";
 import { useTranslation } from '@/hooks/useTranslation';
 import StudentDetail from "@/tenant/features/students/components/StudentDetail";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
@@ -39,11 +39,16 @@ export interface StudentListProps {
   students: Student[];
   onEdit: (student: Student) => void;
   onDelete: (id: string) => void;
+  onRestore?: (id: string) => void;
   onBulkDelete?: (ids: string[]) => void;
+  onBulkRestore?: (ids: string[]) => void;
   onBulkStatusChange?: (ids: string[], status: string) => void;
   layout?: string;
   isColumnVisible?: (key: string) => boolean;
   serverPagination?: StudentListServerPagination;
+  showDeleted?: boolean;
+  canWrite?: boolean;
+  canDelete?: boolean;
 }
 
 /**
@@ -53,11 +58,16 @@ export default function StudentList({
   students,
   onEdit,
   onDelete,
+  onRestore,
   onBulkDelete,
+  onBulkRestore,
   onBulkStatusChange,
   layout = "list",
   isColumnVisible,
   serverPagination,
+  showDeleted = false,
+  canWrite = true,
+  canDelete = true,
 }: StudentListProps): JSX.Element {
   const { t } = useTranslation();
   const sessions = useSessionsCollection();
@@ -98,12 +108,13 @@ export default function StudentList({
   // Messaging State
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
+  const [confirmBulkRestoreOpen, setConfirmBulkRestoreOpen] = useState(false);
 
   // Reset page and selection on data changes
   useEffect(() => {
     setCurrentPage(1);
     setSelectedIds([]);
-  }, [students.length, pageSize]);
+  }, [students.length, pageSize, showDeleted]);
 
   // Handle Header Click for Sorting
   const handleSort = (field: NonNullable<typeof sortField>) => {
@@ -235,19 +246,34 @@ export default function StudentList({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem onClick={() => setViewStudent(studentCard)}>
-                          <Eye className="w-3.5 h-3.5 me-2" /> {t("students.list.viewProfile")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onEdit(studentCard)}>
-                          <Edit2 className="w-3.5 h-3.5 me-2" /> {t("students.list.editStudent")}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => onDelete(studentIdStr)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 me-2" /> {t("students.list.remove")}
-                        </DropdownMenuItem>
+                        {!showDeleted && (
+                          <>
+                            <DropdownMenuItem onClick={() => setViewStudent(studentCard)}>
+                              <Eye className="w-3.5 h-3.5 me-2" /> {t("students.list.viewProfile")}
+                            </DropdownMenuItem>
+                            {canWrite && (
+                              <DropdownMenuItem onClick={() => onEdit(studentCard)}>
+                                <Edit2 className="w-3.5 h-3.5 me-2" /> {t("students.list.editStudent")}
+                              </DropdownMenuItem>
+                            )}
+                            {canDelete && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => onDelete(studentIdStr)}
+                                  className="text-destructive focus:text-destructive"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 me-2" /> {t("students.list.remove")}
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </>
+                        )}
+                        {showDeleted && canDelete && onRestore && (
+                          <DropdownMenuItem onClick={() => onRestore(studentIdStr)}>
+                            <RotateCcw className="w-3.5 h-3.5 me-2" /> {t("students.restore")}
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -471,31 +497,46 @@ export default function StudentList({
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-44">
-                              <DropdownMenuItem onClick={() => setViewStudent(studentRow)}>
-                                <Eye className="w-3.5 h-3.5 me-2" /> {t("students.list.viewProfile")}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => onEdit(studentRow)}>
-                                <Edit2 className="w-3.5 h-3.5 me-2" /> {t("students.list.editStudent")}
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => openComposer("whatsapp", [toMessagingRecipient(studentRow)])}>
-                                <MessageCircle className="w-3.5 h-3.5 me-2 text-success" /> {t("students.list.actionWhatsApp")}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => openComposer("sms", [toMessagingRecipient(studentRow)])}>
-                                <MessageSquare className="w-3.5 h-3.5 me-2 text-info" /> {t("students.list.actionSms")}
-                              </DropdownMenuItem>
-                              {studentRow.email && (
-                                <DropdownMenuItem onClick={() => openComposer("email", [toMessagingRecipient(studentRow)])}>
-                                  <Mail className="w-3.5 h-3.5 me-2 text-primary" /> {t("students.list.actionEmail")}
+                              {!showDeleted && (
+                                <>
+                                  <DropdownMenuItem onClick={() => setViewStudent(studentRow)}>
+                                    <Eye className="w-3.5 h-3.5 me-2" /> {t("students.list.viewProfile")}
+                                  </DropdownMenuItem>
+                                  {canWrite && (
+                                    <DropdownMenuItem onClick={() => onEdit(studentRow)}>
+                                      <Edit2 className="w-3.5 h-3.5 me-2" /> {t("students.list.editStudent")}
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => openComposer("whatsapp", [toMessagingRecipient(studentRow)])}>
+                                    <MessageCircle className="w-3.5 h-3.5 me-2 text-success" /> {t("students.list.actionWhatsApp")}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => openComposer("sms", [toMessagingRecipient(studentRow)])}>
+                                    <MessageSquare className="w-3.5 h-3.5 me-2 text-info" /> {t("students.list.actionSms")}
+                                  </DropdownMenuItem>
+                                  {studentRow.email && (
+                                    <DropdownMenuItem onClick={() => openComposer("email", [toMessagingRecipient(studentRow)])}>
+                                      <Mail className="w-3.5 h-3.5 me-2 text-primary" /> {t("students.list.actionEmail")}
+                                    </DropdownMenuItem>
+                                  )}
+                                  {canDelete && (
+                                    <>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        onClick={() => onDelete(studentIdStr)}
+                                        className="text-destructive focus:text-destructive"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5 me-2" /> {t("students.list.remove")}
+                                      </DropdownMenuItem>
+                                    </>
+                                  )}
+                                </>
+                              )}
+                              {showDeleted && canDelete && onRestore && (
+                                <DropdownMenuItem onClick={() => onRestore(studentIdStr)}>
+                                  <RotateCcw className="w-3.5 h-3.5 me-2" /> {t("students.restore")}
                                 </DropdownMenuItem>
                               )}
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => onDelete(studentIdStr)}
-                                className="text-destructive focus:text-destructive"
-                              >
-                                <Trash2 className="w-3.5 h-3.5 me-2" /> {t("students.list.remove")}
-                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </td>
@@ -537,70 +578,88 @@ export default function StudentList({
 
             <div className="h-4 w-px bg-border" />
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => openComposer("whatsapp", selectedStudents.map((s) => toMessagingRecipient(s)))}
-              className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
-            >
-              <MessageCircle className="w-3.5 h-3.5 text-success" /> {t("students.list.actionWhatsApp")}
-            </Button>
+            {showDeleted ? (
+              canDelete && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => { if (onBulkRestore) setConfirmBulkRestoreOpen(true); }}
+                className="px-3 py-1.5 rounded-lg border-primary/40 text-primary text-[11px] font-semibold hover:bg-primary/10 transition-colors h-auto flex items-center gap-1.5"
+              >
+                <RotateCcw className="w-3.5 h-3.5" /> {t("students.bulkRestore")}
+              </Button>
+              )
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => openComposer("whatsapp", selectedStudents.map((s) => toMessagingRecipient(s)))}
+                  className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 text-success" /> {t("students.list.actionWhatsApp")}
+                </Button>
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => openComposer("sms", selectedStudents.map((s) => toMessagingRecipient(s)))}
-              className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
-            >
-              <MessageSquare className="w-3.5 h-3.5 text-info" /> {t("students.list.actionSms")}
-            </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => openComposer("sms", selectedStudents.map((s) => toMessagingRecipient(s)))}
+                  className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-info" /> {t("students.list.actionSms")}
+                </Button>
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => openComposer("email", selectedStudents.filter((s) => s.email).map((s) => toMessagingRecipient(s)))}
-              className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
-            >
-              <Mail className="w-3.5 h-3.5 text-primary" /> {t("students.list.actionEmail")}
-            </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => openComposer("email", selectedStudents.filter((s) => s.email).map((s) => toMessagingRecipient(s)))}
+                  className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
+                >
+                  <Mail className="w-3.5 h-3.5 text-primary" /> {t("students.list.actionEmail")}
+                </Button>
 
-            {onBulkStatusChange && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
-                  >
-                    <Tag className="w-3.5 h-3.5 text-primary" /> {t("students.columns.status")} <ChevronDown className="w-3 h-3 ms-0.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-36">
-                  {(statuses.length > 0 ? statuses : STUDENT_STATUS_VALUES).map((statusVal) => (
-                    <DropdownMenuItem
-                      key={statusVal}
-                      onClick={() => {
-                        onBulkStatusChange(selectedIds, statusVal);
-                        setSelectedIds([]);
-                      }}
+                {canWrite && onBulkStatusChange && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
+                      >
+                        <Tag className="w-3.5 h-3.5 text-primary" /> {t("students.columns.status")} <ChevronDown className="w-3 h-3 ms-0.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-36">
+                      {resolveStudentStatuses(statuses).map((statusVal) => (
+                        <DropdownMenuItem
+                          key={statusVal}
+                          onClick={() => {
+                            onBulkStatusChange(selectedIds, statusVal);
+                            setSelectedIds([]);
+                          }}
+                        >
+                          <StatusBadge status={statusVal} size="sm" />
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+
+                {canDelete && (
+                  <>
+                    <div className="h-4 w-px bg-border" />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => { if (onBulkDelete) setConfirmBulkDeleteOpen(true); }}
+                      className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-[11px] font-semibold hover:bg-destructive/90 transition-colors h-auto"
                     >
-                      <StatusBadge status={statusVal} size="sm" />
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      {t("students.list.remove")}
+                    </Button>
+                  </>
+                )}
+              </>
             )}
-
-            <div className="h-4 w-px bg-border" />
-
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => { if (onBulkDelete) setConfirmBulkDeleteOpen(true); }}
-              className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-[11px] font-semibold hover:bg-destructive/90 transition-colors h-auto"
-            >
-              {t("students.list.remove")}
-            </Button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -611,10 +670,10 @@ export default function StudentList({
           <StudentDetail
             student={viewStudent}
             onClose={() => setViewStudent(null)}
-            onEdit={(student) => {
+            onEdit={canWrite ? (student) => {
               setViewStudent(null);
               onEdit(student);
-            }}
+            } : undefined}
           />
         )}
       </AnimatePresence>
@@ -641,6 +700,20 @@ export default function StudentList({
           onBulkDelete?.(selectedIds);
           setSelectedIds([]);
           setConfirmBulkDeleteOpen(false);
+        }}
+      />
+
+      <ConfirmAlertDialog
+        open={confirmBulkRestoreOpen}
+        onOpenChange={setConfirmBulkRestoreOpen}
+        title={t("students.bulkRestore")}
+        description={t("students.bulkRestoreConfirm", { count: selectedIds.length })}
+        confirmLabel={t("students.restore")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={() => {
+          onBulkRestore?.(selectedIds);
+          setSelectedIds([]);
+          setConfirmBulkRestoreOpen(false);
         }}
       />
     </div>

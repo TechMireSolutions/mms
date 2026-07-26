@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { ZodType } from 'zod';
 
 import type { User } from '@mms/shared';
-import { canReadCollection, canWriteCollection } from '../services/rbacService.js';
+import { canDeleteCollection, canReadCollection, canWriteCollection } from '../services/rbacService.js';
 import { sendForbidden, sendDatabaseError, sendNotFound } from './httpErrors.js';
 import { parseRequest, replyValidationError, executeDynamicValidation } from './zodRequest.js';
 import {
@@ -240,7 +240,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
   if (deleteFn) {
     fastify.delete<{ Params: { id: string } }>(`${prefix}/:id`, async (request, reply) => {
       const user = request.user as User;
-      if (!canWriteCollection(user, collection)) return sendForbidden(reply);
+      if (!canDeleteCollection(user, collection)) return sendForbidden(reply);
       const params = parseRequest(resourceIdParamsSchema, request.params);
       if (!params.ok) return replyValidationError(reply, params.message);
       const body = parseRequest(softDeleteBodySchema, request.body ?? {});
@@ -261,7 +261,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
   if (restoreFn) {
     fastify.post(`${prefix}/:id/restore`, async (request, reply) => {
       const user = request.user as User;
-      if (!canWriteCollection(user, collection)) return sendForbidden(reply);
+      if (!canDeleteCollection(user, collection)) return sendForbidden(reply);
       const params = parseRequest(resourceIdParamsSchema, request.params);
       if (!params.ok) return replyValidationError(reply, params.message);
       try {
@@ -463,6 +463,9 @@ export function registerBulkPutRoute<T>(
       const updated = await saveFn(parsed.data);
       return reply.send({ [responseKey]: updated });
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return replyValidationError(reply, error.issues.map((issue) => issue.message).join('; '));
+      }
       request.log.error(error, `Failed to replace ${errorMessagePrefix}`);
       return sendDatabaseError(reply, `Failed to replace ${errorMessagePrefix}`);
     }
@@ -561,6 +564,7 @@ export interface StandardExtendedRoutesOptions<TQuery, TRecord> {
   loadByIdsFn?: (ids: string[]) => Promise<TRecord[]>;
   loadLinkedContactIdsFn?: (excludeId?: string) => Promise<(string | number)[]>;
   columnPreferencesObjectKey?: string;
+  canWriteDeletedCheck?: (user: User) => boolean;
 }
 
 /**
@@ -587,6 +591,7 @@ export function registerStandardExtendedRoutes<
     loadByIdsFn,
     columnPreferencesObjectKey,
     loadLinkedContactIdsFn,
+    canWriteDeletedCheck,
   } = options;
 
   if (listQuerySchema && loadPageFn) {
@@ -596,6 +601,7 @@ export function registerStandardExtendedRoutes<
       schema: listQuerySchema,
       defaultPageSize: defaultPageSize ?? 20,
       errorMessagePrefix,
+      canWriteDeletedCheck,
       loadPageFn,
     });
   }
@@ -704,6 +710,7 @@ export function registerStandardTenantRoutes<
     customPostRoute,
     customPutRoute,
     validateDynamicFn,
+    canWriteDeletedCheck,
   } = options;
 
   registerStandardExtendedRoutes(fastify, {
@@ -720,6 +727,7 @@ export function registerStandardTenantRoutes<
     loadByIdsFn,
     columnPreferencesObjectKey,
     loadLinkedContactIdsFn,
+    canWriteDeletedCheck,
   });
 
   const hasPaginatedListRoute = !!(listQuerySchema && loadPageFn);

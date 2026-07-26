@@ -5,8 +5,9 @@ import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  UserPlus, GraduationCap, Filter, ChevronDown, Users, RotateCcw,
+  UserPlus, GraduationCap, Filter, ChevronDown, Users, RotateCcw, Archive,
 } from "lucide-react";
+import { notify } from "@/lib/notify";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -22,7 +23,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import StudentList from "@/tenant/features/students/components/StudentList";
 import StudentForm from "@/tenant/features/students/components/StudentForm";
 import StudentsSettingsPanel from "@/tenant/features/students/components/StudentsSettings";
-import { type Student, STUDENTS_MODULE_CONTRACT, toTitleCase, type AppTranslationKey } from "@mms/shared";
+import { type Student, STUDENTS_MODULE_CONTRACT, toTitleCase, resolveStudentStatuses, type AppTranslationKey } from "@mms/shared";
 
 
 import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
@@ -44,6 +45,7 @@ export default function Students() {
   const { t } = useTranslation();
   const {
     canWrite,
+    canDelete,
     canReports: canViewReports,
     canViewSetup,
   } = useModulePermissions(STUDENTS_MODULE_CONTRACT);
@@ -53,13 +55,23 @@ export default function Students() {
     canViewReports,
   });
   const { data: serverCount } = useStudentCount();
-  const { createStudent, updateStudent, deleteStudent, bulkDeleteStudents, bulkUpdateStudentStatus } = useStudentMutations();
-  const { settings, statuses: studentStatusOptions, genderFilters } = useStudentConfig();
+  const {
+    createStudent,
+    updateStudent,
+    deleteStudent,
+    bulkDeleteStudents,
+    restoreStudent,
+    bulkRestoreStudents,
+    bulkUpdateStudentStatus,
+  } = useStudentMutations();
+  const { settings, statuses: configuredStatuses, genderFilters } = useStudentConfig();
+  const studentStatusOptions = resolveStudentStatuses(configuredStatuses);
   const [activeTab, setActiveTab] = usePersistedTabState<string>("students_active_tab", "work");
   const [showStudentForm, setShowStudentForm] = useState(false);
   const [listPage, setListPage] = useState(1);
+  const [showDeleted, setShowDeleted] = useState(false);
 
-  useGrMigration(settings, updateStudent, activeTab);
+  useGrMigration(settings, updateStudent, activeTab, canWrite);
 
   const {
     columnRegistry,
@@ -81,7 +93,7 @@ export default function Students() {
         return;
       }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "n") {
-        if (canWrite) {
+        if (canWrite && !showDeleted) {
           e.preventDefault();
           setEditStudent(null);
           setShowStudentForm(true);
@@ -90,7 +102,7 @@ export default function Students() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [canWrite]);
+  }, [canWrite, showDeleted]);
 
   const useServerWork = activeTab === "work";
   const isListView = settings.defaultViewLayout === "list";
@@ -104,18 +116,19 @@ export default function Students() {
     search: studentSearch,
     status: studentFilterStatus.length > 0 ? studentFilterStatus.join(",") : undefined,
     gender: studentFilterGender || undefined,
+    includeDeleted: showDeleted,
     enabled: useServerWork,
   });
 
   useEffect(() => {
     setListPage(1);
-  }, [studentSearch, studentFilterStatus, studentFilterGender, settings.defaultViewLayout]);
+  }, [studentSearch, studentFilterStatus, studentFilterGender, settings.defaultViewLayout, showDeleted]);
 
-  const workStudents = useMemo(
-    () => (workPageData?.students ?? []) as Student[],
-    [workPageData],
-  );
-  const shownCount = workPageData?.total ?? 0;
+  const workStudents = useMemo(() => {
+    const rows = (workPageData?.students ?? []) as Student[];
+    return showDeleted ? rows.filter((row) => Boolean(row.deletedAt)) : rows;
+  }, [workPageData, showDeleted]);
+  const shownCount = showDeleted ? workStudents.length : (workPageData?.total ?? 0);
   const workTruncated = useServerWork && !isListView && Boolean(workPageData?.hasMore);
 
   const handleSaveStudent = async (studentToSave: Student) => {
@@ -159,7 +172,7 @@ export default function Students() {
           : t("page.students.subtitle")
       }
       headerActions={
-        canWrite ? (
+        canWrite && !showDeleted ? (
           <ActionButton
             variant="primary"
             icon={UserPlus}
@@ -226,7 +239,7 @@ export default function Students() {
                         onClick={() => setStudentFilterStatus([])}
                         className="text-xs text-muted-foreground hover:text-foreground cursor-pointer flex items-center justify-between"
                       >
-                        <span>Clear All</span>
+                        <span>{t("students.clearAllFilters")}</span>
                         <RotateCcw className="w-3 h-3 ms-1" />
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -275,6 +288,23 @@ export default function Students() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              {canDelete && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowDeleted((previous) => !previous)}
+                  aria-pressed={showDeleted}
+                  className={`flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
+                    showDeleted
+                      ? "border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Archive className="w-3.5 h-3.5" />
+                  <span>{showDeleted ? t("students.showActive") : t("students.showDeleted")}</span>
+                </Button>
+              )}
+
               <ModuleColumnCustomizer
                 columnRegistry={columnRegistry}
                 updateUserColumnLayout={updateUserColumnLayout}
@@ -308,8 +338,11 @@ export default function Students() {
                     students={workStudents}
                     layout={settings.defaultViewLayout}
                     isColumnVisible={isColumnVisible}
+                    showDeleted={showDeleted}
+                    canWrite={canWrite}
+                    canDelete={canDelete}
                     serverPagination={
-                      isListView && workPageData
+                      isListView && workPageData && !showDeleted
                         ? {
                             total: workPageData.total,
                             page: workPageData.page,
@@ -320,10 +353,20 @@ export default function Students() {
                     }
                     onEdit={(studentToEdit: Student) => { setEditStudent(studentToEdit); setShowStudentForm(true); }}
                     onDelete={(studentId: string) => deleteStudent.mutate(String(studentId))}
+                    onRestore={(studentId: string) => {
+                      restoreStudent.mutate(String(studentId), {
+                        onSuccess: () => notify.success(t("students.restoreSuccess")),
+                      });
+                    }}
                     onBulkDelete={(studentIds) => bulkDeleteStudents.mutate(studentIds.map(String))}
+                    onBulkRestore={(studentIds) => {
+                      bulkRestoreStudents.mutate(studentIds.map(String), {
+                        onSuccess: () => notify.success(t("students.restoreSuccess")),
+                      });
+                    }}
                     onBulkStatusChange={(studentIds, status) => bulkUpdateStudentStatus.mutate({ ids: studentIds.map(String), status })}
                   />
-                  {useServerWork && isListView && workPageData && (
+                  {useServerWork && isListView && workPageData && !showDeleted && (
                     <ListPagination
                       page={workPageData.page}
                       total={workPageData.total}
@@ -362,7 +405,7 @@ export default function Students() {
             transition={{ duration: 0.18 }}
           >
             <ErrorBoundary>
-              <StudentsSettingsPanel mode="preferences" />
+              <StudentsSettingsPanel />
             </ErrorBoundary>
           </motion.div>
         ) : null}

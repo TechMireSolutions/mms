@@ -67,6 +67,8 @@ interface JournalEntriesProps {
   fiscalYears: FiscalYear[];
   onChange: (entries: JournalEntry[]) => void;
   onFilteredCountChange?: (count: number) => void;
+  canWrite?: boolean;
+  canDelete?: boolean;
   isColumnVisible?: (key: string) => boolean;
   columnCustomizer?: ModuleColumnCustomizerProps;
 }
@@ -88,6 +90,8 @@ export function JournalEntries({
   fiscalYears,
   onChange,
   onFilteredCountChange,
+  canWrite = true,
+  canDelete = true,
   isColumnVisible,
   columnCustomizer,
 }: JournalEntriesProps) {
@@ -268,6 +272,7 @@ export function JournalEntries({
         ) : (
           <>
             {/* Natural language entry */}
+            {canWrite && (
             <article className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
               <header className="flex items-center gap-2 mb-3">
                 <Sparkles className="w-4 h-4 text-primary" aria-hidden="true" />
@@ -291,8 +296,10 @@ export function JournalEntries({
                 </Button>
               </form>
             </article>
+            )}
 
             {/* Quick action buttons */}
+            {canWrite && (
             <section aria-label="Quick Actions">
               <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2.5 m-0">{t("accounting.journal.dashboard.quickActions")}</h3>
               <nav className="flex flex-wrap gap-2">
@@ -311,6 +318,7 @@ export function JournalEntries({
                 </Button>
               </nav>
             </section>
+            )}
 
             {/* Recent transactions list */}
             <section aria-label="Recent Transactions">
@@ -364,7 +372,8 @@ export function JournalEntries({
           </>
         )}
 
-        <SimpleTransactionWizard
+        {canWrite && (
+          <SimpleTransactionWizard
               open={simpleModal !== null}
               accounts={accounts}
               entries={entries}
@@ -373,6 +382,7 @@ export function JournalEntries({
               onSave={handleSave}
               onClose={() => setSimpleModal(null)}
             />
+        )}
       </section>
     );
   }
@@ -424,14 +434,16 @@ export function JournalEntries({
             labels={columnCustomizer.labels}
           />
         )}
-        <Button 
-          type="button"
-          variant="default"
-          onClick={() => { setSelected(null); setModal("new"); }}
-          className="flex items-center gap-1.5 rounded-xl text-sm font-semibold"
-        >
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.newEntry")}
-        </Button>
+        {canWrite && (
+          <Button 
+            type="button"
+            variant="default"
+            onClick={() => { setSelected(null); setModal("new"); }}
+            className="flex items-center gap-1.5 rounded-xl text-sm font-semibold"
+          >
+            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.newEntry")}
+          </Button>
+        )}
       </nav>
 
       {showFilters && (
@@ -582,39 +594,45 @@ export function JournalEntries({
                           </Button>
                           {entry.status === "draft" && (
                             <>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                aria-label={`Edit entry ${entry.ref}`}
-                                onClick={() => { setSelected(entry); setModal("edit"); }}
-                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                              >
-                                <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                aria-label={`Post entry ${entry.ref}`}
-                                onClick={() => handlePost(entry)}
-                                className="h-8 w-8 text-muted-foreground hover:text-success"
-                              >
-                                <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                aria-label={`Delete entry ${entry.ref}`}
-                                onClick={() => handleDelete(entry.id)}
-                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                              </Button>
+                              {canWrite && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`Edit entry ${entry.ref}`}
+                                  onClick={() => { setSelected(entry); setModal("edit"); }}
+                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
+                                </Button>
+                              )}
+                              {canWrite && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`Post entry ${entry.ref}`}
+                                  onClick={() => handlePost(entry)}
+                                  className="h-8 w-8 text-muted-foreground hover:text-success"
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
+                                </Button>
+                              )}
+                              {canDelete && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`Delete entry ${entry.ref}`}
+                                  onClick={() => handleDelete(entry.id)}
+                                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                                </Button>
+                              )}
                             </>
                           )}
-                          {entry.status === "posted" && (
+                          {canWrite && entry.status === "posted" && (
                             <Button
                               type="button"
                               variant="ghost"
@@ -661,7 +679,7 @@ export function JournalEntries({
       )}
 
       <AnimatePresence>
-        {(modal === "new" || modal === "edit") && (
+        {canWrite && (modal === "new" || modal === "edit") && (
           <JournalEntryForm
             accounts={accounts}
             entries={entries}
@@ -676,8 +694,8 @@ export function JournalEntries({
             entry={selected}
             accounts={accounts}
             onClose={() => { setModal(null); setSelected(null); }}
-            onEdit={() => setModal("edit")}
-            onReverse={() => { handleReverse(selected); setModal(null); setSelected(null); }}
+            onEdit={canWrite ? () => setModal("edit") : undefined}
+            onReverse={canWrite ? () => { handleReverse(selected); setModal(null); setSelected(null); } : undefined}
           />
         )}
       </AnimatePresence>

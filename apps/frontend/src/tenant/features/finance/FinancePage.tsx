@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
-import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ReceiptText, CreditCard, Plus, DollarSign } from "lucide-react";
@@ -18,6 +19,7 @@ import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Invoice, Payment } from '@/lib/data/financeData';
+import { FINANCE_MODULE_CONTRACT } from "@mms/shared";
 import {
   useFinanceInvoicesCollection,
   useFinancePaymentsCollection,
@@ -33,8 +35,13 @@ import { FinanceCommandMetrics } from "@/tenant/features/finance/components/Fina
  * @returns {React.ReactElement} The Finance page component.
  */
 export default function Finance() {
-  const PAGE_TABS = useModuleTierTabs();
   const { t } = useTranslation();
+  const {
+    canWrite,
+    canReports: canViewReports,
+    canViewSetup,
+  } = useModulePermissions(FINANCE_MODULE_CONTRACT);
+  const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const SUB_TABS = useMemo(
     () => [
       { id: "invoices", label: t("finance.invoices"), icon: ReceiptText },
@@ -80,17 +87,19 @@ export default function Finance() {
       headerTitle={t("nav.finance")}
       headerSubtitle={t("page.finance.subtitle")}
       headerActions={
-        <ActionButton
-          variant="primary"
-          icon={Plus}
-          onClick={() => {
-            setActiveTab("work");
-            setActiveSubTab("invoices");
-            setCreatingInvoice(true);
-          }}
-        >
-          {t("finance.newInvoice")}
-        </ActionButton>
+        canWrite ? (
+          <ActionButton
+            variant="primary"
+            icon={Plus}
+            onClick={() => {
+              setActiveTab("work");
+              setActiveSubTab("invoices");
+              setCreatingInvoice(true);
+            }}
+          >
+            {t("finance.newInvoice")}
+          </ActionButton>
+        ) : undefined
       }
       metricsStrip={
         <FinanceCommandMetrics invoiceTotal={invoices.length} />
@@ -128,6 +137,7 @@ export default function Finance() {
                 invoices={invoices}
                 onView={setViewInvoice}
                 onRecord={setRecordInvoice}
+                canWrite={canWrite}
                 isColumnVisible={invoiceColumnLayout.isColumnVisible}
                 columnCustomizer={{
                   columnRegistry: invoiceColumnLayout.columnRegistry,
@@ -153,7 +163,7 @@ export default function Finance() {
       </ResponsiveAccordionTabs>
 
       <AnimatePresence>
-        {creatingInvoice && (
+        {creatingInvoice && canWrite && (
           <InvoiceForm
             open={creatingInvoice}
             saving={createInvoice.isPending}
@@ -162,9 +172,14 @@ export default function Finance() {
           />
         )}
         {viewInvoice && (
-          <InvoiceDetail invoice={viewInvoice} onClose={() => setViewInvoice(null)} onRecord={(invoiceToRecord: Invoice) => { setViewInvoice(null); setRecordInvoice(invoiceToRecord); }} />
+          <InvoiceDetail
+            invoice={viewInvoice}
+            onClose={() => setViewInvoice(null)}
+            onRecord={(invoiceToRecord: Invoice) => { setViewInvoice(null); setRecordInvoice(invoiceToRecord); }}
+            canWrite={canWrite}
+          />
         )}
-        {recordInvoice && (
+        {recordInvoice && canWrite && (
           <PaymentForm open={!!recordInvoice} invoice={recordInvoice} onClose={() => setRecordInvoice(null)} onSave={handleRecordPayment} />
         )}
       </AnimatePresence>

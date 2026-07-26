@@ -93,6 +93,12 @@ const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
   message_logs: 'contacts.write',
 };
 
+/** Distinct delete permission when the module contract defines one; else write. */
+const COLLECTION_DELETE_PERMISSION: Record<string, Permission> = {
+  contacts: CONTACTS_MODULE_CONTRACT.permissions.delete,
+  students: STUDENTS_MODULE_CONTRACT.permissions.delete,
+};
+
 const OBJECT_READ_PERMISSION: Record<string, Permission> = {
   global_settings: 'configuration.view',
   branding: 'configuration.view',
@@ -343,6 +349,24 @@ export function canWriteCollection(user: User, collectionName: string): boolean 
 }
 
 /**
+ * Returns true if the user may soft-delete / restore the given collection.
+ * Falls back to write permission when no distinct delete mapping exists.
+ */
+export function canDeleteCollection(user: User, collectionName: string): boolean {
+  if (!user || !user.role) {
+    return false;
+  }
+  if (!isAllowedCollectionName(collectionName)) {
+    return false;
+  }
+  const mapped = COLLECTION_DELETE_PERMISSION[collectionName];
+  if (mapped) {
+    return roleHasPermission(user.role, mapped);
+  }
+  return canWriteCollection(user, collectionName);
+}
+
+/**
  * Returns true if the user may read the given KV object.
  * Email integration settings are admin-only; other staff objects follow workspace roles.
  */
@@ -412,35 +436,35 @@ export function canReadContacts(user: User): boolean {
   if (!user || !user.role) {
     return false;
   }
-  return roleHasPermission(user.role, 'contacts.read');
+  return roleHasPermission(user.role, CONTACTS_MODULE_CONTRACT.permissions.read);
 }
 
 export function canWriteContacts(user: User): boolean {
   if (!user || !user.role) {
     return false;
   }
-  return roleHasPermission(user.role, 'contacts.write');
+  return roleHasPermission(user.role, CONTACTS_MODULE_CONTRACT.permissions.write);
 }
 
 export function canDeleteContacts(user: User): boolean {
   if (!user || !user.role) {
     return false;
   }
-  return roleHasPermission(user.role, 'contacts.delete');
+  return roleHasPermission(user.role, CONTACTS_MODULE_CONTRACT.permissions.delete);
 }
 
 export function canReadMessaging(user: User): boolean {
   if (!user || !user.role) {
     return false;
   }
-  return roleHasPermission(user.role, 'contacts.read');
+  return roleHasPermission(user.role, CONTACTS_MODULE_CONTRACT.permissions.read);
 }
 
 export function canWriteMessaging(user: User): boolean {
   if (!user || !user.role) {
     return false;
   }
-  return roleHasPermission(user.role, 'contacts.write');
+  return roleHasPermission(user.role, CONTACTS_MODULE_CONTRACT.permissions.write);
 }
 
 export function canClearMessagingLogs(user: User): boolean {

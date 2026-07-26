@@ -39,6 +39,7 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
   });
 
   test('should setup platform, onboard a new madrasa, force the first password change, and log in to the new tenant dashboard', async ({ page }) => {
+    test.setTimeout(120_000);
     const browserFailures: string[] = [];
 
     // Add console log listeners to capture errors in the page
@@ -276,25 +277,30 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
 
     // 16. Create a new Student linking to the Contact
     await page.click('button:has-text("Add Student")');
-    await page.waitForSelector('input[placeholder="Search contacts…"]');
-    await page.fill('input[placeholder="Search contacts…"]', 'Jane Doe');
-    const janeOption = page.locator('button').filter({ hasText: 'Jane Doe' }).filter({ hasNotText: 'Create' }).first();
-    await janeOption.waitFor({ state: 'visible' });
+    const registerDialog = page.getByRole('dialog', { name: 'Register student' });
+    await expect(registerDialog).toBeVisible();
+
+    const studentContactSearch = registerDialog.getByLabel('Student contact');
+    await studentContactSearch.fill('Jane Doe');
+    const janeOption = registerDialog.getByRole('button', { name: /Jane Doe/ }).filter({ hasNotText: 'Create' }).first();
+    await expect(janeOption).toBeVisible({ timeout: 15_000 });
     await janeOption.dispatchEvent('mousedown');
 
-    // Link Father guardian (John Doe)
-    await page.fill('div:has(> span:text-is("Father")) input[placeholder="Search contacts…"]', 'John Doe');
-    const johnOption = page.locator('button').filter({ hasText: 'John Doe' }).filter({ hasNotText: 'Create' }).first();
-    await johnOption.waitFor({ state: 'visible' });
+    // Link Father guardian (John Doe) — accessible name includes avatar initials (e.g. "JD John Doe —")
+    const fatherSearch = registerDialog.getByLabel('Father');
+    await fatherSearch.scrollIntoViewIfNeeded();
+    await fatherSearch.fill('John Doe');
+    const johnOption = registerDialog.getByRole('button', { name: /John Doe/ }).filter({ hasNotText: 'Create' }).first();
+    await expect(johnOption).toBeVisible({ timeout: 15_000 });
     await johnOption.dispatchEvent('mousedown');
-    
+
     // Wait for the next GR number query to resolve and populate the input field
     await expect(page.locator('input[placeholder="e.g. 0001-2026"]')).not.toHaveValue('');
-    
-    await page.click('button:has-text("Register student")');
+
+    await registerDialog.getByRole('button', { name: 'Register student' }).click();
 
     // Wait for the modal dialog to close completely
-    await expect(page.getByRole('dialog', { name: 'Register student' })).toBeHidden();
+    await expect(registerDialog).toBeHidden();
 
     // 17. Verify Student successfully created and listed
     await page.waitForSelector('tbody tr:has-text("Jane Doe") >> visible=true');
@@ -326,8 +332,18 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     await page.waitForSelector('text=Jane Doe >> visible=true');
     console.log('Jane Doe is visible in the class attendance list.');
 
-    // 22. Click submit attendance button
+    // 22. Submit attendance and require a successful bulk save
+    const bulkSave = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/attendance/bulk') && response.request().method() === 'PUT',
+      { timeout: 30_000 },
+    );
     await page.click('button:has-text("Submit Attendance") >> visible=true');
+    const bulkResponse = await bulkSave;
+    if (!bulkResponse.ok()) {
+      const body = await bulkResponse.text();
+      throw new Error(`Attendance bulk save failed: HTTP ${bulkResponse.status()} ${body}`);
+    }
 
     // 23. Assert submitted success badge is visible
     await page.waitForSelector('text=Submitted >> visible=true');

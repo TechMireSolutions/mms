@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { motion, AnimatePresence } from "framer-motion";
 import { LayoutDashboard, Star, Package, Send, Gift } from "lucide-react";
-import { resolveModuleTierTab } from "@mms/shared";
+import { HASANAT_MODULE_CONTRACT, resolveModuleTierTab } from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -37,9 +38,14 @@ const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer
  * @returns {React.ReactElement} The HasanatCards page component.
  */
 export default function HasanatCards() {
-  const PAGE_TABS = useModuleTierTabs();
   const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
+  const {
+    canWrite,
+    canReports: canViewReports,
+    canViewSetup,
+  } = useModulePermissions(HASANAT_MODULE_CONTRACT);
+  const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const HASANAT_CONFIG_TABS = useMemo(
     () => [
       { id: "denominations" as const, label: t("hasanat.denominations") },
@@ -142,13 +148,26 @@ export default function HasanatCards() {
                 value={configSubTab}
                 onChange={(tabKey) => setConfigSubTab(tabKey as typeof configSubTab)}
               />
-              {configSubTab === "denominations" && <DenominationsManager denoms={denoms} onUpdate={(denominations) => replaceDenoms.mutate(denominations)} />}
+              {configSubTab === "denominations" && (
+                <DenominationsManager
+                  denoms={denoms}
+                  onUpdate={(denominations) => replaceDenoms.mutate(denominations)}
+                  canWrite={canWrite}
+                />
+              )}
               {configSubTab === "preferences" && <HasanatSettings mode="preferences" />}
             </div>
           )}
           
           {effectiveTab === "work" && effectiveSubTab === "overview"     && <HasanatDashboard denoms={denoms} batches={batches} distributions={distributions} />}
-          {effectiveTab === "work" && effectiveSubTab === "stock"         && <StockManager batches={batches} denoms={denoms} onUpdate={(batches) => replaceBatches.mutate(batches)} />}
+          {effectiveTab === "work" && effectiveSubTab === "stock"         && (
+            <StockManager
+              batches={batches}
+              denoms={denoms}
+              onUpdate={(batches) => replaceBatches.mutate(batches)}
+              canWrite={canWrite}
+            />
+          )}
           {effectiveTab === "work" && effectiveSubTab === "distribute"    && (
             <DistributionManager
               distributions={distributions}
@@ -156,6 +175,7 @@ export default function HasanatCards() {
               batches={batches}
               onUpdate={(distributions) => replaceDistributions.mutate(distributions)}
               onFilteredCountChange={setFilteredCount}
+              canWrite={canWrite}
               isColumnVisible={distributionColumnLayout.isColumnVisible}
               columnCustomizer={{
                 columnRegistry: distributionColumnLayout.columnRegistry,
@@ -170,6 +190,7 @@ export default function HasanatCards() {
               distributions={distributions}
               onUpdateDistributions={(distributions) => replaceDistributions.mutate(distributions)}
               onFilteredCountChange={setFilteredCount}
+              canWrite={canWrite}
               isColumnVisible={redemptionColumnLayout.isColumnVisible}
               columnCustomizer={{
                 columnRegistry: redemptionColumnLayout.columnRegistry,

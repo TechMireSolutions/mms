@@ -174,9 +174,18 @@ interface AccountingSettingsProps {
   fiscalYears: FiscalYear[];
   onSaveFiscalYears: (fiscalYears: FiscalYear[]) => void;
   mode?: "fields" | "preferences";
+  canWrite?: boolean;
+  canDelete?: boolean;
 }
 
-export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, mode }: AccountingSettingsProps) {
+export function AccountingSettings({
+  accounts,
+  fiscalYears,
+  onSaveFiscalYears,
+  mode,
+  canWrite = true,
+  canDelete = true,
+}: AccountingSettingsProps) {
   const { t } = useTranslation();
   const decimalSeparators = useMemo(() => [
     { label: t("accounting.settings.decimal.period"), value: "period" },
@@ -310,15 +319,17 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
             <div className="mt-4">
               <header className="flex items-center justify-between mb-3">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.settings.configuredFiscalYears")}</h4>
-                <Button
-                  type="button"
-                  variant="link"
-                  size="sm"
-                  onClick={() => setFyModal({ label: "", startDate: "", endDate: "", status: "upcoming" })}
-                  className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors p-0 h-auto"
-                >
-                  <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.settings.addYear")}
-                </Button>
+                {canWrite && (
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    onClick={() => setFyModal({ label: "", startDate: "", endDate: "", status: "upcoming" })}
+                    className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors p-0 h-auto"
+                  >
+                    <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.settings.addYear")}
+                  </Button>
+                )}
               </header>
               <div className="rounded-xl border border-border overflow-hidden">
                 <table className="w-full text-sm">
@@ -348,27 +359,30 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
                           </td>
                           <td className="px-4 py-2.5 text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                aria-label={`Edit ${fiscalYear.label}`}
-                                onClick={() => setFyModal({ ...fiscalYear })}
-                                className="h-8 w-8 text-muted-foreground hover:text-foreground shadow-none"
-                              >
-                                <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                aria-label={`Delete ${fiscalYear.label}`}
-                                onClick={() => handleDeleteFY(fiscalYear.id)}
-                                disabled={fiscalYear.status === "active"}
-                                className="h-8 w-8 text-muted-foreground hover:text-destructive shadow-none"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                              </Button>
+                              {canWrite && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`Edit ${fiscalYear.label}`}
+                                  onClick={() => setFyModal({ ...fiscalYear })}
+                                  className="h-8 w-8 text-muted-foreground hover:text-foreground shadow-none"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
+                                </Button>
+                              )}
+                              {canDelete && fiscalYear.status !== "active" && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`Delete ${fiscalYear.label}`}
+                                  onClick={() => handleDeleteFY(fiscalYear.id)}
+                                  className="h-8 w-8 text-muted-foreground hover:text-destructive shadow-none"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                                </Button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -441,7 +455,7 @@ export function AccountingSettings({ accounts, fiscalYears, onSaveFiscalYears, m
         </Button>
       </footer>
 
-      <FYModal open={!!fyModal} initial={fyModal} onSave={handleSaveFY} onClose={() => setFyModal(null)} />
+      <FYModal open={!!fyModal && canWrite} initial={fyModal} onSave={handleSaveFY} onClose={() => setFyModal(null)} />
     </section>
   );
 }

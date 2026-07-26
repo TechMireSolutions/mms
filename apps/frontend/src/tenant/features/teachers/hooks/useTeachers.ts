@@ -7,8 +7,8 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { TEACHER_COUNT_QUERY_KEY } from '@/tenant/features/teachers/hooks/useTeacherCount';
 import { uniqueRegistryIds } from '@/lib/registryResolve';
-export const TEACHERS_QUERY_KEY = ['teachers', 'list'] as const;
-export const TEACHERS_METRICS_QUERY_KEY = ['teachers', 'metrics'] as const;
+export const TEACHERS_QUERY_KEY = [TEACHERS_MODULE_CONTRACT.collectionKey, 'list'] as const;
+export const TEACHERS_METRICS_QUERY_KEY = [TEACHERS_MODULE_CONTRACT.collectionKey, 'metrics'] as const;
 export const TEACHERS_WIDGET_AGGREGATES_QUERY_KEY = [TEACHERS_MODULE_CONTRACT.collectionKey, 'widget-aggregates'] as const;
 
 const TEACHERS_API = TEACHERS_MODULE_CONTRACT.restBasePath;
@@ -21,6 +21,7 @@ export interface TeachersPaginatedParams {
   specialization?: string;
   sortField?: string;
   sortDir?: 'asc' | 'desc';
+  includeDeleted?: boolean;
   enabled?: boolean;
 }
 
@@ -33,6 +34,7 @@ function buildTeachersPageUrl(params: TeachersPaginatedParams): string {
   if (params.specialization) queryParams.set('specialization', params.specialization);
   if (params.sortField) queryParams.set('sortField', params.sortField);
   if (params.sortDir) queryParams.set('sortDir', params.sortDir);
+  if (params.includeDeleted) queryParams.set('includeDeleted', 'true');
   return `${TEACHERS_API}?${queryParams.toString()}`;
 }
 
@@ -70,7 +72,7 @@ export function useTeacherMutations() {
   const createTeacher = useMutation({
     mutationFn: async (teacher: TeacherRecord) => {
       const normalized = normalizeStoredTeacher(teacher);
-      return apiJson<{ teacher: TeacherRecord }>('/api/teachers', {
+      return apiJson<{ teacher: TeacherRecord }>(TEACHERS_API, {
         method: 'POST',
         body: JSON.stringify(normalized),
       });
@@ -81,7 +83,7 @@ export function useTeacherMutations() {
   const updateTeacher = useMutation({
     mutationFn: async ({ id, teacher }: { id: string; teacher: TeacherRecord }) => {
       const normalized = normalizeStoredTeacher(teacher);
-      return apiJson<{ teacher: TeacherRecord }>(`/api/teachers/${id}`, {
+      return apiJson<{ teacher: TeacherRecord }>(`${TEACHERS_API}/${id}`, {
         method: 'PUT',
         body: JSON.stringify(normalized),
       });
@@ -91,11 +93,40 @@ export function useTeacherMutations() {
 
   const deleteTeacher = useMutation({
     mutationFn: async (id: string) =>
-      apiFetch(`/api/teachers/${id}`, { method: 'DELETE' }),
+      apiFetch(`${TEACHERS_API}/${id}`, { method: 'DELETE' }),
     onSuccess: invalidate,
   });
 
-  return { createTeacher, updateTeacher, deleteTeacher };
+  const bulkDeleteTeachers = useMutation({
+    mutationFn: async (ids: string[]) =>
+      Promise.all(ids.map((id) => apiFetch(`${TEACHERS_API}/${id}`, { method: 'DELETE' }))),
+    onSuccess: invalidate,
+  });
+
+  const restoreTeacher = useMutation({
+    mutationFn: async (id: string) =>
+      apiFetch(`${TEACHERS_API}/${encodeURIComponent(id)}/restore`, { method: 'POST' }),
+    onSuccess: invalidate,
+  });
+
+  const bulkRestoreTeachers = useMutation({
+    mutationFn: async (ids: string[]) =>
+      Promise.all(
+        ids.map((id) =>
+          apiFetch(`${TEACHERS_API}/${encodeURIComponent(id)}/restore`, { method: 'POST' }),
+        ),
+      ),
+    onSuccess: invalidate,
+  });
+
+  return {
+    createTeacher,
+    updateTeacher,
+    deleteTeacher,
+    bulkDeleteTeachers,
+    restoreTeacher,
+    bulkRestoreTeachers,
+  };
 }
 
 export function useTeacherById(teacherId: string | undefined, enabled = true) {
