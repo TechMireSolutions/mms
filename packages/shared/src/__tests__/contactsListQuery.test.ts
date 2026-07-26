@@ -32,7 +32,7 @@ describe('filterContactsForQuery quickFilter', () => {
       id: '1',
       name: 'Wa Syed',
       isSyed: true,
-      phones: [{ label: 'Mobile', number: '+10000000001' }],
+      phones: [{ label: 'Mobile', number: '+923001111111' }],
       emails: [{ label: 'Personal', address: 'a@example.com' }],
     }),
     contact({
@@ -44,7 +44,7 @@ describe('filterContactsForQuery quickFilter', () => {
     contact({
       id: '3',
       name: 'Phone Only',
-      phones: [{ label: 'Mobile', number: '+10000000003' }],
+      phones: [{ label: 'Mobile', number: '+15551234567' }],
       emails: [],
     }),
   ];
@@ -59,5 +59,17 @@ describe('filterContactsForQuery quickFilter', () => {
       '2',
       '3',
     ]);
+  });
+});
+
+describe('filterContactsForQuery excludeIds', () => {
+  const rows = [
+    contact({ id: '1', name: 'Ali' }),
+    contact({ id: '2', name: 'Sara' }),
+    contact({ id: '3', name: 'Hassan' }),
+  ];
+
+  it('omits excluded contact ids', () => {
+    expect(filterContactsForQuery(rows, { excludeIds: ['2', 3] }).map((row) => row.id)).toEqual(['1']);
   });
 });

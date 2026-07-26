@@ -79,8 +79,8 @@ export default function WelcomeBanner({ dashboardRole }: WelcomeBannerProps): Re
     >
       {/* Glow effects & Islamic pattern */}
       <div className="absolute inset-0 islamic-pattern opacity-[0.06] mix-blend-overlay pointer-events-none" aria-hidden="true" />
-      <div className="absolute -top-24 -right-16 w-80 h-80 rounded-full bg-secondary/15 blur-3xl opacity-70 pointer-events-none" aria-hidden="true" />
-      <div className="absolute -bottom-20 -left-16 w-72 h-72 rounded-full bg-warning/10 blur-3xl opacity-50 pointer-events-none" aria-hidden="true" />
+      <div className="absolute -top-24 -end-16 w-80 h-80 rounded-full bg-secondary/15 blur-3xl opacity-70 pointer-events-none" aria-hidden="true" />
+      <div className="absolute -bottom-20 -start-16 w-72 h-72 rounded-full bg-warning/10 blur-3xl opacity-50 pointer-events-none" aria-hidden="true" />
 
       <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
         <div>

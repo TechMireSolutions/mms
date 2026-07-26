@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useOverlayBehavior } from "@/hooks/useOverlayBehavior";
@@ -56,7 +57,7 @@ export function Modal({
   const containerRef = useOverlayBehavior<HTMLDivElement>({ open, onClose });
   const titleId = React.useId();
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {open && (
         <div className={cn("fixed inset-0 flex items-center justify-center p-4", priority ? "z-[60]" : "z-50")}>
@@ -127,6 +128,7 @@ export function Modal({
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }

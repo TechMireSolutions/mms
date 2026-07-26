@@ -17,7 +17,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { Button } from "@/components/ui/button";
 
-import EnrollmentChart from "@/tenant/features/dashboard/components/widgets/charts/EnrollmentChart";
+import EnrollmentChart from "@/components/dashboard-widgets/charts/EnrollmentChart";
 
 /** Sub-tab labels available within the student report. */
 const _SUB_TABS = ["Student List", "Enrollment History"] as const;

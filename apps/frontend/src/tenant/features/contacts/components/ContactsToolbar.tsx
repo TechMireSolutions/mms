@@ -2,8 +2,9 @@ import React, { useMemo, useCallback } from "react";
 import { SlidersHorizontal, RefreshCw, Archive, Table, LayoutGrid, MessageCircle, CheckCircle2, AlertCircle, Users } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
+  DropdownMenu, DropdownMenuContent,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenuRadioGroup, DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
@@ -151,29 +152,31 @@ export default function ContactsToolbar({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 bg-card border border-border">
               <DropdownMenuLabel className="text-xs text-foreground">{t("contacts.genderFilter")}</DropdownMenuLabel>
-              {["", ...genders].map((genderOption) => (
-                <DropdownMenuCheckboxItem
-                  key={genderOption}
-                  checked={filterGender === genderOption}
-                  onCheckedChange={() => onGenderChange(genderOption)}
-                  className="text-sm"
-                >
-                  {genderOption ? formatContactGenderLabel(genderOption, t) : t("contacts.allGenders")}
-                </DropdownMenuCheckboxItem>
-              ))}
+              <DropdownMenuRadioGroup value={filterGender} onValueChange={onGenderChange}>
+                {["", ...genders].map((genderOption) => (
+                  <DropdownMenuRadioItem
+                    key={genderOption || "all"}
+                    value={genderOption}
+                    className="text-sm"
+                  >
+                    {genderOption ? formatContactGenderLabel(genderOption, t) : t("contacts.allGenders")}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
 
               <DropdownMenuSeparator className="bg-border" />
               <DropdownMenuLabel className="text-xs text-foreground">{t("contacts.sortBy")}</DropdownMenuLabel>
-              {sortOptions.map((sortOption) => (
-                <DropdownMenuCheckboxItem
-                  key={sortOption.field}
-                  checked={sortField === sortOption.field}
-                  onCheckedChange={() => onSort(sortOption.field)}
-                  className="text-sm"
-                >
-                  {sortOption.label}
-                </DropdownMenuCheckboxItem>
-              ))}
+              <DropdownMenuRadioGroup value={sortField} onValueChange={onSort}>
+                {sortOptions.map((sortOption) => (
+                  <DropdownMenuRadioItem
+                    key={sortOption.field}
+                    value={sortOption.field}
+                    className="text-sm"
+                  >
+                    {sortOption.label}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
 

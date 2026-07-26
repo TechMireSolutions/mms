@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   MessageCircle, MessageSquare, Eye, Phone, Mail,
-  AlertTriangle, CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import { 
   type Contact, 
@@ -13,7 +13,8 @@ import {
   hasWhatsApp,
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
-import { buildContactsMap, formatContactGenderLabel, resolveContactPhoneDisplay, getContactAccentBarClass, formatTelHref } from "@/lib/contacts/contactI18n";
+import { buildContactsMap, resolveContactPhoneDisplay, getContactAccentBarClass, formatTelHref } from "@/lib/contacts/contactI18n";
+import { ContactIdentityMeta } from "@/tenant/features/contacts/components/ContactIdentityMeta";
 import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -114,9 +115,9 @@ interface ContactCardsProps {
   onDelete: (id: string | number) => void;
   onRestore?: (id: string | number) => void;
   showArchived?: boolean;
-  onWhatsApp: (contacts: Contact[]) => void;
-  onSms: (contacts: Contact[]) => void;
-  onEmail: (contacts: Contact[]) => void;
+  onWhatsApp?: (contacts: Contact[]) => void;
+  onSms?: (contacts: Contact[]) => void;
+  onEmail?: (contacts: Contact[]) => void;
   allContacts?: Contact[];
   canWrite?: boolean;
   canDelete?: boolean;
@@ -257,20 +258,7 @@ export default function ContactCards({
                     <h4 className="text-sm font-black text-foreground tracking-tight truncate group-hover:text-primary transition-colors">
                       {displayName}
                     </h4>
-                    {(contact.gender || contact.isSyed) && (
-                      <div className="text-[11px] font-semibold text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap truncate">
-                        {contact.gender && (
-                          <span className="capitalize">{formatContactGenderLabel(contact.gender, t)}</span>
-                        )}
-                        {contact.gender && contact.isSyed && <span className="text-muted-foreground/40">•</span>}
-                        {contact.isSyed && (
-                          <span className="inline-flex items-center gap-0.5 text-[10px] font-bold uppercase px-1.5 py-0.2 rounded border bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                            {t("contacts.table.yesSyed")}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    <ContactIdentityMeta gender={contact.gender} isSyed={contact.isSyed} className="mt-0.5 font-semibold truncate" />
                   </div>
                 </Button>
               </div>
@@ -360,56 +348,50 @@ export default function ContactCards({
                     </div>
                   )}
  
-                  <MotionButton
-                    type="button"
-                    variant="ghost"
-                    disabled={!hasWhatsApp(contact)}
-                    whileHover={hasWhatsApp(contact) ? { scale: 1.05 } : undefined}
-                    whileTap={hasWhatsApp(contact) ? { scale: 0.95 } : undefined}
-                    onClick={() => onWhatsApp([contact])}
-                    className={`h-auto p-2.5 rounded-xl border transition-colors shadow-none ${hasWhatsApp(contact)
-                        ? "border-success/30 dark:border-success/20 bg-success/5 text-success hover:text-success hover:bg-success/10 cursor-pointer"
-                        : "border-border/20 text-muted-foreground/30 opacity-40 cursor-not-allowed"
-                      }`}
-                    title={`${t("contacts.whatsapp")} - ${displayName}`}
-                    aria-label={`${t("contacts.whatsapp")} - ${displayName}`}
-                  >
-                    <MessageCircle aria-hidden="true" className="w-4 h-4" />
-                  </MotionButton>
- 
-                  <MotionButton
-                    type="button"
-                    variant="ghost"
-                    disabled={!phone}
-                    whileHover={phone ? { scale: 1.05 } : undefined}
-                    whileTap={phone ? { scale: 0.95 } : undefined}
-                    onClick={() => onSms([contact])}
-                    className={`h-auto p-2.5 rounded-xl border transition-colors shadow-none ${phone
-                        ? "border-primary/30 dark:border-primary/20 bg-primary/5 text-primary hover:text-primary hover:bg-primary/10 cursor-pointer"
-                        : "border-border/20 text-muted-foreground/30 opacity-40 cursor-not-allowed"
-                      }`}
-                    title={`${t("contacts.sms")} - ${displayName}`}
-                    aria-label={`${t("contacts.sms")} - ${displayName}`}
-                  >
-                    <MessageSquare aria-hidden="true" className="w-4 h-4" />
-                  </MotionButton>
- 
-                  <MotionButton
-                    type="button"
-                    variant="ghost"
-                    disabled={!email}
-                    whileHover={email ? { scale: 1.05 } : undefined}
-                    whileTap={email ? { scale: 0.95 } : undefined}
-                    onClick={() => onEmail([contact])}
-                    className={`h-auto p-2.5 rounded-xl border transition-colors shadow-none ${email
-                        ? "border-secondary/30 dark:border-secondary/20 bg-secondary/5 text-secondary hover:text-secondary hover:bg-secondary/10 cursor-pointer"
-                        : "border-border/20 text-muted-foreground/30 opacity-40 cursor-not-allowed"
-                      }`}
-                    title={`${t("contacts.detail.emailAction")} - ${displayName}`}
-                    aria-label={`${t("contacts.detail.emailAction")} - ${displayName}`}
-                  >
-                    <Mail aria-hidden="true" className="w-4 h-4" />
-                  </MotionButton>
+                  {onWhatsApp && hasWhatsApp(contact) && (
+                    <MotionButton
+                      type="button"
+                      variant="ghost"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => onWhatsApp([contact])}
+                      className="h-auto p-2.5 rounded-xl border border-success/30 dark:border-success/20 bg-success/5 text-success hover:text-success hover:bg-success/10 cursor-pointer transition-colors shadow-none"
+                      title={`${t("contacts.whatsapp")} - ${displayName}`}
+                      aria-label={`${t("contacts.whatsapp")} - ${displayName}`}
+                    >
+                      <MessageCircle aria-hidden="true" className="w-4 h-4" />
+                    </MotionButton>
+                  )}
+
+                  {onSms && phone && (
+                    <MotionButton
+                      type="button"
+                      variant="ghost"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => onSms([contact])}
+                      className="h-auto p-2.5 rounded-xl border border-primary/30 dark:border-primary/20 bg-primary/5 text-primary hover:text-primary hover:bg-primary/10 cursor-pointer transition-colors shadow-none"
+                      title={`${t("contacts.sms")} - ${displayName}`}
+                      aria-label={`${t("contacts.sms")} - ${displayName}`}
+                    >
+                      <MessageSquare aria-hidden="true" className="w-4 h-4" />
+                    </MotionButton>
+                  )}
+
+                  {onEmail && email && (
+                    <MotionButton
+                      type="button"
+                      variant="ghost"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => onEmail([contact])}
+                      className="h-auto p-2.5 rounded-xl border border-secondary/30 dark:border-secondary/20 bg-secondary/5 text-secondary hover:text-secondary hover:bg-secondary/10 cursor-pointer transition-colors shadow-none"
+                      title={`${t("contacts.detail.emailAction")} - ${displayName}`}
+                      aria-label={`${t("contacts.detail.emailAction")} - ${displayName}`}
+                    >
+                      <Mail aria-hidden="true" className="w-4 h-4" />
+                    </MotionButton>
+                  )}
                 </div>
  
                 <div className="flex items-center gap-1.5">

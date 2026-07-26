@@ -1,8 +1,7 @@
-import { type AppTranslationKey, formatMoney, todayISO } from '@mms/shared';
+import { type AppTranslationKey, type Permission, formatMoney, todayISO, FINANCE_MODULE_CONTRACT, STUDENTS_MODULE_CONTRACT, ATTENDANCE_MODULE_CONTRACT } from '@mms/shared';
 import type { DashboardRole } from '@/lib/dashboardRole';
 import type { Invoice } from '@/lib/data/financeData';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
-
 
 export interface DashboardNotificationItem {
   id: string;
@@ -61,26 +60,35 @@ export function buildDashboardNotifications(
   },
   t: Translate,
   formatCurrency?: (amount: number | string | null | undefined) => string,
+  can?: (permission: Permission) => boolean,
 ): DashboardNotificationItem[] {
   const dashboardNotifications: DashboardNotificationItem[] = [];
   const unpaidCount = countOpenInvoices(dashboardNotificationInput.invoices);
   const outstandingTotal = sumOutstanding(dashboardNotificationInput.invoices);
   const attendanceRate = todayAttendanceRate(dashboardNotificationInput.attendanceRecords);
 
-  if (dashboardRole === 'admin' || dashboardRole === 'accountant') {
+  const canFinance = can ? can(FINANCE_MODULE_CONTRACT.permissions.write) : true;
+  const canStudents = can ? can(STUDENTS_MODULE_CONTRACT.permissions.read) : true;
+  const canAttendance = can
+    ? can(ATTENDANCE_MODULE_CONTRACT.permissions.write) || can(ATTENDANCE_MODULE_CONTRACT.permissions.read)
+    : true;
+
+  if ((dashboardRole === 'admin' || dashboardRole === 'accountant') && canFinance) {
     if (unpaidCount > 0) {
       dashboardNotifications.push({
         id: 'unpaid-invoices',
         type: 'fee',
         title: t('notifications.unpaidInvoicesTitle', { count: unpaidCount }),
-        desc: t('notifications.unpaidInvoicesDesc', { amount: formatCurrency ? formatCurrency(outstandingTotal) : formatMoney(outstandingTotal) }),
+        desc: t('notifications.unpaidInvoicesDesc', {
+          amount: formatCurrency ? formatCurrency(outstandingTotal) : formatMoney(outstandingTotal),
+        }),
         time: t('notifications.timeNow'),
         urgent: outstandingTotal > 0,
       });
     }
   }
 
-  if (dashboardRole === 'admin') {
+  if (dashboardRole === 'admin' && canStudents) {
     if (dashboardNotificationInput.inactiveStudents > 0) {
       dashboardNotifications.push({
         id: 'inactive-students',
@@ -95,7 +103,7 @@ export function buildDashboardNotifications(
     }
   }
 
-  if (attendanceRate !== null && attendanceRate < 75) {
+  if (canAttendance && attendanceRate !== null && attendanceRate < 75) {
     dashboardNotifications.push({
       id: 'low-attendance',
       type: 'attendance',
@@ -106,7 +114,7 @@ export function buildDashboardNotifications(
     });
   }
 
-  if (dashboardRole === 'accountant' && unpaidCount === 0) {
+  if (dashboardRole === 'accountant' && canFinance && unpaidCount === 0) {
     dashboardNotifications.push({
       id: 'fees-clear',
       type: 'fee',

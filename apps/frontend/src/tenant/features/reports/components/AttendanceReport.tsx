@@ -11,8 +11,8 @@ import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 
-import { AttendanceChart } from "@/tenant/features/dashboard/components/widgets/charts/AttendanceChart";
-import TodayAttendanceWidget from "@/tenant/features/dashboard/components/widgets/TodayAttendanceWidget";
+import { AttendanceChart } from "@/components/dashboard-widgets/charts/AttendanceChart";
+import TodayAttendanceWidget from "@/components/dashboard-widgets/TodayAttendanceWidget";
 import { VisualizerConfig } from "@/tenant/features/reports/components/reportMetadata";
 
 interface AttendanceReportProps {

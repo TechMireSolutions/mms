@@ -34,11 +34,13 @@ import {
   formatContactDobWithAge,
   formatContactGenderLabel,
   formatTelHref,
+  getFallbackCountryCode,
   resolvePhoneLabel,
   resolveEmailLabel,
   resolveAddressLabel,
   resolveSocialPlatformLabel,
 } from "@/lib/contacts/contactI18n";
+import { ContactIdentityMeta } from "./ContactIdentityMeta";
 import { contactDetailQueryKey, fetchContactById } from "@/tenant/features/contacts/hooks/useContacts";
 import { Button } from "@/components/ui/button";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -67,11 +69,10 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 const DETAIL_SYSTEM_TAB_KEYS = new Set(DEFAULT_DETAIL_TABS.map((tab) => tab.key));
+const DEFAULT_DETAIL_TAB_BY_KEY = new Map(DEFAULT_DETAIL_TABS.map((tab) => [tab.key, tab]));
 
 const DETAIL_STYLES = {
   whatsappActive: "bg-success/10 text-success border-success/30 hover:bg-success/20",
-  whatsappDisabled: "opacity-40 cursor-not-allowed bg-muted/50 text-muted-foreground",
-  syedBadge: "bg-success/10 text-success border border-success/20 font-bold",
   smsAction: "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20",
   callAction: "bg-info/10 text-info border border-info/20 hover:bg-info/20",
   emailAction: "bg-secondary/10 text-secondary border border-secondary/20 hover:bg-secondary/20",
@@ -183,9 +184,9 @@ interface ContactDetailDrawerProps {
   contact: Contact;
   onClose: () => void;
   onEdit: (contact: Contact) => void;
-  onWhatsApp: (contacts: Contact[]) => void;
-  onSms: (contacts: Contact[]) => void;
-  onEmail: (contacts: Contact[]) => void;
+  onWhatsApp?: (contacts: Contact[]) => void;
+  onSms?: (contacts: Contact[]) => void;
+  onEmail?: (contacts: Contact[]) => void;
   allContacts?: Contact[];
   onUpdateContact?: (contact: Contact) => Promise<void>;
   canWrite?: boolean;
@@ -282,7 +283,7 @@ export default function ContactDetailDrawer({
   onUpdateContact,
   canWrite = false,
 }: ContactDetailDrawerProps): JSX.Element {
-  const { enabledTabIds, isTabFieldEnabled, fieldConfig, fields, phoneLabels, emailLabels, addressLabels, socialPlatforms } = useContactConfig();
+  const { enabledTabIds, isTabFieldEnabled, fieldConfig, fields, phoneLabels, emailLabels, addressLabels, socialPlatforms, prefs, countryCodesMap } = useContactConfig();
   const { user } = useAuth();
   const { role } = usePermissions();
   const viewerRole = role ?? '';
@@ -351,12 +352,16 @@ export default function ContactDetailDrawer({
       .sort((a, b) => a.order - b.order)
       .filter((tab) => tab.enabled && (DETAIL_SYSTEM_TAB_KEYS.has(tab.key) || enabledTabIds.has(tab.key)));
 
-    return sorted.map((tab) => ({
-      key: tab.key,
-      label: tab.label,
-      icon: ICON_MAP[tab.icon || tab.key] || LayoutDashboard,
-    }));
-  }, [fieldConfig.detailTabs, enabledTabIds]);
+    return sorted.map((tab) => {
+      const defaultTab = DEFAULT_DETAIL_TAB_BY_KEY.get(tab.key);
+      const labelKey = tab.labelKey ?? defaultTab?.labelKey;
+      return {
+        key: tab.key,
+        label: labelKey ? t(labelKey) : tab.label,
+        icon: ICON_MAP[tab.icon || tab.key] || LayoutDashboard,
+      };
+    });
+  }, [fieldConfig.detailTabs, enabledTabIds, t]);
 
   const [activeTab, setActiveTab] = useState<string>(() => {
     return detailTabs[0]?.key || "";
@@ -546,22 +551,7 @@ export default function ContactDetailDrawer({
                 />
                 <div className="flex-1 min-w-0">
                   <h3 className="text-base font-bold text-foreground truncate leading-tight">{getDisplayName(contactState)}</h3>
-                  {(contactState.gender || contactState.isSyed) && (
-                    <div className="flex flex-wrap gap-1.5 mt-1.5 items-center">
-                      {contactState.gender && (
-                        <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1 capitalize">
-                          <User className="w-3.5 h-3.5 text-muted-foreground" />
-                          {formatContactGenderLabel(contactState.gender, t)}
-                        </span>
-                      )}
-                      {contactState.gender && contactState.isSyed && <span className="text-muted-foreground/40">•</span>}
-                      {contactState.isSyed && (
-                        <span className={`text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider ${DETAIL_STYLES.syedBadge}`}>
-                          {t('contacts.table.yesSyed')}
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  <ContactIdentityMeta gender={contactState.gender} isSyed={contactState.isSyed} size="md" className="mt-1.5" />
                 </div>
               </div>
 
@@ -578,16 +568,15 @@ export default function ContactDetailDrawer({
 
               {/* Quick Communication Actions Bar */}
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {enabledTabIds.has("phones") && (
+                {onWhatsApp && hasWhatsApp(contactState) && (
                   <QuickActionButton
                     label={t('contacts.whatsapp')}
                     icon={MessageCircle}
-                    disabled={!hasWhatsApp(contactState)}
                     onClick={() => onWhatsApp([contactState])}
-                    className={hasWhatsApp(contactState) ? DETAIL_STYLES.whatsappActive : DETAIL_STYLES.whatsappDisabled}
+                    className={DETAIL_STYLES.whatsappActive}
                   />
                 )}
-                {primaryPhone && (
+                {onSms && primaryPhone && (
                   <QuickActionButton
                     label={t('contacts.sms')}
                     icon={MessageSquare}
@@ -604,7 +593,7 @@ export default function ContactDetailDrawer({
                     className={DETAIL_STYLES.callAction}
                   />
                 )}
-                {primaryEmail && (
+                {onEmail && primaryEmail && (
                   <QuickActionButton
                     label={t('contacts.detail.emailAction')}
                     icon={Mail}
@@ -633,7 +622,10 @@ export default function ContactDetailDrawer({
                 {enabledTabIds.has("phones") && visibleCollectionFields.phones.length > 0 && contactState.phones && contactState.phones.length > 0 && (
                   <DetailSection title={t('contacts.form.phonesLabel')}>
                     {contactState.phones.map((phone, phoneIndex) => {
-                      const formattedPhone = formatPhoneWithCountryCode(phone.number, phone.countryCode || "+92") || String(phone.number || "");
+                      const formattedPhone = formatPhoneWithCountryCode(
+                        phone.number,
+                        phone.countryCode || getFallbackCountryCode(prefs, countryCodesMap),
+                      ) || String(phone.number || "");
                       return (
                         <CollectionRowItem
                           key={`phone-${phone.number}-${phoneIndex}`}
@@ -659,7 +651,7 @@ export default function ContactDetailDrawer({
                           key={`email-${email.address}-${emailIndex}`}
                           label={resolveEmailLabel(email.label, emailLabels, t)}
                           value={rawEmail}
-                          onAction={() => onEmail([{ ...contactState, email: rawEmail }])}
+                          onAction={onEmail ? () => onEmail([{ ...contactState, email: rawEmail }]) : undefined}
                           actionIcon={Mail}
                           actionTitle={t('contacts.detail.emailContact', { email: rawEmail })}
                           actionColorClass="text-secondary hover:bg-secondary/10"

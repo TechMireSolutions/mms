@@ -6,6 +6,7 @@ import {
 } from "@mms/shared";
 import { useTenant } from "@/lib/contexts/TenantContext";
 import { applyTenantEntryTheme } from "@/lib/brandingThemeCore";
+import { applyTenantDocumentFavicon } from "@/lib/documentFavicon";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -65,16 +66,12 @@ export default function AuthLayout({
     if (displayName) {
       document.title = `${displayName} - Madrasa MS`;
     }
-    const favicon = entryBranding.faviconUrl || entryBranding.logoUrl;
-    if (favicon) {
-      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
-      if (!link) {
-        link = document.createElement("link");
-        link.rel = "icon";
-        document.head.appendChild(link);
-      }
-      link.href = favicon;
-    }
+    applyTenantDocumentFavicon({
+      faviconUrl: entryBranding.faviconUrl,
+      logoUrl: entryBranding.logoUrl,
+      madrasaName: entryBranding.madrasaName || displayName,
+      primaryColor: entryBranding.primaryColor,
+    });
   }, [brandingReady, entryBranding, displayName]);
 
   if (!brandingReady) {

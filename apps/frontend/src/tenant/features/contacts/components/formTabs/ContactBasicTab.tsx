@@ -10,6 +10,7 @@ import { Field, EditableSelect } from "@/components/ui/FormPrimitives";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
+import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import {
   Contact,
   getDisplayName,
@@ -100,7 +101,7 @@ export function ContactBasicTab({
                 {contactDraft.gender &&
                   contactDraft.gender !== "unspecified" && (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground border border-border/80">
-                      {contactDraft.gender}
+                      {formatContactGenderLabel(contactDraft.gender, t)}
                     </span>
                   )}
                 {contactDraft.isSyed && (

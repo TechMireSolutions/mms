@@ -80,11 +80,11 @@ export default async function messagingRoutes(
     const user = req.user as User;
     if (!canReadMessaging(user)) return sendForbidden(reply);
     const parsedQuery = parseRequest(messagingLogsQuerySchema, req.query);
-    const query = parsedQuery.ok ? parsedQuery.data : (req.query as Record<string, string>);
+    if (!parsedQuery.ok) return replyValidationError(reply, parsedQuery.message);
     const tenantSubdomain = getRequestTenant();
     try {
       const logs = tenantSubdomain
-        ? await loadFilteredMessageLogs(tenantSubdomain, query)
+        ? await loadFilteredMessageLogs(tenantSubdomain, parsedQuery.data)
         : await loadMessageLogs();
       return reply.send({ logs });
     } catch (err) {

@@ -17,7 +17,7 @@ import { getDenominationPoints, formatNumber } from "@mms/shared";
 
 
 /** Active filter state passed down from the parent report view. */
-import { HasanatChart } from "@/tenant/features/dashboard/components/widgets/charts/AttendanceChart";
+import { HasanatChart } from "@/components/dashboard-widgets/charts/AttendanceChart";
 
 interface HasanatReportFilters {
   /** Class name to filter by, or "all" for no filter. */

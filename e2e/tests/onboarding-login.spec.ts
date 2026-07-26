@@ -282,17 +282,17 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
 
     const studentContactSearch = registerDialog.getByLabel('Student contact');
     await studentContactSearch.fill('Jane Doe');
-    const janeOption = registerDialog.getByRole('button', { name: /Jane Doe/ }).filter({ hasNotText: 'Create' }).first();
+    const janeOption = page.getByRole('option', { name: /Jane Doe/ }).first();
     await expect(janeOption).toBeVisible({ timeout: 15_000 });
-    await janeOption.dispatchEvent('mousedown');
+    await janeOption.click();
 
     // Link Father guardian (John Doe) — accessible name includes avatar initials (e.g. "JD John Doe —")
     const fatherSearch = registerDialog.getByLabel('Father');
     await fatherSearch.scrollIntoViewIfNeeded();
     await fatherSearch.fill('John Doe');
-    const johnOption = registerDialog.getByRole('button', { name: /John Doe/ }).filter({ hasNotText: 'Create' }).first();
+    const johnOption = page.getByRole('option', { name: /John Doe/ }).first();
     await expect(johnOption).toBeVisible({ timeout: 15_000 });
-    await johnOption.dispatchEvent('mousedown');
+    await johnOption.click();
 
     // Wait for the next GR number query to resolve and populate the input field
     await expect(page.locator('input[placeholder="e.g. 0001-2026"]')).not.toHaveValue('');

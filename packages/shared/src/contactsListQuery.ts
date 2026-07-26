@@ -17,6 +17,8 @@ export interface ContactsListQuery {
   hasPhone?: boolean;
   /** Toolbar quick filter; omit or `all` means no preset. */
   quickFilter?: ContactsQuickFilter;
+  /** Contact ids to omit from results (picker already-linked exclusions). */
+  excludeIds?: Array<string | number>;
 }
 
 export interface ContactsListPageResult {
@@ -51,6 +53,10 @@ export function filterContactsForQuery(contacts: Contact[], query: ContactsListQ
   }
   if (query.quickFilter && query.quickFilter !== 'all') {
     rows = rows.filter((contact) => matchesContactsQuickFilter(contact, query.quickFilter));
+  }
+  if (query.excludeIds && query.excludeIds.length > 0) {
+    const excluded = new Set(query.excludeIds.map(String));
+    rows = rows.filter((contact) => !excluded.has(String(contact.id)));
   }
   if (query.search?.trim()) {
     rows = rows.filter((contact) => contactMatchesSearch(contact, query.search!));

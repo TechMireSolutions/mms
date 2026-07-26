@@ -16,6 +16,9 @@ describe('messagingModuleContract', () => {
     expect(MESSAGING_MODULE_CONTRACT.entityType).toBe('Message');
     expect(MESSAGING_MODULE_CONTRACT.restBasePath).toBe('/api/messaging');
     expect(MESSAGING_MODULE_CONTRACT.tiers).toEqual(['work', 'reports', 'setup']);
+    expect(MESSAGING_MODULE_CONTRACT.permissions.read).toBe('messaging.read');
+    expect(MESSAGING_MODULE_CONTRACT.permissions.write).toBe('messaging.write');
+    expect(MESSAGING_MODULE_CONTRACT.permissions.clearLogs).toBe('messaging.clearLogs');
   });
 
   it('contains expected contract options mapping to i18n keys', () => {

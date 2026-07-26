@@ -1,21 +1,26 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
+import { useDebounce } from "@/hooks/useDebounce";
 import type { Contact, AppTranslationKey, ContactsQuickFilter } from "@mms/shared";
 import {
   getDisplayName,
   getPrimaryPhone,
+  getPrimaryEmail,
   hasWhatsApp,
   resolveModuleTierTab,
   filterActiveContacts,
   isContactDeleted,
   filterContactsForQuery,
   sortContacts,
+  contactMatchesSearch,
   CONTACTS_MODULE_CONTRACT,
   syncContactScalarFields,
+  toMessagingRecipient,
 } from "@mms/shared";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { downloadContactsCsv, downloadContactsCsvChunked } from "@/lib/contacts/exportContactsCsv";
 import {
   completeContactsBackgroundJob,
@@ -247,6 +252,7 @@ export function useContactsPageState({
   }, [conflictCount]);
 
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 250);
   const [filterGender, setFilterGender] = useState("");
   const [quickFilter, setQuickFilter] = useState<ContactsQuickFilter>("all");
   const [sortField, setSortField] = useState("name");
@@ -256,7 +262,12 @@ export function useContactsPageState({
   const [editContact, setEditContact] = useState<Contact | null>(null);
   const [viewContact, setViewContact] = useState<Contact | null>(null);
   const [showDuplicates, setShowDuplicates] = useState(false);
-  const [messagingTarget, setMessagingTarget] = useState<{ channel: "sms" | "whatsapp" | "email"; contacts: Contact[] } | null>(null);
+  const {
+    messagingTarget,
+    openComposer,
+    closeComposer,
+    canWriteMessaging,
+  } = useMessageComposerState();
   const [activeTab, setActiveTab] = usePersistedTabState<string>("contacts_active_tab", "work");
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false);
@@ -266,7 +277,7 @@ export function useContactsPageState({
 
   useEffect(() => {
     setListPage(1);
-  }, [search, filterGender, quickFilter, sortField, sortDir, showDeletedArchives]);
+  }, [debouncedSearch, filterGender, quickFilter, sortField, sortDir, showDeletedArchives]);
 
   const needsFullContactsList = showDeletedArchives || effectiveTab === "setup";
 
@@ -281,7 +292,7 @@ export function useContactsPageState({
   const { data: workPageData, isFetching: isWorkPageFetching } = useContactsPaginated({
     page: listPage,
     limit: workLimit,
-    search,
+    search: debouncedSearch,
     gender: filterGender,
     sortField,
     sortDir,
@@ -381,8 +392,11 @@ export function useContactsPageState({
   }, [contacts, search, filterGender, quickFilter, sortField, sortDir]);
 
   const workContacts = useMemo(() => {
-    return useServerWork ? (workPageData?.contacts ?? []) : filtered;
-  }, [useServerWork, workPageData?.contacts, filtered]);
+    if (!useServerWork) return filtered;
+    const rows = workPageData?.contacts ?? [];
+    // Narrow stale/in-flight server rows against the live search box.
+    return search.trim() ? rows.filter((contact) => contactMatchesSearch(contact, search)) : rows;
+  }, [useServerWork, workPageData?.contacts, filtered, search]);
 
   // Centralized linked contact directory resolution (SSOT)
   const linkSourceContacts = useMemo(() => {
@@ -712,17 +726,31 @@ export function useContactsPageState({
     [canDelete, contacts, restoreContactAction, t, handleError],
   );
 
-  const handleWhatsApp = useCallback(
-    (contacts: Contact[]) => setMessagingTarget({ channel: "whatsapp", contacts }),
+  const toComposerRecipients = useCallback(
+    (contacts: Contact[]) =>
+      contacts.map((c) =>
+        toMessagingRecipient(c, { getDisplayName, getPrimaryPhone, getPrimaryEmail }),
+      ),
     [],
+  );
+
+  const handleWhatsApp = useCallback(
+    (contacts: Contact[]) => {
+      openComposer("whatsapp", toComposerRecipients(contacts));
+    },
+    [openComposer, toComposerRecipients],
   );
   const handleSms = useCallback(
-    (contacts: Contact[]) => setMessagingTarget({ channel: "sms", contacts }),
-    [],
+    (contacts: Contact[]) => {
+      openComposer("sms", toComposerRecipients(contacts));
+    },
+    [openComposer, toComposerRecipients],
   );
   const handleEmail = useCallback(
-    (contacts: Contact[]) => setMessagingTarget({ channel: "email", contacts }),
-    [],
+    (contacts: Contact[]) => {
+      openComposer("email", toComposerRecipients(contacts));
+    },
+    [openComposer, toComposerRecipients],
   );
 
   return {
@@ -752,10 +780,11 @@ export function useContactsPageState({
     showDuplicates,
     setShowDuplicates,
     messagingTarget,
-    setMessagingTarget,
+    closeComposer,
     handleWhatsApp,
     handleSms,
     handleEmail,
+    canWriteMessaging,
     hasActiveFilters,
     activeFilterCount,
     defaultCountry,

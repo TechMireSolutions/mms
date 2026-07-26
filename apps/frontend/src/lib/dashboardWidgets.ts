@@ -1,5 +1,13 @@
 import type { AppTranslationKey } from '@mms/shared';
-import type { CustomWidget } from '@/tenant/features/reports/components/pinnedWidgets/types';
+
+/** Minimal widget/card shape for title/subtitle resolution. */
+export type WidgetI18nSource = {
+  id: string;
+  title: string;
+  titleKey?: AppTranslationKey;
+  fixedSubText?: string;
+  fixedSubTextKey?: AppTranslationKey;
+};
 
 /** i18n keys for seeded default widgets (user-created widgets keep custom `title`). */
 export const DEFAULT_WIDGET_TITLE_KEYS: Partial<Record<string, AppTranslationKey>> = {
@@ -21,13 +29,15 @@ export const DEFAULT_WIDGET_TITLE_KEYS: Partial<Record<string, AppTranslationKey
   'def-card-admin-contacts': 'widget.title.totalContacts',
   'def-card-accountant-contacts': 'widget.title.totalContacts',
   'def-contacts-total': 'widget.title.totalContacts',
-  'def-contacts-conversion': 'widget.title.activeLeadsRate',
+  'def-contacts-whatsapp': 'widget.title.whatsappVerifiedRate',
   'def-students-kpi': 'widget.title.activeStudents',
+  'def-students-lock': 'widget.title.attendanceLocking',
   'def-attendance-summary': 'widget.title.todaysAttendanceSummary',
   'def-enrollment-trends': 'widget.title.enrollmentTrends',
   'def-attendance-rate': 'widget.title.attendanceRate',
   'def-finance-outstanding': 'widget.title.overduePayments',
   'def-finance-paid-rate': 'widget.title.paidInvoicesRatio',
+  'def-finance-toggle-rev': 'widget.title.showRevenueGraph',
   'def-fee-summary': 'widget.title.feeCollectionSummary',
   'def-outstanding-list': 'widget.title.outstandingInvoicesList',
   'def-overdue-obligations': 'widget.title.overdueObligations',
@@ -36,6 +46,28 @@ export const DEFAULT_WIDGET_TITLE_KEYS: Partial<Record<string, AppTranslationKey
   'def-hasanat-distribution': 'widget.title.hasanatDistribution',
   'def-sessions-count': 'widget.title.activeSessions',
   'def-sessions-list': 'widget.title.activeSessionsList',
+  'def-sessions-toggle-grid': 'widget.title.dashboardSessionList',
+};
+
+/** i18n keys for seeded default card subtitles (user-created widgets keep custom `fixedSubText`). */
+export const DEFAULT_WIDGET_SUBTEXT_KEYS: Partial<Record<string, AppTranslationKey>> = {
+  'def-card-admin-contacts': 'widget.subtitle.totalContacts',
+  'def-card-accountant-contacts': 'widget.subtitle.totalContacts',
+  'def-card-admin-students': 'widget.subtitle.registeredStudents',
+  'def-card-admin-attendance': 'widget.subtitle.attendanceRateToday',
+  'def-card-teacher-attendance': 'widget.subtitle.averagePresentRate',
+  'def-card-admin-fees': 'widget.subtitle.thisMonth',
+  'def-card-accountant-fees': 'widget.subtitle.thisMonth',
+  'def-card-admin-outstanding': 'widget.subtitle.unpaidInvoices',
+  'def-card-accountant-outstanding': 'widget.subtitle.unpaidInvoices',
+  'def-card-accountant-revenue': 'widget.subtitle.fromInvoices',
+  'def-card-accountant-expenses': 'widget.subtitle.totalDiscountOffset',
+  'def-card-admin-hasanat': 'widget.subtitle.allTimePoints',
+  'def-card-teacher-hasanat': 'widget.subtitle.awardedByMe',
+  'def-card-admin-sessions': 'widget.subtitle.activeSessions',
+  'def-card-teacher-sessions': 'widget.subtitle.fromActiveSessions',
+  'def-card-admin-classes': 'widget.subtitle.allActiveClasses',
+  'def-card-teacher-classes': 'widget.subtitle.activeClassesCount',
 };
 
 const LOWERCASE_KEYS = Object.values(DEFAULT_WIDGET_TITLE_KEYS).reduce<Record<string, AppTranslationKey>>((acc, key) => {
@@ -46,7 +78,7 @@ const LOWERCASE_KEYS = Object.values(DEFAULT_WIDGET_TITLE_KEYS).reduce<Record<st
 }, {});
 
 export function resolveWidgetTitle(
-  widget: Pick<CustomWidget, 'id' | 'title' | 'titleKey'>,
+  widget: WidgetI18nSource,
   t: (key: AppTranslationKey) => string,
 ): string {
   const rawKey = widget.titleKey ?? DEFAULT_WIDGET_TITLE_KEYS[widget.id];
@@ -58,4 +90,14 @@ export function resolveWidgetTitle(
     return t(key);
   }
   return widget.title;
+}
+
+/** Resolve card subtitle: keyed defaults first, then user fixed text. Empty string if neither. */
+export function resolveWidgetSubText(
+  widget: WidgetI18nSource,
+  t: (key: AppTranslationKey) => string,
+): string {
+  const key = widget.fixedSubTextKey ?? DEFAULT_WIDGET_SUBTEXT_KEYS[widget.id];
+  if (key) return t(key);
+  return widget.fixedSubText ?? '';
 }

@@ -11,6 +11,7 @@ import { notify } from "@/lib/notify";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenuRadioGroup, DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
@@ -23,7 +24,8 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import StudentList from "@/tenant/features/students/components/StudentList";
 import StudentForm from "@/tenant/features/students/components/StudentForm";
 import StudentsSettingsPanel from "@/tenant/features/students/components/StudentsSettings";
-import { type Student, STUDENTS_MODULE_CONTRACT, toTitleCase, resolveStudentStatuses, type AppTranslationKey } from "@mms/shared";
+import { type Student, STUDENTS_MODULE_CONTRACT, toTitleCase, resolveStudentStatuses } from "@mms/shared";
+import { studentStatusLabel } from "@/lib/students/studentStatusUi";
 
 
 import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
@@ -152,7 +154,7 @@ export default function Students() {
   const studentFilterChips = [
     ...studentFilterStatus.map((status) => ({
       key: status,
-      label: t(`students.form.status.${status}` as AppTranslationKey) || toTitleCase(status),
+      label: studentStatusLabel(t, status),
       onRemove: () => toggleStudentStatus(status),
     })),
     ...(studentFilterGender
@@ -251,7 +253,7 @@ export default function Students() {
                       checked={studentFilterStatus.includes(status)}
                       onCheckedChange={() => toggleStudentStatus(status)}
                     >
-                      {t(`students.form.status.${status}` as AppTranslationKey) || toTitleCase(status)}
+                      {studentStatusLabel(t, status)}
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuContent>
@@ -276,15 +278,16 @@ export default function Students() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-36">
-                  {["", ...genderFilters].map((genderFilter) => (
-                    <DropdownMenuCheckboxItem
-                       key={genderFilter}
-                       checked={studentFilterGender === genderFilter}
-                       onCheckedChange={() => setStudentFilterGender(genderFilter)}
-                     >
-                       {genderFilter ? toTitleCase(genderFilter) : t("students.allGenders")}
-                     </DropdownMenuCheckboxItem>
-                  ))}
+                  <DropdownMenuRadioGroup
+                    value={studentFilterGender}
+                    onValueChange={setStudentFilterGender}
+                  >
+                    {["", ...genderFilters].map((genderFilter) => (
+                      <DropdownMenuRadioItem key={genderFilter || "all"} value={genderFilter}>
+                        {genderFilter ? toTitleCase(genderFilter) : t("students.allGenders")}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
 

@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
 import { type Student, resolveStudentStatuses, calcAge, formatDate, toMessagingRecipient, toTitleCase } from "@mms/shared";
 import { useTranslation } from '@/hooks/useTranslation';
+import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
 import StudentDetail from "@/tenant/features/students/components/StudentDetail";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
@@ -72,6 +73,8 @@ export default function StudentList({
   const { t } = useTranslation();
   const sessions = useSessionsCollection();
   const { settings, statuses, isFieldEnabled } = useStudentConfig();
+  const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
+  const studentStatusOptions = useMemo(() => resolveStudentStatuses(statuses), [statuses]);
 
   const showDob = isColumnVisible
     ? isColumnVisible("dob")
@@ -313,7 +316,7 @@ export default function StudentList({
                     )}
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">{t("students.columns.status")}:</span>
-                      <StatusBadge status={studentCard.status || "active"} />
+                      <StatusBadge status={studentCard.status || "active"} config={statusBadgeConfig} />
                     </div>
                   </div>
                 </motion.div>
@@ -486,7 +489,7 @@ export default function StudentList({
 
                         {showStatus && (
                         <td className="px-4 py-3 hidden sm:table-cell">
-                          <StatusBadge status={studentRow.status || "active"} />
+                          <StatusBadge status={studentRow.status || "active"} config={statusBadgeConfig} />
                         </td>
                         )}
                         <td className="px-4 py-3">
@@ -629,8 +632,8 @@ export default function StudentList({
                         <Tag className="w-3.5 h-3.5 text-primary" /> {t("students.columns.status")} <ChevronDown className="w-3 h-3 ms-0.5" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-36">
-                      {resolveStudentStatuses(statuses).map((statusVal) => (
+                    <DropdownMenuContent align="end" className="w-40">
+                      {studentStatusOptions.map((statusVal) => (
                         <DropdownMenuItem
                           key={statusVal}
                           onClick={() => {
@@ -638,7 +641,7 @@ export default function StudentList({
                             setSelectedIds([]);
                           }}
                         >
-                          <StatusBadge status={statusVal} size="sm" />
+                          <StatusBadge status={statusVal} size="sm" config={statusBadgeConfig} />
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>

@@ -35,6 +35,7 @@ import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
+import { resolveWidgetTitle, resolveWidgetSubText } from "@/lib/dashboardWidgets";
 
 interface KPIItem {
   icon: LucideIcon;
@@ -157,11 +158,19 @@ function computeCustomCard(
   },
   t: TranslationFunction
 ): KPIItem & { categories: string[] } {
-  const computedCard = computeCustomCardShared(card, collections, t);
+  const computedCard = computeCustomCardShared(
+    {
+      ...card,
+      title: resolveWidgetTitle(card, t),
+      fixedSubText: resolveWidgetSubText(card, t) || card.fixedSubText,
+    },
+    collections,
+    t,
+  );
   return {
-    label: computedCard.title,
+    label: resolveWidgetTitle(card, t),
     value: String(computedCard.value),
-    sub: computedCard.sub,
+    sub: resolveWidgetSubText(card, t) || computedCard.sub,
     icon: (ICONS[computedCard.icon] || BarChart2) as LucideIcon,
     color: (computedCard.color === "emerald" ? "green" : computedCard.color) as KPIItem["color"],
     trend: "flat" as const,
@@ -722,9 +731,9 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         if (aggregate) {
           const aggregateValue = formatAggregateCardValue(card, aggregate);
           return {
-            label: card.title,
+            label: resolveWidgetTitle(card, t),
             value: String(aggregateValue.finalValue),
-            sub: card.fixedSubText || t('reports.widgets.totalCountText', { count: aggregateValue.totalCount }),
+            sub: resolveWidgetSubText(card, t) || t('reports.widgets.totalCountText', { count: aggregateValue.totalCount }),
             icon: (ICONS[card.icon] || Users) as LucideIcon,
             color: (card.color === "emerald" ? "green" : card.color) as KPIItem["color"],
             trend: "flat" as const,
@@ -738,9 +747,9 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         if (aggregate) {
           const aggregateValue = formatAggregateCardValue(card, aggregate);
           return {
-            label: card.title,
+            label: resolveWidgetTitle(card, t),
             value: String(aggregateValue.finalValue),
-            sub: card.fixedSubText || t('reports.widgets.totalCountText', { count: aggregateValue.totalCount }),
+            sub: resolveWidgetSubText(card, t) || t('reports.widgets.totalCountText', { count: aggregateValue.totalCount }),
             icon: (ICONS[card.icon] || Users) as LucideIcon,
             color: (card.color === "emerald" ? "green" : card.color) as KPIItem["color"],
             trend: "flat" as const,
@@ -754,9 +763,9 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         if (aggregate) {
           const aggregateValue = formatAggregateCardValue(card, aggregate);
           return {
-            label: card.title,
+            label: resolveWidgetTitle(card, t),
             value: String(aggregateValue.finalValue),
-            sub: card.fixedSubText || t('reports.widgets.totalCountText', { count: aggregateValue.totalCount }),
+            sub: resolveWidgetSubText(card, t) || t('reports.widgets.totalCountText', { count: aggregateValue.totalCount }),
             icon: (ICONS[card.icon] || Users) as LucideIcon,
             color: (card.color === "emerald" ? "green" : card.color) as KPIItem["color"],
             trend: "flat" as const,

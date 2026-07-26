@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { getObject, saveObject } from '@/lib/db';
 import { getOrInitializeCustomWidgets } from '@/tenant/features/reports/components/pinnedWidgets/widgetDefaults';
-import type { CustomWidget } from '@/tenant/features/reports/components/PinnedWidgets';
+import type { CustomWidget } from '@/tenant/features/reports/components/pinnedWidgets/types';
 import { useLiveObject } from '@/hooks/useLiveObject';
 import {
   DEFAULT_DASHBOARD_PREFERENCES,

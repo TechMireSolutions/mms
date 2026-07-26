@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import {
   TrendingUp, TrendingDown, Trash2, Plus, Pencil, DollarSign
@@ -21,20 +21,8 @@ export interface StatItem {
   sparklineData?: number[];
 }
 
-function Sparkline({ trend, data, color }: { trend: number; data?: number[]; color: string }) {
-  const points = useMemo(() => {
-    if (data && data.length > 1) return data;
-    const base = 100;
-    const change = trend;
-    const factor = change >= 0 ? 1 : -1;
-    return [
-      base,
-      base + change * 0.2 + factor * 2,
-      base + change * 0.5 - factor * 3,
-      base + change * 0.8 + factor * 1.5,
-      base + change
-    ];
-  }, [data, trend]);
+function Sparkline({ data, color }: { data: number[]; color: string }) {
+  const points = data;
 
   const min = Math.min(...points);
   const max = Math.max(...points);
@@ -119,7 +107,7 @@ export default function StatsGrid({
             accentColor={accent}
             className="p-4.5 md:p-5 px-5.5 flex flex-col justify-between"
           >
-            <div className={`absolute -right-8 -top-8 w-24 h-24 rounded-full ${colorTheme.glow} transition-all duration-500`} />
+            <div className={`absolute -end-8 -top-8 w-24 h-24 rounded-full ${colorTheme.glow} transition-all duration-500`} />
             
             <header className="flex items-start justify-between mb-3 select-none">
               <div
@@ -194,9 +182,9 @@ export default function StatsGrid({
                   {statItem.title}
                 </h4>
               </main>
-              {!isEditMode && (
-                <div className="w-16 h-8 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0 pointer-events-none flex-shrink-0 ml-2">
-                  <Sparkline trend={statItem.trend} data={statItem.sparklineData} color={statItem.color} />
+              {!isEditMode && Array.isArray(statItem.sparklineData) && statItem.sparklineData.length > 1 && (
+                <div className="w-16 h-8 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0 pointer-events-none flex-shrink-0 ms-2">
+                  <Sparkline data={statItem.sparklineData} color={statItem.color} />
                 </div>
               )}
             </div>

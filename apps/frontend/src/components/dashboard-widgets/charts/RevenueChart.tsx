@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/lib/config/routes";
-import { useBrandedDashboardChartColors } from "@/tenant/features/dashboard/hooks/useBrandedDashboardChartColors";
+import { useBrandedDashboardChartColors } from "@/components/dashboard-widgets/useBrandedDashboardChartColors";
 import {
   ComposedChart, Bar, Line, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, TooltipContentProps, TooltipPayloadEntry,
@@ -21,7 +21,7 @@ import {
 import { FORM_SELECT_MINI } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
-import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
+import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 import { getCollectedAmountForInvoice, getRecentMonthsList } from "@mms/shared";
 
 interface RevenuePoint {
@@ -39,7 +39,7 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
   const { formatCurrency } = useFinanceCurrency();
   if (!active || !payload?.length) return null;
   return (
-    <div className="surface-glass rounded-xl px-4 py-3 shadow-lg text-xs space-y-1.5 text-left select-none">
+    <div className="surface-glass rounded-xl px-4 py-3 shadow-lg text-xs space-y-1.5 text-start select-none">
       <p className="text-muted-foreground/80 text-[10px] font-bold m-0">{label}</p>
       {payload.map((payloadEntry: TooltipPayloadEntry) => (
         <div key={payloadEntry.dataKey as string | number} className="flex items-center gap-2">
@@ -134,7 +134,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
 
   return (
     <WidgetCard ariaLabelledby="revenue-chart-heading" accentColor="primary" className="p-5">
-      <header className="flex flex-wrap items-start justify-between gap-3 mb-5 pl-1.5 select-none">
+      <header className="flex flex-wrap items-start justify-between gap-3 mb-5 ps-1.5 select-none">
         <div>
           <h3 id="revenue-chart-heading" className="text-sm font-bold text-foreground m-0">
             {t("widget.title.revenueExpenses")}
@@ -155,7 +155,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
                 }}
               >
                 <SelectTrigger className={FORM_SELECT_MINI}>
-                  <SelectValue placeholder="Select chart type" />
+                  <SelectValue placeholder={t("reports.visualizer.chartType")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="bar">{t("dashboard.charts.attendance.barChart")}</SelectItem>
@@ -170,7 +170,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
                 }}
               >
                 <SelectTrigger className={FORM_SELECT_MINI}>
-                  <SelectValue placeholder="Select color theme" />
+                  <SelectValue placeholder={t("reports.visualizer.colorPalette")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="mixed">{t("dashboard.charts.hasanat.mixed")}</SelectItem>

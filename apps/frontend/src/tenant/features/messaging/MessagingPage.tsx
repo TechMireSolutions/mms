@@ -12,7 +12,7 @@ import {
 import { SafeResponsiveContainer } from '@/components/ui/SafeResponsiveContainer';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { usePermissions } from '@/tenant/hooks/usePermissions';
+import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
@@ -40,6 +40,7 @@ import {
   getMessageCategoryLabelKey,
   toMessagingRecipient,
   appendVariableToken,
+  contactMatchesSearch,
   type StandardMessagingRecipient as MessagingRecipient,
   type Message, 
   type MessageCategory,
@@ -58,7 +59,7 @@ const CHART_COLORS = ['var(--color-info)', 'var(--color-success)', 'var(--color-
 export default function MessagingPage(): React.JSX.Element {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { can } = usePermissions();
+  const { canWrite, canViewSetup, canEditSetup, canClearLogs } = useModulePermissions(MESSAGING_MODULE_CONTRACT);
 
   const contactsCollectionRaw = useContactsCollection();
   const allContacts = useMemo(() => contactsCollectionRaw || [], [contactsCollectionRaw]);
@@ -136,7 +137,7 @@ export default function MessagingPage(): React.JSX.Element {
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
 
   const visibleTabs = useFilteredModuleTierTabs({
-    canViewSetup: can('configuration.view'),
+    canViewSetup: canViewSetup || canEditSetup,
   });
 
   const { templates: customTemplates } = useMessageTemplates();
@@ -254,7 +255,7 @@ export default function MessagingPage(): React.JSX.Element {
 
   const filteredContacts = useMemo(() => {
     return allContacts.filter((c) => {
-      const nameMatch = getDisplayName(c).toLowerCase().includes(searchContact.toLowerCase());
+      const nameMatch = contactMatchesSearch(c, searchContact);
       const hasContactInfo = Boolean(getPrimaryPhone(c)) || Boolean(getPrimaryEmail(c));
       const genderMatch = genderFilter === 'all' || (c.gender || 'unspecified').toLowerCase() === genderFilter;
       
@@ -395,20 +396,22 @@ export default function MessagingPage(): React.JSX.Element {
       headerTitle={t('messaging.title')}
       headerSubtitle={t('messaging.subtitle')}
       headerActions={
-        <ActionButton
-          variant="primary"
-          icon={Send}
-          onClick={() => {
-            setActiveTab("work");
-            if (currentSelectedList.length > 0) {
-              triggerCompose('whatsapp');
-            } else {
-              notify.info(t('messaging.selectRecipientsDesc'));
-            }
-          }}
-        >
-          {t('messaging.newCampaign')}
-        </ActionButton>
+        canWrite ? (
+          <ActionButton
+            variant="primary"
+            icon={Send}
+            onClick={() => {
+              setActiveTab("work");
+              if (currentSelectedList.length > 0) {
+                triggerCompose('whatsapp');
+              } else {
+                notify.info(t('messaging.selectRecipientsDesc'));
+              }
+            }}
+          >
+            {t('messaging.newCampaign')}
+          </ActionButton>
+        ) : null
       }
       metricsStrip={
         <ModuleCommandMetricsGrid
@@ -438,7 +441,7 @@ export default function MessagingPage(): React.JSX.Element {
             <div className="lg:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4 shadow-xs">
               <div className="flex justify-between items-start flex-wrap gap-4">
                 <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-foreground">1. {t('messaging.selectRecipients')}</h4>
+                  <h4 className="text-sm font-bold text-foreground">{t('messaging.stepSelectRecipients')}</h4>
                   <p className="text-xs text-muted-foreground">{t('messaging.selectRecipientsDesc')}</p>
                 </div>
 
@@ -562,7 +565,7 @@ export default function MessagingPage(): React.JSX.Element {
             <div className="border border-border rounded-xl bg-card p-4 space-y-4 flex flex-col justify-between shadow-xs">
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-foreground">2. {t('messaging.confirmRecipients')}</h4>
+                  <h4 className="text-sm font-bold text-foreground">{t('messaging.stepConfirmDispatch')}</h4>
                   <p className="text-xs text-muted-foreground">{t('messaging.confirmRecipientsDesc')}</p>
                 </div>
 
@@ -585,6 +588,8 @@ export default function MessagingPage(): React.JSX.Element {
               </div>
 
               <div className="space-y-2">
+                {canWrite ? (
+                  <>
                 <Button
                   onClick={() => triggerCompose('whatsapp')}
                   disabled={currentSelectedList.length === 0}
@@ -609,6 +614,8 @@ export default function MessagingPage(): React.JSX.Element {
                   <Mail className="w-4 h-4 mr-2" />
                   {t('messaging.sendEmail')}
                 </Button>
+                  </>
+                ) : null}
               </div>
             </div>
           </motion.div>
@@ -672,10 +679,10 @@ export default function MessagingPage(): React.JSX.Element {
                         body: log.body,
                         sentAt: formatDateTime(log.sentAt),
                       }))}
-                      filename="message_history"
+                      filename={t('messaging.exportFilename')}
                     />
                   )}
-                  {messageLogs.length > 0 && (
+                  {messageLogs.length > 0 && canClearLogs && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -725,6 +732,7 @@ export default function MessagingPage(): React.JSX.Element {
                               {formatDateTime(log.sentAt)}
                             </td>
                             <td className="px-4 py-3 text-center">
+                              {canWrite ? (
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -735,6 +743,7 @@ export default function MessagingPage(): React.JSX.Element {
                                 <RotateCcw className="w-3.5 h-3.5 mr-1" />
                                 {t('messaging.resend')}
                               </Button>
+                              ) : null}
                             </td>
                           </tr>
                         );
@@ -798,6 +807,8 @@ export default function MessagingPage(): React.JSX.Element {
             className="grid grid-cols-1 md:grid-cols-3 gap-6"
           >
             <div className="border border-border rounded-xl bg-card p-4 space-y-4 shadow-xs">
+              {canEditSetup || canWrite ? (
+              <>
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
@@ -873,6 +884,8 @@ export default function MessagingPage(): React.JSX.Element {
                   {editingTemplateId ? t('messaging.updateTemplate') : t('messaging.saveTemplate')}
                 </Button>
               </form>
+              </>
+              ) : null}
             </div>
 
             <div className="md:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4 shadow-xs">
@@ -914,7 +927,7 @@ export default function MessagingPage(): React.JSX.Element {
                     {filteredTemplates.map((tpl) => (
                       <tr key={tpl.id} className="hover:bg-muted/5 transition-colors">
                         <td className="px-4 py-3 font-semibold text-foreground flex items-center gap-1.5">
-                          <span>{tpl.label}</span>
+                          <span>{tpl.labelKey ? t(tpl.labelKey as 'messaging.template.generalAnnouncement') : tpl.label}</span>
                           {tpl.channel && tpl.channel !== 'all' && (
                             <ChannelBadge channel={tpl.channel} className="text-[9px]" />
                           )}
@@ -944,10 +957,11 @@ export default function MessagingPage(): React.JSX.Element {
                               onClick={() => handleDuplicateTemplate(tpl)}
                               className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
                               title={t('messaging.duplicateTemplate')}
+                              disabled={!canWrite}
                             >
                               <Copy className="w-3.5 h-3.5 text-primary/70" />
                             </Button>
-                            {tpl.id.startsWith('custom_') ? (
+                            {canWrite && tpl.id.startsWith('custom_') ? (
                               <>
                                 <Button
                                   variant="ghost"

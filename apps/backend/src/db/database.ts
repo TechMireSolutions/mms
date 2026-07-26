@@ -54,6 +54,7 @@ import { runMigration030 } from './migrations/030_migrate_hasanat_to_tables.js';
 import { runMigration031 } from './migrations/031_migrate_accounting_to_tables.js';
 import { runMigration032 } from './migrations/032_migrate_question_bank_to_tables.js';
 import { runMigration033 } from './migrations/033_migrate_logs_to_tables.js';
+import { runMigration034 } from './migrations/034_purge_overdue_obligations.js';
 import { deleteAuthArtifactsForWorkspace, purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
 import { initPlatformSettings } from '../services/platform/platformSettingsService.js';
@@ -156,6 +157,7 @@ export async function initDb(): Promise<void> {
       { id: '031', run: runMigration031 },
       { id: '032', run: runMigration032 },
       { id: '033', run: runMigration033 },
+      { id: '034', run: runMigration034 },
     ];
 
     const migrationLockClient = await pool.connect();

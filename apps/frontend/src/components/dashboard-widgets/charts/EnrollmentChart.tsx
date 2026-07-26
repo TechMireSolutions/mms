@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { useBrandedDashboardChartColors } from "@/tenant/features/dashboard/hooks/useBrandedDashboardChartColors";
+import { useBrandedDashboardChartColors } from "@/components/dashboard-widgets/useBrandedDashboardChartColors";
 import {
   ComposedChart, Area, Line, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, TooltipContentProps
@@ -9,7 +9,7 @@ import { WidgetCard } from "@/components/ui/WidgetCard";
 import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import { TrendingUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
+import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 import { getRecentMonthsList } from "@/lib/utils";
 import {
   Select,
@@ -33,7 +33,7 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
   const { t } = useTranslation();
   if (!active || !payload?.length) return null;
   return (
-    <div className="surface-glass rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-left">
+    <div className="surface-glass rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-start">
       <p className="text-muted-foreground/80 text-[10px] mb-0.5 m-0 font-medium select-none">{label}</p>
       <p className="font-bold text-foreground m-0 tabular-nums">
         {t("dashboard.widgets.studentsCount", { count: Number(payload[0].value) })}
@@ -83,7 +83,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
 
   return (
     <WidgetCard ariaLabelledby="enrollment-chart-heading" accentColor="primary" className="p-5">
-      <header className="flex flex-wrap items-start justify-between gap-3 mb-5 pl-1.5 select-none">
+      <header className="flex flex-wrap items-start justify-between gap-3 mb-5 ps-1.5 select-none">
         <div>
           <h3 id="enrollment-chart-heading" className="text-sm font-bold text-foreground m-0">
             {t("widget.title.enrollmentTrends")}
@@ -104,7 +104,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
                 }}
               >
                 <SelectTrigger className={FORM_SELECT_MINI}>
-                  <SelectValue placeholder="Select chart type" />
+                  <SelectValue placeholder={t("reports.visualizer.chartType")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="area">{t("dashboard.charts.enrollment.area")}</SelectItem>
@@ -120,7 +120,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
                 }}
               >
                 <SelectTrigger className={FORM_SELECT_MINI}>
-                  <SelectValue placeholder="Select color theme" />
+                  <SelectValue placeholder={t("reports.visualizer.colorPalette")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="emerald">{t("dashboard.charts.attendance.emerald")}</SelectItem>
@@ -138,7 +138,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
                 }}
               >
                 <SelectTrigger className={FORM_SELECT_MINI}>
-                  <SelectValue placeholder="Select period" />
+                  <SelectValue placeholder={t("dashboard.widgets.selectPeriod")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="3">{t("dashboard.charts.monthsRange", { count: 3 })}</SelectItem>
@@ -178,7 +178,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
               strokeWidth={2.5}
               fill={activeColor.fill}
               dot={false}
-              activeDot={{ r: 5, fill: activeColor.stroke, strokeWidth: 2, stroke: "#fff" }}
+              activeDot={{ r: 5, fill: activeColor.stroke, strokeWidth: 2, stroke: "hsl(var(--card))" }}
             />
           )}
           {chartType === "line" && (
@@ -188,7 +188,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
               stroke={activeColor.stroke}
               strokeWidth={2.5}
               dot={{ r: 3, fill: activeColor.stroke }}
-              activeDot={{ r: 5, fill: activeColor.stroke, strokeWidth: 2, stroke: "#fff" }}
+              activeDot={{ r: 5, fill: activeColor.stroke, strokeWidth: 2, stroke: "hsl(var(--card))" }}
             />
           )}
           {chartType === "bar" && (

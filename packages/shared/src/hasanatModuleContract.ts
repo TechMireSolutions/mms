@@ -79,13 +79,13 @@ export const HASANAT_MODULE_CONTRACT = {
   analyticsCategory: 'hasanat',
   tiers: ['work', 'reports', 'setup'] as const,
   permissions: {
-    read: 'finance.write',
-    write: 'finance.write',
-    delete: 'finance.write',
+    read: 'hasanat.read',
+    write: 'hasanat.write',
+    delete: 'hasanat.write',
     setupView: 'configuration.view',
     setupWrite: 'settings.global.write',
-    export: 'finance.write',
-    reports: 'finance.write',
+    export: 'hasanat.read',
+    reports: 'hasanat.read',
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['overview', 'stock', 'distribute', 'redemptions'] as const,

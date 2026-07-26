@@ -20,9 +20,9 @@ import {
   getInitials,
   formatDateTime,
   mergeMessageTemplates,
-  parsePhoneNumber,
-  toMessagingRecipient,
   appendVariableToken,
+  getMessageCategoryLabelKey,
+  PuppeteerWhatsAppProvider,
   type StandardMessagingRecipient as MessagingRecipient,
   type MessageTemplate,
   type Message
@@ -30,7 +30,8 @@ import {
 import { MessagingVariableTokensBar } from '@/components/ui/MessagingVariableTokensBar';
 import { SegmentedPillFilter } from '@/components/ui/SegmentedPillFilter';
 import { ChannelBadge } from '@/components/ui/ChannelBadge';
-import { useMessageTemplates, useMessagingMutations } from '@/tenant/features/messaging/hooks/useMessaging';
+import { useMessageTemplates, useMessagingMutations } from '@/hooks/useMessaging';
+import { useBranding } from '@/tenant/hooks/useBranding';
 
 
 
@@ -67,6 +68,12 @@ export default function MessageComposer({
 }: MessageComposerProps): React.JSX.Element {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const branding = useBranding();
+
+  const personalizeOpts = useMemo(
+    () => ({ madrasaName: branding.madrasaName || undefined }),
+    [branding.madrasaName],
+  );
 
   // Evaluate recipients eligibility and validation
   const validatedRecipients = useMemo(() => {
@@ -133,14 +140,14 @@ export default function MessageComposer({
   }, [message]);
 
   const executeSend = (recipient: MessagingRecipient, text: string): boolean => {
-    const personalizedBody = personalizeMessage(text, recipient);
+    const personalizedBody = personalizeMessage(text, recipient, personalizeOpts);
 
     if (channel === 'email') {
       const email = recipient.email;
       if (!email) return false;
-      const personalizedSubject = personalizeMessage(subject || t('messaging.defaultSubject'), recipient);
-      window.open(`mailto:${email}?subject=${encodeURIComponent(personalizedSubject)}&body=${encodeURIComponent(personalizedBody)}`, '_blank');
-      return true;
+      const personalizedSubject = personalizeMessage(subject || t('messaging.defaultSubject'), recipient, personalizeOpts);
+      const opened = window.open(`mailto:${email}?subject=${encodeURIComponent(personalizedSubject)}&body=${encodeURIComponent(personalizedBody)}`, '_blank');
+      return opened !== null;
     } else {
       const phone = recipient.phone;
       if (!phone) return false;
@@ -148,17 +155,17 @@ export default function MessageComposer({
       if (channel === 'sms') {
         return openDeviceSmsComposer(phone, personalizedBody);
       } else {
-        const parsed = parsePhoneNumber(phone);
-        const cleanNum = `${parsed.countryCode}${parsed.number}`.replace(/\D/g, '');
-        window.open(`https://wa.me/${cleanNum}?text=${encodeURIComponent(personalizedBody)}`, '_blank');
-        return true;
+        const numberId = PuppeteerWhatsAppProvider.getNumberId(phone);
+        if (!numberId) return false;
+        const opened = window.open(`https://wa.me/${numberId}?text=${encodeURIComponent(personalizedBody)}`, '_blank');
+        return opened !== null;
       }
     }
   };
 
   const { recordDispatches } = useMessagingMutations();
 
-  const saveSentMessageHistory = (sentRecords: { recipientId: string | number; body: string }[]): void => {
+  const saveSentMessageHistory = (sentRecords: { recipientId: string | number; body: string; status: 'sent' | 'failed' }[]): void => {
     if (sentRecords.length > 0 && user) {
       const activeTplObj = activeTemplates.find((t) => t.id === template);
       const newMsgs: Message[] = sentRecords.map((rec) => ({
@@ -168,12 +175,11 @@ export default function MessageComposer({
         channel,
         body: rec.body,
         sentAt: new Date().toISOString(),
-        status: 'sent',
+        status: rec.status,
         subject: channel === 'email' ? subject || undefined : undefined,
         category: activeTplObj?.category || 'general',
       }));
 
-      // Mutate to server REST API + fallback local storage
       recordDispatches.mutate(newMsgs);
       window.dispatchEvent(new CustomEvent('local-database-update'));
     }
@@ -182,31 +188,25 @@ export default function MessageComposer({
   const handleSendAll = async (): Promise<void> => {
     if (eligibleRecipients.length === 0 || !message.trim()) return;
 
-    const sentRecords: { recipientId: string | number; body: string }[] = [];
+    const sentRecords: { recipientId: string | number; body: string; status: 'sent' | 'failed' }[] = [];
 
-    if (channel === 'sms') {
-      eligibleRecipients.forEach((recipient) => {
-        const success = executeSend(recipient, message);
-        if (success) {
-          sentRecords.push({ recipientId: recipient.id, body: personalizeMessage(message, recipient) });
-        }
+    const recordDispatch = (recipient: MessagingRecipient, success: boolean): void => {
+      sentRecords.push({
+        recipientId: recipient.id,
+        body: personalizeMessage(message, recipient, personalizeOpts),
+        status: success ? 'sent' : 'failed',
       });
-      saveSentMessageHistory(sentRecords);
-      onSent?.(sentRecords);
-      onClose();
-      return;
-    }
+    };
 
     if (eligibleRecipients.length === 1) {
-      executeSend(eligibleRecipients[0], message);
-      sentRecords.push({ recipientId: eligibleRecipients[0].id, body: personalizeMessage(message, eligibleRecipients[0]) });
+      const recipient = eligibleRecipients[0];
+      recordDispatch(recipient, executeSend(recipient, message));
       saveSentMessageHistory(sentRecords);
       onSent?.(sentRecords);
       onClose();
       return;
     }
 
-    // Bulk execution engine with pause/cancel/speed controls
     setOpening(true);
     setIsPaused(false);
     dispatchCancelRef.current = false;
@@ -215,7 +215,6 @@ export default function MessageComposer({
     for (let index = 0; index < eligibleRecipients.length; index++) {
       if (dispatchCancelRef.current) break;
 
-      // Wait if paused
       while (dispatchPausedRef.current && !dispatchCancelRef.current) {
         await new Promise((res) => setTimeout(res, 200));
       }
@@ -223,8 +222,7 @@ export default function MessageComposer({
       if (dispatchCancelRef.current) break;
 
       const recipient = eligibleRecipients[index];
-      executeSend(recipient, message);
-      sentRecords.push({ recipientId: recipient.id, body: personalizeMessage(message, recipient) });
+      recordDispatch(recipient, executeSend(recipient, message));
       setDispatchProgress({ current: index + 1, total: eligibleRecipients.length });
 
       if (index < eligibleRecipients.length - 1) {
@@ -290,8 +288,8 @@ export default function MessageComposer({
 
   const previewText = useMemo(() => {
     if (!message.trim() || !currentPreviewRecipient) return '';
-    return personalizeMessage(message, currentPreviewRecipient);
-  }, [message, currentPreviewRecipient]);
+    return personalizeMessage(message, currentPreviewRecipient, personalizeOpts);
+  }, [message, currentPreviewRecipient, personalizeOpts]);
 
   const insertVariableTag = (tag: string): void => {
     setMessage((prev) => appendVariableToken(prev, tag));
@@ -315,6 +313,7 @@ export default function MessageComposer({
   return (
     <FormModal
       open
+      priority
       onClose={onClose}
       title={title}
       subtitle={subtitle}
@@ -344,13 +343,14 @@ export default function MessageComposer({
                   {t('messaging.skippedNotice', { count: String(skippedCount), type: isEmail ? t('messaging.emailAddress') : t('messaging.phoneNumber') })}
                 </span>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="link"
                 onClick={() => setRecipientTab('skipped')}
-                className="text-[11px] font-semibold underline hover:opacity-80 flex-shrink-0 cursor-pointer"
+                className="text-[11px] font-semibold flex-shrink-0 h-auto p-0"
               >
                 {t('messaging.viewSkipped')}
-              </button>
+              </Button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -378,6 +378,7 @@ export default function MessageComposer({
                     className="h-6 w-6 text-xs"
                     onClick={() => setIsPaused((p) => !p)}
                     title={isPaused ? t('messaging.resume') : t('messaging.pause')}
+                    aria-label={isPaused ? t('messaging.resume') : t('messaging.pause')}
                   >
                     {isPaused ? <Play className="w-3 h-3 text-success" /> : <Pause className="w-3 h-3 text-warning" />}
                   </Button>
@@ -388,6 +389,7 @@ export default function MessageComposer({
                     className="h-6 w-6 text-destructive hover:bg-destructive/10"
                     onClick={handleCancelDispatch}
                     title={t('messaging.cancelDispatch')}
+                    aria-label={t('messaging.cancelDispatch')}
                   >
                     <XCircle className="w-3.5 h-3.5" />
                   </Button>
@@ -450,10 +452,14 @@ export default function MessageComposer({
               id="messageTemplate"
               value={template}
               onChange={handleTemplateChange}
-              options={activeTemplates.map((tpl) => ({ 
-                value: tpl.id, 
-                label: tpl.category ? `${tpl.label} [${tpl.category}]` : tpl.label 
-              }))}
+              options={activeTemplates.map((tpl) => {
+                const label = tpl.labelKey ? t(tpl.labelKey as Parameters<typeof t>[0]) : tpl.label;
+                const categoryLabel = t(getMessageCategoryLabelKey(tpl.category || 'general'));
+                return {
+                  value: tpl.id,
+                  label: `${label} [${categoryLabel}]`,
+                };
+              })}
             />
           </div>
         )}
@@ -535,6 +541,7 @@ export default function MessageComposer({
                         className="h-5 w-5"
                         disabled={previewIndex <= 0}
                         onClick={() => setPreviewIndex((i) => Math.max(0, i - 1))}
+                        aria-label={t('common.previous')}
                       >
                         <ChevronLeft className="w-3 h-3" />
                       </Button>
@@ -546,6 +553,7 @@ export default function MessageComposer({
                         className="h-5 w-5"
                         disabled={previewIndex >= eligibleRecipients.length - 1}
                         onClick={() => setPreviewIndex((i) => Math.min(eligibleRecipients.length - 1, i + 1))}
+                        aria-label={t('common.next')}
                       >
                         <ChevronRight className="w-3 h-3" />
                       </Button>
@@ -562,7 +570,7 @@ export default function MessageComposer({
                       <span className="font-semibold text-foreground me-1">{t('messaging.to')}:</span> {currentPreviewRecipient.name} &lt;{currentPreviewRecipient.email}&gt;
                     </div>
                     <div className="text-muted-foreground mt-0.5">
-                      <span className="font-semibold text-foreground me-1">{t('messaging.subjectLabel')}:</span> {personalizeMessage(subject || t('messaging.defaultSubject'), currentPreviewRecipient)}
+                      <span className="font-semibold text-foreground me-1">{t('messaging.subjectLabel')}:</span> {personalizeMessage(subject || t('messaging.defaultSubject'), currentPreviewRecipient, personalizeOpts)}
                     </div>
                   </div>
                   <div className="text-xs text-foreground whitespace-pre-wrap leading-relaxed">
@@ -584,9 +592,9 @@ export default function MessageComposer({
                     <span>{currentPreviewRecipient.phone}</span>
                   </div>
                   <div className="whitespace-pre-wrap leading-relaxed">{previewText}</div>
-                  <div className="flex items-center justify-end gap-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-mono">
+                  <div className="flex items-center justify-end gap-1 text-[9px] text-success font-mono">
                     <span>{formatDateTime(new Date())}</span>
-                    <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
+                    <CheckCheck className="w-3.5 h-3.5 text-success" />
                   </div>
                 </div>
               )}

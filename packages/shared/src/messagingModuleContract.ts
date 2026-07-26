@@ -34,11 +34,14 @@ export const MESSAGING_MODULE_CONTRACT = {
   restBasePath: '/api/messaging',
   tiers: ['work', 'reports', 'setup'] as const,
   permissions: {
-    read: 'contacts.read',
-    write: 'contacts.write',
-    clearLogs: 'contacts.write',
+    read: 'messaging.read',
+    write: 'messaging.write',
+    clearLogs: 'messaging.clearLogs',
     setupView: 'configuration.view',
+    setupWrite: 'messaging.write',
   } satisfies Record<string, Permission>,
+  /** Message log wipe is intentional hard-delete after soft-archive; requires clearLogs. */
+  logRetention: 'soft-delete-then-clear' as const,
   categories: MESSAGE_CATEGORIES,
   channels: MESSAGE_CHANNELS,
   categoryOptions: MESSAGE_CATEGORY_OPTIONS,

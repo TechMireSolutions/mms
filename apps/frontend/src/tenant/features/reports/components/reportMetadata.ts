@@ -26,6 +26,8 @@ export interface CustomCard {
   id: string;
   role?: string;
   title: string;
+  /** When set, UI uses `t(titleKey)` instead of `title`. */
+  titleKey?: AppTranslationKey;
   collection: ReportCollection;
   operation: "count" | "sum" | "avg" | "percentage";
   targetField?: string;
@@ -36,6 +38,8 @@ export interface CustomCard {
   color: string;
   subTextType: "fixed" | "dynamic";
   fixedSubText?: string;
+  /** When set (or mapped via DEFAULT_WIDGET_SUBTEXT_KEYS), UI uses `t(fixedSubTextKey)`. */
+  fixedSubTextKey?: AppTranslationKey;
   trend?: number;
   trendType?: "manual" | "database";
 }

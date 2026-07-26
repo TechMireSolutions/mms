@@ -7,6 +7,10 @@ import { SETTINGS_PREVIEW_EVENT } from "@/lib/settingsPreview";
 import { isTenantHost } from "@/platform/lib/themeScope";
 import { ROUTES, isEntryPath } from "@/lib/config/routes";
 import { useTranslation } from "@/hooks/useTranslation";
+import {
+  applyPlatformDocumentFavicon,
+  applyTenantDocumentFavicon,
+} from "@/lib/documentFavicon";
 
 /**
  * Custom React hook to load and track real-time changes to the institution's branding settings.
@@ -45,8 +49,7 @@ export function useBranding(): BrandingSettings {
     }
     if (!isTenantHost()) {
       document.title = "Madrasa Management System";
-      const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
-      if (link) link.href = "/favicon.svg";
+      applyPlatformDocumentFavicon();
       return;
     }
 
@@ -74,16 +77,12 @@ export function useBranding(): BrandingSettings {
         : `${branding.madrasaName} - Madrasa MS`;
     }
 
-    const favicon = branding.faviconUrl || branding.logoUrl;
-    if (favicon) {
-      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
-      if (!link) {
-        link = document.createElement("link");
-        link.rel = "icon";
-        document.head.appendChild(link);
-      }
-      link.href = favicon;
-    }
+    applyTenantDocumentFavicon({
+      faviconUrl: branding.faviconUrl,
+      logoUrl: branding.logoUrl,
+      madrasaName: branding.madrasaName,
+      primaryColor: branding.primaryColor,
+    });
   }, [location.pathname, branding, t]);
 
   return branding;

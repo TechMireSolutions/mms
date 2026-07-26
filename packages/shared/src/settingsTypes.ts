@@ -1559,6 +1559,23 @@ export function formatDayName(date: string | Date | null | undefined): string {
 }
 
 /**
+ * Localized short weekday labels Monday→Sunday for chart axes (Mon, Tue, …).
+ */
+export function formatShortWeekdayLabels(): string[] {
+  const stored = getStoredGlobalSettings();
+  const intlLocale = getIntlLocaleForLanguage(stored.language);
+  // 2024-01-01 was a Monday (UTC).
+  const formatter = new Intl.DateTimeFormat(intlLocale, {
+    weekday: "short",
+    timeZone: "UTC",
+  });
+  return Array.from({ length: 7 }, (_, dayIndex) => {
+    const date = new Date(Date.UTC(2024, 0, 1 + dayIndex));
+    return formatter.format(date);
+  });
+}
+
+/**
  * Formats a Date object or date string as a long date format (e.g. "January 2, 2000") using active global settings.
  *
  * @param {string | Date | null | undefined} date - The date to format.

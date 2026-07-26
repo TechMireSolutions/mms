@@ -59,7 +59,7 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
       const invMonth = Number(dateStr.slice(5, 7)) - 1;
       
       if (invYear === currentYear && invMonth === currentMonth) {
-        const className = inv.class || "Other";
+        const className = inv.class || t("common.other");
         if (!map[className]) {
           map[className] = { name: className, collected: 0, target: 0 };
         }
@@ -72,7 +72,7 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
       }
     });
     return map;
-  }, [invoices, currentYear, currentMonth]);
+  }, [invoices, currentYear, currentMonth, t]);
 
   const byClass = useMemo(() => Object.values(classMap), [classMap]);
 
@@ -109,7 +109,7 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
           </h3>
           <p className="text-[11px] text-muted-foreground mt-0.5 m-0 font-medium">{displayDate}</p>
         </div>
-        <div className="text-right shrink-0">
+        <div className="text-end shrink-0">
           <p className="text-base font-black text-foreground m-0 tabular-nums">{formatCurrency(totalCollected)}</p>
           <div className={`flex items-center gap-1 justify-end mt-0.5 ${isPositiveTrend ? "text-success" : "text-destructive"}`}>
             {isPositiveTrend ? (
@@ -130,7 +130,10 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
           <div className="bg-success h-full transition-all duration-700 ease-out" style={{ width: `${collectedPct}%` }} />
           <div className="bg-destructive h-full transition-all duration-700 ease-out" style={{ width: `${outstandingPct}%` }} />
         </div>
-        <div className="flex items-center gap-4 mb-6 select-none" aria-label={`Collected: ${collectedPct}%, Outstanding: ${outstandingPct}%`}>
+        <div
+          className="flex items-center gap-4 mb-6 select-none"
+          aria-label={t("dashboard.widgets.feeSplitAria", { collected: collectedPct, outstanding: outstandingPct })}
+        >
           {breakdown.map((b) => (
             <div key={b.label} className="flex items-center gap-1.5">
               <div className={`w-2.5 h-2.5 rounded-full ${b.color}`} aria-hidden="true" />
@@ -152,7 +155,10 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
                     {formatCurrency(classSummary.collected)} / {formatCurrency(classSummary.target)}
                   </span>
                 </header>
-                <div className="h-2 rounded-full bg-muted overflow-hidden" aria-label={`${classSummary.name} collection is at ${pct}%`}>
+                <div
+                  className="h-2 rounded-full bg-muted overflow-hidden"
+                  aria-label={t("dashboard.widgets.classCollectionAria", { name: classSummary.name, pct })}
+                >
                   <div
                     className={`h-full rounded-full transition-all duration-700 ease-out ${
                       pct >= 90 ? "bg-success" : pct >= 70 ? "bg-warning" : "bg-destructive"

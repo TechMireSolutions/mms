@@ -10,6 +10,7 @@ import {
   FINANCE_MODULE_CONTRACT,
   HASANAT_MODULE_CONTRACT,
   INVOICE_TEMPLATE_OBJECT_KEY,
+  MESSAGING_MODULE_CONTRACT,
   OBLIGATIONS_MODULE_CONTRACT,
   PLATFORM_SUPER_USERS_OBJECT_KEY,
   QUESTION_BANK_MODULE_CONTRACT,
@@ -33,7 +34,6 @@ const COLLECTION_READ_PERMISSION: Record<string, Permission> = {
   finance_invoices: FINANCE_MODULE_CONTRACT.permissions.read,
   finance_payments: FINANCE_MODULE_CONTRACT.permissions.read,
   obligation_collections: OBLIGATIONS_MODULE_CONTRACT.permissions.read,
-  overdue_obligations: OBLIGATIONS_MODULE_CONTRACT.permissions.read,
   obligation_types: OBLIGATIONS_MODULE_CONTRACT.permissions.read,
   mujtahids: OBLIGATIONS_MODULE_CONTRACT.permissions.read,
   mujtahid_reps: OBLIGATIONS_MODULE_CONTRACT.permissions.read,
@@ -54,8 +54,8 @@ const COLLECTION_READ_PERMISSION: Record<string, Permission> = {
   users: USERS_MODULE_CONTRACT.permissions.read,
   user_activity_logs: 'analytics.view',
   custom_tabs: 'configuration.view',
-  message_templates: 'contacts.read',
-  message_logs: 'contacts.read',
+  message_templates: MESSAGING_MODULE_CONTRACT.permissions.read,
+  message_logs: MESSAGING_MODULE_CONTRACT.permissions.read,
 };
 
 const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
@@ -68,7 +68,6 @@ const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
   finance_invoices: FINANCE_MODULE_CONTRACT.permissions.write,
   finance_payments: FINANCE_MODULE_CONTRACT.permissions.write,
   obligation_collections: OBLIGATIONS_MODULE_CONTRACT.permissions.write,
-  overdue_obligations: OBLIGATIONS_MODULE_CONTRACT.permissions.write,
   obligation_types: OBLIGATIONS_MODULE_CONTRACT.permissions.write,
   mujtahids: OBLIGATIONS_MODULE_CONTRACT.permissions.write,
   mujtahid_reps: OBLIGATIONS_MODULE_CONTRACT.permissions.write,
@@ -89,8 +88,8 @@ const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
   users: USERS_MODULE_CONTRACT.permissions.write,
   user_activity_logs: 'analytics.view',
   custom_tabs: 'settings.global.write',
-  message_templates: 'contacts.write',
-  message_logs: 'contacts.write',
+  message_templates: MESSAGING_MODULE_CONTRACT.permissions.write,
+  message_logs: MESSAGING_MODULE_CONTRACT.permissions.write,
 };
 
 /** Distinct delete permission when the module contract defines one; else write. */
@@ -191,7 +190,6 @@ const ALLOWED_COLLECTIONS = new Set([
   FINANCE_MODULE_CONTRACT.collectionKey,
   FINANCE_MODULE_CONTRACT.paymentCollectionKey,
   OBLIGATIONS_MODULE_CONTRACT.collectionKey,
-  'overdue_obligations',
   'obligation_types',
   'mujtahids',
   'mujtahid_reps',
@@ -457,20 +455,20 @@ export function canReadMessaging(user: User): boolean {
   if (!user || !user.role) {
     return false;
   }
-  return roleHasPermission(user.role, CONTACTS_MODULE_CONTRACT.permissions.read);
+  return roleHasPermission(user.role, MESSAGING_MODULE_CONTRACT.permissions.read);
 }
 
 export function canWriteMessaging(user: User): boolean {
   if (!user || !user.role) {
     return false;
   }
-  return roleHasPermission(user.role, CONTACTS_MODULE_CONTRACT.permissions.write);
+  return roleHasPermission(user.role, MESSAGING_MODULE_CONTRACT.permissions.write);
 }
 
 export function canClearMessagingLogs(user: User): boolean {
   if (!user || !user.role) {
     return false;
   }
-  return user.role === 'admin';
+  return roleHasPermission(user.role, MESSAGING_MODULE_CONTRACT.permissions.clearLogs);
 }
 

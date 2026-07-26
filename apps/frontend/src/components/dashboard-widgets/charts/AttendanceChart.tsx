@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/lib/config/routes";
-import { useBrandedDashboardChartColors } from "@/tenant/features/dashboard/hooks/useBrandedDashboardChartColors";
+import { useBrandedDashboardChartColors } from "@/components/dashboard-widgets/useBrandedDashboardChartColors";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import {
   Cell, PieChart, Pie, Tooltip, TooltipContentProps,
@@ -13,8 +13,8 @@ import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
 import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/features/hasanat/hooks/useHasanatApi";
-import { useDashboardConfig } from "@/tenant/features/dashboard/hooks/useDashboardConfig";
-import { getDenominationPoints, formatNumber } from "@mms/shared";
+import { useDashboardConfig } from "@/hooks/useDashboardConfig";
+import { getDenominationPoints, formatNumber, formatShortWeekdayLabels } from "@mms/shared";
 
 import {
   Select,
@@ -39,7 +39,7 @@ interface HasanatPoint {
 const AttTooltip = ({ active = false, payload = [], label = "" }: Partial<TooltipContentProps>) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="surface-glass rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-left">
+    <div className="surface-glass rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-start">
       <p className="text-muted-foreground text-[10px] m-0">{label}</p>
       <p className="font-bold text-foreground m-0">{payload[0].value}%</p>
     </div>
@@ -47,11 +47,12 @@ const AttTooltip = ({ active = false, payload = [], label = "" }: Partial<Toolti
 };
 
 const HasanatTooltip = ({ active = false, payload = [] }: Partial<TooltipContentProps>) => {
+  const { t } = useTranslation();
   if (!active || !payload?.length) return null;
   return (
-    <div className="surface-glass rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-left">
+    <div className="surface-glass rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-start">
       <p className="text-muted-foreground text-[10px] m-0">{payload[0].name}</p>
-      <p className="font-bold text-foreground m-0">{formatNumber(payload[0].value)} pts</p>
+      <p className="font-bold text-foreground m-0">{t("hasanat.dashboard.pts", { count: formatNumber(payload[0].value) })}</p>
 
     </div>
   );
@@ -77,7 +78,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
 
   const attendanceData: AttendancePoint[] = useMemo(() => {
     const uniqueDates = [...new Set(attendanceRecords.map((attendanceRecord) => attendanceRecord.date as string))].sort().reverse().slice(0, 7).reverse();
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const days = formatShortWeekdayLabels();
     return days.map((dayLabel, index) => {
       const targetDate = uniqueDates.find((attendanceDate) => {
         const dateObj = new Date(attendanceDate);
@@ -116,7 +117,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
 
   return (
     <WidgetCard ariaLabelledby="attendance-chart-heading" accentColor="primary" className="p-5">
-      <header className="flex flex-wrap items-start justify-between gap-3 mb-5 pl-1.5 select-none">
+      <header className="flex flex-wrap items-start justify-between gap-3 mb-5 ps-1.5 select-none">
         <div>
           <h3 id="attendance-chart-heading" className="text-sm font-bold text-foreground m-0">
             {t("widget.title.attendanceRate")}
@@ -126,7 +127,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
           </p>
         </div>
         
-        <div className="flex items-center gap-3 ml-auto">
+        <div className="flex items-center gap-3 ms-auto">
           {isEditMode && (
             <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
               <Select
@@ -136,7 +137,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
                 }}
               >
                 <SelectTrigger className={FORM_SELECT_MINI}>
-                  <SelectValue placeholder="Select chart type" />
+                  <SelectValue placeholder={t("reports.visualizer.chartType")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="bar">{t("dashboard.charts.attendance.barChart")}</SelectItem>
@@ -152,7 +153,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
                 }}
               >
                 <SelectTrigger className={FORM_SELECT_MINI}>
-                  <SelectValue placeholder="Select color theme" />
+                  <SelectValue placeholder={t("reports.visualizer.colorPalette")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="semantic">{t("dashboard.charts.attendance.semantic")}</SelectItem>
@@ -165,7 +166,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
               </Select>
             </div>
           )}
-          <div className="text-right select-none">
+          <div className="text-end select-none">
             <p className="text-lg font-black text-foreground m-0 tabular-nums">{avg}%</p>
             <p className="text-[11px] text-muted-foreground mt-0.5 m-0 font-medium">{t("dashboard.charts.attendance.weeklyAvg")}</p>
           </div>
@@ -201,7 +202,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
               stroke={themeColor}
               strokeWidth={2.5}
               fill="url(#attGrad)"
-              activeDot={{ r: 5, fill: themeColor, strokeWidth: 2, stroke: "#fff" }}
+              activeDot={{ r: 5, fill: themeColor, strokeWidth: 2, stroke: "hsl(var(--card))" }}
             />
           )}
           
@@ -212,7 +213,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
               stroke={themeColor}
               strokeWidth={2.5}
               dot={{ r: 3, fill: themeColor }}
-              activeDot={{ r: 5, fill: themeColor, strokeWidth: 2, stroke: "#fff" }}
+              activeDot={{ r: 5, fill: themeColor, strokeWidth: 2, stroke: "hsl(var(--card))" }}
             />
           )}
 
@@ -285,7 +286,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
 
   return (
     <WidgetCard ariaLabelledby="hasanat-chart-heading" accentColor="warning" className="p-5">
-      <header className="flex flex-wrap items-start justify-between gap-3 mb-4 pl-1.5 select-none">
+      <header className="flex flex-wrap items-start justify-between gap-3 mb-4 ps-1.5 select-none">
         <div>
           <h3 id="hasanat-chart-heading" className="text-sm font-bold text-foreground m-0">
             {t("widget.title.hasanatDistribution")}
@@ -295,7 +296,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
           </p>
         </div>
         
-        <div className="flex items-center gap-3 ml-auto">
+        <div className="flex items-center gap-3 ms-auto">
           {isEditMode && (
             <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
               <Select
@@ -305,7 +306,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
                 }}
               >
                 <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
-                  <SelectValue placeholder="Select chart type" />
+                  <SelectValue placeholder={t("reports.visualizer.chartType")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pie">{t("dashboard.charts.hasanat.pieDonut")}</SelectItem>
@@ -321,7 +322,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
                 }}
               >
                 <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
-                  <SelectValue placeholder="Select color theme" />
+                  <SelectValue placeholder={t("reports.visualizer.colorPalette")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="mixed">{t("dashboard.charts.hasanat.mixed")}</SelectItem>
@@ -385,7 +386,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
                 <PolarGrid stroke="hsl(var(--border))" />
                 <PolarAngleAxis dataKey="name" tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} />
                 <PolarRadiusAxis angle={30} domain={[0, "auto"]} tick={{ fontSize: 7 }} />
-                <Radar name="Points" dataKey="value" stroke={activeColors.mem} fill={activeColors.mem} fillOpacity={0.35} />
+                <Radar name={t("dashboard.widgets.hasanatPointsSeries")} dataKey="value" stroke={activeColors.mem} fill={activeColors.mem} fillOpacity={0.35} />
                 <Tooltip content={<HasanatTooltip />} />
               </RadarChart>
             </SafeResponsiveContainer>
@@ -393,7 +394,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
         )}
 
         {/* Legend */}
-        <div className="flex-1 w-full space-y-2 text-left">
+        <div className="flex-1 w-full space-y-2 text-start">
           {hasanatData.map((hasanatPoint) => {
             const percentage = total > 0 ? ((hasanatPoint.value / total) * 100).toFixed(0) : "0";
             return (

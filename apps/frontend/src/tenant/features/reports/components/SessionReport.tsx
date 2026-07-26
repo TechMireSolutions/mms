@@ -15,7 +15,7 @@ import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 
-import SessionsTable from "@/tenant/features/dashboard/components/widgets/SessionsTable";
+import SessionsTable from "@/components/dashboard-widgets/SessionsTable";
 
 /** Active filter state passed down from the parent report view. */
 interface SessionReportFilters {

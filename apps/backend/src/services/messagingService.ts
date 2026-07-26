@@ -13,7 +13,6 @@ import {
   listMessageLogsByWorkspace,
   replaceMessageLogsForWorkspace,
   bulkSaveMessageLogs,
-  deleteMessageLogsByWorkspace,
 } from '../db/repositories/messagingRepository.js';
 import { defineTenantBulkCollectionService } from './tenantBulkService.js';
 import { z } from 'zod';
@@ -48,27 +47,54 @@ export async function removeMessageTemplate(workspaceSubdomain: string, template
 export const loadMessageLogs = logBulkService.load;
 export const replaceMessageLogs = logBulkService.replace;
 
+function isActiveLog(log: Message): boolean {
+  return !log.deletedAt;
+}
+
 export async function loadFilteredMessageLogs(
   workspaceSubdomain?: string,
-  query?: { channel?: string; category?: string; search?: string; status?: string }
+  query?: {
+    channel?: string;
+    category?: string;
+    search?: string;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    pageSize?: number;
+    includeDeleted?: boolean;
+  },
 ): Promise<Message[]> {
   const allLogs = workspaceSubdomain ? await listMessageLogsByWorkspace(workspaceSubdomain) : await loadMessageLogs();
-  if (!query) return allLogs;
+  const includeDeleted = query?.includeDeleted === true;
+  let filtered = includeDeleted ? allLogs : allLogs.filter(isActiveLog);
 
-  const { channel, category, search, status } = query;
-  return allLogs.filter((log) => {
-    if (channel && channel !== 'all' && log.channel !== channel) return false;
-    if (category && category !== 'all' && (log.category || 'general') !== category) return false;
-    if (status && status !== 'all' && (log.status || 'sent') !== status) return false;
-    if (search && search.trim()) {
-      const queryStr = search.toLowerCase();
-      const matchBody = log.body.toLowerCase().includes(queryStr);
-      const matchSubject = log.subject ? log.subject.toLowerCase().includes(queryStr) : false;
-      const matchContact = String(log.contactId).toLowerCase().includes(queryStr);
-      if (!matchBody && !matchSubject && !matchContact) return false;
-    }
-    return true;
-  });
+  if (query) {
+    const { channel, category, search, status, startDate, endDate } = query;
+    filtered = filtered.filter((log) => {
+      if (channel && channel !== 'all' && log.channel !== channel) return false;
+      if (category && category !== 'all' && (log.category || 'general') !== category) return false;
+      if (status && status !== 'all' && (log.status || 'sent') !== status) return false;
+      if (startDate && log.sentAt < startDate) return false;
+      if (endDate && log.sentAt > endDate) return false;
+      if (search && search.trim()) {
+        const queryStr = search.toLowerCase();
+        const matchBody = log.body.toLowerCase().includes(queryStr);
+        const matchSubject = log.subject ? log.subject.toLowerCase().includes(queryStr) : false;
+        const matchContact = String(log.contactId).toLowerCase().includes(queryStr);
+        if (!matchBody && !matchSubject && !matchContact) return false;
+      }
+      return true;
+    });
+  }
+
+  const page = query?.page && query.page > 0 ? query.page : undefined;
+  const pageSize = query?.pageSize && query.pageSize > 0 ? query.pageSize : undefined;
+  if (page != null && pageSize != null) {
+    const start = (page - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }
+  return filtered;
 }
 
 export async function recordMessageLogs(workspaceSubdomain: string, logs: Message[]): Promise<Message[]> {
@@ -77,12 +103,19 @@ export async function recordMessageLogs(workspaceSubdomain: string, logs: Messag
   return logs;
 }
 
+/** Soft-deletes all active message logs for the workspace (sets deletedAt). */
 export async function clearAllMessageLogs(workspaceSubdomain: string): Promise<void> {
-  await deleteMessageLogsByWorkspace(workspaceSubdomain);
+  const logs = await listMessageLogsByWorkspace(workspaceSubdomain);
+  const now = new Date().toISOString();
+  const softDeleted = logs.map((log) =>
+    log.deletedAt ? log : { ...log, deletedAt: now },
+  );
+  await replaceMessageLogsForWorkspace(workspaceSubdomain, softDeleted);
 }
 
 export async function computeMessagingMetrics(workspaceSubdomain?: string): Promise<MessagingMetricsDto> {
-  const logs = workspaceSubdomain ? await listMessageLogsByWorkspace(workspaceSubdomain) : await loadMessageLogs();
+  const logsRaw = workspaceSubdomain ? await listMessageLogsByWorkspace(workspaceSubdomain) : await loadMessageLogs();
+  const logs = logsRaw.filter(isActiveLog);
   const total = logs.length;
   const smsCount = logs.filter((l) => l.channel === 'sms').length;
   const whatsappCount = logs.filter((l) => l.channel === 'whatsapp').length;
@@ -92,7 +125,6 @@ export async function computeMessagingMetrics(workspaceSubdomain?: string): Prom
   const failedCount = logs.filter((l) => l.status === 'failed').length;
   const skippedCount = logs.filter((l) => l.status === 'skipped').length;
   const queuedCount = logs.filter((l) => l.status === 'queued').length;
-
 
   const categoryBreakdown = {
     general: logs.filter((l) => (l.category || 'general') === 'general').length,
@@ -119,4 +151,3 @@ export async function computeMessagingMetrics(workspaceSubdomain?: string): Prom
     categoryBreakdown,
   };
 }
-

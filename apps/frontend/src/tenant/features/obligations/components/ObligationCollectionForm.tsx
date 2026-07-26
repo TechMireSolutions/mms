@@ -204,7 +204,7 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
                 label="Sender (Contact)"
                 value={form.sender_id || null}
                 onChange={(contactId) => setForm({ ...form, sender_id: contactId != null ? String(contactId) : "" })}
-                searchPlaceholder="Search contacts…"
+                searchPlaceholder={t("contacts.picker.searchPlaceholder")}
               />
             )}
             {formField("reference_id", "Reference Contact", false,
@@ -213,7 +213,7 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
                 value={form.reference_id || null}
                 onChange={(contactId) => setForm({ ...form, reference_id: contactId != null ? String(contactId) : "" })}
                 allowCreate={false}
-                searchPlaceholder="Search contacts…"
+                searchPlaceholder={t("contacts.picker.searchPlaceholder")}
               />
             )}
           </div>

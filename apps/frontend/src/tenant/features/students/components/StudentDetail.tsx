@@ -25,6 +25,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useTranslation } from "@/hooks/useTranslation";
+import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { GrBadge } from "@/tenant/features/students/components/GrBadge";
 
@@ -135,6 +136,7 @@ const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
  */
 export default function StudentDetail({ student, onClose, onEdit }: StudentDetailProps): React.JSX.Element {
   const { t } = useTranslation();
+  const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const sessions = useSessionsCollection();
   const linkedIds = useMemo(
@@ -241,7 +243,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-bold text-foreground truncate leading-tight">{student.name}</h3>
             <div className="flex flex-wrap gap-1.5 mt-2 items-center">
-              <StatusBadge status={student.status || "active"} />
+              <StatusBadge status={student.status || "active"} config={statusBadgeConfig} />
               <GrBadge grNumber={student.grNumber} />
             </div>
           </div>

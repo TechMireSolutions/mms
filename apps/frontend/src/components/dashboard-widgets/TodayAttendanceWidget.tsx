@@ -136,7 +136,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
                   <div className={`h-full rounded-full ${rateBarColor} transition-all duration-700 ease-out`} style={{ width: `${rate}%` }} />
                 </div>
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <p className={`text-2xl font-black tabular-nums leading-none m-0 ${rateColor}`}>{rate}%</p>
                 <p className="text-[11px] text-muted-foreground mt-1 m-0 font-medium">{t("dashboard.widgets.studentsCount", { count: stats.total })}</p>
               </div>
@@ -176,7 +176,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
                     <div className={`h-full rounded-full transition-all duration-700 ease-out ${rateToneClass(classStats.rate).bar}`}
                       style={{ width: `${classStats.rate}%` }} />
                   </div>
-                  <span className={`text-xs font-bold w-10 text-right tabular-nums ${rateToneClass(classStats.rate).text}`}>{classStats.rate}%</span>
+                  <span className={`text-xs font-bold w-10 text-end tabular-nums ${rateToneClass(classStats.rate).text}`}>{classStats.rate}%</span>
                 </div>
               ))}
             </div>

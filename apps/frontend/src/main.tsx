@@ -5,13 +5,17 @@ import '@/index.css'
 import { isApexHost } from '@mms/shared'
 import { getAppDomain } from '@/lib/config/tenantConfig'
 import { initErrorReporting } from '@/lib/clientErrorReporting'
+import { applyPlatformDocumentFavicon, applyTenantDocumentFavicon } from '@/lib/documentFavicon'
 
 initErrorReporting()
 if (typeof window !== 'undefined' && isApexHost(window.location.hostname, getAppDomain())) {
+  applyPlatformDocumentFavicon();
   void import('@/lib/brandingThemeCore').then(({ applyApexPlatformTheme }) => {
     applyApexPlatformTheme('en');
   });
 } else {
+  // Drop the static platform favicon from index.html before React mounts.
+  applyTenantDocumentFavicon({});
   void import('@/lib/brandingTheme').then(({ applyAppTheme }) => applyAppTheme())
 }
 

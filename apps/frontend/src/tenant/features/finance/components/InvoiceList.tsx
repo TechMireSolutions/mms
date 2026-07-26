@@ -12,7 +12,7 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { INVOICE_STATUSES, Invoice } from '@/lib/data/financeData';
 import { Button } from "@/components/ui/button";
-import { formatDate, type AppTranslationKey } from "@mms/shared";
+import { formatDate, getOutstandingAmountForInvoice, type AppTranslationKey } from "@mms/shared";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
@@ -256,26 +256,41 @@ export function InvoiceList({
                       <td className="px-4 py-3">
                         {(() => {
                           const invRec = invoice as unknown as Record<string, unknown>;
-                          const phone = typeof invRec.phone === "string" ? invRec.phone : "";
+                          const phone = typeof invRec.phone === "string" ? invRec.phone.trim() : "";
                           const email = typeof invRec.email === "string" ? invRec.email : undefined;
+                          const amount = getOutstandingAmountForInvoice(invoice);
+                          const recipient = {
+                            id: invoice.id,
+                            name: invoice.studentName,
+                            phone,
+                            email,
+                            amount,
+                            dueDate: invoice.dueDate,
+                          };
                           return (
                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button
-                                variant="ghost"
-                                onClick={() => openComposer("whatsapp", [{ id: invoice.id, name: invoice.studentName, phone, email }])}
-                                title="WhatsApp Invoice"
-                                className="p-1.5 rounded-lg hover:bg-muted text-success hover:text-success transition-colors"
-                              >
-                                <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                onClick={() => openComposer("sms", [{ id: invoice.id, name: invoice.studentName, phone, email }])}
-                                title="SMS Invoice Reminder"
-                                className="p-1.5 rounded-lg hover:bg-muted text-info hover:text-info transition-colors"
-                              >
-                                <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
-                              </Button>
+                              {phone ? (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    onClick={() => openComposer("whatsapp", [recipient])}
+                                    title={t("messaging.sendWhatsapp")}
+                                    aria-label={t("messaging.sendWhatsapp")}
+                                    className="p-1.5 rounded-lg hover:bg-muted text-success hover:text-success transition-colors"
+                                  >
+                                    <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    onClick={() => openComposer("sms", [recipient])}
+                                    title={t("messaging.sendSms")}
+                                    aria-label={t("messaging.sendSms")}
+                                    className="p-1.5 rounded-lg hover:bg-muted text-info hover:text-info transition-colors"
+                                  >
+                                    <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+                                  </Button>
+                                </>
+                              ) : null}
                               <Button variant="ghost" onClick={() => onView(invoice)} aria-label={t("finance.viewInvoice", { id: invoice.id })} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                                 <Eye className="w-3.5 h-3.5" aria-hidden="true" />
                               </Button>

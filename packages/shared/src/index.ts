@@ -112,4 +112,6 @@ export * from './platformSettingsTypes.js';
 export * from './platformSchemas.js';
 export * from './messagingSchemas.js';
 export * from './messagingModuleContract.js';
+export * from './dashboardModuleContract.js';
+export * from './whatsappProvider.js';
 export * from './vcardUtils.js';

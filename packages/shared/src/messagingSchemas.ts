@@ -48,6 +48,7 @@ export const messageRecordSchema = z.object({
   subject: z.string().optional(),
   category: messageCategorySchema.optional().default('general'),
   errorMessage: z.string().optional(),
+  deletedAt: z.string().optional(),
 });
 
 export const recordMessageLogsSchema = z.object({
@@ -61,8 +62,12 @@ export const messagingLogsQuerySchema = z.object({
   status: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
-  page: z.number().optional().default(1),
-  pageSize: z.number().optional().default(50),
+  page: z.coerce.number().int().positive().optional(),
+  pageSize: z.coerce.number().int().positive().max(500).optional(),
+  includeDeleted: z
+    .union([z.boolean(), z.enum(['true', 'false'])])
+    .optional()
+    .transform((value) => value === true || value === 'true'),
 });
 
 export const messagingMetricsSchema = z.object({

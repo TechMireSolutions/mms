@@ -15,9 +15,14 @@ export type Permission =
   | "configuration.view"
   | "obligations.write"
   | "finance.write"
+  | "hasanat.read"
+  | "hasanat.write"
   | "enrollments.read"
   | "enrollments.write"
-  | "attendance.write";
+  | "attendance.write"
+  | "messaging.read"
+  | "messaging.write"
+  | "messaging.clearLogs";
 
 const ADMIN: Permission[] = [
   "contacts.read",
@@ -35,9 +40,14 @@ const ADMIN: Permission[] = [
   "configuration.view",
   "obligations.write",
   "finance.write",
+  "hasanat.read",
+  "hasanat.write",
   "enrollments.read",
   "enrollments.write",
   "attendance.write",
+  "messaging.read",
+  "messaging.write",
+  "messaging.clearLogs",
 ];
 
 const TEACHER: Permission[] = [
@@ -48,9 +58,13 @@ const TEACHER: Permission[] = [
   "teachers.read",
   "teachers.write",
   "analytics.view",
+  "hasanat.read",
+  "hasanat.write",
   "enrollments.read",
   "enrollments.write",
   "attendance.write",
+  "messaging.read",
+  "messaging.write",
 ];
 
 const ACCOUNTANT: Permission[] = [
@@ -61,6 +75,7 @@ const ACCOUNTANT: Permission[] = [
   "finance.write",
   "obligations.write",
   "enrollments.read",
+  "messaging.read",
 ];
 
 const ASSISTANT_TEACHER: Permission[] = [
@@ -68,7 +83,9 @@ const ASSISTANT_TEACHER: Permission[] = [
   "students.read",
   "teachers.read",
   "analytics.view",
+  "hasanat.read",
   "enrollments.read",
+  "messaging.read",
 ];
 
 const ROLE_PERMISSIONS: Record<string, readonly Permission[]> = {

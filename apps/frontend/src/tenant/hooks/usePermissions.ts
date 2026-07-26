@@ -29,6 +29,7 @@ export interface ModulePermissionsContract {
     reports?: Permission;
     setupView?: Permission;
     setupWrite?: Permission;
+    clearLogs?: Permission;
   };
 }
 
@@ -45,6 +46,7 @@ export function useModulePermissions(contract: ModulePermissionsContract) {
       canReports: p.reports ? can(p.reports) : false,
       canViewSetup: p.setupView ? (can(p.setupView) || (p.setupWrite ? can(p.setupWrite) : false)) : false,
       canEditSetup: p.setupWrite ? can(p.setupWrite) : false,
+      canClearLogs: p.clearLogs ? can(p.clearLogs) : false,
     };
   }, [can, contract.permissions]);
 }

@@ -15,11 +15,13 @@ import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { studentStatusBadgeConfig, studentStatusLabel } from "@/lib/students/studentStatusUi";
 import {
   checkStudentRegistrationDuplicate,
   useStudentLinkedContactIds,
   useStudentNextGrNumber,
 } from "@/tenant/features/students/hooks/useStudents";
+import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import {
   Student,
   Contact,
@@ -87,6 +89,16 @@ export default function StudentForm({
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
   const [studentDraft, setStudentDraft] = useState<Partial<Student>>(() => getInitialStudentDraft(student));
+  const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
+  const statusSelectOptions = useMemo(() => {
+    const resolved = [...resolveStudentStatuses(configStatuses)];
+    const current = studentDraft.status || "active";
+    if (current && !resolved.includes(current)) resolved.unshift(current);
+    return resolved.map((status) => ({
+      value: status,
+      label: studentStatusLabel(t, status),
+    }));
+  }, [configStatuses, studentDraft.status, t]);
 
   /** Tracks whether the user has manually typed in the GR field — prevents the
    *  auto-fill effect from overwriting a value the user deliberately cleared. */
@@ -116,12 +128,19 @@ export default function StudentForm({
     !!studentDraft.contactId,
   );
 
-  const linkedGender = linkedContact?.gender?.trim() ? toTitleCase(linkedContact.gender.trim()) : "";
+  const linkedGenderRaw = linkedContact?.gender?.trim() || "";
+  const linkedGenderLabel = linkedGenderRaw ? formatContactGenderLabel(linkedGenderRaw, t) : "";
   const linkedDob = linkedContact?.dob?.trim() ? formatDate(linkedContact.dob.trim()) : "";
 
   const [typedDuplicateReason, setTypedDuplicateReason] = useState<StudentDuplicateReason | null>(null);
   const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
   const [pendingSaveData, setPendingSaveData] = useState<Partial<Student> | null>(null);
+
+  const clearDuplicatePrompt = useCallback(() => {
+    setDuplicateConfirmOpen(false);
+    setTypedDuplicateReason(null);
+    setPendingSaveData(null);
+  }, []);
 
   const { data: linkedStudentContactIds = [] } = useStudentLinkedContactIds(
     student?.id ? String(student.id) : undefined,
@@ -181,7 +200,7 @@ export default function StudentForm({
 
     const validationDraft = {
       ...studentDraft,
-      gender: linkedGender,
+      gender: linkedGenderRaw,
       dob: linkedContact?.dob || "",
     };
     const parseResult = schema.safeParse(validationDraft);
@@ -276,13 +295,15 @@ export default function StudentForm({
 
   const handleContactSelect = (id: string | number | null): void => {
     if (!id) {
-      updateDraft({ contactId: "", grNumber: "" });
-    } else {
-      updateDraft({ contactId: String(id) });
-      if (!student && !studentDraft.grNumber && nextGrNumber) {
-        updateDraft({ grNumber: nextGrNumber });
-      }
+      // Keep a manually entered / existing GR; only clear the contact link.
+      updateDraft({ contactId: "" });
+      return;
     }
+    const patch: Partial<Student> = { contactId: String(id) };
+    if (!student && !studentDraft.grNumber && nextGrNumber) {
+      patch.grNumber = nextGrNumber;
+    }
+    updateDraft(patch);
   };
 
   const handleStudentAvatarChange = (avatarUrl: string): void => {
@@ -318,6 +339,10 @@ export default function StudentForm({
     [studentDraft.contactId, studentDraft.fatherContactId, studentDraft.motherContactId, studentDraft.guardianContactId],
   );
 
+  const fatherExcludeIds = useMemo(() => getParentExcludeIds("father"), [getParentExcludeIds]);
+  const motherExcludeIds = useMemo(() => getParentExcludeIds("mother"), [getParentExcludeIds]);
+  const guardianExcludeIds = useMemo(() => getParentExcludeIds("guardian"), [getParentExcludeIds]);
+
   const excludeIds = useMemo(() => {
     const list = [studentDraft.fatherContactId, studentDraft.motherContactId, studentDraft.guardianContactId]
       .filter(Boolean)
@@ -337,7 +362,7 @@ export default function StudentForm({
       </span>
       <div className="flex items-center gap-1.5">
         <GrBadge grNumber={studentDraft.grNumber} />
-        <StatusBadge status={studentDraft.status || "active"} size="sm" />
+        <StatusBadge status={studentDraft.status || "active"} size="sm" config={statusBadgeConfig} />
       </div>
     </div>
   ) : (
@@ -367,7 +392,7 @@ export default function StudentForm({
       >
         <div className="space-y-6 pb-6">
           {/* Contact Selection */}
-          <div className="relative z-30 space-y-6">
+          <div className="space-y-6">
             <SectionCard
               title={t("students.form.contactLabel")}
               subtitle={t("students.form.contactHint")}
@@ -390,7 +415,7 @@ export default function StudentForm({
 
                 {studentDraft.contactId && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border/40">
-                    {renderContactProfileValue(t("students.gender"), linkedGender, User, genderError)}
+                    {renderContactProfileValue(t("students.gender"), linkedGenderLabel, User, genderError)}
                     {renderContactProfileValue(t("students.form.fieldDob"), linkedDob, Calendar, dobError)}
                   </div>
                 )}
@@ -399,7 +424,7 @@ export default function StudentForm({
           </div>
 
           {/* Registration Details */}
-          <div className="relative z-20 space-y-6">
+          <div className="space-y-6">
             <SectionCard
               title={t("students.form.registrationSection")}
               subtitle={t("students.form.registrationSectionDesc")}
@@ -437,19 +462,18 @@ export default function StudentForm({
                   <FormSelect
                     value={studentDraft.status || "active"}
                     onChange={(val) => updateDraft({ status: val as StudentStatus })}
-                    options={resolveStudentStatuses(configStatuses).map((status) => ({
-                      value: status,
-                      label: t(`students.form.status.${status}` as AppTranslationKey) || status,
-                    }))}
+                    options={statusSelectOptions}
                   />
                 </Field>
 
                 <div className="sm:col-span-2">
-                  <Field label={t("reports.fields.registeredDate")}>
+                  <Field label={t("students.form.registeredDate")}>
                     <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/20 px-3 py-2.5 min-h-[44px] text-sm text-muted-foreground select-none font-medium">
                       <Clock className="w-4 h-4 text-muted-foreground/60 shrink-0" />
                       <span>
-                        {studentDraft.registeredDate ? formatDateTime(studentDraft.registeredDate, true) : "—"}
+                        {studentDraft.registeredDate
+                          ? formatDateTime(studentDraft.registeredDate, true)
+                          : t("contacts.table.emptyDash")}
                       </span>
                     </div>
                   </Field>
@@ -460,7 +484,7 @@ export default function StudentForm({
 
           {/* Guardian Links */}
           {enabledTabs.has("guardian") && (
-            <div className="relative z-10 space-y-6">
+            <div className="space-y-6">
               <SectionCard
                 title={t("students.form.guardiansSection")}
                 subtitle={t("students.form.guardiansSectionDesc")}
@@ -475,7 +499,8 @@ export default function StudentForm({
                         value={studentDraft.fatherContactId ? String(studentDraft.fatherContactId) : null}
                         onChange={(id, contactObj) => handleParentSelect("father", id, contactObj)}
                         filterGender={GENDERS[0]}
-                        excludeIds={getParentExcludeIds("father")}
+                        createDefaults={{ gender: GENDERS[0] }}
+                        excludeIds={fatherExcludeIds}
                         searchPlaceholder={t("contacts.picker.searchPlaceholder")}
                         emptyTitle={t("contacts.picker.emptyTitle")}
                         error={!!getFieldError("fatherLink")}
@@ -491,7 +516,8 @@ export default function StudentForm({
                         value={studentDraft.motherContactId ? String(studentDraft.motherContactId) : null}
                         onChange={(id, contactObj) => handleParentSelect("mother", id, contactObj)}
                         filterGender={GENDERS[1]}
-                        excludeIds={getParentExcludeIds("mother")}
+                        createDefaults={{ gender: GENDERS[1] }}
+                        excludeIds={motherExcludeIds}
                         searchPlaceholder={t("contacts.picker.searchPlaceholder")}
                         emptyTitle={t("contacts.picker.emptyTitle")}
                         error={!!getFieldError("motherLink")}
@@ -506,7 +532,7 @@ export default function StudentForm({
                         label={t("students.form.guardianLink")}
                         value={studentDraft.guardianContactId ? String(studentDraft.guardianContactId) : null}
                         onChange={(id, contactObj) => handleParentSelect("guardian", id, contactObj)}
-                        excludeIds={getParentExcludeIds("guardian")}
+                        excludeIds={guardianExcludeIds}
                         searchPlaceholder={t("contacts.picker.searchPlaceholder")}
                         emptyTitle={t("contacts.picker.emptyTitle")}
                         error={!!getFieldError("guardianLink")}
@@ -521,13 +547,13 @@ export default function StudentForm({
 
           {/* Academic / Internal Notes */}
           {enabledTabs.has("academic") && (
-            <div className="relative z-0 space-y-6">
+            <div className="space-y-6">
               <SectionCard
                 title={t("students.form.notesSection")}
                 icon={FileText}
                 accentColor="emerald"
               >
-                <Field label="">
+                <Field label={t("students.form.notesSection")}>
                   <Textarea
                     value={studentDraft.notes || ""}
                     onChange={(event) => updateDraft({ notes: event.target.value })}
@@ -542,7 +568,10 @@ export default function StudentForm({
       </FormModal>
       <ConfirmAlertDialog
         open={duplicateConfirmOpen}
-        onOpenChange={setDuplicateConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) clearDuplicatePrompt();
+          else setDuplicateConfirmOpen(true);
+        }}
         title={student ? t("students.form.editTitle") : t("students.form.addTitle")}
         description={typedDuplicateReason
           ? t("students.form.duplicateSaveWarning", { message: t(DUPLICATE_ERROR_KEYS[typedDuplicateReason]) })

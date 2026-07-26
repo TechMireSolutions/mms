@@ -2,7 +2,7 @@ import React, { useMemo, lazy, Suspense, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserPlus, AlertTriangle, Download, Users, UserX, Loader2, Trash2, X, MessageCircle, MessageSquare, RotateCcw, RefreshCw } from "lucide-react";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { CONTACTS_MODULE_CONTRACT, getDisplayName, getPrimaryPhone, getPrimaryEmail } from "@mms/shared";
+import { CONTACTS_MODULE_CONTRACT } from "@mms/shared";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useContactsPageState } from "@/tenant/features/contacts/hooks/useContactsPageState";
 import { useContactConfig, useContactColumns } from "@/lib/contexts/ContactConfigContext";
@@ -81,10 +81,11 @@ function ContactsInner() {
     showDuplicates,
     setShowDuplicates,
     messagingTarget,
-    setMessagingTarget,
+    closeComposer,
     handleWhatsApp,
     handleSms,
     handleEmail,
+    canWriteMessaging,
     hasActiveFilters,
     activeFilterCount,
     defaultCountry,
@@ -141,6 +142,13 @@ function ContactsInner() {
     setActiveTab("setup");
   }, [setActiveTab]));
 
+  const messagingHandlers = useMemo(() => {
+    if (!canWriteMessaging || viewingDeleted) {
+      return { onWhatsApp: undefined, onSms: undefined, onEmail: undefined };
+    }
+    return { onWhatsApp: handleWhatsApp, onSms: handleSms, onEmail: handleEmail };
+  }, [canWriteMessaging, viewingDeleted, handleWhatsApp, handleSms, handleEmail]);
+
   const commonDirectoryProps = useMemo(() => ({
     contacts: workContacts,
     selected,
@@ -151,9 +159,7 @@ function ContactsInner() {
     onDelete: handleDelete,
     onRestore: handleRestore,
     showArchived: viewingDeleted,
-    onWhatsApp: handleWhatsApp,
-    onSms: handleSms,
-    onEmail: handleEmail,
+    ...messagingHandlers,
     allContacts: allContactsForLinks,
     onUpdateContact: handleUpdateContact,
     canWrite,
@@ -170,9 +176,7 @@ function ContactsInner() {
     handleDelete,
     handleRestore,
     viewingDeleted,
-    handleWhatsApp,
-    handleSms,
-    handleEmail,
+    messagingHandlers,
     allContactsForLinks,
     handleUpdateContact,
     canWrite,
@@ -303,25 +307,25 @@ function ContactsInner() {
                     <span className="text-sm font-semibold text-foreground">{t("contacts.selectedCount", { count: selected.length })}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {bulkActions.includes("whatsapp") && !viewingDeleted && (
+                    {bulkActions.includes("whatsapp") && !viewingDeleted && canWriteMessaging && (
                       <Button
                         type="button"
                         size="sm"
                         disabled={selectedTargets.waTargets.length === 0}
-                        onClick={() => setMessagingTarget({ channel: "whatsapp", contacts: selectedTargets.waTargets })}
+                        onClick={() => handleWhatsApp(selectedTargets.waTargets)}
                         aria-label={t("contacts.whatsappBulk", { count: selectedTargets.waTargets.length })}
-                        className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm"
+                        className="gap-1.5 bg-success hover:bg-success/90 text-success-foreground font-semibold shadow-sm"
                       >
                         <MessageCircle className="w-3.5 h-3.5" /> {t("contacts.whatsappBulk", { count: selectedTargets.waTargets.length })}
                       </Button>
                     )}
-                    {bulkActions.includes("sms") && !viewingDeleted && (
+                    {bulkActions.includes("sms") && !viewingDeleted && canWriteMessaging && (
                       <Button
                         type="button"
                         size="sm"
                         variant="outline"
                         disabled={selectedTargets.smsReady.length === 0}
-                        onClick={() => setMessagingTarget({ channel: "sms", contacts: selectedTargets.smsReady })}
+                        onClick={() => handleSms(selectedTargets.smsReady)}
                         aria-label={t("contacts.smsBulk", { count: selectedTargets.smsReady.length })}
                         className="gap-1.5 border-primary/40 bg-primary/10 text-primary font-semibold hover:bg-primary/20"
                       >
@@ -499,13 +503,8 @@ function ContactsInner() {
           {messagingTarget && (
             <MessageComposer
               channel={messagingTarget.channel}
-              recipients={messagingTarget.contacts.map((c) => ({
-                id: c.id,
-                name: getDisplayName(c),
-                phone: getPrimaryPhone(c) || "",
-                email: getPrimaryEmail(c) || "",
-              }))}
-              onClose={() => setMessagingTarget(null)}
+              recipients={messagingTarget.recipients}
+              onClose={closeComposer}
             />
           )}
           {viewContact && (
@@ -516,9 +515,9 @@ function ContactsInner() {
                 setViewContact(null);
                 handleEdit(contactToEdit);
               }}
-              onWhatsApp={handleWhatsApp}
-              onSms={handleSms}
-              onEmail={handleEmail}
+              onWhatsApp={messagingHandlers.onWhatsApp}
+              onSms={messagingHandlers.onSms}
+              onEmail={messagingHandlers.onEmail}
               allContacts={allContactsForLinks}
               onUpdateContact={canWrite ? handleUpdateContact : undefined}
               canWrite={canWrite}

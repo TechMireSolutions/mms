@@ -21,6 +21,8 @@ export interface CustomWidget {
   icon?: string;
   subTextType?: "fixed" | "dynamic";
   fixedSubText?: string;
+  /** When set (or mapped via DEFAULT_WIDGET_SUBTEXT_KEYS), UI uses `t(fixedSubTextKey)` instead of English `fixedSubText`. */
+  fixedSubTextKey?: AppTranslationKey;
   trend?: number;
   trendType?: "manual" | "database";
   role?: string;
@@ -30,6 +32,9 @@ export interface CustomWidget {
   switchStateKey?: string;
   switchLabelOn?: string;
   switchLabelOff?: string;
+  /** When set, UI uses `t(switchLabelOnKey)` instead of English `switchLabelOn`. */
+  switchLabelOnKey?: AppTranslationKey;
+  switchLabelOffKey?: AppTranslationKey;
   switchCollection?: CustomCard["collection"];
   switchRecordId?: string;
   switchField?: string;

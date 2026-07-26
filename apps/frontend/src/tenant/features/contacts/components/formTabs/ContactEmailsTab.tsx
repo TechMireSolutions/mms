@@ -1,12 +1,12 @@
 import React from "react";
-import { Mail, Plus } from "lucide-react";
+import { Mail } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { EditableSelect, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
-import { ListFieldCard, EmptyListCard } from "./FormCardUtils";
+import { ListFieldCard, ContactSubListShell } from "./FormCardUtils";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
+import { resolveEmailLabel } from "@/lib/contacts/contactI18n";
 import { Contact, EmailAddress, DEFAULT_EMAIL_LABELS } from "@mms/shared";
 
 export interface ContactEmailsTabProps {
@@ -38,82 +38,75 @@ export function ContactEmailsTab({
   const { t } = useTranslation();
   const emails = contactDraft.emails || [];
   const addEmail = () => {
-    addSubListItem("emails", { label: emailLabels[0] || "Personal", address: "" });
+    addSubListItem("emails", {
+      label: resolveEmailLabel(undefined, emailLabels, t),
+      address: "",
+    });
   };
   const removeEmail = (idx: number) => removeSubListItem("emails", idx);
   const updateEmail = (idx: number, patch: Partial<EmailAddress>) => updateSubListItem("emails", idx, patch);
 
   return (
-    <div className="space-y-3 text-left">
-      {emails.length === 0 && (
-        <EmptyListCard icon={Mail} message={t("contacts.form.noEmailAddressesYet")} />
-      )}
-
-      <div className="space-y-3">
-        <AnimatePresence initial={false}>
-          {emails.map((email, idx) => {
-            const emailError = getListItemError("emails", "address", idx);
-            return (
-              <ListFieldCard
-                key={getLocalId("emails", idx)}
-                id={getLocalId("emails", idx)}
-                index={idx}
-                icon={Mail}
-                accentClass="bg-amber-500/60 group-hover:bg-amber-500"
-                iconClass="text-amber-500/70 group-hover:text-amber-500"
-                label={`${t("contacts.form.type")}:`}
-                typeSelect={
-                  <EditableSelect
-                    options={
-                      emailLabels.length > 0
-                        ? emailLabels
-                        : (DEFAULT_EMAIL_LABELS as unknown as string[])
-                    }
-                    value={email.label || "Personal"}
-                    onChange={(val) => updateEmail(idx, { label: val })}
-                    className={TYPE_SELECT_WIDTH}
-                    id={`email-label-${idx}`}
-                    name={`email-label-${idx}`}
-                  />
-                }
-                onRemove={() => removeEmail(idx)}
-                removeLabel={t("contacts.form.removeEmailAddress", { index: idx + 1 })}
-              >
-                <div className="relative flex items-center group/input">
-                  <Mail className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                  <Input
-                    type="email"
-                    id={`email-address-${idx}`}
-                    name={`email-address-${idx}`}
-                    value={email.address || ""}
-                    onChange={(e) => updateEmail(idx, { address: e.target.value })}
-                    placeholder={t("auth.emailAddress")}
-                    className={cn(
-                      "pl-10",
-                      emailError && "border-destructive focus-visible:ring-destructive",
-                    )}
-                  />
-                </div>
-                {emailError && (
-                  <p className="text-[10px] text-destructive mt-1 font-medium">
-                    {emailError}
-                  </p>
-                )}
-              </ListFieldCard>
-            );
-          })}
-        </AnimatePresence>
-      </div>
-
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={addEmail}
-        className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2 cursor-pointer"
-      >
-        <Plus className="w-4 h-4" />
-        <span>{t("contacts.form.addEmailAddress")}</span>
-      </Button>
-    </div>
+    <ContactSubListShell
+      isEmpty={emails.length === 0}
+      emptyIcon={Mail}
+      emptyMessage={t("contacts.form.noEmailAddressesYet")}
+      addLabel={t("contacts.form.addEmailAddress")}
+      onAdd={addEmail}
+    >
+      <AnimatePresence initial={false}>
+        {emails.map((email, idx) => {
+          const emailError = getListItemError("emails", "address", idx);
+          return (
+            <ListFieldCard
+              key={getLocalId("emails", idx)}
+              id={getLocalId("emails", idx)}
+              index={idx}
+              icon={Mail}
+              accentClass="bg-warning/60 group-hover:bg-warning"
+              iconClass="text-warning group-hover:text-warning"
+              label={`${t("contacts.form.type")}:`}
+              typeSelect={
+                <EditableSelect
+                  options={
+                    emailLabels.length > 0
+                      ? emailLabels
+                      : (DEFAULT_EMAIL_LABELS as unknown as string[])
+                  }
+                  value={resolveEmailLabel(email.label, emailLabels, t)}
+                  onChange={(val) => updateEmail(idx, { label: val })}
+                  className={TYPE_SELECT_WIDTH}
+                  id={`email-label-${idx}`}
+                  name={`email-label-${idx}`}
+                />
+              }
+              onRemove={() => removeEmail(idx)}
+              removeLabel={t("contacts.form.removeEmailAddress", { index: idx + 1 })}
+            >
+              <div className="relative flex items-center group/input">
+                <Mail className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Input
+                  type="email"
+                  id={`email-address-${idx}`}
+                  name={`email-address-${idx}`}
+                  value={email.address || ""}
+                  onChange={(e) => updateEmail(idx, { address: e.target.value })}
+                  placeholder={t("auth.emailAddress")}
+                  className={cn(
+                    "ps-10",
+                    emailError && "border-destructive focus-visible:ring-destructive",
+                  )}
+                />
+              </div>
+              {emailError && (
+                <p className="text-[10px] text-destructive mt-1 font-medium">
+                  {emailError}
+                </p>
+              )}
+            </ListFieldCard>
+          );
+        })}
+      </AnimatePresence>
+    </ContactSubListShell>
   );
 }

@@ -1,5 +1,9 @@
 import { useState, useCallback } from "react";
 import type { StandardMessagingRecipient as MessagingRecipient } from "@mms/shared";
+import { validateRecipientAddress } from "@mms/shared";
+import { usePermissions } from "@/tenant/hooks/usePermissions";
+import { notify } from "@/lib/notify";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface MessagingTarget {
   channel: "sms" | "whatsapp" | "email";
@@ -11,10 +15,13 @@ export interface MessagingTarget {
 
 /**
  * Custom hook to manage the state of the MessageComposer dialog.
- * Unifies state management and types for sending message campaigns or quick reminders.
+ * Gates on messaging.write and drops recipients without a valid channel address.
  */
 export function useMessageComposerState() {
   const [messagingTarget, setMessagingTarget] = useState<MessagingTarget | null>(null);
+  const { can } = usePermissions();
+  const { t } = useTranslation();
+  const canWriteMessaging = can("messaging.write");
 
   const openComposer = useCallback(
     (
@@ -22,15 +29,26 @@ export function useMessageComposerState() {
       recipients: MessagingRecipient[],
       options?: { initialMessage?: string; initialSubject?: string; templateId?: string }
     ) => {
+      if (!canWriteMessaging) {
+        notify.error(t("messaging.writeDenied"));
+        return;
+      }
+
+      const eligible = recipients.filter((recipient) => validateRecipientAddress(recipient, channel).isValid);
+      if (eligible.length === 0) {
+        notify.error(t("messaging.noEligibleRecipients"));
+        return;
+      }
+
       setMessagingTarget({
         channel,
-        recipients,
+        recipients: eligible,
         initialMessage: options?.initialMessage,
         initialSubject: options?.initialSubject,
         templateId: options?.templateId,
       });
     },
-    []
+    [canWriteMessaging, t]
   );
 
   const closeComposer = useCallback(() => {
@@ -42,5 +60,6 @@ export function useMessageComposerState() {
     setMessagingTarget,
     openComposer,
     closeComposer,
+    canWriteMessaging,
   };
 }

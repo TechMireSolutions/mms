@@ -1,3 +1,4 @@
+import type { AppTranslationKey } from './appTranslations.js';
 import { DEFAULT_MODULE_TIER_TAB_LABELS } from './moduleTierTabs.js';
 
 /** Status of WhatsApp registration checks for phone numbers. */
@@ -179,6 +180,8 @@ export interface FieldGroup {
 export interface TabDefinition {
   key: string;
   label: string;
+  /** i18n key for system tabs; custom tabs use `label` directly. */
+  labelKey?: AppTranslationKey;
   icon?: string;
   enabled: boolean;
   order: number;
@@ -440,10 +443,10 @@ export const DEFAULT_FORM_TABS: TabDefinition[] = [
 ];
 
 export const DEFAULT_DETAIL_TABS: TabDefinition[] = [
-  { key: "overview",  label: "Overview",  enabled: true, order: 0, isSystem: true },
-  { key: "timeline",  label: "Timeline",  enabled: true, order: 1, isSystem: true },
-  { key: "network",   label: "Network",   enabled: true, order: 2, isSystem: true },
-  { key: "files",     label: "Files",     enabled: true, order: 3, isSystem: true },
+  { key: "overview",  label: "Overview",  labelKey: "contacts.detail.tabOverview",  enabled: true, order: 0, isSystem: true },
+  { key: "timeline",  label: "Timeline",  labelKey: "contacts.detail.tabTimeline",  enabled: true, order: 1, isSystem: true },
+  { key: "network",   label: "Network",   labelKey: "contacts.detail.tabNetwork",   enabled: true, order: 2, isSystem: true },
+  { key: "files",     label: "Files",     labelKey: "contacts.detail.tabFiles",     enabled: true, order: 3, isSystem: true },
 ];
 
 export const DEFAULT_SETTINGS_SUB_TABS: TabDefinition[] = [
@@ -496,6 +499,8 @@ export type MessageCategory = 'general' | 'academic' | 'financial' | 'attendance
 export interface MessageTemplate {
   id: string;
   label: string;
+  /** i18n key for system templates; custom templates use `label` directly. */
+  labelKey?: string;
   body: string;
   category?: MessageCategory;
   channel?: 'all' | 'sms' | 'whatsapp' | 'email';
@@ -503,10 +508,10 @@ export interface MessageTemplate {
 }
 
 export const DEFAULT_MESSAGE_TEMPLATES: MessageTemplate[] = [
-  { id: 't1', label: 'General Announcement', category: 'general', channel: 'all', body: 'Dear {name|Valued Parent}, we would like to inform you that...' },
-  { id: 't2', label: 'Payment Reminder', category: 'financial', channel: 'all', body: 'Dear {name|Valued Parent}, this is a friendly reminder that your balance payment of {amount|0 PKR} is due.' },
-  { id: 't3', label: 'Holiday Announcement', category: 'general', channel: 'all', body: 'Dear {name|Valued Parent}, please note that the madrasa will remain closed on {date}.' },
-  { id: 't4', label: 'Attendance Alert', category: 'attendance', channel: 'whatsapp', body: 'Respected {name|Parent}, student {first_name} was marked absent today.' },
+  { id: 't1', label: 'General Announcement', labelKey: 'messaging.template.generalAnnouncement', category: 'general', channel: 'all', body: 'Dear {name|Valued Parent}, we would like to inform you that...' },
+  { id: 't2', label: 'Payment Reminder', labelKey: 'messaging.template.paymentReminder', category: 'financial', channel: 'all', body: 'Dear {name|Valued Parent}, this is a friendly reminder that your balance payment of {amount|0 PKR} is due.' },
+  { id: 't3', label: 'Holiday Announcement', labelKey: 'messaging.template.holidayAnnouncement', category: 'general', channel: 'all', body: 'Dear {name|Valued Parent}, please note that the madrasa will remain closed on {date}.' },
+  { id: 't4', label: 'Attendance Alert', labelKey: 'messaging.template.attendanceAlert', category: 'attendance', channel: 'whatsapp', body: 'Respected {name|Parent}, student {first_name} was marked absent today.' },
 ];
 
 /**
@@ -537,6 +542,8 @@ export interface Message {
   subject?: string;
   category?: MessageCategory;
   errorMessage?: string;
+  /** Soft-delete timestamp; cleared logs remain until admin clear wipes them. */
+  deletedAt?: string;
 }
 
 /** Client configuration model for Google Contacts OAuth and synchronization. */

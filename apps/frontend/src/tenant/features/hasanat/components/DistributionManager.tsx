@@ -3,8 +3,9 @@ import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Plus, Search, X, Star, User, Users2, Filter, ChevronDown, Eye } from "lucide-react";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
+  DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenuRadioGroup, DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { Distribution, Denomination, StockBatch } from '@/lib/data/hasanatData';
 import { useHasanatConfig } from "@/hooks/useStandardModuleConfig";
@@ -595,23 +596,30 @@ export function DistributionManager({
                                 <>
                                   <DropdownMenuLabel className="text-xs">{t("hasanat.changeStatus")}</DropdownMenuLabel>
                                   <DropdownMenuSeparator />
-                                  {Object.keys(statusConfig).map((status) => (
-                                    <DropdownMenuCheckboxItem key={status} checked={distribution.status === status} onCheckedChange={() => changeStatus(distribution.id, status as "active" | "redeemed" | "returned")}>
-                                      {statusLabels[status as keyof typeof statusLabels]}
-                                    </DropdownMenuCheckboxItem>
-                                  ))}
+                                  <DropdownMenuRadioGroup
+                                    value={distribution.status}
+                                    onValueChange={(status) =>
+                                      changeStatus(distribution.id, status as "active" | "redeemed" | "returned")
+                                    }
+                                  >
+                                    {Object.keys(statusConfig).map((status) => (
+                                      <DropdownMenuRadioItem key={status} value={status}>
+                                        {statusLabels[status as keyof typeof statusLabels]}
+                                      </DropdownMenuRadioItem>
+                                    ))}
+                                  </DropdownMenuRadioGroup>
                                 </>
                               )}
                               {onMessage && (
                                 <>
                                   {canWrite && <DropdownMenuSeparator />}
-                                  <DropdownMenuLabel className="text-xs">Notify Recipient</DropdownMenuLabel>
-                                  <DropdownMenuCheckboxItem checked={false} onCheckedChange={() => onMessage('whatsapp', [distribution])}>
-                                    WhatsApp
-                                  </DropdownMenuCheckboxItem>
-                                  <DropdownMenuCheckboxItem checked={false} onCheckedChange={() => onMessage('sms', [distribution])}>
-                                    SMS
-                                  </DropdownMenuCheckboxItem>
+                                  <DropdownMenuLabel className="text-xs">{t("messaging.channel")}</DropdownMenuLabel>
+                                  <DropdownMenuItem onClick={() => onMessage('whatsapp', [distribution])}>
+                                    {t("messaging.channel.whatsapp")}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => onMessage('sms', [distribution])}>
+                                    {t("messaging.channel.sms")}
+                                  </DropdownMenuItem>
                                 </>
                               )}
                             </DropdownMenuContent>

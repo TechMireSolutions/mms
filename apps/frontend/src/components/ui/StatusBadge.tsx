@@ -15,21 +15,23 @@ export interface StatusBadgeProps {
 }
 
 const DEFAULT_CONFIG: Record<string, StatusBadgeConfigItem> = {
-  active:    { label: "Active",    cls: SEMANTIC_BADGE.success },
-  inactive:  { label: "Inactive",  cls: SEMANTIC_BADGE.muted },
-  suspended: { label: "Suspended", cls: SEMANTIC_BADGE.warning },
-  pending:   { label: "Pending",   cls: SEMANTIC_BADGE.warning },
-  paid:      { label: "Paid",      cls: SEMANTIC_BADGE.success },
-  overdue:   { label: "Overdue",   cls: SEMANTIC_BADGE.destructive },
-  partial:   { label: "Partial",   cls: SEMANTIC_BADGE.info },
-  cancelled: { label: "Cancelled", cls: SEMANTIC_BADGE.muted },
-  completed: { label: "Completed", cls: SEMANTIC_BADGE.success },
-  upcoming:  { label: "Upcoming",  cls: SEMANTIC_BADGE.info },
-  ongoing:   { label: "Ongoing",   cls: SEMANTIC_BADGE.warning },
-  success:   { label: "Success",   cls: SEMANTIC_BADGE.success },
-  failed:    { label: "Failed",    cls: SEMANTIC_BADGE.destructive },
-  posted:    { label: "Posted",    cls: SEMANTIC_BADGE.successStrong },
-  draft:     { label: "Draft",     cls: SEMANTIC_BADGE.muted },
+  active:      { label: "Active",      cls: SEMANTIC_BADGE.success },
+  inactive:    { label: "Inactive",    cls: SEMANTIC_BADGE.muted },
+  suspended:   { label: "Suspended",   cls: SEMANTIC_BADGE.warning },
+  graduated:   { label: "Graduated",   cls: SEMANTIC_BADGE.info },
+  transferred: { label: "Transferred", cls: SEMANTIC_BADGE.infoStrong },
+  pending:     { label: "Pending",     cls: SEMANTIC_BADGE.warning },
+  paid:        { label: "Paid",        cls: SEMANTIC_BADGE.success },
+  overdue:     { label: "Overdue",     cls: SEMANTIC_BADGE.destructive },
+  partial:     { label: "Partial",     cls: SEMANTIC_BADGE.info },
+  cancelled:   { label: "Cancelled",   cls: SEMANTIC_BADGE.muted },
+  completed:   { label: "Completed",   cls: SEMANTIC_BADGE.success },
+  upcoming:    { label: "Upcoming",    cls: SEMANTIC_BADGE.info },
+  ongoing:     { label: "Ongoing",     cls: SEMANTIC_BADGE.warning },
+  success:     { label: "Success",     cls: SEMANTIC_BADGE.success },
+  failed:      { label: "Failed",      cls: SEMANTIC_BADGE.destructive },
+  posted:      { label: "Posted",      cls: SEMANTIC_BADGE.successStrong },
+  draft:       { label: "Draft",       cls: SEMANTIC_BADGE.muted },
 };
 
 export function StatusBadge({

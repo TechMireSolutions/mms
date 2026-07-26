@@ -14,10 +14,10 @@ import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
-import RevenueChart from "@/tenant/features/dashboard/components/widgets/charts/RevenueChart";
-import FeeCollectionSummary from "@/tenant/features/dashboard/components/widgets/FeeCollectionSummary";
-import OutstandingFeesTable from "@/tenant/features/dashboard/components/widgets/OutstandingFeesTable";
-import OverdueObligationsWidget from "@/tenant/features/dashboard/components/widgets/OverdueObligationsWidget";
+import RevenueChart from "@/components/dashboard-widgets/charts/RevenueChart";
+import FeeCollectionSummary from "@/components/dashboard-widgets/FeeCollectionSummary";
+import OutstandingFeesTable from "@/components/dashboard-widgets/OutstandingFeesTable";
+import OverdueObligationsWidget from "@/components/dashboard-widgets/OverdueObligationsWidget";
 
 /** Active filter state passed down from the parent report view. */
 interface FinancialReportFilters {

@@ -10,6 +10,7 @@ import {
   canWriteCollection,
   canWriteContacts,
   canWriteObject,
+  canClearMessagingLogs,
 } from "../services/rbacService.js";
 
 const admin: User = { id: "1", email: "a@test.com", name: "Admin", role: "admin", workspaceSubdomain: "demo" };
@@ -119,5 +120,11 @@ describe("rbacService", () => {
     expect(canReadContacts(teacher)).toBe(true);
     expect(canReadContacts(accountant)).toBe(true);
     expect(canReadContacts(viewer)).toBe(false);
+  });
+
+  it("restricts messaging clear logs to messaging.clearLogs", () => {
+    expect(canClearMessagingLogs(admin)).toBe(true);
+    expect(canClearMessagingLogs(teacher)).toBe(false);
+    expect(canClearMessagingLogs(accountant)).toBe(false);
   });
 });

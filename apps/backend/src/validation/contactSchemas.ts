@@ -91,6 +91,19 @@ export const contactsListQuerySchema = baseListQuerySchema.extend({
     }, z.boolean())
     .optional(),
   quickFilter: z.enum(['all', 'whatsapp', 'syed', 'missingInfo']).optional(),
+  /** Comma-separated contact ids to omit from the page. */
+  excludeIds: z
+    .string()
+    .max(4000)
+    .optional()
+    .transform((value) =>
+      value
+        ? value
+            .split(',')
+            .map((id) => id.trim())
+            .filter(Boolean)
+        : undefined,
+    ),
 });
 
 export const contactSetupAuditSchema = z.object({

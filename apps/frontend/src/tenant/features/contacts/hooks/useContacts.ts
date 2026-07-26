@@ -46,6 +46,7 @@ export interface ContactsPaginatedParams {
   sortDir?: 'asc' | 'desc';
   hasPhone?: boolean;
   quickFilter?: ContactsQuickFilter;
+  excludeIds?: Array<string | number>;
   enabled?: boolean;
 }
 
@@ -60,24 +61,65 @@ function buildContactsPageUrl(params: ContactsPaginatedParams): string {
   if (params.quickFilter && params.quickFilter !== 'all') {
     queryParams.set('quickFilter', params.quickFilter);
   }
+  if (params.excludeIds && params.excludeIds.length > 0) {
+    queryParams.set('excludeIds', params.excludeIds.map(String).join(','));
+  }
   if (params.sortField) queryParams.set('sortField', params.sortField);
   if (params.sortDir) queryParams.set('sortDir', params.sortDir);
   return `${CONTACTS_API}?${queryParams.toString()}`;
 }
 
+function contactsListQueryKeyParams(params: ContactsPaginatedParams) {
+  return {
+    page: params.page,
+    limit: params.limit ?? CONTACTS_MODULE_CONTRACT.defaultPageSize,
+    search: params.search?.trim() || '',
+    gender: params.gender || '',
+    includeDeleted: Boolean(params.includeDeleted),
+    hasPhone: Boolean(params.hasPhone),
+    quickFilter: params.quickFilter ?? 'all',
+    excludeIds: (params.excludeIds ?? []).map(String).join(','),
+    sortField: params.sortField || '',
+    sortDir: params.sortDir || 'asc',
+  };
+}
+
 export function contactsPaginatedQueryKey(params: ContactsPaginatedParams) {
-  return [...CONTACTS_QUERY_KEY, 'page', params] as const;
+  return [...CONTACTS_QUERY_KEY, 'page', contactsListQueryKeyParams(params)] as const;
+}
+
+function sameContactsListFilters(
+  previous: ReturnType<typeof contactsListQueryKeyParams> | undefined,
+  next: ReturnType<typeof contactsListQueryKeyParams>,
+): boolean {
+  if (!previous) return false;
+  return (
+    previous.search === next.search &&
+    previous.gender === next.gender &&
+    previous.includeDeleted === next.includeDeleted &&
+    previous.hasPhone === next.hasPhone &&
+    previous.quickFilter === next.quickFilter &&
+    previous.excludeIds === next.excludeIds &&
+    previous.sortField === next.sortField &&
+    previous.sortDir === next.sortDir &&
+    previous.limit === next.limit
+  );
 }
 
 export function useContactsPaginated(params: ContactsPaginatedParams) {
   const { isAuthenticated } = useAuth();
   const enabled = params.enabled ?? true;
+  const keyParams = contactsListQueryKeyParams(params);
   return useQuery({
     queryKey: contactsPaginatedQueryKey(params),
     queryFn: async () => apiJson<ContactsListPageResult>(buildContactsPageUrl(params)),
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
-    placeholderData: (previousData) => previousData,
+    // Keep prior page only when paging within the same filters — never while search/filters change.
+    placeholderData: (previousData, previousQuery) => {
+      const previousParams = previousQuery?.queryKey.at(-1) as ReturnType<typeof contactsListQueryKeyParams> | undefined;
+      return sameContactsListFilters(previousParams, keyParams) ? previousData : undefined;
+    },
   });
 }
 

@@ -1,11 +1,20 @@
 import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
-import { DEFAULT_WIDGET_TITLE_KEYS } from "@/lib/dashboardWidgets";
+import { DEFAULT_WIDGET_TITLE_KEYS, DEFAULT_WIDGET_SUBTEXT_KEYS } from "@/lib/dashboardWidgets";
 import { DASHBOARD_WIDGETS_KEY } from "@mms/shared";
 import { getObject, saveObject } from "@/lib/db";
 
 function withDefaultTitleKey(widget: CustomWidget): CustomWidget {
   const titleKey = widget.titleKey ?? DEFAULT_WIDGET_TITLE_KEYS[widget.id];
   return titleKey ? { ...widget, titleKey } : widget;
+}
+
+function withDefaultSubTextKey(widget: CustomWidget): CustomWidget {
+  const fixedSubTextKey = widget.fixedSubTextKey ?? DEFAULT_WIDGET_SUBTEXT_KEYS[widget.id];
+  return fixedSubTextKey ? { ...widget, fixedSubTextKey } : widget;
+}
+
+function withDefaultI18nKeys(widget: CustomWidget): CustomWidget {
+  return withDefaultSubTextKey(withDefaultTitleKey(widget));
 }
 
 export function getDefaultCustomWidgets(category: string): CustomWidget[] {
@@ -31,7 +40,6 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         icon: "Users",
         color: "blue",
         subTextType: "fixed",
-        fixedSubText: "Total contacts",
         trend: 0,
         trendType: "manual",
         role: "admin",
@@ -47,7 +55,6 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         icon: "Users",
         color: "blue",
         subTextType: "fixed",
-        fixedSubText: "Total contacts",
         trend: 0,
         trendType: "manual",
         role: "accountant",
@@ -78,7 +85,6 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         icon: "GraduationCap",
         color: "emerald",
         subTextType: "fixed",
-        fixedSubText: "Registered students",
         trend: 14,
         trendType: "manual",
         role: "admin",
@@ -97,7 +103,6 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         icon: "UserCheck",
         color: "amber",
         subTextType: "fixed",
-        fixedSubText: "Attendance rate today",
         trend: -3,
         trendType: "manual",
         role: "admin",
@@ -116,7 +121,6 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         icon: "UserCheck",
         color: "emerald",
         subTextType: "fixed",
-        fixedSubText: "Average present rate",
         trend: 5,
         trendType: "manual",
         role: "teacher",
@@ -148,8 +152,8 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         operation: "count",
         switchActionType: "app_setting",
         switchStateKey: "app_setting_attendance_lock",
-        switchLabelOn: "Locked",
-        switchLabelOff: "Unlocked",
+        switchLabelOnKey: "reports.widgets.switchLocked",
+        switchLabelOffKey: "reports.widgets.switchUnlocked",
         color: "red",
         isPinnedToDashboard: true
       },
@@ -202,7 +206,6 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         icon: "DollarSign",
         color: "emerald",
         subTextType: "fixed",
-        fixedSubText: "This month",
         trend: 11,
         trendType: "manual",
         role: "admin",
@@ -222,7 +225,6 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         icon: "AlertCircle",
         color: "red",
         subTextType: "fixed",
-        fixedSubText: "Unpaid invoices",
         trend: -8,
         trendType: "manual",
         role: "admin",
@@ -242,7 +244,6 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         icon: "DollarSign",
         color: "emerald",
         subTextType: "fixed",
-        fixedSubText: "This month",
         trend: 11,
         trendType: "manual",
         role: "accountant",
@@ -262,7 +263,6 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         icon: "AlertCircle",
         color: "red",
         subTextType: "fixed",
-        fixedSubText: "Unpaid invoices",
         trend: -8,
         trendType: "manual",
         role: "accountant",
@@ -282,7 +282,6 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         icon: "TrendingUp",
         color: "blue",
         subTextType: "fixed",
-        fixedSubText: "From invoices",
         trend: 11.4,
         trendType: "manual",
         role: "accountant",
@@ -299,7 +298,6 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         icon: "Receipt",
         color: "violet",
         subTextType: "fixed",
-        fixedSubText: "Total discount offset",
         trend: -2,
         trendType: "manual",
         role: "accountant",
@@ -349,8 +347,8 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         operation: "count",
         switchActionType: "app_setting",
         switchStateKey: "section_revenueChart",
-        switchLabelOn: "Visible",
-        switchLabelOff: "Hidden",
+        switchLabelOnKey: "reports.widgets.switchVisible",
+        switchLabelOffKey: "reports.widgets.switchHidden",
         color: "blue",
         isPinnedToDashboard: true
       },
@@ -410,7 +408,6 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         icon: "Star",
         color: "amber",
         subTextType: "fixed",
-        fixedSubText: "All-time points",
         trend: 22,
         trendType: "manual",
         role: "admin",
@@ -427,7 +424,6 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         icon: "Star",
         color: "amber",
         subTextType: "fixed",
-        fixedSubText: "Awarded by me",
         trend: 12,
         trendType: "manual",
         role: "teacher",
@@ -469,7 +465,6 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         icon: "CalendarCheck",
         color: "blue",
         subTextType: "fixed",
-        fixedSubText: "Active sessions",
         trend: 0,
         trendType: "manual",
         role: "admin",
@@ -485,7 +480,6 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         icon: "BookOpen",
         color: "violet",
         subTextType: "fixed",
-        fixedSubText: "From active sessions",
         trend: 4,
         trendType: "manual",
         role: "admin",
@@ -501,7 +495,6 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         icon: "BookOpen",
         color: "violet",
         subTextType: "fixed",
-        fixedSubText: "All active classes",
         trend: 0,
         trendType: "manual",
         role: "teacher",
@@ -517,7 +510,6 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         icon: "CalendarCheck",
         color: "blue",
         subTextType: "fixed",
-        fixedSubText: "Active classes count",
         trend: 0,
         trendType: "manual",
         role: "teacher",
@@ -545,8 +537,8 @@ export function getDefaultCustomWidgets(category: string): CustomWidget[] {
         operation: "count",
         switchActionType: "app_setting",
         switchStateKey: "section_sessionsTable",
-        switchLabelOn: "Visible",
-        switchLabelOff: "Hidden",
+        switchLabelOnKey: "reports.widgets.switchVisible",
+        switchLabelOffKey: "reports.widgets.switchHidden",
         color: "violet",
         isPinnedToDashboard: false
       },
@@ -579,12 +571,12 @@ export function getOrInitializeCustomWidgets(): CustomWidget[] {
       ...getDefaultCustomWidgets("financial"),
       ...getDefaultCustomWidgets("hasanat"),
       ...getDefaultCustomWidgets("sessions"),
-    ].map(withDefaultTitleKey);
+    ].map(withDefaultI18nKeys);
     if (!saved) {
       saveObject(DASHBOARD_WIDGETS_KEY, defaults);
       return defaults;
     }
-    const parsed = saved.map(withDefaultTitleKey);
+    const parsed = saved.map(withDefaultI18nKeys);
     const existingIds = new Set(parsed.map((widget) => widget.id));
     const merged = [...parsed];
     let hasChanges = false;
@@ -601,6 +593,18 @@ export function getOrInitializeCustomWidgets(): CustomWidget[] {
           }
           if (defaultWidget.titleKey && !merged[widgetIndex].titleKey) {
             merged[widgetIndex] = { ...merged[widgetIndex], titleKey: defaultWidget.titleKey };
+            hasChanges = true;
+          }
+          if (defaultWidget.switchLabelOnKey && !merged[widgetIndex].switchLabelOnKey) {
+            merged[widgetIndex] = {
+              ...merged[widgetIndex],
+              switchLabelOnKey: defaultWidget.switchLabelOnKey,
+              switchLabelOffKey: defaultWidget.switchLabelOffKey,
+            };
+            hasChanges = true;
+          }
+          if (defaultWidget.fixedSubTextKey && !merged[widgetIndex].fixedSubTextKey) {
+            merged[widgetIndex] = { ...merged[widgetIndex], fixedSubTextKey: defaultWidget.fixedSubTextKey };
             hasChanges = true;
           }
         }

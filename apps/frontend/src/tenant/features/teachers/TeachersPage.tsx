@@ -8,6 +8,7 @@ import { UserPlus, School, Filter, ChevronDown, Archive } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenuRadioGroup, DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
@@ -89,42 +90,29 @@ export default function Teachers(): React.JSX.Element {
   const [filterSpecialization, setFilterSpecialization] = useState('');
   const [editTeacher, setEditTeacher] = useState<Teacher | null>(null);
 
-  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
+  const { messagingTarget, openComposer, closeComposer, canWriteMessaging } = useMessageComposerState();
+
+  const toTeacherRecipients = (teachersList: Teacher[]) =>
+    teachersList.map((tr) => ({
+      id: tr.id,
+      name: tr.name || '',
+      phone: tr.phone || '',
+      email: tr.email || '',
+    }));
 
   const handleWhatsApp = (teachersList: Teacher[]) => {
-    openComposer(
-      'whatsapp',
-      teachersList.map((tr) => ({
-        id: tr.id,
-        name: tr.name || '',
-        phone: (tr as unknown as { phone?: string }).phone || '',
-        email: (tr as unknown as { email?: string }).email || '',
-      }))
-    );
+    if (!canWriteMessaging) return;
+    openComposer('whatsapp', toTeacherRecipients(teachersList));
   };
 
   const handleSms = (teachersList: Teacher[]) => {
-    openComposer(
-      'sms',
-      teachersList.map((tr) => ({
-        id: tr.id,
-        name: tr.name || '',
-        phone: (tr as unknown as { phone?: string }).phone || '',
-        email: (tr as unknown as { email?: string }).email || '',
-      }))
-    );
+    if (!canWriteMessaging) return;
+    openComposer('sms', toTeacherRecipients(teachersList));
   };
 
   const handleEmail = (teachersList: Teacher[]) => {
-    openComposer(
-      'email',
-      teachersList.map((tr) => ({
-        id: tr.id,
-        name: tr.name || '',
-        phone: (tr as unknown as { phone?: string }).phone || '',
-        email: (tr as unknown as { email?: string }).email || '',
-      }))
-    );
+    if (!canWriteMessaging) return;
+    openComposer('email', toTeacherRecipients(teachersList));
   };
 
   const useServerWork = activeTab === 'work';
@@ -321,22 +309,19 @@ export default function Teachers(): React.JSX.Element {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuCheckboxItem
-                      checked={!filterSpecialization}
-                      onCheckedChange={() => setFilterSpecialization('')}
+                    <DropdownMenuRadioGroup
+                      value={filterSpecialization}
+                      onValueChange={setFilterSpecialization}
                     >
-                      {t('teachers.filter.allSpecializations')}
-                    </DropdownMenuCheckboxItem>
-                    <DropdownMenuSeparator />
-                    {specializationOptions.map((specialization) => (
-                      <DropdownMenuCheckboxItem
-                        key={specialization}
-                        checked={filterSpecialization === specialization}
-                        onCheckedChange={() => setFilterSpecialization(specialization)}
-                      >
-                        {specialization}
-                      </DropdownMenuCheckboxItem>
-                    ))}
+                      <DropdownMenuRadioItem value="">
+                        {t('teachers.filter.allSpecializations')}
+                      </DropdownMenuRadioItem>
+                      {specializationOptions.map((specialization) => (
+                        <DropdownMenuRadioItem key={specialization} value={specialization}>
+                          {specialization}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
                   </DropdownMenuContent>
                 </DropdownMenu>
 

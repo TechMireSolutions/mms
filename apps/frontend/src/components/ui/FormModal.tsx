@@ -44,6 +44,8 @@ export interface FormModalProps<K extends string = string> {
   showBuilderToggle?: boolean;
   builderMode?: boolean;
   onBuilderModeChange?: (active: boolean) => void;
+  /** Raise above other modals (nested dialogs). */
+  priority?: boolean;
   children: React.ReactNode;
 }
 
@@ -197,6 +199,7 @@ export function FormModal<K extends string = string>({
   showBuilderToggle = false,
   builderMode = false,
   onBuilderModeChange,
+  priority = false,
   children,
 }: FormModalProps<K>): React.JSX.Element {
   const { t } = useTranslation();
@@ -393,6 +396,7 @@ export function FormModal<K extends string = string>({
       headerExtra={resolvedHeaderExtra}
       headerActions={headerActions}
       panelClassName={panelClassName}
+      priority={priority}
       footer={
         hideFooter || builderMode ? null : (
           <div

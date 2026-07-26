@@ -40,6 +40,8 @@ interface ContactFormProps {
   defaultProvince?: string;
   initialDraft?: Partial<Contact>;
   lockGender?: boolean;
+  /** Raise above other modals (e.g. create from ContactPicker inside a form). */
+  priority?: boolean;
 }
 
 const CONTACT_TAB_META: Record<string, { labelKey: AppTranslationKey; icon: typeof User }> = {
@@ -72,6 +74,7 @@ export default function ContactForm({
   defaultProvince = "",
   initialDraft,
   lockGender = false,
+  priority = false,
 }: ContactFormProps): JSX.Element {
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
@@ -469,6 +472,7 @@ export default function ContactForm({
       }
       icon={User}
       tall
+      priority={priority}
       tabs={visibleTabs}
       activeTab={tab}
       onTabChange={setTab}

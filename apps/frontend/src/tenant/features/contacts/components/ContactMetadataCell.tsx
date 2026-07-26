@@ -13,6 +13,7 @@ import {
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { buildContactsMap, formatContactCellValue, formatContactGenderLabel } from "@/lib/contacts/contactI18n";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 export interface ContactMetadataCellProps {
   colId: string;
@@ -71,8 +72,8 @@ export function ContactMetadataCell({
       }
       case "isSyed":
         return contact.isSyed ? (
-          <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 rounded border ${COLOR_PALETTES.success.bg}`}>
-            <CheckCircle2 className="w-3 h-3" />
+          <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 rounded border ${SEMANTIC_BADGE.success}`}>
+            <CheckCircle2 className="w-3 h-3 text-success" />
             {t("contacts.table.yesSyed")}
           </span>
         ) : (

@@ -8,10 +8,21 @@ import {
   UserPlus, CalendarPlus, DollarSign,
   Star, FileText, Printer, BarChart3, UserCheck, Sparkles,
 } from "lucide-react";
-import { type AppTranslationKey } from "@mms/shared";
+import {
+  type AppTranslationKey,
+  type Permission,
+  ACCOUNTING_MODULE_CONTRACT,
+  ATTENDANCE_MODULE_CONTRACT,
+  DASHBOARD_MODULE_CONTRACT,
+  ENROLLMENTS_MODULE_CONTRACT,
+  FINANCE_MODULE_CONTRACT,
+  HASANAT_MODULE_CONTRACT,
+  SESSIONS_MODULE_CONTRACT,
+} from "@mms/shared";
 import type { DashboardRole } from '@/lib/dashboardRole';
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useTranslation } from "@/hooks/useTranslation";
+import { usePermissions } from "@/tenant/hooks/usePermissions";
 
 interface ActionSetItem {
   labelKey: AppTranslationKey;
@@ -19,28 +30,29 @@ interface ActionSetItem {
   icon: React.ElementType;
   color: "emerald" | "blue" | "amber" | "violet" | "slate";
   moduleId: string;
+  permission: Permission;
 }
 
 const ACTION_SETS: Record<DashboardRole, ActionSetItem[]> = {
   admin: [
-    { labelKey: "action.addStudent", descKey: "action.addStudentDesc", icon: UserPlus, color: "emerald", moduleId: "enrollment" },
-    { labelKey: "action.createSession", descKey: "action.createSessionDesc", icon: CalendarPlus, color: "blue", moduleId: "sessions" },
-    { labelKey: "action.recordPayment", descKey: "action.recordPaymentDesc", icon: DollarSign, color: "amber", moduleId: "finance" },
-    { labelKey: "action.takeAttendance", descKey: "action.takeAttendanceDesc", icon: UserCheck, color: "violet", moduleId: "attendance" },
-    { labelKey: "action.awardHasanat", descKey: "action.awardHasanatDesc", icon: Star, color: "amber", moduleId: "hasanat" },
-    { labelKey: "action.generateReport", descKey: "action.generateReportDesc", icon: BarChart3, color: "slate", moduleId: "reports" },
+    { labelKey: "action.addStudent", descKey: "action.addStudentDesc", icon: UserPlus, color: "emerald", moduleId: "enrollment", permission: ENROLLMENTS_MODULE_CONTRACT.permissions.write },
+    { labelKey: "action.createSession", descKey: "action.createSessionDesc", icon: CalendarPlus, color: "blue", moduleId: "sessions", permission: SESSIONS_MODULE_CONTRACT.permissions.write },
+    { labelKey: "action.recordPayment", descKey: "action.recordPaymentDesc", icon: DollarSign, color: "amber", moduleId: "finance", permission: FINANCE_MODULE_CONTRACT.permissions.write },
+    { labelKey: "action.takeAttendance", descKey: "action.takeAttendanceDesc", icon: UserCheck, color: "violet", moduleId: "attendance", permission: ATTENDANCE_MODULE_CONTRACT.permissions.write },
+    { labelKey: "action.awardHasanat", descKey: "action.awardHasanatDesc", icon: Star, color: "amber", moduleId: "hasanat", permission: HASANAT_MODULE_CONTRACT.permissions.write },
+    { labelKey: "action.generateReport", descKey: "action.generateReportDesc", icon: BarChart3, color: "slate", moduleId: "reports", permission: DASHBOARD_MODULE_CONTRACT.permissions.read },
   ],
   teacher: [
-    { labelKey: "action.takeAttendance", descKey: "action.takeAttendanceDesc", icon: UserCheck, color: "emerald", moduleId: "attendance" },
-    { labelKey: "action.awardHasanat", descKey: "action.awardHasanatDesc", icon: Star, color: "amber", moduleId: "hasanat" },
-    { labelKey: "action.addStudent", descKey: "action.addStudentDesc", icon: UserPlus, color: "blue", moduleId: "enrollment" },
-    { labelKey: "action.createSession", descKey: "action.createSessionDesc", icon: CalendarPlus, color: "violet", moduleId: "sessions" },
+    { labelKey: "action.takeAttendance", descKey: "action.takeAttendanceDesc", icon: UserCheck, color: "emerald", moduleId: "attendance", permission: ATTENDANCE_MODULE_CONTRACT.permissions.write },
+    { labelKey: "action.awardHasanat", descKey: "action.awardHasanatDesc", icon: Star, color: "amber", moduleId: "hasanat", permission: HASANAT_MODULE_CONTRACT.permissions.write },
+    { labelKey: "action.addStudent", descKey: "action.addStudentDesc", icon: UserPlus, color: "blue", moduleId: "enrollment", permission: ENROLLMENTS_MODULE_CONTRACT.permissions.write },
+    { labelKey: "action.createSession", descKey: "action.createSessionDesc", icon: CalendarPlus, color: "violet", moduleId: "sessions", permission: SESSIONS_MODULE_CONTRACT.permissions.write },
   ],
   accountant: [
-    { labelKey: "action.recordPayment", descKey: "action.recordPaymentDesc", icon: DollarSign, color: "emerald", moduleId: "finance" },
-    { labelKey: "action.generateReport", descKey: "action.generateReportDesc", icon: BarChart3, color: "blue", moduleId: "reports" },
-    { labelKey: "action.printReceipt", descKey: "action.printReceiptDesc", icon: Printer, color: "amber", moduleId: "finance" },
-    { labelKey: "action.viewLedger", descKey: "action.viewLedgerDesc", icon: FileText, color: "violet", moduleId: "accounting" },
+    { labelKey: "action.recordPayment", descKey: "action.recordPaymentDesc", icon: DollarSign, color: "emerald", moduleId: "finance", permission: FINANCE_MODULE_CONTRACT.permissions.write },
+    { labelKey: "action.generateReport", descKey: "action.generateReportDesc", icon: BarChart3, color: "blue", moduleId: "reports", permission: DASHBOARD_MODULE_CONTRACT.permissions.read },
+    { labelKey: "action.printReceipt", descKey: "action.printReceiptDesc", icon: Printer, color: "amber", moduleId: "finance", permission: FINANCE_MODULE_CONTRACT.permissions.write },
+    { labelKey: "action.viewLedger", descKey: "action.viewLedgerDesc", icon: FileText, color: "violet", moduleId: "accounting", permission: ACCOUNTING_MODULE_CONTRACT.permissions.write },
   ],
 };
 
@@ -57,16 +69,18 @@ interface QuickActionsPanelProps {
 }
 
 /**
- * Displays a grid of role-specific quick actions to navigate
- * directly to frequent tasks.
+ * Role-specific quick actions filtered by enabled modules and write permissions.
  */
 export default function QuickActionsPanel({ dashboardRole }: QuickActionsPanelProps): React.JSX.Element | null {
   const settings = useGlobalSettings();
   const { t } = useTranslation();
+  const { can } = usePermissions();
   const enabledModules = settings.enabledModules || {};
 
-  const allActions = ACTION_SETS[dashboardRole] || ACTION_SETS.admin;
-  const actions = allActions.filter((quickAction) => enabledModules[quickAction.moduleId] !== false);
+  const allActions = ACTION_SETS[dashboardRole] || ACTION_SETS.teacher;
+  const actions = allActions.filter(
+    (quickAction) => enabledModules[quickAction.moduleId] !== false && can(quickAction.permission),
+  );
 
   if (actions.length === 0) return null;
 
@@ -93,16 +107,16 @@ export default function QuickActionsPanel({ dashboardRole }: QuickActionsPanelPr
               <Link
                 to={href}
                 aria-label={label}
-                className="relative overflow-hidden group/item flex flex-col items-start gap-2.5 p-3.5 rounded-xl border border-border/70 bg-card/20 hover:bg-card/45 hover:-translate-y-1 hover:border-primary/20 hover:shadow-md transition-all duration-300 text-left h-full w-full shadow-xs"
+                className="relative overflow-hidden group/item flex flex-col items-start gap-2.5 p-3.5 rounded-xl border border-border/70 bg-card/20 hover:bg-card/45 hover:-translate-y-1 hover:border-primary/20 hover:shadow-md transition-all duration-300 text-start h-full w-full shadow-xs"
               >
-                <div className={`absolute -right-8 -top-8 w-20 h-20 rounded-full transition-all duration-500 blur-xl opacity-40 group-hover/item:opacity-70 ${
+                <div className={`absolute -end-8 -top-8 w-20 h-20 rounded-full transition-all duration-500 blur-xl opacity-40 group-hover/item:opacity-70 ${
                   quickAction.color === 'emerald' ? 'bg-success/15' :
                   quickAction.color === 'blue' ? 'bg-info/15' :
                   quickAction.color === 'amber' ? 'bg-warning/15' :
                   quickAction.color === 'violet' ? 'bg-primary/15' :
                   'bg-muted-foreground/15'
                 }`} aria-hidden="true" />
-                
+
                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-transform group-hover/item:scale-110 duration-300 ${ACTION_COLOR_CLASSES[quickAction.color]}`} aria-hidden="true">
                   <Icon className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} />
                 </div>

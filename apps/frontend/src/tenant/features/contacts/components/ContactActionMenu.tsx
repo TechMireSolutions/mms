@@ -17,9 +17,10 @@ export interface ContactActionMenuProps {
   onEdit: (contact: Contact) => void;
   onDelete: (id: string | number) => void;
   onRestore?: (id: string | number) => void;
-  onWhatsApp: (contacts: Contact[]) => void;
-  onSms: (contacts: Contact[]) => void;
-  onEmail: (contacts: Contact[]) => void;
+  /** Omit when messaging is forbidden (RBAC) or archive mode. */
+  onWhatsApp?: (contacts: Contact[]) => void;
+  onSms?: (contacts: Contact[]) => void;
+  onEmail?: (contacts: Contact[]) => void;
   showArchived?: boolean;
   canWrite?: boolean;
   canDelete?: boolean;
@@ -28,6 +29,7 @@ export interface ContactActionMenuProps {
 
 /**
  * Reusable dropdown menu component for contact row and card actions.
+ * Messaging items are omitted (not disabled) when handlers are undefined or channel is unavailable.
  */
 export function ContactActionMenu({
   contact,
@@ -65,16 +67,21 @@ export function ContactActionMenu({
   }, [contact.id, onRestore]);
 
   const handleWhatsAppAction = useCallback(() => {
-    onWhatsApp([contact]);
+    onWhatsApp?.([contact]);
   }, [contact, onWhatsApp]);
 
   const handleEmailAction = useCallback(() => {
-    onEmail([contact]);
+    onEmail?.([contact]);
   }, [contact, onEmail]);
 
   const handleSmsAction = useCallback(() => {
-    onSms([contact]);
+    onSms?.([contact]);
   }, [contact, onSms]);
+
+  const showWhatsApp = Boolean(onWhatsApp) && waAvailable;
+  const showEmail = Boolean(onEmail) && Boolean(primaryEmail);
+  const showSms = Boolean(onSms) && Boolean(primaryPhone);
+  const showMessaging = !showArchived && (showWhatsApp || showEmail || showSms);
 
   return (
     <DropdownMenu>
@@ -102,35 +109,38 @@ export function ContactActionMenu({
             <Edit2 className="w-3.5 h-3.5 me-2" /> {t("contacts.table.edit")}
           </DropdownMenuItem>
         )}
-        {!showArchived ? (
+        {showMessaging ? (
           <>
-            <DropdownMenuItem disabled={!waAvailable} onClick={handleWhatsAppAction}>
-              <MessageCircle className={`w-3.5 h-3.5 me-2 ${waAvailable ? "text-success" : "text-muted-foreground"}`} />{" "}
-              {t("contacts.whatsapp")}
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={!primaryEmail} onClick={handleEmailAction}>
-              <Mail className={`w-3.5 h-3.5 me-2 ${primaryEmail ? "text-warning" : "text-muted-foreground"}`} />{" "}
-              {t("contacts.detail.emailAction")}
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={!primaryPhone} onClick={handleSmsAction}>
-              <MessageSquare className="w-3.5 h-3.5 me-2 text-primary" /> {t("contacts.sms")}
-            </DropdownMenuItem>
-            {canDelete && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">
-                  <Trash2 className="w-3.5 h-3.5 me-2" /> {t("contacts.table.deleteContact")}
-                </DropdownMenuItem>
-              </>
-            )}
+            {showWhatsApp ? (
+              <DropdownMenuItem onClick={handleWhatsAppAction}>
+                <MessageCircle className="w-3.5 h-3.5 me-2 text-success" /> {t("contacts.whatsapp")}
+              </DropdownMenuItem>
+            ) : null}
+            {showEmail ? (
+              <DropdownMenuItem onClick={handleEmailAction}>
+                <Mail className="w-3.5 h-3.5 me-2 text-warning" /> {t("contacts.detail.emailAction")}
+              </DropdownMenuItem>
+            ) : null}
+            {showSms ? (
+              <DropdownMenuItem onClick={handleSmsAction}>
+                <MessageSquare className="w-3.5 h-3.5 me-2 text-primary" /> {t("contacts.sms")}
+              </DropdownMenuItem>
+            ) : null}
           </>
-        ) : (
-          canDelete && (
-            <DropdownMenuItem onClick={handleRestore}>
-              <RotateCcw className="w-3.5 h-3.5 me-2" /> {t("contacts.restoreContact")}
+        ) : null}
+        {!showArchived && canDelete ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">
+              <Trash2 className="w-3.5 h-3.5 me-2" /> {t("contacts.table.deleteContact")}
             </DropdownMenuItem>
-          )
-        )}
+          </>
+        ) : null}
+        {showArchived && canDelete ? (
+          <DropdownMenuItem onClick={handleRestore}>
+            <RotateCcw className="w-3.5 h-3.5 me-2" /> {t("contacts.restoreContact")}
+          </DropdownMenuItem>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );

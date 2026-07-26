@@ -3,9 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronUp,
   ChevronDown,
-  User,
   MessageCircle,
-  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,7 +15,8 @@ import {
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import { buildContactsMap, formatContactGenderLabel, resolveContactPhoneDisplay } from "@/lib/contacts/contactI18n";
+import { buildContactsMap, resolveContactPhoneDisplay } from "@/lib/contacts/contactI18n";
+import { ContactIdentityMeta } from "@/tenant/features/contacts/components/ContactIdentityMeta";
 import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
 import { UserAvatar } from "@/components/ui/UserAvatar";
@@ -39,9 +38,9 @@ export interface ContactsTableProps {
   onDelete: (contactId: number | string) => void;
   onRestore?: (contactId: number | string) => void;
   showArchived?: boolean;
-  onWhatsApp: (contacts: Contact[]) => void;
-  onSms: (contacts: Contact[]) => void;
-  onEmail: (contacts: Contact[]) => void;
+  onWhatsApp?: (contacts: Contact[]) => void;
+  onSms?: (contacts: Contact[]) => void;
+  onEmail?: (contacts: Contact[]) => void;
   sortField: string;
   sortDir: "asc" | "desc";
   onSort: (field: string) => void;
@@ -113,9 +112,9 @@ interface ContactTableRowProps {
   onEdit: (contact: Contact) => void;
   onDelete: (contactId: number | string) => void;
   onRestore?: (contactId: number | string) => void;
-  onWhatsApp: (contacts: Contact[]) => void;
-  onSms: (contacts: Contact[]) => void;
-  onEmail: (contacts: Contact[]) => void;
+  onWhatsApp?: (contacts: Contact[]) => void;
+  onSms?: (contacts: Contact[]) => void;
+  onEmail?: (contacts: Contact[]) => void;
 }
 
 /**
@@ -165,23 +164,7 @@ const ContactTableRow = memo(function ContactTableRow({
                 >
                   {displayName}
                 </Button>
-                {(contact.gender || contact.isSyed) && (
-                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap leading-normal mt-0.5">
-                    {contact.gender && (
-                      <span className="flex items-center gap-1">
-                        <User className="w-3.5 h-3.5 text-muted-foreground inline" />
-                        <span>{formatContactGenderLabel(contact.gender, t)}</span>
-                      </span>
-                    )}
-                    {contact.gender && contact.isSyed && <span className="text-muted-foreground/40">•</span>}
-                    {contact.isSyed && (
-                      <span className="inline-flex items-center gap-0.5 text-[10px] font-bold uppercase px-1.5 py-0.2 rounded border bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                        {t("contacts.table.yesSyed")}
-                      </span>
-                    )}
-                  </p>
-                )}
+                <ContactIdentityMeta gender={contact.gender} isSyed={contact.isSyed} className="mt-0.5" />
                 {showArchived && contact.deletionReason && (
                   <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
                     {t('contacts.deletionReasonLabel')}: {contact.deletionReason}
@@ -209,24 +192,21 @@ const ContactTableRow = memo(function ContactTableRow({
                 <span className="text-[13px] text-muted-foreground">{t('contacts.table.emptyDash')}</span>
               )}
               {primaryPhone && <CopyBtn text={primaryPhone} />}
+              {onWhatsApp && hasWa ? (
               <Button
-                disabled={!hasWa}
                 onClick={(e) => {
                   e.stopPropagation();
                   onWhatsApp([contact]);
                 }}
-                title={hasWa ? t('contacts.whatsapp') : t('contacts.table.notRegisteredWhatsApp')}
-                aria-label={hasWa ? t('contacts.whatsapp') : t('contacts.table.notRegisteredWhatsApp')}
+                title={t('contacts.whatsapp')}
+                aria-label={t('contacts.whatsapp')}
                 variant="ghost"
-                className={`min-w-[44px] min-h-[44px] flex items-center justify-center p-0 transition-all hover:bg-transparent ${
-                  hasWa
-                    ? "opacity-0 group-hover/phone:opacity-100 text-success hover:text-success/80 cursor-pointer"
-                    : "opacity-30 group-hover/phone:opacity-60 text-muted-foreground cursor-not-allowed"
-                }`}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center p-0 transition-all hover:bg-transparent opacity-0 group-hover/phone:opacity-100 text-success hover:text-success/80 cursor-pointer"
                 type="button"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
               </Button>
+              ) : null}
             </div>
           </td>
         );

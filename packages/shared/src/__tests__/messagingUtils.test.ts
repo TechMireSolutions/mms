@@ -58,7 +58,7 @@ describe('messagingUtils', () => {
     it('validates phone numbers for SMS / WhatsApp', () => {
       expect(validateRecipientAddress({ id: 1, name: 'Ali', phone: '+92 300 1234567' }, 'whatsapp')).toEqual({
         isValid: true,
-        address: '+92 300 1234567',
+        address: '923001234567',
         reason: undefined,
       });
 

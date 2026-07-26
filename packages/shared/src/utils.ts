@@ -7,6 +7,7 @@ import type {
   EmergencyContact
 } from "./contactTypes.js";
 import { CONTACTS_MODULE_CONTRACT } from "./contactsModuleContract.js";
+import { PuppeteerWhatsAppProvider } from "./whatsappProvider.js";
 
 
 
@@ -500,12 +501,12 @@ export function getDisplayName(contact: Partial<Contact>): string {
 }
 
 /**
- * Check if contact has WhatsApp enabled
+ * Check if contact has a WhatsApp-resolvable number (`PuppeteerWhatsAppProvider.getNumberId`).
  * @param contact - Contact object
- * @returns True if WhatsApp enabled, false otherwise.
+ * @returns True when a WhatsApp number id can be resolved from the primary phone.
  */
 export function hasWhatsApp(contact: Partial<Contact>): boolean {
-  return !!getPrimaryPhone(contact);
+  return !!PuppeteerWhatsAppProvider.getNumberId(getPrimaryPhone(contact));
 }
 
 /**
@@ -1504,7 +1505,7 @@ export interface PersonalizeRecipient {
 export function personalizeMessage(
   body: string,
   recipient: PersonalizeRecipient,
-  options?: { date?: string; dueDate?: string; amount?: string | number; madrasaName?: string }
+  options?: { date?: string; dueDate?: string; amount?: string | number; madrasaName?: string; salutation?: string }
 ): string {
   if (!body) return "";
   const name = recipient.name || "";
@@ -1514,8 +1515,8 @@ export function personalizeMessage(
   const dateStr = options?.date || new Date().toISOString().split("T")[0];
   const dueDateStr = recipient.dueDate || options?.dueDate || "";
   const amountStr = recipient.amount !== undefined ? String(recipient.amount) : (options?.amount !== undefined ? String(options.amount) : "");
-  const madrasaNameStr = recipient.madrasaName || options?.madrasaName || "Madrasa";
-  const salutationStr = recipient.salutation || "Respected";
+  const madrasaNameStr = recipient.madrasaName || options?.madrasaName || "";
+  const salutationStr = recipient.salutation || options?.salutation || "";
   const timeStr = recipient.time || "";
 
   const tokenValues: Record<string, string> = {
@@ -1587,13 +1588,23 @@ export function validateRecipientAddress(
     if (!email) return { isValid: false, address: '', reason: 'missing_email' };
     const isValidFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     return { isValid: isValidFormat, address: email, reason: isValidFormat ? undefined : 'invalid_email_format' };
-  } else {
-    const phone = recipient.phone?.trim() || '';
-    if (!phone) return { isValid: false, address: '', reason: 'missing_phone' };
-    const cleanDigits = phone.replace(/\D/g, '');
-    const isValidLength = cleanDigits.length >= 7 && cleanDigits.length <= 15;
-    return { isValid: isValidLength, address: phone, reason: isValidLength ? undefined : 'invalid_phone_format' };
   }
+
+  const phone = recipient.phone?.trim() || '';
+  if (!phone) return { isValid: false, address: '', reason: 'missing_phone' };
+
+  if (channel === 'whatsapp') {
+    const numberId = PuppeteerWhatsAppProvider.getNumberId(phone);
+    return {
+      isValid: numberId != null,
+      address: numberId ?? phone,
+      reason: numberId != null ? undefined : 'invalid_phone_format',
+    };
+  }
+
+  const cleanDigits = phone.replace(/\D/g, '');
+  const isValidLength = cleanDigits.length >= 7 && cleanDigits.length <= 15;
+  return { isValid: isValidLength, address: phone, reason: isValidLength ? undefined : 'invalid_phone_format' };
 }
 
 

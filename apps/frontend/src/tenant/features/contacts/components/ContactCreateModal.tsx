@@ -72,6 +72,7 @@ export default function ContactCreateModal({
       <ContactForm
         key={`create-${initialName}-${createDefaults?.gender ?? ""}`}
         open
+        priority
         initialDraft={initialDraft}
         lockGender={createDefaults?.lockGender === true}
         onClose={onClose}
