@@ -37,6 +37,7 @@ import {
   formatDateTime,
   todayISO,
   type FieldDefinition,
+  GENDERS,
 } from "@mms/shared";
 import { GrBadge } from "@/tenant/features/students/components/GrBadge";
 
@@ -411,7 +412,7 @@ export default function StudentForm({
                       <span>{t("students.form.grNumber")}</span>
                       {isGrAutoAssigned && (
                         <span className="text-[9px] font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-md me-1">
-                          Auto-Assigned
+                          {t("students.form.grAutoAssigned")}
                         </span>
                       )}
                     </div>
@@ -472,7 +473,7 @@ export default function StudentForm({
                         label={t("students.form.fatherLink")}
                         value={studentDraft.fatherContactId ? String(studentDraft.fatherContactId) : null}
                         onChange={(id, contactObj) => handleParentSelect("father", id, contactObj)}
-                        filterGender="Male"
+                        filterGender={GENDERS[0]}
                         excludeIds={getParentExcludeIds("father")}
                         searchPlaceholder={t("contacts.picker.searchPlaceholder")}
                         emptyTitle={t("contacts.picker.emptyTitle")}
@@ -488,7 +489,7 @@ export default function StudentForm({
                         label={t("students.form.motherLink")}
                         value={studentDraft.motherContactId ? String(studentDraft.motherContactId) : null}
                         onChange={(id, contactObj) => handleParentSelect("mother", id, contactObj)}
-                        filterGender="Female"
+                        filterGender={GENDERS[1]}
                         excludeIds={getParentExcludeIds("mother")}
                         searchPlaceholder={t("contacts.picker.searchPlaceholder")}
                         emptyTitle={t("contacts.picker.emptyTitle")}

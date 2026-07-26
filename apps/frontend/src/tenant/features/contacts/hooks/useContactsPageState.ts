@@ -5,6 +5,7 @@ import type { Contact, AppTranslationKey } from "@mms/shared";
 import {
   getDisplayName,
   getPrimaryPhone,
+  getPrimaryEmail,
   hasWhatsApp,
   resolveModuleTierTab,
   contactMatchesSearch,
@@ -248,6 +249,7 @@ export function useContactsPageState({
 
   const [search, setSearch] = useState("");
   const [filterGender, setFilterGender] = useState("");
+  const [quickFilter, setQuickFilter] = useState<"all" | "whatsapp" | "syed" | "missingInfo">("all");
   const [sortField, setSortField] = useState("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [selected, setSelected] = useState<(string | number)[]>([]);
@@ -265,7 +267,7 @@ export function useContactsPageState({
 
   useEffect(() => {
     setListPage(1);
-  }, [search, filterGender, sortField, sortDir, showDeletedArchives]);
+  }, [search, filterGender, quickFilter, sortField, sortDir, showDeletedArchives]);
 
   const needsFullContactsList = showDeletedArchives || effectiveTab === "setup";
 
@@ -372,10 +374,13 @@ export function useContactsPageState({
     const list = contacts.filter((contact) => {
       if (!contactMatchesSearch(contact, search)) return false;
       if (filterGender && contact.gender !== filterGender) return false;
+      if (quickFilter === "whatsapp" && !hasWhatsApp(contact)) return false;
+      if (quickFilter === "syed" && !contact.isSyed) return false;
+      if (quickFilter === "missingInfo" && (getPrimaryPhone(contact) && getPrimaryEmail(contact))) return false;
       return true;
     });
     return sortContacts(list, sortField, sortDir);
-  }, [contacts, search, filterGender, sortField, sortDir]);
+  }, [contacts, search, filterGender, quickFilter, sortField, sortDir]);
 
   const workContacts = useMemo(() => {
     return useServerWork ? (workPageData?.contacts ?? []) : filtered;
@@ -441,8 +446,8 @@ export function useContactsPageState({
     setShowDuplicates(true);
   }, [openingDuplicates, shownCount, queryClient, t, setShowDuplicates]);
 
-  const hasActiveFilters = !!(filterGender || search);
-  const activeFilterCount = filterGender ? 1 : 0;
+  const hasActiveFilters = !!(filterGender || search || quickFilter !== "all");
+  const activeFilterCount = (filterGender ? 1 : 0) + (quickFilter !== "all" ? 1 : 0);
 
   const handleSort = useCallback((field: string) => {
     if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -638,7 +643,39 @@ export function useContactsPageState({
   const clearFilters = useCallback(() => {
     setFilterGender("");
     setSearch("");
+    setQuickFilter("all");
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const activeTag = (document.activeElement?.tagName || "").toLowerCase();
+      const isInputActive =
+        activeTag === "input" ||
+        activeTag === "textarea" ||
+        (document.activeElement as HTMLElement)?.isContentEditable;
+
+      if ((event.key === "/" || (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey))) && !isInputActive) {
+        event.preventDefault();
+        const searchInput = document.querySelector<HTMLInputElement>(
+          'input[type="search"], input[placeholder*="search" i], input[placeholder*="Search" i]',
+        );
+        searchInput?.focus();
+        searchInput?.select();
+      } else if (event.key === "Escape") {
+        if (selected.length > 0) {
+          setSelected([]);
+        } else if (hasActiveFilters) {
+          clearFilters();
+        }
+      } else if (event.key === "N" && event.shiftKey && !isInputActive && canWrite) {
+        event.preventDefault();
+        handleCreateContact();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selected.length, hasActiveFilters, clearFilters, canWrite, handleCreateContact]);
 
   const handleImport = useCallback(
     (list: Contact[]) => {
@@ -701,6 +738,8 @@ export function useContactsPageState({
     setSearch,
     filterGender,
     setFilterGender,
+    quickFilter,
+    setQuickFilter,
     sortField,
     sortDir,
     selected,

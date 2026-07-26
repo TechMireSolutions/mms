@@ -16,6 +16,8 @@ import { useContactById, useContactsPaginated } from "@/tenant/features/contacts
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { notify } from "@/lib/notify";
+import { reportClientError } from "@/lib/clientErrorReporting";
 
 export interface ContactPickerProps {
   label: string;
@@ -71,6 +73,7 @@ export default function ContactPicker({
   const [createOpen, setCreateOpen] = useState(false);
   const [createQuery, setCreateQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const serverMode = contacts === undefined;
   const fallbackId = useId();
   const resolvedId = id || fallbackId;
@@ -134,11 +137,12 @@ export default function ContactPicker({
     try {
       const url = await uploadUserImage(file, "avatar");
       onAvatarChange?.(url);
-    } catch {
-      // ignore
+    } catch (err) {
+      notify.error(t("account.photoUploadFailed"));
+      reportClientError(err, { scope: "ContactPicker.avatar_upload" });
     }
     event.target.value = "";
-  }, [onAvatarChange]);
+  }, [onAvatarChange, t]);
 
   const openCreateFlow = useCallback((searchText: string): void => {
     setCreateQuery(searchText);
@@ -222,7 +226,7 @@ export default function ContactPicker({
   }
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <span className={FORM_LABEL}>{label}</span>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/75 pointer-events-none" />
@@ -234,7 +238,12 @@ export default function ContactPicker({
           value={query}
           onChange={(event) => { setQuery(event.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
-          onBlur={() => setTimeout(() => setOpen(false), 200)}
+          onBlur={(e) => {
+            if (!containerRef.current?.contains(e.relatedTarget as Node)) {
+              setOpen(false);
+              setQuery('');
+            }
+          }}
         />
         {query && (
           <Button

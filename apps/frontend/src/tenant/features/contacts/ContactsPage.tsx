@@ -66,6 +66,8 @@ function ContactsInner() {
     setSearch,
     filterGender,
     setFilterGender,
+    quickFilter,
+    setQuickFilter,
     sortField,
     sortDir,
     selected,
@@ -242,6 +244,7 @@ function ContactsInner() {
               <ContactsToolbar
                 search={search}             onSearchChange={setSearch}
                 filterGender={filterGender} onGenderChange={setFilterGender}
+                quickFilter={quickFilter}   onQuickFilterChange={setQuickFilter}
                 sortField={sortField}       onSort={handleSort}
                 hasActiveFilters={hasActiveFilters}
                 activeFilterCount={activeFilterCount}
@@ -254,6 +257,7 @@ function ContactsInner() {
                 canViewDeleted={canDelete}
                 viewMode={viewModeOverride ?? "table"}
                 onViewModeChange={setViewModeOverride}
+                shownCount={shownCount}
               />
             </ErrorBoundary>
 
