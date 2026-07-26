@@ -83,8 +83,8 @@ export function useGrMigration(
         if (!cancelled) {
           try {
             localStorage.setItem(STUDENTS_GR_MIGRATION_KEY, '1');
-          } catch {
-            /* ignore */
+          } catch (err: unknown) {
+            console.warn('[Students] Failed to record GR migration status in localStorage:', err);
           }
           setNeedsMigrationScan(false);
         }

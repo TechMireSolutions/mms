@@ -9,12 +9,13 @@ import {
   INITIAL_STUDENT_FIELD_SEED,
 } from "@mms/shared";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_INPUT } from "@/components/ui/formStyles";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ToggleRow } from "@/components/ui/ToggleRow";
+import { Field } from "@/components/ui/FormPrimitives";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 
 export default function StudentsSettings({ mode }: { mode?: "fields" | "preferences" }): React.ReactElement {
@@ -63,8 +64,10 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
               {t("students.settings.grSectionTitle")}
             </h4>
             <div className="grid grid-cols-2 gap-3 text-left">
-              <div>
-                <label htmlFor="gr-template" className={FORM_LABEL}>{t("students.settings.grTemplate")}</label>
+              <Field
+                label={t("students.settings.grTemplate")}
+                hint={t("students.settings.grTemplateHint", { seq: "{seq}", year: "{year}" })}
+              >
                 <Input
                   id="gr-template"
                   className={FORM_INPUT}
@@ -72,12 +75,11 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
                   onChange={(event) => upd("grNumberTemplate", event.target.value)}
                   placeholder={t("students.settings.grTemplatePlaceholder", { seq: "{seq}", year: "{year}" })}
                 />
-                <span className="text-[9px] text-muted-foreground mt-1 block">
-                  {t("students.settings.grTemplateHint", { seq: "{seq}", year: "{year}" })}
-                </span>
-              </div>
-              <div>
-                <label htmlFor="gr-digits" className={FORM_LABEL}>{t("students.settings.grDigits")}</label>
+              </Field>
+              <Field
+                label={t("students.settings.grDigits")}
+                hint={t("students.settings.grDigitsHint")}
+              >
                 <Input
                   id="gr-digits"
                   type="number"
@@ -87,10 +89,7 @@ export default function StudentsSettings({ mode }: { mode?: "fields" | "preferen
                   value={settingsDraft.grNumberDigits || 4}
                   onChange={(event) => upd("grNumberDigits", Number(event.target.value))}
                 />
-                <span className="text-[9px] text-muted-foreground mt-1 block">
-                  {t("students.settings.grDigitsHint")}
-                </span>
-              </div>
+              </Field>
             </div>
             <ToggleRow
               label={t("students.settings.restartAnnually")}

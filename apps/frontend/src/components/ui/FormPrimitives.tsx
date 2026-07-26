@@ -9,6 +9,7 @@ import { AvatarCropper } from "@/components/ui/AvatarCropper";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
@@ -246,7 +247,7 @@ export function EditableSelect({
 }
 
 interface FieldProps {
-  label: string;
+  label: React.ReactNode;
   required?: boolean;
   hint?: string;
   error?: string;
@@ -262,7 +263,7 @@ interface FieldProps {
 export function Field({ label, required = false, hint = undefined, error = undefined, id, children }: FieldProps): React.JSX.Element {
   const fallbackId = React.useId();
   const instanceIdSuffix = React.useId().replace(/:/g, "");
-  const slugified = label
+  const slugified = typeof label === "string"
     ? label.toLowerCase().replace(/[^\w\s-]/g, "").trim().replace(/[-\s]+/g, "-")
     : "";
   const baseId = id || slugified || fallbackId;
@@ -311,7 +312,7 @@ export function Field({ label, required = false, hint = undefined, error = undef
       </label>
       {enhancedChildren}
       {error ? (
-        <p id={errorId} className="text-[10px] text-destructive mt-1 font-medium flex items-center gap-1">
+        <p id={errorId} role="alert" aria-live="polite" className="text-[10px] text-destructive mt-1 font-medium flex items-center gap-1">
           <AlertCircle className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </p>
@@ -422,7 +423,7 @@ function TagsInput({ selected = [], predefined = [], onChange, id, name }: TagsI
               <button
                 type="button"
                 onClick={() => remove(tag)}
-                className="hover:text-destructive focus:outline-none transition-colors"
+                className="p-1 -mr-1 hover:text-destructive focus:outline-none transition-colors rounded-full me-0.5"
                 aria-label={t("contacts.form.removeTag", { tag })}
               >
                 <X className="w-3 h-3" />
@@ -515,10 +516,10 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
 
   if (field.type === "textarea") {
     return (
-      <textarea
+      <Textarea
         id={field.key}
         name={field.key}
-        className={cn(TEXTAREA, "resize-none h-20", error && "border-destructive focus-visible:ring-destructive")}
+        className={cn("resize-none h-20", error && "border-destructive focus-visible:ring-destructive")}
         value={String(displayValue)}
         onChange={(event) => onChange(event.target.value)}
         placeholder={field.placeholder || ""}

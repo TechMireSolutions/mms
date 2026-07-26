@@ -38,6 +38,7 @@ export interface StatCardProps {
   onClick?: () => void;
   className?: string;
   variant?: "default" | "compact";
+  isActive?: boolean;
 }
 
 const ACCENT_MAP: Record<
@@ -139,11 +140,12 @@ export function StatCard({
   onClick,
   className,
   variant = "default",
+  isActive = false,
 }: StatCardProps): React.JSX.Element {
   const { t } = useTranslation();
   const theme = resolveAccent(accent || color);
   const Comp = onClick ? motion.button : motion.div;
-  const buttonProps = onClick ? { type: "button" as const } : {};
+  const buttonProps = onClick ? { type: "button" as const, "aria-pressed": isActive } : {};
   const isCompact = variant === "compact";
 
   const resolvedAccentColor = (accent || color) as React.ComponentProps<typeof Card>["accentColor"];
@@ -162,29 +164,48 @@ export function StatCard({
         <Card
           accentColor={resolvedAccentColor}
           className={cn(
-            "flex items-center gap-3 px-4 py-3 ps-5.5 min-h-[44px] w-full",
+            "flex items-center justify-between gap-3 px-4 py-3 ps-5.5 min-h-[44px] w-full",
             onClick && "hover:border-primary/40 hover:bg-card/75",
+            isActive && "ring-2 ring-primary/60 border-primary/60 bg-primary/5",
             className
           )}
         >
-          {Icon && (
-            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ms-0.5 shadow-sm ring-4", theme.iconBg, theme.ring)} aria-hidden="true">
-              <Icon className={cn("w-4 h-4", theme.iconText)} />
-            </div>
-          )}
-          <div className="min-w-0">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide truncate">
-              {label}
-            </p>
-            <p className="text-lg font-bold text-foreground leading-tight tabular-nums">
-              {formattedValue}
-            </p>
-            {sub && (
-              <p className="text-[10px] font-semibold text-muted-foreground mt-1 opacity-70 truncate">
-                {sub}
-              </p>
+          <div className="flex items-center gap-3 min-w-0">
+            {Icon && (
+              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ms-0.5 shadow-sm ring-4", theme.iconBg, theme.ring)} aria-hidden="true">
+                <Icon className={cn("w-4 h-4", theme.iconText)} />
+              </div>
             )}
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide truncate">
+                {label}
+              </p>
+              <p className="text-lg font-bold text-foreground leading-tight tabular-nums">
+                {formattedValue}
+              </p>
+              {sub && (
+                <p className="text-[10px] font-semibold text-muted-foreground mt-1 opacity-70 truncate">
+                  {sub}
+                </p>
+              )}
+            </div>
           </div>
+          {trend !== undefined && (
+            <span
+              className={cn(
+                "flex items-center gap-0.5 text-[10px] font-bold ms-2 shrink-0 select-none",
+                trend >= 0 ? "text-success" : "text-destructive"
+              )}
+              aria-label={trend >= 0 ? t("ui.statCard.positiveTrend") : t("ui.statCard.negativeTrend")}
+            >
+              {trend >= 0 ? (
+                <ArrowUpRight className="w-3 h-3" aria-hidden="true" />
+              ) : (
+                <ArrowDownRight className="w-3 h-3" aria-hidden="true" />
+              )}
+              {Math.abs(trend)}%
+            </span>
+          )}
         </Card>
       </Comp>
     );
@@ -204,6 +225,7 @@ export function StatCard({
         className={cn(
           "flex items-center justify-between p-4 ps-5.5 min-h-[82px] w-full",
           onClick && "hover:border-primary/40 hover:bg-card/75",
+          isActive && "ring-2 ring-primary/60 border-primary/60 bg-primary/5",
           className
         )}
       >
@@ -217,7 +239,7 @@ export function StatCard({
             <span className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1.5">
               {label}
             </span>
-            <p className="text-lg font-black text-foreground leading-none tracking-tight">
+            <p className="text-lg font-black text-foreground leading-none tracking-tight tabular-nums">
               {formattedValue}
             </p>
             {sub && (

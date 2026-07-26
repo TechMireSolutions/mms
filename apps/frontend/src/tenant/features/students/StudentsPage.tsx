@@ -5,10 +5,10 @@ import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  UserPlus, GraduationCap, Filter, ChevronDown, Users,
+  UserPlus, GraduationCap, Filter, ChevronDown, Users, RotateCcw,
 } from "lucide-react";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
+  DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
@@ -22,11 +22,10 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import StudentList from "@/tenant/features/students/components/StudentList";
 import StudentForm from "@/tenant/features/students/components/StudentForm";
 import StudentsSettingsPanel from "@/tenant/features/students/components/StudentsSettings";
-import { type Student, type StudentsSettings, STUDENTS_MODULE_CONTRACT, toTitleCase } from "@mms/shared";
+import { type Student, STUDENTS_MODULE_CONTRACT, toTitleCase, type AppTranslationKey } from "@mms/shared";
 
 
 import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
-import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { useStudentCount } from "@/tenant/features/students/hooks/useStudentCount";
 import { useStudentsPaginated, useStudentMutations, type StudentRecord } from "@/tenant/features/students/hooks/useStudents";
 import { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
@@ -54,7 +53,7 @@ export default function Students() {
     canViewReports,
   });
   const { data: serverCount } = useStudentCount();
-  const { createStudent, updateStudent, deleteStudent } = useStudentMutations();
+  const { createStudent, updateStudent, deleteStudent, bulkDeleteStudents, bulkUpdateStudentStatus } = useStudentMutations();
   const { settings, statuses: studentStatusOptions, genderFilters } = useStudentConfig();
   const [activeTab, setActiveTab] = usePersistedTabState<string>("students_active_tab", "work");
   const [showStudentForm, setShowStudentForm] = useState(false);
@@ -73,6 +72,25 @@ export default function Students() {
   const [studentFilterStatus, setStudentFilterStatus] = useState<string[]>([]);
   const [studentFilterGender, setStudentFilterGender] = useState("");
   const [editStudent, setEditStudent] = useState<Student | null>(null);
+
+  // Global Keyboard Shortcuts (Cmd+N to add student)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "n") {
+        if (canWrite) {
+          e.preventDefault();
+          setEditStudent(null);
+          setShowStudentForm(true);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [canWrite]);
 
   const useServerWork = activeTab === "work";
   const isListView = settings.defaultViewLayout === "list";
@@ -94,22 +112,20 @@ export default function Students() {
   }, [studentSearch, studentFilterStatus, studentFilterGender, settings.defaultViewLayout]);
 
   const workStudents = useMemo(
-    () => (workPageData?.students ?? []) as unknown as Student[],
+    () => (workPageData?.students ?? []) as Student[],
     [workPageData],
   );
   const shownCount = workPageData?.total ?? 0;
   const workTruncated = useServerWork && !isListView && Boolean(workPageData?.hasMore);
 
-  const filteredStudents = workStudents;
-
   const handleSaveStudent = async (studentToSave: Student) => {
     if (editStudent) {
       await updateStudent.mutateAsync({
         id: String(studentToSave.id),
-        student: studentToSave as unknown as StudentRecord,
+        student: studentToSave as StudentRecord,
       });
     } else {
-      await createStudent.mutateAsync(studentToSave as unknown as StudentRecord);
+      await createStudent.mutateAsync(studentToSave as StudentRecord);
     }
   };
 
@@ -121,8 +137,14 @@ export default function Students() {
     );
 
   const studentFilterChips = [
-    ...studentFilterStatus.map((status) => ({ key: status, label: status, onRemove: () => toggleStudentStatus(status) })),
-    ...(studentFilterGender ? [{ key: "gender", label: studentFilterGender, onRemove: () => setStudentFilterGender("") }] : []),
+    ...studentFilterStatus.map((status) => ({
+      key: status,
+      label: t(`students.form.status.${status}` as AppTranslationKey) || toTitleCase(status),
+      onRemove: () => toggleStudentStatus(status),
+    })),
+    ...(studentFilterGender
+      ? [{ key: "gender", label: toTitleCase(studentFilterGender), onRemove: () => setStudentFilterGender("") }]
+      : []),
   ];
 
   return (
@@ -186,7 +208,7 @@ export default function Students() {
                         : "border-border bg-card text-foreground hover:bg-muted"
                     }`}
                   >
-                    <Filter className="w-3.5 h-3.5" /> Status
+                    <Filter className="w-3.5 h-3.5" /> {t("students.columns.status")}
                     {studentFilterStatus.length > 0 && (
                       <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
                         {studentFilterStatus.length}
@@ -195,16 +217,28 @@ export default function Students() {
                     <ChevronDown className="w-3 h-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuContent align="end" className="w-44">
                   <DropdownMenuLabel className="text-xs">{t("students.filterByStatus")}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  {studentFilterStatus.length > 0 && (
+                    <>
+                      <DropdownMenuItem
+                        onClick={() => setStudentFilterStatus([])}
+                        className="text-xs text-muted-foreground hover:text-foreground cursor-pointer flex items-center justify-between"
+                      >
+                        <span>Clear All</span>
+                        <RotateCcw className="w-3 h-3 ms-1" />
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   {studentStatusOptions.map((status) => (
                     <DropdownMenuCheckboxItem
                       key={status}
                       checked={studentFilterStatus.includes(status)}
                       onCheckedChange={() => toggleStudentStatus(status)}
                     >
-                      {toTitleCase(status)}
+                      {t(`students.form.status.${status}` as AppTranslationKey) || toTitleCase(status)}
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuContent>
@@ -271,7 +305,7 @@ export default function Students() {
               ) : (
                 <>
                   <StudentList
-                    students={filteredStudents}
+                    students={workStudents}
                     layout={settings.defaultViewLayout}
                     isColumnVisible={isColumnVisible}
                     serverPagination={
@@ -286,15 +320,8 @@ export default function Students() {
                     }
                     onEdit={(studentToEdit: Student) => { setEditStudent(studentToEdit); setShowStudentForm(true); }}
                     onDelete={(studentId: string) => deleteStudent.mutate(String(studentId))}
-                    onBulkDelete={(studentIds) => studentIds.forEach((studentId) => deleteStudent.mutate(String(studentId)))}
-                    onBulkStatusChange={(studentIds, status) => {
-                      for (const studentId of studentIds) {
-                        const student = workStudents.find((workStudent) => workStudent.id === studentId);
-                        if (student) {
-                          updateStudent.mutate({ id: String(studentId), student: { ...student, status } as unknown as StudentRecord });
-                        }
-                      }
-                    }}
+                    onBulkDelete={(studentIds) => bulkDeleteStudents.mutate(studentIds.map(String))}
+                    onBulkStatusChange={(studentIds, status) => bulkUpdateStudentStatus.mutate({ ids: studentIds.map(String), status })}
                   />
                   {useServerWork && isListView && workPageData && (
                     <ListPagination
@@ -323,10 +350,7 @@ export default function Students() {
             transition={{ duration: 0.18 }}
           >
             <ErrorBoundary>
-              <div className="space-y-4">
-                <KPISummary category="students" />
-                <ModuleReports category="students" />
-              </div>
+              <ModuleReports category="students" />
             </ErrorBoundary>
           </motion.div>
         ) : activeTab === "setup" ? (

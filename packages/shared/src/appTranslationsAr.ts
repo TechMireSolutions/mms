@@ -2602,6 +2602,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "contacts.table.inlineAge": " ({count} سنة)",
   "contacts.table.notRegisteredWhatsApp": "غير مسجل على واتساب",
   "contacts.table.deletedAt": "تم الحذف {date}",
+  "contacts.picker.searchPlaceholder": "البحث في جهات الاتصال…",
   "contacts.picker.emptyTitle": "لم يتم العثور على جهات اتصال",
   "contacts.picker.emptyHint": "جرب تعديل مصطلحات البحث أو أنشئ جهة اتصال جديدة أدناه.",
   "contacts.picker.createLabel": "إنشاء جهة اتصال جديدة",

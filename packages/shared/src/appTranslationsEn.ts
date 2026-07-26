@@ -2605,6 +2605,7 @@ export const APP_TRANSLATIONS_EN = {
   "contacts.table.inlineAge": " ({count} y/o)",
   "contacts.table.notRegisteredWhatsApp": "Not registered on WhatsApp",
   "contacts.table.deletedAt": "Deleted {date}",
+  "contacts.picker.searchPlaceholder": "Search contacts…",
   "contacts.picker.emptyTitle": "No contacts found",
   "contacts.picker.emptyHint": "Try adjusting your search terms or create a new contact below.",
   "contacts.picker.createLabel": "Create New Contact",

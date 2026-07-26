@@ -40,10 +40,6 @@ import {
 } from "@mms/shared";
 import { GrBadge } from "@/tenant/features/students/components/GrBadge";
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
 function getInitialStudentDraft(student?: Partial<Student> | null): Partial<Student> {
   return {
     contactId: student?.contactId ?? "",
@@ -87,7 +83,6 @@ export default function StudentForm({
 
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
-  const [manualError, setManualError] = useState("");
 
   const [studentDraft, setStudentDraft] = useState<Partial<Student>>(() => getInitialStudentDraft(student));
 
@@ -99,7 +94,6 @@ export default function StudentForm({
   useEffect(() => {
     setStudentDraft(getInitialStudentDraft(student));
     setValidationErrors([]);
-    setManualError("");
     grManuallyEdited.current = false;
   }, [student]);
 
@@ -108,14 +102,6 @@ export default function StudentForm({
   };
 
   const enabledTabs = useMemo(() => new Set(settings.enabledTabs || ["guardian", "academic"]), [settings.enabledTabs]);
-
-  const isTabEnabled = useCallback(
-    (tabId: string) => {
-      if (tabId === "basic") return true;
-      return enabledTabs.has(tabId);
-    },
-    [enabledTabs]
-  );
 
 
   const getFieldError = (fieldId: string) => {
@@ -128,7 +114,7 @@ export default function StudentForm({
     !!studentDraft.contactId,
   );
 
-  const linkedGender = linkedContact?.gender?.trim() || "";
+  const linkedGender = linkedContact?.gender?.trim() ? toTitleCase(linkedContact.gender.trim()) : "";
   const linkedDob = linkedContact?.dob?.trim() ? formatDate(linkedContact.dob.trim()) : "";
 
   const [typedDuplicateReason, setTypedDuplicateReason] = useState<StudentDuplicateReason | null>(null);
@@ -174,13 +160,12 @@ export default function StudentForm({
         id: student?.id || `st${Date.now()}`,
         enrolledSessions: student?.enrolledSessions || [],
         ...(settings.version != null ? { _blueprintId: String(settings.version) } : {}),
-      }) as unknown as Student,
+      }) as Student,
     );
   };
 
   const handleSave = async () => {
     setValidationErrors([]);
-    setManualError("");
 
     const requiredTabs = new Set(settings.requiredTabs || []);
     const fields = (settings.fields || {}) as unknown as Record<string, FieldDefinition[]>;
@@ -202,7 +187,7 @@ export default function StudentForm({
       const zodErrors = formatStudentZodIssues(parseResult.error, validationDraft, fields);
       setValidationErrors(zodErrors);
 
-      notify.error(t("contacts.form.pleaseFixErrors") || "Please fix validation errors");
+      notify.error(t("contacts.form.pleaseFixErrors"));
       return;
     }
 
@@ -228,7 +213,7 @@ export default function StudentForm({
       await commitSave(studentDraft);
       onClose();
     } catch (err: unknown) {
-      notify.error(t("settings.serverSaveFailed") || "Failed to save", { description: errorMessage(err) });
+      notify.error(t("settings.serverSaveFailed"), { description: err instanceof Error ? err.message : String(err) });
     } finally {
       setSaving(false);
     }
@@ -244,7 +229,7 @@ export default function StudentForm({
         setDuplicateConfirmOpen(false);
         onClose();
       } catch (err: unknown) {
-        notify.error(t("settings.serverSaveFailed") || "Failed to save", { description: errorMessage(err) });
+        notify.error(t("settings.serverSaveFailed"), { description: err instanceof Error ? err.message : String(err) });
       } finally {
         setSaving(false);
       }
@@ -272,7 +257,7 @@ export default function StudentForm({
     const Icon = icon;
     const hasValue = value.trim().length > 0;
     return (
-      <Field label={label} hint={t("students.form.contactFieldHint")}>
+      <Field label={label} hint={t("students.form.contactFieldHint")} error={error}>
         <div
           className={`flex min-h-11 items-center gap-3 rounded-lg border px-3.5 py-2.5 ${
             error ? "border-destructive/40 bg-destructive/5" : "border-border/60 bg-muted/25"
@@ -283,7 +268,6 @@ export default function StudentForm({
             {hasValue ? value : t("students.form.notSetOnContact")}
           </span>
         </div>
-        {renderFieldError(error)}
       </Field>
     );
   };
@@ -340,10 +324,9 @@ export default function StudentForm({
   }, [studentDraft.fatherContactId, studentDraft.motherContactId, studentDraft.guardianContactId, linkedStudentContactIds]);
 
   const errorSummary = useMemo(() => {
-    if (manualError) return manualError;
     if (typedDuplicateReason) return t(DUPLICATE_ERROR_KEYS[typedDuplicateReason]);
     return "";
-  }, [manualError, typedDuplicateReason, t]);
+  }, [typedDuplicateReason, t]);
 
   const footerStart = linkedContact?.name ? (
     <div className="flex flex-wrap items-center gap-2.5 text-xs">
@@ -361,176 +344,7 @@ export default function StudentForm({
     </span>
   );
 
-
-
-  const renderContact = () => {
-    return (
-      <div className="space-y-6">
-        <SectionCard
-          title={t("students.form.contactLabel") || "Linked Contact"}
-          subtitle={t("students.form.contactHint")}
-          icon={User}
-          accentColor="primary"
-        >
-          <div className="space-y-4">
-            <ContactPicker
-              label={t("students.form.contactLabel") || "Linked Contact"}
-              value={studentDraft.contactId ? String(studentDraft.contactId) : null}
-              onChange={handleContactSelect}
-              excludeIds={excludeIds}
-              onAvatarChange={handleStudentAvatarChange}
-              searchPlaceholder={t("teachers.form.searchContact")}
-              emptyTitle={t("teachers.form.noContacts")}
-              emptyHint={t("teachers.form.noContactsHint")}
-              error={!!getFieldError("contactId")}
-            />
-            {renderFieldError(getFieldError("contactId"))}
-
-            {studentDraft.contactId && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border/40">
-                {renderContactProfileValue(t("students.gender"), linkedGender, User, genderError)}
-                {renderContactProfileValue(t("students.form.fieldDob"), linkedDob, Calendar, dobError)}
-              </div>
-            )}
-          </div>
-        </SectionCard>
-      </div>
-    );
-  };
-
-  const renderRegistration = () => {
-    return (
-      <div className="space-y-6">
-        <SectionCard
-          title={t("students.form.registrationSection") || "Registration Details"}
-          subtitle={t("students.form.registrationSectionDesc")}
-          icon={GraduationCap}
-          accentColor="primary"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label={t("students.form.grNumber")} required error={getFieldError("grNumber")}>
-              <div className="relative flex items-center group/input">
-                <Hash className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                <Input
-                  required
-                  value={studentDraft.grNumber || ""}
-                  onChange={(event) => handleGrNumberChange(event.target.value)}
-                  placeholder={t("students.form.grNumberPlaceholder") || "Enter GR Number"}
-                  className={`${FORM_INPUT} ps-10`}
-                />
-              </div>
-            </Field>
-
-            <Field label={t("students.form.status")} required error={getFieldError("status")}>
-              <FormSelect
-                value={studentDraft.status || "active"}
-                onChange={(val) => updateDraft({ status: val as StudentStatus })}
-                options={(configStatuses.length > 0 ? configStatuses : STUDENT_STATUS_VALUES).map((status) => ({
-                  value: status,
-                  label: t(`students.form.status.${status}` as AppTranslationKey) || status,
-                }))}
-              />
-            </Field>
-
-            <div className="sm:col-span-2">
-              <Field label={t("reports.fields.registeredDate") || "Registration Date & Time"}>
-                <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/20 px-3 py-2.5 min-h-[44px] text-sm text-muted-foreground select-none font-medium">
-                  <Clock className="w-4 h-4 text-muted-foreground/60 shrink-0" />
-                  <span>
-                    {studentDraft.registeredDate ? formatDateTime(studentDraft.registeredDate, true) : "—"}
-                  </span>
-                </div>
-              </Field>
-            </div>
-          </div>
-        </SectionCard>
-      </div>
-    );
-  };
-
-  const renderGuardian = () => {
-    return (
-      <div className="space-y-6">
-        <SectionCard
-          title={t("students.form.guardiansSection")}
-          subtitle={t("students.form.guardiansSectionDesc")}
-          icon={Users}
-          accentColor="indigo"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {isFieldEnabled("fatherLink") && (
-              <div className="space-y-1">
-                <ContactPicker
-                  label={t("students.form.fatherLink") || "Father"}
-                  value={studentDraft.fatherContactId ? String(studentDraft.fatherContactId) : null}
-                  onChange={(id, contactObj) => handleParentSelect("father", id, contactObj)}
-                  filterGender="Male"
-                  excludeIds={getParentExcludeIds("father")}
-                  searchPlaceholder={t("teachers.form.searchContact")}
-                  emptyTitle={t("teachers.form.noContacts")}
-                  error={!!getFieldError("fatherLink")}
-                />
-                {renderFieldError(getFieldError("fatherLink"))}
-              </div>
-            )}
-
-            {isFieldEnabled("motherLink") && (
-              <div className="space-y-1">
-                <ContactPicker
-                  label={t("students.form.motherLink") || "Mother"}
-                  value={studentDraft.motherContactId ? String(studentDraft.motherContactId) : null}
-                  onChange={(id, contactObj) => handleParentSelect("mother", id, contactObj)}
-                  filterGender="Female"
-                  excludeIds={getParentExcludeIds("mother")}
-                  searchPlaceholder={t("teachers.form.searchContact")}
-                  emptyTitle={t("teachers.form.noContacts")}
-                  error={!!getFieldError("motherLink")}
-                />
-                {renderFieldError(getFieldError("motherLink"))}
-              </div>
-            )}
-
-            {isFieldEnabled("guardianLink") && (
-              <div className="sm:col-span-2 space-y-1">
-                <ContactPicker
-                  label={t("students.form.guardianLink") || "Guardian (Other)"}
-                  value={studentDraft.guardianContactId ? String(studentDraft.guardianContactId) : null}
-                  onChange={(id, contactObj) => handleParentSelect("guardian", id, contactObj)}
-                  excludeIds={getParentExcludeIds("guardian")}
-                  searchPlaceholder={t("teachers.form.searchContact")}
-                  emptyTitle={t("teachers.form.noContacts")}
-                  error={!!getFieldError("guardianLink")}
-                />
-                {renderFieldError(getFieldError("guardianLink"))}
-              </div>
-            )}
-          </div>
-        </SectionCard>
-      </div>
-    );
-  };
-
-  const renderAcademic = () => {
-    return (
-      <div className="space-y-6">
-        {/* Notes */}
-        <SectionCard
-          title={t("students.form.notesSection")}
-          icon={FileText}
-          accentColor="emerald"
-        >
-          <Field label="">
-            <Textarea
-              value={studentDraft.notes || ""}
-              onChange={(event) => updateDraft({ notes: event.target.value })}
-              placeholder={t("students.form.notesPlaceholder")}
-              className="min-h-[120px] bg-background"
-            />
-          </Field>
-        </SectionCard>
-      </div>
-    );
-  };
+  const isGrAutoAssigned = !student?.id && !!studentDraft.grNumber && studentDraft.grNumber === nextGrNumber && !grManuallyEdited.current;
 
   return (
     <>
@@ -541,7 +355,7 @@ export default function StudentForm({
         subtitle={t("students.form.subtitle")}
         icon={GraduationCap}
         lang={language}
-        cancelLabel={t("common.cancel") || "Cancel"}
+        cancelLabel={t("common.cancel")}
         saveLabel={saving ? t("students.form.saving") : student ? t("students.form.saveUpdate") : t("students.form.saveRegister")}
         onSave={handleSave}
         saving={saving}
@@ -550,10 +364,178 @@ export default function StudentForm({
         footerStart={footerStart}
       >
         <div className="space-y-6 pb-6">
-          <div className="relative z-30">{renderContact()}</div>
-          <div className="relative z-20">{renderRegistration()}</div>
-          {isTabEnabled("guardian") && <div className="relative z-10">{renderGuardian()}</div>}
-          {isTabEnabled("academic") && <div className="relative z-0">{renderAcademic()}</div>}
+          {/* Contact Selection */}
+          <div className="relative z-30 space-y-6">
+            <SectionCard
+              title={t("students.form.contactLabel")}
+              subtitle={t("students.form.contactHint")}
+              icon={User}
+              accentColor="primary"
+            >
+              <div className="space-y-4">
+                <ContactPicker
+                  label={t("students.form.contactLabel")}
+                  value={studentDraft.contactId ? String(studentDraft.contactId) : null}
+                  onChange={handleContactSelect}
+                  excludeIds={excludeIds}
+                  onAvatarChange={handleStudentAvatarChange}
+                  searchPlaceholder={t("contacts.picker.searchPlaceholder")}
+                  emptyTitle={t("contacts.picker.emptyTitle")}
+                  emptyHint={t("contacts.picker.emptyHint")}
+                  error={!!getFieldError("contactId")}
+                />
+                {renderFieldError(getFieldError("contactId"))}
+
+                {studentDraft.contactId && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border/40">
+                    {renderContactProfileValue(t("students.gender"), linkedGender, User, genderError)}
+                    {renderContactProfileValue(t("students.form.fieldDob"), linkedDob, Calendar, dobError)}
+                  </div>
+                )}
+              </div>
+            </SectionCard>
+          </div>
+
+          {/* Registration Details */}
+          <div className="relative z-20 space-y-6">
+            <SectionCard
+              title={t("students.form.registrationSection")}
+              subtitle={t("students.form.registrationSectionDesc")}
+              icon={GraduationCap}
+              accentColor="primary"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field
+                  label={
+                    <div className="flex items-center justify-between w-full">
+                      <span>{t("students.form.grNumber")}</span>
+                      {isGrAutoAssigned && (
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-md me-1">
+                          Auto-Assigned
+                        </span>
+                      )}
+                    </div>
+                  }
+                  required
+                  error={getFieldError("grNumber")}
+                >
+                  <div className="relative flex items-center group/input">
+                    <Hash className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                    <Input
+                      required
+                      value={studentDraft.grNumber || ""}
+                      onChange={(event) => handleGrNumberChange(event.target.value)}
+                      placeholder={t("students.form.grNumberPlaceholder")}
+                      className={`${FORM_INPUT} ps-10`}
+                    />
+                  </div>
+                </Field>
+
+                <Field label={t("students.form.status")} required error={getFieldError("status")}>
+                  <FormSelect
+                    value={studentDraft.status || "active"}
+                    onChange={(val) => updateDraft({ status: val as StudentStatus })}
+                    options={(configStatuses.length > 0 ? configStatuses : STUDENT_STATUS_VALUES).map((status) => ({
+                      value: status,
+                      label: t(`students.form.status.${status}` as AppTranslationKey) || status,
+                    }))}
+                  />
+                </Field>
+
+                <div className="sm:col-span-2">
+                  <Field label={t("reports.fields.registeredDate")}>
+                    <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/20 px-3 py-2.5 min-h-[44px] text-sm text-muted-foreground select-none font-medium">
+                      <Clock className="w-4 h-4 text-muted-foreground/60 shrink-0" />
+                      <span>
+                        {studentDraft.registeredDate ? formatDateTime(studentDraft.registeredDate, true) : "—"}
+                      </span>
+                    </div>
+                  </Field>
+                </div>
+              </div>
+            </SectionCard>
+          </div>
+
+          {/* Guardian Links */}
+          {enabledTabs.has("guardian") && (
+            <div className="relative z-10 space-y-6">
+              <SectionCard
+                title={t("students.form.guardiansSection")}
+                subtitle={t("students.form.guardiansSectionDesc")}
+                icon={Users}
+                accentColor="indigo"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {isFieldEnabled("fatherLink") && (
+                    <div className="space-y-1">
+                      <ContactPicker
+                        label={t("students.form.fatherLink")}
+                        value={studentDraft.fatherContactId ? String(studentDraft.fatherContactId) : null}
+                        onChange={(id, contactObj) => handleParentSelect("father", id, contactObj)}
+                        filterGender="Male"
+                        excludeIds={getParentExcludeIds("father")}
+                        searchPlaceholder={t("contacts.picker.searchPlaceholder")}
+                        emptyTitle={t("contacts.picker.emptyTitle")}
+                        error={!!getFieldError("fatherLink")}
+                      />
+                      {renderFieldError(getFieldError("fatherLink"))}
+                    </div>
+                  )}
+
+                  {isFieldEnabled("motherLink") && (
+                    <div className="space-y-1">
+                      <ContactPicker
+                        label={t("students.form.motherLink")}
+                        value={studentDraft.motherContactId ? String(studentDraft.motherContactId) : null}
+                        onChange={(id, contactObj) => handleParentSelect("mother", id, contactObj)}
+                        filterGender="Female"
+                        excludeIds={getParentExcludeIds("mother")}
+                        searchPlaceholder={t("contacts.picker.searchPlaceholder")}
+                        emptyTitle={t("contacts.picker.emptyTitle")}
+                        error={!!getFieldError("motherLink")}
+                      />
+                      {renderFieldError(getFieldError("motherLink"))}
+                    </div>
+                  )}
+
+                  {isFieldEnabled("guardianLink") && (
+                    <div className="sm:col-span-2 space-y-1">
+                      <ContactPicker
+                        label={t("students.form.guardianLink")}
+                        value={studentDraft.guardianContactId ? String(studentDraft.guardianContactId) : null}
+                        onChange={(id, contactObj) => handleParentSelect("guardian", id, contactObj)}
+                        excludeIds={getParentExcludeIds("guardian")}
+                        searchPlaceholder={t("contacts.picker.searchPlaceholder")}
+                        emptyTitle={t("contacts.picker.emptyTitle")}
+                        error={!!getFieldError("guardianLink")}
+                      />
+                      {renderFieldError(getFieldError("guardianLink"))}
+                    </div>
+                  )}
+                </div>
+              </SectionCard>
+            </div>
+          )}
+
+          {/* Academic / Internal Notes */}
+          {enabledTabs.has("academic") && (
+            <div className="relative z-0 space-y-6">
+              <SectionCard
+                title={t("students.form.notesSection")}
+                icon={FileText}
+                accentColor="emerald"
+              >
+                <Field label="">
+                  <Textarea
+                    value={studentDraft.notes || ""}
+                    onChange={(event) => updateDraft({ notes: event.target.value })}
+                    placeholder={t("students.form.notesPlaceholder")}
+                    className="min-h-[120px] bg-background"
+                  />
+                </Field>
+              </SectionCard>
+            </div>
+          )}
         </div>
       </FormModal>
       <ConfirmAlertDialog

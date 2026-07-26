@@ -38,6 +38,7 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 | Date & Money formatting consistency DRY | Refactored raw date string renderings and manual `.toLocaleString()` calls on currency values in the frontend to resolve through settings-aware `formatDate` and `formatMoney` helpers, eliminating duplicate formatting code |
 | Settings-Aware Currency Formatting DRY | Refactored the frontend's accounting and finance feature modules to use settings-aware hooks (`useAccountingCurrency` and `useFinanceCurrency`), eliminating hardcoded `"PKR"` defaults and currency prop-drilling |
 | Unified Date Filters | Consolidated duplicate date range input fields, labels, and fiscal-year presets across reporting subpanels into the reusable `<AccountingDateFilterBar>` component |
+| Students Module DRY & Interactive Enhancements | Refactored the Students feature module for 100% DRY compliance, decoupled cross-module translation keys, added floating bar bulk status updates, page keyboard shortcuts (⌘N), interactive report StatCard filters, and completely purged legacy custom dynamic field overhead |
 
 
 ## Open priorities

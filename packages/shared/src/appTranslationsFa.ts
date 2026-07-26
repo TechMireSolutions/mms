@@ -1382,6 +1382,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "contacts.table.lunarDobLabel": "تاریخ تولد قمری:",
   "contacts.table.notRegisteredWhatsApp": "فاقد واتس‌اپ فعال",
   "contacts.table.deletedAt": "حذف شده {date}",
+  "contacts.picker.searchPlaceholder": "جستجوی مخاطبین…",
   "contacts.picker.emptyTitle": "مخاطبی یافت نشد",
   "contacts.picker.emptyHint": "عبارت جستجو را تغییر دهید یا مخاطب جدیدی ایجاد کنید.",
   "contacts.picker.createLabel": "ایجاد مخاطب جدید",

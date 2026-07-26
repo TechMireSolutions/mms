@@ -2602,6 +2602,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "contacts.table.inlineAge": " ({count} سال)",
   "contacts.table.notRegisteredWhatsApp": "WhatsApp پر رجسٹرڈ نہیں",
   "contacts.table.deletedAt": "حذف شدہ {date}",
+  "contacts.picker.searchPlaceholder": "رابطے تلاش کریں…",
   "contacts.picker.emptyTitle": "کوئی رابطے نہیں ملے",
   "contacts.picker.emptyHint": "اپنی تلاش کی شرائط کو ایڈجسٹ کرنے کی کوشش کریں یا نیچے نیا رابطہ بنائیں۔",
   "contacts.picker.createLabel": "نیا رابطہ بنائیں",

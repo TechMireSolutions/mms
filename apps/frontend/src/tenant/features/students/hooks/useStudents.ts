@@ -30,9 +30,9 @@ function buildStudentsPageUrl(params: StudentsPaginatedParams): string {
   queryParams.set('limit', String(params.limit ?? STUDENTS_MODULE_CONTRACT.defaultPageSize));
   if (params.search?.trim()) queryParams.set('search', params.search.trim());
   if (params.status?.trim()) queryParams.set('status', params.status.trim());
-  if (params.gender) queryParams.set('gender', params.gender);
-  if (params.sortField) queryParams.set('sortField', params.sortField);
-  if (params.sortDir) queryParams.set('sortDir', params.sortDir);
+  if (params.gender?.trim()) queryParams.set('gender', params.gender.trim());
+  if (params.sortField?.trim()) queryParams.set('sortField', params.sortField.trim());
+  if (params.sortDir?.trim()) queryParams.set('sortDir', params.sortDir.trim());
   return `${STUDENTS_API}?${queryParams.toString()}`;
 }
 
@@ -40,6 +40,7 @@ export function studentsPaginatedQueryKey(params: StudentsPaginatedParams) {
   return [...STUDENTS_QUERY_KEY, 'page', params] as const;
 }
 
+/** Performs server-authoritative paginated query for Student directory views. */
 export function useStudentsPaginated(params: StudentsPaginatedParams) {
   const { isAuthenticated } = useAuth();
   const enabled = params.enabled ?? true;
@@ -79,6 +80,7 @@ export interface StudentRecord {
   [key: string]: unknown;
 }
 
+/** Server mutations for Student records (create, update, delete, bulk delete, bulk status). */
 export function useStudentMutations() {
   const queryClient = useQueryClient();
 
@@ -91,7 +93,7 @@ export function useStudentMutations() {
 
   const createStudent = useMutation({
     mutationFn: async (student: StudentRecord) => {
-      const [normalized] = [normalizeStoredStudent(student)];
+      const normalized = normalizeStoredStudent(student);
       return apiJson<{ student: StudentRecord }>('/api/students', {
         method: 'POST',
         body: JSON.stringify(normalized),
@@ -117,7 +119,26 @@ export function useStudentMutations() {
     onSuccess: invalidate,
   });
 
-  return { createStudent, updateStudent, deleteStudent };
+  const bulkDeleteStudents = useMutation({
+    mutationFn: async (ids: string[]) =>
+      Promise.all(ids.map((id) => apiFetch(`/api/students/${id}`, { method: 'DELETE' }))),
+    onSuccess: invalidate,
+  });
+
+  const bulkUpdateStudentStatus = useMutation({
+    mutationFn: async ({ ids, status }: { ids: string[]; status: string }) =>
+      Promise.all(
+        ids.map((id) =>
+          apiJson<{ student: StudentRecord }>(`/api/students/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ status }),
+          }),
+        ),
+      ),
+    onSuccess: invalidate,
+  });
+
+  return { createStudent, updateStudent, deleteStudent, bulkDeleteStudents, bulkUpdateStudentStatus };
 }
 
 export function useStudentById(studentId: string | undefined, enabled = true) {
@@ -155,6 +176,7 @@ export interface StudentNextGrNumberParams {
   enabled?: boolean;
 }
 
+/** Fetches next sequential GR Number based on tenant settings and registration date. */
 export function useStudentNextGrNumber(params: StudentNextGrNumberParams) {
   const { isAuthenticated } = useAuth();
   const enabled = params.enabled ?? true;
@@ -224,6 +246,7 @@ export interface StudentsWidgetAggregateWidgetInput {
   xAxisField?: string;
 }
 
+/** Computes server-authoritative widget aggregates for Students module analytics. */
 export function useStudentsWidgetAggregates(
   widgets: StudentsWidgetAggregateWidgetInput[],
   options?: { enabled?: boolean },
@@ -233,7 +256,7 @@ export function useStudentsWidgetAggregates(
   const studentQueries = widgets
     .filter((widget) => widget.collection === 'students')
     .map((widget) => studentsWidgetQueryFromWidget(widget));
-  const querySignature = studentQueries.map((query) => query.id).sort().join(',');
+  const querySignature = JSON.stringify(studentQueries.map((query) => ({ id: query.id, target: query.targetField, filter: query.filterValue })).sort((a, b) => a.id.localeCompare(b.id)));
 
   return useQuery({
     queryKey: [...STUDENTS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,

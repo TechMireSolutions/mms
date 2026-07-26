@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   MoreHorizontal, Edit2, Trash2, GraduationCap,
   ChevronUp, ChevronDown, Eye,
-  MessageSquare, MessageCircle, Mail
+  MessageSquare, MessageCircle, Mail, Tag
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
-import { type FieldDefinition, type Student, calcAge, formatDate, toMessagingRecipient } from "@mms/shared";
+import { type Student, STUDENT_STATUS_VALUES, calcAge, formatDate, toMessagingRecipient, toTitleCase } from "@mms/shared";
 import { useTranslation } from '@/hooks/useTranslation';
 import StudentDetail from "@/tenant/features/students/components/StudentDetail";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
@@ -63,21 +63,6 @@ export default function StudentList({
   const sessions = useSessionsCollection();
   const { settings, statuses, isFieldEnabled } = useStudentConfig();
 
-  const sortedCustomFields = useMemo(() => {
-    const customFieldColumns: Array<{ id: string; label: string }> = [];
-    Object.entries(settings.fields || {}).forEach(([tabId, tabFields]) => {
-      (tabFields as FieldDefinition[]).forEach((fieldDefinition) => {
-        const isSystemField =
-          (tabId === "basic" && ["gender", "dob", "registeredDate"].includes(fieldDefinition.key)) ||
-          (tabId === "guardians" && ["fatherLink", "motherLink", "guardianLink"].includes(fieldDefinition.key));
-        if (!isSystemField) {
-          customFieldColumns.push({ id: fieldDefinition.key, label: fieldDefinition.label });
-        }
-      });
-    });
-    return customFieldColumns;
-  }, [settings.fields]);
-
   const showDob = isColumnVisible
     ? isColumnVisible("dob")
     : isFieldEnabled("dob");
@@ -88,16 +73,12 @@ export default function StudentList({
       isFieldEnabled("guardianLink");
   const showSessions = isColumnVisible ? isColumnVisible("sessions") : true;
   const showStatus = isColumnVisible ? isColumnVisible("status") : true;
-  const visibleCustomFields = sortedCustomFields.filter((field) =>
-    isColumnVisible ? isColumnVisible(`custom:${field.id}`) : true,
-  );
 
   const colSpanCount = 2 +
     1 +
     (showDob ? 1 : 0) +
     (showParents ? 1 : 0) +
     (showSessions ? 1 : 0) +
-    visibleCustomFields.length +
     (showStatus ? 1 : 0);
 
   // Sorting State
@@ -217,10 +198,10 @@ export default function StudentList({
   const someSelected = selectedIds.length > 0 && selectedIds.length < paginatedStudents.length;
   const selectedStudents = students.filter((s) => selectedIds.includes(String(s.id)));
 
-  if (layout === "cards") {
-    return (
-      <div className="space-y-4">
-        {paginatedStudents.length === 0 ? (
+  return (
+    <div className="space-y-4">
+      {layout === "cards" ? (
+        paginatedStudents.length === 0 ? (
           <EmptyState
             icon={GraduationCap}
             title={t("students.list.emptyTitle")}
@@ -272,7 +253,7 @@ export default function StudentList({
                   </div>
 
                   <div className="flex flex-col items-center text-center mt-3 mb-4">
-                    <UserAvatar id={studentIdStr} name={studentCard.name || ""} className="w-8 h-8 rounded-full text-[11px] font-bold" />
+                    <UserAvatar id={studentIdStr} name={studentCard.name || ""} className="w-12 h-12 rounded-full text-sm font-bold shadow-sm" />
                     <h4 className="text-sm font-bold text-foreground mt-2 group-hover:text-primary transition-colors truncate w-full max-w-[150px]">
                       {studentCard.name}
                     </h4>
@@ -283,7 +264,7 @@ export default function StudentList({
                     {isFieldEnabled("gender") && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">{t("students.gender")}:</span>
-                        <span className="font-semibold text-foreground capitalize">{studentCard.gender || "—"}</span>
+                        <span className="font-semibold text-foreground">{studentCard.gender ? toTitleCase(studentCard.gender) : "—"}</span>
                       </div>
                     )}
                     {isFieldEnabled("dob") && (
@@ -313,38 +294,8 @@ export default function StudentList({
               );
             })}
           </div>
-        )}
-
-        {/* Footer with pagination */}
-        {students.length > 0 && !serverPagination && (
-          <ListPagination
-            page={currentPage}
-            total={students.length}
-            limit={pageSize}
-            onPageChange={setCurrentPage}
-            i18nNamespace="students"
-            variant="range"
-          />
-        )}
-
-        <AnimatePresence>
-          {viewStudent && (
-            <StudentDetail
-              student={viewStudent}
-              onClose={() => setViewStudent(null)}
-              onEdit={(student) => {
-                setViewStudent(null);
-                onEdit(student);
-              }}
-            />
-          )}
-        </AnimatePresence>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
+        )
+      ) : (
       <div className="rounded-2xl border border-border/50 bg-card/45 backdrop-blur-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -389,11 +340,7 @@ export default function StudentList({
                   {t("students.columns.sessions")}
                 </th>
                 )}
-                {visibleCustomFields.map((field) => (
-                  <th key={field.id} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">
-                    {field.label}
-                  </th>
-                ))}
+
                 {showStatus && (
                 <th
                   onClick={() => handleSort("status")}
@@ -456,7 +403,7 @@ export default function StudentList({
                                 <GrBadge grNumber={studentRow.grNumber} />
                               </div>
                               <p className="text-[11px] text-muted-foreground">
-                                {isFieldEnabled("gender") && studentRow.gender ? `${studentRow.gender} · ` : ""}{studentRow.phone || t("students.list.noPhone")}
+                                {isFieldEnabled("gender") && studentRow.gender ? `${toTitleCase(studentRow.gender)} · ` : ""}{studentRow.phone || t("students.list.noPhone")}
                               </p>
                             </div>
                           </div>
@@ -510,22 +457,7 @@ export default function StudentList({
                           </div>
                         </td>
                         )}
-                        {visibleCustomFields.map((field) => {
-                          const fieldValue = (studentRow as unknown as Record<string, unknown>)[field.id];
-                          let displayValue = "—";
-                          if (fieldValue !== undefined && fieldValue !== null && fieldValue !== "") {
-                            if (typeof fieldValue === "boolean") {
-                              displayValue = fieldValue ? t("students.list.yes") : t("students.list.no");
-                            } else {
-                              displayValue = String(fieldValue);
-                            }
-                          }
-                          return (
-                            <td key={field.id} className="px-4 py-3 hidden md:table-cell text-[13px] text-foreground font-medium">
-                              {displayValue}
-                            </td>
-                          );
-                        })}
+
                         {showStatus && (
                         <td className="px-4 py-3 hidden sm:table-cell">
                           <StatusBadge status={studentRow.status || "active"} />
@@ -588,6 +520,7 @@ export default function StudentList({
           />
         )}
       </div>
+      )}
 
       {/* Floating Selection Bar */}
       <AnimatePresence>
@@ -630,6 +563,33 @@ export default function StudentList({
             >
               <Mail className="w-3.5 h-3.5 text-primary" /> {t("students.list.actionEmail")}
             </Button>
+
+            {onBulkStatusChange && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
+                  >
+                    <Tag className="w-3.5 h-3.5 text-primary" /> {t("students.columns.status")} <ChevronDown className="w-3 h-3 ms-0.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-36">
+                  {(statuses.length > 0 ? statuses : STUDENT_STATUS_VALUES).map((statusVal) => (
+                    <DropdownMenuItem
+                      key={statusVal}
+                      onClick={() => {
+                        onBulkStatusChange(selectedIds, statusVal);
+                        setSelectedIds([]);
+                      }}
+                    >
+                      <StatusBadge status={statusVal} size="sm" />
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
             <div className="h-4 w-px bg-border" />
 
