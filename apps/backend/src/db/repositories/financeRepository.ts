@@ -2,8 +2,12 @@ import { type Invoice, type Payment } from '@mms/shared';
 import { financeInvoices, financePayments } from '../schema.js';
 import { createGenericRepository } from './genericRepository.js';
 
-const invoicesRepo = createGenericRepository<Invoice, typeof financeInvoices>(financeInvoices);
-const paymentsRepo = createGenericRepository<Payment, typeof financePayments>(financePayments);
+const invoicesRepo = createGenericRepository<Invoice, typeof financeInvoices>(financeInvoices, {
+  conflictTarget: [financeInvoices.workspaceSubdomain, financeInvoices.id],
+});
+const paymentsRepo = createGenericRepository<Payment, typeof financePayments>(financePayments, {
+  conflictTarget: [financePayments.workspaceSubdomain, financePayments.id],
+});
 
 export const listInvoicesByWorkspace = invoicesRepo.listByWorkspace;
 export const findInvoiceById = invoicesRepo.findById;

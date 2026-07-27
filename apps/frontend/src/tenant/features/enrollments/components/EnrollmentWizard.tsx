@@ -91,6 +91,7 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
 
     const nowISO = new Date().toISOString();
     const enrollment = {
+      id: `enr-${Date.now()}`,
       studentId: student.id,
       studentName: student.name || "",
       sessionId: session.id,

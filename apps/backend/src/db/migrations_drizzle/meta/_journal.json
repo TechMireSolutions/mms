@@ -197,6 +197,13 @@
       "when": 1785149400000,
       "tag": "0027_tenant_users_soft_delete",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1785177200000,
+      "tag": "0028_message_templates_and_logs",
+      "breakpoints": true
     }
   ]
 }

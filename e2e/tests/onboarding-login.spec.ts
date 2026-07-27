@@ -248,10 +248,16 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     await page.fill('input[name="dob"]', '15/05/2015');
     await page.locator('input[name="dob"]').blur();
 
+    // Phone required for Messaging recipient eligibility
+    const janeDialog = page.getByRole('dialog', { name: 'Add New Contact' });
+    await janeDialog.getByRole('tab', { name: 'Phones' }).click();
+    await janeDialog.locator('#phone-number-0').fill('3001234567');
+    await janeDialog.locator('#phone-number-0').blur();
+
     await page.click('button:has-text("Save")');
     
     // Wait for the modal dialog to close completely
-    await expect(page.getByRole('dialog', { name: 'Add New Contact' })).toBeHidden();
+    await expect(janeDialog).toBeHidden();
     
     // Verify contact Jane Doe is listed and visible in the active contacts tab
     await page.waitForSelector('tbody tr:has-text("Jane Doe") >> visible=true');
@@ -355,8 +361,8 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     expect(browserFailures, browserFailures.join('\n')).toEqual([]);
   });
 
-  test('should expose module shells and create teacher, invoice, and session', async ({ page }) => {
-    test.setTimeout(120_000);
+  test('should expose module shells and create teacher, invoice, session, enrollment, payment, message template, and campaign', async ({ page }) => {
+    test.setTimeout(210_000);
 
     await loginTenant(page, tenantOrigin, adminEmail, changedAdminPassword);
     await expect(page.locator('h1')).toContainText('Assalamu Alaikum');
@@ -469,6 +475,204 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     await expect(sessionDialog).toBeHidden({ timeout: 20_000 });
     await expect(
       page.getByRole('heading', { name: 'Afternoon Tajweed 2026' }).first(),
+    ).toBeVisible({ timeout: 20_000 });
+
+    // Add a class on the new session (detail drawer opens on create)
+    await page.getByRole('button', { name: 'Add class' }).click();
+    const classDialog = page.getByRole('dialog', { name: 'Add class' });
+    await expect(classDialog).toBeVisible();
+    // Wait for async teacher options so ClassModal does not remount/reset mid-fill
+    await expect(classDialog.locator('#class-teacher')).toContainText('John Doe', { timeout: 15_000 });
+    const className = classDialog.getByRole('textbox', { name: /Class name/ });
+    await className.fill('Tajweed A');
+    await expect(className).toHaveValue('Tajweed A');
+    await expect(classDialog.getByRole('button', { name: 'Save' })).toBeEnabled();
+
+    const sessionUpdate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/sessions/') &&
+        response.request().method() === 'PUT',
+      { timeout: 30_000 },
+    );
+    await classDialog.getByRole('button', { name: 'Save' }).click();
+    const sessionUpdateResponse = await sessionUpdate;
+    if (!sessionUpdateResponse.ok()) {
+      throw new Error(
+        `Session class save failed: HTTP ${sessionUpdateResponse.status()} ${await sessionUpdateResponse.text()}`,
+      );
+    }
+    await expect(classDialog).toBeHidden({ timeout: 20_000 });
+    await expect(page.getByText(/Tajweed a/i).first()).toBeVisible({ timeout: 15_000 });
+    await page.getByRole('button', { name: 'Close' }).click();
+
+    // Enrollment wizard: Jane Doe → Afternoon Tajweed 2026
+    await page.goto(`${tenantOrigin}/enrollments`);
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('button', { name: 'New Enrollment' }).click();
+    const enrollmentDialog = page.getByRole('dialog', { name: 'New Enrollment' });
+    await expect(enrollmentDialog).toBeVisible();
+
+    await enrollmentDialog.getByPlaceholder('Search students by name…').fill('Jane Doe');
+    const janeStudent = enrollmentDialog.getByRole('radio', { name: /Jane Doe/ }).first();
+    await expect(janeStudent).toBeVisible({ timeout: 15_000 });
+    await janeStudent.click();
+    await enrollmentDialog.getByRole('button', { name: 'Next' }).click();
+
+    const afternoonSession = enrollmentDialog.getByRole('radio', { name: /Afternoon Tajweed 2026/ }).first();
+    await expect(afternoonSession).toBeVisible({ timeout: 15_000 });
+    await afternoonSession.click();
+    await enrollmentDialog.getByRole('button', { name: 'Next' }).click();
+
+    // Eligibility
+    await expect(
+      enrollmentDialog.getByText('Student is eligible — you may proceed to class assignment.'),
+    ).toBeVisible({ timeout: 10_000 });
+    await enrollmentDialog.getByRole('button', { name: 'Next' }).click();
+
+    // Class assignment (auto-suggested; Title Case may yield "Tajweed a")
+    await expect(enrollmentDialog.getByRole('radio', { name: /Tajweed a/i }).first()).toBeVisible({
+      timeout: 10_000,
+    });
+    await enrollmentDialog.getByRole('button', { name: 'Next' }).click();
+
+    // Fee
+    await enrollmentDialog.getByRole('button', { name: 'Next' }).click();
+
+    const enrollmentCreate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/enrollments') &&
+        response.request().method() === 'POST' &&
+        !response.url().includes('/bulk'),
+      { timeout: 30_000 },
+    );
+    await enrollmentDialog.getByRole('button', { name: 'New Enrollment' }).click();
+    const enrollmentResponse = await enrollmentCreate;
+    if (!enrollmentResponse.ok()) {
+      throw new Error(
+        `Enrollment create failed: HTTP ${enrollmentResponse.status()} ${await enrollmentResponse.text()}`,
+      );
+    }
+    await expect(enrollmentDialog).toBeHidden({ timeout: 20_000 });
+    await expect(
+      page.locator('table:visible tbody tr').filter({ hasText: 'Afternoon Tajweed 2026' }),
+    ).toBeVisible({ timeout: 20_000 });
+    await expect(
+      page.locator('table:visible tbody tr').filter({ hasText: 'Afternoon Tajweed 2026' }).filter({
+        hasText: 'Jane Doe',
+      }),
+    ).toBeVisible({ timeout: 20_000 });
+
+    // Record payment against the Jane Doe invoice
+    await page.goto(`${tenantOrigin}/finance`);
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('button', { name: /Record payment for/i }).first().click();
+    const paymentDialog = page.getByRole('dialog', { name: 'Record payment' });
+    await expect(paymentDialog).toBeVisible();
+    await expect(paymentDialog.locator('#payment-amount-input')).not.toHaveValue('', { timeout: 10_000 });
+    await expect(paymentDialog.locator('#payment-amount-input')).not.toHaveValue('0');
+
+    const paymentCreate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/finance/payments') &&
+        response.request().method() === 'POST',
+      { timeout: 30_000 },
+    );
+    await paymentDialog.getByRole('button', { name: 'Record payment' }).click();
+    const paymentResponse = await paymentCreate;
+    if (!paymentResponse.ok()) {
+      throw new Error(`Payment create failed: HTTP ${paymentResponse.status()} ${await paymentResponse.text()}`);
+    }
+    await expect(paymentDialog).toBeHidden({ timeout: 20_000 });
+    await expect(page.getByText('Paid', { exact: true }).first()).toBeVisible({ timeout: 20_000 });
+
+    // Messaging Setup — create a custom template preset
+    await page.goto(`${tenantOrigin}/messaging`);
+    await page.waitForLoadState('networkidle');
+    const messagingNav = page
+      .locator('div.hidden.lg\\:block')
+      .filter({ has: page.getByRole('button', { name: 'Setup', exact: true }) })
+      .first();
+    await messagingNav.getByRole('button', { name: 'Setup', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Create Preset Template' })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.locator('#tplLabel').locator('visible=true').fill('E2E Fee Reminder');
+    await page.locator('#tplBody').locator('visible=true').fill(
+      'Assalamu Alaikum {name}, your fee balance is due. JazakAllah Khair.',
+    );
+
+    const templateCreate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/messaging/templates') &&
+        response.request().method() === 'POST',
+      { timeout: 30_000 },
+    );
+    await page.getByRole('button', { name: 'Save New Template' }).locator('visible=true').click();
+    const templateResponse = await templateCreate;
+    if (!templateResponse.ok()) {
+      throw new Error(
+        `Messaging template create failed: HTTP ${templateResponse.status()} ${await templateResponse.text()}`,
+      );
+    }
+    // applyTitleCaseRecursive stores "E2e Fee Reminder"; desktop+mobile lists may both render.
+    await expect(page.getByText('E2e Fee Reminder').locator('visible=true').first()).toBeVisible({
+      timeout: 20_000,
+    });
+
+    // Work — select Jane and dispatch an SMS campaign (logs via POST even when device SMS URI opens)
+    const messagingWorkNav = page
+      .locator('div.hidden.lg\\:block')
+      .filter({ has: page.getByRole('button', { name: 'Work', exact: true }) })
+      .first();
+    await messagingWorkNav.getByRole('button', { name: 'Work', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Select Recipients' })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.getByPlaceholder('Search by recipient or content...').locator('visible=true').fill('Jane Doe');
+    const janeRecipient = page.getByRole('checkbox', { name: 'Select Jane Doe' });
+    await expect(janeRecipient).toBeVisible({ timeout: 15_000 });
+    await janeRecipient.check();
+
+    await page.getByRole('button', { name: 'Send SMS Campaign' }).click();
+    const smsDialog = page.getByRole('dialog').filter({ hasText: /Jane Doe/ });
+    await expect(smsDialog).toBeVisible({ timeout: 15_000 });
+
+    // Prefer the custom preset when available in the native template select
+    const templateSelect = smsDialog.locator('#messageTemplate');
+    const feeTemplateValue = await templateSelect.locator('option', { hasText: /E2e Fee Reminder/i }).getAttribute('value');
+    if (feeTemplateValue) {
+      await templateSelect.selectOption(feeTemplateValue);
+    } else {
+      await smsDialog.locator('#messageBody').fill(
+        'Assalamu Alaikum {name}, your fee balance is due.',
+      );
+    }
+    await expect(smsDialog.locator('#messageBody')).not.toHaveValue('', { timeout: 10_000 });
+
+    const logCreate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/messaging/logs') &&
+        response.request().method() === 'POST',
+      { timeout: 30_000 },
+    );
+    await smsDialog.getByRole('button', { name: 'Open Messages' }).click();
+    const logResponse = await logCreate;
+    if (!logResponse.ok()) {
+      throw new Error(
+        `Messaging log create failed: HTTP ${logResponse.status()} ${await logResponse.text()}`,
+      );
+    }
+    await expect(smsDialog).toBeHidden({ timeout: 20_000 });
+
+    const messagingReportsNav = page
+      .locator('div.hidden.lg\\:block')
+      .filter({ has: page.getByRole('button', { name: 'Reports', exact: true }) })
+      .first();
+    await messagingReportsNav.getByRole('button', { name: 'Reports', exact: true }).click();
+    await expect(
+      page.locator('table:visible tbody tr').filter({ hasText: 'Jane Doe' }).first(),
     ).toBeVisible({ timeout: 20_000 });
   });
 });

@@ -17,7 +17,7 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | `category="academic"` in reports/KPI | Removed from module pages | Module-specific categories only (`mms-module-architecture.md`) |
 | Legacy entity forms | Create/edit/builders on `FormModal` (incl. fields setup tabs, wizards); Modal reserved for confirm/preview | `FormModal` / `Modal` / `DetailDrawerShell` — `mms-ui-ux-design.md` |
 | Status colours inline | Most StatusBadge configs on SEMANTIC_BADGE; residual chart palette maps | `StatusBadge` + semantic tokens — `mms-ui-ux-design.md` |
-| Automated tests | Shared + backend; frontend hooks; Playwright onboard + Contacts/Students/Attendance + teacher/invoice/session create + module tier shells + settings | Broaden remaining module write flows (enrollments wizard, etc.) — `mms-testing-observability.md` |
+| Automated tests | Shared + backend; frontend hooks; Playwright onboard + Contacts/Students/Attendance + teacher/invoice/payment + session/class/enrollment + messaging template + SMS campaign log + module tier shells + settings | Broaden remaining write flows (other modules) — `mms-testing-observability.md` |
 | Global a11y pass | Partial (dropdowns + ContactPicker labels); not a full WCAG sweep | WCAG baseline on new UI — `mms-ui-ux-design.md` |
 | Universal module architecture | All modules have `{Module}ModuleManifest` + command centre metric strips | Report drill-down on remaining modules |
 | Soft deletion (remaining gaps) | Work trash + restore shipped for Contacts, Students, Teachers, Sessions, Attendance, Enrollments, Finance, Accounting, Obligations, Hasanat, Examinations, Question Bank (questions), Users (`tenant_users.deleted_at`); Messaging logs soft-archive via admin clear; Question Bank tests/results remain upsert-only | Keep intentional Messaging clear + QB papers/results upsert-only variants |
@@ -67,10 +67,12 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 - **Question Bank gold-standard parity**: Upsert bulk for questions/tests/results; soft-delete + Work trash on questions (JSONB `deletedAt`); Setup Fields|Preferences + `canEditSetup`; awaited question saves; ErrorState + Cmd/Ctrl+N; tests/papers and assessment_results remain upsert-only (documented in contract).
 - **Contacts gender list filter**: `filterContactsForQuery` / student gender filters match case-insensitively so Father/Mother pickers (`filterGender=male|female`) find Title-Case stored values.
 - **ContactPicker label association**: Search inputs use `<label htmlFor>` for a11y and stable Playwright `getByLabel` selectors.
-- **Onboarding E2E critical path**: `e2e/tests/onboarding-login.spec.ts` covers platform setup → tenant onboard → contacts → student with guardians → attendance bulk submit → module tier shells → teacher create (contact-linked) → finance invoice create → session create.
+- **Onboarding E2E critical path**: `e2e/tests/onboarding-login.spec.ts` covers platform setup → tenant onboard → contacts (with phone) → student with guardians → attendance bulk submit → module tier shells → teacher create → finance invoice → record payment → session + class → enrollment wizard → messaging preset template → SMS campaign compose + message log.
+- **Messaging templates/logs tables**: Drizzle `0028_message_templates_and_logs` creates composite-PK tenant tables + RLS; messaging repos use composite `conflictTarget` for upserts.
 - **Teacher create without client id**: `teacherCoreSchema.id` is optional on POST; server assigns `tch-{timestamp}` (parity with students).
 - **Finance invoice studentName strip**: InvoiceForm no longer invents a slug `studentId` from the free-text name (that triggered `normalizeIdLinkedName` to drop `studentName` on cache save).
 - **Session create client id**: SessionForm assigns `sess-{timestamp}` on create so POST validates against required `SessionSchema.id`.
+- **Enrollment wizard client id**: EnrollmentWizard assigns `enr-{timestamp}` on submit; EnrollmentList falls back to linked student name when denormalized `studentName` is missing on paginated API rows.
 
 Do not reintroduce resolved violations.
 

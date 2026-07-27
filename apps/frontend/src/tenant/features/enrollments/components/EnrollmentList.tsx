@@ -246,12 +246,13 @@ export function EnrollmentList({
                  {paginatedEnrollments.map((enrollment) => {
                   const enrollmentStatus = statusInfo(enrollment.status);
                   const student = students.find((candidate) => String(candidate.id) === String(enrollment.studentId));
+                  const studentDisplayName = enrollment.studentName?.trim() || student?.name || "";
                   return (
                     <motion.tr key={enrollment.id} layout className="hover:bg-muted/20 transition-colors">
                       {showStudent && (
                         <td className="px-3 py-2.5 whitespace-nowrap">
                           <div className="flex flex-col">
-                            <span className="font-semibold text-foreground">{enrollment.studentName}</span>
+                            <span className="font-semibold text-foreground">{studentDisplayName}</span>
                             {student?.grNumber && (
                               <span className="text-[10px] text-primary font-bold">GR: {student.grNumber}</span>
                             )}
@@ -311,7 +312,7 @@ export function EnrollmentList({
                                 size="icon"
                                 onClick={() => {
                                   const phone = student?.phone || "";
-                                  openComposer("whatsapp", [{ id: enrollment.id, name: enrollment.studentName, phone, email: student?.email }]);
+                                  openComposer("whatsapp", [{ id: enrollment.id, name: studentDisplayName, phone, email: student?.email }]);
                                 }}
                                 className="p-1.5 w-8 h-8 rounded-lg hover:bg-muted text-success hover:text-success transition-colors"
                                 title="WhatsApp Applicant"
@@ -323,7 +324,7 @@ export function EnrollmentList({
                                 size="icon"
                                 onClick={() => {
                                   const phone = student?.phone || "";
-                                  openComposer("sms", [{ id: enrollment.id, name: enrollment.studentName, phone, email: student?.email }]);
+                                  openComposer("sms", [{ id: enrollment.id, name: studentDisplayName, phone, email: student?.email }]);
                                 }}
                                 className="p-1.5 w-8 h-8 rounded-lg hover:bg-muted text-info hover:text-info transition-colors"
                                 title="Send SMS"
@@ -335,7 +336,7 @@ export function EnrollmentList({
                                 size="icon"
                                 onClick={() => onView(enrollment)}
                                 className="p-1.5 w-8 h-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
-                                aria-label={t("enrollments.actions.view", { name: enrollment.studentName })}
+                                aria-label={t("enrollments.actions.view", { name: studentDisplayName })}
                                 title={t("enrollments.actions.viewShort")}
                               >
                                 <Eye className="w-3.5 h-3.5" aria-hidden="true" />
@@ -346,7 +347,7 @@ export function EnrollmentList({
                                   size="icon"
                                   onClick={() => onCancel(enrollment.id)}
                                   className="p-1.5 w-8 h-8 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                                  aria-label={t("enrollments.actions.cancel", { name: enrollment.studentName })}
+                                  aria-label={t("enrollments.actions.cancel", { name: studentDisplayName })}
                                   title={t("enrollments.actions.cancelShort")}
                                 >
                                   <XCircle className="w-3.5 h-3.5" aria-hidden="true" />
