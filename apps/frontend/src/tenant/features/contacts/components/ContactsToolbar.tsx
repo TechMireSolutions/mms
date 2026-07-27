@@ -256,19 +256,21 @@ export default function ContactsToolbar({
             const Icon = preset.icon;
             const isSelected = quickFilter === preset.id;
             return (
-              <button
+              <Button
                 key={preset.id}
                 type="button"
+                variant="outline"
                 onClick={() => onQuickFilterChange(preset.id)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer border ${
+                aria-pressed={isSelected}
+                className={`inline-flex items-center gap-1.5 h-auto px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shadow-none ${
                   isSelected
-                    ? "bg-primary/10 text-primary border-primary/30 font-semibold shadow-2xs"
+                    ? "bg-primary/10 text-primary border-primary/30 font-semibold shadow-2xs hover:bg-primary/15 hover:text-primary"
                     : "bg-card/40 text-muted-foreground hover:text-foreground border-border/40 hover:bg-card/80"
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
+                <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-primary" : "text-muted-foreground"}`} aria-hidden="true" />
                 <span>{t(preset.labelKey) || preset.id}</span>
-              </button>
+              </Button>
             );
           })}
         </div>

@@ -12,6 +12,8 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { formatMoney } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 const EMPTY: Partial<Discount> = { name: "", type: "percentage", value: 0, conditions: "", active: true };
 
@@ -166,9 +168,14 @@ export function DiscountsTab({ session, onUpdate, canWrite }: DiscountsTabProps)
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h4 className="text-[13px] font-bold text-foreground m-0">{discountItem.name}</h4>
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${discountItem.active ? "bg-success/10 text-success border-success/20" : "bg-muted text-muted-foreground border-border"}`}>
-                    {discountItem.active ? t("sessions.discounts.active") : t("sessions.discounts.inactive")}
-                  </span>
+                  <StatusBadge
+                    status={discountItem.active ? "active" : "inactive"}
+                    config={{
+                      active: { label: t("sessions.discounts.active"), cls: SEMANTIC_BADGE.success },
+                      inactive: { label: t("sessions.discounts.inactive"), cls: SEMANTIC_BADGE.muted },
+                    }}
+                    size="sm"
+                  />
                 </div>
                 <p className="text-[13px] font-semibold text-primary m-0">
                   {t("sessions.discounts.off", { amount: discountItem.type === "percentage" ? `${discountItem.value}%` : formatMoney(discountItem.value, session.currency) })}

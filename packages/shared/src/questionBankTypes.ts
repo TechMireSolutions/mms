@@ -42,11 +42,11 @@ export const FILL_BLANK_MARKER = '___';
 /** Delimiter for multi-part stored answers (blanks, matching rights, ordering). */
 export const QUESTION_COMPOUND_ANSWER_DELIMITER = '|||';
 
-/** Tailwind badge classes keyed by difficulty id (labels via i18n). */
+/** Tailwind badge classes keyed by difficulty id (labels via i18n). Uses semantic tokens. */
 export const QUESTION_DIFFICULTY_BADGE_CLASSES: Record<QuestionDifficulty, string> = {
-  easy: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  medium: 'bg-amber-50 text-amber-700 border-amber-200',
-  hard: 'bg-red-50 text-red-700 border-red-200',
+  easy: 'bg-success/10 text-success border-success/20',
+  medium: 'bg-warning/10 text-warning border-warning/20',
+  hard: 'bg-destructive/10 text-destructive border-destructive/20',
 };
 
 /** Display icons keyed by question type id (labels via i18n). */

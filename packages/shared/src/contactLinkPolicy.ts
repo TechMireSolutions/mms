@@ -18,6 +18,8 @@ export const CONTACT_PROFILE_FIELDS = [
 export interface ContactLike {
   id: string | number;
   name?: string;
+  firstName?: string;
+  lastName?: string;
   gender?: string;
   dob?: string;
   phone?: string;
@@ -25,6 +27,16 @@ export interface ContactLike {
   city?: string;
   phones?: { number?: string }[];
   emails?: { address?: string }[];
+}
+
+function nonEmpty(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+/** Display name from contact profile fields (composed when `name` is empty). */
+export function contactDisplayName(contact: ContactLike): string {
+  const composed = [contact.firstName, contact.lastName].map(nonEmpty).filter(Boolean).join(' ');
+  return nonEmpty(contact.name) || composed;
 }
 
 export function stripRecordFields<T extends Record<string, unknown>>(
@@ -83,14 +95,18 @@ export function hydrateContactProfile<T extends Record<string, unknown>>(
   if (contactId == null || contactId === '') return record;
   const contact = contacts.find((candidateContact) => String(candidateContact.id) === String(contactId));
   if (!contact) return record;
+  const contactName = contactDisplayName(contact);
+  const contactEmail = nonEmpty(contact.emails?.[0]?.address) || nonEmpty(contact.email);
+  const contactPhone = nonEmpty(contact.phones?.[0]?.number) || nonEmpty(contact.phone);
   return {
     ...record,
-    name: contact.name ?? record.name,
-    gender: contact.gender ?? record.gender,
-    dob: contact.dob ?? record.dob,
-    phone: contact.phones?.[0]?.number ?? record.phone,
-    email: contact.emails?.[0]?.address ?? record.email,
-    city: contact.city ?? record.city,
+    // Prefer non-empty contact values — `??` would keep "" and wipe stored auth names.
+    name: contactName || record.name,
+    gender: nonEmpty(contact.gender) || record.gender,
+    dob: nonEmpty(contact.dob) || record.dob,
+    phone: contactPhone || record.phone,
+    email: contactEmail || record.email,
+    city: nonEmpty(contact.city) || record.city,
   };
 }
 

@@ -211,7 +211,7 @@ export function PerformanceAnalytics({
           </div>
         </SectionCard>
 
-        <SectionCard accentColor="indigo" title={t("questionBank.analytics.categoryAccuracy")}>
+        <SectionCard accentColor="info" title={t("questionBank.analytics.categoryAccuracy")}>
           {radarData.length >= 3 ? (
             <div className="h-[180px]" aria-hidden>
               <SafeResponsiveContainer width="100%" height="100%">

@@ -1,4 +1,6 @@
 import React from 'react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export interface SegmentedPillOption<T extends string> {
   value: T;
@@ -26,22 +28,26 @@ export function SegmentedPillFilter<T extends string>({
   const paddingClass = size === 'sm' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-[11px]';
 
   return (
-    <div className={`flex rounded-lg border border-border bg-muted/40 p-0.5 ${className}`}>
+    <div className={cn('flex rounded-lg border border-border bg-muted/40 p-0.5', className)} role="group">
       {options.map((opt) => {
         const isSelected = value === opt.value;
         return (
-          <button
+          <Button
             key={opt.value}
             type="button"
+            variant="ghost"
+            aria-pressed={isSelected}
             onClick={() => onChange(opt.value)}
-            className={`${paddingClass} rounded-md font-bold uppercase transition-all cursor-pointer ${
+            className={cn(
+              'h-auto rounded-md font-bold uppercase shadow-none',
+              paddingClass,
               isSelected
-                ? 'bg-background shadow-xs text-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+                ? 'bg-background shadow-xs text-foreground hover:bg-background'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
           >
             {opt.label}
-          </button>
+          </Button>
         );
       })}
     </div>

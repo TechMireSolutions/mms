@@ -8,6 +8,7 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import { Slider } from '@/components/ui/slider';
+import { Button } from '@/components/ui/button';
 
 interface CornerStyleSelectorProps {
   value: BrandingCornerStyle;
@@ -117,19 +118,20 @@ export default function CornerStyleSelector({
             const isSelected = matchedPreset === opt.value;
 
             return (
-              <button
+              <Button
                 key={opt.value}
                 type="button"
+                variant="ghost"
                 onClick={() => onChange(opt.value)}
                 className={cn(
-                  "text-[9px] font-black uppercase tracking-widest transition-colors cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring p-1 rounded-sm",
-                  isSelected 
-                    ? "text-primary" 
+                  "h-auto text-[9px] font-black uppercase tracking-widest p-1 rounded-sm shadow-none",
+                  isSelected
+                    ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {t(opt.labelKey)}
-              </button>
+              </Button>
             );
           })}
         </div>

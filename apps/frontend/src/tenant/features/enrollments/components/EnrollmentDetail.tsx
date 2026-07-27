@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   User, BookOpen, Layers, DollarSign, Clock, ArrowRight,
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
-import { STATUS_MAP, Enrollment } from '@/lib/data/enrollmentData';
+import { Enrollment } from '@/lib/data/enrollmentData';
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { Button } from "@/components/ui/button";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { formatDate, formatDateTime } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -42,13 +44,6 @@ function Row({ label, value }: RowProps): React.ReactElement {
   );
 }
 
-const paymentColors: Record<string, string> = {
-  paid:    "bg-success/15 text-success",
-  pending: "bg-warning/15 text-warning",
-  overdue: "bg-destructive/15 text-destructive",
-  partial: "bg-info/15 text-info",
-};
-
 interface EnrollmentDetailProps {
   enrollment: Enrollment | null | undefined;
   onClose: () => void;
@@ -62,8 +57,22 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
   const { formatCurrency } = useFinanceCurrency();
   const student = resolvedStudents[0];
 
+  const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    pending: { label: t("enrollments.status.pending"), cls: SEMANTIC_BADGE.warning },
+    confirmed: { label: t("enrollments.status.confirmed"), cls: SEMANTIC_BADGE.success },
+    cancelled: { label: t("enrollments.status.cancelled"), cls: SEMANTIC_BADGE.destructive },
+    completed: { label: t("enrollments.status.completed"), cls: SEMANTIC_BADGE.info },
+  }), [t]);
+
+  const paymentConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    paid: { label: t("enrollments.payment.paid"), cls: SEMANTIC_BADGE.success },
+    pending: { label: t("enrollments.payment.pending"), cls: SEMANTIC_BADGE.warning },
+    overdue: { label: t("enrollments.payment.overdue"), cls: SEMANTIC_BADGE.destructive },
+    unpaid: { label: t("enrollments.payment.unpaid"), cls: SEMANTIC_BADGE.muted },
+    partial: { label: t("enrollments.payment.partial"), cls: SEMANTIC_BADGE.info },
+  }), [t]);
+
   if (!enrollment) return null;
-  const enrollmentStatus = STATUS_MAP[enrollment.status] || { label: enrollment.status, color: "bg-muted text-muted-foreground border-border" };
 
   const TRANSITIONS: Record<Enrollment["status"], Enrollment["status"][]> = {
     pending:   ["confirmed", "cancelled"],
@@ -88,9 +97,7 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
               {t("enrollments.detail.grNumber")}: {student.grNumber}
             </span>
           )}
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${enrollmentStatus.color}`}>
-            {enrollmentStatus.label}
-          </span>
+          <StatusBadge status={enrollment.status} config={statusConfig} size="sm" />
         </div>
       }
     >
@@ -125,9 +132,9 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
             <span className="text-sm font-bold text-primary">{formatCurrency(enrollment.finalFee)}</span>
           </div>
           <Row label={t("enrollments.detail.paymentStatus")} value={
-            <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${paymentColors[enrollment.paymentStatus] || "bg-muted text-muted-foreground"}`}>
-              {enrollment.paymentStatus || "—"}
-            </span>
+            enrollment.paymentStatus
+              ? <StatusBadge status={enrollment.paymentStatus} config={paymentConfig} size="sm" />
+              : "—"
           } />
         </Section>
 
@@ -156,7 +163,6 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
           <div className="flex items-center gap-2 flex-wrap pt-1">
             <p className="text-xs font-semibold text-muted-foreground">{t("enrollments.detail.moveTo")}</p>
             {nextStatuses.map((nextStatus) => {
-              const statusInfo = STATUS_MAP[nextStatus];
               const isCancel = nextStatus === "cancelled";
               return (
                 <Button
@@ -170,7 +176,7 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
                   }`}
                 >
                   <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-                  {statusInfo?.label || nextStatus}
+                  {statusConfig[nextStatus]?.label || nextStatus}
                 </Button>
               );
             })}

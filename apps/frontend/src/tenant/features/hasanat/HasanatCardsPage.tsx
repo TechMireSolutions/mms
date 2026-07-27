@@ -9,6 +9,7 @@ import { HASANAT_MODULE_MANIFEST, resolveModuleTierTab, type AppTranslationKey }
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { ActionButton } from "@/components/ui/ActionButton";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { HasanatDashboard } from "@/tenant/features/hasanat/components/HasanatDashboard";
@@ -219,18 +220,19 @@ export default function HasanatCards() {
       headerTitle={t("nav.hasanatCards")}
       headerSubtitle={t("page.hasanat.subtitle")}
       headerActions={
-        effectiveTab === "work" && effectiveSubTab === "distribute" && canDelete ? (
-          <Button
-            type="button"
-            variant={showDeleted ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowDeleted((prev) => !prev)}
-            className="gap-1.5"
+        canWrite && !showDeleted ? (
+          <ActionButton
+            variant="primary"
+            icon={Send}
+            onClick={() => {
+              setActiveTab("work");
+              setActiveSubTab("distribute");
+              setCreateDistributeKey((key) => key + 1);
+            }}
           >
-            <Archive className="w-3.5 h-3.5" aria-hidden="true" />
-            {showDeleted ? t("hasanat.trash.showActive") : t("hasanat.trash.showDeleted")}
-          </Button>
-        ) : null
+            {t("hasanat.distributeCards")}
+          </ActionButton>
+        ) : undefined
       }
       metricsStrip={
         <HasanatCommandMetrics shown={filteredCount} />
@@ -243,14 +245,28 @@ export default function HasanatCards() {
         panelIdPrefix="hasanat-tab"
       >
       {effectiveTab === "work" && (
-        <SubTabBar
-          tabs={SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
-          value={effectiveSubTab}
-          onChange={(next) => {
-            setActiveSubTab(next);
-            if (next !== "distribute") setShowDeleted(false);
-          }}
-        />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <SubTabBar
+            tabs={SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
+            value={effectiveSubTab}
+            onChange={(next) => {
+              setActiveSubTab(next);
+              if (next !== "distribute") setShowDeleted(false);
+            }}
+          />
+          {effectiveSubTab === "distribute" && canDelete && (
+            <Button
+              type="button"
+              variant={showDeleted ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowDeleted((prev) => !prev)}
+              className="gap-1.5 shrink-0"
+            >
+              <Archive className="w-3.5 h-3.5" aria-hidden="true" />
+              {showDeleted ? t("hasanat.trash.showActive") : t("hasanat.trash.showDeleted")}
+            </Button>
+          )}
+        </div>
       )}
 
       <AnimatePresence mode="wait">

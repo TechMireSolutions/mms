@@ -13,6 +13,8 @@ import { CertificatePreview } from "@/tenant/features/examinations/components/Ce
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { Button } from "@/components/ui/button";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { getInitials } from "@mms/shared";
 
 
@@ -48,6 +50,10 @@ export function ResultsView({
   const [selectedExam, setSelectedExam] = useState<string>(exams[0]?.id || "");
   const [selectedStudent, setSelectedStudent] = useState<RankedResult | null>(null);
   const [certStudent, setCertStudent] = useState<RankedResult | null>(null);
+  const passFailConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    pass: { label: t("examinations.pass"), cls: SEMANTIC_BADGE.success },
+    fail: { label: t("examinations.fail"), cls: SEMANTIC_BADGE.destructive },
+  }), [t]);
 
   const exam = exams.find((examOption) => examOption.id === selectedExam);
   const studentIdsForExam = useMemo(() => {
@@ -250,9 +256,11 @@ export function ResultsView({
                     )}
 
                     {showPassFail && (
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${rankedResult.passed ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
-                        {rankedResult.passed ? t("examinations.pass") : t("examinations.fail")}
-                      </span>
+                      <StatusBadge
+                        status={rankedResult.passed ? "pass" : "fail"}
+                        config={passFailConfig}
+                        size="sm"
+                      />
                     )}
 
                     {rankedResult.passed && rankedResult.rank <= 3 && (

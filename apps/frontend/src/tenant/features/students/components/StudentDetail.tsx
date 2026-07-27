@@ -47,7 +47,7 @@ interface GuardianContactCardProps {
 function GuardianContactCard({ label, badgeCode, badgeBg, badgeText, name, phone, onWhatsApp, onSms }: GuardianContactCardProps) {
   const { t } = useTranslation();
   return (
-    <Card accentColor="indigo" className="p-3">
+    <Card accentColor="info" className="p-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0 text-start ms-1">
           <div className={`w-8 h-8 rounded-lg ${badgeBg} ${badgeText} flex items-center justify-center text-[10px] font-bold flex-shrink-0`}>

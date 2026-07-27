@@ -11,6 +11,9 @@ import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/comp
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { Checkbox } from "@/components/ui/checkbox";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
 const PrintInvoiceModal = lazy(() => import("@/tenant/features/obligations/components/invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
@@ -104,6 +107,11 @@ export function ObligationCollectionList({
   const showAmount = isColumnVisible ? isColumnVisible("amount") : true;
   const showPaymentMode = isColumnVisible ? isColumnVisible("paymentMode") : true;
 
+  const paymentModeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    Cash: { label: t("obligations.paymentMode.cash"), cls: SEMANTIC_BADGE.warning },
+    Online: { label: t("obligations.paymentMode.online"), cls: SEMANTIC_BADGE.info },
+  }), [t]);
+
   const selectOptions = useMemo(() => [
     { value: "all", label: t("obligations.filter.allTypes") },
     ...obligationTypes.map((item) => ({ value: item.id, label: item.name }))
@@ -196,12 +204,11 @@ export function ObligationCollectionList({
                   <tr>
                     {canDelete && (
                       <th scope="col" className="px-3 py-2.5 w-10">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={allFilteredSelected}
-                          onChange={() => {
-                            if (allFilteredSelected) setSelectedIds([]);
-                            else setSelectedIds(filtered.map((collection) => collection.id));
+                          onCheckedChange={(checked) => {
+                            if (checked === true) setSelectedIds(filtered.map((collection) => collection.id));
+                            else setSelectedIds([]);
                           }}
                           aria-label={t("obligations.trash.selectAll")}
                         />
@@ -257,14 +264,13 @@ export function ObligationCollectionList({
                       <tr key={collection.id} className="hover:bg-muted/20 transition-colors">
                         {canDelete && (
                           <td className="px-3 py-2.5">
-                            <input
-                              type="checkbox"
+                            <Checkbox
                               checked={selectedIds.includes(collection.id)}
-                              onChange={() => {
+                              onCheckedChange={(checked) => {
                                 setSelectedIds((prev) =>
-                                  prev.includes(collection.id)
-                                    ? prev.filter((id) => id !== collection.id)
-                                    : [...prev, collection.id],
+                                  checked === true
+                                    ? [...prev, collection.id]
+                                    : prev.filter((id) => id !== collection.id),
                                 );
                               }}
                               aria-label={t("obligations.trash.selectCollection", { receipt: collection.receipt_no })}
@@ -298,9 +304,7 @@ export function ObligationCollectionList({
                         )}
                         {showPaymentMode && (
                           <td className="px-3 py-2.5">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${collection.payment_mode === "Cash" ? "bg-warning/15 text-warning border-warning/30" : "bg-info/15 text-info border-info/30"}`}>
-                              {collection.payment_mode}
-                            </span>
+                            <StatusBadge status={collection.payment_mode} config={paymentModeConfig} size="sm" />
                           </td>
                         )}
                         <td className="px-3 py-2.5 text-right">

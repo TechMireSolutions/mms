@@ -27,8 +27,9 @@ import { SearchBar } from '@/components/ui/SearchBar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { ExportToolbar } from '@/components/ui/ExportToolbar';
-import { StatusBadge } from '@/components/ui/StatusBadge';
+import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { ChannelBadge } from '@/components/ui/ChannelBadge';
+import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { useContactsCollection } from '@/tenant/hooks/collections/contacts';
 import { 
   getDisplayName, 
@@ -91,6 +92,14 @@ export default function MessagingPage(): React.JSX.Element {
       label: t(opt.labelKey),
     })),
   [t]);
+
+  const categoryBadgeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    general: { label: t(getMessageCategoryLabelKey('general')), cls: SEMANTIC_BADGE.muted },
+    academic: { label: t(getMessageCategoryLabelKey('academic')), cls: SEMANTIC_BADGE.info },
+    financial: { label: t(getMessageCategoryLabelKey('financial')), cls: SEMANTIC_BADGE.success },
+    attendance: { label: t(getMessageCategoryLabelKey('attendance')), cls: SEMANTIC_BADGE.warning },
+    emergency: { label: t(getMessageCategoryLabelKey('emergency')), cls: SEMANTIC_BADGE.destructive },
+  }), [t]);
 
   const channelSelectOptions = useMemo(() => 
     MESSAGING_MODULE_MANIFEST.channelOptions.map((opt) => ({
@@ -1064,9 +1073,11 @@ export default function MessagingPage(): React.JSX.Element {
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">
-                            {t(getMessageCategoryLabelKey(tpl.category || 'general'))}
-                          </span>
+                          <StatusBadge
+                            status={tpl.category || 'general'}
+                            config={categoryBadgeConfig}
+                            size="sm"
+                          />
                         </td>
                         <td className="px-4 py-3 text-muted-foreground max-w-sm truncate" title={tpl.body}>
                           {tpl.body}

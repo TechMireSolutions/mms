@@ -237,29 +237,15 @@ export default function Obligations() {
       headerTitle={t("nav.obligations")}
       headerSubtitle={t("page.obligations.subtitle")}
       headerActions={
-        <div className="flex items-center gap-2">
-          {effectiveTab === "work" && canDelete && (
-            <Button
-              type="button"
-              variant={showDeleted ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowDeleted((prev) => !prev)}
-              className="gap-1.5"
-            >
-              <Archive className="w-3.5 h-3.5" aria-hidden="true" />
-              {showDeleted ? t("obligations.trash.showActive") : t("obligations.trash.showDeleted")}
-            </Button>
-          )}
-          {canWrite && !showDeleted && (
-            <ActionButton
-              variant="primary"
-              icon={Plus}
-              onClick={() => setShowForm(true)}
-            >
-              {t("obligations.newCollection")}
-            </ActionButton>
-          )}
-        </div>
+        canWrite && !showDeleted ? (
+          <ActionButton
+            variant="primary"
+            icon={Plus}
+            onClick={() => setShowForm(true)}
+          >
+            {t("obligations.newCollection")}
+          </ActionButton>
+        ) : undefined
       }
       metricsStrip={
         <ObligationsCommandMetrics total={collections.length} shown={filteredCount} />
@@ -271,6 +257,20 @@ export default function Obligations() {
         onTabChange={setActiveTab}
         panelIdPrefix="obligations-tab"
       >
+      {effectiveTab === "work" && canDelete && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant={showDeleted ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowDeleted((prev) => !prev)}
+            className="gap-1.5"
+          >
+            <Archive className="w-3.5 h-3.5" aria-hidden="true" />
+            {showDeleted ? t("obligations.trash.showActive") : t("obligations.trash.showDeleted")}
+          </Button>
+        </div>
+      )}
       {effectiveTab === "setup" && (
         <SubTabBar
           tabs={CONFIG_SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}

@@ -7,6 +7,7 @@ import type {
   EmergencyContact
 } from "./contactTypes.js";
 import { CONTACTS_MODULE_MANIFEST } from "./contactsModuleManifest.js";
+import { contactDisplayName } from "./contactLinkPolicy.js";
 import { PuppeteerWhatsAppProvider } from "./whatsappProvider.js";
 
 
@@ -493,7 +494,12 @@ export function getPrimaryAddress(contact: Partial<Contact>): ContactAddress | n
  * @returns Formatted display name
  */
 export function getDisplayName(contact: Partial<Contact>): string {
-  const baseName = contact.name || contact.firstName || "";
+  const baseName = contactDisplayName({
+    id: contact.id ?? "",
+    name: contact.name,
+    firstName: contact.firstName,
+    lastName: contact.lastName,
+  });
   if (!baseName || !contact.isSyed) return baseName;
 
   const prefix = contact.gender === "male" ? "Syed " : contact.gender === "female" ? "Syeda " : "";

@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
-  X, ArrowUpRight, ShieldAlert, ArrowRight, Users, EyeOff
+  X, ArrowUpRight, ArrowRight, Users, EyeOff
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatMoney, capitalize, type AppTranslationKey } from "@mms/shared";
@@ -25,6 +25,9 @@ import {
   ICONS_LIST,
 } from "@/tenant/features/reports/components/pinnedWidgets/types";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import {
   Table,
   TableHeader,
@@ -264,15 +267,21 @@ export function WidgetDrilldownModal({
                         <TableCell className="py-3.5 pr-2 font-bold text-foreground max-w-[180px] truncate">{name}</TableCell>
                         <TableCell className="py-3.5 text-muted-foreground font-semibold">{detailText}</TableCell>
                         <TableCell className="py-3.5">
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${
-                            ["active", "paid", "present", "customer"].includes(status.toLowerCase())
-                              ? "bg-success/10 text-success border-success/20"
-                              : ["inactive", "unpaid", "absent", "lead", "cancelled"].includes(status.toLowerCase())
-                              ? "bg-destructive/10 text-destructive border-destructive/20"
-                              : "bg-warning/10 text-warning border-warning/20"
-                          }`}>
-                            {t(`reports.status.${status.toLowerCase()}` as AppTranslationKey) || status}
-                          </span>
+                          <StatusBadge
+                            status={status.toLowerCase()}
+                            size="sm"
+                            config={{
+                              active: { label: t("reports.status.active"), cls: SEMANTIC_BADGE.success },
+                              paid: { label: t("reports.status.paid"), cls: SEMANTIC_BADGE.success },
+                              present: { label: t("reports.status.present"), cls: SEMANTIC_BADGE.success },
+                              customer: { label: t("reports.status.customer"), cls: SEMANTIC_BADGE.success },
+                              inactive: { label: t("reports.status.inactive"), cls: SEMANTIC_BADGE.destructive },
+                              unpaid: { label: t("reports.status.unpaid"), cls: SEMANTIC_BADGE.destructive },
+                              absent: { label: t("reports.status.absent"), cls: SEMANTIC_BADGE.destructive },
+                              lead: { label: t("reports.status.lead"), cls: SEMANTIC_BADGE.destructive },
+                              cancelled: { label: t("reports.status.cancelled"), cls: SEMANTIC_BADGE.destructive },
+                            }}
+                          />
                         </TableCell>
                         <TableCell className="py-3.5 text-right">
                           {widget.collection === "hasanat_distributions" ? (
@@ -582,8 +591,7 @@ export function CustomWidgetRenderer({
   const alertScheme = isAlert ? ALERT_COLOR_MAP[widget.thresholdColor || "red"] : null;
 
   // Handle Switch inline toggle
-  const handleSwitchClick = (event: React.MouseEvent) => {
-    event.stopPropagation();
+  const handleSwitchClick = () => {
     onSwitchToggle(widget);
   };
 
@@ -711,17 +719,12 @@ export function CustomWidgetRenderer({
             {resolveWidgetTitle(widget, t)}
           </span>
           
-          <button
-            onClick={handleSwitchClick}
-            className={`w-7 h-4 rounded-full p-0.5 transition-colors duration-300 relative cursor-pointer ${isSwitchOn ? "bg-primary" : "bg-muted border border-border/60"}`}
-            type="button"
-          >
-            <motion.div
-              layout
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              className={`w-2.5 h-2.5 rounded-full shadow-sm ${isSwitchOn ? "bg-primary-foreground ml-auto" : "bg-muted-foreground"}`}
-            />
-          </button>
+          <Switch
+            checked={isSwitchOn}
+            onCheckedChange={() => handleSwitchClick()}
+            className="h-4 w-7"
+            aria-label={switchLabel}
+          />
 
           <span className="text-[7px] font-black uppercase tracking-widest mb-0.5" style={{ color: isSwitchOn ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
             {switchLabel}
@@ -781,21 +784,24 @@ export function CustomWidgetRenderer({
         </div>
         
         {isAlert && (
-          <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-wider text-destructive bg-destructive/10 px-2 py-0.5 rounded-full border border-destructive/20 animate-pulse">
-            <ShieldAlert className="w-2.5 h-2.5" />
-            {t("reports.widgets.alertLevel")}
-          </span>
+          <StatusBadge
+            status="alert"
+            size="sm"
+            config={{ alert: { label: t("reports.widgets.alertLevel"), cls: `${SEMANTIC_BADGE.destructive} animate-pulse` } }}
+          />
         )}
       </div>
 
       {/* Widget Card Body */}
       <div className="py-4 flex items-center justify-between min-h-[70px]">
         {resolvedWidgetType === "kpi" && (
-          <button
+          <Button
             onClick={() => onMetricClick(widget)}
-            className="text-left cursor-pointer select-none outline-none group/kpi"
+            className="h-auto text-left select-none outline-none group/kpi shadow-none px-0 py-0 hover:bg-transparent"
             type="button"
+            variant="ghost"
           >
+            <span className="block">
             <h4 className={`text-3xl font-black tracking-tight font-mono flex items-baseline gap-1.5 ${alertScheme ? alertScheme.text : "text-foreground"}`}>
               {formattedValue}
               <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/35 group-hover/kpi:text-primary group-hover/kpi:translate-x-0.5 group-hover/kpi:-translate-y-0.5 transition-all" />
@@ -803,16 +809,19 @@ export function CustomWidgetRenderer({
             <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider mt-1">
               {t("reports.widgets.clickToViewRecords")}
             </p>
-          </button>
+            </span>
+          </Button>
         )}
 
         {resolvedWidgetType === "progress" && (
           <div className="flex items-center gap-4 w-full">
-            <button
+            <Button
               onClick={() => onMetricClick(widget)}
-              className="flex-1 text-left cursor-pointer outline-none group/prog"
+              className="flex-1 h-auto text-left outline-none group/prog shadow-none px-0 py-0 hover:bg-transparent justify-start"
               type="button"
+              variant="ghost"
             >
+              <span className="block">
               <h4 className="text-sm font-black text-foreground flex items-center gap-1">
                 {t("reports.widgets.progression")}
                 <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover/prog:translate-x-0.5 transition-transform" />
@@ -820,7 +829,8 @@ export function CustomWidgetRenderer({
               <p className="text-[9px] text-muted-foreground font-semibold mt-1">
                 {t("reports.widgets.progressionDesc")}
               </p>
-            </button>
+              </span>
+            </Button>
             <ProgressRing percentage={value} colorHex={colorHex} />
           </div>
         )}
@@ -836,17 +846,12 @@ export function CustomWidgetRenderer({
               </p>
             </div>
             
-            <button
-              onClick={handleSwitchClick}
-              className={`w-11 h-6 rounded-full p-1 transition-colors duration-300 relative cursor-pointer ${isSwitchOn ? "bg-primary" : "bg-muted border border-border/80"}`}
-              type="button"
-            >
-              <motion.div
-                layout
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className={`w-4 h-4 rounded-full shadow-md ${isSwitchOn ? "bg-primary-foreground ml-auto" : "bg-muted-foreground"}`}
-              />
-            </button>
+            <Switch
+              checked={isSwitchOn}
+              onCheckedChange={() => handleSwitchClick()}
+              className="h-6 w-11"
+              aria-label={switchLabel}
+            />
           </div>
         )}
 

@@ -7,13 +7,15 @@ import { motion } from "framer-motion";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { useLocalPagination } from "@/hooks/useLocalPagination";
-import { ENROLLMENT_STATUSES, STATUS_MAP, Enrollment, EnrollmentStatus } from '@/lib/data/enrollmentData';
+import { ENROLLMENT_STATUSES, Enrollment } from '@/lib/data/enrollmentData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { formatDate } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
@@ -106,17 +108,22 @@ export function EnrollmentList({
   const showStatus = isColumnVisible ? isColumnVisible("status") : true;
   const showPayment = isColumnVisible ? isColumnVisible("payment") : true;
 
-  const statusInfo = (status: string): EnrollmentStatus => STATUS_MAP[status] || { id: status as EnrollmentStatus["id"], label: status, color: "bg-muted text-muted-foreground border-border" };
+  const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    pending: { label: t("enrollments.status.pending"), cls: SEMANTIC_BADGE.warning },
+    confirmed: { label: t("enrollments.status.confirmed"), cls: SEMANTIC_BADGE.success },
+    cancelled: { label: t("enrollments.status.cancelled"), cls: SEMANTIC_BADGE.destructive },
+    completed: { label: t("enrollments.status.completed"), cls: SEMANTIC_BADGE.info },
+  }), [t]);
 
-  const paymentColor = (status: string): string => {
-    if (status === "paid")    return "text-success";
-    if (status === "pending") return "text-warning";
-    if (status === "overdue") return "text-destructive";
-    return "text-muted-foreground";
-  };
+  const paymentConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    paid: { label: t("enrollments.payment.paid"), cls: SEMANTIC_BADGE.success },
+    pending: { label: t("enrollments.payment.pending"), cls: SEMANTIC_BADGE.warning },
+    overdue: { label: t("enrollments.payment.overdue"), cls: SEMANTIC_BADGE.destructive },
+    unpaid: { label: t("enrollments.payment.unpaid"), cls: SEMANTIC_BADGE.muted },
+  }), [t]);
 
   return (
-    <section className="space-y-4" aria-label="Enrollment list interface">
+    <section className="space-y-4" aria-label={t("enrollments.list")}>
       <div className="flex flex-wrap gap-2 items-center">
         <SearchBar
           value={search}
@@ -139,9 +146,9 @@ export function EnrollmentList({
                 key={status.id}
                 variant="ghost"
                 onClick={() => { setStatus(status.id); setPage(1); }}
-                className={`px-3 py-2 transition-colors rounded-none h-auto ${statusFilter === status.id ? `${status.color} border-0 hover:bg-transparent` : "bg-card text-muted-foreground hover:bg-muted"}`}
+                className={`px-3 py-2 transition-colors rounded-none h-auto ${statusFilter === status.id ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
               >
-                {status.label}
+                {statusConfig[status.id]?.label ?? status.id}
               </Button>
             ))}
           </div>
@@ -244,7 +251,6 @@ export function EnrollmentList({
               </thead>
               <tbody className="divide-y divide-border">
                  {paginatedEnrollments.map((enrollment) => {
-                  const enrollmentStatus = statusInfo(enrollment.status);
                   const student = students.find((candidate) => String(candidate.id) === String(enrollment.studentId));
                   const studentDisplayName = enrollment.studentName?.trim() || student?.name || "";
                   return (
@@ -272,22 +278,25 @@ export function EnrollmentList({
                         <td className="px-3 py-2.5 text-right font-semibold text-foreground whitespace-nowrap">
                           {formatCurrency(enrollment.finalFee)}
                           {enrollment.discountPct > 0 && (
-                            <span className="ml-1 text-[10px] text-success font-normal" aria-label={`Discount percentage: ${enrollment.discountPct} percent`}>–{enrollment.discountPct}%</span>
+                            <span
+                              className="ms-1 text-[10px] text-success font-normal"
+                              aria-label={t("enrollments.discountPctAria", { pct: enrollment.discountPct })}
+                            >
+                              –{enrollment.discountPct}%
+                            </span>
                           )}
                         </td>
                       )}
                       {showStatus && (
                         <td className="px-3 py-2.5">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border ${enrollmentStatus.color}`}>
-                            {enrollmentStatus.label}
-                          </span>
+                          <StatusBadge status={enrollment.status} config={statusConfig} size="sm" />
                         </td>
                       )}
                       {showPayment && (
                         <td className="px-3 py-2.5">
-                          <span className={`text-xs font-semibold capitalize ${paymentColor(enrollment.paymentStatus)}`}>
-                            {enrollment.paymentStatus || "—"}
-                          </span>
+                          {enrollment.paymentStatus
+                            ? <StatusBadge status={enrollment.paymentStatus} config={paymentConfig} size="sm" />
+                            : "—"}
                         </td>
                       )}
                       <td className="px-3 py-2.5 text-right">

@@ -54,20 +54,20 @@ import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
 const MotionCard = motion.create(Card);
 
-const TYPE_COLORS: Record<string, string> = {
-  Hifz: "bg-success/15 text-success",
-  Qaidah: "bg-info/15 text-info",
-  Tajweed: "bg-primary/15 text-primary",
-  "Islamic Studies": "bg-warning/15 text-warning",
-  Arabic: "bg-secondary/15 text-secondary",
-};
-
 const SESSION_TYPE_LABEL_KEYS: Record<string, AppTranslationKey> = {
   Hifz: "sessions.types.hifz",
   Qaidah: "sessions.types.qaidah",
   Tajweed: "sessions.types.tajweed",
   "Islamic Studies": "sessions.types.islamicStudies",
   Arabic: "sessions.types.arabic",
+};
+
+const SESSION_TYPE_BADGE_CLS: Record<string, string> = {
+  Hifz: SEMANTIC_BADGE.successStrong,
+  Qaidah: SEMANTIC_BADGE.infoStrong,
+  Tajweed: "bg-primary/15 text-primary border-primary/20",
+  "Islamic Studies": SEMANTIC_BADGE.warningStrong,
+  Arabic: SEMANTIC_BADGE.secondary,
 };
 
 interface SessionCardProps {
@@ -78,6 +78,7 @@ interface SessionCardProps {
   canDelete?: boolean;
   showDeleted?: boolean;
   statusConfig: Record<string, StatusBadgeConfigItem>;
+  typeConfig: Record<string, StatusBadgeConfigItem>;
 }
 
 function SessionCard({
@@ -88,6 +89,7 @@ function SessionCard({
   canDelete,
   showDeleted,
   statusConfig,
+  typeConfig,
 }: SessionCardProps) {
   const { t } = useTranslation();
   const totalEnrolled = session.classes?.reduce((sum, sessionClass) => sum + sessionClass.enrolled, 0) ?? 0;
@@ -101,10 +103,6 @@ function SessionCard({
     ? "info" as const
     : undefined;
 
-  const typeLabel = SESSION_TYPE_LABEL_KEYS[session.type]
-    ? t(SESSION_TYPE_LABEL_KEYS[session.type])
-    : session.type;
-
   return (
     <MotionCard
       initial={{ opacity: 0, y: 10 }}
@@ -112,13 +110,16 @@ function SessionCard({
       accentColor={accentColor}
       className="text-start w-full p-5 ps-6.5 hover:border-primary/40 group relative"
     >
-      <button type="button" onClick={onClick} className="w-full text-start">
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={onClick}
+        className="w-full h-auto p-0 text-start font-normal hover:bg-transparent"
+      >
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0 pe-3">
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${TYPE_COLORS[session.type as SessionType] ?? "bg-muted text-muted-foreground"}`}>
-                {typeLabel}
-              </span>
+              <StatusBadge status={session.type || "other"} config={typeConfig} size="sm" />
               <StatusBadge status={session.status} config={statusConfig} size="sm" />
             </div>
             <h3 className="text-[14px] font-bold text-foreground truncate group-hover:text-primary transition-colors">{session.name}</h3>
@@ -162,7 +163,7 @@ function SessionCard({
             </p>
           </div>
         )}
-      </button>
+      </Button>
 
       {canDelete && (
         <div className="absolute top-3 end-3 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -424,6 +425,17 @@ export default function Sessions() {
     completed: { label: statusLabels.completed || t("sessions.status.completed"), cls: SEMANTIC_BADGE.muted },
     cancelled: { label: statusLabels.cancelled || t("sessions.status.cancelled"), cls: SEMANTIC_BADGE.destructive },
   }), [statusLabels, t]);
+
+  const typeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => {
+    const config: Record<string, StatusBadgeConfigItem> = {};
+    for (const [typeValue, label] of Object.entries(typeLabels)) {
+      config[typeValue] = {
+        label,
+        cls: SESSION_TYPE_BADGE_CLS[typeValue] ?? SEMANTIC_BADGE.muted,
+      };
+    }
+    return config;
+  }, [typeLabels]);
   const canSelectSessions = canWrite || canDelete;
   const allVisibleSelected = sessions.length > 0
     && sessions.every((sessionItem) => selectedIds.includes(sessionItem.id));
@@ -674,9 +686,7 @@ export default function Sessions() {
                             )}
                             {showType && (
                               <td className="px-4 py-3">
-                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${TYPE_COLORS[sessionItem.type as SessionType] ?? "bg-muted text-muted-foreground"}`}>
-                                  {typeLabels[sessionItem.type] ?? sessionItem.type}
-                                </span>
+                                <StatusBadge status={sessionItem.type || "other"} config={typeConfig} size="sm" />
                               </td>
                             )}
                             {showDuration && (
@@ -740,6 +750,7 @@ export default function Sessions() {
                     canDelete={canDelete}
                     showDeleted={showDeleted}
                     statusConfig={statusConfig}
+                    typeConfig={typeConfig}
                   />
                 ))}
               </div>

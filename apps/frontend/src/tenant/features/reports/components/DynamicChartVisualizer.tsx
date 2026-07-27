@@ -33,6 +33,7 @@ import { METADATA_FIELDS, VisualizerConfig, type ReportCollection, getFieldLabel
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 
 interface CollectionMeta {
   name: string;
@@ -844,14 +845,15 @@ export default function DynamicChartVisualizer({
                 <p className="text-[9px] text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("reports.visualizer.filtersSubtitle")}</p>
               </div>
             </div>
-            <button
-              onClick={handleAddFilter}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-border bg-card/50 text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-foreground hover:border-muted-foreground/30 transition-all cursor-pointer"
+            <Button
               type="button"
+              variant="outline"
+              onClick={handleAddFilter}
+              className="h-auto flex items-center gap-1 px-3 py-1.5 rounded-xl border border-border bg-card/50 text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-foreground hover:border-muted-foreground/30 shadow-none"
             >
               <Plus className="w-3 h-3" />
               {t("reports.visualizer.addRule")}
-            </button>
+            </Button>
           </div>
 
           <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
@@ -898,13 +900,15 @@ export default function DynamicChartVisualizer({
                   />
 
                   {/* Remove */}
-                  <button
-                    onClick={() => handleDeleteFilter(rule.id)}
-                    className="p-1 rounded hover:bg-destructive/15 text-muted-foreground hover:text-destructive cursor-pointer transition-colors"
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteFilter(rule.id)}
+                    className="h-auto w-auto p-1 rounded hover:bg-destructive/15 text-muted-foreground hover:text-destructive shadow-none"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  </Button>
                 </div>
               ))
             )}
@@ -936,7 +940,8 @@ export default function DynamicChartVisualizer({
             
             <div className="flex items-center gap-2 print:hidden">
               {onSave && (
-                <button
+                <Button
+                  type="button"
                   onClick={() => {
                     onSave({
                       id: initialConfig?.id || "visual-" + Date.now(),
@@ -949,37 +954,38 @@ export default function DynamicChartVisualizer({
                       activePalette
                     });
                   }}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-primary text-primary-foreground border border-primary/50 text-[10px] font-black uppercase tracking-wider hover:opacity-90 transition-all cursor-pointer shadow-md shadow-primary/15"
-                  type="button"
+                  className="h-auto flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-primary text-primary-foreground border border-primary/50 text-[10px] font-black uppercase tracking-wider hover:opacity-90 shadow-md shadow-primary/15"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   {t("reports.visualizer.saveVisual")}
-                </button>
+                </Button>
               )}
 
               {onClose && (
-                <button
-                  onClick={onClose}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border border-border bg-card/50 text-muted-foreground hover:text-foreground text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer"
+                <Button
                   type="button"
+                  variant="outline"
+                  onClick={onClose}
+                  className="h-auto flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border border-border bg-card/50 text-muted-foreground hover:text-foreground text-[10px] font-black uppercase tracking-wider shadow-none"
                 >
                   {t("reports.visualizer.cancel")}
-                </button>
+                </Button>
               )}
 
               {/* Pin widget to home dashboard */}
-              <button
+              <Button
+                type="button"
+                variant="outline"
                 onClick={handleTogglePin}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                className={`h-auto flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border text-[10px] font-black uppercase tracking-wider shadow-none ${
                   isPinned
-                    ? "border-success/30 bg-success/10 text-success shadow-md shadow-success/5"
+                    ? "border-success/30 bg-success/10 text-success shadow-md shadow-success/5 hover:bg-success/15 hover:text-success"
                     : "border-border bg-card/50 text-muted-foreground hover:text-foreground"
                 }`}
-                type="button"
               >
                 {isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
                 {isPinned ? t("reports.visualizer.pinnedToHome") : t("reports.visualizer.pinToDashboard")}
-              </button>
+              </Button>
 
               {/* Exports button group */}
               <div className="flex items-center gap-1.5 relative">
@@ -988,20 +994,22 @@ export default function DynamicChartVisualizer({
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.visualizer.pdfOrientation")}</label>
                       <div className="flex gap-1 p-1 bg-muted rounded-xl">
-                        <button 
-                          onClick={() => setPdfOrientation("p")}
-                          className={`flex-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer ${pdfOrientation === "p" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                        <Button 
                           type="button"
+                          variant="ghost"
+                          onClick={() => setPdfOrientation("p")}
+                          className={`h-auto flex-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase shadow-none ${pdfOrientation === "p" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                         >
                           {t("reports.export.portrait")}
-                        </button>
-                        <button 
-                          onClick={() => setPdfOrientation("l")}
-                          className={`flex-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer ${pdfOrientation === "l" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                        </Button>
+                        <Button 
                           type="button"
+                          variant="ghost"
+                          onClick={() => setPdfOrientation("l")}
+                          className={`h-auto flex-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase shadow-none ${pdfOrientation === "l" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                         >
                           {t("reports.export.landscape")}
-                        </button>
+                        </Button>
                       </div>
                     </div>
                     <div className="space-y-1.5">
@@ -1021,49 +1029,59 @@ export default function DynamicChartVisualizer({
                   </div>
                 )}
 
-                <button
-                  onClick={() => window.print()}
-                  className="p-1.5 bg-card/60 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground rounded-xl transition-colors cursor-pointer"
-                  title={t("reports.visualizer.printReport")}
+                <Button
                   type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => window.print()}
+                  className="h-auto w-auto p-1.5 bg-card/60 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground rounded-xl shadow-none"
+                  title={t("reports.visualizer.printReport")}
                 >
                   <Printer className="w-3.5 h-3.5" />
-                </button>
+                </Button>
 
-                <button
-                  onClick={handleExportExcel}
-                  className="p-1.5 bg-card/60 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground rounded-xl transition-colors cursor-pointer"
-                  title={t("reports.visualizer.exportExcel")}
+                <Button
                   type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleExportExcel}
+                  className="h-auto w-auto p-1.5 bg-card/60 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground rounded-xl shadow-none"
+                  title={t("reports.visualizer.exportExcel")}
                 >
                   <FileSpreadsheet className="w-3.5 h-3.5 text-success" />
-                </button>
+                </Button>
 
                 <div className="flex bg-card/60 border border-border/50 rounded-xl overflow-hidden p-0.5 items-center">
-                  <button
-                    onClick={handleExportPNG}
-                    className="p-1.5 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
-                    title={t("reports.visualizer.exportPng")}
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleExportPNG}
+                    className="h-auto w-auto p-1.5 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg shadow-none"
+                    title={t("reports.visualizer.exportPng")}
                   >
                     <Image className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={handleExportPDF}
-                    className="p-1.5 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
-                    title={t("reports.visualizer.exportPdf")}
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleExportPDF}
+                    className="h-auto w-auto p-1.5 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg shadow-none"
+                    title={t("reports.visualizer.exportPdf")}
                   >
                     <FileText className="w-3.5 h-3.5 text-destructive" />
-                  </button>
-                  <button
-                    onClick={() => setShowPdfSettings(!showPdfSettings)}
-                    className={`p-1.5 hover:bg-muted rounded-lg transition-colors cursor-pointer ${showPdfSettings ? "text-primary bg-primary/10" : "text-muted-foreground"}`}
-                    title={t("reports.visualizer.pdfSettings")}
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowPdfSettings(!showPdfSettings)}
+                    className={`h-auto w-auto p-1.5 hover:bg-muted rounded-lg shadow-none ${showPdfSettings ? "text-primary bg-primary/10" : "text-muted-foreground"}`}
+                    title={t("reports.visualizer.pdfSettings")}
                   >
                     <Settings className="w-3.5 h-3.5" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -1100,17 +1118,18 @@ export default function DynamicChartVisualizer({
 
           {/* Toggle Table Panel */}
           <div className="border-t border-border/40 pt-4 flex flex-col gap-3">
-            <button
-              onClick={() => setShowDataTable(!showDataTable)}
-              className="flex items-center justify-between text-xs font-bold text-muted-foreground hover:text-foreground cursor-pointer select-none"
+            <Button
               type="button"
+              variant="ghost"
+              onClick={() => setShowDataTable(!showDataTable)}
+              className="h-auto w-full flex items-center justify-between text-xs font-bold text-muted-foreground hover:text-foreground select-none shadow-none px-0"
             >
               <span className="flex items-center gap-1.5">
                 <Table className="w-4 h-4 text-primary" />
                 {t("reports.visualizer.dataMatrix")}
               </span>
               {showDataTable ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
+            </Button>
 
             <AnimatePresence>
               {showDataTable && processedData.length > 0 && (

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { calculateSmsSegments } from "./smsUtils.js";
-import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray, personalizeMessage, validateRecipientAddress, MESSAGING_VARIABLE_TOKENS } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray, personalizeMessage, validateRecipientAddress, getDisplayName, MESSAGING_VARIABLE_TOKENS } from "./utils.js";
 
 
 
@@ -580,6 +580,29 @@ describe("validateRecipientAddress", () => {
     expect(MESSAGING_VARIABLE_TOKENS.length).toBeGreaterThan(5);
     const hasNameToken = MESSAGING_VARIABLE_TOKENS.some((t) => t.token === "{name}");
     expect(hasNameToken).toBe(true);
+  });
+});
+
+describe("getDisplayName", () => {
+  it("composes firstName and lastName when name is empty", () => {
+    expect(
+      getDisplayName({
+        id: "c1",
+        firstName: "John",
+        lastName: "Doe",
+      } as Contact),
+    ).toBe("John Doe");
+  });
+
+  it("prefixes Syed for male isSyed contacts", () => {
+    expect(
+      getDisplayName({
+        id: "c1",
+        name: "Ahmed",
+        isSyed: true,
+        gender: "male",
+      } as Contact),
+    ).toBe("Syed Ahmed");
   });
 });
 

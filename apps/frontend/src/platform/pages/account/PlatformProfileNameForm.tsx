@@ -51,7 +51,7 @@ export function PlatformProfileNameForm({
         {t("platform.profileName")}
       </h2>
       
-      <Card accentColor="indigo" className="p-0 overflow-hidden">
+      <Card accentColor="info" className="p-0 overflow-hidden">
         <form onSubmit={(event) => void handleSaveName(event)} className="p-6 space-y-4 text-start">
           <h3 className="text-sm font-bold text-foreground">{t("platform.profileName")}</h3>
           {nameError ? <Alert message={nameError} /> : null}

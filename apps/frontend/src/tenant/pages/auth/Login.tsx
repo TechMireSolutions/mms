@@ -15,7 +15,8 @@ import { requiresTwoFactor, isValidEmail } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FORM_ERROR, FORM_LABEL, FORM_CHECKBOX } from "@/components/ui/formStyles";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FORM_ERROR, FORM_LABEL } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
 const REMEMBER_EMAIL_KEY = "mms_login_remember_email";
@@ -244,18 +245,16 @@ export default function Login(): React.ReactElement {
             htmlFor={rememberFieldId}
             className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg px-0.5 py-1"
           >
-            <input
-              type="checkbox"
+            <Checkbox
               id={rememberFieldId}
               checked={rememberMe}
-              onChange={(event) => {
-                const shouldRememberEmail = event.target.checked;
+              onCheckedChange={(checked) => {
+                const shouldRememberEmail = checked === true;
                 setRememberMe(shouldRememberEmail);
                 if (!shouldRememberEmail) {
                   persistRememberedEmail("", false);
                 }
               }}
-              className={FORM_CHECKBOX}
             />
             <span className="text-sm text-muted-foreground">{t("auth.rememberMe")}</span>
           </label>

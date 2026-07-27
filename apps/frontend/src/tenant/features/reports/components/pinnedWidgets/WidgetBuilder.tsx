@@ -11,6 +11,7 @@ import {
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getWidgetCollections } from "@/tenant/features/reports/components/pinnedWidgets/widgetDataUtils";
 import { CustomWidgetRenderer } from "@/tenant/features/reports/components/pinnedWidgets/CustomWidgetRenderer";
@@ -283,24 +284,25 @@ export function WidgetBuilder({
               })().map((widgetTypeOption) => {
                 const isSelectedType = widgetType === widgetTypeOption.id;
                 return (
-                  <button
+                  <Button
                     key={widgetTypeOption.id}
+                    type="button"
+                    variant="outline"
                     onClick={() => {
                       setWidgetType(widgetTypeOption.id as CustomWidget["widgetType"]);
                       if (widgetTypeOption.id === "switch") {
                         setBuilderOperation("count");
                       }
                     }}
-                    className={`p-3 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                    className={`h-auto p-3 rounded-2xl border text-left flex flex-col justify-between transition-all shadow-none ${
                       isSelectedType
                         ? "border-primary bg-primary/10 text-primary shadow-sm" 
                         : "border-border bg-card/30 text-muted-foreground hover:border-muted-foreground/20"
                     }`}
-                    type="button"
                   >
                     <span className="text-xs font-black uppercase block">{widgetTypeOption.label}</span>
                     <span className="text-[9px] text-muted-foreground block mt-1 leading-none">{widgetTypeOption.desc}</span>
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -461,28 +463,30 @@ export function WidgetBuilder({
                         {t("reports.widgets.builder.trendSource")}
                       </label>
                       <div className="grid grid-cols-2 gap-2 bg-card/20 border border-border/60 p-1 rounded-xl max-w-sm">
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
                           onClick={() => setTrendType("database")}
-                          className={`py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                          className={`h-auto py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-none ${
                             trendType === "database"
                               ? "bg-primary text-primary-foreground shadow"
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
                           {t("reports.widgets.builder.sourceDb")}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
+                          variant="ghost"
                           onClick={() => setTrendType("manual")}
-                          className={`py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                          className={`h-auto py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-none ${
                             trendType === "manual"
                               ? "bg-primary text-primary-foreground shadow"
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
                           {t("reports.widgets.builder.sourceManual")}
-                        </button>
+                        </Button>
                       </div>
                     </div>
 
@@ -510,14 +514,15 @@ export function WidgetBuilder({
                               onChange={(event) => setTrend(Number(event.target.value))}
                               className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-primary"
                             />
-                            <button
+                            <Button
                               type="button"
+                              variant="outline"
                               onClick={() => setTrend(0)}
-                              className="px-2 py-1 text-[9px] font-bold uppercase tracking-wider bg-card hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg border border-border transition-colors cursor-pointer"
+                              className="h-auto px-2 py-1 text-[9px] font-bold uppercase tracking-wider bg-card hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg shadow-none"
                               title={t("reports.widgets.builder.resetTrend")}
                             >
                               {t("reports.widgets.builder.reset")}
-                            </button>
+                            </Button>
                           </div>
                         </>
                       )}
@@ -683,11 +688,12 @@ export function WidgetBuilder({
                 const isSelected = builderColor === colorOption.id;
                 const cMap = resolveWidgetChartHex(colorOption.id, palette);
                 return (
-                  <button
+                  <Button
                     key={colorOption.id}
                     type="button"
+                    variant="outline"
                     onClick={() => setBuilderColor(colorOption.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all cursor-pointer ${
+                    className={`h-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold shadow-none ${
                       isSelected
                         ? "border-primary ring-2 ring-primary/20 scale-105"
                         : "border-border hover:border-muted-foreground/30 text-muted-foreground bg-card/25"
@@ -695,7 +701,7 @@ export function WidgetBuilder({
                   >
                     <span className="w-2.5 h-2.5 rounded-full border border-black/5 flex-shrink-0" style={{ background: cMap }} />
                     {t(colorOption.labelKey)}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -722,18 +728,19 @@ export function WidgetBuilder({
               {/* Icon Categories */}
               <div className="flex flex-wrap gap-1 mb-2 select-none">
                 {(["all", "academic", "finance", "status", "general"] as const).map((tab) => (
-                  <button
+                  <Button
                     key={tab}
                     type="button"
+                    variant="outline"
                     onClick={() => setActiveIconTab(tab)}
-                    className={`px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all border cursor-pointer ${
+                    className={`h-auto px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider border shadow-none ${
                       activeIconTab === tab
                         ? "bg-primary/10 border-primary/30 text-primary"
                         : "bg-card/30 border-border/50 text-muted-foreground hover:text-foreground hover:bg-card/50"
                     }`}
                   >
                     {t(`reports.widgets.builder.cat${capitalize(tab)}` as AppTranslationKey) || tab}
-                  </button>
+                  </Button>
                 ))}
               </div>
 
@@ -759,17 +766,19 @@ export function WidgetBuilder({
                     const active = builderIcon === iconName;
                     if (!Icon) return null;
                     return (
-                      <button
+                      <Button
                         key={iconName}
                         type="button"
+                        variant="outline"
+                        size="icon"
                         onClick={() => setBuilderIcon(iconName)}
-                        className={`p-2 rounded-xl border transition-all flex items-center justify-center cursor-pointer hover:scale-105 ${
+                        className={`p-2 rounded-xl border flex items-center justify-center hover:scale-105 shadow-none ${
                           active ? "border-primary bg-primary/10 text-primary shadow-sm" : "border-border text-muted-foreground hover:text-foreground"
                         }`}
                         title={iconName}
                       >
                         <Icon className="w-4 h-4" />
-                      </button>
+                      </Button>
                     );
                   });
                 })()}
@@ -818,14 +827,15 @@ export function WidgetBuilder({
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={onCancelEdit}
-              className="flex-1 py-2.5 rounded-xl border border-border bg-card/50 hover:bg-muted text-foreground font-black text-[11px] uppercase tracking-wider transition-all cursor-pointer font-sans"
+              className="flex-1 h-auto py-2.5 rounded-xl border border-border bg-card/50 hover:bg-muted text-foreground font-black text-[11px] uppercase tracking-wider shadow-none"
             >
               {t("reports.widgets.builder.cancel")}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               disabled={!builderTitle}
               onClick={() => {
@@ -861,10 +871,10 @@ export function WidgetBuilder({
                   role: (widgetType === "card" && mode === "dashboard") ? builderRole : undefined
                 });
               }}
-              className="flex-[2] py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-[11px] uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg hover:shadow-primary/20 shadow-primary/10 cursor-pointer font-sans"
+              className="flex-[2] h-auto py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-[11px] uppercase tracking-wider disabled:opacity-40 shadow-lg hover:shadow-primary/20 shadow-primary/10"
             >
               {editWidgetConfig ? t("reports.widgets.builder.updateWidget") : t("reports.widgets.builder.createWidget")}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

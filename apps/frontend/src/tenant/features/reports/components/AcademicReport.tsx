@@ -15,15 +15,17 @@ import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 /** Grade badge colour mapping. */
-const GRADE_COLOR: Record<string, string> = {
-  "A+": "bg-success/15 text-success",
-  "A":  "bg-success/10 text-success",
-  "B+": "bg-info/10 text-info",
-  "B":  "bg-info/10 text-info",
-  "C":  "bg-warning/10 text-warning",
-  "F":  "bg-destructive/10 text-destructive",
+const GRADE_BADGE_CLS: Record<string, string> = {
+  "A+": SEMANTIC_BADGE.successStrong,
+  "A":  SEMANTIC_BADGE.success,
+  "B+": SEMANTIC_BADGE.info,
+  "B":  SEMANTIC_BADGE.info,
+  "C":  SEMANTIC_BADGE.warning,
+  "F":  SEMANTIC_BADGE.destructive,
 };
 
 /** Active filter state passed down from the parent report view. */
@@ -375,9 +377,16 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
                   <td className="px-3 py-2.5 text-muted-foreground">{academicResult.subject}</td>
                   <td className="px-3 py-2.5 font-semibold">{academicResult.marks}/{academicResult.total}</td>
                   <td className="px-3 py-2.5">
-                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${GRADE_COLOR[academicResult.grade] ?? "bg-muted text-muted-foreground"}`}>
-                      {academicResult.grade}
-                    </span>
+                    <StatusBadge
+                      status={academicResult.grade}
+                      size="sm"
+                      config={{
+                        [academicResult.grade]: {
+                          label: academicResult.grade,
+                          cls: GRADE_BADGE_CLS[academicResult.grade] ?? SEMANTIC_BADGE.muted,
+                        },
+                      }}
+                    />
                   </td>
                 </tr>
               ))}

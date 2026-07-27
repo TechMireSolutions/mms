@@ -489,7 +489,7 @@ export default function StudentForm({
                 title={t("students.form.guardiansSection")}
                 subtitle={t("students.form.guardiansSectionDesc")}
                 icon={Users}
-                accentColor="indigo"
+                accentColor="info"
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {isFieldEnabled("fatherLink") && (

@@ -14,7 +14,6 @@ import {
   formatQuestionSourcesCitation,
   getQuestionCategoryIds,
   isQuestionSourceFieldId,
-  QUESTION_DIFFICULTY_BADGE_CLASSES,
   QUESTION_SOURCE_FIELD_IDS,
   QUESTION_TYPE_ICONS,
   splitQuestionCompoundAnswer,
@@ -22,6 +21,9 @@ import {
 } from '@mms/shared';
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
 import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
+import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
+import { SEMANTIC_BADGE } from '@/lib/semanticTone';
+import { CategoryColorChip } from '@/tenant/features/question-bank/components/CategoryColorChip';
 
 
 
@@ -86,6 +88,24 @@ export function QuestionBank({
   const setEditingQuestion = (question: Question | null): void => {
     onEditQuestionChange?.(question);
   };
+
+  const difficultyConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    easy: { label: config.difficultyLabel('easy'), cls: SEMANTIC_BADGE.success },
+    medium: { label: config.difficultyLabel('medium'), cls: SEMANTIC_BADGE.warning },
+    hard: { label: config.difficultyLabel('hard'), cls: SEMANTIC_BADGE.destructive },
+  }), [config]);
+
+  const typeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => (
+    Object.fromEntries(
+      Object.keys(QUESTION_TYPE_ICONS).map((typeId) => [
+        typeId,
+        {
+          label: `${QUESTION_TYPE_ICONS[typeId as keyof typeof QUESTION_TYPE_ICONS]} ${config.typeLabel(typeId)}`,
+          cls: SEMANTIC_BADGE.muted,
+        },
+      ]),
+    )
+  ), [config]);
 
   const showText = isColumnVisible ? isColumnVisible('text') : true;
   const showCategory = isColumnVisible ? isColumnVisible('category') : true;
@@ -185,13 +205,7 @@ export function QuestionBank({
         const cat = getCat(catId);
         if (!cat) return null;
         return (
-          <span
-            key={catId}
-            className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
-            style={{ background: cat.color }}
-          >
-            {cat.icon} {cat.name}
-          </span>
+          <CategoryColorChip key={catId} name={cat.name} color={cat.color} icon={cat.icon} />
         );
       });
     }
@@ -206,19 +220,10 @@ export function QuestionBank({
       );
     }
     if (fieldId === 'difficulty') {
-      const difficultyClassName = QUESTION_DIFFICULTY_BADGE_CLASSES[question.difficulty] ?? '';
-      return (
-        <span key="difficulty" className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${difficultyClassName}`}>
-          {config.difficultyLabel(question.difficulty)}
-        </span>
-      );
+      return <StatusBadge key="difficulty" status={question.difficulty} config={difficultyConfig} size="sm" />;
     }
     if (fieldId === 'type') {
-      return (
-        <span key="type" className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
-          {QUESTION_TYPE_ICONS[question.type]} {config.typeLabel(question.type)}
-        </span>
-      );
+      return <StatusBadge key="type" status={question.type} config={typeConfig} size="sm" />;
     }
     return null;
   };
@@ -547,7 +552,6 @@ export function QuestionBank({
                     const citation = showSource
                       ? formatQuestionSourcesCitation(question, t, config.sourceBooks)
                       : '';
-                    const difficultyClass = QUESTION_DIFFICULTY_BADGE_CLASSES[question.difficulty] ?? '';
                     return (
                       <motion.tr
                         key={question.id}
@@ -577,13 +581,7 @@ export function QuestionBank({
                                 const cat = getCat(catId);
                                 if (!cat) return null;
                                 return (
-                                  <span
-                                    key={catId}
-                                    className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
-                                    style={{ background: cat.color }}
-                                  >
-                                    {cat.icon} {cat.name}
-                                  </span>
+                                  <CategoryColorChip key={catId} name={cat.name} color={cat.color} icon={cat.icon} />
                                 );
                               })}
                             </div>
@@ -595,15 +593,13 @@ export function QuestionBank({
                           </td>
                         )}
                         {showType && (
-                          <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
-                            {QUESTION_TYPE_ICONS[question.type]} {config.typeLabel(question.type)}
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <StatusBadge status={question.type} config={typeConfig} size="sm" />
                           </td>
                         )}
                         {showDifficulty && (
                           <td className="px-4 py-3">
-                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${difficultyClass}`}>
-                              {config.difficultyLabel(question.difficulty)}
-                            </span>
+                            <StatusBadge status={question.difficulty} config={difficultyConfig} size="sm" />
                           </td>
                         )}
                         {showSource && (

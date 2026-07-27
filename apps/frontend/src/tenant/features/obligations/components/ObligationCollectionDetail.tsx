@@ -7,9 +7,11 @@ import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Card } from "@/components/ui/card";
 import { InvoiceTemplateEditor } from "@/tenant/features/obligations/components/invoice/InvoiceTemplateEditor";
 import { Button } from "@/components/ui/button";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const PrintInvoiceModal = lazy(() => import("@/tenant/features/obligations/components/invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
-
 
 interface RowProps {
   label: string;
@@ -37,14 +39,10 @@ export interface ObligationCollectionDetailProps {
 }
 
 /**
- * ObligationCollectionDetail component.
- * 
- * Displays the details of an obligation collection including distribution.
- * 
- * @param {ObligationCollectionDetailProps} props - The component props.
- * @returns {React.ReactElement}
+ * Displays obligation collection details including distribution breakdown.
  */
 export function ObligationCollectionDetail({ collection, obligationTypes, reps, mujtahids, distributions, wakalaTypes, onClose }: ObligationCollectionDetailProps) {
+  const { t } = useTranslation();
   const currencies = DEFAULT_CURRENCIES;
   const [showPrint, setShowPrint] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
@@ -56,6 +54,16 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
   const contacts = useMergedObligationContacts(contactIds);
   const users = useMergedObligationUsers();
 
+  const distributionTypeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    Income: { label: t("obligations.distribution.income"), cls: SEMANTIC_BADGE.success },
+    Liability: { label: t("obligations.distribution.liability"), cls: SEMANTIC_BADGE.info },
+  }), [t]);
+
+  const paymentModeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    Cash: { label: t("obligations.paymentMode.cash"), cls: SEMANTIC_BADGE.warning },
+    Online: { label: t("obligations.paymentMode.online"), cls: SEMANTIC_BADGE.info },
+  }), [t]);
+
   const getContact = (id?: string | number | null) => contacts.find((contact) => String(contact.id) === String(id));
   const getCurrency = (id: string) => currencies.find((currencyOption) => currencyOption.id === id);
   const getUser = (id?: string | number | null) => users.find((u) => String(u.id) === String(id));
@@ -64,7 +72,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
     const rep = getRep(repId);
     return rep ? mujtahids.find((m) => m.id === rep.mujtahid_id) : null;
   };
-  const getObType = (id: string) => obligationTypes.find((t) => t.id === id);
+  const getObType = (id: string) => obligationTypes.find((obligationType) => obligationType.id === id);
 
   const selectedCollection = collection;
   const sender = getContact(selectedCollection.sender_id);
@@ -75,56 +83,55 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
   const mujtahid = getMujtahid(selectedCollection.mujtahid_representative_id);
   const obType = getObType(selectedCollection.obligation_type_id);
 
-  // Find applicable Wakala Type and its distributions
   const wakalaType = wakalaTypes.find(
     (wakalaTypeItem) => wakalaTypeItem.obligation_type_id === selectedCollection.obligation_type_id && wakalaTypeItem.mujtahid_representative_id === selectedCollection.mujtahid_representative_id
   );
-  const dists = wakalaType ? distributions.filter((d) => d.wakala_type_id === wakalaType.id) : [];
+  const dists = wakalaType ? distributions.filter((distribution) => distribution.wakala_type_id === wakalaType.id) : [];
 
   return (
-    <DetailDrawerShell open onClose={onClose} title="Collection Details" icon={Receipt} className="max-w-2xl">
+    <DetailDrawerShell open onClose={onClose} title={t("obligations.detail.title")} icon={Receipt} className="max-w-2xl">
       <div className="space-y-5">
-        {/* Receipt header */}
         <header className="relative overflow-hidden group rounded-2xl border border-primary/25 bg-primary/5 backdrop-blur-sm p-4 px-5.5 flex items-center gap-3.5 shadow-sm transition-all duration-300">
           <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/70" />
           <Receipt className="w-5 h-5 text-primary" aria-hidden="true" />
           <div>
-            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide m-0">Receipt No.</h3>
+            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide m-0">{t("obligations.columns.receiptNo")}</h3>
             <p className="text-xl font-bold text-primary font-mono m-0">{selectedCollection.receipt_no}</p>
           </div>
           <div className="ms-auto text-end">
-            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">Date</h3>
+            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">{t("obligations.columns.receivedDate")}</h3>
             <p className="text-sm font-semibold text-foreground m-0">{formatDate(selectedCollection.received_date)}</p>
           </div>
         </header>
 
-        {/* Main details */}
-        <Card accentColor="indigo" className="divide-y divide-border px-5.5 pb-2.5">
-          <Row label="Sender" value={sender?.name} />
-          {reference && <Row label="Reference" value={reference?.name} />}
-          <Row label="Obligation Type" value={obType?.name} />
-          <Row label="Designated For" value={obType?.designated_for} />
-          <Row label="Representative" value={rep?.name} />
-          <Row label="Mujtahid" value={mujtahid?.name} />
-          <Row label="Amount" value={formatMoney(selectedCollection.amount, currency?.code)} mono />
-          <Row label="Payment Mode" value={selectedCollection.payment_mode} />
-          <Row label="Received By" value={user?.name} />
-          <Row label="Created" value={formatDate(selectedCollection.created_at)} />
+        <Card accentColor="info" className="divide-y divide-border px-5.5 pb-2.5">
+          <Row label={t("obligations.columns.sender")} value={sender?.name} />
+          {reference && <Row label={t("obligations.form.reference")} value={reference?.name} />}
+          <Row label={t("obligations.columns.obligationType")} value={obType?.name} />
+          <Row label={t("obligations.detail.designatedFor")} value={obType?.designated_for} />
+          <Row label={t("obligations.form.representative")} value={rep?.name} />
+          <Row label={t("obligations.form.mujtahidLabel")} value={mujtahid?.name} />
+          <Row label={t("obligations.columns.amount")} value={formatMoney(selectedCollection.amount, currency?.code)} mono />
+          <div className="flex justify-between items-start gap-4 py-2.5 border-b border-border last:border-0">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex-shrink-0">{t("obligations.columns.paymentMode")}</span>
+            <StatusBadge status={selectedCollection.payment_mode} config={paymentModeConfig} size="sm" />
+          </div>
+          <Row label={t("obligations.form.receivedBy")} value={user?.name} />
+          <Row label={t("obligations.detail.created")} value={formatDate(selectedCollection.created_at)} />
         </Card>
 
-        {/* Distribution breakdown */}
         {dists.length > 0 && (
-          <section aria-label="Distribution Breakdown">
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 m-0">Distribution Breakdown</h4>
+          <section aria-label={t("obligations.detail.distribution")}>
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 m-0">{t("obligations.detail.distribution")}</h4>
             <Card accentColor="emerald" className="p-0 overflow-hidden">
               <table className="w-full text-sm">
-                <caption className="sr-only">Distribution breakdown for collection {selectedCollection.receipt_no}</caption>
+                <caption className="sr-only">{t("obligations.detail.distributionCaption", { receipt: selectedCollection.receipt_no })}</caption>
                 <thead className="bg-muted/60 border-b border-border">
                   <tr>
-                    <th scope="col" className="px-5 py-2 text-start text-[11px] font-semibold text-muted-foreground uppercase">Name</th>
-                    <th scope="col" className="px-4 py-2 text-start text-[11px] font-semibold text-muted-foreground uppercase">Type</th>
-                    <th scope="col" className="px-4 py-2 text-end text-[11px] font-semibold text-muted-foreground uppercase">%</th>
-                    <th scope="col" className="px-5 py-2 text-end text-[11px] font-semibold text-muted-foreground uppercase">Amount</th>
+                    <th scope="col" className="px-5 py-2 text-start text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.detail.colName")}</th>
+                    <th scope="col" className="px-4 py-2 text-start text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.detail.colType")}</th>
+                    <th scope="col" className="px-4 py-2 text-end text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.detail.colPct")}</th>
+                    <th scope="col" className="px-5 py-2 text-end text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.columns.amount")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -132,9 +139,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
                     <tr key={distribution.id} className="hover:bg-muted/20">
                       <td className="px-5 py-2.5 font-medium text-foreground">{distribution.name}</td>
                       <td className="px-4 py-2.5">
-                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${distribution.type === "Income" ? "bg-success/15 text-success" : "bg-info/15 text-info"}`}>
-                          {distribution.type}
-                        </span>
+                        <StatusBadge status={distribution.type} config={distributionTypeConfig} size="sm" />
                       </td>
                       <td className="px-4 py-2.5 text-end font-mono text-xs font-semibold">{distribution.percentage}%</td>
                       <td className="px-5 py-2.5 text-end font-mono text-xs font-semibold text-foreground">
@@ -150,19 +155,19 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
 
         {dists.length === 0 && wakalaType && (
           <div className="px-4 py-3 rounded-xl bg-warning/10 border border-warning/30 text-xs text-warning" role="alert">
-            No distribution entries configured for this Wakala Type yet.
+            {t("obligations.detail.noDistribution")}
           </div>
         )}
 
         <footer className="flex items-center justify-between">
           <Button type="button" onClick={() => setShowPrint(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
-            <Printer className="w-4 h-4" aria-hidden="true" /> Print Receipt
+            <Printer className="w-4 h-4" aria-hidden="true" /> {t("obligations.actions.printShort")}
           </Button>
           <Button type="button" onClick={onClose}
             variant="outline"
             className="px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors">
-            Close
+            {t("common.close")}
           </Button>
         </footer>
       </div>

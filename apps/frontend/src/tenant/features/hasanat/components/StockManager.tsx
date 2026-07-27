@@ -150,9 +150,9 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
   }, {} as Record<string, { den: Denomination, batches: StockBatch[] }>);
 
   return (
-    <section aria-label="Stock Manager" className="space-y-5">
+    <section aria-label={t("hasanat.tabs.stock")} className="space-y-5">
       <header className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-foreground m-0">{batches.length} batch{batches.length !== 1 ? "es" : ""}</p>
+        <p className="text-sm font-semibold text-foreground m-0">{t("hasanat.stock.batchCount", { count: batches.length })}</p>
         {canWrite && (
           <Button
             type="button"
@@ -179,7 +179,7 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
               </div>
               <div className="flex-1">
                 <h3 className="text-[13px] font-bold text-foreground m-0">{den.name}</h3>
-                <p className="text-[11px] text-muted-foreground m-0">{den.points} points · {totalRemaining}/{totalStock} available</p>
+                <p className="text-[11px] text-muted-foreground m-0">{t("hasanat.stock.pointsAvailable", { points: den.points, remaining: totalRemaining, total: totalStock })}</p>
               </div>
               <div className="w-20">
                 <div className="h-1.5 rounded-full bg-border overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${den.name} availability`}>
@@ -197,12 +197,12 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
                   <motion.div key={batch.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.04 }} className="flex items-center gap-3 px-4 py-3">
                     <Package className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-medium text-foreground m-0">{batch.note || "Batch"}</p>
-                      <p className="text-[10px] text-muted-foreground m-0">{batch.addedDate} · Added by {batch.addedBy || "—"}</p>
+                      <p className="text-[12px] font-medium text-foreground m-0">{batch.note || t("hasanat.stock.batchFallback")}</p>
+                      <p className="text-[10px] text-muted-foreground m-0">{t("hasanat.stock.addedMeta", { date: batch.addedDate, by: batch.addedBy || "—" })}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-[12px] font-bold text-foreground m-0">{batch.remaining}<span className="text-muted-foreground font-normal">/{batch.quantity}</span></p>
-                      <p className="text-[10px] text-muted-foreground m-0">{batchPercentage}% left</p>
+                      <p className="text-[10px] text-muted-foreground m-0">{t("hasanat.stock.pctLeft", { pct: batchPercentage })}</p>
                     </div>
                   </motion.div>
                 );
@@ -215,7 +215,7 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
       {batches.length === 0 && (
         <div className="py-12 text-center rounded-xl border-2 border-dashed border-border">
           <Package className="w-8 h-8 text-muted-foreground mx-auto mb-2" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground m-0">No stock batches yet</p>
+          <p className="text-sm font-medium text-foreground m-0">{t("hasanat.stock.empty")}</p>
         </div>
       )}
 

@@ -1,33 +1,25 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { DESIGNATED_FOR_OPTIONS, ObligationType } from '@/lib/data/obligationsData';
 import { FormModal } from "@/components/ui/FormModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
-import { OBLIGATION_TYPE_BADGE, SEMANTIC_BADGE } from "@/lib/semanticTone";
-import { cn } from "@/lib/utils";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Checkbox } from "@/components/ui/checkbox";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import type { AppTranslationKey } from "@mms/shared";
 
 export type DesignatedFor = "Syed" | "Non-Syed" | "Both" | "None";
 
-interface TypeBadgeProps {
-  designatedFor: DesignatedFor;
-}
-
-/**
- * TypeBadge component.
- * @param {TypeBadgeProps} props
- */
-function TypeBadge({ designatedFor }: TypeBadgeProps) {
-  return (
-    <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold border", OBLIGATION_TYPE_BADGE[designatedFor] || OBLIGATION_TYPE_BADGE.None)}>
-      {designatedFor}
-    </span>
-  );
-}
+const DESIGNATED_LABEL_KEYS: Record<DesignatedFor, AppTranslationKey> = {
+  Syed: "obligations.designated.syed",
+  "Non-Syed": "obligations.designated.nonSyed",
+  Both: "obligations.designated.both",
+  None: "obligations.designated.none",
+};
 
 const EMPTY: Partial<ObligationType> = { name: "", quantity_based: false, designated_for: "Both" };
 
@@ -42,13 +34,23 @@ interface ModalState {
 }
 
 /**
- * ObligationTypeManager component.
- *
- * @param {ObligationTypeManagerProps} props
- * @returns {React.ReactElement}
+ * Setup manager for obligation types.
  */
 export function ObligationTypeManager({ types, onChange }: ObligationTypeManagerProps) {
+  const { t } = useTranslation();
   const [modal, setModal] = useState<ModalState | null>(null);
+
+  const designatedConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    Syed: { label: t(DESIGNATED_LABEL_KEYS.Syed), cls: SEMANTIC_BADGE.info },
+    "Non-Syed": { label: t(DESIGNATED_LABEL_KEYS["Non-Syed"]), cls: SEMANTIC_BADGE.warning },
+    Both: { label: t(DESIGNATED_LABEL_KEYS.Both), cls: SEMANTIC_BADGE.success },
+    None: { label: t(DESIGNATED_LABEL_KEYS.None), cls: SEMANTIC_BADGE.muted },
+  }), [t]);
+
+  const quantityConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    yes: { label: t("common.yes"), cls: SEMANTIC_BADGE.successStrong },
+    no: { label: t("common.no"), cls: SEMANTIC_BADGE.muted },
+  }), [t]);
 
   const handleSave = async (form: Partial<ObligationType>) => {
     if (modal?.mode === "add") {
@@ -60,52 +62,52 @@ export function ObligationTypeManager({ types, onChange }: ObligationTypeManager
   };
 
   const handleDelete = async (obligationTypeId: string) => {
-    if (!confirm("Delete this obligation type?")) return;
+    if (!confirm(t("obligations.types.deleteConfirm"))) return;
     await onChange(types.filter((obligationType) => obligationType.id !== obligationTypeId));
   };
 
   return (
     <div className="space-y-4">
       <header className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground m-0">{types.length} obligation type{types.length !== 1 ? "s" : ""} configured</p>
+        <p className="text-sm text-muted-foreground m-0">{t("obligations.types.count", { count: types.length })}</p>
         <Button type="button" onClick={() => setModal({ mode: "add", data: { ...EMPTY } })}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Type
+          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.types.add")}
         </Button>
       </header>
 
-      <section aria-label="Obligation Types List" className="rounded-xl border border-border overflow-hidden">
+      <section aria-label={t("obligations.types")} className="rounded-xl border border-border overflow-hidden">
         <table className="w-full text-sm">
-          <caption className="sr-only">List of obligation types</caption>
+          <caption className="sr-only">{t("obligations.types")}</caption>
           <thead className="bg-muted/60 border-b border-border">
             <tr>
-              <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Name</th>
-              <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Quantity Based</th>
-              <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Designated For</th>
-              <th scope="col" className="px-4 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase"><span className="sr-only">Actions</span></th>
+              <th scope="col" className="px-4 py-2.5 text-start text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.types.colName")}</th>
+              <th scope="col" className="px-4 py-2.5 text-start text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.types.colQuantity")}</th>
+              <th scope="col" className="px-4 py-2.5 text-start text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.types.colDesignated")}</th>
+              <th scope="col" className="px-4 py-2.5 text-end text-[11px] font-semibold text-muted-foreground uppercase"><span className="sr-only">{t("common.actions")}</span></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {types.length === 0 && (
-              <tr><td colSpan={4} className="px-4 py-10 text-center text-sm text-muted-foreground">No obligation types yet.</td></tr>
+              <tr><td colSpan={4} className="px-4 py-10 text-center text-sm text-muted-foreground">{t("obligations.types.empty")}</td></tr>
             )}
             {types.map((obligationType) => (
               <tr key={obligationType.id} className="hover:bg-muted/20 transition-colors">
                 <td className="px-4 py-3 font-semibold text-foreground">{obligationType.name}</td>
                 <td className="px-4 py-3">
-                  <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold border", obligationType.quantity_based ? SEMANTIC_BADGE.successStrong : SEMANTIC_BADGE.muted)}>
-                    {obligationType.quantity_based ? "Yes" : "No"}
-                  </span>
+                  <StatusBadge status={obligationType.quantity_based ? "yes" : "no"} config={quantityConfig} size="sm" />
                 </td>
-                <td className="px-4 py-3"><TypeBadge designatedFor={obligationType.designated_for} /></td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-4 py-3">
+                  <StatusBadge status={obligationType.designated_for} config={designatedConfig} size="sm" />
+                </td>
+                <td className="px-4 py-3 text-end">
                   <div className="flex items-center justify-end gap-1">
-                    <Button type="button" aria-label={`Edit ${obligationType.name}`} onClick={() => setModal({ mode: "edit", data: { ...obligationType } })}
+                    <Button type="button" aria-label={t("obligations.types.editAria", { name: obligationType.name })} onClick={() => setModal({ mode: "edit", data: { ...obligationType } })}
                       variant="ghost"
                       className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
                       <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                     </Button>
-                    <Button type="button" aria-label={`Delete ${obligationType.name}`} onClick={() => handleDelete(obligationType.id)}
+                    <Button type="button" aria-label={t("obligations.types.deleteAria", { name: obligationType.name })} onClick={() => void handleDelete(obligationType.id)}
                       variant="ghost"
                       className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
                       <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -120,10 +122,11 @@ export function ObligationTypeManager({ types, onChange }: ObligationTypeManager
 
       {modal ? (
         <ObligationTypeFormModal
-          title={modal.mode === "add" ? "Add Obligation Type" : "Edit Obligation Type"}
+          title={modal.mode === "add" ? t("obligations.types.addTitle") : t("obligations.types.editTitle")}
           initial={modal.data}
-          onSave={handleSave}
+          onSave={(form) => { void handleSave(form); }}
           onClose={() => setModal(null)}
+          designatedConfig={designatedConfig}
         />
       ) : null}
     </div>
@@ -135,16 +138,25 @@ interface ObligationTypeFormModalProps {
   initial: Partial<ObligationType>;
   onSave: (form: Partial<ObligationType>) => void;
   onClose: () => void;
+  designatedConfig: Record<string, StatusBadgeConfigItem>;
 }
 
 function ObligationTypeFormModal({ initial, onSave, onClose, title }: ObligationTypeFormModalProps) {
   const { t } = useTranslation();
   const [form, setForm] = useState({ ...initial });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Partial<Record<"name", AppTranslationKey>>>({});
 
-  const validate = (): Record<string, string> => {
-    const nextErrors: Record<string, string> = {};
-    if (!form.name?.trim()) nextErrors.name = "Name is required";
+  const designatedOptions = useMemo(
+    () => DESIGNATED_FOR_OPTIONS.map((option) => ({
+      value: option,
+      label: t(DESIGNATED_LABEL_KEYS[option as DesignatedFor]),
+    })),
+    [t],
+  );
+
+  const validate = (): Partial<Record<"name", AppTranslationKey>> => {
+    const nextErrors: Partial<Record<"name", AppTranslationKey>> = {};
+    if (!form.name?.trim()) nextErrors.name = "obligations.types.nameRequired";
     return nextErrors;
   };
 
@@ -165,11 +177,11 @@ function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obligation
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.save")}
       onSave={handleSave}
-      error={Object.values(errors)}
+      error={Object.values(errors).map((key) => t(key))}
     >
       <div className="space-y-4">
         <div>
-          <label htmlFor="type-name" className={FORM_LABEL}>Name *</label>
+          <label htmlFor="type-name" className={FORM_LABEL}>{t("obligations.types.colName")} *</label>
           <Input
             id="type-name"
             value={form.name || ""}
@@ -179,12 +191,12 @@ function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obligation
           />
         </div>
         <div>
-          <label htmlFor="type-designated" className={FORM_LABEL}>Designated For *</label>
+          <label htmlFor="type-designated" className={FORM_LABEL}>{t("obligations.types.colDesignated")} *</label>
           <FormSelect
             id="type-designated"
             value={form.designated_for || ""}
             onChange={(val) => setForm({ ...form, designated_for: val as DesignatedFor })}
-            options={DESIGNATED_FOR_OPTIONS}
+            options={designatedOptions}
           />
         </div>
         <div className="flex items-center gap-3">
@@ -193,7 +205,7 @@ function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obligation
             checked={form.quantity_based}
             onCheckedChange={(checked) => setForm({ ...form, quantity_based: !!checked })}
           />
-          <label htmlFor="qty" className="text-sm font-medium text-foreground cursor-pointer select-none">Quantity Based</label>
+          <label htmlFor="qty" className="text-sm font-medium text-foreground cursor-pointer select-none">{t("obligations.types.colQuantity")}</label>
         </div>
       </div>
     </FormModal>

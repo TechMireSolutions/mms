@@ -37,6 +37,7 @@ interface ModalState {
  * @returns {React.ReactElement}
  */
 export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeReps }: MujtahidManagerProps) {
+  const { t } = useTranslation();
   const [modal, setModal] = useState<ModalState | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -50,7 +51,7 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
   };
 
   const handleDeleteMujtahid = async (mujtahidId: string) => {
-    if (!confirm("Delete this Mujtahid? Associated representatives will also be removed.")) return;
+    if (!confirm(t("obligations.mujtahids.deleteConfirm"))) return;
     await onChangeMujtahids(mujtahids.filter((mujtahid) => mujtahid.id !== mujtahidId));
     await onChangeReps(reps.filter((representative) => representative.mujtahid_id !== mujtahidId));
   };
@@ -65,23 +66,23 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
   };
 
   const handleDeleteRep = async (representativeId: string) => {
-    if (!confirm("Delete this representative?")) return;
+    if (!confirm(t("obligations.mujtahids.repDeleteConfirm"))) return;
     await onChangeReps(reps.filter((representative) => representative.id !== representativeId));
   };
 
   return (
     <div className="space-y-4">
       <header className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground m-0">{mujtahids.length} Mujtahid{mujtahids.length !== 1 ? "s" : ""}</p>
+        <p className="text-sm text-muted-foreground m-0">{t("obligations.mujtahids.count", { count: mujtahids.length })}</p>
         <Button type="button" onClick={() => setModal({ mode: "add", data: { name: "" } })}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Mujtahid
+          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.mujtahids.add")}
         </Button>
       </header>
 
-      <section aria-label="Mujtahids List" className="space-y-2">
+      <section aria-label={t("obligations.mujtahids.listAria")} className="space-y-2">
         {mujtahids.length === 0 && (
-          <div className="py-10 text-center text-sm text-muted-foreground rounded-xl border border-border">No Mujtahids configured.</div>
+          <div className="py-10 text-center text-sm text-muted-foreground rounded-xl border border-border">{t("obligations.mujtahids.empty")}</div>
         )}
         {mujtahids.map((mujtahid) => {
           const mujtahidReps = reps.filter((representative) => representative.mujtahid_id === mujtahid.id);
@@ -95,20 +96,20 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
                   className="flex items-center gap-2 h-auto p-0 text-sm font-semibold text-foreground hover:text-primary hover:bg-transparent shadow-none transition-colors">
                   {isOpen ? <ChevronDown className="w-4 h-4" aria-hidden="true" /> : <ChevronRight className="w-4 h-4" aria-hidden="true" />}
                   {mujtahid.name}
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 bg-muted text-muted-foreground rounded-full">{mujtahidReps.length} rep{mujtahidReps.length !== 1 ? "s" : ""}</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 bg-muted text-muted-foreground rounded-full">{t("obligations.mujtahids.repsCount", { count: mujtahidReps.length })}</span>
                 </Button>
                 <div className="flex items-center gap-1">
-                  <Button type="button" aria-label={`Add representative for ${mujtahid.name}`} onClick={() => setModal({ mode: "add-rep", data: { name: "", mujtahid_id: mujtahid.id } })}
+                  <Button type="button" aria-label={t("obligations.mujtahids.addRepAria", { name: mujtahid.name })} onClick={() => setModal({ mode: "add-rep", data: { name: "", mujtahid_id: mujtahid.id } })}
                     variant="ghost"
                     className="flex items-center gap-1 h-auto px-2 py-1.5 rounded-lg text-xs font-semibold text-primary hover:bg-primary/10 shadow-none transition-colors">
-                    <Plus className="w-3 h-3" aria-hidden="true" /> Rep
+                    <Plus className="w-3 h-3" aria-hidden="true" /> {t("obligations.mujtahids.addRep")}
                   </Button>
-                  <Button type="button" aria-label={`Edit ${mujtahid.name}`} onClick={() => setModal({ mode: "edit", data: { ...mujtahid } })}
+                  <Button type="button" aria-label={t("obligations.mujtahids.editAria", { name: mujtahid.name })} onClick={() => setModal({ mode: "edit", data: { ...mujtahid } })}
                     variant="ghost"
                     className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
                     <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                   </Button>
-                  <Button type="button" aria-label={`Delete ${mujtahid.name}`} onClick={() => handleDeleteMujtahid(mujtahid.id)}
+                  <Button type="button" aria-label={t("obligations.mujtahids.deleteAria", { name: mujtahid.name })} onClick={() => handleDeleteMujtahid(mujtahid.id)}
                     variant="ghost"
                     className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
                     <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -118,18 +119,18 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
               {isOpen && (
                 <div className="border-t border-border bg-muted/30">
                   {mujtahidReps.length === 0 ? (
-                    <p className="px-6 py-3 text-xs text-muted-foreground m-0">No representatives yet.</p>
+                    <p className="px-6 py-3 text-xs text-muted-foreground m-0">{t("obligations.mujtahids.noReps")}</p>
                   ) : (
                     mujtahidReps.map((representative) => (
                       <div key={representative.id} className="flex items-center justify-between px-6 py-2.5 border-b border-border last:border-0">
                         <span className="text-sm text-foreground">{representative.name}</span>
                         <div className="flex items-center gap-1">
-                          <Button type="button" aria-label={`Edit representative ${representative.name}`} onClick={() => setModal({ mode: "edit-rep", data: { ...representative } })}
+                          <Button type="button" aria-label={t("obligations.mujtahids.repEditAria", { name: representative.name })} onClick={() => setModal({ mode: "edit-rep", data: { ...representative } })}
                             variant="ghost"
                             className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
                             <Pencil className="w-3 h-3" aria-hidden="true" />
                           </Button>
-                          <Button type="button" aria-label={`Delete representative ${representative.name}`} onClick={() => handleDeleteRep(representative.id)}
+                          <Button type="button" aria-label={t("obligations.mujtahids.repDeleteAria", { name: representative.name })} onClick={() => handleDeleteRep(representative.id)}
                             variant="ghost"
                             className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
                             <Trash2 className="w-3 h-3" aria-hidden="true" />
@@ -147,8 +148,8 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
 
       {modal && (modal.mode === "add" || modal.mode === "edit") ? (
         <NameFormModal
-          title={modal.mode === "add" ? "Add Mujtahid" : "Edit Mujtahid"}
-          label="Mujtahid Name"
+          title={modal.mode === "add" ? t("obligations.mujtahids.addTitle") : t("obligations.mujtahids.editTitle")}
+          label={t("obligations.mujtahids.nameLabel")}
           initial={modal.data}
           onSave={handleSaveMujtahid}
           onClose={() => setModal(null)}
@@ -156,8 +157,8 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
       ) : null}
       {modal && (modal.mode === "add-rep" || modal.mode === "edit-rep") ? (
         <NameFormModal
-          title={modal.mode === "add-rep" ? "Add Representative" : "Edit Representative"}
-          label="Representative Name"
+          title={modal.mode === "add-rep" ? t("obligations.mujtahids.repAddTitle") : t("obligations.mujtahids.repEditTitle")}
+          label={t("obligations.mujtahids.repNameLabel")}
           initial={modal.data}
           onSave={handleSaveRep}
           onClose={() => setModal(null)}
@@ -182,7 +183,7 @@ function NameFormModal({ initial, onSave, onClose, label, title }: NameFormModal
 
   const handleSave = (): void => {
     if (!form.name || !form.name.trim()) {
-      setError("Name is required");
+      setError(t("obligations.mujtahids.nameRequired"));
       return;
     }
     onSave(form);

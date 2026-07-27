@@ -268,9 +268,10 @@ export function TeacherList({
                     </td>
                   )}
                   <td className="px-4 py-3">
-                    <button
+                    <Button
                       type="button"
-                      className="flex items-center gap-3 min-w-0 text-start w-full"
+                      variant="ghost"
+                      className="h-auto flex items-center gap-3 min-w-0 text-start w-full p-0 shadow-none hover:bg-transparent"
                       onClick={() => setViewTeacher(teacher)}
                     >
                       <UserAvatar id={teacher.id} name={displayName} className="h-8 w-8 rounded-full text-xs font-semibold" />
@@ -280,7 +281,7 @@ export function TeacherList({
                           <p className="text-[11px] text-muted-foreground">{teacher.employeeId}</p>
                         )}
                       </div>
-                    </button>
+                    </Button>
                   </td>
                   {showSpecialization && (
                     <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{teacher.specialization ?? t('common.notSpecified')}</td>

@@ -679,12 +679,12 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
                       if (field.id === "notes") {
                         return (
                           <td key="notes" className="px-3 py-2.5">
-                            <label htmlFor={`notes-${row.studentId}`} className="sr-only">Notes</label>
+                            <label htmlFor={`notes-${row.studentId}`} className="sr-only">{t("attendance.mark.notes")}</label>
                             <Input 
                               id={`notes-${row.studentId}`}
                               type="text" 
                               value={row.notes} 
-                              placeholder="Add note…"
+                              placeholder={t("attendance.mark.notesPlaceholder")}
                               onChange={(event) => setRow(row.studentId, "notes", event.target.value)}
                               className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground h-8" 
                             />

@@ -249,7 +249,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
           </Card>
 
           {/* Tags */}
-          <Card accentColor="indigo" className="p-0">
+          <Card accentColor="info" className="p-0">
             <fieldset className="p-5.5 px-6.5 pb-6 border-0 m-0 text-left">
             <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-3">
               <Tag className="w-4 h-4 text-indigo-500/70 group-hover:text-indigo-500 transition-colors" />

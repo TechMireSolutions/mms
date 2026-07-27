@@ -205,7 +205,7 @@ export function QuestionForm({
     const falseLabel = t('questionBank.false');
     return (
       <div className="space-y-5 text-left">
-        <Card accentColor="indigo" className="p-5.5 px-6.5 pb-6 space-y-4.5 shadow-sm">
+        <Card accentColor="info" className="p-5.5 px-6.5 pb-6 space-y-4.5 shadow-sm">
           <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
             <BookOpen className="w-4 h-4 text-indigo-500/70 group-hover:text-indigo-500 transition-colors" />
             <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t('questionBank.form.content')}</h3>

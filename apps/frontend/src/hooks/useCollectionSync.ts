@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
-import { getCollection, saveCollection } from '@/lib/db';
+import { saveCollectionCacheOnly } from '@/lib/db';
 import { useSyncedCollection } from './useSyncedCollection';
 
 export interface UseCollectionSyncOptions<T, R = Record<string, T[]>> {
@@ -18,6 +18,9 @@ export interface UseCollectionSyncOptions<T, R = Record<string, T[]>> {
 /**
  * A custom React hook that coordinates fetching collection data from the server,
  * saving it to a local collection, and synchronizing with an offline fallback.
+ *
+ * REST responses are authoritative: cache locally only — never echo into `/api/db`
+ * (that path can wipe table-backed rows such as `tenant_users` after profile strip).
  */
 export function useCollectionSync<T, R = Record<string, T[]>>({
   queryKey,
@@ -37,8 +40,9 @@ export function useCollectionSync<T, R = Record<string, T[]>>({
       const response = await apiJson<R>(apiPath);
       const rawData = responseKey && response ? response[responseKey] : response;
       const data = (Array.isArray(rawData) ? rawData : []) as unknown as T[];
-      saveCollection(collectionName, data);
-      return getCollection<T>(collectionName, data);
+      // Cache-only: keep hydrated REST payload for offline fallback; do not POST /api/db.
+      saveCollectionCacheOnly(collectionName, data);
+      return data;
     },
     enabled: isAuthenticated && enabled,
     staleTime,

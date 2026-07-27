@@ -139,7 +139,7 @@ export function AttendanceSettings() {
           </Card>
 
           {/* QR */}
-          <Card accentColor="indigo" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
+          <Card accentColor="info" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
             <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 ps-6.5">
               <QrCode className="w-4 h-4 text-primary" />
               <h2 className="text-sm font-bold text-foreground m-0">{t("attendance.settings.qrAttendance")}</h2>

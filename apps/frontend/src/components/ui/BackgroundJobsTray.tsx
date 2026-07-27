@@ -5,6 +5,7 @@ import { useBackgroundJobs } from "@/tenant/hooks/useBackgroundJobs";
 import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
 import { FormModal } from "@/components/ui/FormModal";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { type AppTranslationKey, formatDateTime } from "@mms/shared";
 
@@ -55,12 +56,15 @@ export function BackgroundJobsTray({
 
   return (
     <>
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         aria-label={t("backgroundJobs.trayLabel")}
         onClick={() => setOpen(true)}
         className={cn(
-          "relative rounded-lg p-2 hover:bg-muted transition-colors",
+          "relative rounded-lg",
+          compact ? "h-9 w-9" : "h-10 w-10",
           className,
         )}
       >
@@ -73,7 +77,7 @@ export function BackgroundJobsTray({
             {badgeCount}
           </Badge>
         )}
-      </button>
+      </Button>
 
       {open && (
         <FormModal
@@ -88,14 +92,15 @@ export function BackgroundJobsTray({
           <div className="space-y-3">
             <div className="flex items-start justify-between gap-3">
               <p className="text-sm text-muted-foreground">{t("backgroundJobs.panelDesc")}</p>
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={refresh}
-                className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted"
+                className="h-auto shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium shadow-none"
               >
                 <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
                 {t("backgroundJobs.refresh")}
-              </button>
+              </Button>
             </div>
             <ul className="space-y-2 max-h-80 overflow-y-auto">
               {jobs.map((job) => {
@@ -128,11 +133,13 @@ export function BackgroundJobsTray({
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
                       {job.status === "completed" && job.hasDownload && (
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => void handleDownload(job.id)}
                           disabled={downloadingId === job.id}
-                          className="p-1 rounded hover:bg-muted text-primary"
+                          className="h-7 w-7 text-primary shadow-none"
                           aria-label={t("backgroundJobs.download")}
                         >
                           {downloadingId === job.id ? (
@@ -140,17 +147,19 @@ export function BackgroundJobsTray({
                           ) : (
                             <Download className="w-3.5 h-3.5" />
                           )}
-                        </button>
+                        </Button>
                       )}
                       {job.status !== "running" && (
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => dismiss(job.id)}
-                          className="p-1 rounded hover:bg-muted"
+                          className="h-7 w-7 shadow-none"
                           aria-label={t("backgroundJobs.dismiss")}
                         >
                           <X className="w-3.5 h-3.5" />
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </li>
@@ -158,13 +167,14 @@ export function BackgroundJobsTray({
               })}
             </ul>
             {jobs.some((j) => j.status !== "running") && (
-              <button
+              <Button
                 type="button"
+                variant="link"
                 onClick={clearFinished}
-                className="text-xs text-muted-foreground underline hover:no-underline"
+                className="h-auto p-0 text-xs text-muted-foreground"
               >
                 {t("backgroundJobs.clearFinished")}
-              </button>
+              </Button>
             )}
           </div>
         </FormModal>

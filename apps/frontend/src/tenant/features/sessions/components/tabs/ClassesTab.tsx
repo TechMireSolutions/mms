@@ -19,14 +19,10 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
-
-const GENDER_COLORS: Record<string, string> = {
-  male:   "bg-info/10 text-info border-info/20",
-  female: "bg-secondary/10 text-secondary border-secondary/20",
-  any:    "bg-muted text-muted-foreground border-border",
-};
 
 const EMPTY_CLASS: Partial<Class> = { name: "", ageMin: 5, ageMax: 18, gender: "any", teacherId: "", capacity: 20, enrolled: 0, room: "" };
 
@@ -44,6 +40,11 @@ function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage, canWri
   const capacityPercent = Math.round((sessionClass.enrolled / sessionClass.capacity) * 100);
   const barColor = capacityPercent >= 100 ? "bg-destructive" : capacityPercent >= 80 ? "bg-warning" : "bg-success";
   const teacherLabel = teacherNameById(teachers, sessionClass.teacherId) || sessionClass.teacherName || t('sessions.classes.unassigned');
+  const genderConfig: Record<string, StatusBadgeConfigItem> = {
+    male: { label: t("sessions.classes.gender.male"), cls: SEMANTIC_BADGE.info },
+    female: { label: t("sessions.classes.gender.female"), cls: SEMANTIC_BADGE.secondary },
+    any: { label: t("sessions.classes.gender.any"), cls: SEMANTIC_BADGE.muted },
+  };
 
   return (
     <motion.article
@@ -98,9 +99,7 @@ function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage, canWri
         </div>
         <div className="rounded-lg bg-muted/40 px-3 py-2">
           <p className="text-[10px] text-muted-foreground font-medium m-0">{t("sessions.classes.form.gender")}</p>
-          <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full border ${GENDER_COLORS[sessionClass.gender] || GENDER_COLORS.any}`}>
-            {t(`sessions.classes.gender.${sessionClass.gender}` as AppTranslationKey)}
-          </span>
+          <StatusBadge status={sessionClass.gender || "any"} config={genderConfig} size="sm" />
         </div>
       </div>
 

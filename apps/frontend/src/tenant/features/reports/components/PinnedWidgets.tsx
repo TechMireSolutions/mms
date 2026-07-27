@@ -11,6 +11,7 @@ import {
   CustomWidget,
 } from "@/tenant/features/reports/components/pinnedWidgets/types";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { getWidgetCollections } from "@/tenant/features/reports/components/pinnedWidgets/widgetDataUtils";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
@@ -194,7 +195,9 @@ export default function PinnedWidgets({ category }: { category: string }): React
           </div>
         </div>
         
-        <button
+        <Button
+          type="button"
+          variant="outline"
           onClick={() => {
             if (isBuilderOpen) {
               setIsBuilderOpen(false);
@@ -203,16 +206,15 @@ export default function PinnedWidgets({ category }: { category: string }): React
               handleOpenCreateBuilder();
             }
           }}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer ${
+          className={`h-auto flex items-center gap-1.5 px-4 py-2 rounded-xl border text-[11px] font-bold uppercase tracking-wider shadow-none ${
             isBuilderOpen 
-              ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
+              ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 hover:text-primary-foreground" 
               : "border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground hover:bg-muted/30"
           }`}
-          type="button"
         >
           <SlidersHorizontal className="w-3.5 h-3.5" />
           {isBuilderOpen ? t("reports.widgets.closeBuilder") : t("reports.widgets.createWidget")}
-        </button>
+        </Button>
       </div>
 
       {/* Module checkboxes visibility parameters togglers */}
@@ -408,36 +410,42 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   
                   <div className="flex items-center gap-1.5">
                     {/* Pin toggle button handles */}
-                    <button
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
                       onClick={() => handleTogglePin(widget.id)}
-                      className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                      className={`h-auto w-auto p-1.5 rounded-lg border shadow-none ${
                         widget.isPinnedToDashboard 
                           ? "border-primary bg-primary/10 text-primary" 
                           : "border-border text-muted-foreground hover:text-foreground"
                       }`}
                       title={widget.isPinnedToDashboard ? t("reports.widgets.pinnedToDashboard") : t("reports.widgets.pinToDashboard")}
-                      type="button"
                     >
                       {widget.isPinnedToDashboard ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
-                    </button>
+                    </Button>
                     {/* Edit configuration settings */}
-                    <button
-                      onClick={() => handleEditClick(widget)}
-                      className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                      title={t("reports.widgets.editWidget")}
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleEditClick(widget)}
+                      className="h-auto w-auto p-1.5 rounded-lg border border-border text-muted-foreground hover:text-primary hover:bg-primary/10 shadow-none"
+                      title={t("reports.widgets.editWidget")}
                     >
                       <Pencil className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                     {/* Deletion handle triggers */}
-                    <button
-                      onClick={() => handleDeleteWidget(widget.id)}
-                      className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-                      title={t("reports.widgets.deleteWidget")}
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleDeleteWidget(widget.id)}
+                      className="h-auto w-auto p-1.5 rounded-lg border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 shadow-none"
+                      title={t("reports.widgets.deleteWidget")}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
 

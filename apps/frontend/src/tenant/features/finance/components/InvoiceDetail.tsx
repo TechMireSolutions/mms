@@ -1,8 +1,10 @@
 import React from "react";
-import { X, CheckCircle2, Clock, AlertCircle, ReceiptText, User, Calendar, CreditCard } from "lucide-react";
+import { ReceiptText, User, Calendar, CreditCard } from "lucide-react";
 import { Invoice } from '@/lib/data/financeData';
 import { Button } from "@/components/ui/button";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDate } from "@mms/shared";
@@ -28,18 +30,13 @@ export function InvoiceDetail({ invoice, onClose, onRecord, canWrite = true }: I
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
 
-  const statusConfig = React.useMemo(() => {
-    const config: Record<string, { label: string, className: string, icon: React.ElementType }> = {
-      paid:      { label: t("finance.invoiceStatus.paid"),      className: "bg-success/10 text-success border-success/20", icon: CheckCircle2 },
-      pending:   { label: t("finance.invoiceStatus.pending"),   className: "bg-warning/10 text-warning border-warning/20",       icon: Clock },
-      overdue:   { label: t("finance.invoiceStatus.overdue"),   className: "bg-destructive/10 text-destructive border-destructive/20",             icon: AlertCircle },
-      partial:   { label: t("finance.invoiceStatus.partial"),   className: "bg-info/10 text-info border-info/20",          icon: Clock },
-      cancelled: { label: t("finance.invoiceStatus.cancelled"), className: "bg-muted text-muted-foreground border-border",      icon: X },
-    };
-    return config[invoice.status] || config.pending;
-  }, [invoice.status, t]);
-
-  const StatusIcon = statusConfig.icon;
+  const statusConfig = React.useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    paid: { label: t("finance.invoiceStatus.paid"), cls: SEMANTIC_BADGE.success },
+    pending: { label: t("finance.invoiceStatus.pending"), cls: SEMANTIC_BADGE.warning },
+    overdue: { label: t("finance.invoiceStatus.overdue"), cls: SEMANTIC_BADGE.destructive },
+    partial: { label: t("finance.invoiceStatus.partial"), cls: SEMANTIC_BADGE.info },
+    cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: SEMANTIC_BADGE.muted },
+  }), [t]);
 
   const rows = [
     { label: t("finance.columns.baseFee"), value: formatCurrency(invoice.baseFee), highlight: false, neg: false },
@@ -68,11 +65,8 @@ export function InvoiceDetail({ invoice, onClose, onRecord, canWrite = true }: I
       }
     >
       <div className="space-y-5">
-        {/* Status badge */}
-        <div className="flex items-center justify-between" aria-label={t("finance.detail.status", { status: statusConfig.label })}>
-          <span className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border ${statusConfig.className}`}>
-            <StatusIcon className="w-3 h-3" aria-hidden="true" /> {statusConfig.label}
-          </span>
+        <div className="flex items-center justify-between" aria-label={t("finance.detail.status", { status: statusConfig[invoice.status]?.label ?? invoice.status })}>
+          <StatusBadge status={invoice.status} config={statusConfig} size="sm" />
           <span className="text-[11px] text-muted-foreground">{t("finance.detail.due", { date: formatDate(invoice.dueDate) })}</span>
         </div>
 

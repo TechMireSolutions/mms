@@ -15,6 +15,8 @@ import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 import SessionsTable from "@/components/dashboard-widgets/SessionsTable";
 
@@ -77,6 +79,12 @@ function utilisationColour(rate: number): string {
  */
 export default function SessionReport({ filters }: SessionReportProps): React.JSX.Element {
   const { t } = useTranslation();
+  const sessionStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    active: { label: t("sessions.status.active"), cls: SEMANTIC_BADGE.success },
+    upcoming: { label: t("sessions.status.upcoming"), cls: SEMANTIC_BADGE.info },
+    completed: { label: t("sessions.status.completed"), cls: SEMANTIC_BADGE.muted },
+    cancelled: { label: t("sessions.status.cancelled"), cls: SEMANTIC_BADGE.destructive },
+  }), [t]);
   const sessions = useSessionsCollection();
   const enrollments = useEnrollmentsCollection();
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
@@ -345,9 +353,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
                     </div>
                   </td>
                   <td className="px-3 py-2.5">
-                    <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[11px] font-semibold capitalize">
-                      {sessionCapacity.status}
-                    </span>
+                    <StatusBadge status={sessionCapacity.status} config={sessionStatusConfig} size="sm" />
                   </td>
                 </tr>
               ))}

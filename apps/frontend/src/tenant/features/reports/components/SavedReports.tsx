@@ -10,9 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { notify } from "@/lib/notify";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { formatDate, todayISO } from "@mms/shared";
+import { formatDate, todayISO, type AppTranslationKey } from "@mms/shared";
 
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 
@@ -27,16 +29,15 @@ export interface SavedReportItem {
   createdBy: string;
 }
 
-
-const CATEGORY_COLOR: Record<string, string> = {
-  financial:  "bg-success/10 text-success",
-  students:   "bg-info/10 text-info",
-  contacts:   "bg-primary/10 text-primary",
-  attendance: "bg-warning/10 text-warning",
-  academic:   "bg-primary/10 text-primary",
-  hasanat:    "bg-primary/10 text-primary",
-  sessions:   "bg-info/10 text-info",
-  faculty:    "bg-secondary/10 text-secondary",
+const CATEGORY_BADGE_CLS: Record<string, string> = {
+  financial:  SEMANTIC_BADGE.success,
+  students:   SEMANTIC_BADGE.info,
+  contacts:   "bg-primary/10 text-primary border-primary/20",
+  attendance: SEMANTIC_BADGE.warning,
+  academic:   "bg-primary/10 text-primary border-primary/20",
+  hasanat:    "bg-primary/10 text-primary border-primary/20",
+  sessions:   SEMANTIC_BADGE.info,
+  faculty:    SEMANTIC_BADGE.secondary,
 };
 
 interface SavedReportsProps {
@@ -177,9 +178,16 @@ export default function SavedReports({
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h4 className="text-sm font-semibold text-foreground">{report.name}</h4>
-                    <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${CATEGORY_COLOR[report.category] || "bg-muted text-muted-foreground"}`}>
-                      {report.category}
-                    </span>
+                    <StatusBadge
+                      status={report.category}
+                      size="sm"
+                      config={{
+                        [report.category]: {
+                          label: t(`reports.category.${report.category}` as AppTranslationKey) || report.category,
+                          cls: CATEGORY_BADGE_CLS[report.category] ?? SEMANTIC_BADGE.muted,
+                        },
+                      }}
+                    />
                   </div>
                   <Bookmark className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
                 </div>

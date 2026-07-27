@@ -9,7 +9,7 @@ import { useContactById } from '@/tenant/hooks/collections/contacts';
 import { FormModal } from '@/components/ui/FormModal';
 import ContactPicker from '@/components/contactLink/ContactPicker';
 import { Button } from '@/components/ui/button';
-import { FORM_CHECKBOX } from '@/components/ui/formStyles';
+import { Checkbox } from '@/components/ui/checkbox';
 import { FormSelect } from '@/components/ui/FormSelect';
 import {
   Form,
@@ -176,13 +176,11 @@ export function InviteUserModal({
             render={({ field }) => (
               <FormItem>
                 <label htmlFor={field.name} className="flex cursor-pointer items-center gap-2">
-                  <input
+                  <Checkbox
                     id={field.name}
                     name={field.name}
-                    type="checkbox"
                     checked={field.value}
-                    onChange={(event) => field.onChange(event.target.checked)}
-                    className={FORM_CHECKBOX}
+                    onCheckedChange={(checked) => field.onChange(checked === true)}
                   />
                   <span className="text-xs font-medium text-foreground">{t('users.inviteSendEmail')}</span>
                 </label>

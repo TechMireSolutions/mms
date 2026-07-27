@@ -29,8 +29,8 @@ export function TeachersCommandMetrics({
     { icon: Filter, label: t("teachers.metrics.filtered"), value: shown, accent: "info" as const },
     { icon: UserCheck, label: t("teachers.metrics.active"), value: metrics.active, accent: "success" as const },
     { icon: UserX, label: t("teachers.metrics.inactive"), value: metrics.inactive, accent: "warning" as const },
-    { icon: CalendarClock, label: t("teachers.metrics.onLeave"), value: metrics.onLeave, accent: "rose" as const },
-    { icon: CalendarPlus, label: t("teachers.metrics.newThisPeriod"), value: metrics.newThisPeriod, accent: "indigo" as const },
+    { icon: CalendarClock, label: t("teachers.metrics.onLeave"), value: metrics.onLeave, accent: "destructive" as const },
+    { icon: CalendarPlus, label: t("teachers.metrics.newThisPeriod"), value: metrics.newThisPeriod, accent: "info" as const },
   ];
 
   return <ModuleCommandMetricsGrid items={items} />;

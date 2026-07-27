@@ -142,14 +142,16 @@ function CollectionRowItem({
             />
           )}
           {onAction && ActionIcon ? (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={onAction}
               aria-label={actionTitle || value}
-              className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors ${actionColorClass}`}
+              className={`h-8 w-8 rounded-lg flex items-center justify-center shadow-none ${actionColorClass}`}
             >
               <ActionIcon className="w-3.5 h-3.5" />
-            </button>
+            </Button>
           ) : actionHref && ActionIcon ? (
             <a
               href={actionHref}

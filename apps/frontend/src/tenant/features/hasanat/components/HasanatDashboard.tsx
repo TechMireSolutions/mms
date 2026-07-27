@@ -54,9 +54,9 @@ export function HasanatDashboard({
     { label: t("hasanat.stats.totalStock"), value: totalStock, icon: Layers, color: "text-primary", bg: "bg-primary/10", border: "border-primary/10", accent: "primary" as const },
     { label: t("hasanat.stats.available"), value: totalRemaining, icon: Package, color: "text-success", bg: "bg-success/10", border: "border-success/20", accent: "success" as const },
     { label: t("hasanat.stats.distributed"), value: totalDistributed, icon: Star, color: "text-warning", bg: "bg-warning/10", border: "border-warning/20", accent: "warning" as const },
-    { label: t("hasanat.stats.redeemed"), value: totalRedeemed, icon: Gift, color: "text-primary", bg: "bg-primary/10", border: "border-primary/20", accent: "indigo" as const },
+    { label: t("hasanat.stats.redeemed"), value: totalRedeemed, icon: Gift, color: "text-primary", bg: "bg-primary/10", border: "border-primary/20", accent: "info" as const },
     { label: t("hasanat.stats.active"), value: totalActive, icon: TrendingUp, color: "text-info", bg: "bg-info/10", border: "border-info/20", accent: "info" as const },
-    { label: t("hasanat.stats.returned"), value: totalReturned, icon: RotateCcw, color: "text-muted-foreground", bg: "bg-muted", border: "border-border", accent: "rose" as const },
+    { label: t("hasanat.stats.returned"), value: totalReturned, icon: RotateCcw, color: "text-muted-foreground", bg: "bg-muted", border: "border-border", accent: "destructive" as const },
   ];
 
   // Per-denomination stock
@@ -119,7 +119,7 @@ export function HasanatDashboard({
         </Card>
 
         {/* Per-denomination stock */}
-        <Card accentColor="indigo" className="p-5 shadow-sm hover:shadow-md border-border/80">
+        <Card accentColor="info" className="p-5 shadow-sm hover:shadow-md border-border/80">
           <h3 className="text-sm font-bold text-foreground mb-4 m-0">{t("hasanat.dashboard.stockByDenomination")}</h3>
           <div className="space-y-3">
             {denominationStock.map((denomination: DenStockEntry) => {

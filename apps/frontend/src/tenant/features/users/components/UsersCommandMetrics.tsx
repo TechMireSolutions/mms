@@ -60,19 +60,19 @@ export function UsersCommandMetrics({ users, shown }: UsersCommandMetricsProps):
         icon: ShieldCheck,
         label: t("users.stats.admin"),
         value: stats.admins,
-        accent: "indigo" as const,
+        accent: "info" as const,
       },
       {
         icon: KeyRound,
         label: t("users.stats.twoFa"),
         value: stats.twoFa,
-        accent: "purple" as const,
+        accent: "secondary" as const,
       },
       {
         icon: Radio,
         label: t("users.stats.sessions"),
         value: stats.activeSessions,
-        accent: "teal" as const,
+        accent: "info" as const,
       },
     ],
     [t, users.length, shown, stats]

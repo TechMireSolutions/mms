@@ -1,18 +1,27 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { CreditCard, RotateCcw, Trash2 } from "lucide-react";
 import { Payment } from '@/lib/data/financeData';
-import { PAYMENT_METHOD_BADGE } from "@/lib/semanticTone";
-import { cn } from "@/lib/utils";
+import { PAYMENT_METHOD_BADGE, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { formatDate } from "@mms/shared";
+import { formatDate, type AppTranslationKey } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+
+const METHOD_LABEL_KEYS: Record<string, AppTranslationKey> = {
+  Cash: "finance.paymentMethod.cash",
+  "Bank Transfer": "finance.paymentMethod.bank_transfer",
+  Cheque: "finance.paymentMethod.cheque",
+  Online: "finance.paymentMethod.online",
+  Card: "finance.paymentMethod.card",
+  Other: "finance.paymentMethod.other",
+};
 
 
 
@@ -77,12 +86,23 @@ export function PaymentTracker({
     (canDelete ? 2 : 0);
   const allSelected = payments.length > 0 && payments.every((payment) => selectedIds.includes(payment.id));
 
+  const methodConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => {
+    const entries = Object.keys(PAYMENT_METHOD_BADGE).map((method) => [
+      method,
+      {
+        label: t(METHOD_LABEL_KEYS[method] ?? "finance.paymentMethod.other"),
+        cls: PAYMENT_METHOD_BADGE[method] || SEMANTIC_BADGE.muted,
+      },
+    ] as const);
+    return Object.fromEntries(entries);
+  }, [t]);
+
   return (
     <section aria-label={t("finance.payments")} className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" aria-label={t("finance.paymentsByMethod")}>
         {Object.entries(paymentsByMethod).map(([method, amount]) => (
           <Card key={method} className="p-3">
-            <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full border", PAYMENT_METHOD_BADGE[method] || PAYMENT_METHOD_BADGE.Other)}>{method}</span>
+            <StatusBadge status={method} config={methodConfig} size="sm" />
             <p className="text-[15px] font-bold text-foreground mt-2 m-0">{formatCurrency(amount)}</p>
             <p className="text-[10px] text-muted-foreground m-0">
               {t("finance.paymentCount", { count: payments.filter((payment) => payment.method === method).length })}
@@ -204,7 +224,7 @@ export function PaymentTracker({
                     )}
                     {showMethod && (
                       <td className="px-4 py-3">
-                        <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full border", PAYMENT_METHOD_BADGE[payment.method] || PAYMENT_METHOD_BADGE.Other)}>{payment.method}</span>
+                        <StatusBadge status={payment.method} config={methodConfig} size="sm" />
                       </td>
                     )}
                     {showReceivedBy && (

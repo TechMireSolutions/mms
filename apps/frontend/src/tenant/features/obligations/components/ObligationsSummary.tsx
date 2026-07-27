@@ -327,7 +327,7 @@ export function ObligationsSummary({
 
           {/* Monthly trend */}
           {monthlyTrend.length > 1 ? (
-            <Card accentColor="indigo" className="p-4 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
+            <Card accentColor="info" className="p-4 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
               <SectionTitle icon={TrendingUp} title={t("obligations.summary.charts.monthlyTrendTitle")} subtitle={t("obligations.summary.charts.monthlyTrendSubtitle")} />
               <SafeResponsiveContainer height={200}>
                 <BarChart data={monthlyTrend} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>

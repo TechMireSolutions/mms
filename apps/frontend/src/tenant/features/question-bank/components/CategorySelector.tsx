@@ -126,10 +126,14 @@ export function CategorySelector({
                 onClick={() => toggleCategory(cat.id)}
                 className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 h-auto text-xs font-semibold shadow-none transition-colors ${
                   selected
-                    ? 'border-transparent text-white'
+                    ? 'border-transparent'
                     : 'border-border bg-card text-foreground hover:bg-muted'
                 }`}
-                style={selected ? { background: cat.color, borderColor: cat.color } : undefined}
+                style={selected ? {
+                  backgroundColor: `color-mix(in srgb, ${cat.color} 18%, transparent)`,
+                  color: cat.color,
+                  borderColor: `color-mix(in srgb, ${cat.color} 45%, transparent)`,
+                } : undefined}
               >
                 <span aria-hidden>{cat.icon}</span>
                 <span>{cat.name}</span>

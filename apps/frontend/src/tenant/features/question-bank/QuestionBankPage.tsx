@@ -5,7 +5,7 @@ import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Library, ClipboardList, FileText, Plus } from 'lucide-react';
+import { Library, ClipboardList, FileText, Plus, Archive } from 'lucide-react';
 import {
   QUESTION_BANK_MODULE_MANIFEST,
   resolveModuleTierTab,
@@ -249,31 +249,18 @@ export default function QuestionBankPage(): React.JSX.Element {
       headerTitle={t('nav.questionBank')}
       headerSubtitle={t('page.questionBank.subtitle')}
       headerActions={
-        <div className="flex flex-wrap items-center gap-2">
-          {effectiveTab === 'work' && effectiveSubTab === 'questions' && canDelete ? (
-            <Button
-              type="button"
-              variant={showDeleted ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setShowDeleted((prev) => !prev)}
-              className="gap-1.5"
-            >
-              {showDeleted ? t('questionBank.trash.showActive') : t('questionBank.trash.showDeleted')}
+        canWrite && !showDeleted ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" size="sm" variant="outline" onClick={openCreatePaper}>
+              <FileText className="h-3.5 w-3.5" />
+              {t('questionBank.generator')}
             </Button>
-          ) : null}
-          {canWrite && !showDeleted ? (
-            <>
-              <Button type="button" size="sm" variant="outline" onClick={openCreatePaper}>
-                <FileText className="h-3.5 w-3.5" />
-                {t('questionBank.generator')}
-              </Button>
-              <Button type="button" size="sm" onClick={openAddQuestion}>
-                <Plus className="h-3.5 w-3.5" />
-                {t('questionBank.addQuestion')}
-              </Button>
-            </>
-          ) : null}
-        </div>
+            <Button type="button" size="sm" onClick={openAddQuestion}>
+              <Plus className="h-3.5 w-3.5" />
+              {t('questionBank.addQuestion')}
+            </Button>
+          </div>
+        ) : undefined
       }
       metricsStrip={
         <QuestionBankCommandMetrics total={questions.length} shown={filteredCount} />
@@ -286,11 +273,28 @@ export default function QuestionBankPage(): React.JSX.Element {
         panelIdPrefix="question-bank-tab"
       >
         {effectiveTab === 'work' && (
-          <SubTabBar
-            tabs={OPS_SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
-            value={effectiveSubTab}
-            onChange={setActiveSubTab}
-          />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <SubTabBar
+              tabs={OPS_SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
+              value={effectiveSubTab}
+              onChange={(next) => {
+                setActiveSubTab(next);
+                if (next !== 'questions') setShowDeleted(false);
+              }}
+            />
+            {effectiveSubTab === 'questions' && canDelete && (
+              <Button
+                type="button"
+                variant={showDeleted ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setShowDeleted((prev) => !prev)}
+                className="gap-1.5 shrink-0"
+              >
+                <Archive className="h-3.5 w-3.5" aria-hidden="true" />
+                {showDeleted ? t('questionBank.trash.showActive') : t('questionBank.trash.showDeleted')}
+              </Button>
+            )}
+          </div>
         )}
 
         <ErrorBoundary>

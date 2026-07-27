@@ -9,13 +9,8 @@ import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FormSelect } from "@/components/ui/FormSelect";
-
-const ACTION_LABELS: Record<string, { labelKey: string; color: string }> = {
-  edit:        { labelKey: "attendance.audit.action.edit",    color: "bg-info/10 text-info border-info/30" },
-  bulk_mark:   { labelKey: "attendance.audit.action.bulkMark",    color: "bg-warning/10 text-warning border-warning/30" },
-  submitted:   { labelKey: "attendance.audit.action.submitted",    color: "bg-success/10 text-success border-success/30" },
-  draft_saved: { labelKey: "attendance.audit.action.draftSaved",  color: "bg-muted text-muted-foreground border-border" },
-};
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 export interface AuditEntry {
   ts?: string | number;
@@ -74,6 +69,12 @@ export function AuditLog({ filters }: AuditLogProps) {
   const [log, setLog] = useState<AuditEntry[]>([]);
   const studentIds = useMemo(() => uniqueRegistryIds(log.map((entry) => entry.studentId)), [log]);
   const { data: students = [] } = useStudentsByIds(studentIds);
+  const actionConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    edit: { label: t("attendance.audit.action.edit"), cls: SEMANTIC_BADGE.info },
+    bulk_mark: { label: t("attendance.audit.action.bulkMark"), cls: SEMANTIC_BADGE.warning },
+    submitted: { label: t("attendance.audit.action.submitted"), cls: SEMANTIC_BADGE.success },
+    draft_saved: { label: t("attendance.audit.action.draftSaved"), cls: SEMANTIC_BADGE.muted },
+  }), [t]);
 
   const studentNameFor = (id?: string): string => {
     if (!id) return "";
@@ -167,12 +168,11 @@ export function AuditLog({ filters }: AuditLogProps) {
             </thead>
             <tbody className="divide-y divide-border">
               {log.map((entry, index) => {
-                const actionLabel = ACTION_LABELS[entry.action] || { labelKey: entry.action as AppTranslationKey, color: "bg-muted text-muted-foreground border-border" };
                 return (
                   <tr key={index} className="hover:bg-muted/20 transition-colors">
                     <td className="px-3 py-2.5 text-[11px] font-mono text-muted-foreground whitespace-nowrap">{formatDateTime(entry.ts)}</td>
                     <td className="px-3 py-2.5">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border ${actionLabel.color}`}>{t(actionLabel.labelKey as AppTranslationKey)}</span>
+                      <StatusBadge status={entry.action} config={actionConfig} size="sm" />
                     </td>
                     <td className="px-3 py-2.5 text-xs text-foreground">{describeEntry(entry, studentNameFor, t)}</td>
                     <td className="px-3 py-2.5 text-xs font-semibold text-muted-foreground capitalize">{entry.by || "—"}</td>

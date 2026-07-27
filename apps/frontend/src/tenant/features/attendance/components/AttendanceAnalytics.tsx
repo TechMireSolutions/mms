@@ -195,7 +195,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.3, ease: "easeOut" }}
         >
-          <Card accentColor="indigo" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
+          <Card accentColor="info" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
             <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.studentRatesTitle")}</h2>
             <SafeResponsiveContainer height={220}>
               <BarChart data={studentRates} layout="vertical" barSize={12}>

@@ -76,6 +76,8 @@ function rowToTenantUser(row: typeof tenantUsers.$inferSelect): TenantUserRow {
     id: row.id,
     workspaceSubdomain: row.workspaceSubdomain,
     loginEmail: row.loginEmail,
+    // Workspace UI reads `email`; auth column is `loginEmail`.
+    email: row.loginEmail,
     passwordHash: row.passwordHash,
     name: row.name,
     role: row.role,
@@ -176,6 +178,17 @@ function omitUndefinedColumns<T extends Record<string, unknown>>(columns: T): Pa
   ) as Partial<T>;
 }
 
+function nonEmptyString(value: unknown): string {
+  return typeof value === 'string' && value.trim() ? value : '';
+}
+
+function tenantUserIdWhere(id: string, workspaceSubdomain: string) {
+  return and(
+    eq(tenantUsers.id, id),
+    eq(tenantUsers.workspaceSubdomain, workspaceSubdomain.trim().toLowerCase()),
+  );
+}
+
 export async function upsertTenantUserRow(user: TenantUserRow): Promise<void> {
   const processedUser = applyTitleCaseRecursive(user) as TenantUserRow;
   const { columns } = splitProfileFields(processedUser);
@@ -183,10 +196,19 @@ export async function upsertTenantUserRow(user: TenantUserRow): Promise<void> {
   const existing = await findTenantUserRowById(columns.id);
 
   if (existing) {
-    await db
-      .update(tenantUsers)
-      .set({ ...omitUndefinedColumns(columns), updatedAt: new Date() })
-      .where(eq(tenantUsers.id, columns.id));
+    const existingWorkspace =
+      typeof existing.workspaceSubdomain === 'string' ? existing.workspaceSubdomain : '';
+    // Contact-linked clients may strip profile fields; never blank auth credentials.
+    // Keep workspace bound to the existing row (no cross-tenant reassignment).
+    const merged = {
+      ...omitUndefinedColumns(columns),
+      workspaceSubdomain: existingWorkspace,
+      name: nonEmptyString(columns.name) || existing.name || '',
+      loginEmail: nonEmptyString(columns.loginEmail) || existing.loginEmail || '',
+      passwordHash: nonEmptyString(columns.passwordHash) || existing.passwordHash || '',
+      updatedAt: new Date(),
+    };
+    await db.update(tenantUsers).set(merged).where(tenantUserIdWhere(columns.id, existingWorkspace));
     return;
   }
 
@@ -199,6 +221,8 @@ export async function softDeleteTenantUserRow(
 ): Promise<boolean> {
   const existing = await findTenantUserRowById(id);
   if (!existing || existing.deletedAt) return false;
+  const workspaceSubdomain =
+    typeof existing.workspaceSubdomain === 'string' ? existing.workspaceSubdomain : '';
   await getDb()
     .update(tenantUsers)
     .set({
@@ -206,13 +230,15 @@ export async function softDeleteTenantUserRow(
       deletedBy,
       updatedAt: new Date(),
     })
-    .where(eq(tenantUsers.id, id));
+    .where(tenantUserIdWhere(id, workspaceSubdomain));
   return true;
 }
 
 export async function restoreTenantUserRow(id: string): Promise<boolean> {
   const existing = await findTenantUserRowById(id);
   if (!existing || !existing.deletedAt) return false;
+  const workspaceSubdomain =
+    typeof existing.workspaceSubdomain === 'string' ? existing.workspaceSubdomain : '';
   await getDb()
     .update(tenantUsers)
     .set({
@@ -220,7 +246,7 @@ export async function restoreTenantUserRow(id: string): Promise<boolean> {
       deletedBy: null,
       updatedAt: new Date(),
     })
-    .where(eq(tenantUsers.id, id));
+    .where(tenantUserIdWhere(id, workspaceSubdomain));
   return true;
 }
 

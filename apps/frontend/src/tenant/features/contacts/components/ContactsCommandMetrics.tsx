@@ -49,8 +49,8 @@ export function ContactsCommandMetrics({
       accent: "destructive" as const,
       onClick: conflictCount > 0 ? onReviewConflicts : undefined,
     },
-    { icon: MessageCircle, label: t("contacts.metrics.whatsapp"), value: metrics.whatsappCount, accent: "teal" as const },
-    { icon: AlertCircle, label: t("contacts.metrics.incomplete"), value: metrics.incompleteCount, accent: "rose" as const },
+    { icon: MessageCircle, label: t("contacts.metrics.whatsapp"), value: metrics.whatsappCount, accent: "info" as const },
+    { icon: AlertCircle, label: t("contacts.metrics.incomplete"), value: metrics.incompleteCount, accent: "destructive" as const },
     {
       icon: GitMerge,
       label: t("contacts.metrics.duplicates"),

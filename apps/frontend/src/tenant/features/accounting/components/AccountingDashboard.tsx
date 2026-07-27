@@ -127,7 +127,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
         </Card>
 
         {/* Expense Breakdown Pie */}
-        <Card accentColor="indigo" className="p-5 pl-6.5">
+        <Card accentColor="info" className="p-5 pl-6.5">
           <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">{t("accounting.dashboard.expenseBreakdown")}</h3>
           {expenseBreakdown.length === 0 ? (
             <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">{t("accounting.dashboard.noExpenseData")}</div>

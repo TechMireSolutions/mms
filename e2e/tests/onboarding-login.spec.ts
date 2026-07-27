@@ -264,17 +264,21 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     console.log('Contact Jane Doe successfully created.');
     await waitForToastOverlayToClear(page, 'after creating Jane Doe; continuing with contact flow');
 
-    // Create Father Contact (John Doe)
+    // Create Father Contact (John Doe) with email for Users invite eligibility
     console.log('Creating contact John Doe...');
     await page.click('button:has-text("Add Contact")');
     await page.waitForSelector('input[name="firstName"]');
-    await page.fill('input[name="firstName"]', 'John');
-    await page.fill('input[name="lastName"]', 'Doe');
-    await page.click('#cf-new-gender');
-    await page.click('role=option[name="Male"]');
+    const johnDialog = page.getByRole('dialog', { name: 'Add New Contact' });
+    await johnDialog.locator('input[name="firstName"]').fill('John');
+    await johnDialog.locator('input[name="lastName"]').fill('Doe');
+    await johnDialog.locator('#cf-new-gender').click();
+    await page.getByRole('option', { name: 'Male', exact: true }).click();
+    await johnDialog.getByRole('tab', { name: 'Emails' }).click();
+    await johnDialog.locator('#email-address-0').fill('john.doe.e2e@example.com');
+    await johnDialog.locator('#email-address-0').blur();
     await waitForToastOverlayToClear(page, 'before saving John Doe');
-    await page.click('button:has-text("Save")');
-    await expect(page.getByRole('dialog', { name: 'Add New Contact' })).toBeHidden();
+    await johnDialog.getByRole('button', { name: 'Save' }).click();
+    await expect(johnDialog).toBeHidden();
     await page.waitForSelector('tbody tr:has-text("John Doe") >> visible=true');
     console.log('Contact John Doe successfully created.');
 
@@ -361,8 +365,8 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     expect(browserFailures, browserFailures.join('\n')).toEqual([]);
   });
 
-  test('should expose module shells and create teacher, invoice, session, enrollment, payment, message template, campaign, and accounting entry', async ({ page }) => {
-    test.setTimeout(240_000);
+  test('should expose module shells and create teacher, invoice, session, enrollment, payment, messaging, accounting, and user', async ({ page }) => {
+    test.setTimeout(270_000);
 
     await loginTenant(page, tenantOrigin, adminEmail, changedAdminPassword);
     await expect(page.locator('h1')).toContainText('Assalamu Alaikum');
@@ -753,6 +757,48 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     await expect(entryDialog).toBeHidden({ timeout: 20_000 });
     await expect(
       page.getByText('E2e Fee Collection Journal').locator('visible=true').first(),
+    ).toBeVisible({ timeout: 20_000 });
+
+    // Users — add John Doe as Teacher via invite-style account setup (bulk PUT)
+    await page.goto(`${tenantOrigin}/users`);
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('button', { name: 'Add User' }).click();
+    const userDialog = page.getByRole('dialog', { name: 'Add new user' });
+    await expect(userDialog).toBeVisible({ timeout: 15_000 });
+
+    const userContactSearch = userDialog.getByRole('combobox', { name: 'Search contact' });
+    await userContactSearch.fill('John Doe');
+    const johnUserOption = page.getByRole('option', { name: /John Doe/ }).first();
+    await expect(johnUserOption).toBeVisible({ timeout: 15_000 });
+    await johnUserOption.click();
+    await expect(userDialog.getByText('john.doe.e2e@example.com').first()).toBeVisible({
+      timeout: 10_000,
+    });
+
+    await userDialog.getByRole('button', { name: 'Next' }).click();
+    // Role cards are clickable divs (not buttons); select Teacher workspace role
+    await userDialog.locator('div.rounded-xl.border-2').filter({ hasText: /^Teacher/ }).first().click();
+    await userDialog.getByRole('button', { name: 'Next' }).click();
+
+    // Default setup method is "Send invite email" → inactive user
+    const userCreate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/users/bulk') &&
+        response.request().method() === 'PUT',
+      { timeout: 30_000 },
+    );
+    await userDialog.getByRole('button', { name: 'Create user' }).click();
+    const userResponse = await userCreate;
+    if (!userResponse.ok()) {
+      throw new Error(
+        `User create failed: HTTP ${userResponse.status()} ${await userResponse.text()}`,
+      );
+    }
+    await expect(userDialog).toBeHidden({ timeout: 20_000 });
+    await expect(
+      page.locator('table:visible tbody tr').filter({ hasText: 'John Doe' }).filter({
+        hasText: 'john.doe.e2e@example.com',
+      }),
     ).toBeVisible({ timeout: 20_000 });
   });
 });

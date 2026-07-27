@@ -9,7 +9,7 @@ import {
 } from "@mms/shared";
 import {
   DollarSign, Calendar, Plus, Pencil, Trash2,
-  CheckCircle2, Lock, Clock, Save, BookOpen
+  CheckCircle2, Save, BookOpen
 } from "lucide-react";
 import { Account, FiscalYear } from '@/lib/data/accountingData';
 import { useAccountingConfig } from "@/hooks/useStandardModuleConfig";
@@ -23,12 +23,13 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { Switch } from "@/components/ui/switch";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { notify } from "@/lib/notify";
 
-const DATE_FORMATS = ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD-MM-YYYY"];
-const FY_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DATE_FORMATS = ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD-MM-YYYY"];const FY_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 interface SectionCardProps {
   title: string;
@@ -174,12 +175,6 @@ function FYModal({ open, initial, onSave, onClose }: FYModalProps) {
   );
 }
 
-const FY_STATUS: Record<string, { color: string; icon: React.ElementType }> = {
-  active:   { color: "bg-success/15 text-success border-success/30", icon: CheckCircle2 },
-  closed:   { color: "bg-muted text-muted-foreground border-border",       icon: Lock },
-  upcoming: { color: "bg-info/15 text-info border-info/30",          icon: Clock },
-};
-
 interface AccountingSettingsProps {
   accounts: Account[];
   fiscalYears: FiscalYear[];
@@ -197,6 +192,11 @@ export function AccountingSettings({
     { label: t("accounting.settings.decimal.period"), value: "period" },
     { label: t("accounting.settings.decimal.comma"), value: "comma" },
   ], [t]);
+  const fyStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    active: { label: t("accounting.settings.fy.status.active"), cls: SEMANTIC_BADGE.successStrong },
+    closed: { label: t("accounting.settings.fy.status.closed"), cls: SEMANTIC_BADGE.muted },
+    upcoming: { label: t("accounting.settings.fy.status.upcoming"), cls: SEMANTIC_BADGE.infoStrong },
+  }), [t]);
   const currencies = DEFAULT_CURRENCIES;
   const config = useAccountingConfig();
   const {
@@ -373,8 +373,6 @@ export function AccountingSettings({
                   </thead>
                   <tbody className="divide-y divide-border">
                     {[...fiscalYears].sort((firstYear, secondYear) => secondYear.startDate.localeCompare(firstYear.startDate)).map((fiscalYear) => {
-                      const statusMeta = FY_STATUS[fiscalYear.status] || FY_STATUS.upcoming;
-                      const StatusIcon = statusMeta.icon;
                       return (
                         <tr key={fiscalYear.id} className="hover:bg-muted/20 transition-colors">
                           <td className="px-4 py-2.5 font-semibold text-foreground">{fiscalYear.label}</td>
@@ -382,9 +380,7 @@ export function AccountingSettings({
                             {formatDate(fiscalYear.startDate)} → {formatDate(fiscalYear.endDate)}
                           </td>
                           <td className="px-4 py-2.5">
-                            <span className={`flex items-center gap-1 w-fit px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusMeta.color}`}>
-                              <StatusIcon className="w-2.5 h-2.5" aria-hidden="true" /> {t(`accounting.settings.fy.status.${fiscalYear.status}` as AppTranslationKey)}
-                            </span>
+                            <StatusBadge status={fiscalYear.status} config={fyStatusConfig} size="sm" />
                           </td>
                           <td className="px-4 py-2.5 text-right">
                             <div className="flex items-center justify-end gap-1">

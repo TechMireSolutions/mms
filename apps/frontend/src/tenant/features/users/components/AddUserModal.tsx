@@ -13,6 +13,7 @@ import {
   workspaceRoleLabel,
   getPrimaryEmail,
   getPrimaryPhone,
+  getDisplayName,
   type WorkspaceRole,
   type SystemUser,
   type UserStatus,
@@ -232,7 +233,7 @@ function Step1({ form, setForm, errors }: Step1Props): JSX.Element {
     setForm((previousForm) => ({
       ...previousForm,
       contactId: contact.id,
-      name: contact.name,
+      name: getDisplayName(contact),
       email: primaryEmail,
       phone: primaryPhone,
     }));

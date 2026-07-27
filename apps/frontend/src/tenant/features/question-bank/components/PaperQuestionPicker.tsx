@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FORM_INPUT } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { FormSelect, type FormSelectOption } from "@/components/ui/FormSelect";
 import {
   getQuestionCategoryIds,
-  QUESTION_DIFFICULTY_BADGE_CLASSES,
   type QuestionBankQuestion as Question,
 } from "@mms/shared";
 import type { DifficultyFilter, PaperSection } from "@/tenant/features/question-bank/components/paperBuilderUtils";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { CategoryColorChip } from "@/tenant/features/question-bank/components/CategoryColorChip";
 
 interface QuestionCategoryBadge {
   color: string;
@@ -50,6 +52,11 @@ export function PaperQuestionPicker({
   onSearchChange,
 }: PaperQuestionPickerProps): React.ReactElement {
   const { t } = useTranslation();
+  const difficultyConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    easy: { label: difficultyLabel("easy"), cls: SEMANTIC_BADGE.success },
+    medium: { label: difficultyLabel("medium"), cls: SEMANTIC_BADGE.warning },
+    hard: { label: difficultyLabel("hard"), cls: SEMANTIC_BADGE.destructive },
+  }), [difficultyLabel]);
 
   return (
     <section className="rounded-xl border border-border bg-card p-3 sm:p-4">
@@ -84,7 +91,6 @@ export function PaperQuestionPicker({
         ) : (
           questions.map((question) => {
             const selected = selectedQuestionIds.has(question.id);
-            const diffCls = QUESTION_DIFFICULTY_BADGE_CLASSES[question.difficulty] ?? "";
             return (
               <div key={question.id} className="rounded-lg border border-border bg-muted/20 p-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
@@ -104,14 +110,10 @@ export function PaperQuestionPicker({
                     const category = categoryById.get(categoryId);
                     if (!category) return null;
                     return (
-                      <span key={categoryId} className="rounded px-1.5 py-0.5 text-[9px] font-bold text-white" style={{ background: category.color }}>
-                        {category.name}
-                      </span>
+                      <CategoryColorChip key={categoryId} name={category.name} color={category.color} />
                     );
                   })}
-                  <span className={`rounded border px-1.5 py-0.5 text-[9px] font-bold ${diffCls}`}>
-                    {difficultyLabel(question.difficulty)}
-                  </span>
+                  <StatusBadge status={question.difficulty} config={difficultyConfig} size="sm" />
                 </div>
               </div>
             );

@@ -36,6 +36,10 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { type TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { resolveWidgetTitle, resolveWidgetSubText } from "@/lib/dashboardWidgets";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 interface KPIItem {
   id: string;
@@ -155,13 +159,14 @@ function SubtextDisplay({ text }: { text: string }): React.JSX.Element {
   return (
     <span className="block leading-normal font-semibold whitespace-normal break-words">
       {expanded ? text : `${text.slice(0, 30)}...`}
-      <button
+      <Button
         type="button"
+        variant="link"
         onClick={(event) => { event.stopPropagation(); setExpanded((previousExpanded) => !previousExpanded); }}
-        className="ml-1 text-primary hover:underline font-extrabold inline-block cursor-pointer bg-transparent border-0 p-0 text-[9px]"
+        className="ml-1 h-auto p-0 text-primary hover:underline font-extrabold inline text-[9px] shadow-none"
       >
         {expanded ? t("common.showLess") : t("common.readMore")}
-      </button>
+      </Button>
     </span>
   );
 }
@@ -1100,13 +1105,15 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
         <span className="font-bold text-muted-foreground uppercase tracking-widest leading-none">
           {t("reports.kpiSectionTitle", { module: moduleLabel })}
         </span>
-        <button
+        <Button
+          type="button"
+          variant="outline"
           onClick={() => setIsConfigOpen(!isConfigOpen)}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card/60 backdrop-blur-md hover:bg-card hover:text-primary transition-all text-muted-foreground font-semibold shadow-sm cursor-pointer"
+          className="h-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card/60 backdrop-blur-md hover:bg-card hover:text-primary text-muted-foreground font-semibold shadow-sm"
         >
-          <SlidersHorizontal className="w-3.5 h-3.5" />
+          <SlidersHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
           {t("reports.kpiCustomize")}
-        </button>
+        </Button>
       </div>
 
       {/* Glassmorphic Settings Panel */}
@@ -1127,12 +1134,16 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-success/10 text-success font-bold border border-success/20 flex items-center gap-1">
-                  {t("reports.kpiSelectedCount", { count: selectedCardIds.length })}
-                </span>
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold border border-primary/20">
-                  {t("reports.kpiDataVolume", { count: primaryVolume })}
-                </span>
+                <StatusBadge
+                  status="selected"
+                  size="sm"
+                  config={{ selected: { label: t("reports.kpiSelectedCount", { count: selectedCardIds.length }), cls: SEMANTIC_BADGE.success } }}
+                />
+                <StatusBadge
+                  status="volume"
+                  size="sm"
+                  config={{ volume: { label: t("reports.kpiDataVolume", { count: primaryVolume }), cls: "bg-primary/10 text-primary border-primary/20" } }}
+                />
               </div>
             </div>
 
@@ -1171,11 +1182,11 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
                           className="flex items-center justify-between p-2.5 rounded-xl border border-border/40 bg-card/10 hover:bg-card/20 transition-all font-sans"
                         >
                           <label className="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0">
-                            <input
-                              type="checkbox"
+                            <Checkbox
                               checked={isSelected}
-                              onChange={() => handleToggleCard(kpi.id)}
-                              className="rounded border-border text-primary focus:ring-primary/20 w-3.5 h-3.5 cursor-pointer"
+                              onCheckedChange={() => handleToggleCard(kpi.id)}
+                              className="w-3.5 h-3.5"
+                              aria-label={kpi.label}
                             />
                             <div className="flex-1 min-w-0">
                               <p className="text-[11px] font-bold text-foreground truncate leading-tight">
@@ -1192,24 +1203,28 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
                           </label>
 
                           <div className="flex items-center gap-1 shrink-0">
-                            <button
+                            <Button
                               onClick={() => handleEditCard(kpi)}
-                              className="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                              className="h-auto w-auto p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary shadow-none"
                               title={t("reports.kpiEditConfig")}
                               type="button"
+                              variant="ghost"
+                              size="icon"
                             >
-                              <SlidersHorizontal className="w-3.5 h-3.5" />
-                            </button>
+                              <SlidersHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
+                            </Button>
 
                             {isCustom && (
-                              <button
+                              <Button
                                 onClick={() => handleDeleteCustomCard(kpi.id)}
-                                className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                                className="h-auto w-auto p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none"
                                 title={t("reports.kpiDeleteConfig")}
                                 type="button"
+                                variant="ghost"
+                                size="icon"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                                <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                              </Button>
                             )}
                           </div>
                         </div>

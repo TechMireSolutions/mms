@@ -25,6 +25,7 @@ import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/comp
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
@@ -558,12 +559,11 @@ export function JournalEntries({
                 <tr>
                   {canDelete && (
                     <th scope="col" className="px-3 py-2.5 w-10">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={allFilteredSelected}
-                        onChange={() => {
-                          if (allFilteredSelected) setSelectedIds([]);
-                          else setSelectedIds(filtered.map((entry) => entry.id));
+                        onCheckedChange={(checked) => {
+                          if (checked === true) setSelectedIds(filtered.map((entry) => entry.id));
+                          else setSelectedIds([]);
                         }}
                         aria-label={t("accounting.trash.selectAll")}
                       />
@@ -617,10 +617,9 @@ export function JournalEntries({
                     <tr key={entry.id} className="hover:bg-muted/20 transition-colors">
                       {canDelete && (
                         <td className="px-3 py-2.5">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={selectedIds.includes(entry.id)}
-                            onChange={() => toggleSelected(entry.id)}
+                            onCheckedChange={() => toggleSelected(entry.id)}
                             aria-label={t("accounting.trash.selectEntry", { ref: entry.ref })}
                           />
                         </td>

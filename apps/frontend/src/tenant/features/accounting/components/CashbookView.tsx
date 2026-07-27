@@ -4,9 +4,9 @@ import { TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { JournalEntry, Account } from '@/lib/data/accountingData';
 import { FLOW_TONE, SEMANTIC_BADGE } from "@/lib/semanticTone";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/ui/StatCard";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SegmentedPillFilter } from "@/components/ui/SegmentedPillFilter";
 import { useTranslation } from "@/hooks/useTranslation";
 
 // Money-in account IDs (asset accounts that receive income)
@@ -99,7 +99,7 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
   return (
     <div className="space-y-4">
       {/* Summary cards */}
-      <section aria-label="Cashbook Summary" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <section aria-label={t("accounting.cashbook.summaryAria")} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard
           icon={TrendingUp}
           label={t("accounting.cashbook.moneyIn")}
@@ -121,30 +121,23 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
       </section>
 
       {/* Filters */}
-      <nav aria-label="Filter transactions" className="flex flex-wrap gap-2">
+      <nav aria-label={t("accounting.cashbook.filterAria")} className="flex flex-wrap items-center gap-2">
         <SearchBar
           value={search}
           onChange={setSearch}
           placeholder={t("reports.widgets.searchRecords")}
           className="flex-1 min-w-[180px]"
         />
-        {(["all","in","out","transfer"] as const).map((filterOption) => (
-          <Button 
-            key={filterOption}
-            variant={filterType === filterOption ? "default" : "outline"}
-            onClick={() => setFilterType(filterOption)}
-            aria-pressed={filterType === filterOption}
-            className="rounded-xl text-xs font-bold"
-          >
-            {filterOption === "all"
-              ? t("accounting.cashbook.all")
-              : filterOption === "in"
-              ? t("accounting.cashbook.moneyIn")
-              : filterOption === "out"
-              ? t("accounting.cashbook.moneyOut")
-              : t("accounting.cashbook.transfers")}
-          </Button>
-        ))}
+        <SegmentedPillFilter
+          value={filterType}
+          onChange={setFilterType}
+          options={[
+            { value: "all", label: t("accounting.cashbook.all") },
+            { value: "in", label: t("accounting.cashbook.moneyIn") },
+            { value: "out", label: t("accounting.cashbook.moneyOut") },
+            { value: "transfer", label: t("accounting.cashbook.transfers") },
+          ]}
+        />
       </nav>
 
       {/* Table */}
@@ -156,7 +149,7 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
         <div className="rounded-xl border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <caption className="sr-only">Cashbook Transactions</caption>
+              <caption className="sr-only">{t("accounting.cashbook.tableCaption")}</caption>
               <thead className="bg-muted/60 border-b border-border">
                 <tr>
                   <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.date")}</th>
@@ -173,15 +166,15 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
                       {formatDate(row.date)}
                     </td>
                     <td className="px-3 py-3">
-                      <span className={cn(
-                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border",
-                        row.flowType === "in" ? FLOW_TONE.in.badge
-                          : row.flowType === "out" ? FLOW_TONE.out.badge
-                          : SEMANTIC_BADGE.infoStrong,
-                      )}>
-                        {row.flowType === "in" ? <TrendingUp className="w-2.5 h-2.5" aria-hidden="true" /> : row.flowType === "out" ? <TrendingDown className="w-2.5 h-2.5" aria-hidden="true" /> : <ArrowUpDown className="w-2.5 h-2.5" aria-hidden="true" />}
-                        {row.flowLabel}
-                      </span>
+                      <StatusBadge
+                        status={row.flowType}
+                        size="sm"
+                        config={{
+                          in: { label: row.flowLabel, cls: FLOW_TONE.in.badge },
+                          out: { label: row.flowLabel, cls: FLOW_TONE.out.badge },
+                          transfer: { label: row.flowLabel, cls: SEMANTIC_BADGE.infoStrong },
+                        }}
+                      />
                     </td>
                     <td className="px-3 py-3 text-foreground max-w-[200px] truncate">
                       <p className="font-medium m-0">{row.description}</p>

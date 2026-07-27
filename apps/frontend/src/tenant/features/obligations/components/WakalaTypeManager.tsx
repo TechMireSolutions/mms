@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { DISTRIBUTION_TYPES, WakalaType, ObligationDistribution, ObligationType, MujtahidRep, Mujtahid } from '@/lib/data/obligationsData';
 import { FormModal } from "@/components/ui/FormModal";
@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Card } from "@/components/ui/card";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 export type DistributionType = "Income" | "Liability";
 
@@ -34,7 +36,14 @@ interface ModalState {
  * @returns {React.ReactElement}
  */
 export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes, reps, mujtahids, onChangeWakala, onChangeDistributions }: WakalaTypeManagerProps) {
+  const { t } = useTranslation();
   const [modal, setModal] = useState<ModalState | null>(null);
+  const emDash = t("obligations.wakala.emDash");
+
+  const distributionTypeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    Income: { label: t("obligations.distribution.income"), cls: SEMANTIC_BADGE.success },
+    Liability: { label: t("obligations.distribution.liability"), cls: SEMANTIC_BADGE.info },
+  }), [t]);
 
   const getRep = (repId: string) => reps.find((rep) => rep.id === repId);
   const getMujtahid = (mujtahidId: string) => mujtahids.find((mujtahid) => mujtahid.id === mujtahidId);
@@ -55,7 +64,7 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
   };
 
   const handleDeleteWakala = async (wakalaTypeId: string) => {
-    if (!confirm("Delete this Wakala Type? Associated distributions will also be removed.")) return;
+    if (!confirm(t("obligations.wakala.deleteConfirm"))) return;
     await onChangeWakala(wakalaTypes.filter((wakalaType) => wakalaType.id !== wakalaTypeId));
     await onChangeDistributions(distributions.filter((distribution) => distribution.wakala_type_id !== wakalaTypeId));
   };
@@ -65,7 +74,7 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
     const otherDistributions = existing.filter((distribution) => distribution.id !== form.id);
     const newTotal = otherDistributions.reduce((sum, distribution) => sum + parseFloat(String(distribution.percentage ?? 0)), 0) + parseFloat(String(form.percentage ?? 0));
     if (newTotal > 100) {
-      alert(`Total distribution percentage cannot exceed 100%. Current total would be ${newTotal}%.`);
+      alert(t("obligations.wakala.pctExceed", { pct: newTotal }));
       return;
     }
     if (modal?.distMode === "add") {
@@ -77,23 +86,23 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
   };
 
   const handleDeleteDist = async (distributionId: string) => {
-    if (!confirm("Delete this distribution?")) return;
+    if (!confirm(t("obligations.wakala.distDeleteConfirm"))) return;
     await onChangeDistributions(distributions.filter((distribution) => distribution.id !== distributionId));
   };
 
   return (
     <div className="space-y-4">
       <header className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground m-0">{wakalaTypes.length} Wakala Type{wakalaTypes.length !== 1 ? "s" : ""}</p>
+        <p className="text-sm text-muted-foreground m-0">{t("obligations.wakala.count", { count: wakalaTypes.length })}</p>
         <Button type="button" onClick={() => setModal({ mode: "add", data: { mujtahid_representative_id: reps[0]?.id || "", obligation_type_id: obligationTypes[0]?.id || "" } })}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Wakala Type
+          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.wakala.add")}
         </Button>
       </header>
 
-      <section aria-label="Wakala Types List" className="space-y-3">
+      <section aria-label={t("obligations.wakala.listAria")} className="space-y-3">
         {wakalaTypes.length === 0 && (
-          <div className="py-10 text-center text-sm text-muted-foreground rounded-xl border border-border">No Wakala Types configured.</div>
+          <div className="py-10 text-center text-sm text-muted-foreground rounded-xl border border-border">{t("obligations.wakala.empty")}</div>
         )}
         {wakalaTypes.map((wakalaType) => {
           const rep = getRep(wakalaType.mujtahid_representative_id);
@@ -102,29 +111,36 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
           const wakalaDistributions = getDistributions(wakalaType.id);
           const total = totalPct(wakalaType.id);
           const isComplete = Math.abs(total - 100) < 0.01;
+          const typeName = obligationType?.name || emDash;
 
           return (
             <Card key={wakalaType.id} accentColor="primary" className="group/wakala">
-              {/* Header */}
               <header className="flex items-start justify-between px-5 py-3 border-b border-border/40 pl-5.5">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-foreground m-0">{obligationType?.name || "—"}</h3>
-                    <span className="text-[10px] text-muted-foreground">via</span>
-                    <span className="text-sm font-semibold text-foreground">{rep?.name || "—"}</span>
+                    <h3 className="text-sm font-bold text-foreground m-0">{typeName}</h3>
+                    <span className="text-[10px] text-muted-foreground">{t("obligations.wakala.via")}</span>
+                    <span className="text-sm font-semibold text-foreground">{rep?.name || emDash}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5 m-0">Mujtahid: {mujtahid?.name || "—"}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 m-0">{t("obligations.wakala.mujtahidLabel", { name: mujtahid?.name || emDash })}</p>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isComplete ? "bg-success/15 text-success" : "bg-warning/15 text-warning"}`} aria-label={`Total distribution is ${total.toFixed(0)} percent`}>
-                    {total.toFixed(0)}%
+                  <span aria-label={t("obligations.wakala.totalPctAria", { pct: total.toFixed(0) })}>
+                    <StatusBadge
+                      status={isComplete ? "complete" : "incomplete"}
+                      size="sm"
+                      config={{
+                        complete: { label: `${total.toFixed(0)}%`, cls: SEMANTIC_BADGE.success },
+                        incomplete: { label: `${total.toFixed(0)}%`, cls: SEMANTIC_BADGE.warning },
+                      }}
+                    />
                   </span>
-                  <Button type="button" aria-label={`Edit Wakala Type for ${obligationType?.name}`} onClick={() => setModal({ mode: "edit", data: { ...wakalaType } })}
+                  <Button type="button" aria-label={t("obligations.wakala.editAria", { name: typeName })} onClick={() => setModal({ mode: "edit", data: { ...wakalaType } })}
                     variant="ghost"
                     className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
                     <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                   </Button>
-                  <Button type="button" aria-label={`Delete Wakala Type for ${obligationType?.name}`} onClick={() => handleDeleteWakala(wakalaType.id)}
+                  <Button type="button" aria-label={t("obligations.wakala.deleteAria", { name: typeName })} onClick={() => handleDeleteWakala(wakalaType.id)}
                     variant="ghost"
                     className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
                     <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -132,24 +148,23 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
                 </div>
               </header>
 
-              {/* Distributions */}
               <div className="bg-muted/20">
                 {!isComplete && total > 0 && (
                   <div className="flex items-center gap-1.5 px-4 py-2 bg-warning/10 border-b border-warning/20 text-xs text-warning" role="alert">
-                    <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" /> Distributions total {total.toFixed(1)}% — must equal 100%
+                    <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.wakala.incompleteAlert", { pct: total.toFixed(1) })}
                   </div>
                 )}
                 {wakalaDistributions.length === 0 ? (
-                  <p className="px-4 py-3 text-xs text-muted-foreground m-0">No distributions. Add distribution entries to reach 100%.</p>
+                  <p className="px-4 py-3 text-xs text-muted-foreground m-0">{t("obligations.wakala.noDistributions")}</p>
                 ) : (
                   <table className="w-full text-xs">
-                    <caption className="sr-only">Distributions for Wakala Type</caption>
+                    <caption className="sr-only">{t("obligations.wakala.distTableCaption")}</caption>
                     <thead className="border-b border-border">
                       <tr>
-                        <th scope="col" className="px-4 py-2 text-left font-semibold text-muted-foreground">Name</th>
-                        <th scope="col" className="px-4 py-2 text-left font-semibold text-muted-foreground">Type</th>
-                        <th scope="col" className="px-4 py-2 text-left font-semibold text-muted-foreground">%</th>
-                        <th scope="col" className="px-4 py-2 text-right font-semibold text-muted-foreground"><span className="sr-only">Actions</span></th>
+                        <th scope="col" className="px-4 py-2 text-left font-semibold text-muted-foreground">{t("obligations.wakala.colName")}</th>
+                        <th scope="col" className="px-4 py-2 text-left font-semibold text-muted-foreground">{t("obligations.wakala.colType")}</th>
+                        <th scope="col" className="px-4 py-2 text-left font-semibold text-muted-foreground">{t("obligations.wakala.colPct")}</th>
+                        <th scope="col" className="px-4 py-2 text-right font-semibold text-muted-foreground"><span className="sr-only">{t("obligations.wakala.colActions")}</span></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -157,19 +172,17 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
                         <tr key={distribution.id} className="hover:bg-muted/20">
                           <td className="px-4 py-2 font-medium text-foreground">{distribution.name}</td>
                           <td className="px-4 py-2">
-                            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${distribution.type === "Income" ? "bg-success/15 text-success" : "bg-info/15 text-info"}`}>
-                              {distribution.type}
-                            </span>
+                            <StatusBadge status={distribution.type} config={distributionTypeConfig} size="sm" />
                           </td>
                           <td className="px-4 py-2 font-mono font-semibold text-foreground">{distribution.percentage}%</td>
                           <td className="px-4 py-2 text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <Button type="button" aria-label={`Edit distribution ${distribution.name}`} onClick={() => setModal({ mode: "edit-dist", distMode: "edit", data: { ...distribution } })}
+                              <Button type="button" aria-label={t("obligations.wakala.distEditAria", { name: distribution.name })} onClick={() => setModal({ mode: "edit-dist", distMode: "edit", data: { ...distribution } })}
                                 variant="ghost"
                                 className="h-auto p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
                                 <Pencil className="w-3 h-3" aria-hidden="true" />
                               </Button>
-                              <Button type="button" aria-label={`Delete distribution ${distribution.name}`} onClick={() => handleDeleteDist(distribution.id)}
+                              <Button type="button" aria-label={t("obligations.wakala.distDeleteAria", { name: distribution.name })} onClick={() => handleDeleteDist(distribution.id)}
                                 variant="ghost"
                                 className="h-auto p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
                                 <Trash2 className="w-3 h-3" aria-hidden="true" />
@@ -185,7 +198,7 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
                   <Button type="button" onClick={() => setModal({ mode: "add-dist", distMode: "add", data: { name: "", percentage: 0, wakala_type_id: wakalaType.id, type: "Liability" } })}
                     variant="ghost"
                     className="flex items-center gap-1 h-auto p-0 text-xs font-semibold text-primary hover:text-primary/80 hover:bg-transparent shadow-none transition-colors">
-                    <Plus className="w-3 h-3" aria-hidden="true" /> Add Distribution
+                    <Plus className="w-3 h-3" aria-hidden="true" /> {t("obligations.wakala.addDistribution")}
                   </Button>
                 </div>
               </div>
@@ -196,7 +209,7 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
 
       {modal && (modal.mode === "add" || modal.mode === "edit") ? (
         <WakalaFormModal
-          title={modal.mode === "add" ? "Add Wakala Type" : "Edit Wakala Type"}
+          title={modal.mode === "add" ? t("obligations.wakala.addTitle") : t("obligations.wakala.editTitle")}
           initial={modal.data}
           reps={reps}
           mujtahids={mujtahids}
@@ -208,7 +221,7 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
 
       {modal && (modal.mode === "add-dist" || modal.mode === "edit-dist") ? (
         <DistributionFormModal
-          title={modal.distMode === "add" ? "Add Distribution" : "Edit Distribution"}
+          title={modal.distMode === "add" ? t("obligations.wakala.distAddTitle") : t("obligations.wakala.distEditTitle")}
           initial={modal.data}
           onSave={handleSaveDist}
           onClose={() => setModal(null)}
@@ -240,8 +253,8 @@ function WakalaFormModal({ initial, reps, mujtahids, obligationTypes, onSave, on
 
   const validate = (): Record<string, string> => {
     const nextErrors: Record<string, string> = {};
-    if (!form.mujtahid_representative_id) nextErrors.rep = "Representative is required";
-    if (!form.obligation_type_id) nextErrors.obType = "Obligation type is required";
+    if (!form.mujtahid_representative_id) nextErrors.rep = t("obligations.wakala.repRequired");
+    if (!form.obligation_type_id) nextErrors.obType = t("obligations.wakala.typeRequired");
     return nextErrors;
   };
 
@@ -266,12 +279,12 @@ function WakalaFormModal({ initial, reps, mujtahids, obligationTypes, onSave, on
     >
       <div className="space-y-4">
         <div>
-          <label htmlFor="wakala-rep" className={FORM_LABEL}>Mujtahid Representative *</label>
+          <label htmlFor="wakala-rep" className={FORM_LABEL}>{t("obligations.wakala.repLabel")} *</label>
           <FormSelect
             id="wakala-rep"
             value={form.mujtahid_representative_id || ""}
             onChange={(val) => setForm({ ...form, mujtahid_representative_id: val })}
-            placeholder="Select representative…"
+            placeholder={t("obligations.wakala.repPlaceholder")}
             options={reps.map((rep) => {
               const mujtahid = getMujtahidForRep(rep.id);
               return { value: rep.id, label: `${rep.name} (${mujtahid?.name || "?"})` };
@@ -279,12 +292,12 @@ function WakalaFormModal({ initial, reps, mujtahids, obligationTypes, onSave, on
           />
         </div>
         <div>
-          <label htmlFor="wakala-type" className={FORM_LABEL}>Obligation Type *</label>
+          <label htmlFor="wakala-type" className={FORM_LABEL}>{t("obligations.wakala.obTypeLabel")} *</label>
           <FormSelect
             id="wakala-type"
             value={form.obligation_type_id || ""}
             onChange={(val) => setForm({ ...form, obligation_type_id: val })}
-            placeholder="Select type…"
+            placeholder={t("obligations.wakala.obTypePlaceholder")}
             options={obligationTypes.map((obligationType) => ({ value: obligationType.id, label: obligationType.name }))}
           />
         </div>
@@ -307,9 +320,9 @@ function DistributionFormModal({ initial, onSave, onClose, title }: Distribution
 
   const validate = (): Record<string, string> => {
     const nextErrors: Record<string, string> = {};
-    if (!form.name?.trim()) nextErrors.name = "Name is required";
+    if (!form.name?.trim()) nextErrors.name = t("obligations.mujtahids.nameRequired");
     if (!form.percentage || isNaN(Number(form.percentage)) || Number(form.percentage) <= 0 || Number(form.percentage) > 100) {
-      nextErrors.pct = "Enter a valid percentage (1–100)";
+      nextErrors.pct = t("obligations.wakala.pctInvalid");
     }
     return nextErrors;
   };
@@ -335,7 +348,7 @@ function DistributionFormModal({ initial, onSave, onClose, title }: Distribution
     >
       <div className="space-y-4">
         <div>
-          <label htmlFor="dist-name" className={FORM_LABEL}>Name *</label>
+          <label htmlFor="dist-name" className={FORM_LABEL}>{t("obligations.wakala.distName")} *</label>
           <Input
             id="dist-name"
             value={form.name || ""}
@@ -345,16 +358,19 @@ function DistributionFormModal({ initial, onSave, onClose, title }: Distribution
           />
         </div>
         <div>
-          <label htmlFor="dist-type" className={FORM_LABEL}>Type *</label>
+          <label htmlFor="dist-type" className={FORM_LABEL}>{t("obligations.wakala.distType")} *</label>
           <FormSelect
             id="dist-type"
             value={form.type || ""}
             onChange={(val) => setForm({ ...form, type: val as DistributionType })}
-            options={DISTRIBUTION_TYPES}
+            options={DISTRIBUTION_TYPES.map((type) => ({
+              value: type,
+              label: type === "Income" ? t("obligations.distribution.income") : t("obligations.distribution.liability"),
+            }))}
           />
         </div>
         <div>
-          <label htmlFor="dist-pct" className={FORM_LABEL}>Percentage (%) *</label>
+          <label htmlFor="dist-pct" className={FORM_LABEL}>{t("obligations.wakala.distPct")} *</label>
           <Input
             id="dist-pct"
             type="number"

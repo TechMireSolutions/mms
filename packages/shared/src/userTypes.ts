@@ -341,9 +341,14 @@ export function normalizeWorkspaceUser(
         ? raw.roles[0]
         : 'teacher';
 
-  const name = raw.name ?? raw.email ?? 'User';
+  const email =
+    (typeof raw.email === 'string' && raw.email.trim()) ||
+    (typeof raw.loginEmail === 'string' && raw.loginEmail.trim()) ||
+    '';
+  const name =
+    (typeof raw.name === 'string' && raw.name.trim()) || email || 'User';
   const initials =
-    raw.avatarInitials ??
+    (typeof raw.avatarInitials === 'string' && raw.avatarInitials.trim()) ||
     name
       .split(/\s+/)
       .filter(Boolean)
@@ -358,7 +363,7 @@ export function normalizeWorkspaceUser(
     id: raw.id ?? '',
     contactId: raw.contactId,
     name,
-    email: raw.email ?? '',
+    email,
     loginEmail: typeof raw.loginEmail === 'string' ? raw.loginEmail : undefined,
     mustChangePassword: raw.mustChangePassword === true,
     phone: raw.phone ?? '',

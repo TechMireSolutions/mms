@@ -12,11 +12,12 @@ type AccentColor =
   | "warning"
   | "destructive"
   | "info"
+  | "secondary"
+  | "muted"
   | "indigo"
   | "rose"
   | "teal"
   | "purple"
-  | "muted"
   | "green"
   | "emerald"
   | "amber"
@@ -75,29 +76,11 @@ const ACCENT_MAP: Record<
     iconText: "text-info",
     ring: "ring-info/20",
   },
-  indigo: {
-    stripe: "bg-indigo-500/60 group-hover:bg-indigo-500",
-    iconBg: "bg-indigo-500/10",
-    iconText: "text-indigo-500",
-    ring: "ring-indigo-500/20",
-  },
-  rose: {
-    stripe: "bg-rose-500/60 group-hover:bg-rose-500",
-    iconBg: "bg-rose-500/10",
-    iconText: "text-rose-500",
-    ring: "ring-rose-500/20",
-  },
-  teal: {
-    stripe: "bg-teal-500/60 group-hover:bg-teal-500",
-    iconBg: "bg-teal-500/10",
-    iconText: "text-teal-500",
-    ring: "ring-teal-500/20",
-  },
-  purple: {
-    stripe: "bg-purple-500/60 group-hover:bg-purple-500",
-    iconBg: "bg-purple-500/10",
-    iconText: "text-purple-500",
-    ring: "ring-purple-500/20",
+  secondary: {
+    stripe: "bg-secondary/60 group-hover:bg-secondary",
+    iconBg: "bg-secondary/10",
+    iconText: "text-secondary",
+    ring: "ring-secondary/20",
   },
   muted: {
     stripe: "bg-muted-foreground/30 group-hover:bg-muted-foreground",
@@ -107,22 +90,27 @@ const ACCENT_MAP: Record<
   },
 };
 
-// Aliases for compatibility
+// Compatibility aliases → semantic tokens only
 ACCENT_MAP.green = ACCENT_MAP.success;
 ACCENT_MAP.emerald = ACCENT_MAP.success;
 ACCENT_MAP.amber = ACCENT_MAP.warning;
 ACCENT_MAP.red = ACCENT_MAP.destructive;
+ACCENT_MAP.rose = ACCENT_MAP.destructive;
 ACCENT_MAP.blue = ACCENT_MAP.info;
+ACCENT_MAP.indigo = ACCENT_MAP.info;
+ACCENT_MAP.teal = ACCENT_MAP.info;
 ACCENT_MAP.violet = ACCENT_MAP.primary;
+ACCENT_MAP.purple = ACCENT_MAP.secondary;
 
 function resolveAccent(accent?: string) {
   if (!accent) return ACCENT_MAP.primary;
   
   // Handle tailwind background classes passed as color (from legacy FinancialReports.tsx)
-  if (accent.includes("success")) return ACCENT_MAP.success;
-  if (accent.includes("destructive")) return ACCENT_MAP.destructive;
-  if (accent.includes("warning")) return ACCENT_MAP.warning;
-  if (accent.includes("info") || accent.includes("blue")) return ACCENT_MAP.info;
+  if (accent.includes("success") || accent.includes("emerald") || accent.includes("green")) return ACCENT_MAP.success;
+  if (accent.includes("destructive") || accent.includes("rose") || accent.includes("red")) return ACCENT_MAP.destructive;
+  if (accent.includes("warning") || accent.includes("amber")) return ACCENT_MAP.warning;
+  if (accent.includes("info") || accent.includes("blue") || accent.includes("indigo") || accent.includes("teal")) return ACCENT_MAP.info;
+  if (accent.includes("secondary") || accent.includes("purple")) return ACCENT_MAP.secondary;
   if (accent.includes("primary") || accent.includes("violet")) return ACCENT_MAP.primary;
   
   return ACCENT_MAP[accent] || ACCENT_MAP.primary;

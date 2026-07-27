@@ -6,11 +6,12 @@ import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp, List, BookMarked, Scale,
-  BookOpen, LayoutDashboard, Archive,
+  BookOpen, LayoutDashboard, Archive, Plus,
 } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { ActionButton } from "@/components/ui/ActionButton";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { ChartOfAccounts } from "@/tenant/features/accounting/components/ChartOfAccounts";
@@ -236,18 +237,19 @@ export default function Accounting() {
       headerSubtitle={`${t("page.accounting.subtitle")}${activeFiscalYear ? ` · ${activeFiscalYear.label}` : ""} · ${activeCurrency.code}`}
       headerActions={
         <div className="flex items-center gap-2">
-          {activeTab === "work" && activeSubTab === "journal" && canDelete && (
-            <Button
-              type="button"
-              variant={showDeleted ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowDeleted((prev) => !prev)}
-              className="gap-1.5"
+          {canWrite && !showDeleted ? (
+            <ActionButton
+              variant="primary"
+              icon={Plus}
+              onClick={() => {
+                setActiveTab("work");
+                setActiveSubTab("journal");
+                setCreateJournalRequestKey((key) => key + 1);
+              }}
             >
-              <Archive className="w-3.5 h-3.5" aria-hidden="true" />
-              {showDeleted ? t("accounting.trash.showActive") : t("accounting.trash.showDeleted")}
-            </Button>
-          )}
+              {t("accounting.journal.dashboard.newEntry")}
+            </ActionButton>
+          ) : null}
           {activeFiscalYear && (
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-success/15 text-success border border-success/30">
               {t("page.accounting.activeBadge", { label: activeFiscalYear.label })}
@@ -266,14 +268,28 @@ export default function Accounting() {
         panelIdPrefix="accounting-tab"
       >
       {activeTab === "work" && (
-        <SubTabBar
-          tabs={SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
-          value={activeSubTab}
-          onChange={(next) => {
-            setActiveSubTab(next);
-            if (next !== "journal") setShowDeleted(false);
-          }}
-        />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <SubTabBar
+            tabs={SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
+            value={activeSubTab}
+            onChange={(next) => {
+              setActiveSubTab(next);
+              if (next !== "journal") setShowDeleted(false);
+            }}
+          />
+          {activeSubTab === "journal" && canDelete && (
+            <Button
+              type="button"
+              variant={showDeleted ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowDeleted((prev) => !prev)}
+              className="gap-1.5 shrink-0"
+            >
+              <Archive className="w-3.5 h-3.5" aria-hidden="true" />
+              {showDeleted ? t("accounting.trash.showActive") : t("accounting.trash.showDeleted")}
+            </Button>
+          )}
+        </div>
       )}
 
       <AnimatePresence mode="wait">

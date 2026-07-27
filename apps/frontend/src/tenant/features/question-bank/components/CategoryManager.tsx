@@ -5,6 +5,7 @@ import { createQuestionCategory, type QuestionCategory } from '@mms/shared';
 import { FORM_INPUT } from '@/components/ui/formStyles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CategoryColorChip } from '@/tenant/features/question-bank/components/CategoryColorChip';
 
 interface CategoryManagerProps {
   categories: QuestionCategory[];
@@ -72,12 +73,7 @@ export function CategoryManager({
               onChange={(event) => update(cat.id, { color: event.target.value })}
               aria-label={t('questionBank.categoryColor')}
             />
-            <span
-              className="truncate rounded-full px-2 py-1 text-center text-[10px] font-bold text-white"
-              style={{ background: cat.color }}
-            >
-              {cat.name}
-            </span>
+            <CategoryColorChip name={cat.name} color={cat.color} />
             <Button
               type="button"
               onClick={() => removeCategory(cat.id)}

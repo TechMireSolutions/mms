@@ -14,6 +14,7 @@ import { useTeachersWidgetAggregates } from "@/tenant/hooks/collections/teachers
 import { applyContactsWorkDrillDown } from "@/lib/contacts/contactsWorkDrillDown";
 import { isSeededDashboardWidget } from "@/lib/dashboardWidgets";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { Button } from "@/components/ui/button";
 import { notify } from "@/lib/notify";
 
 interface DashboardWidgetsProps {
@@ -162,14 +163,15 @@ export function DashboardWidgets({
         
         {/* Layout Density Controls */}
         <div className="flex items-center gap-1 border border-border/60 bg-muted/20 p-1 rounded-xl shadow-inner backdrop-blur-xs relative select-none">
-          <button
+          <Button
+            type="button"
+            variant="ghost"
             onClick={() => handleToggleGridMode("comfortable")}
-            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer relative z-10 ${
+            className={`h-auto px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider relative z-10 shadow-none ${
               gridMode === "comfortable" 
                 ? "text-foreground" 
                 : "text-muted-foreground hover:text-foreground"
             }`}
-            type="button"
           >
             {gridMode === "comfortable" && (
               <motion.div
@@ -179,15 +181,16 @@ export function DashboardWidgets({
               />
             )}
             {t("reports.widgets.comfortable")}
-          </button>
-          <button
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
             onClick={() => handleToggleGridMode("compact")}
-            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer relative z-10 ${
+            className={`h-auto px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider relative z-10 shadow-none ${
               gridMode === "compact" 
                 ? "text-foreground" 
                 : "text-muted-foreground hover:text-foreground"
             }`}
-            type="button"
           >
             {gridMode === "compact" && (
               <motion.div
@@ -197,7 +200,7 @@ export function DashboardWidgets({
               />
             )}
             {t("reports.widgets.compact")}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -242,39 +245,45 @@ export function DashboardWidgets({
                   gridMode === "compact" ? "scale-75 top-0.5 right-0.5" : ""
                 }`}>
                   {isEditMode && onEditWidget && (
-                    <button
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
                       onClick={(event) => {
                         event.stopPropagation();
                         onEditWidget(widget);
                       }}
-                      className="p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-primary hover:text-primary-foreground text-muted-foreground transition-all cursor-pointer"
+                      className="h-auto w-auto p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-primary hover:text-primary-foreground text-muted-foreground shadow-none"
                       title={t("reports.widgets.editWidget")}
-                      type="button"
                     >
                       <Pencil className="w-3 h-3" />
-                    </button>
+                    </Button>
                   )}
                   {isEditMode && onDeleteWidget && !isSeededDashboardWidget(widget.id) && (
-                    <button
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
                       onClick={(event) => {
                         event.stopPropagation();
                         onDeleteWidget(widget.id);
                       }}
-                      className="p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-destructive hover:text-destructive-foreground text-muted-foreground transition-all cursor-pointer"
+                      className="h-auto w-auto p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-destructive hover:text-destructive-foreground text-muted-foreground shadow-none"
                       title={t("reports.widgets.deleteWidget")}
-                      type="button"
                     >
                       <Trash2 className="w-3 h-3" />
-                    </button>
+                    </Button>
                   )}
-                  <button
-                    onClick={() => handleLocalUnpin(widget.id)}
-                    className="p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all cursor-pointer"
-                    title={t("reports.widgets.unpinWidget")}
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleLocalUnpin(widget.id)}
+                    className="h-auto w-auto p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none"
+                    title={t("reports.widgets.unpinWidget")}
                   >
                     <PinOff className="w-3 h-3" />
-                  </button>
+                  </Button>
                 </div>
               </motion.div>
             );

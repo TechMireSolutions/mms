@@ -11,6 +11,7 @@ import { resolveModuleTierTab, todayISO, ATTENDANCE_MODULE_MANIFEST } from "@mms
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { ActionButton } from "@/components/ui/ActionButton";
 import { AttendanceFilters } from "@/tenant/features/attendance/components/AttendanceFilters";
 import { MarkAttendance } from "@/tenant/features/attendance/components/MarkAttendance";
 import { AttendanceRecords } from "@/tenant/features/attendance/components/AttendanceRecords";
@@ -255,6 +256,20 @@ export default function Attendance() {
       headerIcon={UserCheck}
       headerTitle={t("nav.attendance")}
       headerSubtitle={t("page.attendance.subtitle")}
+      headerActions={
+        canWriteAttendance && !showDeleted ? (
+          <ActionButton
+            variant="primary"
+            icon={ClipboardEdit}
+            onClick={() => {
+              setActiveTab("work");
+              setActiveOpsTab("mark");
+            }}
+          >
+            {t("attendance.tabs.mark")}
+          </ActionButton>
+        ) : undefined
+      }
       metricsStrip={
         <AttendanceCommandMetrics
           total={attendanceRecords.length}
@@ -270,8 +285,7 @@ export default function Attendance() {
         hideWhenSingle
         panelIdPrefix="attendance-tab"
       >
-      {/* Role info banner */}
-      {!can("users.manage") && (
+      {effectiveTab !== "setup" && !can("users.manage") && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium bg-muted text-muted-foreground border border-border">
           <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
           <span className="font-bold capitalize">{t("attendance.roleBanner.label", { role })}</span>
@@ -280,8 +294,9 @@ export default function Attendance() {
         </div>
       )}
 
-      {/* Global Filters */}
-      <AttendanceFilters filters={filters} onChange={setFilters} />
+      {effectiveTab !== "setup" && (
+        <AttendanceFilters filters={filters} onChange={setFilters} />
+      )}
 
       {effectiveTab === "work" && effectiveOpsTab === "records" && canDeleteAttendance && (
         <Button

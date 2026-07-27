@@ -8,6 +8,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { RegistryPersonSelect } from "@/components/ui/RegistryPersonSelect";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const ICONS: Record<string, React.ReactElement> = {
   pass: <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" aria-hidden="true" />,
@@ -28,6 +29,7 @@ const LABEL_COL: Record<string, string> = {
 };
 
 export function EligibilityCheck(): React.ReactElement {
+  const { t } = useTranslation();
   const sessions = useSessionsCollection();
   const [studentId, setStudentId] = useState<string>("");
   const [sessionId, setSessionId] = useState<string>("");
@@ -49,20 +51,20 @@ export function EligibilityCheck(): React.ReactElement {
   return (
     <article className="max-w-2xl space-y-5" aria-labelledby="eligibility-title">
       <div>
-        <h3 id="eligibility-title" className="text-base font-bold text-foreground">Eligibility Check</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">Verify a student's eligibility for any session without creating an enrollment.</p>
+        <h3 id="eligibility-title" className="text-base font-bold text-foreground">{t("enrollments.eligibility.title")}</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">{t("enrollments.eligibility.description")}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <RegistryPersonSelect
           kind="student"
           id="select-student"
-          label="Student"
+          label={t("enrollments.eligibility.student")}
           value={studentId}
           onChange={setStudentId}
         />
         <div>
-          <label htmlFor="select-session" className={FORM_LABEL}>Session</label>
+          <label htmlFor="select-session" className={FORM_LABEL}>{t("enrollments.eligibility.session")}</label>
           <FormSelect
             id="select-session"
             name="select-session"
@@ -72,13 +74,13 @@ export function EligibilityCheck(): React.ReactElement {
               value: sessionOption.id,
               label: sessionOption.name,
             }))}
-            placeholder="— Select session —"
+            placeholder={t("enrollments.eligibility.selectSession")}
           />
         </div>
       </div>
 
       {student && (
-        <section className="flex items-center gap-3 px-4 py-3 rounded-xl bg-muted border border-border" aria-label="Student details preview">
+        <section className="flex items-center gap-3 px-4 py-3 rounded-xl bg-muted border border-border" aria-label={t("enrollments.eligibility.studentPreview")}>
           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
             <span className="text-sm font-bold text-primary">{getInitials(student.name)}</span>
           </div>
@@ -87,12 +89,16 @@ export function EligibilityCheck(): React.ReactElement {
               <p className="text-sm font-bold text-foreground">{student.name}</p>
               {student.grNumber && (
                 <span className="bg-primary/5 text-primary text-[9px] px-1.5 py-0.5 rounded border border-primary/10 font-bold uppercase">
-                  GR: {student.grNumber}
+                  {t("enrollments.detail.grNumber")}: {student.grNumber}
                 </span>
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Age {calcAge(student.dob) ?? "?"} · {student.gender} · {student.city || "No city"}
+              {t("enrollments.eligibility.studentMeta", {
+                age: calcAge(student.dob) ?? "?",
+                gender: student.gender || "—",
+                city: student.city || t("enrollments.eligibility.noCity"),
+              })}
             </p>
           </div>
         </section>
@@ -100,26 +106,26 @@ export function EligibilityCheck(): React.ReactElement {
 
       {student && session && (
         <>
-          <div className="flex items-center gap-3 flex-wrap" role="status" aria-label="Eligibility summary">
+          <div className="flex items-center gap-3 flex-wrap" role="status" aria-label={t("enrollments.eligibility.summary")}>
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-success/10 border border-success/30">
               <CheckCircle2 className="w-3.5 h-3.5 text-success" aria-hidden="true" />
-              <span className="text-xs font-bold text-success">{passCount} Passed</span>
+              <span className="text-xs font-bold text-success">{t("enrollments.eligibility.passed", { count: passCount })}</span>
             </div>
             {failCount > 0 && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-destructive/10 border border-destructive/30">
                 <XCircle className="w-3.5 h-3.5 text-destructive" aria-hidden="true" />
-                <span className="text-xs font-bold text-destructive">{failCount} Failed</span>
+                <span className="text-xs font-bold text-destructive">{t("enrollments.eligibility.failed", { count: failCount })}</span>
               </div>
             )}
             {warnCount > 0 && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-warning/10 border border-warning/30">
                 <AlertTriangle className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
-                <span className="text-xs font-bold text-warning">{warnCount} Warning{warnCount > 1 ? "s" : ""}</span>
+                <span className="text-xs font-bold text-warning">{t("enrollments.eligibility.warnings", { count: warnCount })}</span>
               </div>
             )}
           </div>
 
-          <div className="space-y-2" role="list" aria-label="Eligibility check details">
+          <div className="space-y-2" role="list" aria-label={t("enrollments.eligibility.details")}>
             {checks.map((check) => (
               <div key={check.id} className={`flex items-start gap-3 p-3 rounded-xl border ${ROW_BG[check.status]}`} role="listitem">
                 <div className="mt-0.5">{ICONS[check.status]}</div>

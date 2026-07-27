@@ -17,8 +17,8 @@ import { formatDate } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
+import { Checkbox } from '@/components/ui/checkbox';
 import { UserRoleBadge, UserStatusBadge } from '@/tenant/features/users/components/UserBadges';
-import { FORM_CHECKBOX } from '@/components/ui/formStyles';
 
 interface AvatarProps {
   user: SystemUser;
@@ -262,11 +262,9 @@ export function UsersList({
                 <tr>
                   {canDelete && (
                     <th className="w-8 px-3 py-2.5">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={selected.length === filtered.length && filtered.length > 0}
-                        onChange={toggleAll}
-                        className={FORM_CHECKBOX}
+                        onCheckedChange={() => toggleAll()}
                         aria-label={t('users.selectAll')}
                       />
                     </th>
@@ -329,11 +327,9 @@ export function UsersList({
                   <motion.tr key={user.id} layout className="transition-colors hover:bg-muted/20">
                     {canDelete && (
                       <td className="px-3 py-2.5">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={selected.includes(user.id)}
-                          onChange={() => toggleSelect(user.id)}
-                          className={FORM_CHECKBOX}
+                          onCheckedChange={() => toggleSelect(user.id)}
                           aria-label={t('users.selectRow', { name: user.name })}
                         />
                       </td>

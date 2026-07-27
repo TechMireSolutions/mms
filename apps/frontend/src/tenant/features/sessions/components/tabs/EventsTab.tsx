@@ -12,15 +12,8 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { formatDate, type AppTranslationKey } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-
-
-const TYPE_COLORS: Record<string, string> = {
-  ceremony:   "bg-warning/10 text-warning border-warning/20",
-  assessment: "bg-destructive/10 text-destructive border-destructive/20",
-  meeting:    "bg-info/10 text-info border-info/20",
-  trip:       "bg-success/10 text-success border-success/20",
-  other:      "bg-muted text-muted-foreground border-border",
-};
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 const EMPTY: Partial<SessionEvent> = { title: "", date: "", time: "", location: "", description: "", type: "meeting" };
 
@@ -124,6 +117,14 @@ export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps) {
   const deletePendingRef = React.useRef(false);
   const events = [...(session.events ?? [])].sort((a, b) => a.date.localeCompare(b.date));
 
+  const eventTypeConfig = React.useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    ceremony: { label: t("sessions.events.type.ceremony"), cls: SEMANTIC_BADGE.warning },
+    assessment: { label: t("sessions.events.type.assessment"), cls: SEMANTIC_BADGE.destructive },
+    meeting: { label: t("sessions.events.type.meeting"), cls: SEMANTIC_BADGE.info },
+    trip: { label: t("sessions.events.type.trip"), cls: SEMANTIC_BADGE.success },
+    other: { label: t("sessions.events.type.other"), cls: SEMANTIC_BADGE.muted },
+  }), [t]);
+
   const handleSave = async (eventToSave: SessionEvent) => {
     const existing = session.events?.find((sessionEvent) => sessionEvent.id === eventToSave.id);
     setSaving(true);
@@ -182,9 +183,7 @@ export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps) {
                   <header className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h4 className="text-[13px] font-bold text-foreground m-0">{sessionEvent.title}</h4>
-                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${TYPE_COLORS[sessionEvent.type] || TYPE_COLORS.other}`}>
-                        {t(`sessions.events.type.${sessionEvent.type}` as AppTranslationKey)}
-                      </span>
+                      <StatusBadge status={sessionEvent.type || "other"} config={eventTypeConfig} size="sm" />
                     </div>
                     {canWrite && <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button aria-label={t("sessions.events.editNamed", { name: sessionEvent.title })} onClick={() => { setEditEvent(sessionEvent); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground w-8 h-8" variant="ghost" size="icon">

@@ -274,8 +274,7 @@ export default function ExamsList({
           {/* Card view for mobile/tablet */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:hidden" role="list" aria-label={t("examinations.exams")}>
             {filtered.map((exam, index) => {
-              const { assignedClasses, studentCount, StatusIcon } = renderExamMeta(exam);
-              const conf = statusConfig[exam.status] || { label: exam.status, cls: SEMANTIC_BADGE.muted };
+              const { assignedClasses, studentCount } = renderExamMeta(exam);
               return (
                 <motion.div
                   key={exam.id}
@@ -291,9 +290,7 @@ export default function ExamsList({
                     <div className="flex-1 min-w-0 pr-2">
                       {showStatus && (
                         <div className="flex items-center gap-2 mb-1.5">
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${conf.cls} flex items-center gap-1`}>
-                            <StatusIcon className="w-2.5 h-2.5" aria-hidden="true" /> {conf.label}
-                          </span>
+                          <StatusBadge status={exam.status} config={statusConfig} size="sm" />
                         </div>
                       )}
                       {showName && (

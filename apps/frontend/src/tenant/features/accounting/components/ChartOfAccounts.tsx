@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { type AppTranslationKey } from "@mms/shared";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 
 
@@ -48,6 +50,10 @@ export function ChartOfAccounts({
   const [typeFilter,  setTypeFilter] = useState<AccountType | "all">("all");
   const [showInactive, setShowInactive] = useState(false);
   const [modal,       setModal]      = useState<Partial<Account> | null>(null);
+  const balanceConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    debit: { label: t("accounting.ledger.dr"), cls: SEMANTIC_BADGE.infoStrong },
+    credit: { label: t("accounting.ledger.cr"), cls: SEMANTIC_BADGE.successStrong },
+  }), [t]);
 
   const filtered = useMemo(() => accounts
     .filter((account) => typeFilter === "all" || account.type === typeFilter)
@@ -251,9 +257,11 @@ export function ChartOfAccounts({
                       )}
                       {showNormalBalance && (
                         <td className="px-4 py-2.5">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? "bg-info/15 text-info" : "bg-success/15 text-success"}`}>
-                            {ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? t("accounting.ledger.dr") : t("accounting.ledger.cr")}
-                          </span>
+                          <StatusBadge
+                            status={ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? "debit" : "credit"}
+                            config={balanceConfig}
+                            size="sm"
+                          />
                         </td>
                       )}
                       <td className="px-4 py-2.5 text-right">

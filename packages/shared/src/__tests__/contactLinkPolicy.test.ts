@@ -6,6 +6,7 @@ import {
   hydrateContactProfile,
   hydrateParentContactNames,
   resolveEntityName,
+  contactDisplayName,
 } from '../contactLinkPolicy.js';
 
 describe('contactLinkPolicy', () => {
@@ -65,10 +66,37 @@ describe('contactLinkPolicy', () => {
       expect(hydrated.phone).toBe('+123456789');
     });
 
+    it('does not overwrite stored name with empty contact.name', () => {
+      const record: Record<string, unknown> = { id: 's1', contactId: 'c2', name: 'Kept Name' };
+      const hydrated = hydrateContactProfile(record, [
+        { id: 'c2', name: '', firstName: '', lastName: '' },
+      ]);
+      expect(hydrated.name).toBe('Kept Name');
+    });
+
+    it('composes name from firstName/lastName when name is empty', () => {
+      const record: Record<string, unknown> = { id: 's1', contactId: 'c3' };
+      const hydrated = hydrateContactProfile(record, [
+        { id: 'c3', firstName: 'John', lastName: 'Doe', emails: [{ address: 'j@example.com' }] },
+      ]);
+      expect(hydrated.name).toBe('John Doe');
+      expect(hydrated.email).toBe('j@example.com');
+    });
+
     it('hydrates parent names from parent contact IDs', () => {
       const record: Record<string, unknown> = { id: 'st1', fatherContactId: 'c_father' };
       const hydrated = hydrateParentContactNames(record, contacts);
       expect(hydrated.fatherName).toBe('John Doe Sr.');
+    });
+  });
+
+  describe('contactDisplayName', () => {
+    it('prefers name, then composes firstName and lastName', () => {
+      expect(contactDisplayName({ id: '1', name: 'Full Name', firstName: 'A', lastName: 'B' })).toBe(
+        'Full Name',
+      );
+      expect(contactDisplayName({ id: '1', firstName: 'John', lastName: 'Doe' })).toBe('John Doe');
+      expect(contactDisplayName({ id: '1', name: '  ', firstName: 'Jane' })).toBe('Jane');
     });
   });
 

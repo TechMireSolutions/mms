@@ -7,6 +7,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import type { AppTranslationKey } from "@mms/shared";
 import { capitalize } from "@mms/shared";
 
@@ -81,36 +82,45 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
   return (
     <Card className="overflow-hidden">
       {/* Header */}
-      <button
-        onClick={() => setOpen((isOpen) => !isOpen)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
-        type="button"
-      >
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-muted-foreground" />
+      <div className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors">
+        <Button
+          onClick={() => setOpen((isOpen) => !isOpen)}
+          className="h-auto flex-1 justify-start gap-2 p-0 rounded-none hover:bg-transparent shadow-none"
+          variant="ghost"
+          type="button"
+          aria-expanded={open}
+        >
+          <Filter className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
           <span className="text-sm font-semibold text-foreground">{t("reports.filters.title")}</span>
           {activeCount > 0 && (
             <span className="px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
               {activeCount}
             </span>
           )}
-        </div>
+        </Button>
         <div className="flex items-center gap-2">
           {activeCount > 0 && (
-            <button
-              onClick={(event) => {
-                event.stopPropagation();
-                reset();
-              }}
-              className="text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1"
+            <Button
+              onClick={reset}
+              className="h-auto p-0 text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1 shadow-none"
+              variant="ghost"
               type="button"
             >
-              <X className="w-3 h-3" /> {t("reports.filters.clearAll")}
-            </button>
+              <X className="w-3 h-3" aria-hidden="true" /> {t("reports.filters.clearAll")}
+            </Button>
           )}
-          {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+          <Button
+            onClick={() => setOpen((isOpen) => !isOpen)}
+            className="h-auto p-0 shadow-none hover:bg-transparent"
+            variant="ghost"
+            type="button"
+            aria-expanded={open}
+            aria-label={t("reports.filters.title")}
+          >
+            {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" aria-hidden="true" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" aria-hidden="true" />}
+          </Button>
         </div>
-      </button>
+      </div>
 
       {/* Filter fields */}
       <AnimatePresence>

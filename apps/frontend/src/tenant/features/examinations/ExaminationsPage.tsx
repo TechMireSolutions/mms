@@ -4,7 +4,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, FileText, PenTool, Layers, Archive } from "lucide-react";
+import { BookOpen, FileText, PenTool, Layers, Archive, Plus } from "lucide-react";
 import { EXAMINATIONS_MODULE_MANIFEST, resolveModuleTierTab, type AppTranslationKey } from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
@@ -229,18 +229,6 @@ export default function Examinations(): React.JSX.Element {
       headerSubtitle={t("page.examinations.subtitle")}
       headerActions={
         <div className="flex items-center gap-2">
-          {effectiveTab === "work" && effectiveSubTab === "exams" && canDelete ? (
-            <Button
-              type="button"
-              variant={showDeleted ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowDeleted((prev) => !prev)}
-              className="gap-1.5"
-            >
-              <Archive className="w-3.5 h-3.5" aria-hidden="true" />
-              {showDeleted ? t("examinations.trash.showActive") : t("examinations.trash.showDeleted")}
-            </Button>
-          ) : null}
           {canWrite && !showDeleted ? (
             <ActionButton
               variant="ghost"
@@ -248,6 +236,21 @@ export default function Examinations(): React.JSX.Element {
               onClick={() => setShowMarksModal(true)}
             >
               {t("examinations.marks")}
+            </ActionButton>
+          ) : null}
+          {canWrite && !showDeleted ? (
+            <ActionButton
+              variant="primary"
+              icon={Plus}
+              onClick={() => {
+                setActiveTab("work");
+                setActiveSubTab("exams");
+                setEditExam(null);
+                setShowExamForm(true);
+                setCreateExamKey((key) => key + 1);
+              }}
+            >
+              {t("examinations.newExam")}
             </ActionButton>
           ) : null}
         </div>
@@ -263,14 +266,28 @@ export default function Examinations(): React.JSX.Element {
         panelIdPrefix="examinations-tab"
       >
         {effectiveTab === "work" && (
-          <SubTabBar
-            tabs={OPS_SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
-            value={effectiveSubTab}
-            onChange={(next) => {
-              setActiveSubTab(next);
-              if (next !== "exams") setShowDeleted(false);
-            }}
-          />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <SubTabBar
+              tabs={OPS_SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
+              value={effectiveSubTab}
+              onChange={(next) => {
+                setActiveSubTab(next);
+                if (next !== "exams") setShowDeleted(false);
+              }}
+            />
+            {effectiveSubTab === "exams" && canDelete && (
+              <Button
+                type="button"
+                variant={showDeleted ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowDeleted((prev) => !prev)}
+                className="gap-1.5 shrink-0"
+              >
+                <Archive className="w-3.5 h-3.5" aria-hidden="true" />
+                {showDeleted ? t("examinations.trash.showActive") : t("examinations.trash.showDeleted")}
+              </Button>
+            )}
+          </div>
         )}
 
         <ErrorBoundary>

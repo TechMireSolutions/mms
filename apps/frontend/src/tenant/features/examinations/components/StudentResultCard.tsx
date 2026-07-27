@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Award, Printer } from "lucide-react";
 import { getRankSuffix, GradeInfo } from "@/tenant/features/examinations/components/gradeUtils";
 import { Exam } from '@/lib/data/examinationData';
 import { formatDate } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface StudentResultItem {
   pct: number;
@@ -41,6 +44,7 @@ interface StudentResultCardProps {
  * @returns The StudentResultCard component.
  */
 export function StudentResultCard({ result, exam, allResults, onClose, onCertificate }: StudentResultCardProps): React.ReactElement {
+  const { t } = useTranslation();
   const percentage = result.pct;
   const grade = result.grade;
   const circumference = 2 * Math.PI * 42;
@@ -48,12 +52,16 @@ export function StudentResultCard({ result, exam, allResults, onClose, onCertifi
 
   const position = result.rank;
   const total = allResults.length;
+  const passFailConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    pass: { label: t("examinations.pass"), cls: SEMANTIC_BADGE.success },
+    fail: { label: t("examinations.fail"), cls: SEMANTIC_BADGE.destructive },
+  }), [t]);
 
   return (
     <Modal
       open
       onClose={onClose}
-      title={result.student?.name || "Student Result"}
+      title={result.student?.name || t("examinations.resultCard.title")}
       subtitle={`${result.cls?.name || ""} · ${result.student?.rollNo || ""}`}
       icon={Award}
       size="sm"
@@ -65,7 +73,7 @@ export function StudentResultCard({ result, exam, allResults, onClose, onCertifi
               onClick={onCertificate}
               className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-warning/40 bg-warning/10 text-warning text-sm font-semibold hover:bg-warning/15"
             >
-              <Award className="w-4 h-4" aria-hidden="true" /> Certificate
+              <Award className="w-4 h-4" aria-hidden="true" /> {t("examinations.resultCard.certificate")}
             </Button>
           )}
           <Button
@@ -73,7 +81,7 @@ export function StudentResultCard({ result, exam, allResults, onClose, onCertifi
             onClick={() => window.print()}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border bg-muted text-foreground text-sm font-semibold hover:bg-muted/80"
           >
-            <Printer className="w-4 h-4" aria-hidden="true" /> Print
+            <Printer className="w-4 h-4" aria-hidden="true" /> {t("examinations.resultCard.print")}
           </Button>
         </div>
       }
@@ -106,32 +114,34 @@ export function StudentResultCard({ result, exam, allResults, onClose, onCertifi
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 divide-x divide-border border-t border-border" role="status" aria-label="Student metrics summary">
-          {[
-            { label: "Marks", value: `${result.marksObtained}/${exam.totalMarks}`, className: "text-foreground" },
-            { label: "Rank", value: getRankSuffix(position) + ` / ${total}`, className: "text-foreground" },
-            { label: "Status", value: result.passed ? "PASS" : "FAIL", className: result.passed ? "text-success" : "text-destructive" },
-          ].map((stat) => (
-            <div key={stat.label} className="px-3 py-3.5 text-center">
-              <p className={`text-[14px] font-bold ${stat.className}`}>{stat.value}</p>
-              <p className="text-[10px] text-muted-foreground">{stat.label}</p>
-            </div>
-          ))}
+        <div className="grid grid-cols-3 divide-x divide-border border-t border-border" role="status" aria-label={t("examinations.resultCard.metricsAria")}>
+          <div className="px-3 py-3.5 text-center">
+            <p className="text-[14px] font-bold text-foreground">{`${result.marksObtained}/${exam.totalMarks}`}</p>
+            <p className="text-[10px] text-muted-foreground">{t("examinations.resultCard.marks")}</p>
+          </div>
+          <div className="px-3 py-3.5 text-center">
+            <p className="text-[14px] font-bold text-foreground">{getRankSuffix(position)} / {total}</p>
+            <p className="text-[10px] text-muted-foreground">{t("examinations.resultCard.rank")}</p>
+          </div>
+          <div className="px-3 py-3.5 text-center flex flex-col items-center gap-1">
+            <StatusBadge status={result.passed ? "pass" : "fail"} config={passFailConfig} size="sm" />
+            <p className="text-[10px] text-muted-foreground">{t("examinations.resultCard.status")}</p>
+          </div>
         </div>
 
         {/* Exam info */}
-        <section className="relative overflow-hidden group/examinfo px-5.5 py-4 space-y-2 border-t border-border/60 text-[12px] text-muted-foreground" aria-label="Exam details">
+        <section className="relative overflow-hidden group/examinfo px-5.5 py-4 space-y-2 border-t border-border/60 text-[12px] text-muted-foreground" aria-label={t("examinations.resultCard.examDetailsAria")}>
           <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/examinfo:bg-primary" />
           <div className="flex justify-between ml-1">
-            <span>Exam</span>
+            <span>{t("examinations.resultCard.exam")}</span>
             <span className="font-semibold text-foreground">{exam.name}</span>
           </div>
           <div className="flex justify-between ml-1">
-            <span>Subject</span>
+            <span>{t("examinations.resultCard.subject")}</span>
             <span className="font-semibold text-foreground">{exam.subject}</span>
           </div>
           <div className="flex justify-between ml-1">
-            <span>Date</span>
+            <span>{t("examinations.resultCard.date")}</span>
             <span className="font-semibold text-foreground">{formatDate(exam.date, true)}</span>
           </div>
         </section>

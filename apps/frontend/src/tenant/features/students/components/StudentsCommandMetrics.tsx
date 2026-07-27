@@ -30,7 +30,7 @@ export function StudentsCommandMetrics({
     { icon: UserCheck, label: t("students.metrics.active"), value: metrics.active, accent: "success" as const },
     { icon: UserX, label: t("students.metrics.inactive"), value: metrics.inactive, accent: "warning" as const },
     { icon: UserMinus, label: t("students.metrics.suspended"), value: metrics.suspended, accent: "destructive" as const },
-    { icon: CalendarPlus, label: t("students.metrics.newThisPeriod"), value: metrics.newThisPeriod, accent: "indigo" as const },
+    { icon: CalendarPlus, label: t("students.metrics.newThisPeriod"), value: metrics.newThisPeriod, accent: "info" as const },
   ];
 
   return <ModuleCommandMetricsGrid items={items} />;
