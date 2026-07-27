@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { SectionCard } from "@/components/ui/SectionCard";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
+import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
 import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";

@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { SectionCard } from "@/components/ui/SectionCard";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
-import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
+import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";

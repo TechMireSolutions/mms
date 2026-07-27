@@ -6,8 +6,8 @@ import {
 import { Card } from "@/components/ui/card";
 import { SectionCard } from "@/components/ui/SectionCard";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
-import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
-import { useTeachersByIds } from '@/tenant/features/teachers/hooks/useTeachers';
+import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
+import { useTeachersByIds } from '@/tenant/hooks/collections/teachers';
 import { collectTeacherIdsFromSessions } from '@/lib/registryResolve';
 import { teacherNameById } from '@/lib/teachers/teacherAssignment';
 import { StatCard } from "@/components/ui/StatCard";

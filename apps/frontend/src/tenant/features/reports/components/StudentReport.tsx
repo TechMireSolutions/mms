@@ -3,12 +3,12 @@ import { SubTabBar, type SubTab as UINavTab } from "@/components/ui/SubTabBar";
 import { Users, UserCheck, UserX, TrendingUp, Filter, X } from "lucide-react";
 import { STUDENTS_MODULE_MANIFEST, type Student, calcAge, formatDate, toTitleCase } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
+import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
 import {
   useStudentsMetrics,
   useStudentsPaginated,
   useStudentsWidgetAggregates,
-} from "@/tenant/features/students/hooks/useStudents";
+} from "@/tenant/hooks/collections/students";
 import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";

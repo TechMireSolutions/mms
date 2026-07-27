@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
+import { sanitizeContactSeedObjects } from '@mms/shared';
 import { hashPassword } from '../services/auth/passwordService.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -111,5 +112,5 @@ export async function getDefaultCollectionsForSeed(): Promise<Record<string, unk
  * @returns {Record<string, unknown>} Map of object key to object data.
  */
 export function getDefaultObjects(): Record<string, unknown> {
-  return loadSeeds().DEFAULT_OBJECTS;
+  return sanitizeContactSeedObjects({ ...loadSeeds().DEFAULT_OBJECTS });
 }

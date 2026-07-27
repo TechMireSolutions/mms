@@ -5,7 +5,7 @@ import { ClipboardList, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { getAuditLog } from "@/tenant/features/attendance/components/MarkAttendance";
-import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
+import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -37,7 +37,7 @@ interface AuditLogProps {
 
 
 
-import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
+import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 
 function describeEntry(entry: AuditEntry, studentNameFor: (id?: string) => string, t: (key: AppTranslationKey, vars?: Record<string, string | number>) => string): string {

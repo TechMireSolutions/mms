@@ -5,7 +5,7 @@ import {
   ObligationCollection, ObligationType, WakalaType, MujtahidRep, Mujtahid
 } from '@/lib/data/obligationsData';
 import { DEFAULT_CURRENCIES, todayISO } from '@mms/shared';
-import ContactPicker from '@/tenant/features/contacts/components/contactLink/ContactPicker';
+import ContactPicker from '@/components/contactLink/ContactPicker';
 import { useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { FormModal } from "@/components/ui/FormModal";
 import { useTranslation } from "@/hooks/useTranslation";

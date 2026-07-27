@@ -5,7 +5,7 @@ import { STUDENTS_MODULE_MANIFEST } from "@mms/shared";
 import { calcAge, Student } from '@/lib/data/studentsData';
 import { Session } from '@/lib/data/sessionsData';
 import { WIZARD_SELECTION_DOT } from "@/lib/semanticTone";
-import { useStudentsByIds, useStudentsPaginated } from "@/tenant/features/students/hooks/useStudents";
+import { useStudentsByIds, useStudentsPaginated } from "@/tenant/hooks/collections/students";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/StatusBadge";

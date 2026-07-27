@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { WorkspaceUser, ActivityLog } from '@mms/shared';
 import { USERS_MODULE_MANIFEST } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
-import { saveCollection } from '@/lib/db';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
 
 const USERS_API = USERS_MODULE_MANIFEST.restBasePath;
@@ -57,8 +56,7 @@ export function useUsersMutations() {
         method: 'PUT',
         body: JSON.stringify(users),
       }),
-    onSuccess: (usersResponse) => {
-      saveCollection('users', usersResponse.users);
+    onSuccess: () => {
       invalidate();
     },
   });
@@ -69,8 +67,7 @@ export function useUsersMutations() {
         method: 'PUT',
         body: JSON.stringify(logs),
       }),
-    onSuccess: (logsResponse) => {
-      saveCollection('user_activity_logs', logsResponse.logs);
+    onSuccess: () => {
       invalidate();
     },
   });

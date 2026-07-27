@@ -64,7 +64,6 @@ interface WidgetRecordFields {
   room?: string;
   type?: string;
   status?: string;
-  lifecycleStage?: string;
 }
 
 /**
@@ -228,7 +227,7 @@ export function WidgetDrilldownModal({
                     // Format columns based on collection
                     let name = String(displayRecord.name || displayRecord.studentName || displayRecord.invoiceNo || displayRecord.id);
                     let detailText = "";
-                    let status = String(displayRecord.status || displayRecord.lifecycleStage || "active");
+                    let status = String(displayRecord.status || "active");
                     let hasAction = true;
                     
                     if (widget.collection === "students") {

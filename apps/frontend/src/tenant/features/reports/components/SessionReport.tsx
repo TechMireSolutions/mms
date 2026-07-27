@@ -7,8 +7,8 @@ import {
 import { Card } from "@/components/ui/card";
 import { SectionCard } from "@/components/ui/SectionCard";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
-import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
-import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
+import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
+import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
 import { formatMonthName } from '@mms/shared';
 import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";

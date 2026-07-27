@@ -29,7 +29,6 @@ async function main() {
     console.log(`[#${idx + 1}] ID: ${r.id}`);
     console.log(`  Name: ${d.name || 'N/A'} (First: "${d.firstName || ''}", Last: "${d.lastName || ''}")`);
     console.log(`  Gender: ${d.gender || 'N/A'} | DOB: ${d.dob || 'N/A'} | Syed Lineage: ${d.isSyed ? 'Yes' : 'No'}`);
-    console.log(`  Primary Tag: ${d.tag || 'N/A'}`);
     console.log(`  Phones: ${JSON.stringify(d.phones || [])}`);
     console.log(`  Emails: ${JSON.stringify(d.emails || [])}`);
     console.log(`  Addresses: ${JSON.stringify(d.addresses || [])}`);

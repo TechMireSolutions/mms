@@ -47,7 +47,7 @@ import {
   saveModuleColumnPreferenceList,
   saveModuleColumnRegistry,
 } from "@/lib/columnPreferences/moduleColumnPreferencesStorage";
-import { useContactColumnPrefs, useContactColumnPrefsMutation } from "@/tenant/features/contacts/hooks/useContacts";
+import { useContactColumnPrefs, useContactColumnPrefsMutation } from "@/tenant/hooks/collections/contacts";
 import {
   CONFIG_KEY,
   DEFAULT_PREFERENCES,

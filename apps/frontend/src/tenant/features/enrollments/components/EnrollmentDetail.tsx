@@ -4,7 +4,7 @@ import {
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { STATUS_MAP, Enrollment } from '@/lib/data/enrollmentData';
-import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
+import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatDateTime } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";

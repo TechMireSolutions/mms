@@ -12,7 +12,7 @@ import {
   useQuestionBankQuestionsCollection,
   useQuestionBankTestsCollection,
   useQuestionBankResultsCollection,
-} from "@/tenant/features/question-bank/hooks/useQuestionBankApi";
+} from "@/tenant/hooks/collections/questionBank";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";
 import { StatCard } from "@/components/ui/StatCard";

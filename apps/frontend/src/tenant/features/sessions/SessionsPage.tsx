@@ -62,6 +62,14 @@ const TYPE_COLORS: Record<string, string> = {
   Arabic: "bg-secondary/15 text-secondary",
 };
 
+const SESSION_TYPE_LABEL_KEYS: Record<string, AppTranslationKey> = {
+  Hifz: "sessions.types.hifz",
+  Qaidah: "sessions.types.qaidah",
+  Tajweed: "sessions.types.tajweed",
+  "Islamic Studies": "sessions.types.islamicStudies",
+  Arabic: "sessions.types.arabic",
+};
+
 interface SessionCardProps {
   session: Session;
   onClick: () => void;
@@ -93,6 +101,10 @@ function SessionCard({
     ? "info" as const
     : undefined;
 
+  const typeLabel = SESSION_TYPE_LABEL_KEYS[session.type]
+    ? t(SESSION_TYPE_LABEL_KEYS[session.type])
+    : session.type;
+
   return (
     <MotionCard
       initial={{ opacity: 0, y: 10 }}
@@ -105,7 +117,7 @@ function SessionCard({
           <div className="flex-1 min-w-0 pe-3">
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${TYPE_COLORS[session.type as SessionType] ?? "bg-muted text-muted-foreground"}`}>
-                {session.type}
+                {typeLabel}
               </span>
               <StatusBadge status={session.status} config={statusConfig} size="sm" />
             </div>
@@ -397,6 +409,15 @@ export default function Sessions() {
     return sessionStatusLabelsByValue;
   }, [statusOptions, t]);
 
+  const typeLabels = useMemo(() => {
+    const sessionTypeLabelsByValue: Record<string, string> = {};
+    for (const typeOption of typeOptions) {
+      const translationKey = SESSION_TYPE_LABEL_KEYS[typeOption];
+      sessionTypeLabelsByValue[typeOption] = translationKey ? t(translationKey) : typeOption;
+    }
+    return sessionTypeLabelsByValue;
+  }, [typeOptions, t]);
+
   const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
     active: { label: statusLabels.active || t("sessions.status.active"), cls: SEMANTIC_BADGE.success },
     upcoming: { label: statusLabels.upcoming || t("sessions.status.upcoming"), cls: SEMANTIC_BADGE.info },
@@ -495,7 +516,7 @@ export default function Sessions() {
                   <DropdownMenuSeparator />
                   {typeOptions.map((typeOption) => (
                     <DropdownMenuCheckboxItem key={typeOption} checked={filterType.includes(typeOption)} onCheckedChange={() => toggleFilter(filterType, setFilterType, typeOption)}>
-                      {typeOption}
+                      {typeLabels[typeOption]}
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuContent>
@@ -530,7 +551,7 @@ export default function Sessions() {
             <FilterChips
               chips={[
                 ...filterStatus.map((statusOption) => ({ key: statusOption, label: statusLabels[statusOption], onRemove: () => toggleFilter(filterStatus, setFilterStatus, statusOption) })),
-                ...filterType.map((typeOption) => ({ key: typeOption, label: typeOption, onRemove: () => toggleFilter(filterType, setFilterType, typeOption) })),
+                ...filterType.map((typeOption) => ({ key: typeOption, label: typeLabels[typeOption], onRemove: () => toggleFilter(filterType, setFilterType, typeOption) })),
               ]}
               onClearAll={() => { setFilterStatus([]); setFilterType([]); }}
             />
@@ -654,7 +675,7 @@ export default function Sessions() {
                             {showType && (
                               <td className="px-4 py-3">
                                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${TYPE_COLORS[sessionItem.type as SessionType] ?? "bg-muted text-muted-foreground"}`}>
-                                  {sessionItem.type}
+                                  {typeLabels[sessionItem.type] ?? sessionItem.type}
                                 </span>
                               </td>
                             )}

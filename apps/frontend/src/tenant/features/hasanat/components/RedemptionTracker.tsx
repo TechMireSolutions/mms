@@ -8,7 +8,7 @@ import { FormModal } from "@/components/ui/FormModal";
 import { UserActorSelect } from "@/components/ui/UserActorSelect";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useUsersCollection } from "@/tenant/features/users/hooks/useUsersApi";
+import { useUsersCollection } from "@/tenant/hooks/collections/users";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { formatDate, todayISO, type SystemUser, formatNumber } from "@mms/shared";
 

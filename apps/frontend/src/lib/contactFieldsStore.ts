@@ -25,6 +25,7 @@ import {
   DEFAULT_SETTINGS_SUB_TABS,
   DEFAULT_COLUMN_REGISTRY,
   REMOVED_FORM_FIELD_KEYS,
+  isContactRetiredClassificationKey,
   refreshModuleTierTabLabels,
   refreshModuleTierTabKeys,
 } from "@mms/shared";
@@ -155,6 +156,12 @@ export function sanitizeConfig(config: FieldConfig): FieldConfig {
         : tabFields;
     }
     sanitizedConfig.fields = cleanedFields;
+  }
+
+  if (Array.isArray(sanitizedConfig.columnRegistry)) {
+    sanitizedConfig.columnRegistry = sanitizedConfig.columnRegistry.filter(
+      (column) => !isContactRetiredClassificationKey(column.key),
+    );
   }
 
   if (Array.isArray(sanitizedConfig.formTabs)) {

@@ -16,10 +16,10 @@ import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import {
   useContactsSavedReportMutations,
   useContactsSavedReports,
-} from "@/tenant/features/contacts/hooks/useContacts";
+} from "@/tenant/hooks/collections/contacts";
 import { applyContactsWorkDrillDown } from "@/lib/contacts/contactsWorkDrillDown";
 import { notify } from "@/lib/notify";
-import { useUsersCollection } from "@/tenant/features/users/hooks/useUsersApi";
+import { useUsersCollection } from "@/tenant/hooks/collections/users";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface ContactsSavedReportsProps {

@@ -17,6 +17,7 @@ import { FilterChips } from '@/components/ui/FilterChips';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { Button } from '@/components/ui/button';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { TeacherList, type TeacherSortField } from "@/tenant/features/teachers/components/TeacherList";
 import { TeacherForm } from "@/tenant/features/teachers/components/TeacherForm";
 import { TeachersSettings as TeachersSettingsPanel } from "@/tenant/features/teachers/components/TeachersSettings";
@@ -140,7 +141,13 @@ export default function Teachers(): React.JSX.Element {
   };
 
   const useServerWork = activeTab === 'work';
-  const { data: workPageData, isFetching: isWorkPageFetching, isLoading: isWorkPageLoading } = useTeachersPaginated({
+  const {
+    data: workPageData,
+    isFetching: isWorkPageFetching,
+    isLoading: isWorkPageLoading,
+    isError: isWorkPageError,
+    refetch: refetchWorkPage,
+  } = useTeachersPaginated({
     page: listPage,
     limit: TEACHERS_MODULE_MANIFEST.defaultPageSize,
     search,
@@ -424,6 +431,11 @@ export default function Teachers(): React.JSX.Element {
               <ErrorBoundary>
                 {isWorkPageLoading ? (
                   <TableSkeleton rows={6} cols={columnRegistry.length} />
+                ) : isWorkPageError ? (
+                  <ErrorState
+                    title={t('teachers.loadFailed')}
+                    onRetry={() => void refetchWorkPage()}
+                  />
                 ) : (
                   <>
                     <TeacherList

@@ -3,7 +3,7 @@ import { Heart, Plus } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Field, EditableSelect } from "@/components/ui/FormPrimitives";
-import ContactPicker from "@/tenant/features/contacts/components/contactLink/ContactPicker";
+import ContactPicker from "@/components/contactLink/ContactPicker";
 import { ListFieldCard, EmptyListCard } from "./FormCardUtils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Contact, EmergencyContact, RELATIONSHIPS } from "@mms/shared";

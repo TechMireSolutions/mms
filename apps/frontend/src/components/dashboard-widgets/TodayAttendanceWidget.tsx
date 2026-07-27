@@ -6,7 +6,7 @@ import { ROUTES } from "@/lib/config/routes";
 import { AttendanceStatus } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
 import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
-import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
+import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { rateToneClass } from "@/lib/semanticTone";
 import { type AppTranslationKey, todayISO, formatDate } from "@mms/shared";

@@ -12,9 +12,9 @@ import {
   AttendanceStatus,
 } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
-import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
-import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
-import { useStudentsByIds } from '@/tenant/features/students/hooks/useStudents';
+import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
+import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
+import { useStudentsByIds } from '@/tenant/hooks/collections/students';
 import { AlertTriangle, TrendingDown, Award } from "lucide-react";
 
 import { StatCard } from "@/components/ui/StatCard";

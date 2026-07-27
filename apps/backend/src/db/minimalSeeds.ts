@@ -6,6 +6,7 @@ import {
   DEFAULT_ATTENDANCE_SETTINGS,
   DEFAULT_QUESTION_BANK_SETTINGS,
   WORKSPACES_COLLECTION,
+  sanitizeContactSeedObjects,
 } from '@mms/shared';
 
 const MINIMAL_SEEDED_COLLECTIONS = new Set([
@@ -47,7 +48,7 @@ export async function getMinimalCollectionsForSeed(): Promise<Record<string, unk
 }
 
 export function getMinimalObjects(): Record<string, unknown> {
-  const objects = getDefaultObjects();
+  const objects = sanitizeContactSeedObjects(getDefaultObjects());
   return {
     ...objects,
     teachers_settings: objects.teachers_settings ?? DEFAULT_TEACHERS_SETTINGS,

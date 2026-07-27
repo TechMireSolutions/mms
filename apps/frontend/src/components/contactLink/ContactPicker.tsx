@@ -24,11 +24,11 @@ import { genderBadgeClass } from "@/lib/semanticTone";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import ContactCreateModal, {
   type ContactCreateDefaults,
-} from "@/tenant/features/contacts/components/ContactCreateModal";
+} from "./ContactCreateModal";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useContactById, useContactsPaginated } from "@/tenant/features/contacts/hooks/useContacts";
+import { useContactById, useContactsPaginated } from "@/tenant/hooks/collections/contacts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/ui/UserAvatar";
@@ -336,7 +336,6 @@ export default function ContactPicker({
             const contactPhone = getPrimaryPhone(contact);
             const primaryAddr = getPrimaryAddress(contact);
             const contactCity = primaryAddr?.city || (contact.city as string | undefined);
-            const contactTag = contact.tag as string | undefined;
             const contactName = getDisplayName(contact);
 
             return (
@@ -368,11 +367,6 @@ export default function ContactPicker({
                   <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 truncate mt-0.5">
                     {contactPhone || t("contacts.table.emptyDash")}
                     {contactCity && <span>· {contactCity}</span>}
-                    {contactTag && (
-                      <span className="bg-primary/5 text-primary text-[9px] px-1.5 py-0.2 rounded border border-primary/10 capitalize font-medium">
-                        {contactTag}
-                      </span>
-                    )}
                   </p>
                 </div>
               </Button>

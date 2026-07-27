@@ -8,7 +8,6 @@ import type {
 import { ACCOUNTING_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
-import { saveCollection } from '@/lib/db';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
 
 const ACCOUNTING_API = ACCOUNTING_MODULE_MANIFEST.restBasePath;
@@ -84,8 +83,7 @@ export function useAccountingMutations() {
         method: 'PUT',
         body: JSON.stringify(accounts),
       }),
-    onSuccess: (accountsResponse) => {
-      saveCollection('accounting_accounts', accountsResponse.accounts);
+    onSuccess: () => {
       invalidate();
     },
   });
@@ -96,8 +94,7 @@ export function useAccountingMutations() {
         method: 'PUT',
         body: JSON.stringify(entries),
       }),
-    onSuccess: (entriesResponse) => {
-      saveCollection('accounting_entries', entriesResponse.entries);
+    onSuccess: () => {
       invalidate();
     },
   });
@@ -108,8 +105,7 @@ export function useAccountingMutations() {
         method: 'PUT',
         body: JSON.stringify(fiscalYears),
       }),
-    onSuccess: (fiscalYearsResponse) => {
-      saveCollection('accounting_fiscal_years', fiscalYearsResponse.fiscalYears);
+    onSuccess: () => {
       invalidate();
     },
   });

@@ -8,7 +8,7 @@ import { ListPagination } from "@/components/ui/ListPagination";
 import { useLocalPagination } from "@/hooks/useLocalPagination";
 import { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
-import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
+import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { ATTENDANCE_MODULE_MANIFEST, type AppTranslationKey, formatDate } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";

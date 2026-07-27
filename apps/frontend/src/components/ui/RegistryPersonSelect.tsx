@@ -3,8 +3,8 @@ import {
   STUDENTS_MODULE_MANIFEST,
   TEACHERS_MODULE_MANIFEST,
 } from '@mms/shared';
-import { useStudentsPaginated } from '@/tenant/features/students/hooks/useStudents';
-import { useTeachersPaginated } from '@/tenant/features/teachers/hooks/useTeachers';
+import { useStudentsPaginated } from '@/tenant/hooks/collections/students';
+import { useTeachersPaginated } from '@/tenant/hooks/collections/teachers';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { SearchBar } from '@/components/ui/SearchBar';

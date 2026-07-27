@@ -20,7 +20,7 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useWorkspaceRoles } from "@/tenant/hooks/useWorkspaceRoles";
-import { Modal } from "@/components/ui/Modal";
+import { FormModal } from "@/components/ui/FormModal";
 import { Button } from "@/components/ui/button";
 import { Input as UiInput } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -37,7 +37,7 @@ import {
   todayISO,
 } from "@mms/shared";
 
-import ContactPicker from '@/tenant/features/contacts/components/contactLink/ContactPicker';
+import ContactPicker from '@/components/contactLink/ContactPicker';
 import { getGlobalSettings } from "@/lib/db";
 import { useUsersConfig } from "@/hooks/useStandardModuleConfig";
 import { DatePicker } from "@/components/ui/DatePicker";
@@ -626,41 +626,14 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
   };
 
   return (
-    <Modal
+    <FormModal
       open
       onClose={onClose}
       title={t("users.addTitle")}
       subtitle={t("users.addSubtitle")}
       icon={UserPlus}
       size="lg"
-      footer={
-        success ? undefined : (
-          <div className="flex w-full items-center justify-between gap-2">
-            <Button type="button" variant="outline" onClick={step === 1 ? onClose : handleBack}>
-              {step === 1 ? <X className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
-              {step === 1 ? t("users.cancel") : t("users.addBack")}
-            </Button>
-            <div className="flex items-center gap-1.5">
-              {STEP_DEFS.map((stepDefinition) => (
-                <div
-                  key={stepDefinition.id}
-                  className={`h-1.5 rounded-full transition-all ${step === stepDefinition.id ? "w-3 bg-primary" : step > stepDefinition.id ? "w-1.5 bg-primary/40" : "w-1.5 bg-border"}`}
-                />
-              ))}
-            </div>
-            {step < 3 ? (
-              <Button type="button" onClick={handleNext}>
-                {t("users.addNext")} <ChevronRight className="h-3.5 w-3.5" />
-              </Button>
-            ) : (
-              <Button type="button" onClick={() => { void handleSubmit(); }} disabled={submitting}>
-                {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
-                {submitting ? t("users.addCreating") : t("users.addCreate")}
-              </Button>
-            )}
-          </div>
-        )
-      }
+      hideFooter
     >
       {success ? (
         <motion.div
@@ -698,8 +671,32 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
               {step === 3 && <Step3 form={form} setForm={setForm} errors={errors} />}
             </motion.div>
           </AnimatePresence>
+          <div className="mt-6 flex w-full items-center justify-between gap-2">
+            <Button type="button" variant="outline" onClick={step === 1 ? onClose : handleBack}>
+              {step === 1 ? <X className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+              {step === 1 ? t("users.cancel") : t("users.addBack")}
+            </Button>
+            <div className="flex items-center gap-1.5">
+              {STEP_DEFS.map((stepDefinition) => (
+                <div
+                  key={stepDefinition.id}
+                  className={`h-1.5 rounded-full transition-all ${step === stepDefinition.id ? "w-3 bg-primary" : step > stepDefinition.id ? "w-1.5 bg-primary/40" : "w-1.5 bg-border"}`}
+                />
+              ))}
+            </div>
+            {step < 3 ? (
+              <Button type="button" onClick={handleNext}>
+                {t("users.addNext")} <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            ) : (
+              <Button type="button" onClick={() => { void handleSubmit(); }} disabled={submitting}>
+                {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
+                {submitting ? t("users.addCreating") : t("users.addCreate")}
+              </Button>
+            )}
+          </div>
         </>
       )}
-    </Modal>
+    </FormModal>
   );
 }

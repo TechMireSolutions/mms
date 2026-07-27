@@ -21,7 +21,7 @@ import {
   type AppTranslationKey,
   type Teacher,
 } from "@mms/shared";
-import { useContactById } from "@/tenant/features/contacts/hooks/useContacts";
+import { useContactById } from "@/tenant/hooks/collections/contacts";
 
 const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
 

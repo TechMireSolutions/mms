@@ -3,7 +3,6 @@ import type { Exam, ExamResult, ExaminationsCommandMetricsSnapshot } from '@mms/
 import { EXAMINATIONS_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
-import { saveCollection } from '@/lib/db';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
 
 export const EXAMINATIONS_EXAMS_QUERY_KEY = ['examinations', 'exams', 'list'] as const;
@@ -68,8 +67,7 @@ export function useExaminationsMutations() {
         method: 'PUT',
         body: JSON.stringify(exams),
       }),
-    onSuccess: (response) => {
-      saveCollection('exams', response.exams);
+    onSuccess: () => {
       invalidateExams();
     },
   });
@@ -80,8 +78,7 @@ export function useExaminationsMutations() {
         method: 'PUT',
         body: JSON.stringify(results),
       }),
-    onSuccess: (response) => {
-      saveCollection('exam_results', response.results);
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: EXAMINATIONS_RESULTS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: EXAMINATIONS_METRICS_QUERY_KEY });
     },

@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { WidgetCard } from "@/components/ui/WidgetCard";
-import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
+import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
 import { TrendingUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";

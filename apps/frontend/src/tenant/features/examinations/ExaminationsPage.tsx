@@ -11,7 +11,7 @@ import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SubTabBar } from "@/components/ui/SubTabBar";
-import { Modal } from "@/components/ui/Modal";
+import { FormModal } from "@/components/ui/FormModal";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { Button } from "@/components/ui/button";
 import ExamsList from "@/tenant/features/examinations/components/ExamsList";
@@ -378,15 +378,16 @@ export default function Examinations(): React.JSX.Element {
       </AnimatePresence>
 
       {canWrite && !showDeleted && (
-        <Modal
+        <FormModal
           open={showMarksModal}
           onClose={() => setShowMarksModal(false)}
           title={t("examinations.marks")}
           size="xl"
+          hideFooter
           panelClassName="h-[88vh] max-h-[700px]"
         >
           <EnterMarks exams={exams} results={examResults} onSaveResults={handleSaveResults} />
-        </Modal>
+        </FormModal>
       )}
     </ModulePageShell>
   );

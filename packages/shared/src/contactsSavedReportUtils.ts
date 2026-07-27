@@ -9,7 +9,7 @@ export interface ContactsSavedReportViewer {
 }
 
 export interface ContactsSavedReportIssue {
-  kind: 'stale_lifecycle_stage' | 'stale_gender';
+  kind: 'stale_gender';
   field: keyof ContactsWorkDrillDown;
   value: string;
 }

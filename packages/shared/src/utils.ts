@@ -509,25 +509,6 @@ export function hasWhatsApp(contact: Partial<Contact>): boolean {
   return !!PuppeteerWhatsAppProvider.getNumberId(getPrimaryPhone(contact));
 }
 
-/**
- * Get color classes for a tag
- * @param tag - Tag name
- * @param mode - UI mode (e.g. 'kanban')
- * @returns Object with header and badge classes
- */
-export function getTagColor(tag: string, mode?: "kanban" | "badge"): { header: string; badge: string } {
-  const hash = tag.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const colorSchemes = [
-    { header: "border-emerald-200 bg-emerald-50/50 text-emerald-800", badge: "bg-emerald-100 text-emerald-800" },
-    { header: "border-blue-200 bg-blue-50/50 text-blue-800", badge: "bg-blue-100 text-blue-800" },
-    { header: "border-violet-200 bg-violet-50/50 text-violet-800", badge: "bg-violet-100 text-violet-800" },
-    { header: "border-amber-200 bg-amber-50/50 text-amber-800", badge: "bg-amber-100 text-amber-800" },
-    { header: "border-rose-200 bg-rose-50/50 text-rose-800", badge: "bg-rose-100 text-rose-800" },
-    { header: "border-cyan-200 bg-cyan-50/50 text-cyan-800", badge: "bg-cyan-100 text-cyan-800" },
-  ];
-  return colorSchemes[hash % colorSchemes.length];
-}
-
 // ── Normalization Helpers ───────────────────────────────────────────────────
 
 export const normalizeEmail = (email: unknown): string => {

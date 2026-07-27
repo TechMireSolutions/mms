@@ -5,9 +5,9 @@ import { calcAge } from '@/lib/data/studentsData';
 import { runFullEligibility, suggestClass, CheckResult } from '@/lib/data/enrollmentData';
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
+import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { RegistryPersonSelect } from "@/components/ui/RegistryPersonSelect";
-import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
+import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 
 const ICONS: Record<string, React.ReactElement> = {
   pass: <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" aria-hidden="true" />,

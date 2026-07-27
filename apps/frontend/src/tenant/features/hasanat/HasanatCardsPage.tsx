@@ -111,7 +111,7 @@ export default function HasanatCards() {
       channel,
       distList.map((d) => ({
         id: d.id,
-        name: d.recipientName || 'Recipient',
+        name: d.recipientName || t("hasanat.messaging.recipient"),
         phone: (d as unknown as { phone?: string }).phone || '',
         email: (d as unknown as { email?: string }).email || '',
       }))

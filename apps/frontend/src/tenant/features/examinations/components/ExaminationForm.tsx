@@ -8,14 +8,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/FormPrimitives";
+import { useTranslation } from "@/hooks/useTranslation";
 
-import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
+import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { notify } from "@/lib/notify";
 import { Exam } from '@/lib/data/examinationData';
-import { toTitleCase } from "@mms/shared";
+import { AppTranslationKey, toTitleCase } from "@mms/shared";
 import { FORM_INPUT } from "@/components/ui/formStyles";
 
-const SUBJECTS = ["Tajweed", "Hifz", "Islamic Studies", "Arabic", "Aqeedah", "Quran Recitation", "Fiqh"];
+const SUBJECT_OPTIONS: ReadonlyArray<{ value: string; labelKey: AppTranslationKey }> = [
+  { value: "Tajweed", labelKey: "examinations.subjects.tajweed" },
+  { value: "Hifz", labelKey: "examinations.subjects.hifz" },
+  { value: "Islamic Studies", labelKey: "examinations.subjects.islamicStudies" },
+  { value: "Arabic", labelKey: "examinations.subjects.arabic" },
+  { value: "Aqeedah", labelKey: "examinations.subjects.aqeedah" },
+  { value: "Quran Recitation", labelKey: "examinations.subjects.quranRecitation" },
+  { value: "Fiqh", labelKey: "examinations.subjects.fiqh" },
+];
 
 const EMPTY: Omit<Exam, "id"> = {
   name: "",
@@ -37,6 +46,7 @@ interface ExamFormProps {
 }
 
 export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFormProps): React.JSX.Element {
+  const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const sessions = useSessionsCollection();
@@ -149,7 +159,10 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                 value={examDraft.subject || ""}
                 onChange={(val) => updateDraft({ subject: val })}
                 placeholder="Select subject…"
-                options={SUBJECTS}
+                options={SUBJECT_OPTIONS.map((subjectOption) => ({
+                  value: subjectOption.value,
+                  label: t(subjectOption.labelKey),
+                }))}
               />
             </Field>
 

@@ -15,9 +15,9 @@ import {
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ClassStudent, AttendanceRecord, AttendanceStatus, getAttendanceStatusInfo } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
-import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
-import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
-import { useStudentsByIds } from '@/tenant/features/students/hooks/useStudents';
+import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
+import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
+import { useStudentsByIds } from '@/tenant/hooks/collections/students';
 import type { Student } from "@/lib/data/studentsData";
 import type { Enrollment } from "@/lib/data/enrollmentData";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";

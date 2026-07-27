@@ -10,15 +10,15 @@ import {
 } from "recharts";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
+import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 
-import { useContactsReportAnalytics } from '@/tenant/features/contacts/hooks/useContacts';
+import { useContactsReportAnalytics } from '@/tenant/hooks/collections/contacts';
 
-import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
+import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
 import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
-import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
-import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/features/hasanat/hooks/useHasanatApi";
-import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/tenant/features/examinations/hooks/useExaminationsApi";
+import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
+import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/hooks/collections/hasanat";
+import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/tenant/hooks/collections/examinations";
 import type { Session } from "@/lib/data/sessionsData";
 import type { Enrollment } from "@/lib/data/enrollmentData";
 import type { AttendanceRecord } from "@/lib/data/attendanceData";
@@ -309,8 +309,8 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
 
   const isContacts = category.toLowerCase() === "contacts";
   const [mode, setMode] = useState<"sessions" | "daterange">("sessions");
-  const [valA, setValA] = useState<string>(isContacts ? "Lead" : "s1");
-  const [valB, setValB] = useState<string>(isContacts ? "Active Student" : "s2");
+  const [valA, setValA] = useState<string>("s1");
+  const [valB, setValB] = useState<string>("s2");
   const [rangeA, setRangeA] = useState<DateRange>({ from: "2025-01-01", to: "2025-03-31" });
   const [rangeB, setRangeB] = useState<DateRange>({ from: "2026-01-01", to: "2026-03-31" });
 

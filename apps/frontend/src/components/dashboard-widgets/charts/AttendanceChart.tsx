@@ -12,7 +12,7 @@ import {
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
-import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/features/hasanat/hooks/useHasanatApi";
+import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/hooks/collections/hasanat";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 import { getDenominationPoints, formatNumber, formatShortWeekdayLabels } from "@mms/shared";
 

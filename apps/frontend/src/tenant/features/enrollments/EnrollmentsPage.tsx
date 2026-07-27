@@ -17,16 +17,17 @@ import { EnrollmentReports } from "@/tenant/features/enrollments/components/Enro
 import { EnrollmentsSettings } from "@/tenant/features/enrollments/components/EnrollmentsSettings";
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { Modal } from "@/components/ui/Modal";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { FormModal } from "@/components/ui/FormModal";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { Enrollment } from '@/lib/data/enrollmentData';
 import {
-  useEnrollmentsCollection,
+  useEnrollments,
   useEnrollmentsPaginated,
   useEnrollmentMutations,
 } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
-import { useStudentMutations, type StudentRecord } from "@/tenant/features/students/hooks/useStudents";
+import { useStudentMutations, type StudentRecord } from "@/tenant/hooks/collections/students";
 import { apiJson } from "@/lib/apiClient";
 import { notify } from "@/lib/notify";
 import { STUDENTS_MODULE_MANIFEST, ENROLLMENTS_MODULE_MANIFEST } from "@mms/shared";
@@ -57,13 +58,23 @@ export default function EnrollmentsPage() {
   const role = useEnrollmentViewerRole();
   const [showDeleted, setShowDeleted] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const activeEnrollments = useEnrollmentsCollection();
-  const { data: deletedPage } = useEnrollmentsPaginated({
+  const activeEnrollmentsResult = useEnrollments();
+  const activeEnrollments = activeEnrollmentsResult.syncedData;
+  const {
+    data: deletedPage,
+    isError: isDeletedPageError,
+    refetch: refetchDeletedPage,
+  } = useEnrollmentsPaginated({
     page: 1,
     limit: ENROLLMENTS_MODULE_MANIFEST.maxPageSize,
     includeDeleted: true,
     enabled: showDeleted,
   });
+  const isWorkListError = showDeleted
+    ? isDeletedPageError
+    : activeEnrollmentsResult.queryResult.isError;
+  const retryWorkList = () =>
+    showDeleted ? refetchDeletedPage() : activeEnrollmentsResult.queryResult.refetch();
   const enrollments = showDeleted
     ? ((deletedPage?.enrollments ?? []) as Enrollment[])
     : activeEnrollments;
@@ -268,26 +279,33 @@ export default function EnrollmentsPage() {
           )}
           {tab === "work" && activeSubTab === "list" && (
             <ErrorBoundary>
-              <EnrollmentList
-                enrollments={enrollments}
-                canWrite={canWriteEnrollments}
-                canDelete={canDelete}
-                showDeleted={showDeleted}
-                onShowDeletedChange={setShowDeleted}
-                onView={(enrollment: Enrollment) => setViewing(enrollment)}
-                onCancel={handleCancel}
-                onDelete={(id) => setPendingDeleteId(id)}
-                onRestore={handleRestore}
-                onFilteredCountChange={setFilteredCount}
-                isColumnVisible={columnLayout.isColumnVisible}
-                getColumnWidth={columnLayout.getColumnWidth}
-                onColumnResize={columnLayout.setColumnWidth}
-                columnCustomizer={{
-                  columnRegistry: columnLayout.columnRegistry,
-                  updateUserColumnLayout: columnLayout.updateUserColumnLayout,
-                  labels: columnLayout.customizerLabels,
-                }}
-              />
+              {isWorkListError ? (
+                <ErrorState
+                  title={t("enrollments.loadFailed")}
+                  onRetry={() => void retryWorkList()}
+                />
+              ) : (
+                <EnrollmentList
+                  enrollments={enrollments}
+                  canWrite={canWriteEnrollments}
+                  canDelete={canDelete}
+                  showDeleted={showDeleted}
+                  onShowDeletedChange={setShowDeleted}
+                  onView={(enrollment: Enrollment) => setViewing(enrollment)}
+                  onCancel={handleCancel}
+                  onDelete={(id) => setPendingDeleteId(id)}
+                  onRestore={handleRestore}
+                  onFilteredCountChange={setFilteredCount}
+                  isColumnVisible={columnLayout.isColumnVisible}
+                  getColumnWidth={columnLayout.getColumnWidth}
+                  onColumnResize={columnLayout.setColumnWidth}
+                  columnCustomizer={{
+                    columnRegistry: columnLayout.columnRegistry,
+                    updateUserColumnLayout: columnLayout.updateUserColumnLayout,
+                    labels: columnLayout.customizerLabels,
+                  }}
+                />
+              )}
             </ErrorBoundary>
           )}
 
@@ -319,11 +337,12 @@ export default function EnrollmentsPage() {
         )}
       </AnimatePresence>
 
-      <Modal
+      <FormModal
         open={showWizard}
         onClose={() => setShowWizard(false)}
         title={t("enrollments.new")}
         size="xl"
+        hideFooter
         panelClassName="h-[88vh] max-h-[700px]"
       >
         <ErrorBoundary>
@@ -332,7 +351,7 @@ export default function EnrollmentsPage() {
             onCancel={() => setShowWizard(false)}
           />
         </ErrorBoundary>
-      </Modal>
+      </FormModal>
 
       <ConfirmAlertDialog
         open={pendingDeleteId != null}

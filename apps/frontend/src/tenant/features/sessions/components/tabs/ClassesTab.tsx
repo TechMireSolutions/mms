@@ -4,7 +4,7 @@ import { Plus, Trash2, Edit2, Users, GraduationCap, MessageCircle, MessageSquare
 import { Session, Class } from '@/lib/data/sessionsData';
 import type { Teacher, AppTranslationKey } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useTeachersByIds, useTeachersPaginated } from '@/tenant/features/teachers/hooks/useTeachers';
+import { useTeachersByIds, useTeachersPaginated } from '@/tenant/hooks/collections/teachers';
 import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
 import { collectTeacherIdsFromClasses } from '@/lib/registryResolve';
 import {

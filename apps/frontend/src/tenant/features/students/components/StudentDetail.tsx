@@ -19,8 +19,8 @@ import {
   toMessagingRecipient,
   toTitleCase,
 } from "@mms/shared";
-import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
-import { useContactsByIds } from '@/tenant/features/contacts/hooks/useContacts';
+import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
+import { useContactsByIds } from '@/tenant/hooks/collections/contacts';
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";

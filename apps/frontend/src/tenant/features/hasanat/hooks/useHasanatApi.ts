@@ -3,7 +3,6 @@ import type { Denomination, StockBatch, Distribution, Redemption, HasanatCommand
 import { HASANAT_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
-import { saveCollection } from '@/lib/db';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
 
 export const HASANAT_DENOMS_QUERY_KEY = ['hasanat', 'denoms', 'list'] as const;
@@ -98,8 +97,7 @@ export function useHasanatMutations() {
         method: 'PUT',
         body: JSON.stringify(denoms),
       }),
-    onSuccess: (response) => {
-      saveCollection('hasanat_denoms', response.denoms);
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: HASANAT_DENOMS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: HASANAT_METRICS_QUERY_KEY });
     },
@@ -111,8 +109,7 @@ export function useHasanatMutations() {
         method: 'PUT',
         body: JSON.stringify(batches),
       }),
-    onSuccess: (response) => {
-      saveCollection('hasanat_batches', response.batches);
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: HASANAT_BATCHES_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: HASANAT_METRICS_QUERY_KEY });
     },
@@ -124,8 +121,7 @@ export function useHasanatMutations() {
         method: 'PUT',
         body: JSON.stringify(distributions),
       }),
-    onSuccess: (response) => {
-      saveCollection('hasanat_distributions', response.distributions);
+    onSuccess: () => {
       invalidateDistributions();
     },
   });
@@ -136,8 +132,7 @@ export function useHasanatMutations() {
         method: 'PUT',
         body: JSON.stringify(redemptions),
       }),
-    onSuccess: (response) => {
-      saveCollection('hasanat_redemptions', response.redemptions);
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: HASANAT_REDEMPTIONS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: HASANAT_METRICS_QUERY_KEY });
     },

@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Users, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
-import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
+import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SearchBar } from "@/components/ui/SearchBar";

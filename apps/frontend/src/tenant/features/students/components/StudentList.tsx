@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
+import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { type Student, resolveStudentStatuses, calcAge, formatDate, toMessagingRecipient, toTitleCase } from "@mms/shared";
 import { useTranslation } from '@/hooks/useTranslation';
 import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";

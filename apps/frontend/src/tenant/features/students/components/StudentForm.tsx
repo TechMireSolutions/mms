@@ -3,14 +3,14 @@ import { Calendar, Clock, FileText, GraduationCap, Hash, User, Users } from "luc
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
-import ContactPicker from "@/tenant/features/contacts/components/contactLink/ContactPicker";
+import ContactPicker from "@/components/contactLink/ContactPicker";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { FORM_INPUT } from "@/components/ui/formStyles";
 import { Field } from "@/components/ui/FormPrimitives";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
-import { useContactMutations, useContactById } from "@/tenant/features/contacts/hooks/useContacts";
+import { useContactMutations, useContactById } from "@/tenant/hooks/collections/contacts";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Textarea } from "@/components/ui/textarea";

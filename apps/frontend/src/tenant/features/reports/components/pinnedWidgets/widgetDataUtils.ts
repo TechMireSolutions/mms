@@ -13,15 +13,15 @@ import { queryClientInstance } from "@/lib/queryClient";
 import {
   CONTACTS_METRICS_QUERY_KEY,
   CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
-} from "@/tenant/features/contacts/hooks/useContacts";
+} from "@/tenant/hooks/collections/contacts";
 import {
   STUDENTS_METRICS_QUERY_KEY,
   STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
-} from "@/tenant/features/students/hooks/useStudents";
+} from "@/tenant/hooks/collections/students";
 import {
   TEACHERS_METRICS_QUERY_KEY,
   TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
-} from "@/tenant/features/teachers/hooks/useTeachers";
+} from "@/tenant/hooks/collections/teachers";
 import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
 import type { Denomination, Distribution } from "@/lib/data/hasanatData";
 import type { Student } from "@/lib/data/studentsData";

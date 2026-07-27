@@ -29,7 +29,7 @@ import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { ExportToolbar } from '@/components/ui/ExportToolbar';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { ChannelBadge } from '@/components/ui/ChannelBadge';
-import { useContactsCollection } from '@/tenant/features/contacts/hooks/useContacts';
+import { useContactsCollection } from '@/tenant/hooks/collections/contacts';
 import { 
   getDisplayName, 
   getPrimaryPhone, 

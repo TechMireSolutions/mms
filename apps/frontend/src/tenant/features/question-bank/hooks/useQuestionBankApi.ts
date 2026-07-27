@@ -8,7 +8,6 @@ import type {
 import { QUESTION_BANK_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
-import { saveCollection } from '@/lib/db';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
 
 const QUESTION_BANK_API = QUESTION_BANK_MODULE_MANIFEST.restBasePath;
@@ -85,8 +84,7 @@ export function useQuestionBankMutations() {
         method: 'PUT',
         body: JSON.stringify(questions),
       }),
-    onSuccess: (questionsResponse) => {
-      saveCollection('questions', questionsResponse.questions);
+    onSuccess: () => {
       invalidateQuestions();
     },
   });
@@ -97,8 +95,7 @@ export function useQuestionBankMutations() {
         method: 'PUT',
         body: JSON.stringify(tests),
       }),
-    onSuccess: (testsResponse) => {
-      saveCollection('tests', testsResponse.tests);
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUESTION_BANK_TESTS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: QUESTION_BANK_METRICS_QUERY_KEY });
     },
@@ -110,8 +107,7 @@ export function useQuestionBankMutations() {
         method: 'PUT',
         body: JSON.stringify(results),
       }),
-    onSuccess: (resultsResponse) => {
-      saveCollection('assessment_results', resultsResponse.results);
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUESTION_BANK_RESULTS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: QUESTION_BANK_METRICS_QUERY_KEY });
     },

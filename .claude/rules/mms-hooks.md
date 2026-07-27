@@ -28,6 +28,16 @@ Colocate in `apps/frontend/src/hooks/`. Pure logic used in 2+ modules → extrac
 
 Pattern: `enabled: isAuthenticated`, export `QUERY_KEY` constant, use `apiJson` in `queryFn`, `saveCollection` in fetch when hybrid (`mms-data-layer.md`).
 
+### Cross-module collection facades
+
+Hook **implementations** stay in `tenant/features/{module}/hooks/`. Cross-feature and shared UI (`components/`, dashboard, reports) **must** import the public surface from:
+
+`@/tenant/hooks/collections/{contacts|students|teachers|sessions|enrollments|users|finance|accounting|hasanat|examinations|questionBank}`
+
+Same-feature files may keep direct `@/tenant/features/{module}/hooks/...` imports. Do not import another feature’s hooks path from outside that feature.
+
+Shared person UI: `ContactPicker` / `ContactCreateModal` live under `@/components/contactLink/`.
+
 ## `useLiveCollection(key, seed?)`
 
 Reactive read of a localStorage collection. Subscribes to `local-database-update`.

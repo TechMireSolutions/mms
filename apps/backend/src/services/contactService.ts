@@ -12,6 +12,7 @@ import {
   isContactDeleted,
   paginateContacts,
   parsePhoneNumber,
+  stripContactRetiredClassificationFields,
   type Contact,
   type ContactsCommandMetricsSnapshot,
   type ContactsDuplicatePairsPageResult,
@@ -197,7 +198,8 @@ export async function normalizeContactPhones(contact: Contact): Promise<Contact>
 export async function prepareContactRecord(contact: Contact, id?: string | number): Promise<Contact> {
   const withPhones = await normalizeContactPhones(contact);
   const resolvedId = id ?? withPhones.id ?? `temp-${Date.now()}`;
-  return applyTitleCaseToContact({ ...withPhones, id: resolvedId }) as Contact;
+  const titled = applyTitleCaseToContact({ ...withPhones, id: resolvedId }) as Contact;
+  return stripContactRetiredClassificationFields({ ...titled }) as Contact;
 }
 
 export interface UpsertContactOptions {

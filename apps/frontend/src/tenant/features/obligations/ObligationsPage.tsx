@@ -5,10 +5,9 @@ import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Scale, ClipboardList,
-  Shield, BookOpen, Plus, Archive,
+  Scale, Plus, Archive,
 } from "lucide-react";
-import { OBLIGATIONS_MODULE_MANIFEST, resolveModuleTierTab, type ObligationCollection } from "@mms/shared";
+import { OBLIGATIONS_MODULE_MANIFEST, resolveModuleTierTab, type AppTranslationKey, type ObligationCollection } from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -40,6 +39,12 @@ import { notify } from "@/lib/notify";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
+const SETUP_TAB_LABEL_KEYS: Record<(typeof OBLIGATIONS_MODULE_MANIFEST.setupSubTabs)[number], AppTranslationKey> = {
+  types: "obligations.types",
+  mujtahids: "obligations.mujtahids",
+  wakala: "obligations.wakala",
+};
+
 /**
  * Obligations — Khums, Zakat, and collections. Work | Reports | Setup.
  */
@@ -54,11 +59,10 @@ export default function Obligations() {
   } = useModulePermissions(OBLIGATIONS_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const CONFIG_SUB_TABS = useMemo(
-    () => [
-      { id: "types", label: t("obligations.types"), icon: ClipboardList },
-      { id: "mujtahids", label: t("obligations.mujtahids"), icon: Shield },
-      { id: "wakala", label: t("obligations.wakala"), icon: BookOpen },
-    ],
+    () => OBLIGATIONS_MODULE_MANIFEST.setupSubTabs.map((id) => ({
+      id,
+      label: t(SETUP_TAB_LABEL_KEYS[id]),
+    })),
     [t]
   );
   const [activeTab, setActiveTab] = usePersistedTabState<string>("obligations_active_tab", "work");
@@ -112,7 +116,9 @@ export default function Obligations() {
       channel,
       collectionList.map((col) => ({
         id: col.id,
-        name: col.receipt_no ? `Receipt ${col.receipt_no}` : 'Donor',
+        name: col.receipt_no
+          ? t("obligations.messaging.receipt", { receipt: col.receipt_no })
+          : t("obligations.messaging.donor"),
         phone: (col as unknown as { phone?: string }).phone || '',
         email: (col as unknown as { email?: string }).email || '',
       }))

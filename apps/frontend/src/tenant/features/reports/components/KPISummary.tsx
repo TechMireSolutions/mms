@@ -6,21 +6,21 @@ import {
   Target, Zap, Activity, SlidersHorizontal,
   Plus, Trash2, ShieldCheck, Receipt, CalendarCheck, MessageCircle
 } from "lucide-react";
-import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
+import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
 
-import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/tenant/features/examinations/hooks/useExaminationsApi";
-import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/features/hasanat/hooks/useHasanatApi";
+import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/tenant/hooks/collections/examinations";
+import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/hooks/collections/hasanat";
 import {
   useQuestionBankQuestionsCollection,
   useQuestionBankTestsCollection,
   useQuestionBankResultsCollection,
-} from "@/tenant/features/question-bank/hooks/useQuestionBankApi";
+} from "@/tenant/hooks/collections/questionBank";
 import { getObject, saveObject } from "@/lib/db";
-import { useContactsReportAnalytics, useContactsWidgetAggregates } from "@/tenant/features/contacts/hooks/useContacts";
-import { useStudentsMetrics, useStudentsWidgetAggregates } from "@/tenant/features/students/hooks/useStudents";
-import { useTeachersMetrics, useTeachersWidgetAggregates } from "@/tenant/features/teachers/hooks/useTeachers";
+import { useContactsReportAnalytics, useContactsWidgetAggregates } from "@/tenant/hooks/collections/contacts";
+import { useStudentsMetrics, useStudentsWidgetAggregates } from "@/tenant/hooks/collections/students";
+import { useTeachersMetrics, useTeachersWidgetAggregates } from "@/tenant/hooks/collections/teachers";
 import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
-import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
+import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { type Contact, type AppTranslationKey, formatNumber } from "@mms/shared";
 import { type AttendanceRecord } from '@/lib/data/attendanceData';
 import { type Invoice } from '@/lib/data/financeData';

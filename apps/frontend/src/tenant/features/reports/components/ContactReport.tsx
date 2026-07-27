@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Users, UserCheck, MessageCircle, Loader2 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useContactsReportAnalytics } from "@/tenant/features/contacts/hooks/useContacts";
+import { useContactsReportAnalytics } from "@/tenant/hooks/collections/contacts";
 import { StatCard } from "@/components/ui/StatCard";
-import ContactsSavedReports from "@/tenant/features/contacts/components/ContactsSavedReports";
+import ContactsSavedReports from "./ContactsSavedReports";
 import type { ContactsWorkDrillDown } from "@mms/shared";
 
 interface ContactReportProps {

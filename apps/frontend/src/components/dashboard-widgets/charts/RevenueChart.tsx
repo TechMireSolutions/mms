@@ -8,8 +8,8 @@ import {
   Tooltip, TooltipContentProps, TooltipPayloadEntry,
 } from "recharts";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
-import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
-import { useAccountingEntriesCollection, useAccountingAccountsCollection } from "@/tenant/features/accounting/hooks/useAccountingApi";
+import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
+import { useAccountingEntriesCollection, useAccountingAccountsCollection } from "@/tenant/hooks/collections/accounting";
 import { Button } from "@/components/ui/button";
 import {
   Select,

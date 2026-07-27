@@ -11,7 +11,6 @@ import type {
 import { OBLIGATIONS_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
-import { saveCollection } from '@/lib/db';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
 
 export const OBLIGATIONS_TYPES_QUERY_KEY = ['obligations', 'types', 'list'] as const;
@@ -136,8 +135,7 @@ export function useObligationsMutations() {
         method: 'PUT',
         body: JSON.stringify(types),
       }),
-    onSuccess: (typesResponse) => {
-      saveCollection('obligation_types', typesResponse.types);
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_TYPES_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
     },
@@ -149,8 +147,7 @@ export function useObligationsMutations() {
         method: 'PUT',
         body: JSON.stringify(mujtahids),
       }),
-    onSuccess: (mujtahidsResponse) => {
-      saveCollection('mujtahids', mujtahidsResponse.mujtahids);
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_MUJTAHIDS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
     },
@@ -162,8 +159,7 @@ export function useObligationsMutations() {
         method: 'PUT',
         body: JSON.stringify(reps),
       }),
-    onSuccess: (repsResponse) => {
-      saveCollection('mujtahid_reps', repsResponse.reps);
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_REPS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
     },
@@ -175,8 +171,7 @@ export function useObligationsMutations() {
         method: 'PUT',
         body: JSON.stringify(wakalaTypes),
       }),
-    onSuccess: (wakalaResponse) => {
-      saveCollection('wakala_types', wakalaResponse.wakalaTypes);
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_WAKALA_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
     },
@@ -188,8 +183,7 @@ export function useObligationsMutations() {
         method: 'PUT',
         body: JSON.stringify(distributions),
       }),
-    onSuccess: (distributionsResponse) => {
-      saveCollection('obligation_distributions', distributionsResponse.distributions);
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
     },
@@ -201,8 +195,7 @@ export function useObligationsMutations() {
         method: 'PUT',
         body: JSON.stringify(collections),
       }),
-    onSuccess: (collectionsResponse) => {
-      saveCollection('obligation_collections', collectionsResponse.collections);
+    onSuccess: () => {
       invalidateCollections();
     },
   });

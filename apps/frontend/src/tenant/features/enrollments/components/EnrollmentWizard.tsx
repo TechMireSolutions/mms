@@ -15,7 +15,7 @@ import { suggestClass, runFullEligibility, Enrollment, CalculatedFee } from '@/l
 import { formatMoney, todayISO } from "@mms/shared";
 import { Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
-import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessions";
+import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { useEnrollmentConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";

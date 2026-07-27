@@ -54,13 +54,13 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
 
   const REPORT_TABS = useMemo<readonly SubTab<"dashboard" | "compare" | "builder" | "widgets" | "visualizer" | "cardBuilder" | "saved">[]>(
     () => [
-      { key: "dashboard", label: t("dashboard.title") || "Dashboard", icon: BarChart2 },
-      { key: "compare", label: t("reports.moduleTools.compare") || "Compare", icon: GitCompare },
-      { key: "builder", label: t("reports.moduleTools.reportBuilder") || "Report Builder", icon: Wrench },
-      { key: "widgets", label: t("reports.moduleTools.widgetBuilder") || "Widget Builder", icon: LayoutDashboard },
-      { key: "visualizer", label: t("reports.moduleTools.visualizerBuilder") || "Visualizer Builder", icon: Sparkles },
-      { key: "cardBuilder", label: t("reports.moduleTools.cardBuilder") || "Card Builder", icon: CreditCard },
-      { key: "saved", label: t("reports.saved.title") || "Saved Reports", icon: Bookmark },
+      { key: "dashboard", label: t("dashboard.title"), icon: BarChart2 },
+      { key: "compare", label: t("reports.moduleTools.compare"), icon: GitCompare },
+      { key: "builder", label: t("reports.moduleTools.reportBuilder"), icon: Wrench },
+      { key: "widgets", label: t("reports.moduleTools.widgetBuilder"), icon: LayoutDashboard },
+      { key: "visualizer", label: t("reports.moduleTools.visualizerBuilder"), icon: Sparkles },
+      { key: "cardBuilder", label: t("reports.moduleTools.cardBuilder"), icon: CreditCard },
+      { key: "saved", label: t("reports.saved.title"), icon: Bookmark },
     ],
     [t]
   );

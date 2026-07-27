@@ -88,7 +88,7 @@ export default function Attendance() {
       channel,
       attRecords.map((r) => ({
         id: r.studentId || r.id,
-        name: r.studentName || 'Student',
+        name: r.studentName || t("attendance.messaging.student"),
         phone: (r as unknown as { phone?: string }).phone || '',
         email: (r as unknown as { email?: string }).email || '',
       }))

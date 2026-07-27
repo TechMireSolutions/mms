@@ -20,6 +20,7 @@ import { FilterChips } from "@/components/ui/FilterChips";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 import StudentList from "@/tenant/features/students/components/StudentList";
 import StudentForm from "@/tenant/features/students/components/StudentForm";
@@ -114,7 +115,13 @@ export default function Students() {
     ? STUDENTS_MODULE_MANIFEST.defaultPageSize
     : STUDENTS_MODULE_MANIFEST.maxPageSize;
 
-  const { data: workPageData, isFetching: isWorkPageFetching, isLoading: isWorkPageLoading } = useStudentsPaginated({
+  const {
+    data: workPageData,
+    isFetching: isWorkPageFetching,
+    isLoading: isWorkPageLoading,
+    isError: isWorkPageError,
+    refetch: refetchWorkPage,
+  } = useStudentsPaginated({
     page: isListView ? listPage : 1,
     limit: workLimit,
     search: studentSearch,
@@ -337,6 +344,11 @@ export default function Students() {
             <ErrorBoundary>
               {isWorkPageLoading ? (
                 <TableSkeleton rows={6} cols={columnRegistry.length} />
+              ) : isWorkPageError ? (
+                <ErrorState
+                  title={t("students.loadFailed")}
+                  onRetry={() => void refetchWorkPage()}
+                />
               ) : (
                 <>
                   <StudentList

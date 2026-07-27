@@ -7,7 +7,7 @@ import { ROUTES } from "@/lib/config/routes";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatMoney, formatDate, formatDateToIso, getOutstandingAmountForInvoice } from "@mms/shared";
-import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
+import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import MessageComposer from "@/components/ui/MessageComposer";
@@ -17,7 +17,7 @@ import { SearchBar } from "@/components/ui/SearchBar";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { SimplePagination } from "@/components/ui/SimplePagination";
 import { useLocalPagination } from "@/hooks/useLocalPagination";
-import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
+import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
 import {
   Table,
   TableHeader,

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { TrendingUp, TrendingDown } from "lucide-react";
-import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
+import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatMonthYear, formatMonthName, getCollectedAmountForMonth, getOutstandingAmountForMonth } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
