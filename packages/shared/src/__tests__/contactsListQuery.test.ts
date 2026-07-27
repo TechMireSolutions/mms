@@ -73,3 +73,21 @@ describe('filterContactsForQuery excludeIds', () => {
     expect(filterContactsForQuery(rows, { excludeIds: ['2', 3] }).map((row) => row.id)).toEqual(['1']);
   });
 });
+
+describe('filterContactsForQuery soft deletion', () => {
+  const rows = [
+    contact({ id: 'active', name: 'Active Contact' }),
+    contact({
+      id: 'deleted',
+      name: 'Deleted Contact',
+      deletedAt: '2026-07-27T00:00:00.000Z',
+    }),
+  ];
+
+  it('returns active contacts by default and deleted contacts for trash queries', () => {
+    expect(filterContactsForQuery(rows, {}).map((row) => row.id)).toEqual(['active']);
+    expect(filterContactsForQuery(rows, { includeDeleted: true }).map((row) => row.id)).toEqual([
+      'deleted',
+    ]);
+  });
+});

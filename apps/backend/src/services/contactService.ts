@@ -9,6 +9,7 @@ import {
   DEFAULT_FORM_TABS,
   DEFAULT_REQUIRED_TABS,
   filterActiveContacts,
+  isContactDeleted,
   paginateContacts,
   parsePhoneNumber,
   type Contact,
@@ -53,7 +54,8 @@ export async function loadContacts(options?: { includeDeleted?: boolean }): Prom
 
 export async function loadContactsPage(query: ContactsListQuery): Promise<ContactsListPageResult> {
   const all = await loadContacts({ includeDeleted: query.includeDeleted });
-  return paginateContacts(all, query);
+  const scoped = query.includeDeleted ? all.filter(isContactDeleted) : all;
+  return paginateContacts(scoped, query);
 }
 
 function metricsFieldConfig(fieldConfig: FieldConfig | null): FieldConfig {

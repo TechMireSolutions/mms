@@ -162,7 +162,7 @@ export function ContactMetadataCell({
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
                     className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-[11px] font-semibold transition-colors truncate max-w-[200px]"
-                    title={`${platformStr || "Link"}: ${urlStr}`}
+                    title={`${platformStr || t("contacts.form.link")}: ${urlStr}`}
                   >
                     <Globe className="w-3 h-3 shrink-0 text-primary" />
                     <span className="truncate">{label}</span>

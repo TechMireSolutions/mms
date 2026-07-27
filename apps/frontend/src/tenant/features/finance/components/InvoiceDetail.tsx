@@ -2,7 +2,7 @@ import React from "react";
 import { X, CheckCircle2, Clock, AlertCircle, ReceiptText, User, Calendar, CreditCard } from "lucide-react";
 import { Invoice } from '@/lib/data/financeData';
 import { Button } from "@/components/ui/button";
-import { Modal } from "@/components/ui/Modal";
+import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDate } from "@mms/shared";
@@ -42,38 +42,38 @@ export function InvoiceDetail({ invoice, onClose, onRecord, canWrite = true }: I
   const StatusIcon = statusConfig.icon;
 
   const rows = [
-    { label: "Base Fee", value: formatCurrency(invoice.baseFee), highlight: false, neg: false },
-    ...(invoice.discountAmt > 0 ? [{ label: `Discount (${invoice.discountType} – ${invoice.discountValue}%)`, value: `– ${formatCurrency(invoice.discountAmt)}`, highlight: false, neg: true }] : []),
-    { label: "Final Amount", value: formatCurrency(invoice.finalAmt), highlight: true, neg: false },
-    ...(invoice.paidAmt ? [{ label: "Amount Paid", value: formatCurrency(invoice.paidAmt), highlight: false, neg: false }] : []),
-    ...(invoice.paidAmt && invoice.paidAmt < invoice.finalAmt ? [{ label: "Balance Due", value: formatCurrency(invoice.finalAmt - invoice.paidAmt), highlight: false, neg: true }] : []),
+    { label: t("finance.columns.baseFee"), value: formatCurrency(invoice.baseFee), highlight: false, neg: false },
+    ...(invoice.discountAmt > 0 ? [{ label: t("finance.detail.discount", { type: invoice.discountType ?? t("common.none"), value: invoice.discountValue }), value: `– ${formatCurrency(invoice.discountAmt)}`, highlight: false, neg: true }] : []),
+    { label: t("finance.form.finalAmount"), value: formatCurrency(invoice.finalAmt), highlight: true, neg: false },
+    ...(invoice.paidAmt ? [{ label: t("finance.detail.amountPaid"), value: formatCurrency(invoice.paidAmt), highlight: false, neg: false }] : []),
+    ...(invoice.paidAmt && invoice.paidAmt < invoice.finalAmt ? [{ label: t("finance.balanceDue"), value: formatCurrency(invoice.finalAmt - invoice.paidAmt), highlight: false, neg: true }] : []),
   ];
 
   return (
-    <Modal
+    <DetailDrawerShell
       open
       onClose={onClose}
-      title={`Invoice ${invoice.id}`}
+      title={t("finance.detail.title", { id: invoice.id })}
       icon={ReceiptText}
-      size="sm"
+      className="max-w-2xl"
       footer={
         canWrite && invoice.status !== "paid" && invoice.status !== "cancelled" ? (
           <Button
             onClick={() => { onRecord(invoice); onClose(); }}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
           >
-            <ReceiptText className="w-4 h-4" aria-hidden="true" /> Record Payment
+            <ReceiptText className="w-4 h-4" aria-hidden="true" /> {t("finance.recordPayment")}
           </Button>
         ) : null
       }
     >
       <div className="space-y-5">
         {/* Status badge */}
-        <div className="flex items-center justify-between" aria-label={`Invoice Status: ${statusConfig.label}`}>
+        <div className="flex items-center justify-between" aria-label={t("finance.detail.status", { status: statusConfig.label })}>
           <span className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border ${statusConfig.className}`}>
             <StatusIcon className="w-3 h-3" aria-hidden="true" /> {statusConfig.label}
           </span>
-          <span className="text-[11px] text-muted-foreground">Due: {formatDate(invoice.dueDate)}</span>
+          <span className="text-[11px] text-muted-foreground">{t("finance.detail.due", { date: formatDate(invoice.dueDate) })}</span>
         </div>
 
         {/* Student & session info */}
@@ -92,7 +92,7 @@ export function InvoiceDetail({ invoice, onClose, onRecord, canWrite = true }: I
         <article className="relative overflow-hidden group/breakdown rounded-xl border border-border bg-card/45 backdrop-blur-xs shadow-sm">
           <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/60" />
           <header className="px-4 py-2 bg-muted/30 border-b border-border pl-5">
-            <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide m-0">Fee Breakdown</h4>
+            <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide m-0">{t("finance.detail.breakdown")}</h4>
           </header>
           <div className="divide-y divide-border/50">
             {rows.map((row) => (
@@ -108,10 +108,10 @@ export function InvoiceDetail({ invoice, onClose, onRecord, canWrite = true }: I
         {invoice.paidDate && (
           <div className="flex items-center gap-2.5 text-[12px] text-muted-foreground">
             <CreditCard className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>Paid on {invoice.paidDate} via {invoice.method}</span>
+            <span>{t("finance.detail.paidVia", { date: formatDate(invoice.paidDate), method: invoice.method ?? t("common.none") })}</span>
           </div>
         )}
       </div>
-    </Modal>
+    </DetailDrawerShell>
   );
 }

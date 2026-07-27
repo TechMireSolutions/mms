@@ -15,6 +15,9 @@ export const attendanceRecordSchema = z
     timeIn: z.string(),
     timeOut: z.string(),
     notes: z.string(),
+    deletedAt: z.string().nullable().optional(),
+    deletedBy: z.string().nullable().optional(),
+    deletionReason: z.string().nullable().optional(),
   })
   .passthrough();
 
@@ -37,6 +40,7 @@ export const ATTENDANCE_MODULE_CONTRACT = {
   restBasePath: '/api/attendance',
   analyticsCategory: 'attendance',
   tiers: ['work', 'reports', 'setup'] as const,
+  setupSubTabs: ['fields', 'preferences'] as const,
   permissions: {
     read: 'analytics.view',
     write: 'attendance.write',
@@ -48,9 +52,16 @@ export const ATTENDANCE_MODULE_CONTRACT = {
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['mark', 'records', 'audit'] as const,
-    bulkActions: [] as const,
+    bulkActions: ['delete'] as const,
+  },
+  softDelete: {
+    workExcludesDeleted: true,
+    reportsIncludeDeleted: false,
+    exportsIncludeDeleted: false,
+    captureDeletionReason: true,
   },
   defaultPageSize: 15,
+  maxPageSize: 500,
 } as const;
 
 export type AttendanceModuleTier = (typeof ATTENDANCE_MODULE_CONTRACT.tiers)[number];

@@ -363,7 +363,7 @@ interface SimpleTransactionWizardProps {
   accounts: Account[];
   entries: JournalEntry[];
   fiscalYears: FiscalYear[];
-  onSave: (entry: JournalEntry) => void;
+  onSave: (entry: JournalEntry) => void | Promise<void>;
   onClose: () => void;
   prefillType?: QuickActionType | null;
 }
@@ -421,19 +421,19 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
     return null;
   };
 
-  const handleSave = (status: "draft" | "posted") => {
+  const handleSave = async (status: "draft" | "posted") => {
     const validationError = validate();
     if (validationError) { alert(validationError); return; }
     const amount = parseFloat(form.amount);
     const generatedReference = generateJERef(entries);
     const description = form.description || t(selectedType!.labelKey);
-    onSave({
+    await onSave({
       id: `je${Date.now()}`,
       ref: form.ref ? `${form.ref}` : generatedReference,
       date: form.date,
       description,
       status,
-      created_by: "Admin",
+      created_by: "system",
       tags: [selectedType!.tag],
       attachments: [],
       fiscal_year: form.fiscal_year,
@@ -491,10 +491,10 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
             )}
             {step === 3 && (
               <>
-                <Button type="button" variant="outline" onClick={() => handleSave("draft")}>
+                <Button type="button" variant="outline" onClick={() => { void handleSave("draft"); }}>
                   {t("accounting.journal.dashboard.wizard.saveDraft")}
                 </Button>
-                <Button type="button" onClick={() => handleSave("posted")}>
+                <Button type="button" onClick={() => { void handleSave("posted"); }}>
                   <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> {t("accounting.journal.dashboard.wizard.postTransaction")}
                 </Button>
               </>

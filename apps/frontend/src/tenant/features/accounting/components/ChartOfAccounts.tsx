@@ -16,7 +16,7 @@ import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
 interface ChartOfAccountsProps {
   accounts: Account[];
-  onChange: (accounts: Account[]) => void;
+  onChange: (accounts: Account[] | ((prev: Account[]) => Account[])) => void | Promise<void>;
   onFilteredCountChange?: (count: number) => void;
   canWrite?: boolean;
   isColumnVisible?: (key: string) => boolean;
@@ -66,19 +66,24 @@ export function ChartOfAccounts({
   const showDescription = isColumnVisible ? isColumnVisible("description") : true;
   const showNormalBalance = isColumnVisible ? isColumnVisible("normalBalance") : true;
 
-  const handleSave = (account: Account) => {
-    if (account.id && accounts.find((existingAccount) => existingAccount.id === account.id)) onChange(accounts.map((existingAccount) => existingAccount.id === account.id ? account : existingAccount));
-    else onChange([...accounts, { ...account, isActive: true }]);
+  const handleSave = async (account: Account) => {
+    await onChange((prev) => {
+      if (account.id && prev.find((existingAccount) => existingAccount.id === account.id)) {
+        return prev.map((existingAccount) => existingAccount.id === account.id ? account : existingAccount);
+      }
+      return [...prev, { ...account, isActive: true }];
+    });
     setModal(null);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm(t("accounting.coa.deactivateConfirm"))) {
-      onChange(accounts.map((account) => account.id === id ? { ...account, isActive: false } : account));
-    }
+  const handleDelete = async (id: string) => {
+    if (!confirm(t("accounting.coa.deactivateConfirm"))) return;
+    await onChange((prev) => prev.map((account) => account.id === id ? { ...account, isActive: false } : account));
   };
 
-  const handleReactivate = (id: string) => onChange(accounts.map((account) => account.id === id ? { ...account, isActive: true } : account));
+  const handleReactivate = async (id: string) => {
+    await onChange((prev) => prev.map((account) => account.id === id ? { ...account, isActive: true } : account));
+  };
 
   const existingCodes = accounts.map((account) => account.code);
 

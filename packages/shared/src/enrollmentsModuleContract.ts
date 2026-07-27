@@ -48,6 +48,7 @@ export const ENROLLMENTS_MODULE_CONTRACT = {
   restBasePath: '/api/enrollments',
   analyticsCategory: 'enrollments',
   tiers: ['work', 'reports', 'setup'] as const,
+  setupSubTabs: ['fields', 'preferences'] as const,
   permissions: {
     read: 'enrollments.read',
     write: 'enrollments.write',
@@ -59,9 +60,16 @@ export const ENROLLMENTS_MODULE_CONTRACT = {
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['list', 'eligibility'] as const,
-    bulkActions: ['cancel'] as const,
+    bulkActions: ['cancel', 'delete'] as const,
+  },
+  softDelete: {
+    workExcludesDeleted: true,
+    reportsIncludeDeleted: false,
+    exportsIncludeDeleted: false,
+    captureDeletionReason: false,
   },
   defaultPageSize: 12,
+  maxPageSize: 500,
 } as const;
 
 export type EnrollmentsModuleTier = (typeof ENROLLMENTS_MODULE_CONTRACT.tiers)[number];

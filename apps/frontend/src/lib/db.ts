@@ -646,6 +646,17 @@ export function saveObject<T>(key: string, objectValue: T): void {
   }
 }
 
+/** Persists an object locally and waits for PostgreSQL sync. */
+export async function saveObjectAsync<T>(key: string, objectValue: T): Promise<ServerSyncResult> {
+  try {
+    const processed = writeObjectLocal(key, objectValue);
+    return await syncToServer(`/api/db/objects/${key}`, processed);
+  } catch (error) {
+    console.error(`Error writing object "${key}" to database:`, error);
+    return { ok: false };
+  }
+}
+
 /**
  * Clears all existing "mms_" keys from localStorage, parses
  * the provided JSON string, imports the stored key-value pairs and pushes to backend.

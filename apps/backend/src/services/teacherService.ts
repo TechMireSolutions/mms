@@ -26,6 +26,7 @@ import {
   findTeachersByIds,
   saveTeacher,
 } from '../db/repositories/teacherRepository.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
 
 type TeacherRepo = GenericServiceOptions<TeacherRecord>['repo'];
 const crud = createGenericRelationalService<TeacherRecord>({
@@ -44,6 +45,32 @@ export const createTeacher = crud.create;
 export const updateTeacherById = crud.updateById;
 export const deleteTeacherById = crud.deleteById;
 export const restoreTeacherById = crud.restoreById;
+export const bulkSoftDeleteTeachers = crud.bulkDeleteByIds;
+export const bulkRestoreTeachers = crud.bulkRestoreByIds;
+
+export async function bulkUpdateTeacherStatus(
+  ids: string[],
+  status: 'active' | 'inactive' | 'on_leave',
+): Promise<{ succeeded: number; failed: number }> {
+  const tenant = getRequestTenant();
+  if (!tenant) return { succeeded: 0, failed: ids.length };
+
+  const outcomes = await Promise.all(
+    ids.map(async (id) => {
+      const existing = await findTeacherById(tenant, id);
+      if (!existing || existing.deletedAt) return false;
+      const updated = await updateTeacherById(id, {
+        ...(existing as TeacherRecord),
+        status,
+        id,
+      });
+      return Boolean(updated);
+    }),
+  );
+
+  const succeeded = outcomes.filter(Boolean).length;
+  return { succeeded, failed: ids.length - succeeded };
+}
 
 const hydrated = createContactHydratedService<Teacher, TeacherRecord>({
   listByWorkspaceFn: listTeachersByWorkspace,
@@ -66,7 +93,11 @@ export async function loadTeachersWidgetAggregates(
 
 export async function loadTeachersPage(query: TeachersListQuery & { includeDeleted?: boolean }) {
   const rows = await loadTeachers({ includeDeleted: query.includeDeleted });
-  return paginateTeachers(rows as import('@mms/shared').Teacher[], query);
+  // Trash directory (`includeDeleted`) lists archived rows only — matches FE showDeleted.
+  const scoped = query.includeDeleted
+    ? (rows as import('@mms/shared').Teacher[]).filter((row) => Boolean(row.deletedAt))
+    : (rows as import('@mms/shared').Teacher[]);
+  return paginateTeachers(scoped, query);
 }
 
 

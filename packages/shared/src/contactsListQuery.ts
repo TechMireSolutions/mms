@@ -38,7 +38,9 @@ function matchesContactsQuickFilter(contact: Contact, quickFilter: ContactsQuick
 }
 
 export function filterContactsForQuery(contacts: Contact[], query: ContactsListQuery): Contact[] {
-  let rows = query.includeDeleted ? contacts : filterActiveContacts(contacts);
+  let rows = query.includeDeleted
+    ? contacts.filter(isContactDeleted)
+    : filterActiveContacts(contacts);
   if (query.gender) {
     const genderFilter = query.gender.trim().toLowerCase();
     rows = rows.filter(

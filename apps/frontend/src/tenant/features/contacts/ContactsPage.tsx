@@ -20,6 +20,7 @@ import ContactsDataBanner from "@/tenant/features/contacts/components/ContactsDa
 import ContactsSyncConflictPanel from "@/tenant/features/contacts/components/ContactsSyncConflictPanel";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { TableSkeleton } from "@/components/ui/LoadingState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useGoogleContactsOAuthListener } from "@/lib/contacts/googleContactsOAuthListener";
@@ -126,10 +127,12 @@ function ContactsInner() {
     showDeletedArchives: viewingDeleted,
     setShowDeletedArchives,
     needsFullContactsList,
-    isContactsLoading,
     useServerWork,
     workPageData,
-    isWorkPageFetching,
+    isWorkLoading,
+    isWorkError,
+    refetchWork,
+    isWorkFetching,
     setListPage,
     workContacts,
     allContactsForLinks,
@@ -213,7 +216,7 @@ function ContactsInner() {
               {t("common.export")}
             </ActionButton>
           )}
-          {canWrite && (
+          {canWrite && !viewingDeleted && (
             <ActionButton variant="primary" icon={UserPlus} onClick={handleNew}>{t("contacts.addContact")}</ActionButton>
           )}
         </>
@@ -381,7 +384,15 @@ function ContactsInner() {
             </AnimatePresence>
 
             <AnimatePresence mode="wait">
-              {isContactsLoading ? (
+              {isWorkError ? (
+                <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <ErrorState
+                    title={t("contacts.sync.failed")}
+                    description={t("common.retry")}
+                    onRetry={() => void refetchWork()}
+                  />
+                </motion.div>
+              ) : isWorkLoading ? (
                 <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <TableSkeleton rows={6} cols={tableColumns.length} />
                 </motion.div>
@@ -447,7 +458,7 @@ function ContactsInner() {
                            variant="range"
                          />
                       )}
-                      {useServerWork && isWorkPageFetching && (
+                      {useServerWork && isWorkFetching && (
                         <p className="text-xs text-muted-foreground px-1">{t("common.loading")}</p>
                       )}
                     </ErrorBoundary>

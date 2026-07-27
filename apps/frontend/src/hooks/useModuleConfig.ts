@@ -8,7 +8,7 @@ import {
   type TabDefinition,
 } from "@mms/shared";
 
-import { getObject, saveObject } from "@/lib/db";
+import { getObject, saveObject, saveObjectAsync } from "@/lib/db";
 import { useLiveObject } from "@/hooks/useLiveObject";
 
 export interface ModuleSettingsShape {
@@ -87,6 +87,17 @@ export function useModuleConfig<T extends ModuleSettingsShape>({
     [settingsObjectKey, resolveSettings]
   );
 
+  const updateSettingsAsync = useCallback(
+    async (settingsDraft: T) => {
+      const merged = resolveSettings(settingsDraft);
+      const result = await saveObjectAsync(settingsObjectKey, merged);
+      if (!result.ok) {
+        throw new Error(`Failed to sync settings for ${settingsObjectKey}`);
+      }
+    },
+    [settingsObjectKey, resolveSettings]
+  );
+
   const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
   const customFields = useMemo(() => (settings.customFields || []) as ModuleCustomField[], [settings.customFields]);
   const fieldOrder = useMemo(
@@ -115,6 +126,7 @@ export function useModuleConfig<T extends ModuleSettingsShape>({
     fields,
     customFields,
     updateSettings,
+    updateSettingsAsync,
     reloadConfig,
     mergeSettings,
     loadSettings,

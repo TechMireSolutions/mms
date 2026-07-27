@@ -1,21 +1,37 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { FINANCE_MODULE_CONTRACT, computeFinanceCommandMetrics } from '@mms/shared';
+import { FINANCE_MODULE_CONTRACT, computeFinanceCommandMetrics, type User } from '@mms/shared';
 import { registerStandardTenantRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
-import { invoiceRecordSchema, paymentRecordSchema } from '../../validation/financeSchemas.js';
+import {
+  financeBulkIdsSchema,
+  financeListQuerySchema,
+  invoiceCreateBodySchema,
+  invoiceRecordSchema,
+  paymentCreateBodySchema,
+  paymentRecordSchema,
+} from '../../validation/financeSchemas.js';
 
 import {
   loadInvoices,
+  loadInvoicesPage,
   createInvoice,
   updateInvoiceById,
   deleteInvoiceById,
   restoreInvoiceById,
+  bulkSoftDeleteInvoices,
+  bulkRestoreInvoices,
   loadPayments,
+  loadPaymentsPage,
   createPayment,
   updatePaymentById,
   deletePaymentById,
   restorePaymentById,
+  bulkSoftDeletePayments,
+  bulkRestorePayments,
 } from '../../services/financeService.js';
+import { canDeleteCollection, canWriteCollection } from '../../services/rbacService.js';
+import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
+import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
 const FINANCE_COLLECTION = FINANCE_MODULE_CONTRACT.collectionKey;
 const PAYMENT_COLLECTION = FINANCE_MODULE_CONTRACT.paymentCollectionKey;
@@ -48,8 +64,11 @@ export default async function financeRoutes(
     prefix: '/invoices',
     collection: FINANCE_COLLECTION,
     schema: invoiceRecordSchema,
+    listQuerySchema: financeListQuerySchema,
+    defaultPageSize: FINANCE_MODULE_CONTRACT.defaultPageSize,
     errorMessagePrefix: 'invoices',
     loadAllFn: loadInvoices,
+    loadPageFn: loadInvoicesPage,
     createFn: createInvoice,
     updateFn: updateInvoiceById,
     deleteFn: deleteInvoiceById,
@@ -57,6 +76,19 @@ export default async function financeRoutes(
     nameSingular: 'invoice',
     namePlural: 'invoices',
     columnPreferencesObjectKey: FINANCE_MODULE_CONTRACT.invoiceColumnPreferencesObjectKey,
+    customPostRoute: true,
+  });
+
+  fastify.post('/invoices', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, FINANCE_COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(invoiceCreateBodySchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      return reply.status(201).send({ invoice: await createInvoice(parsed.data) });
+    } catch (error: unknown) {
+      return sendDatabaseError(reply, error instanceof Error ? error.message : 'Failed to create invoice');
+    }
   });
 
   // --- Payments ---
@@ -64,8 +96,11 @@ export default async function financeRoutes(
     prefix: '/payments',
     collection: PAYMENT_COLLECTION,
     schema: paymentRecordSchema,
+    listQuerySchema: financeListQuerySchema,
+    defaultPageSize: FINANCE_MODULE_CONTRACT.defaultPageSize,
     errorMessagePrefix: 'payments',
     loadAllFn: loadPayments,
+    loadPageFn: loadPaymentsPage,
     createFn: createPayment,
     updateFn: updatePaymentById,
     deleteFn: deletePaymentById,
@@ -73,5 +108,58 @@ export default async function financeRoutes(
     nameSingular: 'payment',
     namePlural: 'payments',
     columnPreferencesObjectKey: FINANCE_MODULE_CONTRACT.paymentColumnPreferencesObjectKey,
+    customPostRoute: true,
   });
+
+  fastify.post('/payments', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, PAYMENT_COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(paymentCreateBodySchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      return reply.status(201).send({ payment: await createPayment(parsed.data) });
+    } catch (error: unknown) {
+      return sendDatabaseError(reply, error instanceof Error ? error.message : 'Failed to create payment');
+    }
+  });
+
+  const registerBulkTrashRoutes = (
+    prefix: '/invoices' | '/payments',
+    collection: string,
+    bulkDelete: typeof bulkSoftDeleteInvoices,
+    bulkRestore: typeof bulkRestoreInvoices,
+  ) => {
+    fastify.post(`${prefix}/bulk-delete`, async (request, reply) => {
+      const user = request.user as User;
+      if (!canDeleteCollection(user, collection)) return sendForbidden(reply);
+      const parsed = parseRequest(financeBulkIdsSchema, request.body);
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+      try {
+        return reply.send({
+          success: true,
+          ...await bulkDelete(parsed.data.ids.map(String), String(user.id)),
+        });
+      } catch {
+        return sendDatabaseError(reply, `Failed to bulk delete ${prefix.slice(1)}`);
+      }
+    });
+
+    fastify.post(`${prefix}/bulk-restore`, async (request, reply) => {
+      const user = request.user as User;
+      if (!canDeleteCollection(user, collection)) return sendForbidden(reply);
+      const parsed = parseRequest(financeBulkIdsSchema, request.body);
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+      try {
+        return reply.send({
+          success: true,
+          ...await bulkRestore(parsed.data.ids.map(String)),
+        });
+      } catch {
+        return sendDatabaseError(reply, `Failed to bulk restore ${prefix.slice(1)}`);
+      }
+    });
+  };
+
+  registerBulkTrashRoutes('/invoices', FINANCE_COLLECTION, bulkSoftDeleteInvoices, bulkRestoreInvoices);
+  registerBulkTrashRoutes('/payments', PAYMENT_COLLECTION, bulkSoftDeletePayments, bulkRestorePayments);
 }

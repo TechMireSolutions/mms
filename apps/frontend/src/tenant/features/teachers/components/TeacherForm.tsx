@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { School, User, Briefcase, Hash, GraduationCap } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useContactById } from "@/tenant/features/contacts/hooks/useContacts";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useTeacherLinkedContactIds, useTeacherNextEmployeeId } from "@/tenant/features/teachers/hooks/useTeachers";
+import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
 import { notify } from "@/lib/notify";
 import {
   Teacher,
@@ -26,7 +27,7 @@ import {
 export interface TeacherFormProps {
   teacher?: Teacher;
   onClose: () => void;
-  onSave: (teacher: Teacher) => void;
+  onSave: (teacher: Teacher) => void | Promise<void>;
 }
 
 export function TeacherForm({
@@ -36,33 +37,57 @@ export function TeacherForm({
 }: TeacherFormProps): React.JSX.Element {
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
+  const { settings, specializations, statuses } = useTeacherConfig();
+
+  const specializationOptions = specializations.length > 0
+    ? specializations
+    : [...TEACHER_SPECIALIZATION_VALUES];
+  const statusOptions = statuses.length > 0 ? statuses : [...TEACHER_STATUS_VALUES];
+  const defaultSpecialization = settings.defaultSpecialization || specializationOptions[0] || "General";
+  const idPrefix = settings.idPrefix || "TCH";
+  const autoGenerateId = settings.autoGenerateId !== false;
+  const requireContactLink = settings.requireContactLink !== false;
+  const customFields = useMemo(() => settings.customFields ?? [], [settings.customFields]);
 
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [customValues, setCustomValues] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    for (const field of customFields) {
+      const raw = teacher ? (teacher as unknown as Record<string, unknown>)[field.id] : undefined;
+      initial[field.id] = raw == null ? "" : String(raw);
+    }
+    return initial;
+  });
 
   const [teacherDraft, setTeacherDraft] = useState<Partial<Teacher>>(() => ({
     contactId: teacher?.contactId ?? "",
     employeeId: teacher?.employeeId ?? "",
-    specialization: teacher?.specialization ?? "General",
+    specialization: teacher?.specialization ?? defaultSpecialization,
     status: teacher?.status ?? "active",
     joinDate: teacher?.joinDate ?? todayISO(),
     qualification: teacher?.qualification ?? "",
     notes: teacher?.notes ?? "",
   }));
 
-  // Re-sync draft when editing another teacher record
   useEffect(() => {
     setTeacherDraft({
       contactId: teacher?.contactId ?? "",
       employeeId: teacher?.employeeId ?? "",
-      specialization: teacher?.specialization ?? "General",
+      specialization: teacher?.specialization ?? defaultSpecialization,
       status: teacher?.status ?? "active",
       joinDate: teacher?.joinDate ?? todayISO(),
       qualification: teacher?.qualification ?? "",
       notes: teacher?.notes ?? "",
     });
+    const nextCustom: Record<string, string> = {};
+    for (const field of customFields) {
+      const raw = teacher ? (teacher as unknown as Record<string, unknown>)[field.id] : undefined;
+      nextCustom[field.id] = raw == null ? "" : String(raw);
+    }
+    setCustomValues(nextCustom);
     setErrors({});
-  }, [teacher]);
+  }, [teacher, defaultSpecialization, customFields]);
 
   const updateDraft = (patch: Partial<Teacher>) => {
     setTeacherDraft((prev) => ({ ...prev, ...patch }));
@@ -78,45 +103,56 @@ export function TeacherForm({
   );
 
   const { data: nextEmployeeId } = useTeacherNextEmployeeId({
-    prefix: "TCH-",
-    enabled: !teacher?.id,
+    prefix: idPrefix,
+    enabled: !teacher?.id && autoGenerateId,
   });
 
   useEffect(() => {
-    if (teacher?.id || !nextEmployeeId) return;
+    if (teacher?.id || !autoGenerateId || !nextEmployeeId) return;
     if (!teacherDraft.employeeId) {
       updateDraft({ employeeId: nextEmployeeId });
     }
-  }, [nextEmployeeId, teacher?.id, teacherDraft.employeeId]);
+  }, [nextEmployeeId, teacher?.id, teacherDraft.employeeId, autoGenerateId]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setErrors({});
     const newErrors: Record<string, string> = {};
 
-    if (!teacherDraft.contactId) {
-      newErrors.contactId = t("teachers.errorContactRequired") || "Contact is required";
+    if (requireContactLink && !teacherDraft.contactId) {
+      newErrors.contactId = t("teachers.errorContactRequired");
     }
-    if (!teacherDraft.employeeId?.trim()) {
-      newErrors.employeeId = "Employee ID is required";
+    const resolvedEmployeeId = teacherDraft.employeeId?.trim()
+      || (autoGenerateId && !teacher?.id ? nextEmployeeId?.trim() : undefined);
+    if (!resolvedEmployeeId) {
+      newErrors.employeeId = t("teachers.errorEmployeeIdRequired");
+    }
+    for (const field of customFields) {
+      if (field.required && !customValues[field.id]?.trim()) {
+        newErrors[`custom:${field.id}`] = t("contacts.form.pleaseFixErrors");
+      }
     }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      notify.error(t("contacts.form.pleaseFixErrors") || "Please fix validation errors");
+      notify.error(t("contacts.form.pleaseFixErrors"));
       return;
     }
 
     setSaving(true);
     try {
-      onSave({
+      const payload = {
         ...teacherDraft,
-        id: teacher?.id ?? `tch${Date.now()}`,
-        contactId: String(teacherDraft.contactId),
-      } as Teacher);
-      notify.success(teacher ? "Teacher updated successfully" : "Teacher created successfully");
+        ...customValues,
+        employeeId: resolvedEmployeeId,
+        contactId: String(teacherDraft.contactId || ""),
+        ...(teacher?.id != null ? { id: teacher.id } : {}),
+      } as Teacher;
+      await onSave(payload);
       onClose();
     } catch (err: unknown) {
-      notify.error(t("settings.serverSaveFailed") || "Failed to save", { description: err instanceof Error ? err.message : String(err) });
+      notify.error(t("teachers.toast.saveFailed"), {
+        description: err instanceof Error ? err.message : String(err),
+      });
     } finally {
       setSaving(false);
     }
@@ -129,32 +165,37 @@ export function TeacherForm({
       </span>
       <div className="flex items-center gap-1.5">
         <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px]">
-          ID: {teacherDraft.employeeId || "—"}
+          {t("teachers.form.employeeIdBadge", { id: teacherDraft.employeeId || t("common.notSpecified") })}
         </span>
         <span className={`inline-flex items-center px-2 py-0.5 rounded-md font-semibold border text-[10px] capitalize ${
-          teacherDraft.status === 'active' 
-            ? 'bg-success/10 text-success border-success/20' 
-            : 'bg-muted text-muted-foreground border-border'
+          teacherDraft.status === "active"
+            ? "bg-success/10 text-success border-success/20"
+            : "bg-muted text-muted-foreground border-border"
         }`}>
-          {teacherDraft.status}
+          {(() => {
+            const status = teacherDraft.status || "active";
+            const translationKey = `teachers.status.${status}` as AppTranslationKey;
+            const translated = t(translationKey);
+            return translated === translationKey ? toTitleCase(status) : translated;
+          })()}
         </span>
       </div>
     </div>
-  ) : (
+  ) : requireContactLink ? (
     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-[11px] font-bold border border-destructive/20">
-      Contact is required
+      {t("teachers.form.contactRequired")}
     </span>
-  );
+  ) : null;
 
   const renderBasic = () => (
     <div className="space-y-4 text-start">
       <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm z-20">
         <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
-          <User className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("teachers.field.contact") || "Contact"}</h3>
+          <User className="w-4 h-4 text-primary/70 transition-colors" />
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("teachers.field.contact")}</h3>
         </div>
         <ContactPicker
-          label={t("teachers.field.contact") || "Contact"}
+          label={t("teachers.field.contact")}
           value={teacherDraft.contactId ? String(teacherDraft.contactId) : null}
           onChange={(contactId) => updateDraft({ contactId: contactId ? String(contactId) : "" })}
           excludeIds={linkedTeacherContactIds.map(String)}
@@ -170,24 +211,24 @@ export function TeacherForm({
 
       <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4.5 shadow-sm z-10">
         <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
-          <School className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Details</h3>
+          <School className="w-4 h-4 text-primary/70 transition-colors" />
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("teachers.form.sectionDetails")}</h3>
         </div>
-        <Field label={t("teachers.field.specialization") || "Specialization"}>
+        <Field label={t("teachers.field.specialization")}>
           <FormSelect
-            value={teacherDraft.specialization || "General"}
+            value={teacherDraft.specialization || defaultSpecialization}
             onChange={(val) => updateDraft({ specialization: val })}
-            options={TEACHER_SPECIALIZATION_VALUES}
+            options={specializationOptions}
           />
         </Field>
 
-        <Field label="Qualification">
+        <Field label={t("teachers.field.qualification")}>
           <div className="relative flex items-center group/input">
-            <GraduationCap className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+            <GraduationCap className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
             <Input
               value={teacherDraft.qualification || ""}
               onChange={(event) => updateDraft({ qualification: event.target.value })}
-              placeholder="e.g. Master in Islamic Studies"
+              placeholder={t("teachers.form.qualificationPlaceholder")}
               className={`${FORM_INPUT} ps-10`}
             />
           </div>
@@ -198,28 +239,29 @@ export function TeacherForm({
 
   const renderEmployment = () => (
     <div className="space-y-4 text-start">
-      <Card accentColor="indigo" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm">
+      <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm">
         <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
-          <Briefcase className="w-4 h-4 text-indigo-500/70 group-hover:text-indigo-500 transition-colors" />
-          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Employment Details</h3>
+          <Briefcase className="w-4 h-4 text-primary/70 transition-colors" />
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("teachers.form.sectionEmployment")}</h3>
         </div>
-        <Field label={t("teachers.field.employeeId") || "Employee ID"} required error={errors.employeeId}>
+        <Field label={t("teachers.field.employeeId")} required error={errors.employeeId}>
           <div className="relative flex items-center group/input">
-            <Hash className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+            <Hash className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
             <Input
               value={teacherDraft.employeeId || ""}
               onChange={(event) => updateDraft({ employeeId: event.target.value })}
-              placeholder="TCH-0001"
+              placeholder={t("teachers.form.employeeIdPlaceholder", { prefix: idPrefix })}
               className={`${FORM_INPUT} ps-10`}
+              disabled={autoGenerateId && !teacher?.id && Boolean(nextEmployeeId)}
             />
           </div>
         </Field>
 
-        <Field label={t("teachers.field.status") || "Status"}>
+        <Field label={t("teachers.field.status")}>
           <FormSelect
             value={teacherDraft.status || "active"}
             onChange={(val) => updateDraft({ status: val as Teacher["status"] })}
-            options={TEACHER_STATUS_VALUES.map((status) => {
+            options={statusOptions.map((status) => {
               const translationKey = `teachers.status.${status}` as AppTranslationKey;
               const translated = t(translationKey);
               const label = translated === translationKey ? toTitleCase(status) : translated;
@@ -228,22 +270,53 @@ export function TeacherForm({
           />
         </Field>
 
-        <Field label="Join Date">
+        <Field label={t("teachers.field.joinDate")}>
           <DatePicker
             value={teacherDraft.joinDate || undefined}
             onChange={(dateStr) => updateDraft({ joinDate: dateStr })}
           />
         </Field>
 
-        <Field label={t("teachers.field.notes") || "Notes"}>
+        <Field label={t("teachers.field.notes")}>
           <Textarea
             value={teacherDraft.notes || ""}
             onChange={(event) => updateDraft({ notes: event.target.value })}
-            placeholder="Employment notes..."
+            placeholder={t("teachers.form.notesPlaceholder")}
             className="min-h-[80px]"
           />
         </Field>
       </Card>
+
+      {customFields.length > 0 && (
+        <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm">
+          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
+            <School className="w-4 h-4 text-primary/70 transition-colors" />
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("teachers.form.sectionCustom")}</h3>
+          </div>
+          {customFields.map((field) => (
+            <Field
+              key={field.id}
+              label={field.label || field.id}
+              required={field.required}
+              error={errors[`custom:${field.id}`]}
+            >
+              {field.type === "select" && field.options && field.options.length > 0 ? (
+                <FormSelect
+                  value={customValues[field.id] || ""}
+                  onChange={(val) => setCustomValues((prev) => ({ ...prev, [field.id]: val }))}
+                  options={field.options}
+                />
+              ) : (
+                <Input
+                  value={customValues[field.id] || ""}
+                  onChange={(event) => setCustomValues((prev) => ({ ...prev, [field.id]: event.target.value }))}
+                  className={FORM_INPUT}
+                />
+              )}
+            </Field>
+          ))}
+        </Card>
+      )}
     </div>
   );
 
@@ -251,15 +324,15 @@ export function TeacherForm({
     <FormModal
       open
       onClose={onClose}
-      title={teacher ? (t("teachers.form.editTitle") || "Edit Teacher") : (t("teachers.form.addTitle") || "Add Teacher")}
+      title={teacher ? t("teachers.form.editTitle") : t("teachers.form.addTitle")}
       subtitle={t("teachers.form.contactHint")}
       icon={School}
       lang={language}
-      cancelLabel={t("common.cancel") || "Cancel"}
-      saveLabel={t("common.save") || "Save"}
-      onSave={handleSave}
+      cancelLabel={t("common.cancel")}
+      saveLabel={t("common.save")}
+      onSave={() => { void handleSave(); }}
       saving={saving}
-      saveDisabled={!teacherDraft.contactId}
+      saveDisabled={requireContactLink && !teacherDraft.contactId}
       footerStart={footerStart}
     >
       <div className="space-y-4">

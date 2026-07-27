@@ -37,7 +37,7 @@ vi.mock('../db/database.js', () => ({
   runInTransaction: (cb: () => unknown) => cb(),
 }));
 
-import { updateContactById, upsertContact } from '../services/contactService.js';
+import { loadContactsPage, updateContactById, upsertContact } from '../services/contactService.js';
 
 function contact(overrides: Partial<Contact>): Contact {
   return {
@@ -74,6 +74,18 @@ describe('contactService emergency reciprocal mapping', () => {
     mockSaveContact.mockResolvedValue(undefined);
     mockBulkSaveContacts.mockResolvedValue(undefined);
     mockInvalidateDuplicateScanCache.mockResolvedValue(undefined);
+  });
+
+  it('returns only deleted contacts for trash pages', async () => {
+    mockListContactsByWorkspace.mockResolvedValue([
+      contact({ id: 'active' }),
+      contact({ id: 'deleted', deletedAt: '2026-07-27T00:00:00.000Z' }),
+    ]);
+
+    const page = await loadContactsPage({ page: 1, limit: 50, includeDeleted: true });
+
+    expect(page.contacts.map((entry) => entry.id)).toEqual(['deleted']);
+    expect(page.total).toBe(1);
   });
 
   it('adds a reciprocal emergency link when creating a new contact', async () => {

@@ -23,14 +23,16 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 });
 
 const mockLoadSessions = vi.fn();
+const mockLoadSessionsPage = vi.fn();
 
-vi.mock('../services/sessionService.js', () => ({
-  loadSessions: (...args: unknown[]) => mockLoadSessions(...args),
-  createSession: vi.fn(),
-  updateSessionById: vi.fn(),
-  deleteSessionById: vi.fn(),
-  restoreSessionById: vi.fn(),
-}));
+vi.mock('../services/sessionService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/sessionService.js')>();
+  return {
+    ...actual,
+    loadSessions: (...args: unknown[]) => mockLoadSessions(...args),
+    loadSessionsPage: (...args: unknown[]) => mockLoadSessionsPage(...args),
+  };
+});
 
 function adminToken(app: Awaited<ReturnType<typeof buildApp>>): string {
   return app.jwt.sign({
@@ -48,6 +50,13 @@ describe('sessions REST routes integration', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
     mockLoadSessions.mockReset().mockResolvedValue([]);
+    mockLoadSessionsPage.mockReset().mockResolvedValue({
+      sessions: [],
+      total: 0,
+      page: 1,
+      limit: 20,
+      hasMore: false,
+    });
   });
 
   afterEach(() => {
@@ -76,7 +85,13 @@ describe('sessions REST routes integration', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ sessions: [] });
+    expect(res.json()).toEqual({
+      sessions: [],
+      total: 0,
+      page: 1,
+      limit: 20,
+      hasMore: false,
+    });
     await app.close();
   });
 });

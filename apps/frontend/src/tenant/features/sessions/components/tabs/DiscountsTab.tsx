@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { formatMoney } from "@mms/shared";
+import { useTranslation } from "@/hooks/useTranslation";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 
 const EMPTY: Partial<Discount> = { name: "", type: "percentage", value: 0, conditions: "", active: true };
 
@@ -17,10 +19,12 @@ interface DiscountModalProps {
   open: boolean;
   discount: Discount | null;
   onClose: () => void;
-  onSave: (discount: Discount) => void;
+  onSave: (discount: Discount) => void | Promise<void>;
+  saving: boolean;
 }
 
-function DiscountModal({ open, discount, onClose, onSave }: DiscountModalProps) {
+function DiscountModal({ open, discount, onClose, onSave, saving }: DiscountModalProps) {
+  const { t } = useTranslation();
   const [discountDraft, setDiscountDraft] = useState<Partial<Discount>>(discount ? { ...discount } : { ...EMPTY });
   const updateDiscountDraft = <K extends keyof Discount>(field: K, value: Discount[K]) => setDiscountDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
 
@@ -34,44 +38,45 @@ function DiscountModal({ open, discount, onClose, onSave }: DiscountModalProps) 
     <FormModal
       open={open}
       onClose={onClose}
-      title={discount ? "Edit Discount" : "Add Discount"}
+      title={discount ? t("sessions.discounts.edit") : t("sessions.discounts.add")}
       icon={Tag}
-      cancelLabel="Cancel"
-      saveLabel="Save"
+      cancelLabel={t("common.cancel")}
+      saveLabel={t("common.save")}
       onSave={() => onSave({ ...discountDraft, id: discount?.id || `d${Date.now()}` } as Discount)}
       saveDisabled={!discountDraft.name}
+      saving={saving}
     >
       <div className="space-y-4">
         <div>
-          <label className={FORM_LABEL} htmlFor="discount-name">Name *</label>
-          <Input id="discount-name" value={discountDraft.name || ""} onChange={(event) => updateDiscountDraft("name", event.target.value)} placeholder="e.g. Sibling Discount" required />
+          <label className={FORM_LABEL} htmlFor="discount-name">{t("sessions.discounts.form.name")} *</label>
+          <Input id="discount-name" value={discountDraft.name || ""} onChange={(event) => updateDiscountDraft("name", event.target.value)} placeholder={t("sessions.discounts.form.namePlaceholder")} required />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={FORM_LABEL} htmlFor="discount-type">Type</label>
+            <label className={FORM_LABEL} htmlFor="discount-type">{t("sessions.discounts.form.type")}</label>
             <FormSelect
               id="discount-type"
               value={discountDraft.type || "percentage"}
               onChange={(value) => updateDiscountDraft("type", value as Discount["type"])}
               options={[
-                { value: "percentage", label: "Percentage (%)" },
-                { value: "fixed", label: "Fixed Amount" },
+                { value: "percentage", label: t("sessions.discounts.type.percentage") },
+                { value: "fixed", label: t("sessions.discounts.type.fixed") },
               ]}
               className="w-full"
             />
           </div>
           <div>
-            <label className={FORM_LABEL} htmlFor="discount-value">Value</label>
+            <label className={FORM_LABEL} htmlFor="discount-value">{t("sessions.discounts.form.value")}</label>
             <Input id="discount-value" type="number" value={discountDraft.value || 0} onChange={(event) => updateDiscountDraft("value", +event.target.value)} min={0} max={discountDraft.type === "percentage" ? 100 : undefined} required />
           </div>
         </div>
         <div>
-          <label className={FORM_LABEL} htmlFor="discount-conditions">Conditions</label>
-          <Textarea id="discount-conditions" className="min-h-[64px] resize-none" value={discountDraft.conditions || ""} onChange={(event) => updateDiscountDraft("conditions", event.target.value)} placeholder="Who qualifies for this discount?" />
+          <label className={FORM_LABEL} htmlFor="discount-conditions">{t("sessions.discounts.form.conditions")}</label>
+          <Textarea id="discount-conditions" className="min-h-[64px] resize-none" value={discountDraft.conditions || ""} onChange={(event) => updateDiscountDraft("conditions", event.target.value)} placeholder={t("sessions.discounts.form.conditionsPlaceholder")} />
         </div>
         <label className="flex items-center gap-2.5 cursor-pointer">
           <Checkbox checked={discountDraft.active || false} onCheckedChange={(checked) => updateDiscountDraft("active", !!checked)} />
-          <span className="text-sm text-foreground font-medium">Active</span>
+          <span className="text-sm text-foreground font-medium">{t("sessions.discounts.active")}</span>
         </label>
       </div>
     </FormModal>
@@ -80,7 +85,8 @@ function DiscountModal({ open, discount, onClose, onSave }: DiscountModalProps) 
 
 interface DiscountsTabProps {
   session: Session;
-  onUpdate: (session: Session) => void;
+  onUpdate: (session: Session) => void | Promise<void>;
+  canWrite: boolean;
 }
 
 /**
@@ -91,40 +97,58 @@ interface DiscountsTabProps {
  * @param {DiscountsTabProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export function DiscountsTab({ session, onUpdate }: DiscountsTabProps) {
+export function DiscountsTab({ session, onUpdate, canWrite }: DiscountsTabProps) {
+  const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
   const [editDiscount, setEditDiscount] = useState<Discount | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Discount | null>(null);
+  const [saving, setSaving] = useState(false);
+  const deletePendingRef = React.useRef(false);
   const discounts = session.discounts || [];
 
-  const handleSave = (discountToSave: Discount) => {
+  const handleSave = async (discountToSave: Discount) => {
     const existing = discounts.find((discountItem) => discountItem.id === discountToSave.id);
-    onUpdate({ ...session, discounts: existing ? discounts.map((discountItem) => discountItem.id === discountToSave.id ? discountToSave : discountItem) : [...discounts, discountToSave] });
-    setShowModal(false); setEditDiscount(null);
+    setSaving(true);
+    try {
+      await onUpdate({ ...session, discounts: existing ? discounts.map((discountItem) => discountItem.id === discountToSave.id ? discountToSave : discountItem) : [...discounts, discountToSave] });
+      setShowModal(false); setEditDiscount(null);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = (id: string) => onUpdate({ ...session, discounts: discounts.filter((discountItem) => discountItem.id !== id) });
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    deletePendingRef.current = true;
+    try {
+      await onUpdate({ ...session, discounts: discounts.filter((discountItem) => discountItem.id !== deleteTarget.id) });
+      setDeleteTarget(null);
+    } finally {
+      deletePendingRef.current = false;
+    }
+  };
 
-  const toggleActive = (id: string) => onUpdate({
+  const toggleActive = async (id: string) => await onUpdate({
     ...session,
     discounts: discounts.map((discountItem) => discountItem.id === id ? { ...discountItem, active: !discountItem.active } : discountItem),
   });
 
   return (
-    <section aria-label="Session Discounts" className="space-y-4">
+    <section aria-label={t("sessions.discounts.ariaLabel")} className="space-y-4">
       <header className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-foreground m-0">{discounts.length} discount{discounts.length !== 1 ? "s" : ""}</p>
-        <Button
+        <p className="text-sm font-semibold text-foreground m-0">{t("sessions.discounts.count", { count: discounts.length })}</p>
+        {canWrite && <Button
           onClick={() => { setEditDiscount(null); setShowModal(true); }}
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors h-auto"
         >
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Discount
-        </Button>
+          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.discounts.add")}
+        </Button>}
       </header>
 
       {discounts.length === 0 ? (
         <div className="py-12 text-center rounded-xl border-2 border-dashed border-border">
           <Tag className="w-8 h-8 text-muted-foreground mx-auto mb-2" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground m-0">No discounts yet</p>
+          <p className="text-sm font-medium text-foreground m-0">{t("sessions.discounts.emptyTitle")}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -143,25 +167,25 @@ export function DiscountsTab({ session, onUpdate }: DiscountsTabProps) {
                 <div className="flex items-center gap-2 mb-0.5">
                   <h4 className="text-[13px] font-bold text-foreground m-0">{discountItem.name}</h4>
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${discountItem.active ? "bg-success/10 text-success border-success/20" : "bg-muted text-muted-foreground border-border"}`}>
-                    {discountItem.active ? "Active" : "Inactive"}
+                    {discountItem.active ? t("sessions.discounts.active") : t("sessions.discounts.inactive")}
                   </span>
                 </div>
                 <p className="text-[13px] font-semibold text-primary m-0">
-                  {discountItem.type === "percentage" ? `${discountItem.value}% off` : `${formatMoney(discountItem.value, session.currency)} off`}
+                  {t("sessions.discounts.off", { amount: discountItem.type === "percentage" ? `${discountItem.value}%` : formatMoney(discountItem.value, session.currency) })}
                 </p>
                 {discountItem.conditions && <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{discountItem.conditions}</p>}
               </div>
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <Button aria-label={discountItem.active ? "Deactivate" : "Activate"} onClick={() => toggleActive(discountItem.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors w-8 h-8" title={discountItem.active ? "Deactivate" : "Activate"} variant="ghost" size="icon">
+              {canWrite && <div className="flex items-center gap-1.5 flex-shrink-0">
+                <Button aria-label={discountItem.active ? t("sessions.discounts.deactivate") : t("sessions.discounts.activate")} onClick={() => { void toggleActive(discountItem.id); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors w-8 h-8" title={discountItem.active ? t("sessions.discounts.deactivate") : t("sessions.discounts.activate")} variant="ghost" size="icon">
                   {discountItem.active ? <ToggleRight className="w-4 h-4 text-primary" aria-hidden="true" /> : <ToggleLeft className="w-4 h-4" aria-hidden="true" />}
                 </Button>
-                <Button aria-label={`Edit ${discountItem.name}`} onClick={() => { setEditDiscount(discountItem); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors w-8 h-8" variant="ghost" size="icon">
+                <Button aria-label={t("sessions.discounts.editNamed", { name: discountItem.name })} onClick={() => { setEditDiscount(discountItem); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors w-8 h-8" variant="ghost" size="icon">
                   <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>
-                <Button aria-label={`Delete ${discountItem.name}`} onClick={() => handleDelete(discountItem.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors w-8 h-8" variant="ghost" size="icon">
+                <Button aria-label={t("sessions.discounts.deleteNamed", { name: discountItem.name })} onClick={() => setDeleteTarget(discountItem)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors w-8 h-8" variant="ghost" size="icon">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>
-              </div>
+              </div>}
             </motion.article>
           ))}
         </div>
@@ -170,8 +194,18 @@ export function DiscountsTab({ session, onUpdate }: DiscountsTabProps) {
       <DiscountModal
         open={showModal}
         discount={editDiscount}
-        onClose={() => { setShowModal(false); setEditDiscount(null); }}
+        onClose={() => { if (!saving) { setShowModal(false); setEditDiscount(null); } }}
         onSave={handleSave}
+        saving={saving}
+      />
+      <ConfirmAlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open && !deletePendingRef.current) setDeleteTarget(null); }}
+        title={t("sessions.discounts.confirmDeleteTitle")}
+        description={t("sessions.discounts.confirmDeleteDescription", { name: deleteTarget?.name ?? "" })}
+        confirmLabel={t("common.delete")}
+        destructive
+        onConfirm={() => { void handleDelete(); }}
       />
     </section>
   );

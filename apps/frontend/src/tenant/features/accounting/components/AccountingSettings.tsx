@@ -3,6 +3,7 @@ import {
   DEFAULT_CURRENCIES,
   ACCOUNTING_TAB_REGISTRY,
   INITIAL_ACCOUNTING_FIELD_SEED,
+  ACCOUNTING_MODULE_CONTRACT,
   type AppTranslationKey,
   formatDate
 } from "@mms/shared";
@@ -21,7 +22,10 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Switch } from "@/components/ui/switch";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
+import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { notify } from "@/lib/notify";
 
 const DATE_FORMATS = ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD-MM-YYYY"];
 const FY_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -65,7 +69,7 @@ function Field({ label, hint = undefined, children }: FieldProps) {
 interface FYModalProps {
   open: boolean;
   initial: Partial<FiscalYear> | null;
-  onSave: (fiscalYear: FiscalYear) => void;
+  onSave: (fiscalYear: FiscalYear) => void | Promise<void>;
   onClose: () => void;
 }
 
@@ -74,6 +78,7 @@ function FYModal({ open, initial, onSave, onClose }: FYModalProps) {
   const isEdit = !!initial?.id;
   const [form, setForm] = useState<Partial<FiscalYear>>(initial || { label: "", startDate: "", endDate: "", status: "upcoming" });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   React.useEffect(() => {
     if (open) {
@@ -91,16 +96,21 @@ function FYModal({ open, initial, onSave, onClose }: FYModalProps) {
     return validationErrors;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length) {
       setErrors(validationErrors);
       return;
     }
-    onSave({
-      ...form,
-      id: isEdit ? form.id : `fy${Date.now()}`,
-    } as FiscalYear);
+    setSubmitting(true);
+    try {
+      await onSave({
+        ...form,
+        id: isEdit ? form.id : `fy${Date.now()}`,
+      } as FiscalYear);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -112,7 +122,8 @@ function FYModal({ open, initial, onSave, onClose }: FYModalProps) {
       error={Object.values(errors)}
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.save")}
-      onSave={handleSave}
+      onSave={() => { void handleSave(); }}
+      saving={submitting}
     >
       <div className="space-y-4">
         <div>
@@ -172,21 +183,16 @@ const FY_STATUS: Record<string, { color: string; icon: React.ElementType }> = {
 interface AccountingSettingsProps {
   accounts: Account[];
   fiscalYears: FiscalYear[];
-  onSaveFiscalYears: (fiscalYears: FiscalYear[]) => void;
-  mode?: "fields" | "preferences";
-  canWrite?: boolean;
-  canDelete?: boolean;
+  onSaveFiscalYears: (fiscalYears: FiscalYear[] | ((prev: FiscalYear[]) => FiscalYear[])) => void | Promise<void>;
 }
 
 export function AccountingSettings({
   accounts,
   fiscalYears,
   onSaveFiscalYears,
-  mode,
-  canWrite = true,
-  canDelete = true,
 }: AccountingSettingsProps) {
   const { t } = useTranslation();
+  const { canEditSetup } = useModulePermissions(ACCOUNTING_MODULE_CONTRACT);
   const decimalSeparators = useMemo(() => [
     { label: t("accounting.settings.decimal.period"), value: "period" },
     { label: t("accounting.settings.decimal.comma"), value: "comma" },
@@ -199,36 +205,52 @@ export function AccountingSettings({
     saved,
     setSaved,
     upd,
-    saveSettings,
+    saveSettingsAsync,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: ACCOUNTING_TAB_REGISTRY,
   });
   const [fyModal, setFyModal] = useState<Partial<FiscalYear> | null>(null);
+  const settingsSubTabs = useMemo(
+    () => ACCOUNTING_MODULE_CONTRACT.setupSubTabs.map((key) => ({
+      key,
+      label: t(key === "fields" ? "accounting.setup.fields" : "accounting.setup.preferences"),
+    })),
+    [t],
+  );
+  const [sub, setSub] = useState<string>("fields");
+  const showPrefs = sub === "preferences";
+  const showFields = sub === "fields";
 
-  const handleSave = () => {
-    saveSettings();
+  const handleSave = async () => {
+    try {
+      await saveSettingsAsync();
+      notify.success(t("accounting.settings.saved"));
+    } catch (error: unknown) {
+      notify.error(t("accounting.settings.saveFailed"), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
   };
 
-  const handleSaveFY = (fiscalYear: FiscalYear) => {
-    const updatedFiscalYears = fiscalYears.find((existingFiscalYear) => existingFiscalYear.id === fiscalYear.id)
-      ? fiscalYears.map((existingFiscalYear) => existingFiscalYear.id === fiscalYear.id ? fiscalYear : existingFiscalYear)
-      : [...fiscalYears, fiscalYear];
-    onSaveFiscalYears(updatedFiscalYears);
+  const handleSaveFY = async (fiscalYear: FiscalYear) => {
+    await onSaveFiscalYears((prev) => {
+      const updatedFiscalYears = prev.find((existingFiscalYear) => existingFiscalYear.id === fiscalYear.id)
+        ? prev.map((existingFiscalYear) => existingFiscalYear.id === fiscalYear.id ? fiscalYear : existingFiscalYear)
+        : [...prev, fiscalYear];
+      return updatedFiscalYears;
+    });
     setFyModal(null);
   };
 
-  const handleDeleteFY = (fiscalYearId: string) => {
+  const handleDeleteFY = async (fiscalYearId: string) => {
     const fiscalYear = fiscalYears.find((existingFiscalYear) => existingFiscalYear.id === fiscalYearId);
     if (fiscalYear?.status === "active") { alert(t("accounting.settings.fy.deleteActiveAlert")); return; }
-    if (confirm(t("accounting.settings.fy.deleteConfirm"))) onSaveFiscalYears(fiscalYears.filter((existingFiscalYear) => existingFiscalYear.id !== fiscalYearId));
+    if (!confirm(t("accounting.settings.fy.deleteConfirm"))) return;
+    await onSaveFiscalYears((prev) => prev.filter((existingFiscalYear) => existingFiscalYear.id !== fiscalYearId));
   };
 
   const activeCurrency = currencies.find((currencyOption) => currencyOption.code === settingsDraft.currency);
-
-
-  const showPrefs = mode === "preferences";
-  const showFields = mode === "fields";
 
   const localizedMonths = FY_MONTHS.map((monthName) => ({
     value: monthName,
@@ -236,6 +258,13 @@ export function AccountingSettings({
   }));
 
   return (
+    <div className="space-y-4">
+      <SubTabBar tabs={settingsSubTabs} value={sub} onChange={setSub} />
+      {!canEditSetup ? (
+        <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
+          {t("accounting.setup.readOnly")}
+        </p>
+      ) : (
     <section className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 space-y-5 shadow-sm" aria-labelledby="accounting-settings-title">
       <div className="flex items-center gap-2.5 pb-1 border-b border-border/60">
         <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -319,7 +348,7 @@ export function AccountingSettings({
             <div className="mt-4">
               <header className="flex items-center justify-between mb-3">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.settings.configuredFiscalYears")}</h4>
-                {canWrite && (
+                {canEditSetup && (
                   <Button
                     type="button"
                     variant="link"
@@ -359,7 +388,7 @@ export function AccountingSettings({
                           </td>
                           <td className="px-4 py-2.5 text-right">
                             <div className="flex items-center justify-end gap-1">
-                              {canWrite && (
+                              {canEditSetup && (
                                 <Button
                                   type="button"
                                   variant="ghost"
@@ -371,13 +400,13 @@ export function AccountingSettings({
                                   <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                                 </Button>
                               )}
-                              {canDelete && fiscalYear.status !== "active" && (
+                              {canEditSetup && fiscalYear.status !== "active" && (
                                 <Button
                                   type="button"
                                   variant="ghost"
                                   size="icon"
                                   aria-label={`Delete ${fiscalYear.label}`}
-                                  onClick={() => handleDeleteFY(fiscalYear.id)}
+                                  onClick={() => { void handleDeleteFY(fiscalYear.id); }}
                                   className="h-8 w-8 text-muted-foreground hover:text-destructive shadow-none"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -448,14 +477,16 @@ export function AccountingSettings({
       <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
         <Button
           type="button"
-          onClick={handleSave}
+          onClick={() => { void handleSave(); }}
           className={saved ? "bg-success hover:bg-success/90 text-success-foreground ml-auto" : "ml-auto"}
         >
           {saved ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.settings.btnSaved")}</> : <><Save className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.settings.btnSave")}</>}
         </Button>
       </footer>
 
-      <FYModal open={!!fyModal && canWrite} initial={fyModal} onSave={handleSaveFY} onClose={() => setFyModal(null)} />
+      <FYModal open={!!fyModal && canEditSetup} initial={fyModal} onSave={handleSaveFY} onClose={() => setFyModal(null)} />
     </section>
+      )}
+    </div>
   );
 }

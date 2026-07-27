@@ -23,18 +23,30 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 });
 
 const mockLoadInvoices = vi.fn();
+const mockLoadInvoicesPage = vi.fn();
+const mockLoadPaymentsPage = vi.fn();
+const mockBulkDeleteInvoices = vi.fn();
+const mockBulkRestoreInvoices = vi.fn();
+const mockBulkDeletePayments = vi.fn();
+const mockBulkRestorePayments = vi.fn();
 
 vi.mock('../services/financeService.js', () => ({
   loadInvoices: (...args: unknown[]) => mockLoadInvoices(...args),
+  loadInvoicesPage: (...args: unknown[]) => mockLoadInvoicesPage(...args),
   createInvoice: vi.fn(),
   updateInvoiceById: vi.fn(),
   deleteInvoiceById: vi.fn(),
   restoreInvoiceById: vi.fn(),
+  bulkSoftDeleteInvoices: (...args: unknown[]) => mockBulkDeleteInvoices(...args),
+  bulkRestoreInvoices: (...args: unknown[]) => mockBulkRestoreInvoices(...args),
   loadPayments: vi.fn().mockResolvedValue([]),
+  loadPaymentsPage: (...args: unknown[]) => mockLoadPaymentsPage(...args),
   createPayment: vi.fn(),
   updatePaymentById: vi.fn(),
   deletePaymentById: vi.fn(),
   restorePaymentById: vi.fn(),
+  bulkSoftDeletePayments: (...args: unknown[]) => mockBulkDeletePayments(...args),
+  bulkRestorePayments: (...args: unknown[]) => mockBulkRestorePayments(...args),
 }));
 
 function accountantToken(app: Awaited<ReturnType<typeof buildApp>>): string {
@@ -49,10 +61,40 @@ function accountantToken(app: Awaited<ReturnType<typeof buildApp>>): string {
   });
 }
 
+function teacherToken(app: Awaited<ReturnType<typeof buildApp>>): string {
+  return app.jwt.sign({
+    id: 'u-teacher',
+    email: 'teacher@test.com',
+    name: 'Teacher',
+    role: 'teacher',
+    workspaceSubdomain: 'demo',
+    twoFactorVerified: true,
+    tokenType: 'access',
+  });
+}
+
 describe('finance REST routes integration', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
     mockLoadInvoices.mockReset().mockResolvedValue([]);
+    mockLoadInvoicesPage.mockReset().mockResolvedValue({
+      invoices: [],
+      total: 0,
+      page: 1,
+      limit: 10,
+      hasMore: false,
+    });
+    mockLoadPaymentsPage.mockReset().mockResolvedValue({
+      payments: [],
+      total: 0,
+      page: 1,
+      limit: 10,
+      hasMore: false,
+    });
+    mockBulkDeleteInvoices.mockReset().mockResolvedValue({ succeeded: 2, failed: 0 });
+    mockBulkRestoreInvoices.mockReset().mockResolvedValue({ succeeded: 2, failed: 0 });
+    mockBulkDeletePayments.mockReset().mockResolvedValue({ succeeded: 2, failed: 0 });
+    mockBulkRestorePayments.mockReset().mockResolvedValue({ succeeded: 2, failed: 0 });
   });
 
   afterEach(() => {
@@ -81,7 +123,106 @@ describe('finance REST routes integration', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ invoices: [] });
+    expect(res.json()).toEqual({
+      invoices: [],
+      total: 0,
+      page: 1,
+      limit: 10,
+      hasMore: false,
+    });
+    await app.close();
+  });
+
+  it('GET includeDeleted requests deleted-only invoice page', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/finance/invoices?page=1&includeDeleted=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${accountantToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadInvoicesPage).toHaveBeenCalledWith(expect.objectContaining({ includeDeleted: true }));
+    await app.close();
+  });
+
+  it('GET includeDeleted requests deleted-only payment page', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/finance/payments?page=1&includeDeleted=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${accountantToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadPaymentsPage).toHaveBeenCalledWith(expect.objectContaining({ includeDeleted: true }));
+    await app.close();
+  });
+
+  it('forbids teacher access to deleted finance records', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/finance/invoices?page=1&includeDeleted=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    await app.close();
+  });
+
+  it('bulk deletes and restores invoices', async () => {
+    const app = await buildApp();
+    const headers = {
+      host: 'demo.localhost',
+      authorization: `Bearer ${accountantToken(app)}`,
+    };
+    const deleted = await app.inject({
+      method: 'POST',
+      url: '/api/finance/invoices/bulk-delete',
+      headers,
+      payload: { ids: ['inv-1', 'inv-2'] },
+    });
+    expect(deleted.statusCode).toBe(200);
+    expect(deleted.json()).toEqual({ success: true, succeeded: 2, failed: 0 });
+
+    const restored = await app.inject({
+      method: 'POST',
+      url: '/api/finance/invoices/bulk-restore',
+      headers,
+      payload: { ids: ['inv-1', 'inv-2'] },
+    });
+    expect(restored.statusCode).toBe(200);
+    expect(restored.json()).toEqual({ success: true, succeeded: 2, failed: 0 });
+    await app.close();
+  });
+
+  it('bulk deletes and restores payments', async () => {
+    const app = await buildApp();
+    const headers = {
+      host: 'demo.localhost',
+      authorization: `Bearer ${accountantToken(app)}`,
+    };
+    const deleted = await app.inject({
+      method: 'POST',
+      url: '/api/finance/payments/bulk-delete',
+      headers,
+      payload: { ids: ['pay-1', 'pay-2'] },
+    });
+    expect(deleted.statusCode).toBe(200);
+    const restored = await app.inject({
+      method: 'POST',
+      url: '/api/finance/payments/bulk-restore',
+      headers,
+      payload: { ids: ['pay-1', 'pay-2'] },
+    });
+    expect(restored.statusCode).toBe(200);
     await app.close();
   });
 });

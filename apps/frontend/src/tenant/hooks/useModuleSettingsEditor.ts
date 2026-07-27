@@ -8,6 +8,7 @@ interface UseModuleSettingsEditorOptions<T extends ModuleSettingsShape> {
   config: {
     settings: T;
     updateSettings: (settings: T) => void;
+    updateSettingsAsync?: (settings: T) => Promise<void>;
   };
   tabRegistry: TabDefinition[];
   defaultEnabledTabs?: string[];
@@ -24,7 +25,7 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
   defaultEnabledTabs,
   defaultRequiredTabs = [],
 }: UseModuleSettingsEditorOptions<T>) {
-  const { settings, updateSettings } = config;
+  const { settings, updateSettings, updateSettingsAsync } = config;
   const { saved, flashSaved, clearSaved } = useSavedFlash();
   const [settingsDraft, setSettingsDraft] = useState<T>(settings);
 
@@ -149,6 +150,36 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     setSaved(true);
   }, [settings, settingsDraft, updateSettings, fieldsEditor, setSaved]);
 
+  const saveSettingsAsync = useCallback(async (
+    preferencesDraft?: Partial<T>,
+    additionalFields?: Partial<T>,
+    options: { markSaved?: boolean } = {},
+  ) => {
+    const enabledSet = new Set(Array.from(fieldsEditor.enabledTabs).map((t) => t.toLowerCase()));
+    const updatedFormTabs = fieldsEditor.formTabs.map((tab) => ({
+      ...tab,
+      enabled: tab.key.toLowerCase() === "basic" ? true : enabledSet.has(tab.key.toLowerCase()),
+    }));
+
+    const nextSettings: T = {
+      ...settings,
+      ...settingsDraft,
+      ...(preferencesDraft ?? {}),
+      enabledTabs: Array.from(enabledSet),
+      requiredTabs: Array.from(fieldsEditor.requiredTabs).map((t) => t.toLowerCase()),
+      formTabs: updatedFormTabs,
+      fields: fieldsEditor.buildFieldsMap(),
+      ...(additionalFields ?? {}),
+    };
+
+    if (updateSettingsAsync) {
+      await updateSettingsAsync(nextSettings);
+    } else {
+      updateSettings(nextSettings);
+    }
+    if (options.markSaved !== false) setSaved(true);
+  }, [settings, settingsDraft, updateSettings, updateSettingsAsync, fieldsEditor, setSaved]);
+
   return {
     settings,
     settingsDraft,
@@ -157,6 +188,7 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     setSaved,
     upd,
     saveSettings,
+    saveSettingsAsync,
   };
 }
 

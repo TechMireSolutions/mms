@@ -3,7 +3,7 @@ import { Receipt, Printer } from "lucide-react";
 import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from '@/lib/data/obligationsData';
 import { DEFAULT_CURRENCIES, formatMoney, formatDate } from '@mms/shared';
 import { useMergedObligationContacts, useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
-import { Modal } from "@/components/ui/Modal";
+import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Card } from "@/components/ui/card";
 import { InvoiceTemplateEditor } from "@/tenant/features/obligations/components/invoice/InvoiceTemplateEditor";
 import { Button } from "@/components/ui/button";
@@ -82,7 +82,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
   const dists = wakalaType ? distributions.filter((d) => d.wakala_type_id === wakalaType.id) : [];
 
   return (
-    <Modal open onClose={onClose} title="Collection Details" size="lg">
+    <DetailDrawerShell open onClose={onClose} title="Collection Details" icon={Receipt} className="max-w-2xl">
       <div className="space-y-5">
         {/* Receipt header */}
         <header className="relative overflow-hidden group rounded-2xl border border-primary/25 bg-primary/5 backdrop-blur-sm p-4 px-5.5 flex items-center gap-3.5 shadow-sm transition-all duration-300">
@@ -180,6 +180,6 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
         </Suspense>
       )}
       {showEditor && <InvoiceTemplateEditor onClose={() => setShowEditor(false)} />}
-    </Modal>
+    </DetailDrawerShell>
   );
 }

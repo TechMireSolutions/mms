@@ -96,6 +96,7 @@ const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
 const COLLECTION_DELETE_PERMISSION: Record<string, Permission> = {
   contacts: CONTACTS_MODULE_CONTRACT.permissions.delete,
   students: STUDENTS_MODULE_CONTRACT.permissions.delete,
+  attendance_records: ATTENDANCE_MODULE_CONTRACT.permissions.delete,
 };
 
 const OBJECT_READ_PERMISSION: Record<string, Permission> = {

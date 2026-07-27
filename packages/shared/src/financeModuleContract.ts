@@ -7,22 +7,24 @@ export const invoiceRecordSchema = z.object({
   studentName: z.string(),
   class: z.string(),
   session: z.string(),
-  baseFee: z.number(),
+  baseFee: z.number().nonnegative(),
   discountType: z.string().nullable(),
-  discountValue: z.number(),
-  discountAmt: z.number(),
-  finalAmt: z.number(),
+  discountValue: z.number().nonnegative(),
+  discountAmt: z.number().nonnegative(),
+  finalAmt: z.number().nonnegative(),
   status: z.enum(["paid", "pending", "overdue", "partial", "cancelled"]),
   dueDate: z.string(),
   paidDate: z.string().nullable(),
   method: z.string().nullable(),
-  paidAmt: z.number().optional(),
+  paidAmt: z.number().nonnegative().optional(),
   deletedAt: z.string().optional(),
   deletedBy: z.string().optional(),
   deletionReason: z.string().optional(),
 });
 
 export type Invoice = z.infer<typeof invoiceRecordSchema>;
+export const invoiceCreateSchema = invoiceRecordSchema.extend({ id: z.string().optional() });
+export type InvoiceCreateInput = z.infer<typeof invoiceCreateSchema>;
 export const invoiceListSchema = z.array(invoiceRecordSchema);
 
 export const paymentRecordSchema = z.object({
@@ -30,7 +32,7 @@ export const paymentRecordSchema = z.object({
   invoiceId: z.string(),
   studentId: z.string().optional(),
   studentName: z.string().optional(),
-  amount: z.number(),
+  amount: z.number().positive(),
   date: z.string(),
   method: z.string(),
   receivedByUserId: z.string().optional(),
@@ -42,6 +44,8 @@ export const paymentRecordSchema = z.object({
 });
 
 export type Payment = z.infer<typeof paymentRecordSchema>;
+export const paymentCreateSchema = paymentRecordSchema.extend({ id: z.string().optional() });
+export type PaymentCreateInput = z.infer<typeof paymentCreateSchema>;
 export const paymentListSchema = z.array(paymentRecordSchema);
 
 /** Finance module contract — aligns with globle1 universal module architecture. */
@@ -56,6 +60,13 @@ export const FINANCE_MODULE_CONTRACT = {
   restBasePath: '/api/finance',
   analyticsCategory: 'financial',
   tiers: ['work', 'reports', 'setup'] as const,
+  setupSubTabs: ['fields', 'preferences'] as const,
+  softDelete: {
+    workExcludesDeleted: true,
+    reportsIncludeDeleted: false,
+    exportsIncludeDeleted: false,
+    captureDeletionReason: false,
+  },
   permissions: {
     read: 'finance.write',
     write: 'finance.write',
@@ -67,9 +78,10 @@ export const FINANCE_MODULE_CONTRACT = {
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['invoices', 'payments'] as const,
-    bulkActions: [] as const,
+    bulkActions: ['delete'] as const,
   },
   defaultPageSize: 10,
+  maxPageSize: 500,
 } as const;
 
 export type FinanceModuleTier = (typeof FINANCE_MODULE_CONTRACT.tiers)[number];

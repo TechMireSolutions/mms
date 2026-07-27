@@ -66,10 +66,16 @@ interface JournalEntriesProps {
   accounts: Account[];
   settings: AccountingSettings;
   fiscalYears: FiscalYear[];
-  onChange: (entries: JournalEntry[]) => void;
+  onChange: (entries: JournalEntry[] | ((prev: JournalEntry[]) => JournalEntry[])) => void | Promise<void>;
   onFilteredCountChange?: (count: number) => void;
   canWrite?: boolean;
   canDelete?: boolean;
+  showDeleted?: boolean;
+  createRequestKey?: number;
+  onDelete?: (id: string) => void | Promise<void>;
+  onRestore?: (id: string) => void | Promise<void>;
+  onBulkDelete?: (ids: string[]) => void | Promise<void>;
+  onBulkRestore?: (ids: string[]) => void | Promise<void>;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -95,6 +101,12 @@ export function JournalEntries({
   onFilteredCountChange,
   canWrite = true,
   canDelete = true,
+  showDeleted = false,
+  createRequestKey = 0,
+  onDelete,
+  onRestore,
+  onBulkDelete,
+  onBulkRestore,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
@@ -135,6 +147,23 @@ export function JournalEntries({
   const [showFilters,  setShowFilters]  = useState(false);
   const [modal,        setModal]        = useState<"new" | "edit" | "view" | null>(null);
   const [selected,     setSelected]     = useState<JournalEntry | null>(null);
+  const [selectedIds,  setSelectedIds]  = useState<string[]>([]);
+
+  useEffect(() => {
+    if (showDeleted) setMode("advanced");
+  }, [showDeleted]);
+
+  useEffect(() => {
+    if (createRequestKey > 0 && canWrite && !showDeleted) {
+      setMode("advanced");
+      setModal("new");
+      setSelected(null);
+    }
+  }, [createRequestKey, canWrite, showDeleted]);
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [showDeleted]);
 
   const filtered = useMemo(() => entries
     .filter((journalEntry) => statusFilter === "all" || journalEntry.status === statusFilter)
@@ -157,22 +186,56 @@ export function JournalEntries({
   const showCredit = isColumnVisible ? isColumnVisible("credit") : true;
   const showStatus = isColumnVisible ? isColumnVisible("status") : true;
 
-  const handleSave = (entry: JournalEntry) => {
-    if (entries.find((journalEntry) => journalEntry.id === entry.id)) onChange(entries.map((journalEntry) => journalEntry.id === entry.id ? entry : journalEntry));
-    else onChange([...entries, entry]);
+  const handleSave = async (entry: JournalEntry) => {
+    await onChange((prev) => {
+      if (prev.find((journalEntry) => journalEntry.id === entry.id)) {
+        return prev.map((journalEntry) => journalEntry.id === entry.id ? entry : journalEntry);
+      }
+      return [...prev, entry];
+    });
     setModal(null); setSelected(null); setSimpleModal(null);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     const entry = entries.find((journalEntry) => journalEntry.id === id);
-    if (entry?.status === "posted") { alert(t("accounting.journal.alerts.cannotDeletePosted")); return; }
-    if (confirm(t("accounting.journal.alerts.deleteDraftConfirm"))) onChange(entries.filter((journalEntry) => journalEntry.id !== id));
+    if (entry?.status === "posted" && !showDeleted) {
+      alert(t("accounting.journal.alerts.cannotDeletePosted"));
+      return;
+    }
+    if (showDeleted) {
+      if (!confirm(t("accounting.trash.bulkRestoreConfirm", { count: 1 }))) return;
+      await onRestore?.(id);
+      return;
+    }
+    if (!confirm(t("accounting.trash.deleteEntryConfirm"))) return;
+    await onDelete?.(id);
   };
 
-  const handlePost    = (entry: JournalEntry) => onChange(entries.map((journalEntry) => journalEntry.id === entry.id ? { ...journalEntry, status: "posted" } : journalEntry));
-  const handleReverse = (entry: JournalEntry) => {
+  const handlePost = async (entry: JournalEntry) => {
+    await onChange((prev) => prev.map((journalEntry) => journalEntry.id === entry.id ? { ...journalEntry, status: "posted" } : journalEntry));
+  };
+
+  const handleReverse = async (entry: JournalEntry) => {
     if (!confirm(t("accounting.journal.alerts.reverseConfirm", { ref: entry.ref }))) return;
-    onChange([...entries, createReversalEntry(entry, entries)]);
+    await onChange((prev) => [...prev, createReversalEntry(entry, prev)]);
+  };
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => prev.includes(id) ? prev.filter((selectedId) => selectedId !== id) : [...prev, id]);
+  };
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((entry) => selectedIds.includes(entry.id));
+
+  const handleBulkAction = async () => {
+    if (selectedIds.length === 0) return;
+    if (showDeleted) {
+      if (!confirm(t("accounting.trash.bulkRestoreConfirm", { count: selectedIds.length }))) return;
+      await onBulkRestore?.(selectedIds);
+    } else {
+      if (!confirm(t("accounting.trash.bulkDeleteConfirm", { count: selectedIds.length }))) return;
+      await onBulkDelete?.(selectedIds);
+    }
+    setSelectedIds([]);
   };
 
   const exportCSV = () => {
@@ -439,7 +502,18 @@ export function JournalEntries({
             labels={columnCustomizer.labels}
           />
         )}
-        {canWrite && (
+        {canDelete && selectedIds.length > 0 && (
+          <Button
+            type="button"
+            variant={showDeleted ? "outline" : "destructive"}
+            onClick={() => void handleBulkAction()}
+            className="flex items-center gap-1.5 rounded-xl text-sm font-semibold"
+          >
+            {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
+            {showDeleted ? t("accounting.trash.restore") : t("common.delete")} ({selectedIds.length})
+          </Button>
+        )}
+        {canWrite && !showDeleted && (
           <Button 
             type="button"
             variant="default"
@@ -501,6 +575,19 @@ export function JournalEntries({
               <caption className="sr-only">Journal Entries</caption>
               <thead className="bg-muted/60 border-b border-border">
                 <tr>
+                  {canDelete && (
+                    <th scope="col" className="px-3 py-2.5 w-10">
+                      <input
+                        type="checkbox"
+                        checked={allFilteredSelected}
+                        onChange={() => {
+                          if (allFilteredSelected) setSelectedIds([]);
+                          else setSelectedIds(filtered.map((entry) => entry.id));
+                        }}
+                        aria-label={t("accounting.trash.selectAll")}
+                      />
+                    </th>
+                  )}
                   {showRef && (
                     <ResizableTableHead columnKey="ref" width={getColumnWidth?.("ref")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.ref")}
@@ -547,6 +634,16 @@ export function JournalEntries({
                   const totalCredit = entry.lines.reduce((sum, journalLine) => sum + journalLine.credit, 0);
                   return (
                     <tr key={entry.id} className="hover:bg-muted/20 transition-colors">
+                      {canDelete && (
+                        <td className="px-3 py-2.5">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(entry.id)}
+                            onChange={() => toggleSelected(entry.id)}
+                            aria-label={t("accounting.trash.selectEntry", { ref: entry.ref })}
+                          />
+                        </td>
+                      )}
                       {showRef && (
                         <td className="px-3 py-2.5">
                           <span className="font-mono text-xs font-bold text-primary">{entry.ref}</span>
@@ -597,7 +694,7 @@ export function JournalEntries({
                           >
                             <Eye className="w-3.5 h-3.5" aria-hidden="true" />
                           </Button>
-                          {entry.status === "draft" && (
+                          {entry.status === "draft" && !showDeleted && (
                             <>
                               {canWrite && (
                                 <Button
@@ -617,33 +714,33 @@ export function JournalEntries({
                                   variant="ghost"
                                   size="icon"
                                   aria-label={`Post entry ${entry.ref}`}
-                                  onClick={() => handlePost(entry)}
+                                  onClick={() => void handlePost(entry)}
                                   className="h-8 w-8 text-muted-foreground hover:text-success"
                                 >
                                   <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
                                 </Button>
                               )}
-                              {canDelete && (
+                            </>
+                          )}
+                          {canDelete && (entry.status === "draft" || showDeleted) && (
                                 <Button
                                   type="button"
                                   variant="ghost"
                                   size="icon"
-                                  aria-label={`Delete entry ${entry.ref}`}
-                                  onClick={() => handleDelete(entry.id)}
-                                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                  aria-label={showDeleted ? t("accounting.trash.restore") : t("common.delete")}
+                                  onClick={() => void handleDelete(entry.id)}
+                                  className={`h-8 w-8 text-muted-foreground ${showDeleted ? "hover:text-primary" : "hover:text-destructive"}`}
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                                  {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
                                 </Button>
-                              )}
-                            </>
                           )}
-                          {canWrite && entry.status === "posted" && (
+                          {canWrite && entry.status === "posted" && !showDeleted && (
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon"
                               aria-label={`Reverse entry ${entry.ref}`}
-                              onClick={() => handleReverse(entry)}
+                              onClick={() => void handleReverse(entry)}
                               className="h-8 w-8 text-muted-foreground hover:text-warning"
                             >
                               <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />

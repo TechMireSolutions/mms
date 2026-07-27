@@ -1,13 +1,14 @@
 import React from "react";
 import {
-  User, BookOpen, Layers, DollarSign, Clock, ArrowRight
+  User, BookOpen, Layers, DollarSign, Clock, ArrowRight,
 } from "lucide-react";
-import { Modal } from "@/components/ui/Modal";
+import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { STATUS_MAP, Enrollment } from '@/lib/data/enrollmentData';
 import { useStudentsByIds } from "@/tenant/features/students/hooks/useStudents";
 import { Button } from "@/components/ui/button";
-import { formatDateTime } from "@mms/shared";
+import { formatDate, formatDateTime } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface SectionProps {
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
@@ -15,11 +16,6 @@ interface SectionProps {
   children: React.ReactNode;
 }
 
-/**
- * Section container helper.
- *
- * @returns Component layout.
- */
 function Section({ icon: Icon, title, children }: SectionProps): React.ReactElement {
   return (
     <section className="rounded-xl border border-border bg-card overflow-hidden" aria-label={title}>
@@ -37,11 +33,6 @@ interface RowProps {
   value: React.ReactNode;
 }
 
-/**
- * Data row helper.
- *
- * @returns Component layout.
- */
 function Row({ label, value }: RowProps): React.ReactElement {
   return (
     <div className="flex items-start justify-between gap-4 py-2.5 border-b border-border last:border-0">
@@ -65,17 +56,8 @@ interface EnrollmentDetailProps {
   canWrite: boolean;
 }
 
-/**
- * Renders details and action capabilities for a specific enrollment record.
- *
- * @param props - Component props.
- * @param props.enrollment - The enrollment record to display.
- * @param props.onClose - Action to close the modal.
- * @param props.onStatusChange - Handler to alter state status.
- * @param props.canWrite - Whether the viewer may change enrollment status.
- * @returns The EnrollmentDetail component.
- */
 export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite }: EnrollmentDetailProps): React.ReactElement | null {
+  const { t } = useTranslation();
   const { data: resolvedStudents = [] } = useStudentsByIds(enrollment ? [enrollment.studentId] : []);
   const { formatCurrency } = useFinanceCurrency();
   const student = resolvedStudents[0];
@@ -92,18 +74,18 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
   const nextStatuses = TRANSITIONS[enrollment.status] || [];
 
   return (
-    <Modal
-      open
+    <DetailDrawerShell
       onClose={onClose}
       title={enrollment.studentName}
       subtitle={`${enrollment.sessionName} · #${enrollment.id}`}
       icon={User}
-      size="md"
+      ariaLabel={t("enrollments.detail.ariaLabel")}
+      className="max-w-2xl"
       headerExtra={
         <div className="flex items-center gap-2 flex-wrap mt-1">
           {student?.grNumber && (
             <span className="bg-primary/5 text-primary text-[10px] px-2 py-0.5 rounded border border-primary/10 font-bold uppercase">
-              GR: {student.grNumber}
+              {t("enrollments.detail.grNumber")}: {student.grNumber}
             </span>
           )}
           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${enrollmentStatus.color}`}>
@@ -113,42 +95,44 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
       }
     >
       <div className="space-y-4">
-
-        {/* Sections */}
-        <Section icon={User} title="Student Info">
-          <Row label="Name"         value={enrollment.studentName} />
-          {student?.grNumber && <Row label="GR Number" value={student.grNumber} />}
-          <Row label="Student ID"   value={enrollment.studentId} />
+        <Section icon={User} title={t("enrollments.detail.sectionStudent")}>
+          <Row label={t("enrollments.detail.name")} value={enrollment.studentName} />
+          {student?.grNumber && <Row label={t("enrollments.detail.grNumber")} value={student.grNumber} />}
+          <Row label={t("enrollments.detail.studentId")} value={enrollment.studentId} />
         </Section>
 
-        <Section icon={BookOpen} title="Session Info">
-          <Row label="Session"     value={enrollment.sessionName} />
-          <Row label="Session ID"  value={enrollment.sessionId} />
-          <Row label="Enrolled on" value={enrollment.enrolledDate} />
+        <Section icon={BookOpen} title={t("enrollments.detail.sectionSession")}>
+          <Row label={t("enrollments.detail.session")} value={enrollment.sessionName} />
+          <Row label={t("enrollments.detail.sessionId")} value={enrollment.sessionId} />
+          <Row label={t("enrollments.detail.enrolledOn")} value={formatDate(enrollment.enrolledDate)} />
         </Section>
 
-        <Section icon={Layers} title="Class Info">
-          <Row label="Class"   value={enrollment.className} />
-          <Row label="Class ID" value={enrollment.classId} />
+        <Section icon={Layers} title={t("enrollments.detail.sectionClass")}>
+          <Row label={t("enrollments.detail.class")} value={enrollment.className} />
+          <Row label={t("enrollments.detail.classId")} value={enrollment.classId} />
         </Section>
 
-        <Section icon={DollarSign} title="Fee Breakdown">
-          <Row label="Base Fee"            value={formatCurrency(enrollment.baseFee)} />
-          <Row label={enrollment.discountLabel || "Discount"} value={enrollment.discountPct > 0 ? `– ${formatCurrency(enrollment.discountAmt)} (${enrollment.discountPct}%)` : "None"} />
+        <Section icon={DollarSign} title={t("enrollments.detail.sectionFee")}>
+          <Row label={t("enrollments.detail.baseFee")} value={formatCurrency(enrollment.baseFee)} />
+          <Row
+            label={enrollment.discountLabel || t("enrollments.detail.discount")}
+            value={enrollment.discountPct > 0
+              ? `– ${formatCurrency(enrollment.discountAmt)} (${enrollment.discountPct}%)`
+              : t("enrollments.detail.none")}
+          />
           <div className="flex items-center justify-between py-2.5">
-            <span className="text-xs font-bold text-foreground">Total Due</span>
+            <span className="text-xs font-bold text-foreground">{t("enrollments.detail.totalDue")}</span>
             <span className="text-sm font-bold text-primary">{formatCurrency(enrollment.finalFee)}</span>
           </div>
-          <Row label="Payment Status" value={
+          <Row label={t("enrollments.detail.paymentStatus")} value={
             <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${paymentColors[enrollment.paymentStatus] || "bg-muted text-muted-foreground"}`}>
               {enrollment.paymentStatus || "—"}
             </span>
           } />
         </Section>
 
-        {/* Timeline */}
         {enrollment.timeline && enrollment.timeline.length > 0 && (
-          <Section icon={Clock} title="Timeline">
+          <Section icon={Clock} title={t("enrollments.detail.sectionTimeline")}>
             <div className="py-2 space-y-3" role="list">
               {enrollment.timeline.map((timelineItem, index) => (
                 <div key={`${timelineItem.ts}-${timelineItem.event}`} className="flex gap-3" role="listitem">
@@ -168,10 +152,9 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
           </Section>
         )}
 
-        {/* Status actions */}
         {canWrite && nextStatuses.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap pt-1">
-            <p className="text-xs font-semibold text-muted-foreground">Move to:</p>
+            <p className="text-xs font-semibold text-muted-foreground">{t("enrollments.detail.moveTo")}</p>
             {nextStatuses.map((nextStatus) => {
               const statusInfo = STATUS_MAP[nextStatus];
               const isCancel = nextStatus === "cancelled";
@@ -194,9 +177,9 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
           </div>
         )}
         {enrollment.notes && (
-          <p className="text-xs text-muted-foreground px-1 mt-3" role="note">📝 {enrollment.notes}</p>
+          <p className="text-xs text-muted-foreground px-1 mt-3" role="note">{enrollment.notes}</p>
         )}
       </div>
-    </Modal>
+    </DetailDrawerShell>
   );
 }

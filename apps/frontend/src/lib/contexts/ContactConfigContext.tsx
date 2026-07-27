@@ -18,7 +18,7 @@ import React, {
   useRef,
   ReactNode,
 } from "react";
-import { loadFieldConfig, saveFieldConfig } from "@/lib/contactFieldsStore";
+import { loadFieldConfig, saveFieldConfig, saveFieldConfigAsync } from "@/lib/contactFieldsStore";
 import {
   FieldConfig,
   ContactPreferences,
@@ -54,6 +54,7 @@ import {
   loadPreferences,
   PREFERENCES_KEY,
   savePreferences,
+  savePreferencesAsync,
   syncOptionsInConfig,
 } from "@/lib/contacts/preferencesStorage";
 import {
@@ -77,7 +78,9 @@ export interface ContactConfigContextType {
   fieldConfig: FieldConfig;
   prefs: ContactPreferences;
   updateConfig: (nextConfig: FieldConfig) => void;
+  updateConfigAsync: (nextConfig: FieldConfig) => Promise<void>;
   updatePrefs: (newPrefs: Partial<ContactPreferences>) => void;
+  updatePrefsAsync: (newPrefs: Partial<ContactPreferences>) => Promise<void>;
 
   enabledTabIds: Set<string>;
   requiredTabIds: Set<string>;
@@ -325,6 +328,11 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     setFieldConfigState(nextConfig);
   }, []);
 
+  const updateConfigAsync = useCallback(async (nextConfig: FieldConfig): Promise<void> => {
+    await saveFieldConfigAsync(nextConfig);
+    setFieldConfigState(nextConfig);
+  }, []);
+
   const updatePrefs = useCallback((newPrefs: Partial<ContactPreferences>) => {
     setPrefsState((currentPreferences) => {
       const merged = { ...currentPreferences, ...newPrefs };
@@ -332,6 +340,12 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
       return merged;
     });
   }, []);
+
+  const updatePrefsAsync = useCallback(async (newPrefs: Partial<ContactPreferences>): Promise<void> => {
+    const merged = { ...prefs, ...newPrefs };
+    await savePreferencesAsync(merged);
+    setPrefsState(merged);
+  }, [prefs]);
 
   const updateGenders = useCallback((genderOptions: string[]) => {
     saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.genders, genderOptions);
@@ -593,7 +607,9 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
         fieldConfig,
         prefs,
         updateConfig,
+        updateConfigAsync,
         updatePrefs,
+        updatePrefsAsync,
 
         enabledTabIds,
         requiredTabIds,

@@ -27,7 +27,7 @@ const EMPTY_LINE = (): DraftLine => ({ id: `l${Date.now()}_${Math.random()}`, ac
 interface JournalEntryFormProps {
   accounts: Account[];
   entries: JournalEntry[];
-  onSave: (entry: JournalEntry) => void;
+  onSave: (entry: JournalEntry) => void | Promise<void>;
   onClose: () => void;
   initial?: JournalEntry | null;
   fiscalYears: FiscalYear[];
@@ -67,6 +67,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
         }
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   // Re-sync draft when editing another journal entry record
   React.useEffect(() => {
@@ -133,22 +134,27 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
     return validationErrors;
   };
 
-  const saveEntry = (saveAs?: "draft" | "posted") => {
+  const saveEntry = async (saveAs?: "draft" | "posted") => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length) { setErrors(validationErrors); return; }
     const journalReference = isEdit ? form.ref : generateJERef(entries);
-    onSave({
-      ...form,
-      id: isEdit ? form.id : `je${Date.now()}`,
-      ref: journalReference,
-      status: saveAs || form.status,
-      created_by: "Admin",
-      lines: form.lines.map((journalLine) => ({
-        ...journalLine,
-        debit: typeof journalLine.debit === "string" ? parseFloat(journalLine.debit) || 0 : journalLine.debit,
-        credit: typeof journalLine.credit === "string" ? parseFloat(journalLine.credit) || 0 : journalLine.credit,
-      })),
-    } as JournalEntry);
+    setSubmitting(true);
+    try {
+      await onSave({
+        ...form,
+        id: isEdit ? form.id : `je${Date.now()}`,
+        ref: journalReference,
+        status: saveAs || form.status,
+        created_by: form.created_by || "system",
+        lines: form.lines.map((journalLine) => ({
+          ...journalLine,
+          debit: typeof journalLine.debit === "string" ? parseFloat(journalLine.debit) || 0 : journalLine.debit,
+          credit: typeof journalLine.credit === "string" ? parseFloat(journalLine.credit) || 0 : journalLine.credit,
+        })),
+      } as JournalEntry);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const sortedAccounts = [...accounts].filter((account) => account.isActive !== false).sort((firstAccount, secondAccount) => firstAccount.code.localeCompare(secondAccount.code));
@@ -183,11 +189,12 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
       progressLabel={t("common.formProgress")}
       cancelLabel={t("accounting.journal.form.cancel")}
       saveLabel={t("accounting.journal.form.postEntry")}
-      onSave={() => saveEntry("posted")}
-      saveDisabled={!isBalanced}
+      onSave={() => { void saveEntry("posted"); }}
+      saving={submitting}
+      saveDisabled={!isBalanced || submitting}
       error={errorMessages}
       footerStart={
-        <Button type="button" variant="secondary" onClick={() => saveEntry("draft")}>
+        <Button type="button" variant="secondary" disabled={submitting} onClick={() => { void saveEntry("draft"); }}>
           {t("accounting.journal.form.saveDraft")}
         </Button>
       }

@@ -10,6 +10,7 @@ export const SESSIONS_MODULE_CONTRACT = {
   restBasePath: '/api/sessions',
   analyticsCategory: 'sessions',
   tiers: ['work', 'reports', 'setup'] as const,
+  setupSubTabs: ['fields', 'preferences'] as const,
   permissions: {
     read: 'enrollments.read',
     write: 'enrollments.write',
@@ -21,9 +22,16 @@ export const SESSIONS_MODULE_CONTRACT = {
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['cards', 'list'] as const,
-    bulkActions: [] as const,
+    bulkActions: ['delete'] as const,
+  },
+  softDelete: {
+    workExcludesDeleted: true,
+    reportsIncludeDeleted: false,
+    exportsIncludeDeleted: false,
+    captureDeletionReason: false,
   },
   defaultPageSize: 12,
+  maxPageSize: 500,
 } as const;
 
 export type SessionsModuleTier = (typeof SESSIONS_MODULE_CONTRACT.tiers)[number];

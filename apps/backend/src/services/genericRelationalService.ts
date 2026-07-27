@@ -87,8 +87,13 @@ export function createGenericRelationalService<
     if (!tenant) return false;
     const existing = await repo.findById(tenant, id);
     if (!existing || !existing.deletedAt) return false;
-    const { deletedAt: _deletedAt, deletedBy: _deletedBy, deletionReason: _deletionReason, ...rest } = existing;
-    await repo.save(tenant, rest as T);
+    const restored = {
+      ...existing,
+      deletedAt: null,
+      deletedBy: null,
+      deletionReason: null,
+    } as T;
+    await repo.save(tenant, restored);
     const { broadcastTenantUpdate } = await import('./websocketService.js');
     broadcastTenantUpdate(tenant, 'collection', websocketCollection);
     return true;

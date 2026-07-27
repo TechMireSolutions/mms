@@ -15,7 +15,6 @@ import {
   Contact,
   getDisplayName,
   formatCnic,
-  toTitleCase,
   GENDERS,
 } from "@mms/shared";
 
@@ -164,7 +163,9 @@ export function ContactBasicTab({
             >
               {lockGender ? (
                 <div className="flex h-10 w-full items-center rounded-xl border border-border bg-muted/40 px-3.5 text-xs text-muted-foreground select-none font-semibold">
-                  {toTitleCase(contactDraft.gender || "unspecified")}
+                  {contactDraft.gender
+                    ? formatContactGenderLabel(contactDraft.gender, t)
+                    : t("contacts.gender.unspecified")}
                 </div>
               ) : (
                 <EditableSelect

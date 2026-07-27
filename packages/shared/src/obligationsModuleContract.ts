@@ -5,7 +5,7 @@ export const obligationTypeRecordSchema = z.object({
   id: z.string(),
   name: z.string(),
   quantity_based: z.boolean(),
-  designated_for: z.enum(["Syed", "Non-Syed", "Both", "None"]),
+  designated_for: z.enum(['Syed', 'Non-Syed', 'Both', 'None']),
   created_at: z.string(),
   updated_at: z.string(),
 });
@@ -44,7 +44,7 @@ export const obligationDistributionRecordSchema = z.object({
   name: z.string(),
   percentage: z.number(),
   wakala_type_id: z.string(),
-  type: z.enum(["Liability", "Income"]),
+  type: z.enum(['Liability', 'Income']),
 });
 
 export type ObligationDistribution = z.infer<typeof obligationDistributionRecordSchema>;
@@ -58,12 +58,15 @@ export const obligationCollectionRecordSchema = z.object({
   reference_id: z.string().nullable(),
   amount: z.number(),
   currency_id: z.string(),
-  payment_mode: z.enum(["Cash", "Online"]),
+  payment_mode: z.enum(['Cash', 'Online']),
   obligation_type_id: z.string(),
   mujtahid_representative_id: z.string(),
   received_by: z.string(),
   created_at: z.string(),
   updated_at: z.string(),
+  deletedAt: z.string().optional(),
+  deletedBy: z.string().optional(),
+  deletionReason: z.string().optional(),
 });
 
 export type ObligationCollection = z.infer<typeof obligationCollectionRecordSchema>;
@@ -82,6 +85,13 @@ export const OBLIGATIONS_MODULE_CONTRACT = {
   restBasePath: '/api/obligations',
   analyticsCategory: 'obligations',
   tiers: ['work', 'reports', 'setup'] as const,
+  setupSubTabs: ['types', 'mujtahids', 'wakala'] as const,
+  softDelete: {
+    workExcludesDeleted: true,
+    reportsIncludeDeleted: false,
+    exportsIncludeDeleted: false,
+    captureDeletionReason: false,
+  },
   permissions: {
     read: 'obligations.write',
     write: 'obligations.write',
@@ -93,7 +103,7 @@ export const OBLIGATIONS_MODULE_CONTRACT = {
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['summary', 'collections'] as const,
-    bulkActions: [] as const,
+    bulkActions: ['delete'] as const,
   },
   defaultPageSize: 12,
 } as const;

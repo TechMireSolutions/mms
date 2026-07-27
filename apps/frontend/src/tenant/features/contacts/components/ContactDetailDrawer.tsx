@@ -49,6 +49,7 @@ import { uploadAttachmentFile } from "@/lib/attachmentUpload";
 import { notify } from "@/lib/notify";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { CopyBtn } from "@/components/ui/CopyBtn";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   // tab keys
@@ -294,31 +295,34 @@ export default function ContactDetailDrawer({
   const [noteText, setNoteText] = useState<string>("");
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [pendingAttachmentDelete, setPendingAttachmentDelete] = useState<{ id: string; name: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const canPersistContact = canWrite && Boolean(onUpdateContact);
 
   const updateContactAttachments = async (
     newAttachments: NonNullable<Contact["attachments"]>,
     successMessageKey: AppTranslationKey,
     failureMessageKey: AppTranslationKey,
-  ): Promise<void> => {
+    optimistic = true,
+  ): Promise<boolean> => {
+    if (!canPersistContact || !onUpdateContact) return false;
     const updatedContact: Contact = { ...contactState, attachments: newAttachments };
     const previousState = contactState;
-    setContactState(updatedContact);
-    if (onUpdateContact) {
-      try {
-        await onUpdateContact(updatedContact);
-        notify.success(t(successMessageKey));
-      } catch {
-        setContactState(previousState);
-        notify.error(t(failureMessageKey));
-      }
-    } else {
+    if (optimistic) setContactState(updatedContact);
+    try {
+      await onUpdateContact(updatedContact);
+      if (!optimistic) setContactState(updatedContact);
       notify.success(t(successMessageKey));
+      return true;
+    } catch {
+      if (optimistic) setContactState(previousState);
+      notify.error(t(failureMessageKey));
+      return false;
     }
   };
 
   const handleFiles = async (filesList: FileList | null) => {
-    if (!filesList || filesList.length === 0) return;
+    if (!canPersistContact || !filesList || filesList.length === 0) return;
     setIsUploading(true);
     try {
       const newAttachments = [...(contactState.attachments || [])];
@@ -438,10 +442,10 @@ export default function ContactDetailDrawer({
   const primaryPhone = enabledTabIds.has("phones") ? getPrimaryPhone(contactState) : null;
   const primaryEmail = enabledTabIds.has("emails") ? getPrimaryEmail(contactState) : null;
 
-  const handleAddNote = (event: FormEvent) => {
+  const handleAddNote = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     const trimmed = noteText.trim();
-    if (!trimmed) return;
+    if (!trimmed || !canPersistContact || !onUpdateContact) return;
 
     const newActivity: ContactActivity = {
       id: `act-${crypto.randomUUID()}`,
@@ -458,13 +462,27 @@ export default function ContactDetailDrawer({
     setContactState(updatedContact);
     setNoteText("");
 
-    if (onUpdateContact) {
-      onUpdateContact(updatedContact).catch(() => {
-        setContactState(prev);
-        setNoteText(trimmed);
-        notify.error(t('contacts.detail.noteSaveFailed'));
-      });
+    try {
+      await onUpdateContact(updatedContact);
+    } catch {
+      setContactState(prev);
+      setNoteText(trimmed);
+      notify.error(t('contacts.detail.noteSaveFailed'));
     }
+  };
+
+  const confirmAttachmentDelete = async (): Promise<void> => {
+    if (!pendingAttachmentDelete || !canPersistContact) return;
+    const remainingAttachments = (contactState.attachments || []).filter(
+      (attachment) => attachment.id !== pendingAttachmentDelete.id,
+    );
+    const removed = await updateContactAttachments(
+      remainingAttachments,
+      "contacts.detail.deleteSuccess",
+      "contacts.saveFailed",
+      false,
+    );
+    if (removed) setPendingAttachmentDelete(null);
   };
 
   const handleNavigateToContact = useCallback((targetId: string | number): void => {
@@ -746,7 +764,7 @@ export default function ContactDetailDrawer({
 
           {activeTab === "timeline" && (
             <div className="space-y-5">
-              <div className="relative">
+              {canPersistContact && <div className="relative">
                 <form onSubmit={handleAddNote} className="flex gap-2">
                   <Input
                     id={noteInputId}
@@ -765,7 +783,7 @@ export default function ContactDetailDrawer({
                     <Send className="w-4 h-4" />
                   </Button>
                 </form>
-              </div>
+              </div>}
 
               <div className="space-y-6 relative ps-3">
                 <div className="absolute start-[3px] top-0 bottom-0 w-0.5 bg-border/50" />
@@ -865,7 +883,7 @@ export default function ContactDetailDrawer({
 
           {activeTab === "files" && (
             <div className="space-y-6">
-              <div
+              {canPersistContact && <div
                 onDragOver={(e) => {
                   e.preventDefault();
                   setIsDragging(true);
@@ -915,7 +933,7 @@ export default function ContactDetailDrawer({
                 >
                   {t('contacts.detail.browseFiles')}
                 </Button>
-              </div>
+              </div>}
 
               <div className="space-y-3">
                 {(!contactState.attachments || contactState.attachments.length === 0) ? (
@@ -943,14 +961,11 @@ export default function ContactDetailDrawer({
                         >
                           <ExternalLink className="w-4 h-4" />
                         </a>
-                        {onUpdateContact && (
+                        {canPersistContact && (
                           <Button
                             variant="ghost"
                             aria-label={t('contacts.detail.deleteFile', { name: file.name })}
-                            onClick={() => {
-                              const remainingAttachments = (contactState.attachments || []).filter((f) => f.id !== file.id);
-                              void updateContactAttachments(remainingAttachments, "contacts.detail.deleteSuccess", "contacts.saveFailed");
-                            }}
+                            onClick={() => setPendingAttachmentDelete({ id: file.id, name: file.name })}
                             className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all shadow-none"
                             type="button"
                           >
@@ -982,6 +997,21 @@ export default function ContactDetailDrawer({
           )}
         </motion.div>
       </AnimatePresence>
+      <ConfirmAlertDialog
+        open={pendingAttachmentDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingAttachmentDelete(null);
+        }}
+        title={t("contacts.detail.confirmDeleteAttachmentTitle")}
+        description={t("contacts.detail.confirmDeleteAttachmentDescription", {
+          name: pendingAttachmentDelete?.name ?? "",
+        })}
+        confirmLabel={t("common.delete")}
+        onConfirm={() => {
+          void confirmAttachmentDelete();
+        }}
+        destructive
+      />
     </DetailDrawerShell>
   );
 }

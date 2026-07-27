@@ -1,19 +1,53 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Enrollment, EnrollmentsCommandMetricsSnapshot } from '@mms/shared';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { Enrollment, EnrollmentsCommandMetricsSnapshot, EnrollmentsListPageResult } from '@mms/shared';
 import { ENROLLMENTS_MODULE_CONTRACT } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
-import { apiFetch, apiJson } from '@/lib/apiClient';
+import { apiJson } from '@/lib/apiClient';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 export const ENROLLMENTS_QUERY_KEY = ['enrollments', 'list'] as const;
 export const ENROLLMENTS_METRICS_QUERY_KEY = ['enrollments', 'metrics'] as const;
 
 const ENROLLMENTS_API = ENROLLMENTS_MODULE_CONTRACT.restBasePath;
 
+export interface EnrollmentsPaginatedParams {
+  page: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  sessionId?: string;
+  includeDeleted?: boolean;
+  enabled?: boolean;
+}
+
+function buildEnrollmentsPageUrl(params: EnrollmentsPaginatedParams): string {
+  const queryParams = new URLSearchParams();
+  queryParams.set('page', String(params.page));
+  queryParams.set('limit', String(params.limit ?? ENROLLMENTS_MODULE_CONTRACT.defaultPageSize));
+  if (params.search?.trim()) queryParams.set('search', params.search.trim());
+  if (params.status?.trim() && params.status !== 'all') queryParams.set('status', params.status.trim());
+  if (params.sessionId?.trim() && params.sessionId !== 'all') queryParams.set('sessionId', params.sessionId.trim());
+  if (params.includeDeleted) queryParams.set('includeDeleted', 'true');
+  return `${ENROLLMENTS_API}?${queryParams.toString()}`;
+}
+
+export function useEnrollmentsPaginated(params: EnrollmentsPaginatedParams) {
+  const { isAuthenticated } = useAuth();
+  const enabled = params.enabled ?? true;
+  return useQuery({
+    queryKey: [...ENROLLMENTS_QUERY_KEY, 'page', params] as const,
+    queryFn: async () => apiJson<EnrollmentsListPageResult>(buildEnrollmentsPageUrl(params)),
+    enabled: isAuthenticated && enabled,
+    staleTime: 15_000,
+    placeholderData: (previousData) => previousData,
+  });
+}
+
 export function useEnrollments(options?: { enabled?: boolean }) {
   return useCollectionSync<Enrollment>({
     queryKey: ENROLLMENTS_QUERY_KEY,
-    apiPath: ENROLLMENTS_API,
+    apiPath: `${ENROLLMENTS_API}?page=1&limit=${ENROLLMENTS_MODULE_CONTRACT.maxPageSize}`,
     responseKey: 'enrollments',
     collectionName: 'enrollments',
     staleTime: 15_000,
@@ -62,9 +96,42 @@ export function useEnrollmentMutations() {
 
   const deleteEnrollment = useMutation({
     mutationFn: async (id: string) =>
-      apiFetch(`${ENROLLMENTS_API}/${id}`, { method: 'DELETE' }),
+      apiJson<{ success: boolean }>(`${ENROLLMENTS_API}/${id}`, { method: 'DELETE' }),
     onSuccess: invalidate,
   });
 
-  return { createEnrollment, updateEnrollment, deleteEnrollment };
+  const restoreEnrollment = useMutation({
+    mutationFn: async (id: string) =>
+      apiJson<{ success: boolean }>(`${ENROLLMENTS_API}/${encodeURIComponent(id)}/restore`, {
+        method: 'POST',
+      }),
+    onSuccess: invalidate,
+  });
+
+  const bulkDeleteEnrollments = useMutation({
+    mutationFn: async (ids: string[]) =>
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${ENROLLMENTS_API}/bulk-delete`, {
+        method: 'POST',
+        body: JSON.stringify({ ids }),
+      }),
+    onSuccess: invalidate,
+  });
+
+  const bulkRestoreEnrollments = useMutation({
+    mutationFn: async (ids: string[]) =>
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${ENROLLMENTS_API}/bulk-restore`, {
+        method: 'POST',
+        body: JSON.stringify({ ids }),
+      }),
+    onSuccess: invalidate,
+  });
+
+  return {
+    createEnrollment,
+    updateEnrollment,
+    deleteEnrollment,
+    restoreEnrollment,
+    bulkDeleteEnrollments,
+    bulkRestoreEnrollments,
+  };
 }

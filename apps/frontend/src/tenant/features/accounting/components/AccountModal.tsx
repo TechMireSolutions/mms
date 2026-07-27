@@ -14,7 +14,7 @@ import { FORM_LABEL } from "@/components/ui/formStyles";
 
 interface AccountModalProps {
   initial: Account | null;
-  onSave: (account: Account) => void;
+  onSave: (account: Account) => void | Promise<void>;
   onClose: () => void;
   existingCodes: string[];
 }
@@ -24,6 +24,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
   const isEdit = !!initial?.id;
   const [form, setForm] = useState<Partial<Account>>(initial || { code: "", name: "", type: "Asset", subtype: "", description: "", isActive: true });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   const type = form.type as AccountType;
   const subtypes = type ? (ACCOUNT_SUBTYPES[type] || []) : [];
@@ -39,18 +40,23 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
     return e;
   };
 
-  const saveAccount = () => {
+  const saveAccount = async () => {
     const e = validate();
     if (Object.keys(e).length) {
       setErrors(e);
       return;
     }
-    onSave({
-      ...form,
-      code: form.code!.trim(),
-      name: form.name!.trim(),
-      id: isEdit ? form.id : `a${Date.now()}`,
-    } as Account);
+    setSubmitting(true);
+    try {
+      await onSave({
+        ...form,
+        code: form.code!.trim(),
+        name: form.name!.trim(),
+        id: isEdit ? form.id : `a${Date.now()}`,
+      } as Account);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const errorMessages = useMemo(
@@ -66,7 +72,8 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
       icon={BookOpen}
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.save")}
-      onSave={saveAccount}
+      onSave={() => { void saveAccount(); }}
+      saving={submitting}
       error={errorMessages}
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

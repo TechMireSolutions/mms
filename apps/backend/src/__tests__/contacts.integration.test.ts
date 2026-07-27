@@ -320,7 +320,8 @@ describe('contacts REST routes', () => {
   });
 
   it('GET /api/contacts?includeDeleted=true lists deleted for admin', async () => {
-    mockLoadContacts.mockResolvedValueOnce([{ ...sampleContact, deletedAt: '2026-01-02T00:00:00.000Z' }]);
+    const deletedContact = { ...sampleContact, deletedAt: '2026-01-02T00:00:00.000Z' };
+    mockLoadContacts.mockResolvedValueOnce([deletedContact]);
     const app = await buildApp();
     const res = await app.inject({
       method: 'GET',
@@ -331,6 +332,7 @@ describe('contacts REST routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ contacts: [deletedContact] });
     expect(mockLoadContacts).toHaveBeenCalledWith({ includeDeleted: true });
     await app.close();
   });

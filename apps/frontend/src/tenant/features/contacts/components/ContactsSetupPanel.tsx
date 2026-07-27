@@ -26,11 +26,17 @@ import { FormSelect } from "@/components/ui/FormSelect";
 interface ContactsSetupPanelProps {
   config: FieldConfig;
   onConfigChange: (config: FieldConfig) => void;
+  onConfigChangeAsync?: (config: FieldConfig) => Promise<void>;
   mode?: "fields" | "preferences";
 }
 
-export default function ContactsSetupPanel({ config, onConfigChange, mode }: ContactsSetupPanelProps): React.JSX.Element {
-  const { updatePrefs, prefs: contextPrefs, countryCodes } = useContactConfig();
+export default function ContactsSetupPanel({
+  config,
+  onConfigChange,
+  onConfigChangeAsync,
+  mode,
+}: ContactsSetupPanelProps): React.JSX.Element {
+  const { updatePrefsAsync, prefs: contextPrefs, countryCodes } = useContactConfig();
   const { logSetupAudit } = useContactMutations();
   const { t } = useTranslation();
 
@@ -41,7 +47,8 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
   const editorConfig = useMemo(() => ({
     settings: config,
     updateSettings: onConfigChange,
-  }), [config, onConfigChange]);
+    updateSettingsAsync: onConfigChangeAsync,
+  }), [config, onConfigChange, onConfigChangeAsync]);
 
   const defaultEnabledTabs = useMemo(() => {
     return (config.formTabs && config.formTabs.length > 0)
@@ -53,7 +60,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
     fieldsEditor,
     saved,
     setSaved,
-    saveSettings,
+    saveSettingsAsync,
   } = useModuleSettingsEditor({
     config: editorConfig,
     tabRegistry: getInitialTabs(),
@@ -61,6 +68,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
   });
 
   const [prefs, setPrefs] = useState<ContactPreferences>(() => contextPrefs);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setPrefs(contextPrefs);
@@ -121,7 +129,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
     handleDeleteField: handleDeleteFieldWithGuard,
   }), [fieldsEditor, handleDeleteFieldWithGuard]);
 
-  const handleSave = useCallback((): void => {
+  const handleSave = useCallback(async (): Promise<void> => {
     if (prefs.defaultProvince && /\d/.test(prefs.defaultProvince)) {
       notify.error(t("contacts.setup.invalidProvince"));
       return;
@@ -131,29 +139,38 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
       return;
     }
 
-    const applyTitleCaseToTabs = (tabs: TabDefinition[]) => tabs.map((tab) => ({ ...tab, label: toTitleCase(tab.label) }));
-    saveSettings({}, {
-      version: CONFIG_VERSION,
-      pageTabs: applyTitleCaseToTabs(config.pageTabs || []),
-      formTabs: applyTitleCaseToTabs(fieldsEditor.formTabs),
-      detailTabs: applyTitleCaseToTabs(config.detailTabs || []),
-      settingsSubTabs: applyTitleCaseToTabs(config.settingsSubTabs || []),
-      columnRegistry: config.columnRegistry,
-    });
-    const updatedPrefs = {
-      ...prefs,
-      defaultCountry: prefs.defaultCountry ? toTitleCase(prefs.defaultCountry.trim()) : "",
-      defaultProvince: prefs.defaultProvince ? toTitleCase(prefs.defaultProvince.trim()) : "",
-      defaultCity: prefs.defaultCity ? toTitleCase(prefs.defaultCity.trim()) : "",
-    };
-    setPrefs(updatedPrefs);
-    updatePrefs(updatedPrefs);
-    const auditArea = mode === "preferences" ? "preferences" : "fields";
-    void logSetupAudit.mutateAsync({
-      area: auditArea,
-      summary: t("contacts.setup.auditSummary", { area: auditArea }),
-    });
-  }, [prefs, config, fieldsEditor.formTabs, mode, saveSettings, updatePrefs, logSetupAudit, t]);
+    setIsSaving(true);
+    try {
+      const applyTitleCaseToTabs = (tabs: TabDefinition[]) => tabs.map((tab) => ({ ...tab, label: toTitleCase(tab.label) }));
+      await saveSettingsAsync({}, {
+        version: CONFIG_VERSION,
+        pageTabs: applyTitleCaseToTabs(config.pageTabs || []),
+        formTabs: applyTitleCaseToTabs(fieldsEditor.formTabs),
+        detailTabs: applyTitleCaseToTabs(config.detailTabs || []),
+        settingsSubTabs: applyTitleCaseToTabs(config.settingsSubTabs || []),
+        columnRegistry: config.columnRegistry,
+      }, { markSaved: false });
+      const updatedPrefs = {
+        ...prefs,
+        defaultCountry: prefs.defaultCountry ? toTitleCase(prefs.defaultCountry.trim()) : "",
+        defaultProvince: prefs.defaultProvince ? toTitleCase(prefs.defaultProvince.trim()) : "",
+        defaultCity: prefs.defaultCity ? toTitleCase(prefs.defaultCity.trim()) : "",
+      };
+      await updatePrefsAsync(updatedPrefs);
+      const auditArea = mode === "preferences" ? "preferences" : "fields";
+      await logSetupAudit.mutateAsync({
+        area: auditArea,
+        summary: t("contacts.setup.auditSummary", { area: auditArea }),
+      });
+      setPrefs(updatedPrefs);
+      setSaved(true);
+    } catch {
+      setSaved(false);
+      notify.error(t("contacts.saveFailed"));
+    } finally {
+      setIsSaving(false);
+    }
+  }, [prefs, config, fieldsEditor.formTabs, mode, saveSettingsAsync, updatePrefsAsync, logSetupAudit, setSaved, t]);
 
   const isCoreField = useCallback((tabId: string, fieldKey: string): boolean =>
     INITIAL_FIELD_SEED[tabId]?.some((field) => field.key === fieldKey) ?? false, []);
@@ -249,6 +266,7 @@ export default function ContactsSetupPanel({ config, onConfigChange, mode }: Con
         <Button
           type="button"
           onClick={handleSave}
+          disabled={isSaving}
           className="flex items-center gap-2 px-5 min-h-[44px]"
         >
           <Save className="w-4 h-4" />

@@ -18,19 +18,23 @@ import { EnrollmentsSettings } from "@/tenant/features/enrollments/components/En
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Modal } from "@/components/ui/Modal";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { Enrollment } from '@/lib/data/enrollmentData';
-import { useEnrollmentsCollection, useEnrollmentMutations } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
+import {
+  useEnrollmentsCollection,
+  useEnrollmentsPaginated,
+  useEnrollmentMutations,
+} from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import { useStudentMutations, type StudentRecord } from "@/tenant/features/students/hooks/useStudents";
 import { apiJson } from "@/lib/apiClient";
+import { notify } from "@/lib/notify";
 import { STUDENTS_MODULE_CONTRACT, ENROLLMENTS_MODULE_CONTRACT } from "@mms/shared";
 import { useEnrollmentViewerRole } from "@/tenant/hooks/useViewerRole";
 import { useEnrollmentColumnLayout } from "@/tenant/features/enrollments/hooks/useEnrollmentColumnLayout";
 
 /**
  * Enrollments management — Work | Reports | Setup.
- *
- * @returns {React.ReactElement} The Enrollments page component.
  */
 export default function EnrollmentsPage() {
   const { t } = useTranslation();
@@ -43,6 +47,7 @@ export default function EnrollmentsPage() {
   );
   const {
     canWrite: canWriteEnrollments,
+    canDelete,
     canReports: canViewReports,
     canViewSetup,
   } = useModulePermissions(ENROLLMENTS_MODULE_CONTRACT);
@@ -50,49 +55,86 @@ export default function EnrollmentsPage() {
   const [tab, setTab]                 = usePersistedTabState<string>("enrollments_active_tab", "work");
   const [activeSubTab, setActiveSubTab] = useState("list");
   const role = useEnrollmentViewerRole();
-  const enrollments = useEnrollmentsCollection();
-  const { createEnrollment, updateEnrollment } = useEnrollmentMutations();
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const activeEnrollments = useEnrollmentsCollection();
+  const { data: deletedPage } = useEnrollmentsPaginated({
+    page: 1,
+    limit: ENROLLMENTS_MODULE_CONTRACT.maxPageSize,
+    includeDeleted: true,
+    enabled: showDeleted,
+  });
+  const enrollments = showDeleted
+    ? ((deletedPage?.enrollments ?? []) as Enrollment[])
+    : activeEnrollments;
+  const {
+    createEnrollment,
+    updateEnrollment,
+    deleteEnrollment,
+    restoreEnrollment,
+  } = useEnrollmentMutations();
   const { updateStudent } = useStudentMutations();
   const [viewing, setViewing]         = useState<Enrollment | null>(null);
   const [showWizard, setShowWizard]   = useState(false);
   const [filteredCount, setFilteredCount] = useState(0);
   const columnLayout = useEnrollmentColumnLayout();
 
-  // Reset activeSubTab to list if role changes to accountant (since new and eligibility are restricted)
   useEffect(() => {
     if (!canWriteEnrollments && activeSubTab === "eligibility") {
       setActiveSubTab("list");
     }
   }, [canWriteEnrollments, activeSubTab]);
 
-  const handleComplete = async (enrollment: Enrollment) => {
-    createEnrollment.mutate(enrollment, {
-      onSuccess: async () => {
-        try {
-          const studentsResponse = await apiJson<{ students: StudentRecord[] }>(
-            `${STUDENTS_MODULE_CONTRACT.restBasePath}/resolve`,
-            {
-              method: 'POST',
-              body: JSON.stringify({ ids: [String(enrollment.studentId)] }),
-            },
-          );
-          const student = studentsResponse.students[0];
-          if (student) {
-            const enrolled = (student.enrolledSessions as string[] | undefined) ?? [];
-            if (!enrolled.includes(enrollment.sessionId)) {
-              updateStudent.mutate({
-                id: String(student.id),
-                student: { ...student, enrolledSessions: [...enrolled, enrollment.sessionId] },
-              });
-            }
-          }
-        } catch (error) {
-          console.error('Failed to update student enrolled sessions', error);
-        }
-        setShowWizard(false);
-        setActiveSubTab("list");
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+        return;
       }
-    });
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n") {
+        if (canWriteEnrollments && !showDeleted) {
+          event.preventDefault();
+          setTab("work");
+          setShowWizard(true);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [canWriteEnrollments, showDeleted, setTab]);
+
+  const handleComplete = async (enrollment: Enrollment) => {
+    try {
+      await createEnrollment.mutateAsync(enrollment);
+      try {
+        const studentsResponse = await apiJson<{ students: StudentRecord[] }>(
+          `${STUDENTS_MODULE_CONTRACT.restBasePath}/resolve`,
+          {
+            method: 'POST',
+            body: JSON.stringify({ ids: [String(enrollment.studentId)] }),
+          },
+        );
+        const student = studentsResponse.students[0];
+        if (student) {
+          const enrolled = (student.enrolledSessions as string[] | undefined) ?? [];
+          if (!enrolled.includes(enrollment.sessionId)) {
+            updateStudent.mutate({
+              id: String(student.id),
+              student: { ...student, enrolledSessions: [...enrolled, enrollment.sessionId] },
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to update student enrolled sessions', error);
+      }
+      notify.success(t("enrollments.toast.created"));
+      setActiveSubTab("list");
+    } catch (error) {
+      notify.error(t("enrollments.toast.saveFailed"), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   };
 
   const handleCancel = (id: string) => {
@@ -103,8 +145,37 @@ export default function EnrollmentsPage() {
       enrollment: {
         ...enrollment,
         status: "cancelled" as const,
-        timeline: [...(enrollment.timeline || []), { ts: new Date().toISOString(), event: "Enrollment cancelled", by: role }]
-      }
+        timeline: [
+          ...(enrollment.timeline || []),
+          { ts: new Date().toISOString(), event: t("enrollments.timeline.cancelled"), by: role },
+        ],
+      },
+    }, {
+      onSuccess: () => notify.info(t("enrollments.toast.cancelled")),
+      onError: (err) => notify.error(t("enrollments.toast.saveFailed"), {
+        description: err instanceof Error ? err.message : String(err),
+      }),
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    deleteEnrollment.mutate(id, {
+      onSuccess: () => {
+        notify.info(t("enrollments.toast.deleted"));
+        if (viewing?.id === id) setViewing(null);
+      },
+      onError: (err) => notify.error(t("enrollments.toast.saveFailed"), {
+        description: err instanceof Error ? err.message : String(err),
+      }),
+    });
+  };
+
+  const handleRestore = (id: string) => {
+    restoreEnrollment.mutate(id, {
+      onSuccess: () => notify.success(t("enrollments.toast.restored")),
+      onError: (err) => notify.error(t("enrollments.toast.saveFailed"), {
+        description: err instanceof Error ? err.message : String(err),
+      }),
     });
   };
 
@@ -114,7 +185,14 @@ export default function EnrollmentsPage() {
     const updated: Enrollment = {
       ...enrollment,
       status: newStatus,
-      timeline: [...(enrollment.timeline || []), { ts: new Date().toISOString(), event: `Status → ${newStatus}`, by: role }]
+      timeline: [
+        ...(enrollment.timeline || []),
+        {
+          ts: new Date().toISOString(),
+          event: t("enrollments.timeline.statusChange", { status: newStatus }),
+          by: role,
+        },
+      ],
     };
     updateEnrollment.mutate({
       id,
@@ -122,11 +200,14 @@ export default function EnrollmentsPage() {
     }, {
       onSuccess: () => {
         if (viewing?.id === id) setViewing(updated);
-      }
+        notify.success(t("enrollments.toast.updated"));
+      },
+      onError: (err) => notify.error(t("enrollments.toast.saveFailed"), {
+        description: err instanceof Error ? err.message : String(err),
+      }),
     });
   };
 
-  // Stats bar — server metrics via EnrollmentsCommandMetrics; filtered count from list
   useEffect(() => {
     setFilteredCount(enrollments.length);
   }, [enrollments.length]);
@@ -140,7 +221,7 @@ export default function EnrollmentsPage() {
       headerSubtitle={t("page.enrollments.subtitle")}
       headerActions={
         <div className="flex items-center gap-2">
-          {canWriteEnrollments && (
+          {canWriteEnrollments && !showDeleted && (
             <ActionButton
               variant="primary"
               icon={Plus}
@@ -161,7 +242,6 @@ export default function EnrollmentsPage() {
         onTabChange={setTab}
         panelIdPrefix="enrollments-tab"
       >
-      {/* Work tier sub-tabs */}
       {tab === "work" && (
         <SubTabBar
           tabs={SUB_TABS
@@ -172,9 +252,8 @@ export default function EnrollmentsPage() {
         />
       )}
 
-      {/* Content */}
       <AnimatePresence mode="wait">
-        <motion.div key={tab + "-" + activeSubTab}
+        <motion.div key={tab + "-" + activeSubTab + (showDeleted ? "-trash" : "")}
           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
           className="space-y-4"
@@ -183,7 +262,7 @@ export default function EnrollmentsPage() {
             <ErrorBoundary>
               <div className="space-y-4">
                 <KPISummary category="enrollments" />
-                <EnrollmentReports enrollments={enrollments} />
+                <EnrollmentReports enrollments={activeEnrollments} />
               </div>
             </ErrorBoundary>
           )}
@@ -192,8 +271,13 @@ export default function EnrollmentsPage() {
               <EnrollmentList
                 enrollments={enrollments}
                 canWrite={canWriteEnrollments}
+                canDelete={canDelete}
+                showDeleted={showDeleted}
+                onShowDeletedChange={setShowDeleted}
                 onView={(enrollment: Enrollment) => setViewing(enrollment)}
                 onCancel={handleCancel}
+                onDelete={(id) => setPendingDeleteId(id)}
+                onRestore={handleRestore}
                 onFilteredCountChange={setFilteredCount}
                 isColumnVisible={columnLayout.isColumnVisible}
                 getColumnWidth={columnLayout.getColumnWidth}
@@ -215,16 +299,15 @@ export default function EnrollmentsPage() {
 
           {tab === "setup" && (
             <ErrorBoundary>
-              <EnrollmentsSettings mode="preferences" />
+              <EnrollmentsSettings />
             </ErrorBoundary>
           )}
         </motion.div>
       </AnimatePresence>
       </ResponsiveAccordionTabs>
 
-      {/* Detail panel */}
       <AnimatePresence>
-        {viewing && (
+        {viewing && !showDeleted && (
           <ErrorBoundary>
             <EnrollmentDetail
               enrollment={viewing}
@@ -250,6 +333,19 @@ export default function EnrollmentsPage() {
           />
         </ErrorBoundary>
       </Modal>
+
+      <ConfirmAlertDialog
+        open={pendingDeleteId != null}
+        onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}
+        title={t("enrollments.confirmDeleteTitle")}
+        description={t("enrollments.confirmDeleteDescription")}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={() => {
+          if (pendingDeleteId) handleDelete(pendingDeleteId);
+          setPendingDeleteId(null);
+        }}
+      />
     </ModulePageShell>
   );
 }

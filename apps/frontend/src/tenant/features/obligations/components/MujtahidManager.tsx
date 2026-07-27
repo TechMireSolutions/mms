@@ -21,8 +21,8 @@ export interface MujtahidRep {
 export interface MujtahidManagerProps {
   mujtahids: Mujtahid[];
   reps: MujtahidRep[];
-  onChangeMujtahids: (mujtahids: Mujtahid[]) => void;
-  onChangeReps: (reps: MujtahidRep[]) => void;
+  onChangeMujtahids: (mujtahids: Mujtahid[]) => void | Promise<void>;
+  onChangeReps: (reps: MujtahidRep[]) => void | Promise<void>;
 }
 
 interface ModalState {
@@ -40,33 +40,33 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
   const [modal, setModal] = useState<ModalState | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-  const handleSaveMujtahid = (form: Partial<Mujtahid>) => {
+  const handleSaveMujtahid = async (form: Partial<Mujtahid>) => {
     if (modal?.mode === "add") {
-      onChangeMujtahids([...mujtahids, { ...form, id: `m${Date.now()}` } as Mujtahid]);
+      await onChangeMujtahids([...mujtahids, { ...form, id: `m${Date.now()}` } as Mujtahid]);
     } else if (modal?.mode === "edit") {
-      onChangeMujtahids(mujtahids.map((mujtahid) => mujtahid.id === form.id ? (form as Mujtahid) : mujtahid));
+      await onChangeMujtahids(mujtahids.map((mujtahid) => mujtahid.id === form.id ? (form as Mujtahid) : mujtahid));
     }
     setModal(null);
   };
 
-  const handleDeleteMujtahid = (mujtahidId: string) => {
-    if (confirm("Delete this Mujtahid? Associated representatives will also be removed.")) {
-      onChangeMujtahids(mujtahids.filter((mujtahid) => mujtahid.id !== mujtahidId));
-      onChangeReps(reps.filter((representative) => representative.mujtahid_id !== mujtahidId));
-    }
+  const handleDeleteMujtahid = async (mujtahidId: string) => {
+    if (!confirm("Delete this Mujtahid? Associated representatives will also be removed.")) return;
+    await onChangeMujtahids(mujtahids.filter((mujtahid) => mujtahid.id !== mujtahidId));
+    await onChangeReps(reps.filter((representative) => representative.mujtahid_id !== mujtahidId));
   };
 
-  const handleSaveRep = (form: Partial<MujtahidRep>) => {
+  const handleSaveRep = async (form: Partial<MujtahidRep>) => {
     if (modal?.mode === "add-rep") {
-      onChangeReps([...reps, { ...form, id: `mr${Date.now()}` } as MujtahidRep]);
+      await onChangeReps([...reps, { ...form, id: `mr${Date.now()}` } as MujtahidRep]);
     } else if (modal?.mode === "edit-rep") {
-      onChangeReps(reps.map((representative) => representative.id === form.id ? (form as MujtahidRep) : representative));
+      await onChangeReps(reps.map((representative) => representative.id === form.id ? (form as MujtahidRep) : representative));
     }
     setModal(null);
   };
 
-  const handleDeleteRep = (representativeId: string) => {
-    if (confirm("Delete this representative?")) onChangeReps(reps.filter((representative) => representative.id !== representativeId));
+  const handleDeleteRep = async (representativeId: string) => {
+    if (!confirm("Delete this representative?")) return;
+    await onChangeReps(reps.filter((representative) => representative.id !== representativeId));
   };
 
   return (

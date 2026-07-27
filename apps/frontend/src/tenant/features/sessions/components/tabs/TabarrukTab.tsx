@@ -8,6 +8,9 @@ import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from "@/hooks/useTranslation";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { formatDate } from "@mms/shared";
 
 const EMPTY: Partial<TabarrukItem> = { item: "", quantity: "", occasion: "", date: "", note: "" };
 
@@ -15,10 +18,12 @@ interface TabarrukModalProps {
   open: boolean;
   entry: TabarrukItem | null;
   onClose: () => void;
-  onSave: (entry: TabarrukItem) => void;
+  onSave: (entry: TabarrukItem) => void | Promise<void>;
+  saving: boolean;
 }
 
-function TabarrukModal({ open, entry, onClose, onSave }: TabarrukModalProps) {
+function TabarrukModal({ open, entry, onClose, onSave, saving }: TabarrukModalProps) {
+  const { t } = useTranslation();
   const [tabarrukDraft, setTabarrukDraft] = useState<Partial<TabarrukItem>>(entry ? { ...entry } : { ...EMPTY });
   const updateTabarrukDraft = (field: keyof TabarrukItem, value: string) => setTabarrukDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
 
@@ -32,25 +37,26 @@ function TabarrukModal({ open, entry, onClose, onSave }: TabarrukModalProps) {
     <FormModal
       open={open}
       onClose={onClose}
-      title={entry ? "Edit Tabarruk" : "Add Tabarruk"}
+      title={entry ? t("sessions.tabarruk.edit") : t("sessions.tabarruk.add")}
       icon={Gift}
-      cancelLabel="Cancel"
-      saveLabel="Save"
+      cancelLabel={t("common.cancel")}
+      saveLabel={t("common.save")}
       onSave={() => onSave({ ...tabarrukDraft, id: entry?.id || `tb${Date.now()}` } as TabarrukItem)}
       saveDisabled={!tabarrukDraft.item}
+      saving={saving}
     >
       <div className="space-y-4">
         <div>
-          <label className={FORM_LABEL} htmlFor="tabarruk-item">Item *</label>
-          <Input id="tabarruk-item" value={tabarrukDraft.item || ""} onChange={(event) => updateTabarrukDraft("item", event.target.value)} placeholder="e.g. Dates (Ajwa)" required />
+          <label className={FORM_LABEL} htmlFor="tabarruk-item">{t("sessions.tabarruk.form.item")} *</label>
+          <Input id="tabarruk-item" value={tabarrukDraft.item || ""} onChange={(event) => updateTabarrukDraft("item", event.target.value)} placeholder={t("sessions.tabarruk.form.itemPlaceholder")} required />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={FORM_LABEL} htmlFor="tabarruk-quantity">Quantity</label>
-            <Input id="tabarruk-quantity" value={tabarrukDraft.quantity || ""} onChange={(event) => updateTabarrukDraft("quantity", event.target.value)} placeholder="e.g. 5 kg" />
+            <label className={FORM_LABEL} htmlFor="tabarruk-quantity">{t("sessions.tabarruk.form.quantity")}</label>
+            <Input id="tabarruk-quantity" value={tabarrukDraft.quantity || ""} onChange={(event) => updateTabarrukDraft("quantity", event.target.value)} placeholder={t("sessions.tabarruk.form.quantityPlaceholder")} />
           </div>
           <div>
-            <label className={FORM_LABEL} htmlFor="tabarruk-date">Date</label>
+            <label className={FORM_LABEL} htmlFor="tabarruk-date">{t("sessions.tabarruk.form.date")}</label>
             <DatePicker
               id="tabarruk-date"
               value={tabarrukDraft.date || ""}
@@ -59,12 +65,12 @@ function TabarrukModal({ open, entry, onClose, onSave }: TabarrukModalProps) {
           </div>
         </div>
         <div>
-          <label className={FORM_LABEL} htmlFor="tabarruk-occasion">Occasion</label>
-          <Input id="tabarruk-occasion" value={tabarrukDraft.occasion || ""} onChange={(event) => updateTabarrukDraft("occasion", event.target.value)} placeholder="e.g. Opening Ceremony" />
+          <label className={FORM_LABEL} htmlFor="tabarruk-occasion">{t("sessions.tabarruk.form.occasion")}</label>
+          <Input id="tabarruk-occasion" value={tabarrukDraft.occasion || ""} onChange={(event) => updateTabarrukDraft("occasion", event.target.value)} placeholder={t("sessions.tabarruk.form.occasionPlaceholder")} />
         </div>
         <div>
-          <label className={FORM_LABEL} htmlFor="tabarruk-note">Note</label>
-          <Textarea id="tabarruk-note" className="min-h-[60px] resize-none" value={tabarrukDraft.note || ""} onChange={(event) => updateTabarrukDraft("note", event.target.value)} placeholder="Any additional notes…" />
+          <label className={FORM_LABEL} htmlFor="tabarruk-note">{t("sessions.tabarruk.form.note")}</label>
+          <Textarea id="tabarruk-note" className="min-h-[60px] resize-none" value={tabarrukDraft.note || ""} onChange={(event) => updateTabarrukDraft("note", event.target.value)} placeholder={t("sessions.tabarruk.form.notePlaceholder")} />
         </div>
       </div>
     </FormModal>
@@ -73,7 +79,8 @@ function TabarrukModal({ open, entry, onClose, onSave }: TabarrukModalProps) {
 
 interface TabarrukTabProps {
   session: Session;
-  onUpdate: (session: Session) => void;
+  onUpdate: (session: Session) => void | Promise<void>;
+  canWrite: boolean;
 }
 
 /**
@@ -86,60 +93,77 @@ interface TabarrukTabProps {
  * @param props - Component properties.
  * @returns React element representing the Tabarruk tracking tab UI.
  */
-export function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
+export function TabarrukTab({ session, onUpdate, canWrite }: TabarrukTabProps) {
+  const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
   const [editEntry, setEditEntry] = useState<TabarrukItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TabarrukItem | null>(null);
+  const [saving, setSaving] = useState(false);
+  const deletePendingRef = React.useRef(false);
   const tabarrukItems = session.tabarruk || [];
 
-  const handleSave = (entry: TabarrukItem) => {
+  const handleSave = async (entry: TabarrukItem) => {
     const existingEntry = tabarrukItems.find((tabarrukItem) => tabarrukItem.id === entry.id);
-    onUpdate({
-      ...session,
-      tabarruk: existingEntry
-        ? tabarrukItems.map((tabarrukItem) => tabarrukItem.id === entry.id ? entry : tabarrukItem)
-        : [...tabarrukItems, entry],
-    });
-    setShowModal(false); setEditEntry(null);
+    setSaving(true);
+    try {
+      await onUpdate({
+        ...session,
+        tabarruk: existingEntry
+          ? tabarrukItems.map((tabarrukItem) => tabarrukItem.id === entry.id ? entry : tabarrukItem)
+          : [...tabarrukItems, entry],
+      });
+      setShowModal(false); setEditEntry(null);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = (id: string) => onUpdate({ ...session, tabarruk: tabarrukItems.filter((tabarrukItem) => tabarrukItem.id !== id) });
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    deletePendingRef.current = true;
+    try {
+      await onUpdate({ ...session, tabarruk: tabarrukItems.filter((tabarrukItem) => tabarrukItem.id !== deleteTarget.id) });
+      setDeleteTarget(null);
+    } finally {
+      deletePendingRef.current = false;
+    }
+  };
 
   return (
-    <section aria-label="Session Tabarruk" className="space-y-4">
-      {/* Info banner */}
+    <section aria-label={t("sessions.tabarruk.ariaLabel")} className="space-y-4">
       <article className="flex items-start gap-3 px-4 py-3 rounded-xl bg-warning/10 border border-warning/20">
         <Gift className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" aria-hidden="true" />
         <p className="text-[12px] text-warning leading-relaxed m-0">
-          <strong>Tabarruk</strong> refers to blessed items distributed to students and attendees during events — such as dates, Zam Zam water, or sweets — as a means of seeking blessings.
+          {t("sessions.tabarruk.description")}
         </p>
       </article>
 
       <header className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-foreground m-0">{tabarrukItems.length} item{tabarrukItems.length !== 1 ? "s" : ""} recorded</p>
-        <Button
+        <p className="text-sm font-semibold text-foreground m-0">{t("sessions.tabarruk.count", { count: tabarrukItems.length })}</p>
+        {canWrite && <Button
           onClick={() => { setEditEntry(null); setShowModal(true); }}
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors h-auto"
         >
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Tabarruk
-        </Button>
+          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.tabarruk.add")}
+        </Button>}
       </header>
 
       {tabarrukItems.length === 0 ? (
         <div className="py-12 text-center rounded-xl border-2 border-dashed border-border">
           <Gift className="w-8 h-8 text-muted-foreground mx-auto mb-2" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground m-0">No tabarruk recorded yet</p>
+          <p className="text-sm font-medium text-foreground m-0">{t("sessions.tabarruk.emptyTitle")}</p>
         </div>
       ) : (
         <div className="rounded-xl border border-border overflow-hidden bg-card">
           <table className="w-full text-sm">
-            <caption className="sr-only">List of Tabarruk items</caption>
+            <caption className="sr-only">{t("sessions.tabarruk.tableCaption")}</caption>
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Item</th>
-                <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">Quantity</th>
-                <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">Occasion</th>
-                <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">Date</th>
-                <th scope="col" className="px-4 py-2.5 w-16"><span className="sr-only">Actions</span></th>
+                <th scope="col" className="px-4 py-2.5 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("sessions.tabarruk.form.item")}</th>
+                <th scope="col" className="px-4 py-2.5 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">{t("sessions.tabarruk.form.quantity")}</th>
+                <th scope="col" className="px-4 py-2.5 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">{t("sessions.tabarruk.form.occasion")}</th>
+                <th scope="col" className="px-4 py-2.5 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">{t("sessions.tabarruk.form.date")}</th>
+                <th scope="col" className="px-4 py-2.5 w-16"><span className="sr-only">{t("common.actions")}</span></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
@@ -162,17 +186,17 @@ export function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
                     <span className="text-[13px] text-muted-foreground">{tabarrukItem.occasion || "—"}</span>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="text-[12px] text-muted-foreground">{tabarrukItem.date || "—"}</span>
+                    <span className="text-[12px] text-muted-foreground">{tabarrukItem.date ? formatDate(tabarrukItem.date) : "—"}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-1 justify-end">
-                      <Button aria-label={`Edit ${tabarrukItem.item}`} onClick={() => { setEditEntry(tabarrukItem); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 w-8 h-8" variant="ghost" size="icon">
+                    {canWrite && <div className="flex items-center gap-1 justify-end">
+                      <Button aria-label={t("sessions.tabarruk.editNamed", { name: tabarrukItem.item })} onClick={() => { setEditEntry(tabarrukItem); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 w-8 h-8" variant="ghost" size="icon">
                         <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
-                      <Button aria-label={`Delete ${tabarrukItem.item}`} onClick={() => handleDelete(tabarrukItem.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 w-8 h-8" variant="ghost" size="icon">
+                      <Button aria-label={t("sessions.tabarruk.deleteNamed", { name: tabarrukItem.item })} onClick={() => setDeleteTarget(tabarrukItem)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 w-8 h-8" variant="ghost" size="icon">
                         <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
-                    </div>
+                    </div>}
                   </td>
                 </motion.tr>
               ))}
@@ -184,12 +208,21 @@ export function TabarrukTab({ session, onUpdate }: TabarrukTabProps) {
       <TabarrukEntryModal
         open={showModal}
         entry={editEntry}
-        onClose={() => { setShowModal(false); setEditEntry(null); }}
+        onClose={() => { if (!saving) { setShowModal(false); setEditEntry(null); } }}
         onSave={handleSave}
+        saving={saving}
+      />
+      <ConfirmAlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open && !deletePendingRef.current) setDeleteTarget(null); }}
+        title={t("sessions.tabarruk.confirmDeleteTitle")}
+        description={t("sessions.tabarruk.confirmDeleteDescription", { name: deleteTarget?.item ?? "" })}
+        confirmLabel={t("common.delete")}
+        destructive
+        onConfirm={() => { void handleDelete(); }}
       />
     </section>
   );
 }
 
-// Rename component helper to avoid clash/error with named export
 const TabarrukEntryModal = TabarrukModal;

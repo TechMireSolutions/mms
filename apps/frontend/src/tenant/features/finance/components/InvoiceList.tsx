@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
-import { Filter, ChevronDown, Eye, ReceiptText, X, MessageCircle, MessageSquare } from "lucide-react";
+import { Filter, ChevronDown, Eye, ReceiptText, X, MessageCircle, MessageSquare, Trash2, RotateCcw } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
@@ -18,6 +18,8 @@ import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
@@ -28,6 +30,14 @@ interface InvoiceListProps {
   onView: (invoice: Invoice) => void;
   onRecord: (invoice: Invoice) => void;
   canWrite?: boolean;
+  canDelete?: boolean;
+  canWriteMessaging?: boolean;
+  showDeleted?: boolean;
+  onDelete?: (id: string) => void;
+  onRestore?: (id: string) => void;
+  onBulkDelete?: (ids: string[]) => void;
+  onBulkRestore?: (ids: string[]) => void;
+  selectionResetKey?: string;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -39,6 +49,14 @@ export function InvoiceList({
   onView,
   onRecord,
   canWrite = true,
+  canDelete = false,
+  canWriteMessaging = false,
+  showDeleted = false,
+  onDelete,
+  onRestore,
+  onBulkDelete,
+  onBulkRestore,
+  selectionResetKey,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
@@ -49,6 +67,11 @@ export function InvoiceList({
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
+
+  useEffect(() => setSelectedIds([]), [selectionResetKey, showDeleted]);
 
   const statusLabel = (status: string) => {
     const key = `finance.invoiceStatus.${status}` as AppTranslationKey;
@@ -81,6 +104,7 @@ export function InvoiceList({
     (showFinal ? 1 : 0) +
     (showStatus ? 1 : 0) +
     (showDueDate ? 1 : 0) +
+    (canDelete ? 1 : 0) +
     1;
 
   const filtered = useMemo(() => {
@@ -94,6 +118,7 @@ export function InvoiceList({
       return matchSearch && matchStatus;
     });
   }, [invoices, search, filterStatus]);
+  const allSelected = filtered.length > 0 && filtered.every((invoice) => selectedIds.includes(invoice.id));
 
   const toggleStatus = (status: string) => setFilterStatus((currentStatuses) => currentStatuses.includes(status)
     ? currentStatuses.filter((selectedStatus) => selectedStatus !== status)
@@ -145,12 +170,31 @@ export function InvoiceList({
         )}
       </AnimatePresence>
 
+      {canDelete && selectedIds.length > 0 && (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
+          <span className="text-sm font-medium">{t("finance.trash.selected", { count: selectedIds.length })}</span>
+          <Button type="button" variant={showDeleted ? "outline" : "destructive"} onClick={() => setConfirmBulkOpen(true)}>
+            {showDeleted ? <RotateCcw className="w-4 h-4" /> : <Trash2 className="w-4 h-4" />}
+            {showDeleted ? t("finance.trash.restore") : t("common.delete")}
+          </Button>
+        </div>
+      )}
+
       <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm table-fixed">
             <caption className="sr-only">{t("finance.invoices")}</caption>
             <thead>
               <tr className="border-b border-border bg-muted/30">
+                {canDelete && (
+                  <th scope="col" className="w-10 px-3 py-2.5">
+                    <Checkbox
+                      checked={allSelected}
+                      onCheckedChange={(checked) => setSelectedIds(checked ? filtered.map((invoice) => invoice.id) : [])}
+                      aria-label={t("finance.trash.selectAll")}
+                    />
+                  </th>
+                )}
                 {showInvoice && (
                   <ResizableTableHead columnKey="invoice" width={getColumnWidth?.("invoice")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.invoice")}
@@ -209,6 +253,15 @@ export function InvoiceList({
                       transition={{ delay: index * 0.03 }}
                       className="hover:bg-muted/20 transition-colors group"
                     >
+                      {canDelete && (
+                        <td className="px-3 py-3">
+                          <Checkbox
+                            checked={selectedIds.includes(invoice.id)}
+                            onCheckedChange={(checked) => setSelectedIds((ids) => checked ? [...ids, invoice.id] : ids.filter((id) => id !== invoice.id))}
+                            aria-label={t("finance.trash.selectInvoice", { id: invoice.id })}
+                          />
+                        </td>
+                      )}
                       {showInvoice && (
                         <td className="px-4 py-3">
                           <span className="text-[11px] font-mono font-semibold text-muted-foreground">{invoice.id}</span>
@@ -274,7 +327,7 @@ export function InvoiceList({
                           };
                           return (
                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              {phone ? (
+                              {canWriteMessaging && !showDeleted && phone ? (
                                 <>
                                   <Button
                                     variant="ghost"
@@ -299,9 +352,18 @@ export function InvoiceList({
                               <Button variant="ghost" onClick={() => onView(invoice)} aria-label={t("finance.viewInvoice", { id: invoice.id })} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                                 <Eye className="w-3.5 h-3.5" aria-hidden="true" />
                               </Button>
-                              {canWrite && invoice.status !== "paid" && (
+                              {canWrite && !showDeleted && invoice.status !== "paid" && (
                                 <Button variant="ghost" onClick={() => onRecord(invoice)} aria-label={t("finance.recordPaymentFor", { id: invoice.id })} className="p-1.5 rounded-lg hover:bg-success/10 text-muted-foreground hover:text-success transition-colors">
                                   <ReceiptText className="w-3.5 h-3.5" aria-hidden="true" />
+                                </Button>
+                              )}
+                              {canDelete && (showDeleted ? onRestore : onDelete) && (
+                                <Button
+                                  variant="ghost"
+                                  onClick={() => showDeleted ? onRestore?.(invoice.id) : setPendingDeleteId(invoice.id)}
+                                  aria-label={showDeleted ? t("finance.trash.restore") : t("common.delete")}
+                                >
+                                  {showDeleted ? <RotateCcw className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
                                 </Button>
                               )}
                             </div>
@@ -327,6 +389,32 @@ export function InvoiceList({
           />
         </React.Suspense>
       )}
+      <ConfirmAlertDialog
+        open={pendingDeleteId !== null}
+        onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}
+        title={t("finance.trash.deleteTitle")}
+        description={t("finance.trash.deleteInvoiceConfirm")}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={() => {
+          if (pendingDeleteId) onDelete?.(pendingDeleteId);
+          setPendingDeleteId(null);
+        }}
+      />
+      <ConfirmAlertDialog
+        open={confirmBulkOpen}
+        onOpenChange={setConfirmBulkOpen}
+        title={showDeleted ? t("finance.trash.restore") : t("finance.trash.deleteTitle")}
+        description={t(showDeleted ? "finance.trash.bulkRestoreConfirm" : "finance.trash.bulkDeleteConfirm", { count: selectedIds.length })}
+        confirmLabel={showDeleted ? t("finance.trash.restore") : t("common.delete")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={() => {
+          if (showDeleted) onBulkRestore?.(selectedIds);
+          else onBulkDelete?.(selectedIds);
+          setSelectedIds([]);
+          setConfirmBulkOpen(false);
+        }}
+      />
     </section>
   );
 }

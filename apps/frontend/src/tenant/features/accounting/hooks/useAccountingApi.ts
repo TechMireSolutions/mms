@@ -19,10 +19,13 @@ export const ACCOUNTING_ACCOUNTS_QUERY_KEY = [ACCOUNTING_MODULE_CONTRACT.moduleI
 export const ACCOUNTING_ENTRIES_QUERY_KEY = [ACCOUNTING_MODULE_CONTRACT.moduleId, 'entries', 'list'] as const;
 export const ACCOUNTING_FISCAL_YEARS_QUERY_KEY = [ACCOUNTING_MODULE_CONTRACT.moduleId, 'fiscal_years', 'list'] as const;
 
-export function useAccountingAccounts(options?: { enabled?: boolean }) {
+export class NotifiedAccountingMutationError extends Error {}
+
+export function useAccountingAccounts(options?: { enabled?: boolean; includeDeleted?: boolean }) {
+  const includeDeleted = options?.includeDeleted ?? false;
   return useCollectionSync<Account>({
-    queryKey: ACCOUNTING_ACCOUNTS_QUERY_KEY,
-    apiPath: `${ACCOUNTING_API}/accounts`,
+    queryKey: [...ACCOUNTING_ACCOUNTS_QUERY_KEY, { includeDeleted }],
+    apiPath: `${ACCOUNTING_API}/accounts?includeDeleted=${includeDeleted}`,
     responseKey: 'accounts',
     collectionName: 'accounting_accounts',
     enabled: options?.enabled,
@@ -30,14 +33,15 @@ export function useAccountingAccounts(options?: { enabled?: boolean }) {
   });
 }
 
-export function useAccountingAccountsCollection(options?: { enabled?: boolean }): Account[] {
+export function useAccountingAccountsCollection(options?: { enabled?: boolean; includeDeleted?: boolean }): Account[] {
   return useAccountingAccounts(options).syncedData;
 }
 
-export function useAccountingEntries(options?: { enabled?: boolean }) {
+export function useAccountingEntries(options?: { enabled?: boolean; includeDeleted?: boolean }) {
+  const includeDeleted = options?.includeDeleted ?? false;
   return useCollectionSync<JournalEntry>({
-    queryKey: ACCOUNTING_ENTRIES_QUERY_KEY,
-    apiPath: `${ACCOUNTING_API}/entries`,
+    queryKey: [...ACCOUNTING_ENTRIES_QUERY_KEY, { includeDeleted }],
+    apiPath: `${ACCOUNTING_API}/entries?includeDeleted=${includeDeleted}`,
     responseKey: 'entries',
     collectionName: 'accounting_entries',
     enabled: options?.enabled,
@@ -45,7 +49,7 @@ export function useAccountingEntries(options?: { enabled?: boolean }) {
   });
 }
 
-export function useAccountingEntriesCollection(options?: { enabled?: boolean }): JournalEntry[] {
+export function useAccountingEntriesCollection(options?: { enabled?: boolean; includeDeleted?: boolean }): JournalEntry[] {
   return useAccountingEntries(options).syncedData;
 }
 
@@ -110,7 +114,55 @@ export function useAccountingMutations() {
     },
   });
 
-  return { replaceAccounts, replaceEntries, replaceFiscalYears };
+  const deleteEntry = useMutation({
+    mutationFn: async (id: string) =>
+      apiJson<{ success: boolean }>(`${ACCOUNTING_API}/entries/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      }),
+    onSuccess: () => invalidate(),
+  });
+
+  const restoreEntry = useMutation({
+    mutationFn: async (id: string) =>
+      apiJson<{ success: boolean }>(`${ACCOUNTING_API}/entries/${encodeURIComponent(id)}/restore`, {
+        method: 'POST',
+      }),
+    onSuccess: () => invalidate(),
+  });
+
+  const bulkDeleteEntries = useMutation({
+    mutationFn: async (ids: string[]) =>
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(
+        `${ACCOUNTING_API}/entries/bulk-delete`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ ids }),
+        },
+      ),
+    onSuccess: () => invalidate(),
+  });
+
+  const bulkRestoreEntries = useMutation({
+    mutationFn: async (ids: string[]) =>
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(
+        `${ACCOUNTING_API}/entries/bulk-restore`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ ids }),
+        },
+      ),
+    onSuccess: () => invalidate(),
+  });
+
+  return {
+    replaceAccounts,
+    replaceEntries,
+    replaceFiscalYears,
+    deleteEntry,
+    restoreEntry,
+    bulkDeleteEntries,
+    bulkRestoreEntries,
+  };
 }
 
 export function useAccountingMetrics(options?: { enabled?: boolean }) {

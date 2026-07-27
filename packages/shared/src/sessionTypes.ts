@@ -90,6 +90,9 @@ export const SessionSchema = z.object({
   budget: SessionBudgetSchema.optional(),
   events: z.array(SessionEventSchema).default([]),
   tabarruk: z.array(TabarrukItemSchema).default([]),
+  deletedAt: z.string().nullable().optional(),
+  deletedBy: z.string().optional(),
+  deletionReason: z.string().optional(),
 });
 
 export type Class = z.infer<typeof ClassSchema>;

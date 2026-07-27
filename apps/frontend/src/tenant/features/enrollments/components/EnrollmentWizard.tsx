@@ -21,17 +21,12 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 
 interface EnrollmentWizardProps {
-  onComplete: (enrollment: Enrollment) => void;
+  onComplete: (enrollment: Enrollment) => void | Promise<void>;
   onCancel: () => void;
 }
 
 /**
  * Wizard component for walking through a new student enrollment process.
- *
- * @param props - Component props.
- * @param props.onComplete - Callback when the enrollment is confirmed.
- * @param props.onCancel - Callback when the wizard is cancelled.
- * @returns The EnrollmentWizard component.
  */
 export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps): React.ReactElement {
   const { t } = useTranslation();
@@ -44,6 +39,7 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
   const [notes, setNotes]           = useState<string>("");
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>({});
   const [done, setDone]             = useState<boolean>(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
   const [direction, setDirection]   = useState<number>(1);
 
   const { fields, customFields } = useEnrollmentConfig();
@@ -90,13 +86,13 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
     go(1);
   };
 
-  const handleSubmit = () => {
-    if (!student || !session || !feeResult) return;
+  const handleSubmit = async () => {
+    if (!student || !session || !feeResult || submitting) return;
 
     const nowISO = new Date().toISOString();
-    const enrollment: Enrollment = {
-      id: `enr${Date.now()}`,
+    const enrollment = {
       studentId: student.id,
+      studentName: student.name || "",
       sessionId: session.id,
       sessionName: session.name,
       classId: classInfo?.id || "",
@@ -108,18 +104,31 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
       discountPct: feeResult.pct,
       discountAmt: feeResult.discountAmt,
       finalFee: feeResult.finalFee,
-      status: "pending",
-      invoiceId: `inv${Date.now()}`,
-      paymentStatus: "pending",
+      status: "pending" as const,
+      invoiceId: null,
+      paymentStatus: "pending" as const,
       notes,
       customFields: customFieldValues,
       timeline: [
-        { ts: nowISO, event: "Enrollment created", by: "Admin" },
-        { ts: nowISO, event: `Invoice generated (${formatMoney(feeResult.finalFee)})`, by: "System" },
+        { ts: nowISO, event: t("enrollments.wizard.timelineCreated"), by: "Admin" },
+        {
+          ts: nowISO,
+          event: t("enrollments.wizard.timelineInvoice", { amount: formatMoney(feeResult.finalFee) }),
+          by: "System",
+        },
       ],
     } as unknown as Enrollment;
-    setDone(true);
-    setTimeout(() => onComplete(enrollment), 400);
+
+    setSubmitting(true);
+    try {
+      await onComplete(enrollment);
+      setDone(true);
+      window.setTimeout(() => onCancel(), 900);
+    } catch {
+      // Parent surfaces the error toast; keep wizard open for retry.
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (done) {
@@ -134,9 +143,14 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
         <div className="w-16 h-16 rounded-full bg-success/15 flex items-center justify-center mb-4">
           <CheckCircle2 className="w-8 h-8 text-success" aria-hidden="true" />
         </div>
-        <p className="text-lg font-bold text-foreground">Enrollment Submitted!</p>
-        <p className="text-sm text-muted-foreground mt-1">{student?.name} enrolled in {session?.name}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">Invoice generated · Notification sent</p>
+        <p className="text-lg font-bold text-foreground">{t("enrollments.wizard.submittedTitle")}</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          {t("enrollments.wizard.submittedSubtitle", {
+            student: student?.name || "",
+            session: session?.name || "",
+          })}
+        </p>
+        <p className="text-xs text-muted-foreground mt-0.5">{t("enrollments.wizard.submittedHint")}</p>
       </motion.div>
     );
   }
@@ -205,7 +219,9 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground" aria-live="polite">Step {step + 1} of {steps.length}</span>
+          <span className="text-xs text-muted-foreground" aria-live="polite">
+            {t("enrollments.wizard.stepOf", { step: step + 1, total: steps.length })}
+          </span>
           {step < steps.length - 1 ? (
             <Button
               onClick={handleNext}
@@ -216,8 +232,8 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
             </Button>
           ) : (
             <Button
-              onClick={handleSubmit}
-              disabled={!canConfirm()}
+              onClick={() => { void handleSubmit(); }}
+              disabled={!canConfirm() || submitting}
               className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors h-auto"
             >
               <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> {t('enrollments.new')}

@@ -1,11 +1,11 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   UserCheck, ClipboardEdit, BookOpen, BarChart2,
-  ShieldCheck, ClipboardList,
+  ShieldCheck, ClipboardList, Archive,
 } from "lucide-react";
 import { resolveModuleTierTab, todayISO, ATTENDANCE_MODULE_CONTRACT } from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
@@ -21,16 +21,16 @@ import { AttendanceCommandMetrics } from "@/tenant/features/attendance/component
 import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { saveCollection } from "@/lib/db";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Button } from "@/components/ui/button";
 import { notify } from "@/lib/notify";
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import {
-  useAttendanceRecordsCollection,
+  useAttendanceRecords,
+  useAttendancePaginated,
   useAttendanceMutations,
-  ATTENDANCE_QUERY_KEY,
 } from '@/tenant/features/attendance/hooks/useAttendance';
 import { useAttendanceColumnLayout } from '@/tenant/features/attendance/hooks/useAttendanceColumnLayout';
-import { useQueryClient } from '@tanstack/react-query';
 import { useViewerRole } from "@/tenant/hooks/useViewerRole";
 import { usePermissions, useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
@@ -63,9 +63,23 @@ export default function Attendance() {
   const [activeOpsTab, setActiveOpsTab] = useState("mark");
   const [activeAnalyticsTab, setActiveAnalyticsTab] = useState("charts");
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const queryClient = useQueryClient();
-  const attendanceRecords = useAttendanceRecordsCollection();
-  const { replaceAll } = useAttendanceMutations();
+  const [showDeleted, setShowDeleted] = useState(false);
+  const attendanceCollectionQuery = useAttendanceRecords();
+  const {
+    bulkUpsert,
+    updateRecord,
+    deleteRecord,
+    restoreRecord,
+  } = useAttendanceMutations();
+  const attendancePageQuery = useAttendancePaginated({
+    page: 1,
+    limit: ATTENDANCE_MODULE_CONTRACT.maxPageSize,
+    includeDeleted: showDeleted,
+    enabled: activeTab === "work",
+  });
+  const activeAttendanceRecords = attendanceCollectionQuery.syncedData;
+  const workAttendanceRecords = attendancePageQuery.data?.records ?? [];
+  const attendanceRecords = activeTab === "work" ? workAttendanceRecords : activeAttendanceRecords;
   const columnLayout = useAttendanceColumnLayout();
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
 
@@ -89,15 +103,35 @@ export default function Attendance() {
     }).length;
   }, [attendanceRecords, filters.classId, filters.date]);
 
-  const setRecords = useCallback((updater: React.SetStateAction<AttendanceRecord[]>) => {
-    const nextAttendanceRecords = typeof updater === "function" ? updater(attendanceRecords) : updater;
-    saveCollection("attendance_records", nextAttendanceRecords);
-    queryClient.setQueryData(ATTENDANCE_QUERY_KEY, nextAttendanceRecords);
-    void replaceAll.mutateAsync(nextAttendanceRecords).catch((error: unknown) => {
-      const message = error instanceof Error ? error.message : t("settings.serverSaveFailed");
-      notify.error(message);
-    });
-  }, [attendanceRecords, replaceAll, queryClient, t]);
+  const persistRecords = useCallback(async (recordsForClassDate: AttendanceRecord[]) => {
+    await bulkUpsert.mutateAsync(recordsForClassDate);
+  }, [bulkUpsert]);
+
+  const handleUpdateRecord = useCallback(async (record: AttendanceRecord) => {
+    await updateRecord.mutateAsync({ id: record.id, record });
+  }, [updateRecord]);
+
+  const handleDeleteRecord = useCallback(async (id: string) => {
+    try {
+      await deleteRecord.mutateAsync(id);
+      notify.success(t("attendance.toast.archived"));
+    } catch (error) {
+      notify.error(t("attendance.toast.saveFailed"), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }, [deleteRecord, t]);
+
+  const handleRestoreRecord = useCallback(async (id: string) => {
+    try {
+      await restoreRecord.mutateAsync(id);
+      notify.success(t("attendance.toast.restored"));
+    } catch (error) {
+      notify.error(t("attendance.toast.saveFailed"), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }, [restoreRecord, t]);
 
 
   const canSeeAttendanceAnalytics = canAnalyticsView
@@ -132,11 +166,25 @@ export default function Attendance() {
   const effectiveOpsTab = visibleOperationsTabs.find((t) => t.id === activeOpsTab) ? activeOpsTab : (visibleOperationsTabs[0]?.id || "records");
   const effectiveAnalyticsTab = visibleAnalyticsTabs.find((t) => t.id === activeAnalyticsTab) ? activeAnalyticsTab : (visibleAnalyticsTabs[0]?.id || "reports");
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return;
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n" && canWriteAttendance && !showDeleted) {
+        event.preventDefault();
+        setActiveTab("work");
+        setActiveOpsTab("mark");
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [canWriteAttendance, setActiveTab, showDeleted]);
+
   const renderContent = () => {
     if (!effectiveTab) return null;
     if (effectiveTab === "setup") {
       return (
-        <AttendanceSettings mode="preferences" />
+        <AttendanceSettings />
       );
     }
 
@@ -172,12 +220,15 @@ export default function Attendance() {
 
         {(() => {
           switch (effectiveOpsTab) {
-            case "mark":    return <MarkAttendance filters={filters} role={role} records={attendanceRecords} setRecords={setRecords} />;
+            case "mark":    return <MarkAttendance filters={filters} role={role} records={activeAttendanceRecords} persistBatch={persistRecords} />;
             case "records": return (
               <AttendanceRecords
                 filters={filters}
                 records={attendanceRecords}
-                setRecords={setRecords}
+                onUpdateRecord={handleUpdateRecord}
+                onDeleteRecord={handleDeleteRecord}
+                onRestoreRecord={handleRestoreRecord}
+                showDeleted={showDeleted}
                 isColumnVisible={columnLayout.isColumnVisible}
                 getColumnWidth={columnLayout.getColumnWidth}
                 onColumnResize={columnLayout.setColumnWidth}
@@ -232,6 +283,19 @@ export default function Attendance() {
       {/* Global Filters */}
       <AttendanceFilters filters={filters} onChange={setFilters} />
 
+      {effectiveTab === "work" && effectiveOpsTab === "records" && canDeleteAttendance && (
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => setShowDeleted((current) => !current)}
+          aria-pressed={showDeleted}
+          className="flex items-center gap-1.5 min-h-[44px] border border-border"
+        >
+          <Archive className="w-3.5 h-3.5" />
+          {showDeleted ? t("attendance.showActive") : t("attendance.showDeleted")}
+        </Button>
+      )}
+
       {/* Tab Content */}
       <AnimatePresence mode="wait">
         <motion.div
@@ -242,7 +306,16 @@ export default function Attendance() {
           transition={{ duration: 0.2 }}
         >
           <ErrorBoundary>
-            {renderContent()}
+            {(attendanceCollectionQuery.queryResult.isError || (effectiveTab === "work" && attendancePageQuery.isError)) ? (
+              <ErrorState
+                title={t("attendance.toast.loadFailed")}
+                description={t("common.retry")}
+                onRetry={() => {
+                  void attendanceCollectionQuery.queryResult.refetch();
+                  void attendancePageQuery.refetch();
+                }}
+              />
+            ) : renderContent()}
           </ErrorBoundary>
         </motion.div>
       </AnimatePresence>

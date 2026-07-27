@@ -37,7 +37,7 @@ export function ContactEmergencyTab({
   const { t } = useTranslation();
   const emergencyContacts = contactDraft.emergencyContacts || [];
   const addEmergency = () => {
-    addSubListItem("emergencyContacts", { relationship: relationshipOptions[0] || "Father", contactId: "" });
+    addSubListItem("emergencyContacts", { relationship: relationshipOptions[0] || t("contacts.form.father"), contactId: "" });
   };
   const removeEmergency = (idx: number) => removeSubListItem("emergencyContacts", idx);
   const updateEmergency = (idx: number, patch: Partial<EmergencyContact>) => updateSubListItem("emergencyContacts", idx, patch);
@@ -102,7 +102,7 @@ export function ContactEmergencyTab({
                           ? relationshipOptions
                           : (RELATIONSHIPS as unknown as string[])
                       }
-                      value={em.relationship || "Father"}
+                      value={em.relationship || t("contacts.form.father")}
                       onChange={(val) => updateEmergency(idx, { relationship: val })}
                       className="w-full"
                       id={`emergency-relationship-${idx}`}

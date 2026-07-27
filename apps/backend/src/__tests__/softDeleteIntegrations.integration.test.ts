@@ -48,24 +48,56 @@ vi.mock('../services/enrollmentService.js', () => ({
 
 vi.mock('../services/attendanceService.js', () => ({
   loadAttendanceRecords: vi.fn().mockResolvedValue([]),
+  loadAttendancePage: vi.fn().mockResolvedValue({ records: [], total: 0, page: 1, limit: 15, hasMore: false }),
   createAttendanceRecord: vi.fn(),
   updateAttendanceRecordById: vi.fn(),
   replaceAttendanceRecords: vi.fn(),
+  upsertAttendanceRecords: vi.fn(),
+  bulkSoftDeleteAttendance: vi.fn(),
+  bulkRestoreAttendance: vi.fn(),
   deleteAttendanceRecordById: (...args: unknown[]) => mockDeleteAttendanceRecordById(...args),
   restoreAttendanceRecordById: (...args: unknown[]) => mockRestoreAttendanceRecordById(...args),
 }));
 
 vi.mock('../services/financeService.js', () => ({
   loadInvoices: vi.fn().mockResolvedValue([]),
+  loadInvoicesPage: vi.fn().mockResolvedValue({ invoices: [], total: 0, page: 1, limit: 10, hasMore: false }),
   createInvoice: vi.fn(),
   updateInvoiceById: vi.fn(),
   deleteInvoiceById: (...args: unknown[]) => mockDeleteInvoiceById(...args),
   restoreInvoiceById: (...args: unknown[]) => mockRestoreInvoiceById(...args),
+  bulkSoftDeleteInvoices: vi.fn(),
+  bulkRestoreInvoices: vi.fn(),
   loadPayments: vi.fn().mockResolvedValue([]),
+  loadPaymentsPage: vi.fn().mockResolvedValue({ payments: [], total: 0, page: 1, limit: 10, hasMore: false }),
   createPayment: vi.fn(),
   updatePaymentById: vi.fn(),
   deletePaymentById: (...args: unknown[]) => mockDeletePaymentById(...args),
   restorePaymentById: (...args: unknown[]) => mockRestorePaymentById(...args),
+  bulkSoftDeletePayments: vi.fn(),
+  bulkRestorePayments: vi.fn(),
+}));
+
+const mockDeleteObligationCollectionById = vi.fn();
+const mockRestoreObligationCollectionById = vi.fn();
+
+vi.mock('../services/obligationService.js', () => ({
+  loadObligationTypes: vi.fn().mockResolvedValue([]),
+  upsertObligationTypes: vi.fn(),
+  loadMujtahids: vi.fn().mockResolvedValue([]),
+  upsertMujtahids: vi.fn(),
+  loadMujtahidReps: vi.fn().mockResolvedValue([]),
+  upsertMujtahidReps: vi.fn(),
+  loadWakalaTypes: vi.fn().mockResolvedValue([]),
+  upsertWakalaTypes: vi.fn(),
+  loadObligationDistributions: vi.fn().mockResolvedValue([]),
+  upsertObligationDistributions: vi.fn(),
+  loadObligationCollections: vi.fn().mockResolvedValue([]),
+  upsertObligationCollections: vi.fn(),
+  deleteObligationCollectionById: (...args: unknown[]) => mockDeleteObligationCollectionById(...args),
+  restoreObligationCollectionById: (...args: unknown[]) => mockRestoreObligationCollectionById(...args),
+  bulkSoftDeleteObligationCollections: vi.fn(),
+  bulkRestoreObligationCollections: vi.fn(),
 }));
 
 function adminToken(app: Awaited<ReturnType<typeof buildApp>>): string {
@@ -219,6 +251,38 @@ describe('soft deletion and restore integrations', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(mockRestorePaymentById).toHaveBeenCalledWith('p1');
+    await app.close();
+  });
+
+  it('DELETE /api/obligations/collections/:id soft-deletes collection', async () => {
+    mockDeleteObligationCollectionById.mockResolvedValue(true);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/obligations/collections/oc1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockDeleteObligationCollectionById).toHaveBeenCalledWith('oc1', 'u-admin');
+    await app.close();
+  });
+
+  it('POST /api/obligations/collections/:id/restore restores collection', async () => {
+    mockRestoreObligationCollectionById.mockResolvedValue(true);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/obligations/collections/oc1/restore',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockRestoreObligationCollectionById).toHaveBeenCalledWith('oc1');
     await app.close();
   });
 });

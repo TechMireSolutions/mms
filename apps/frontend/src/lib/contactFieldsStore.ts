@@ -28,7 +28,7 @@ import {
   refreshModuleTierTabLabels,
   refreshModuleTierTabKeys,
 } from "@mms/shared";
-import { getObject, saveObject } from "@/lib/db";
+import { getObject, saveObject, saveObjectAsync } from "@/lib/db";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -219,4 +219,10 @@ export function loadFieldConfig(): FieldConfig {
  */
 export function saveFieldConfig(config: FieldConfig): void {
   saveObject("contact_field_config", { ...config, version: CONFIG_VERSION });
+}
+
+/** Persists contact field config and waits for server synchronization. */
+export async function saveFieldConfigAsync(config: FieldConfig): Promise<void> {
+  const result = await saveObjectAsync("contact_field_config", { ...config, version: CONFIG_VERSION });
+  if (!result.ok) throw new Error("Failed to sync contact field configuration");
 }

@@ -26,10 +26,11 @@ import { isApiError } from "@/lib/apiClient";
 import { queryClientInstance } from "@/lib/queryClient";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { triggerFileDownload } from "@/lib/download";
+import { notify } from "@/lib/notify";
 
 interface GoogleContactsPanelProps {
   contacts: Contact[];
-  onImport: (contacts: Contact[]) => void;
+  onImport: (contacts: Contact[]) => void | Promise<void>;
   canWrite?: boolean;
 }
 
@@ -60,21 +61,25 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
 
   const isConfigured = !!(config.clientId && (config.clientSecret || serverConfig?.hasClientSecret));
   const isConnected = serverConfig?.isConnected ?? false;
-  const handleSaveCredentials = (): void => {
+  const handleSaveCredentials = async (): Promise<void> => {
+    if (!canWrite) return;
     if (!form.clientId.trim() || !form.clientSecret.trim()) {
       setError(t('contacts.sync.clientIdRequired'));
       return;
     }
     const updatedConfig: ContactGoogleSyncConfigClient = { ...config, clientId: form.clientId.trim(), clientSecret: form.clientSecret.trim() };
-    setConfig(updatedConfig);
-    void saveConfig.mutateAsync(updatedConfig).then(() => {
+    try {
+      await saveConfig.mutateAsync(updatedConfig);
+      setConfig(updatedConfig);
+      setShowSetup(false);
+      setError("");
       void logSyncAudit.mutateAsync({ action: 'credentials_saved' });
-    });
-    setShowSetup(false);
-    setError("");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : String(error));
+    }
   };
   const handleConnect = (): void => {
-    if (!config.clientId) return;
+    if (!canWrite || !config.clientId) return;
     const redirectUri = window.location.origin + "/contacts";
     const scope = encodeURIComponent("https://www.googleapis.com/auth/contacts.readonly");
     const state = encodeURIComponent(JSON.stringify({ source: "google_contacts" }));
@@ -88,7 +93,7 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
 
   const exchangeOAuthCode = useCallback(
     async (code: string): Promise<void> => {
-      if (!code.trim() || !isConfigured) return;
+      if (!canWrite || !code.trim() || !isConfigured) return;
       setExchanging(true);
       setError("");
       try {
@@ -108,7 +113,7 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
         setExchanging(false);
       }
     },
-    [exchangeOAuth, isConfigured, t],
+    [canWrite, exchangeOAuth, isConfigured, t],
   );
 
   const handleExchangeCode = async (): Promise<void> => {
@@ -128,21 +133,21 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
   }, [exchangeOAuthCode]);
 
   React.useEffect(() => {
-    if (configLoading || !isConfigured) return;
+    if (!canWrite || configLoading || !isConfigured) return;
     const pending = takeGoogleContactsOAuthCode();
     if (!pending) return;
     setAuthCode(pending);
     setShowAuthCode(true);
     void exchangeOAuthCode(pending);
-  }, [configLoading, isConfigured, exchangeOAuthCode]);
+  }, [canWrite, configLoading, isConfigured, exchangeOAuthCode]);
   const handleSync = async (): Promise<void> => {
-    if (!isConnected) return;
+    if (!canWrite || !isConnected) return;
     setSyncing(true);
     setSyncResult(null);
     setError("");
     try {
       const result = await runGoogleSync.mutateAsync();
-      onImport(result.contacts);
+      await onImport(result.contacts);
       setSyncResult({ total: result.total, imported: result.imported, skipped: result.skipped });
     } catch (error) {
       if (isApiError(error) && error.type === 'session_expired') {
@@ -157,17 +162,21 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
     }
   };
 
-  const handleDisconnect = (): void => {
+  const handleDisconnect = async (): Promise<void> => {
+    if (!canWrite) return;
     const disconnectedConfig: ContactGoogleSyncConfigClient = { clientId: config.clientId, clientSecret: config.clientSecret };
-    setConfig(disconnectedConfig);
-    void saveConfig.mutateAsync({ clientId: config.clientId, clearTokens: true }).then(() => {
+    try {
+      await saveConfig.mutateAsync({ clientId: config.clientId, clearTokens: true });
+      setConfig(disconnectedConfig);
       void logSyncAudit.mutateAsync({ action: 'disconnected' });
-      void queryClientInstance.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });
-    });
-    setSyncResult(null);
-    setError("");
-    setShowAuthCode(false);
-    setAuthCode("");
+      await queryClientInstance.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });
+      setSyncResult(null);
+      setError("");
+      setShowAuthCode(false);
+      setAuthCode("");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : String(error));
+    }
   };
 
   return (
@@ -185,7 +194,7 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
             </span>
           )}
         </div>
-        <Button
+        {canWrite && <Button
           type="button"
           variant="ghost"
           onClick={() => setShowSetup((v) => !v)}
@@ -194,7 +203,7 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
           <Key className="w-3 h-3" />
           <span>{isConfigured ? t('contacts.sync.editCredentials') : t('contacts.sync.setup')}</span>
           {showSetup ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-        </Button>
+        </Button>}
       </div>
 
       <div className="p-4 space-y-4 text-left">
@@ -210,7 +219,7 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
         )}
 
         
-        {showSetup && (
+        {canWrite && showSetup && (
           <div className="space-y-3 p-3 rounded-xl bg-muted/30 border border-border">
             <h4 className="text-xs font-bold text-foreground uppercase tracking-wide">{t('contacts.sync.oauthHeader')}</h4>
             <div>
@@ -261,7 +270,7 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
         )}
 
         
-        {isConfigured && !isConnected && !showSetup && (
+        {isConfigured && !isConnected && !showSetup && canWrite && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">{t('contacts.sync.credentialsSaved')}</p>
             <Button
@@ -315,7 +324,7 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
                 <p className="text-sm font-semibold text-success">{t('contacts.sync.googleConnectedTitle')}</p>
                 <p className="text-xs text-success/90">{t('contacts.sync.googleConnectedDesc')}</p>
               </div>
-              <Button
+              {canWrite && <Button
                 type="button"
                 variant="outline"
                 onClick={handleDisconnect}
@@ -323,7 +332,7 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
               >
                 <Unlink className="w-3 h-3" />
                 <span>{t('contacts.sync.disconnect')}</span>
-              </Button>
+              </Button>}
             </div>
 
             {error && (
@@ -349,10 +358,10 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
               </div>
             )}
 
-            <Button
+            {canWrite && <Button
               type="button"
               onClick={handleSync}
-              disabled={syncing || !canWrite}
+              disabled={syncing}
               className="flex items-center gap-2 px-5 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors shadow-none"
             >
               {syncing ? (
@@ -366,7 +375,7 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
                   <span>{t('contacts.sync.syncGoogle')}</span>
                 </>
               )}
-            </Button>
+            </Button>}
           </div>
         )}
       </div>
@@ -376,7 +385,7 @@ function GoogleContactsPanel({ onImport, canWrite = true }: Omit<GoogleContactsP
 
 interface AppleContactsPanelProps {
   contacts: Contact[];
-  onImport: (contacts: Contact[]) => void;
+  onImport: (contacts: Contact[]) => void | Promise<void>;
   canWrite?: boolean;
 }
 
@@ -440,14 +449,20 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
     }
   };
 
-  const handleImport = (): void => {
+  const handleImport = async (): Promise<void> => {
+    if (!canWrite) return;
     setImporting(true);
-    const existingNames = new Set(contacts.map((contact) => getDisplayName(contact).toLowerCase().trim()));
-    const fresh = previewList.filter((contact) => !existingNames.has(getDisplayName(contact).toLowerCase().trim()));
-    onImport(fresh);
-    setResult({ imported: fresh.length, skipped: previewList.length - fresh.length });
-    setPreviewList([]);
-    setImporting(false);
+    try {
+      const existingNames = new Set(contacts.map((contact) => getDisplayName(contact).toLowerCase().trim()));
+      const fresh = previewList.filter((contact) => !existingNames.has(getDisplayName(contact).toLowerCase().trim()));
+      await onImport(fresh);
+      setResult({ imported: fresh.length, skipped: previewList.length - fresh.length });
+      setPreviewList([]);
+    } catch {
+      notify.error(t("contacts.saveFailed"));
+    } finally {
+      setImporting(false);
+    }
   };
 
   const handleExport = (): void => {
@@ -478,7 +493,7 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
         </div>
 
         
-        <input
+        {canWrite && <input
           id="contacts-vcf-import-file-input"
           name="contactsVcfFile"
           ref={fileRef}
@@ -487,8 +502,8 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
           className="hidden"
           onChange={handleFile}
           aria-label={t('contacts.sync.uploadVcf')}
-        />
-        {previewList.length === 0 && !result && (
+        />}
+        {canWrite && previewList.length === 0 && !result && (
           <Button
             type="button"
             variant="outline"
@@ -507,7 +522,7 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
           </Button>
         )}
 
-        {previewList.length > 0 && (
+        {canWrite && previewList.length > 0 && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-foreground">
@@ -541,7 +556,7 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
               <Button
                 type="button"
                 onClick={handleImport}
-                disabled={importing || !canWrite}
+                disabled={importing}
                 className="flex items-center gap-2 px-5 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors shadow-none"
               >
                 {importing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
@@ -600,7 +615,7 @@ function AppleContactsPanel({ contacts, onImport, canWrite = true }: AppleContac
 
 interface ContactSyncPanelProps {
   contacts?: Contact[];
-  onImport: (contacts: Contact[]) => void;
+  onImport: (contacts: Contact[]) => void | Promise<void>;
   canWrite?: boolean;
 }
 

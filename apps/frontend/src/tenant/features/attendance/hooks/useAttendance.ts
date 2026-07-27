@@ -1,10 +1,10 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { AttendanceCommandMetricsSnapshot } from '@mms/shared';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { AttendanceCommandMetricsSnapshot, AttendanceListPageResult } from '@mms/shared';
 import { ATTENDANCE_MODULE_CONTRACT } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiFetch, apiJson } from '@/lib/apiClient';
-import { saveCollection } from '@/lib/db';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import { ATTENDANCE_RECORDS } from '@/lib/data/attendanceData';
 
@@ -13,10 +13,48 @@ export const ATTENDANCE_METRICS_QUERY_KEY = ['attendance', 'metrics'] as const;
 
 const ATTENDANCE_API = ATTENDANCE_MODULE_CONTRACT.restBasePath;
 
+export interface AttendancePaginatedParams {
+  page: number;
+  limit?: number;
+  search?: string;
+  classId?: string;
+  date?: string;
+  status?: string;
+  sortField?: string;
+  sortDir?: 'asc' | 'desc';
+  includeDeleted?: boolean;
+  enabled?: boolean;
+}
+
+function buildAttendancePageUrl(params: AttendancePaginatedParams): string {
+  const queryParams = new URLSearchParams();
+  queryParams.set('page', String(params.page));
+  queryParams.set('limit', String(params.limit ?? ATTENDANCE_MODULE_CONTRACT.defaultPageSize));
+  if (params.search?.trim()) queryParams.set('search', params.search.trim());
+  if (params.classId?.trim()) queryParams.set('classId', params.classId.trim());
+  if (params.date?.trim()) queryParams.set('date', params.date.trim());
+  if (params.status?.trim()) queryParams.set('status', params.status.trim());
+  if (params.sortField?.trim()) queryParams.set('sortField', params.sortField.trim());
+  if (params.sortDir) queryParams.set('sortDir', params.sortDir);
+  if (params.includeDeleted) queryParams.set('includeDeleted', 'true');
+  return `${ATTENDANCE_API}?${queryParams.toString()}`;
+}
+
+export function useAttendancePaginated(params: AttendancePaginatedParams) {
+  const { isAuthenticated } = useAuth();
+  return useQuery({
+    queryKey: [...ATTENDANCE_QUERY_KEY, 'page', params] as const,
+    queryFn: () => apiJson<AttendanceListPageResult>(buildAttendancePageUrl(params)),
+    enabled: isAuthenticated && (params.enabled ?? true),
+    staleTime: 15_000,
+    placeholderData: (previousData) => previousData,
+  });
+}
+
 export function useAttendanceRecords(options?: { enabled?: boolean }) {
   return useCollectionSync<AttendanceRecord>({
     queryKey: ATTENDANCE_QUERY_KEY,
-    apiPath: ATTENDANCE_API,
+    apiPath: `${ATTENDANCE_API}?page=1&limit=${ATTENDANCE_MODULE_CONTRACT.maxPageSize}`,
     responseKey: 'records',
     collectionName: 'attendance_records',
     defaultData: ATTENDANCE_RECORDS,
@@ -33,16 +71,14 @@ export function useAttendanceMutations() {
     void queryClient.invalidateQueries({ queryKey: ATTENDANCE_METRICS_QUERY_KEY });
   };
 
-  const replaceAll = useMutation({
+  /** Bulk upsert. The legacy name is retained for callers while the endpoint remains PUT /bulk. */
+  const bulkUpsert = useMutation({
     mutationFn: async (records: AttendanceRecord[]) =>
       apiJson<{ records: AttendanceRecord[] }>(`${ATTENDANCE_API}/bulk`, {
         method: 'PUT',
         body: JSON.stringify({ records }),
       }),
-    onSuccess: (response) => {
-      saveCollection('attendance_records', response.records);
-      invalidate();
-    },
+    onSuccess: invalidate,
   });
 
   const createRecord = useMutation({
@@ -68,7 +104,42 @@ export function useAttendanceMutations() {
     onSuccess: invalidate,
   });
 
-  return { replaceAll, createRecord, updateRecord, deleteRecord };
+  const restoreRecord = useMutation({
+    mutationFn: async (id: string) =>
+      apiJson<{ success: boolean }>(`${ATTENDANCE_API}/${encodeURIComponent(id)}/restore`, {
+        method: 'POST',
+      }),
+    onSuccess: invalidate,
+  });
+
+  const bulkDeleteRecords = useMutation({
+    mutationFn: async (ids: string[]) =>
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${ATTENDANCE_API}/bulk-delete`, {
+        method: 'POST',
+        body: JSON.stringify({ ids }),
+      }),
+    onSuccess: invalidate,
+  });
+
+  const bulkRestoreRecords = useMutation({
+    mutationFn: async (ids: string[]) =>
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${ATTENDANCE_API}/bulk-restore`, {
+        method: 'POST',
+        body: JSON.stringify({ ids }),
+      }),
+    onSuccess: invalidate,
+  });
+
+  return {
+    bulkUpsert,
+    replaceAll: bulkUpsert,
+    createRecord,
+    updateRecord,
+    deleteRecord,
+    restoreRecord,
+    bulkDeleteRecords,
+    bulkRestoreRecords,
+  };
 }
 
 /** Query-first attendance; falls back to localStorage cache (hydrated). */

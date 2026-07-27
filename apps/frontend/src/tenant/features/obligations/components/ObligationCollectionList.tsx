@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback, lazy, Suspense } from "react";
-import { Plus, Eye, Search, Receipt, Printer, MessageSquare, MessageCircle } from "lucide-react";
+import { Plus, Eye, Search, Receipt, Printer, MessageSquare, MessageCircle, Trash2, RotateCcw } from "lucide-react";
 import {
   ObligationCollection, ObligationType, MujtahidRep, Mujtahid
 } from '@/lib/data/obligationsData';
@@ -23,6 +23,13 @@ export interface ObligationCollectionListProps {
   onAddNew: () => void;
   onView: (collection: ObligationCollection) => void;
   onFilteredCountChange?: (count: number) => void;
+  canWrite?: boolean;
+  canDelete?: boolean;
+  showDeleted?: boolean;
+  onDelete?: (id: string) => void | Promise<void>;
+  onRestore?: (id: string) => void | Promise<void>;
+  onBulkDelete?: (ids: string[]) => void | Promise<void>;
+  onBulkRestore?: (ids: string[]) => void | Promise<void>;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -38,6 +45,13 @@ export function ObligationCollectionList({
   onAddNew,
   onView,
   onFilteredCountChange,
+  canWrite = true,
+  canDelete = true,
+  showDeleted = false,
+  onDelete,
+  onRestore,
+  onBulkDelete,
+  onBulkRestore,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
@@ -49,10 +63,15 @@ export function ObligationCollectionList({
   const currencies = DEFAULT_CURRENCIES;
   const [typeFilter, setTypeFilter] = useState("all");
   const [printCollection, setPrintCollection] = useState<ObligationCollection | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const debouncedSearch = useDebounce(search, 300);
   const senderIds = useMemo(() => collections.map((collection) => collection.sender_id), [collections]);
   const contacts = useMergedObligationContacts(senderIds);
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [showDeleted]);
 
   const getContact = useCallback((contactId?: string | number | null) => contacts.find((contact) => String(contact.id) === String(contactId)), [contacts]);
   const getRep = (repId: string) => reps.find((rep) => rep.id === repId);
@@ -90,6 +109,20 @@ export function ObligationCollectionList({
     ...obligationTypes.map((item) => ({ value: item.id, label: item.name }))
   ], [obligationTypes, t]);
 
+  const allFilteredSelected = filtered.length > 0 && filtered.every((collection) => selectedIds.includes(collection.id));
+
+  const handleBulkAction = async () => {
+    if (selectedIds.length === 0) return;
+    if (showDeleted) {
+      if (!confirm(t("obligations.trash.bulkRestoreConfirm", { count: selectedIds.length }))) return;
+      await onBulkRestore?.(selectedIds);
+    } else {
+      if (!confirm(t("obligations.trash.bulkDeleteConfirm", { count: selectedIds.length }))) return;
+      await onBulkDelete?.(selectedIds);
+    }
+    setSelectedIds([]);
+  };
+
   return (
     <div className="space-y-4">
       <section aria-label={t("obligations.filter.label")} className="flex flex-wrap gap-2 items-center">
@@ -120,6 +153,17 @@ export function ObligationCollectionList({
             labels={columnCustomizer.labels}
           />
         )}
+        {canDelete && selectedIds.length > 0 && (
+          <Button
+            type="button"
+            variant={showDeleted ? "outline" : "destructive"}
+            onClick={() => { void handleBulkAction(); }}
+            className="gap-1.5"
+          >
+            {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
+            {showDeleted ? t("obligations.trash.restore") : t("common.delete")} ({selectedIds.length})
+          </Button>
+        )}
       </section>
 
       <section aria-label={t("obligations.collectionsList")}>
@@ -136,7 +180,7 @@ export function ObligationCollectionList({
                   : t("obligations.empty.collectionsNone")}
               </p>
             </div>
-            {!search && typeFilter === "all" && (
+            {!search && typeFilter === "all" && canWrite && !showDeleted && (
               <Button type="button" onClick={onAddNew}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
                 <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.newCollection")}
@@ -150,6 +194,19 @@ export function ObligationCollectionList({
                 <caption className="sr-only">{t("obligations.collectionsList")}</caption>
                 <thead className="bg-muted/60 border-b border-border">
                   <tr>
+                    {canDelete && (
+                      <th scope="col" className="px-3 py-2.5 w-10">
+                        <input
+                          type="checkbox"
+                          checked={allFilteredSelected}
+                          onChange={() => {
+                            if (allFilteredSelected) setSelectedIds([]);
+                            else setSelectedIds(filtered.map((collection) => collection.id));
+                          }}
+                          aria-label={t("obligations.trash.selectAll")}
+                        />
+                      </th>
+                    )}
                     {showReceiptNo && (
                       <ResizableTableHead columnKey="receiptNo" width={getColumnWidth?.("receiptNo")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.receiptNo")}
@@ -198,6 +255,22 @@ export function ObligationCollectionList({
                     const mujtahid = getMujtahid(collection.mujtahid_representative_id);
                     return (
                       <tr key={collection.id} className="hover:bg-muted/20 transition-colors">
+                        {canDelete && (
+                          <td className="px-3 py-2.5">
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.includes(collection.id)}
+                              onChange={() => {
+                                setSelectedIds((prev) =>
+                                  prev.includes(collection.id)
+                                    ? prev.filter((id) => id !== collection.id)
+                                    : [...prev, collection.id],
+                                );
+                              }}
+                              aria-label={t("obligations.trash.selectCollection", { receipt: collection.receipt_no })}
+                            />
+                          </td>
+                        )}
                         {showReceiptNo && (
                           <td className="px-3 py-2.5">
                             <span className="font-mono text-xs font-bold text-primary">{collection.receipt_no}</span>
@@ -232,7 +305,7 @@ export function ObligationCollectionList({
                         )}
                         <td className="px-3 py-2.5 text-right">
                           <div className="flex items-center justify-end gap-1">
-                            {onMessage && (
+                            {onMessage && !showDeleted && (
                               <>
                                 <Button type="button" onClick={() => onMessage('whatsapp', [collection])}
                                   variant="ghost"
@@ -255,13 +328,34 @@ export function ObligationCollectionList({
                               title={t("obligations.actions.viewShort")}>
                               <Eye className="w-3.5 h-3.5" aria-hidden="true" />
                             </Button>
-                            <Button type="button" onClick={() => setPrintCollection(collection)}
-                              variant="ghost"
-                              className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary shadow-none transition-colors"
-                              aria-label={t("obligations.actions.print", { receipt: collection.receipt_no })}
-                              title={t("obligations.actions.printShort")}>
-                              <Printer className="w-3.5 h-3.5" aria-hidden="true" />
-                            </Button>
+                            {!showDeleted && (
+                              <Button type="button" onClick={() => setPrintCollection(collection)}
+                                variant="ghost"
+                                className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary shadow-none transition-colors"
+                                aria-label={t("obligations.actions.print", { receipt: collection.receipt_no })}
+                                title={t("obligations.actions.printShort")}>
+                                <Printer className="w-3.5 h-3.5" aria-hidden="true" />
+                              </Button>
+                            )}
+                            {canDelete && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                className={`h-auto p-1.5 rounded-lg hover:bg-muted shadow-none transition-colors ${showDeleted ? "text-muted-foreground hover:text-primary" : "text-muted-foreground hover:text-destructive"}`}
+                                aria-label={showDeleted ? t("obligations.trash.restore") : t("common.delete")}
+                                onClick={() => {
+                                  if (showDeleted) {
+                                    if (!confirm(t("obligations.trash.bulkRestoreConfirm", { count: 1 }))) return;
+                                    void onRestore?.(collection.id);
+                                  } else {
+                                    if (!confirm(t("obligations.trash.deleteConfirm"))) return;
+                                    void onDelete?.(collection.id);
+                                  }
+                                }}
+                              >
+                                {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>

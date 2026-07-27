@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { toTitleCase, formatDate } from "@mms/shared";
+import { formatDate, type AppTranslationKey } from "@mms/shared";
+import { useTranslation } from "@/hooks/useTranslation";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 
 
 const TYPE_COLORS: Record<string, string> = {
@@ -26,10 +28,12 @@ interface EventModalProps {
   open: boolean;
   event: SessionEvent | null;
   onClose: () => void;
-  onSave: (event: SessionEvent) => void;
+  onSave: (event: SessionEvent) => void | Promise<void>;
+  saving: boolean;
 }
 
-function EventModal({ open, event, onClose, onSave }: EventModalProps) {
+function EventModal({ open, event, onClose, onSave, saving }: EventModalProps) {
+  const { t } = useTranslation();
   const [eventDraft, setEventDraft] = useState<Partial<SessionEvent>>(event ? { ...event } : { ...EMPTY });
   const updateEventDraft = <K extends keyof SessionEvent>(field: K, value: SessionEvent[K]) => setEventDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
 
@@ -43,21 +47,22 @@ function EventModal({ open, event, onClose, onSave }: EventModalProps) {
     <FormModal
       open={open}
       onClose={onClose}
-      title={event ? "Edit Event" : "Add Event"}
+      title={event ? t("sessions.events.edit") : t("sessions.events.add")}
       icon={Calendar}
-      cancelLabel="Cancel"
-      saveLabel="Save"
+      cancelLabel={t("common.cancel")}
+      saveLabel={t("common.save")}
       onSave={() => onSave({ ...eventDraft, id: event?.id || `ev${Date.now()}` } as SessionEvent)}
       saveDisabled={!eventDraft.title || !eventDraft.date}
+      saving={saving}
     >
       <div className="space-y-4">
         <div>
-          <label className={FORM_LABEL} htmlFor="event-title">Title *</label>
-          <Input id="event-title" value={eventDraft.title || ""} onChange={(inputEvent) => updateEventDraft("title", inputEvent.target.value)} placeholder="Event title" required />
+          <label className={FORM_LABEL} htmlFor="event-title">{t("sessions.events.form.title")} *</label>
+          <Input id="event-title" value={eventDraft.title || ""} onChange={(inputEvent) => updateEventDraft("title", inputEvent.target.value)} placeholder={t("sessions.events.form.titlePlaceholder")} required />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={FORM_LABEL} htmlFor="event-date">Date *</label>
+            <label className={FORM_LABEL} htmlFor="event-date">{t("sessions.events.form.date")} *</label>
             <DatePicker
               id="event-date"
               value={eventDraft.date || ""}
@@ -66,30 +71,30 @@ function EventModal({ open, event, onClose, onSave }: EventModalProps) {
             />
           </div>
           <div>
-            <label className={FORM_LABEL} htmlFor="event-time">Time</label>
+            <label className={FORM_LABEL} htmlFor="event-time">{t("sessions.events.form.time")}</label>
             <Input id="event-time" type="time" value={eventDraft.time || ""} onChange={(inputEvent) => updateEventDraft("time", inputEvent.target.value)} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={FORM_LABEL} htmlFor="event-type">Type</label>
+            <label className={FORM_LABEL} htmlFor="event-type">{t("sessions.events.form.type")}</label>
             <FormSelect
               id="event-type"
               value={eventDraft.type || "meeting"}
               onChange={(value) => updateEventDraft("type", value as SessionEvent["type"])}
-              options={EVENT_TYPES.map((eventType) => ({ value: eventType, label: toTitleCase(eventType) }))}
+              options={EVENT_TYPES.map((eventType) => ({ value: eventType, label: t(`sessions.events.type.${eventType}` as AppTranslationKey) }))}
 
               className="w-full"
             />
           </div>
           <div>
-            <label className={FORM_LABEL} htmlFor="event-location">Location</label>
-            <Input id="event-location" value={eventDraft.location || ""} onChange={(inputEvent) => updateEventDraft("location", inputEvent.target.value)} placeholder="e.g. Main Hall" />
+            <label className={FORM_LABEL} htmlFor="event-location">{t("sessions.events.form.location")}</label>
+            <Input id="event-location" value={eventDraft.location || ""} onChange={(inputEvent) => updateEventDraft("location", inputEvent.target.value)} placeholder={t("sessions.events.form.locationPlaceholder")} />
           </div>
         </div>
         <div>
-          <label className={FORM_LABEL} htmlFor="event-description">Description</label>
-          <Textarea id="event-description" className="min-h-[64px] resize-none" value={eventDraft.description || ""} onChange={(inputEvent) => updateEventDraft("description", inputEvent.target.value)} placeholder="Brief description…" />
+          <label className={FORM_LABEL} htmlFor="event-description">{t("sessions.events.form.description")}</label>
+          <Textarea id="event-description" className="min-h-[64px] resize-none" value={eventDraft.description || ""} onChange={(inputEvent) => updateEventDraft("description", inputEvent.target.value)} placeholder={t("sessions.events.form.descriptionPlaceholder")} />
         </div>
       </div>
     </FormModal>
@@ -98,7 +103,8 @@ function EventModal({ open, event, onClose, onSave }: EventModalProps) {
 
 interface EventsTabProps {
   session: Session;
-  onUpdate: (session: Session) => void;
+  onUpdate: (session: Session) => void | Promise<void>;
+  canWrite: boolean;
 }
 
 /**
@@ -109,35 +115,53 @@ interface EventsTabProps {
  * @param {EventsTabProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export function EventsTab({ session, onUpdate }: EventsTabProps) {
+export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps) {
+  const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
   const [editEvent, setEditEvent] = useState<SessionEvent | null>(null);
-  const events = (session.events || []).sort((a, b) => a.date.localeCompare(b.date));
+  const [deleteTarget, setDeleteTarget] = useState<SessionEvent | null>(null);
+  const [saving, setSaving] = useState(false);
+  const deletePendingRef = React.useRef(false);
+  const events = [...(session.events ?? [])].sort((a, b) => a.date.localeCompare(b.date));
 
-  const handleSave = (eventToSave: SessionEvent) => {
+  const handleSave = async (eventToSave: SessionEvent) => {
     const existing = session.events?.find((sessionEvent) => sessionEvent.id === eventToSave.id);
-    onUpdate({ ...session, events: existing ? session.events.map((sessionEvent) => sessionEvent.id === eventToSave.id ? eventToSave : sessionEvent) : [...(session.events || []), eventToSave] });
-    setShowModal(false); setEditEvent(null);
+    setSaving(true);
+    try {
+      await onUpdate({ ...session, events: existing ? session.events.map((sessionEvent) => sessionEvent.id === eventToSave.id ? eventToSave : sessionEvent) : [...(session.events || []), eventToSave] });
+      setShowModal(false); setEditEvent(null);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = (id: string) => onUpdate({ ...session, events: session.events.filter((sessionEvent) => sessionEvent.id !== id) });
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    deletePendingRef.current = true;
+    try {
+      await onUpdate({ ...session, events: session.events.filter((sessionEvent) => sessionEvent.id !== deleteTarget.id) });
+      setDeleteTarget(null);
+    } finally {
+      deletePendingRef.current = false;
+    }
+  };
 
   return (
-    <section aria-label="Session Events" className="space-y-4">
+    <section aria-label={t("sessions.events.ariaLabel")} className="space-y-4">
       <header className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-foreground m-0">{events.length} event{events.length !== 1 ? "s" : ""}</p>
-        <Button
+        <p className="text-sm font-semibold text-foreground m-0">{t("sessions.events.count", { count: events.length })}</p>
+        {canWrite && <Button
           onClick={() => { setEditEvent(null); setShowModal(true); }}
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors h-auto"
         >
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Event
-        </Button>
+          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.events.add")}
+        </Button>}
       </header>
 
       {events.length === 0 ? (
         <div className="py-12 text-center rounded-xl border-2 border-dashed border-border">
           <Calendar className="w-8 h-8 text-muted-foreground mx-auto mb-2" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground m-0">No events yet</p>
+          <p className="text-sm font-medium text-foreground m-0">{t("sessions.events.emptyTitle")}</p>
         </div>
       ) : (
         <div className="relative">
@@ -159,17 +183,17 @@ export function EventsTab({ session, onUpdate }: EventsTabProps) {
                     <div className="flex items-center gap-2 flex-wrap">
                       <h4 className="text-[13px] font-bold text-foreground m-0">{sessionEvent.title}</h4>
                       <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${TYPE_COLORS[sessionEvent.type] || TYPE_COLORS.other}`}>
-                        {sessionEvent.type}
+                        {t(`sessions.events.type.${sessionEvent.type}` as AppTranslationKey)}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button aria-label={`Edit ${sessionEvent.title}`} onClick={() => { setEditEvent(sessionEvent); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground w-8 h-8" variant="ghost" size="icon">
+                    {canWrite && <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button aria-label={t("sessions.events.editNamed", { name: sessionEvent.title })} onClick={() => { setEditEvent(sessionEvent); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground w-8 h-8" variant="ghost" size="icon">
                         <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
-                      <Button aria-label={`Delete ${sessionEvent.title}`} onClick={() => handleDelete(sessionEvent.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive w-8 h-8" variant="ghost" size="icon">
+                      <Button aria-label={t("sessions.events.deleteNamed", { name: sessionEvent.title })} onClick={() => setDeleteTarget(sessionEvent)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive w-8 h-8" variant="ghost" size="icon">
                         <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
-                    </div>
+                    </div>}
                   </header>
                   <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground mb-2">
                     <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" aria-hidden="true" />{formatDate(sessionEvent.date, true)}</span>
@@ -187,8 +211,18 @@ export function EventsTab({ session, onUpdate }: EventsTabProps) {
       <EventModal
         open={showModal}
         event={editEvent}
-        onClose={() => { setShowModal(false); setEditEvent(null); }}
+        onClose={() => { if (!saving) { setShowModal(false); setEditEvent(null); } }}
         onSave={handleSave}
+        saving={saving}
+      />
+      <ConfirmAlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open && !deletePendingRef.current) setDeleteTarget(null); }}
+        title={t("sessions.events.confirmDeleteTitle")}
+        description={t("sessions.events.confirmDeleteDescription", { name: deleteTarget?.title ?? "" })}
+        confirmLabel={t("common.delete")}
+        destructive
+        onConfirm={() => { void handleDelete(); }}
       />
     </section>
   );

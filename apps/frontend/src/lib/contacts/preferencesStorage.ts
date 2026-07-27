@@ -4,7 +4,7 @@ import {
   type ContactPreferences,
   type FieldConfig,
 } from "@mms/shared";
-import { readObjectLocal, saveObject } from "@/lib/db";
+import { readObjectLocal, saveObject, saveObjectAsync } from "@/lib/db";
 
 function syncOptionsInConfig(config: FieldConfig, tabId: string, fieldKey: string, options: string[]): FieldConfig {
   const nextConfig = { ...config };
@@ -51,10 +51,18 @@ function savePreferences(preferences: ContactPreferences): void {
   saveObject(PREFERENCES_OBJECT_KEY, preferences);
 }
 
+/** Persists contact preferences and waits for server synchronization. */
+async function savePreferencesAsync(preferences: ContactPreferences): Promise<void> {
+  localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
+  const result = await saveObjectAsync(PREFERENCES_OBJECT_KEY, preferences);
+  if (!result.ok) throw new Error("Failed to sync contact preferences");
+}
+
 export {
   syncOptionsInConfig,
   loadPreferences,
   savePreferences,
+  savePreferencesAsync,
   DEFAULT_CONTACT_PREFERENCES as DEFAULT_PREFERENCES,
   PREFERENCES_KEY,
   CONFIG_KEY,

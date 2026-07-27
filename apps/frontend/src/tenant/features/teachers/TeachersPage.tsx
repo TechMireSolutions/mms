@@ -17,7 +17,7 @@ import { FilterChips } from '@/components/ui/FilterChips';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { Button } from '@/components/ui/button';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { TeacherList } from "@/tenant/features/teachers/components/TeacherList";
+import { TeacherList, type TeacherSortField } from "@/tenant/features/teachers/components/TeacherList";
 import { TeacherForm } from "@/tenant/features/teachers/components/TeacherForm";
 import { TeachersSettings as TeachersSettingsPanel } from "@/tenant/features/teachers/components/TeachersSettings";
 import type { Teacher } from '@/lib/data/teachersData';
@@ -50,6 +50,7 @@ export default function Teachers(): React.JSX.Element {
   const { t } = useTranslation();
   const {
     canWrite,
+    canDelete,
     canReports: canViewReports,
     canViewSetup,
   } = useModulePermissions(TEACHERS_MODULE_CONTRACT);
@@ -67,10 +68,13 @@ export default function Teachers(): React.JSX.Element {
     bulkDeleteTeachers,
     restoreTeacher,
     bulkRestoreTeachers,
+    bulkUpdateTeacherStatus,
   } = useTeacherMutations();
   const [listPage, setListPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
+  const [sortField, setSortField] = useState<TeacherSortField>('name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
   const { settings, statuses, specializations } = useTeacherConfig();
 
@@ -91,6 +95,24 @@ export default function Teachers(): React.JSX.Element {
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterSpecialization, setFilterSpecialization] = useState('');
   const [editTeacher, setEditTeacher] = useState<Teacher | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'n') {
+        if (canWrite && !showDeleted) {
+          event.preventDefault();
+          setEditTeacher(null);
+          setShowForm(true);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canWrite, showDeleted]);
 
   const { messagingTarget, openComposer, closeComposer, canWriteMessaging } = useMessageComposerState();
 
@@ -124,19 +146,21 @@ export default function Teachers(): React.JSX.Element {
     search,
     status: filterStatus.length > 0 ? filterStatus.join(',') : undefined,
     specialization: filterSpecialization || undefined,
+    sortField,
+    sortDir,
     includeDeleted: showDeleted,
     enabled: useServerWork,
   });
 
   useEffect(() => {
     setListPage(1);
-  }, [search, filterStatus, filterSpecialization, showDeleted]);
+  }, [search, filterStatus, filterSpecialization, showDeleted, sortField, sortDir]);
 
-  const workTeachers = useMemo(() => {
-    const rows = (workPageData?.teachers ?? []) as unknown as Teacher[];
-    return showDeleted ? rows.filter((row) => Boolean(row.deletedAt)) : rows;
-  }, [workPageData, showDeleted]);
-  const shownCount = showDeleted ? workTeachers.length : (workPageData?.total ?? 0);
+  const workTeachers = useMemo(
+    () => (workPageData?.teachers ?? []) as unknown as Teacher[],
+    [workPageData],
+  );
+  const shownCount = workPageData?.total ?? workTeachers.length;
 
   const filteredTeachers = workTeachers;
 
@@ -162,50 +186,88 @@ export default function Teachers(): React.JSX.Element {
       : []),
   ];
 
-  const handleSaveTeacher = (teacherToSave: Teacher) => {
+  const handleSaveTeacher = async (teacherToSave: Teacher) => {
     if (editTeacher) {
-      updateTeacher.mutate(
-        { id: String(teacherToSave.id), teacher: teacherToSave as unknown as TeacherRecord },
-        {
-          onSuccess: () => {
-            notify.success(t('teachers.toast.updated'));
-            setShowForm(false);
-            setEditTeacher(null);
-          },
-        },
-      );
-    } else {
-      createTeacher.mutate(teacherToSave as unknown as TeacherRecord, {
-        onSuccess: () => {
-          notify.success(t('teachers.toast.created'));
-          setShowForm(false);
-          setEditTeacher(null);
-        },
+      await updateTeacher.mutateAsync({
+        id: String(teacherToSave.id),
+        teacher: teacherToSave as unknown as TeacherRecord,
       });
+      notify.success(t('teachers.toast.updated'));
+    } else {
+      await createTeacher.mutateAsync(teacherToSave as unknown as TeacherRecord);
+      notify.success(t('teachers.toast.created'));
     }
   };
 
   const handleDelete = (id: string) => {
     deleteTeacher.mutate(id, {
       onSuccess: () => notify.info(t('teachers.toast.deleted')),
+      onError: (err) => notify.error(t('settings.serverSaveFailed'), {
+        description: err instanceof Error ? err.message : String(err),
+      }),
     });
   };
 
   const handleRestore = (id: string) => {
     restoreTeacher.mutate(id, {
       onSuccess: () => notify.success(t('teachers.restoreSuccess')),
+      onError: (err) => notify.error(t('settings.serverSaveFailed'), {
+        description: err instanceof Error ? err.message : String(err),
+      }),
     });
   };
 
   const handleBulkDelete = (ids: string[]) => {
     bulkDeleteTeachers.mutate(ids, {
-      onSuccess: () => notify.info(t('teachers.toast.deleted')),
+      onSuccess: (result) => {
+        if (result.failed > 0) {
+          notify.error(t('teachers.toast.bulkPartial', {
+            succeeded: result.succeeded,
+            failed: result.failed,
+          }));
+        } else {
+          notify.info(t('teachers.toast.deleted'));
+        }
+      },
+      onError: (err) => notify.error(t('settings.serverSaveFailed'), {
+        description: err instanceof Error ? err.message : String(err),
+      }),
     });
   };
 
   const handleBulkRestore = (ids: string[]) => {
     bulkRestoreTeachers.mutate(ids, {
-      onSuccess: () => notify.success(t('teachers.restoreSuccess')),
+      onSuccess: (result) => {
+        if (result.failed > 0) {
+          notify.error(t('teachers.toast.bulkPartial', {
+            succeeded: result.succeeded,
+            failed: result.failed,
+          }));
+        } else {
+          notify.success(t('teachers.restoreSuccess'));
+        }
+      },
+      onError: (err) => notify.error(t('settings.serverSaveFailed'), {
+        description: err instanceof Error ? err.message : String(err),
+      }),
+    });
+  };
+
+  const handleBulkStatusChange = (ids: string[], status: string) => {
+    bulkUpdateTeacherStatus.mutate({ ids, status }, {
+      onSuccess: (result) => {
+        if (result.failed > 0) {
+          notify.error(t('teachers.toast.bulkPartial', {
+            succeeded: result.succeeded,
+            failed: result.failed,
+          }));
+        } else {
+          notify.success(t('teachers.toast.statusUpdated'));
+        }
+      },
+      onError: (err) => notify.error(t('settings.serverSaveFailed'), {
+        description: err instanceof Error ? err.message : String(err),
+      }),
     });
   };
 
@@ -333,7 +395,7 @@ export default function Teachers(): React.JSX.Element {
                   labels={customizerLabels}
                 />
 
-                {canWrite && (
+                {canDelete && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -371,16 +433,25 @@ export default function Teachers(): React.JSX.Element {
                       onRestore={handleRestore}
                       onBulkDelete={handleBulkDelete}
                       onBulkRestore={handleBulkRestore}
+                      onBulkStatusChange={showDeleted ? undefined : handleBulkStatusChange}
                       onWhatsApp={showDeleted ? undefined : handleWhatsApp}
                       onSms={showDeleted ? undefined : handleSms}
                       onEmail={showDeleted ? undefined : handleEmail}
                       canWrite={canWrite}
+                      canDelete={canDelete}
                       showDeleted={showDeleted}
+                      selectionResetKey={`${listPage}:${search}:${filterStatus.join(',')}:${filterSpecialization}:${sortField}:${sortDir}`}
                       isColumnVisible={isColumnVisible}
                       getColumnWidth={getColumnWidth}
                       onColumnResize={setColumnWidth}
+                      sortField={sortField}
+                      sortDir={sortDir}
+                      onSortChange={(field, dir) => {
+                        setSortField(field);
+                        setSortDir(dir);
+                      }}
                     />
-                    {useServerWork && workPageData && !showDeleted && (
+                    {useServerWork && workPageData && (
                       <ListPagination
                         page={workPageData.page}
                         total={workPageData.total}
@@ -422,7 +493,7 @@ export default function Teachers(): React.JSX.Element {
               transition={{ duration: 0.18 }}
             >
               <ErrorBoundary>
-                <TeachersSettingsPanel mode="preferences" />
+                <TeachersSettingsPanel />
               </ErrorBoundary>
             </motion.div>
           ) : null}

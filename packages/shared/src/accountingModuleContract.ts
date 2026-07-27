@@ -1,15 +1,20 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
 
-export const accountRecordSchema = z.object({
-  id: z.string(),
-  code: z.string(),
-  name: z.string(),
-  type: z.enum(["Asset", "Liability", "Equity", "Revenue", "Expense"]),
-  subtype: z.string(),
-  description: z.string(),
-  isActive: z.boolean(),
-});
+export const accountRecordSchema = z
+  .object({
+    id: z.string(),
+    code: z.string(),
+    name: z.string(),
+    type: z.enum(['Asset', 'Liability', 'Equity', 'Revenue', 'Expense']),
+    subtype: z.string(),
+    description: z.string(),
+    isActive: z.boolean(),
+    deletedAt: z.string().optional(),
+    deletedBy: z.string().optional(),
+    deletionReason: z.string().optional(),
+  })
+  .passthrough();
 
 export type Account = z.infer<typeof accountRecordSchema>;
 export const accountListSchema = z.array(accountRecordSchema);
@@ -29,7 +34,7 @@ export const journalEntryRecordSchema = z.object({
   date: z.string(),
   ref: z.string(),
   description: z.string(),
-  status: z.enum(["posted", "draft"]),
+  status: z.enum(['posted', 'draft']),
   created_by: z.string(),
   tags: z.array(z.string()),
   attachments: z.array(z.string()),
@@ -38,6 +43,9 @@ export const journalEntryRecordSchema = z.object({
   transaction_type: z.string().optional(),
   reversed_ref: z.string().nullable().optional(),
   simple_mode: z.boolean().optional(),
+  deletedAt: z.string().optional(),
+  deletedBy: z.string().optional(),
+  deletionReason: z.string().optional(),
 });
 
 export type JournalEntry = z.infer<typeof journalEntryRecordSchema>;
@@ -48,7 +56,7 @@ export const fiscalYearRecordSchema = z.object({
   label: z.string(),
   startDate: z.string(),
   endDate: z.string(),
-  status: z.enum(["active", "closed", "upcoming"]),
+  status: z.enum(['active', 'closed', 'upcoming']),
 });
 
 export type FiscalYear = z.infer<typeof fiscalYearRecordSchema>;
@@ -67,6 +75,13 @@ export const ACCOUNTING_MODULE_CONTRACT = {
   restBasePath: '/api/accounting',
   analyticsCategory: 'accounting',
   tiers: ['work', 'reports', 'setup'] as const,
+  setupSubTabs: ['fields', 'preferences'] as const,
+  softDelete: {
+    workExcludesDeleted: true,
+    reportsIncludeDeleted: false,
+    exportsIncludeDeleted: false,
+    captureDeletionReason: false,
+  },
   permissions: {
     read: 'finance.write',
     write: 'finance.write',
@@ -78,7 +93,7 @@ export const ACCOUNTING_MODULE_CONTRACT = {
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['overview', 'journal', 'ledger', 'trial', 'coa'] as const,
-    bulkActions: [] as const,
+    bulkActions: ['delete'] as const,
   },
   defaultPageSize: 15,
 } as const;

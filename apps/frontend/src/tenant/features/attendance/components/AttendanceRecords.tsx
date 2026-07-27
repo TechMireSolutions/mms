@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Pencil, Trash2, X, MessageSquare, MessageCircle } from "lucide-react";
+import { Check, Pencil, Trash2, X, MessageSquare, MessageCircle, RotateCcw } from "lucide-react";
 import { motion } from "framer-motion";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,8 @@ import { getAttendanceStatusInfo } from "@/lib/data/attendanceData";
 import { StatusToggle } from "@/tenant/features/attendance/components/StatusToggle";
 import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { notify } from "@/lib/notify";
 
 
 const PAGE_SIZE = 15;
@@ -29,7 +31,10 @@ const PAGE_SIZE = 15;
 interface AttendanceRecordsProps {
   filters: AttendanceFilterState;
   records: AttendanceRecord[];
-  setRecords: React.Dispatch<React.SetStateAction<AttendanceRecord[]>>;
+  onUpdateRecord: (record: AttendanceRecord) => Promise<void>;
+  onDeleteRecord: (id: string) => Promise<void>;
+  onRestoreRecord: (id: string) => Promise<void>;
+  showDeleted?: boolean;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -40,7 +45,10 @@ interface AttendanceRecordsProps {
 export function AttendanceRecords({
   filters,
   records,
-  setRecords,
+  onUpdateRecord,
+  onDeleteRecord,
+  onRestoreRecord,
+  showDeleted = false,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
@@ -64,7 +72,8 @@ export function AttendanceRecords({
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [editing, setEditing] = useState<string | null>(null);
+  const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const baseFiltered = useMemo(() => {
     return records.filter((attendanceRecord) => {
@@ -114,12 +123,21 @@ export function AttendanceRecords({
     (showNotes ? 1 : 0) +
     1;
 
-  const updateRecord = <K extends keyof AttendanceRecord>(id: string, key: K, value: AttendanceRecord[K]) =>
-    setRecords((previousRecords) => previousRecords.map((attendanceRecord) => attendanceRecord.id === id ? { ...attendanceRecord, [key]: value } : attendanceRecord));
+  const updateDraft = <K extends keyof AttendanceRecord>(key: K, value: AttendanceRecord[K]) => {
+    setEditingRecord((current) => current ? { ...current, [key]: value } : current);
+  };
 
-  const deleteRecord = (id: string) => {
-    if (!canDeleteAttendance) return;
-    setRecords((previousRecords) => previousRecords.filter((attendanceRecord) => attendanceRecord.id !== id));
+  const saveEditingRecord = async () => {
+    if (!editingRecord || !canWriteAttendance) return;
+    try {
+      await onUpdateRecord(editingRecord);
+      notify.success(t("attendance.toast.updated"));
+      setEditingRecord(null);
+    } catch (error) {
+      notify.error(t("attendance.toast.saveFailed"), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
   };
 
   const classLabel = (classId: string) => allClasses.find((sessionClass) => sessionClass.id === classId)?.name || classId;
@@ -240,8 +258,8 @@ export function AttendanceRecords({
                   )}
                   {showStatus && (
                     <td className="px-3 py-2.5">
-                      {editing === attendanceRecord.id
-                        ? <StatusToggle value={attendanceRecord.status} onChange={(value) => updateRecord(attendanceRecord.id, "status", value as AttendanceRecord["status"])} />
+                      {editingRecord?.id === attendanceRecord.id
+                        ? <StatusToggle value={editingRecord.status} onChange={(value) => updateDraft("status", value as AttendanceRecord["status"])} />
                         : (() => {
                             const info = getAttendanceStatusInfo(attendanceRecord.status, statuses);
                             const config: Record<string, StatusBadgeConfigItem> = info
@@ -254,8 +272,8 @@ export function AttendanceRecords({
                   )}
                   {showTimeIn && (
                     <td className="px-3 py-2.5">
-                      {editing === attendanceRecord.id
-                        ? <Input type="time" value={attendanceRecord.timeIn} onChange={(event) => updateRecord(attendanceRecord.id, "timeIn", event.target.value)}
+                      {editingRecord?.id === attendanceRecord.id
+                        ? <Input type="time" value={editingRecord.timeIn} onChange={(event) => updateDraft("timeIn", event.target.value)}
                             aria-label={t("attendance.columns.timeIn")}
                             className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none" />
                         : <span className="text-xs text-muted-foreground font-mono">{attendanceRecord.timeIn || "—"}</span>
@@ -264,8 +282,8 @@ export function AttendanceRecords({
                   )}
                   {showTimeOut && (
                     <td className="px-3 py-2.5">
-                      {editing === attendanceRecord.id
-                        ? <Input type="time" value={attendanceRecord.timeOut} onChange={(event) => updateRecord(attendanceRecord.id, "timeOut", event.target.value)}
+                      {editingRecord?.id === attendanceRecord.id
+                        ? <Input type="time" value={editingRecord.timeOut} onChange={(event) => updateDraft("timeOut", event.target.value)}
                             aria-label={t("attendance.columns.timeOut")}
                             className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none" />
                         : <span className="text-xs text-muted-foreground font-mono">{attendanceRecord.timeOut || "—"}</span>
@@ -277,15 +295,15 @@ export function AttendanceRecords({
                   )}
                   <td className="px-3 py-2.5 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      {onMessage && (
+                      {onMessage && !showDeleted && (
                         <>
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
                             onClick={() => onMessage('whatsapp', [attendanceRecord])}
-                            aria-label="Send WhatsApp"
-                            title="Send WhatsApp message"
+                            aria-label={t("attendance.message.whatsapp")}
+                            title={t("attendance.message.whatsapp")}
                             className="h-8 w-8 text-muted-foreground hover:text-success"
                           >
                             <MessageCircle className="w-3.5 h-3.5" />
@@ -295,36 +313,51 @@ export function AttendanceRecords({
                             variant="ghost"
                             size="icon"
                             onClick={() => onMessage('sms', [attendanceRecord])}
-                            aria-label="Send SMS"
-                            title="Send SMS message"
+                            aria-label={t("attendance.message.sms")}
+                            title={t("attendance.message.sms")}
                             className="h-8 w-8 text-muted-foreground hover:text-info"
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
                           </Button>
                         </>
                       )}
-                      {canWriteAttendance && (
+                      {canWriteAttendance && !showDeleted && (
+                        <>
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          onClick={() => setEditing(editing === attendanceRecord.id ? null : attendanceRecord.id)}
-                          aria-label={editing === attendanceRecord.id ? t("common.cancel") : t("common.edit")}
+                          onClick={() => {
+                            if (editingRecord?.id === attendanceRecord.id) {
+                              void saveEditingRecord();
+                            } else {
+                              setEditingRecord(attendanceRecord);
+                            }
+                          }}
+                          aria-label={editingRecord?.id === attendanceRecord.id ? t("common.save") : t("common.edit")}
                           className="h-8 w-8 text-muted-foreground hover:text-primary"
                         >
-                          {editing === attendanceRecord.id ? <X className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
+                          {editingRecord?.id === attendanceRecord.id ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
                         </Button>
+                        {editingRecord?.id === attendanceRecord.id && (
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingRecord(null)} aria-label={t("common.cancel")}>
+                            <X className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                        </>
                       )}
                       {canDeleteAttendance && (
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          onClick={() => deleteRecord(attendanceRecord.id)}
-                          aria-label={t("attendance.deleteRecord")}
+                          onClick={() => showDeleted
+                            ? void onRestoreRecord(attendanceRecord.id)
+                            : setPendingDeleteId(attendanceRecord.id)}
+                          aria-label={showDeleted ? t("attendance.restoreRecord") : t("attendance.deleteRecord")}
                           className="h-8 w-8 text-muted-foreground hover:text-destructive"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          {showDeleted ? <RotateCcw className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
                         </Button>
                       )}
                     </div>
@@ -343,6 +376,19 @@ export function AttendanceRecords({
         onPageChange={setPage}
         i18nNamespace="attendance"
         variant="summary"
+      />
+      <ConfirmAlertDialog
+        open={pendingDeleteId != null}
+        onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}
+        title={t("attendance.confirmArchiveTitle")}
+        description={t("attendance.confirmArchiveDescription")}
+        confirmLabel={t("attendance.archive")}
+        onConfirm={() => {
+          const id = pendingDeleteId;
+          setPendingDeleteId(null);
+          if (id) void onDeleteRecord(id);
+        }}
+        destructive
       />
     </section>
   );

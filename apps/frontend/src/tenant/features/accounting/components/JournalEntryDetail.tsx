@@ -1,7 +1,7 @@
 import { Pencil, CheckCircle2, RotateCcw, Tag } from "lucide-react";
 import { formatDate } from "@mms/shared";
 import { Button } from "@/components/ui/button";
-import { Modal } from "@/components/ui/Modal";
+import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Card } from "@/components/ui/card";
 import { ACCOUNT_TYPE_META, Account, JournalEntry } from '@/lib/data/accountingData';
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
@@ -18,12 +18,7 @@ interface JournalEntryDetailProps {
 }
 
 /**
- * JournalEntryDetail component.
- * 
- * Displays the details of a journal entry in a modal.
- * 
- * @param {JournalEntryDetailProps} props - The component props.
- * @returns {React.ReactElement}
+ * Journal entry detail slide-over.
  */
 export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse }: JournalEntryDetailProps) {
   const { t } = useTranslation();
@@ -37,12 +32,12 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
   const totalCredit = entry.lines.reduce((sum, journalLine) => sum + journalLine.credit, 0);
 
   return (
-    <Modal
+    <DetailDrawerShell
       open
       onClose={onClose}
       title={entry.ref}
       icon={Tag}
-      size="lg"
+      className="max-w-2xl"
       headerExtra={
         <div className="flex items-center gap-2 flex-wrap mt-1">
           <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />
@@ -69,7 +64,6 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
       }
     >
       <div className="space-y-5">
-          {/* Meta grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
             <div>
               <h3 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">{t("accounting.journal.detail.date")}</h3>
@@ -91,9 +85,8 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
             </div>
           </div>
 
-          {/* Tags */}
           {(entry.tags || []).length > 0 && (
-            <div className="flex flex-wrap gap-1.5" aria-label="Tags">
+            <div className="flex flex-wrap gap-1.5" aria-label={t("accounting.columns.journal.tags")}>
               <Tag className="w-3.5 h-3.5 text-muted-foreground mt-0.5" aria-hidden="true" />
               {entry.tags!.map((tag) => (
                 <span key={tag} className="px-2 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">{tag}</span>
@@ -101,10 +94,9 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
             </div>
           )}
 
-          {/* Lines table */}
           <Card accentColor="primary" className="p-0 overflow-hidden">
             <table className="w-full text-sm">
-              <caption className="sr-only">Line items for journal entry {entry.ref}</caption>
+              <caption className="sr-only">{t("accounting.journal.detail.account")}</caption>
               <thead className="bg-muted/60 border-b border-border/40">
                 <tr>
                   <th scope="col" className="px-5 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.journal.detail.account")}</th>
@@ -146,7 +138,6 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
             </table>
           </Card>
 
-          {/* Balance check */}
           <div className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border ${Math.abs(totalDebit - totalCredit) < 0.01 ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"}`} role="status">
             {Math.abs(totalDebit - totalCredit) < 0.01
               ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.detail.balanced")}</>
@@ -154,6 +145,6 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
             }
           </div>
       </div>
-    </Modal>
+    </DetailDrawerShell>
   );
 }

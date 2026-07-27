@@ -9,8 +9,6 @@ import {
   getPrimaryEmail,
   hasWhatsApp,
   resolveModuleTierTab,
-  filterActiveContacts,
-  isContactDeleted,
   filterContactsForQuery,
   sortContacts,
   contactMatchesSearch,
@@ -43,6 +41,7 @@ import {
   useContactsCollectionState,
   useContactsPaginated,
   useContactsByIds,
+  fetchAllContactsForQuery,
   CONTACTS_DUPLICATES_QUERY_KEY,
 } from "@/tenant/features/contacts/hooks/useContacts";
 import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
@@ -177,6 +176,7 @@ export function useContactsPageState({
         });
       } catch (err) {
         handleError(err, "contacts.merge_contacts");
+        throw err;
       }
     },
     [updateContact, deleteContact, logMergeAudit, t, handleError],
@@ -279,32 +279,34 @@ export function useContactsPageState({
     setListPage(1);
   }, [debouncedSearch, filterGender, quickFilter, sortField, sortDir, showDeletedArchives]);
 
-  const needsFullContactsList = showDeletedArchives || effectiveTab === "setup";
+  const needsFullContactsList = effectiveTab === "setup";
 
   const { contacts: rawContacts, isLoading: isContactsLoading } = useContactsCollectionState({
     enabled: needsFullContactsList,
-    includeDeleted: showDeletedArchives && canDelete,
   });
 
-  const useServerWork = !showDeletedArchives && effectiveTab === "work";
+  const useServerWork = effectiveTab === "work";
   const workLimit = CONTACTS_MODULE_CONTRACT.defaultPageSize;
 
-  const { data: workPageData, isFetching: isWorkPageFetching } = useContactsPaginated({
+  const {
+    data: workPageData,
+    isLoading: isWorkLoading,
+    isError: isWorkError,
+    refetch: refetchWork,
+    isFetching: isWorkFetching,
+  } = useContactsPaginated({
     page: listPage,
     limit: workLimit,
     search: debouncedSearch,
     gender: filterGender,
+    includeDeleted: showDeletedArchives,
     sortField,
     sortDir,
     quickFilter,
     enabled: useServerWork,
   });
 
-  const contacts = useMemo(() => {
-    return showDeletedArchives
-      ? (rawContacts || []).filter(isContactDeleted)
-      : filterActiveContacts(rawContacts || []);
-  }, [rawContacts, showDeletedArchives]);
+  const contacts = rawContacts || [];
 
   const applyDrillDown = useCallback(
     (filter: ContactsWorkDrillDown) => {
@@ -385,7 +387,6 @@ export function useContactsPageState({
     const list = filterContactsForQuery(contacts, {
       search,
       gender: filterGender || undefined,
-      includeDeleted: true,
       quickFilter,
     });
     return sortContacts(list, sortField, sortDir);
@@ -422,18 +423,17 @@ export function useContactsPageState({
 
   const selectedTargets = useMemo(() => {
     if (selected.length === 0) return { waTargets: [], smsReady: [] };
-    const pool = showDeletedArchives ? contacts : workContacts;
     const selectedSet = new Set(selected);
     const waTargets: Contact[] = [];
     const smsReady: Contact[] = [];
-    for (const contact of pool) {
+    for (const contact of workContacts) {
       if (selectedSet.has(contact.id)) {
         if (hasWhatsApp(contact)) waTargets.push(contact);
         if (getPrimaryPhone(contact)) smsReady.push(contact);
       }
     }
     return { waTargets, smsReady };
-  }, [selected, workContacts, contacts, showDeletedArchives]);
+  }, [selected, workContacts]);
 
   const shownCount = useServerWork && workPageData ? workPageData.total : filtered.length;
   const workTruncated = useServerWork && Boolean(workPageData?.hasMore);
@@ -497,7 +497,7 @@ export function useContactsPageState({
   );
 
   const handleSave = useCallback(
-    (contactDraft: Contact) => {
+    async (contactDraft: Contact): Promise<void> => {
       if (!canWrite) return;
       const isCreatingContact = !editContact;
       const basePayload = syncContactScalarFields(contactDraft);
@@ -513,14 +513,9 @@ export function useContactsPageState({
         emergencyContacts: contactDraft.emergencyContacts ?? [],
       };
 
-      void saveContact(payload, isCreatingContact)
-        .then(() => {
-          setShowForm(false);
-          setEditContact(null);
-        })
-        .catch(() => {
-          /* saveContact handles error reporting */
-        });
+      await saveContact(payload, isCreatingContact);
+      setShowForm(false);
+      setEditContact(null);
     },
     [editContact, saveContact, canWrite],
   );
@@ -558,12 +553,25 @@ export function useContactsPageState({
 
   const handleExportCSV = useCallback(async () => {
     if (!canExport) return;
+
+    const filename = t("contacts.exportFilename");
     if (showDeletedArchives) {
-      runExport(filtered, "filtered");
+      try {
+        const rows = await fetchAllContactsForQuery({
+          search,
+          gender: filterGender || undefined,
+          sortField,
+          sortDir,
+          quickFilter,
+          includeDeleted: true,
+        });
+        runExport(rows, "filtered");
+      } catch (err) {
+        handleError(err, "contacts.export_deleted_csv", "contacts.exportFailed");
+      }
       return;
     }
 
-    const filename = t("contacts.exportFilename");
     const label = t("contacts.jobs.exportLabelServer");
 
     try {
@@ -591,7 +599,6 @@ export function useContactsPageState({
       handleError(err, "contacts.server_export_csv", "contacts.exportFailed");
     }
   }, [
-    filtered,
     runExport,
     canExport,
     showDeletedArchives,
@@ -639,19 +646,24 @@ export function useContactsPageState({
     setBulkRestoreOpen(false);
     void bulkRestoreContactsAction(selected)
       .then((result) => {
-        if (result.succeeded > 0) {
-          notify.success(
-            result.succeeded === 1
-              ? t("contacts.restoreSuccessTitle")
-              : t("contacts.bulkRestoreSuccess", { count: result.succeeded }),
-          );
-        }
+        notifyBulkResult(
+          result.succeeded,
+          result.failed,
+          "contacts.restoreSuccessTitle",
+          "contacts.bulkRestoreSuccess",
+        );
         setSelected([]);
       })
       .catch((err) => {
         handleError(err, "contacts.bulk_restore", "contacts.restoreFailed");
       });
-  }, [checkBulkAllowed, selected, bulkRestoreContactsAction, t, handleError]);
+  }, [
+    checkBulkAllowed,
+    selected,
+    bulkRestoreContactsAction,
+    notifyBulkResult,
+    handleError,
+  ]);
 
   const clearFilters = useCallback(() => {
     setFilterGender("");
@@ -680,7 +692,13 @@ export function useContactsPageState({
         } else if (hasActiveFilters) {
           clearFilters();
         }
-      } else if (event.key === "N" && event.shiftKey && !isInputActive && canWrite) {
+      } else if (
+        (event.metaKey || event.ctrlKey) &&
+        event.key.toLowerCase() === "n" &&
+        !isInputActive &&
+        canWrite &&
+        !showDeletedArchives
+      ) {
         event.preventDefault();
         handleCreateContact();
       }
@@ -688,12 +706,19 @@ export function useContactsPageState({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selected.length, hasActiveFilters, clearFilters, canWrite, handleCreateContact]);
+  }, [
+    selected.length,
+    hasActiveFilters,
+    clearFilters,
+    canWrite,
+    showDeletedArchives,
+    handleCreateContact,
+  ]);
 
   const handleImport = useCallback(
-    (list: Contact[]) => {
+    async (list: Contact[]): Promise<void> => {
       if (!canWrite) return;
-      void importContacts(list);
+      await importContacts(list);
     },
     [canWrite, importContacts],
   );
@@ -709,7 +734,7 @@ export function useContactsPageState({
   const handleRestore = useCallback(
     (id: string | number) => {
       if (!canDelete) return;
-      const selectedContact = contacts.find((contact) => contact.id === id);
+      const selectedContact = findContactById(id);
       const name = selectedContact ? getDisplayName(selectedContact) : undefined;
       void restoreContactAction(String(id))
         .then(() => {
@@ -723,7 +748,7 @@ export function useContactsPageState({
           handleError(err, "contacts.restore_single", "contacts.restoreFailed");
         });
     },
-    [canDelete, contacts, restoreContactAction, t, handleError],
+    [canDelete, findContactById, restoreContactAction, t, handleError],
   );
 
   const toComposerRecipients = useCallback(
@@ -830,7 +855,10 @@ export function useContactsPageState({
     isContactsLoading,
     useServerWork,
     workPageData,
-    isWorkPageFetching,
+    isWorkLoading,
+    isWorkError,
+    refetchWork,
+    isWorkFetching,
     listPage,
     setListPage,
     workContacts,

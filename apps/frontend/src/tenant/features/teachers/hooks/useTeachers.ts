@@ -4,7 +4,7 @@ import type { Teacher, TeachersCommandMetricsSnapshot, TeachersListPageResult, T
 import { normalizeStoredTeacher, TEACHERS_MODULE_CONTRACT, teachersWidgetQueryFromWidget } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { apiFetch, apiJson } from '@/lib/apiClient';
+import { apiJson } from '@/lib/apiClient';
 import { TEACHER_COUNT_QUERY_KEY } from '@/tenant/features/teachers/hooks/useTeacherCount';
 import { uniqueRegistryIds } from '@/lib/registryResolve';
 export const TEACHERS_QUERY_KEY = [TEACHERS_MODULE_CONTRACT.collectionKey, 'list'] as const;
@@ -93,29 +93,42 @@ export function useTeacherMutations() {
 
   const deleteTeacher = useMutation({
     mutationFn: async (id: string) =>
-      apiFetch(`${TEACHERS_API}/${id}`, { method: 'DELETE' }),
+      apiJson<{ success: boolean }>(`${TEACHERS_API}/${id}`, { method: 'DELETE' }),
     onSuccess: invalidate,
   });
 
   const bulkDeleteTeachers = useMutation({
     mutationFn: async (ids: string[]) =>
-      Promise.all(ids.map((id) => apiFetch(`${TEACHERS_API}/${id}`, { method: 'DELETE' }))),
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${TEACHERS_API}/bulk-delete`, {
+        method: 'POST',
+        body: JSON.stringify({ ids }),
+      }),
     onSuccess: invalidate,
   });
 
   const restoreTeacher = useMutation({
     mutationFn: async (id: string) =>
-      apiFetch(`${TEACHERS_API}/${encodeURIComponent(id)}/restore`, { method: 'POST' }),
+      apiJson<{ success: boolean }>(`${TEACHERS_API}/${encodeURIComponent(id)}/restore`, {
+        method: 'POST',
+      }),
     onSuccess: invalidate,
   });
 
   const bulkRestoreTeachers = useMutation({
     mutationFn: async (ids: string[]) =>
-      Promise.all(
-        ids.map((id) =>
-          apiFetch(`${TEACHERS_API}/${encodeURIComponent(id)}/restore`, { method: 'POST' }),
-        ),
-      ),
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${TEACHERS_API}/bulk-restore`, {
+        method: 'POST',
+        body: JSON.stringify({ ids }),
+      }),
+    onSuccess: invalidate,
+  });
+
+  const bulkUpdateTeacherStatus = useMutation({
+    mutationFn: async ({ ids, status }: { ids: string[]; status: string }) =>
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${TEACHERS_API}/bulk-status`, {
+        method: 'POST',
+        body: JSON.stringify({ ids, status }),
+      }),
     onSuccess: invalidate,
   });
 
@@ -126,6 +139,7 @@ export function useTeacherMutations() {
     bulkDeleteTeachers,
     restoreTeacher,
     bulkRestoreTeachers,
+    bulkUpdateTeacherStatus,
   };
 }
 

@@ -17,8 +17,8 @@ export interface WakalaTypeManagerProps {
   obligationTypes: ObligationType[];
   reps: MujtahidRep[];
   mujtahids: Mujtahid[];
-  onChangeWakala: (wt: WakalaType[]) => void;
-  onChangeDistributions: (dists: ObligationDistribution[]) => void;
+  onChangeWakala: (wt: WakalaType[]) => void | Promise<void>;
+  onChangeDistributions: (dists: ObligationDistribution[]) => void | Promise<void>;
 }
 
 interface ModalState {
@@ -45,23 +45,22 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
   const totalPct = (wakalaTypeId: string) =>
     getDistributions(wakalaTypeId).reduce((sum, distribution) => sum + parseFloat(String(distribution.percentage ?? 0)), 0);
 
-  const handleSaveWakala = (form: Partial<WakalaType>) => {
+  const handleSaveWakala = async (form: Partial<WakalaType>) => {
     if (modal?.mode === "add") {
-      onChangeWakala([...wakalaTypes, { ...form, id: `wt${Date.now()}` } as WakalaType]);
+      await onChangeWakala([...wakalaTypes, { ...form, id: `wt${Date.now()}` } as WakalaType]);
     } else if (modal?.mode === "edit") {
-      onChangeWakala(wakalaTypes.map((wakalaType) => wakalaType.id === form.id ? (form as WakalaType) : wakalaType));
+      await onChangeWakala(wakalaTypes.map((wakalaType) => wakalaType.id === form.id ? (form as WakalaType) : wakalaType));
     }
     setModal(null);
   };
 
-  const handleDeleteWakala = (wakalaTypeId: string) => {
-    if (confirm("Delete this Wakala Type? Associated distributions will also be removed.")) {
-      onChangeWakala(wakalaTypes.filter((wakalaType) => wakalaType.id !== wakalaTypeId));
-      onChangeDistributions(distributions.filter((distribution) => distribution.wakala_type_id !== wakalaTypeId));
-    }
+  const handleDeleteWakala = async (wakalaTypeId: string) => {
+    if (!confirm("Delete this Wakala Type? Associated distributions will also be removed.")) return;
+    await onChangeWakala(wakalaTypes.filter((wakalaType) => wakalaType.id !== wakalaTypeId));
+    await onChangeDistributions(distributions.filter((distribution) => distribution.wakala_type_id !== wakalaTypeId));
   };
 
-  const handleSaveDist = (form: Partial<ObligationDistribution>) => {
+  const handleSaveDist = async (form: Partial<ObligationDistribution>) => {
     const existing = getDistributions(form.wakala_type_id!);
     const otherDistributions = existing.filter((distribution) => distribution.id !== form.id);
     const newTotal = otherDistributions.reduce((sum, distribution) => sum + parseFloat(String(distribution.percentage ?? 0)), 0) + parseFloat(String(form.percentage ?? 0));
@@ -70,15 +69,16 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
       return;
     }
     if (modal?.distMode === "add") {
-      onChangeDistributions([...distributions, { ...form, id: `od${Date.now()}` } as ObligationDistribution]);
+      await onChangeDistributions([...distributions, { ...form, id: `od${Date.now()}` } as ObligationDistribution]);
     } else if (modal?.distMode === "edit") {
-      onChangeDistributions(distributions.map((distribution) => distribution.id === form.id ? (form as ObligationDistribution) : distribution));
+      await onChangeDistributions(distributions.map((distribution) => distribution.id === form.id ? (form as ObligationDistribution) : distribution));
     }
     setModal(null);
   };
 
-  const handleDeleteDist = (distributionId: string) => {
-    if (confirm("Delete this distribution?")) onChangeDistributions(distributions.filter((distribution) => distribution.id !== distributionId));
+  const handleDeleteDist = async (distributionId: string) => {
+    if (!confirm("Delete this distribution?")) return;
+    await onChangeDistributions(distributions.filter((distribution) => distribution.id !== distributionId));
   };
 
   return (

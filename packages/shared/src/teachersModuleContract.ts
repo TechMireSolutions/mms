@@ -39,6 +39,7 @@ export const TEACHERS_MODULE_CONTRACT = {
   restBasePath: '/api/teachers',
   analyticsCategory: 'teachers',
   tiers: ['work', 'reports', 'setup'] as const,
+  setupSubTabs: ['fields', 'preferences'] as const,
   permissions: {
     read: 'teachers.read',
     write: 'teachers.write',
@@ -50,7 +51,13 @@ export const TEACHERS_MODULE_CONTRACT = {
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['list'] as const,
-    bulkActions: ['delete'] as const,
+    bulkActions: ['delete', 'status'] as const,
+  },
+  softDelete: {
+    workExcludesDeleted: true,
+    reportsIncludeDeleted: false,
+    exportsIncludeDeleted: false,
+    captureDeletionReason: false,
   },
   /** Default Work directory page size when using server pagination (globle1 §10). */
   defaultPageSize: 50,

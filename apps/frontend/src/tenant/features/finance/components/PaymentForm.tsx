@@ -8,19 +8,20 @@ import { UserActorSelect } from "@/components/ui/UserActorSelect";
 
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { notify } from "@/lib/notify";
-import { PAYMENT_METHODS, Invoice, Payment } from '@/lib/data/financeData';
+import { PAYMENT_METHODS, Invoice } from '@/lib/data/financeData';
 import { FORM_INPUT } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Card } from "@/components/ui/card";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
-import { todayISO } from "@mms/shared";
+import { todayISO, type PaymentCreateInput } from "@mms/shared";
+import { NotifiedFinanceMutationError } from "@/tenant/features/finance/hooks/useFinanceApi";
 
 interface PaymentFormProps {
   open: boolean;
   invoice: Invoice | null;
   onClose: () => void;
-  onSave: (payment: Payment) => void;
+  onSave: (payment: PaymentCreateInput) => void | Promise<void>;
 }
 
 export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps): React.JSX.Element {
@@ -50,6 +51,8 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
 
     if (!paymentDraft.amount || Number(paymentDraft.amount) <= 0) {
       newErrors.amount = t("finance.amountRequired");
+    } else if (Number(paymentDraft.amount) > balance) {
+      newErrors.amount = t("finance.amountExceedsBalance");
     }
     if (!paymentDraft.method) {
       newErrors.method = t("finance.methodRequired");
@@ -71,19 +74,20 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
 
     setSaving(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      onSave({
+      await onSave({
         ...paymentDraft,
         amount: Number(paymentDraft.amount),
         invoiceId: invoice.id,
         studentId: invoice.studentId,
+        studentName: invoice.studentName,
         receivedByUserId: paymentDraft.receivedByUserId || authUser?.id || '',
-        id: `pay${Date.now()}`,
-      } as unknown as Payment);
+      });
       notify.success(t("finance.paymentSaved"));
       onClose();
     } catch (err: unknown) {
-      notify.error(t("finance.paymentSaveFailed"), { description: err instanceof Error ? err.message : String(err) });
+      if (!(err instanceof NotifiedFinanceMutationError)) {
+        notify.error(t("finance.paymentSaveFailed"), { description: err instanceof Error ? err.message : String(err) });
+      }
     } finally {
       setSaving(false);
     }
@@ -195,6 +199,8 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
                 <div className="relative flex items-center group/input">
                   <FileText className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                   <Input
+                    id="payment-note"
+                    name="note"
                     className={`${FORM_INPUT} pl-10`}
                     value={paymentDraft.note || ""}
                     onChange={(event) => updateDraft({ note: event.target.value })}

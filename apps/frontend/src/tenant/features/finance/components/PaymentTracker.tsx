@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { CreditCard } from "lucide-react";
+import { CreditCard, RotateCcw, Trash2 } from "lucide-react";
 import { Payment } from '@/lib/data/financeData';
 import { PAYMENT_METHOD_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
@@ -10,11 +10,21 @@ import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/comp
 import { formatDate } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 
 
 
 interface PaymentTrackerProps {
   payments: Payment[];
+  canDelete?: boolean;
+  showDeleted?: boolean;
+  onDelete?: (id: string) => void;
+  onRestore?: (id: string) => void;
+  onBulkDelete?: (ids: string[]) => void;
+  onBulkRestore?: (ids: string[]) => void;
+  selectionResetKey?: string;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -23,6 +33,13 @@ interface PaymentTrackerProps {
 
 export function PaymentTracker({
   payments,
+  canDelete = false,
+  showDeleted = false,
+  onDelete,
+  onRestore,
+  onBulkDelete,
+  onBulkRestore,
+  selectionResetKey,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
@@ -30,6 +47,10 @@ export function PaymentTracker({
 }: PaymentTrackerProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
+  useEffect(() => setSelectedIds([]), [selectionResetKey, showDeleted]);
   const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
 
   const paymentsByMethod = payments.reduce((amountByMethod, payment) => {
@@ -52,7 +73,9 @@ export function PaymentTracker({
     (showAmount ? 1 : 0) +
     (showMethod ? 1 : 0) +
     (showReceivedBy ? 1 : 0) +
-    (showNote ? 1 : 0);
+    (showNote ? 1 : 0) +
+    (canDelete ? 2 : 0);
+  const allSelected = payments.length > 0 && payments.every((payment) => selectedIds.includes(payment.id));
 
   return (
     <section aria-label={t("finance.payments")} className="space-y-4">
@@ -67,6 +90,15 @@ export function PaymentTracker({
           </Card>
         ))}
       </div>
+      {canDelete && selectedIds.length > 0 && (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
+          <span className="text-sm font-medium">{t("finance.trash.selected", { count: selectedIds.length })}</span>
+          <Button type="button" variant={showDeleted ? "outline" : "destructive"} onClick={() => setConfirmBulkOpen(true)}>
+            {showDeleted ? <RotateCcw className="w-4 h-4" /> : <Trash2 className="w-4 h-4" />}
+            {showDeleted ? t("finance.trash.restore") : t("common.delete")}
+          </Button>
+        </div>
+      )}
 
       <Card accentColor="primary" className="p-0 overflow-hidden">
         <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center justify-between gap-3 pl-6.5">
@@ -90,6 +122,15 @@ export function PaymentTracker({
             <caption className="sr-only">{t("finance.paymentLog")}</caption>
             <thead>
               <tr className="border-b border-border/50">
+                {canDelete && (
+                  <th scope="col" className="w-10 px-3 py-2.5">
+                    <Checkbox
+                      checked={allSelected}
+                      onCheckedChange={(checked) => setSelectedIds(checked ? payments.map((payment) => payment.id) : [])}
+                      aria-label={t("finance.trash.selectAll")}
+                    />
+                  </th>
+                )}
                 {showDate && (
                   <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.paymentDate")}
@@ -125,6 +166,7 @@ export function PaymentTracker({
                     {t("finance.columns.note")}
                   </ResizableTableHead>
                 )}
+                {canDelete && <th scope="col" className="w-12 px-3 py-2.5"><span className="sr-only">{t("common.actions")}</span></th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
@@ -139,6 +181,15 @@ export function PaymentTracker({
                     transition={{ delay: index * 0.03 }}
                     className="hover:bg-muted/20 transition-colors"
                   >
+                    {canDelete && (
+                      <td className="px-3 py-3">
+                        <Checkbox
+                          checked={selectedIds.includes(payment.id)}
+                          onCheckedChange={(checked) => setSelectedIds((ids) => checked ? [...ids, payment.id] : ids.filter((id) => id !== payment.id))}
+                          aria-label={t("finance.trash.selectPayment", { id: payment.id })}
+                        />
+                      </td>
+                    )}
                     {showDate && (
                       <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">{formatDate(payment.date)}</td>
                     )}
@@ -162,6 +213,19 @@ export function PaymentTracker({
                     {showNote && (
                       <td className="px-4 py-3 text-[12px] text-muted-foreground max-w-[160px] truncate">{payment.note || "—"}</td>
                     )}
+                    {canDelete && (
+                      <td className="px-3 py-3">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => showDeleted ? onRestore?.(payment.id) : setPendingDeleteId(payment.id)}
+                          aria-label={showDeleted ? t("finance.trash.restore") : t("common.delete")}
+                        >
+                          {showDeleted ? <RotateCcw className="w-4 h-4" /> : <Trash2 className="w-4 h-4" />}
+                        </Button>
+                      </td>
+                    )}
                   </motion.tr>
                 ))
               )}
@@ -169,6 +233,32 @@ export function PaymentTracker({
           </table>
         </div>
       </Card>
+      <ConfirmAlertDialog
+        open={pendingDeleteId !== null}
+        onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}
+        title={t("finance.trash.deleteTitle")}
+        description={t("finance.trash.deletePaymentConfirm")}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={() => {
+          if (pendingDeleteId) onDelete?.(pendingDeleteId);
+          setPendingDeleteId(null);
+        }}
+      />
+      <ConfirmAlertDialog
+        open={confirmBulkOpen}
+        onOpenChange={setConfirmBulkOpen}
+        title={showDeleted ? t("finance.trash.restore") : t("finance.trash.deleteTitle")}
+        description={t(showDeleted ? "finance.trash.bulkRestoreConfirm" : "finance.trash.bulkDeleteConfirm", { count: selectedIds.length })}
+        confirmLabel={showDeleted ? t("finance.trash.restore") : t("common.delete")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={() => {
+          if (showDeleted) onBulkRestore?.(selectedIds);
+          else onBulkDelete?.(selectedIds);
+          setSelectedIds([]);
+          setConfirmBulkOpen(false);
+        }}
+      />
     </section>
   );
 }

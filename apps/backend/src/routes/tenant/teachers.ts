@@ -1,10 +1,13 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { canReadCollection } from '../../services/rbacService.js';
+import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../services/rbacService.js';
 import {
   createTeacher,
   deleteTeacherById,
   restoreTeacherById,
+  bulkSoftDeleteTeachers,
+  bulkRestoreTeachers,
+  bulkUpdateTeacherStatus,
   loadTeachers,
   loadTeachersPage,
   loadTeachersByIds,
@@ -16,8 +19,14 @@ import {
 } from '../../services/teacherService.js';
 import type { User } from '@mms/shared';
 import { TEACHERS_MODULE_CONTRACT, computeTeachersCommandMetrics } from '@mms/shared';
-import { sendForbidden } from '../../lib/httpErrors.js';
-import { teacherRecordSchema, teachersListQuerySchema, teachersNextEmployeeIdQuerySchema } from '../../validation/teacherSchemas.js';
+import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
+import {
+  teacherRecordSchema,
+  teachersListQuerySchema,
+  teachersNextEmployeeIdQuerySchema,
+  teachersBulkIdsSchema,
+  teachersBulkStatusSchema,
+} from '../../validation/teacherSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
 import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
@@ -52,6 +61,49 @@ export default async function teachersRoutes(
     loadByIdsFn: loadTeachersByIds,
     loadLinkedContactIdsFn: loadTeacherLinkedContactIds,
     columnPreferencesObjectKey: TEACHERS_MODULE_CONTRACT.columnPreferencesObjectKey,
+  });
+
+  fastify.post('/bulk-delete', async (request, reply) => {
+    const user = request.user as User;
+    if (!canDeleteCollection(user, 'teachers')) return sendForbidden(reply);
+    const parsed = parseRequest(teachersBulkIdsSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const result = await bulkSoftDeleteTeachers(
+        parsed.data.ids.map(String),
+        String(user.id),
+        parsed.data.deletionReason,
+      );
+      return reply.send({ success: true, ...result });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to bulk delete teachers');
+    }
+  });
+
+  fastify.post('/bulk-restore', async (request, reply) => {
+    const user = request.user as User;
+    if (!canDeleteCollection(user, 'teachers')) return sendForbidden(reply);
+    const parsed = parseRequest(teachersBulkIdsSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const result = await bulkRestoreTeachers(parsed.data.ids.map(String));
+      return reply.send({ success: true, ...result });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to bulk restore teachers');
+    }
+  });
+
+  fastify.post('/bulk-status', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, 'teachers')) return sendForbidden(reply);
+    const parsed = parseRequest(teachersBulkStatusSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const result = await bulkUpdateTeacherStatus(parsed.data.ids.map(String), parsed.data.status);
+      return reply.send({ success: true, ...result });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to bulk update teacher status');
+    }
   });
 
   // --- Custom GET Next Employee ID ---

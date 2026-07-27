@@ -1,6 +1,5 @@
 import React, { lazy, Suspense, useMemo } from "react";
 import { type Contact, toTitleCase } from "@mms/shared";
-import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactMutations } from "@/tenant/features/contacts/hooks/useContacts";
 
@@ -52,17 +51,10 @@ export default function ContactCreateModal({
     return draft;
   }, [initialName, createDefaults?.gender]);
 
-  const handleSave = (contactPayload: Contact): void => {
+  const handleSave = async (contactPayload: Contact): Promise<void> => {
     const payload = { ...contactPayload, id: contactPayload.id ?? crypto.randomUUID() };
-    void upsertContact
-      .mutateAsync(payload)
-      .then((res) => {
-        onCreated(res.contact);
-        onClose();
-      })
-      .catch(() => {
-        notify.error(t("settings.serverSaveFailed"));
-      });
+    const response = await upsertContact.mutateAsync(payload);
+    onCreated(response.contact);
   };
 
   if (!open) return null;

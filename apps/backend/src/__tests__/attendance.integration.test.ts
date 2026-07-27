@@ -23,13 +23,23 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 });
 
 const mockLoadAttendanceRecords = vi.fn();
+const mockLoadAttendancePage = vi.fn();
+const mockUpsertAttendanceRecords = vi.fn();
+const mockDeleteAttendanceRecordById = vi.fn();
+const mockRestoreAttendanceRecordById = vi.fn();
+const mockBulkSoftDeleteAttendance = vi.fn();
+const mockBulkRestoreAttendance = vi.fn();
 
 vi.mock('../services/attendanceService.js', () => ({
   loadAttendanceRecords: (...args: unknown[]) => mockLoadAttendanceRecords(...args),
+  loadAttendancePage: (...args: unknown[]) => mockLoadAttendancePage(...args),
   createAttendanceRecord: vi.fn(),
   updateAttendanceRecordById: vi.fn(),
-  deleteAttendanceRecordById: vi.fn(),
-  restoreAttendanceRecordById: vi.fn(),
+  deleteAttendanceRecordById: (...args: unknown[]) => mockDeleteAttendanceRecordById(...args),
+  restoreAttendanceRecordById: (...args: unknown[]) => mockRestoreAttendanceRecordById(...args),
+  bulkSoftDeleteAttendance: (...args: unknown[]) => mockBulkSoftDeleteAttendance(...args),
+  bulkRestoreAttendance: (...args: unknown[]) => mockBulkRestoreAttendance(...args),
+  upsertAttendanceRecords: (...args: unknown[]) => mockUpsertAttendanceRecords(...args),
   replaceAttendanceRecords: vi.fn(),
 }));
 
@@ -45,10 +55,47 @@ function teacherToken(app: Awaited<ReturnType<typeof buildApp>>): string {
   });
 }
 
+function adminToken(app: Awaited<ReturnType<typeof buildApp>>): string {
+  return app.jwt.sign({
+    id: 'u-admin',
+    email: 'admin@test.com',
+    name: 'Admin',
+    role: 'admin',
+    workspaceSubdomain: 'demo',
+    twoFactorVerified: true,
+    tokenType: 'access',
+  });
+}
+
+const attendanceRecord = {
+  id: 'c1-2026-07-27-s1',
+  classId: 'c1',
+  date: '2026-07-27',
+  studentId: 's1',
+  studentName: 'Jane Doe',
+  rollNo: '0001',
+  status: 'present' as const,
+  timeIn: '07:00',
+  timeOut: '08:30',
+  notes: '',
+};
+
 describe('attendance REST routes integration', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
     mockLoadAttendanceRecords.mockReset().mockResolvedValue([]);
+    mockLoadAttendancePage.mockReset().mockResolvedValue({
+      records: [],
+      total: 0,
+      page: 1,
+      limit: 15,
+      hasMore: false,
+    });
+    mockUpsertAttendanceRecords.mockReset();
+    mockDeleteAttendanceRecordById.mockReset();
+    mockRestoreAttendanceRecordById.mockReset();
+    mockBulkSoftDeleteAttendance.mockReset();
+    mockBulkRestoreAttendance.mockReset();
   });
 
   afterEach(() => {
@@ -77,27 +124,18 @@ describe('attendance REST routes integration', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ records: [] });
+    expect(res.json()).toEqual({
+      records: [],
+      total: 0,
+      page: 1,
+      limit: 15,
+      hasMore: false,
+    });
     await app.close();
   });
 
-  it('PUT /api/attendance/bulk replaces attendance records', async () => {
-    const { replaceAttendanceRecords } = await import('../services/attendanceService.js');
-    const replaceMock = vi.mocked(replaceAttendanceRecords);
-    replaceMock.mockResolvedValueOnce([
-      {
-        id: 'c1-2026-07-27-s1',
-        classId: 'c1',
-        date: '2026-07-27',
-        studentId: 's1',
-        studentName: 'Jane Doe',
-        rollNo: '0001',
-        status: 'present',
-        timeIn: '07:00',
-        timeOut: '08:30',
-        notes: '',
-      },
-    ]);
+  it('PUT /api/attendance/bulk upserts only supplied records', async () => {
+    mockUpsertAttendanceRecords.mockResolvedValueOnce([attendanceRecord]);
 
     const app = await buildApp();
     const res = await app.inject({
@@ -108,40 +146,87 @@ describe('attendance REST routes integration', () => {
         authorization: `Bearer ${teacherToken(app)}`,
       },
       payload: {
-        records: [
-          {
-            id: 'c1-2026-07-27-s1',
-            classId: 'c1',
-            date: '2026-07-27',
-            studentId: 's1',
-            studentName: 'Jane Doe',
-            rollNo: '0001',
-            status: 'present',
-            timeIn: '07:00',
-            timeOut: '08:30',
-            notes: '',
-          },
-        ],
+        records: [attendanceRecord],
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(replaceMock).toHaveBeenCalledOnce();
-    expect(res.json()).toEqual({
-      records: [
-        {
-          id: 'c1-2026-07-27-s1',
-          classId: 'c1',
-          date: '2026-07-27',
-          studentId: 's1',
-          studentName: 'Jane Doe',
-          rollNo: '0001',
-          status: 'present',
-          timeIn: '07:00',
-          timeOut: '08:30',
-          notes: '',
-        },
-      ],
+    expect(mockUpsertAttendanceRecords).toHaveBeenCalledWith([attendanceRecord]);
+    expect(res.json()).toEqual({ records: [attendanceRecord] });
+    await app.close();
+  });
+
+  it('teacher cannot delete attendance records', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'DELETE',
+      url: `/api/attendance/${attendanceRecord.id}`,
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
     });
+    expect(res.statusCode).toBe(403);
+    expect(mockDeleteAttendanceRecordById).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('admin can bulk soft-delete attendance records', async () => {
+    mockBulkSoftDeleteAttendance.mockResolvedValueOnce({ succeeded: 1, failed: 0 });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/attendance/bulk-delete',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload: { ids: [attendanceRecord.id] },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockBulkSoftDeleteAttendance).toHaveBeenCalledWith(
+      [attendanceRecord.id],
+      'u-admin',
+      undefined,
+    );
+    await app.close();
+  });
+
+  it('admin can restore an archived attendance record', async () => {
+    mockRestoreAttendanceRecordById.mockResolvedValueOnce(true);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/attendance/${attendanceRecord.id}/restore`,
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockRestoreAttendanceRecordById).toHaveBeenCalledWith(attendanceRecord.id);
+    await app.close();
+  });
+
+  it('includeDeleted returns deleted-only attendance for admins', async () => {
+    mockLoadAttendancePage.mockResolvedValueOnce({
+      records: [{ ...attendanceRecord, deletedAt: '2026-07-27T12:00:00.000Z' }],
+      total: 1,
+      page: 1,
+      limit: 15,
+      hasMore: false,
+    });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/attendance?page=1&includeDeleted=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadAttendancePage).toHaveBeenCalledWith(expect.objectContaining({ includeDeleted: true }));
+    expect(res.json().records[0].deletedAt).toBeTruthy();
     await app.close();
   });
 });

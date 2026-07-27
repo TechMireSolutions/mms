@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Save, QrCode, Bell, Clock, Shield, Scan } from "lucide-react";
+import { Save, QrCode, Bell, Clock, Scan } from "lucide-react";
 import {
   ATTENDANCE_TAB_REGISTRY,
+  ATTENDANCE_MODULE_CONTRACT,
   INITIAL_ATTENDANCE_FIELD_SEED,
+  type AppTranslationKey,
 } from "@mms/shared";
 import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
@@ -14,11 +16,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
-import { useIsAdminViewer } from "@/tenant/hooks/useViewerRole";
+import { SubTabBar } from "@/components/ui/SubTabBar";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { notify } from "@/lib/notify";
 
-interface AttendanceSettingsProps {
-  mode?: "fields" | "preferences";
-}
+const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
+  fields: "attendance.setup.fields",
+  preferences: "attendance.setup.preferences",
+};
 
 interface SettingRowProps {
   label: string;
@@ -38,8 +43,8 @@ function SettingRow({ label, sub, children }: SettingRowProps) {
   );
 }
 
-export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
-  const isAdmin = useIsAdminViewer();
+export function AttendanceSettings() {
+  const { canEditSetup } = useModulePermissions(ATTENDANCE_MODULE_CONTRACT);
   const { t } = useTranslation();
   const config = useAttendanceConfig();
   const {
@@ -48,43 +53,56 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
     saved,
     setSaved,
     upd,
-    saveSettings,
+    saveSettingsAsync,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: ATTENDANCE_TAB_REGISTRY,
   });
 
-  if (!isAdmin) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <Shield className="w-12 h-12 text-muted-foreground/40 mb-3" />
-        <p className="text-base font-semibold text-foreground">Admin Access Required</p>
-        <p className="text-sm text-muted-foreground mt-1">Only administrators can configure attendance settings.</p>
-      </div>
-    );
-  }
+  const settingsSubTabs = useMemo(
+    () => ATTENDANCE_MODULE_CONTRACT.setupSubTabs.map((key) => ({
+      key,
+      label: t(SETUP_TAB_LABEL_KEYS[key]),
+    })),
+    [t],
+  );
+  const [sub, setSub] = useState<string>(() => settingsSubTabs[0]?.key ?? "fields");
 
-  const handleSave = () => {
-    saveSettings();
+  const handleSave = async () => {
+    try {
+      await saveSettingsAsync();
+      notify.success(t("attendance.settings.saved"));
+    } catch (error) {
+      notify.error(t("settings.serverSaveFailed"), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
   };
 
-  const showPrefs = mode === "preferences";
-  const showFields = mode === "fields";
+  const showPrefs = sub === "preferences";
+  const showFields = sub === "fields";
 
   return (
     <section className="max-w-2xl space-y-6">
+      <SubTabBar tabs={settingsSubTabs} value={sub} onChange={setSub} />
+      {!canEditSetup ? (
+        <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
+          {t("attendance.settings.readOnly")}
+        </p>
+      ) : (
+      <>
       {showPrefs && (
         <>
           {/* Timing */}
           <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
             <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 ps-6.5">
               <Clock className="w-4 h-4 text-primary" />
-              <h2 className="text-sm font-bold text-foreground m-0">Timing Rules</h2>
+              <h2 className="text-sm font-bold text-foreground m-0">{t("attendance.settings.timingRules")}</h2>
             </header>
             <div className="px-4 ps-6.5 pb-2">
-              <SettingRow label="Late Threshold" sub="Students arriving after this many minutes are marked Late">
+              <SettingRow label={t("attendance.settings.lateThreshold")} sub={t("attendance.settings.lateThresholdDesc")}>
                 <div className="flex items-center gap-2">
-                  <label htmlFor="setting-late-threshold" className="sr-only">Late Threshold Minutes</label>
+                  <label htmlFor="setting-late-threshold" className="sr-only">{t("attendance.settings.lateThresholdMinutes")}</label>
                   <Input 
                     id="setting-late-threshold"
                     name="lateThresholdMins"
@@ -95,12 +113,12 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
                     onChange={(event) => upd("lateThresholdMins", Number(event.target.value))}
                     className="w-16 text-sm text-center" 
                   />
-                  <span className="text-xs text-muted-foreground">min</span>
+                  <span className="text-xs text-muted-foreground">{t("attendance.settings.minutesShort")}</span>
                 </div>
               </SettingRow>
-              <SettingRow label="Auto-Absent After" sub="Mark student absent if not arrived after this threshold">
+              <SettingRow label={t("attendance.settings.autoAbsent")} sub={t("attendance.settings.autoAbsentDesc")}>
                 <div className="flex items-center gap-2">
-                  <label htmlFor="setting-auto-absent" className="sr-only">Auto Absent Minutes</label>
+                  <label htmlFor="setting-auto-absent" className="sr-only">{t("attendance.settings.autoAbsentMinutes")}</label>
                   <Input 
                     id="setting-auto-absent"
                     name="autoAbsentAfterMins"
@@ -111,10 +129,10 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
                     onChange={(event) => upd("autoAbsentAfterMins", Number(event.target.value))}
                     className="w-16 text-sm text-center" 
                   />
-                  <span className="text-xs text-muted-foreground">min</span>
+                  <span className="text-xs text-muted-foreground">{t("attendance.settings.minutesShort")}</span>
                 </div>
               </SettingRow>
-              <SettingRow label="Lock After Submit" sub="Prevent edits once attendance is submitted">
+              <SettingRow label={t("attendance.settings.lockAfterSubmit")} sub={t("attendance.settings.lockAfterSubmitDesc")}>
                 <Switch checked={settingsDraft.lockAfterSubmit} onCheckedChange={(value) => upd("lockAfterSubmit", value)} />
               </SettingRow>
             </div>
@@ -124,10 +142,10 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
           <Card accentColor="indigo" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
             <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 ps-6.5">
               <QrCode className="w-4 h-4 text-primary" />
-              <h2 className="text-sm font-bold text-foreground m-0">QR Attendance</h2>
+              <h2 className="text-sm font-bold text-foreground m-0">{t("attendance.settings.qrAttendance")}</h2>
             </header>
             <div className="px-4 ps-6.5 pb-2">
-              <SettingRow label="Enable QR Attendance" sub="Allow teachers to scan student QR codes to mark attendance">
+              <SettingRow label={t("attendance.settings.enableQr")} sub={t("attendance.settings.enableQrDesc")}>
                 <Switch checked={settingsDraft.qrEnabled} onCheckedChange={(value) => upd("qrEnabled", value)} />
               </SettingRow>
             </div>
@@ -137,12 +155,12 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
           <Card accentColor="warning" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
             <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 ps-6.5">
               <Bell className="w-4 h-4 text-primary" />
-              <h2 className="text-sm font-bold text-foreground m-0">Alerts & Notifications</h2>
+              <h2 className="text-sm font-bold text-foreground m-0">{t("attendance.settings.alerts")}</h2>
             </header>
             <div className="px-4 ps-6.5 pb-2">
-              <SettingRow label="Low Attendance Threshold" sub="Trigger alert when student attendance drops below this %">
+              <SettingRow label={t("attendance.settings.lowThreshold")} sub={t("attendance.settings.lowThresholdDesc")}>
                 <div className="flex items-center gap-2">
-                  <label htmlFor="setting-low-attendance" className="sr-only">Low Attendance Threshold Percentage</label>
+                  <label htmlFor="setting-low-attendance" className="sr-only">{t("attendance.settings.lowThresholdPercent")}</label>
                   <Input 
                     id="setting-low-attendance"
                     name="lowAttendanceThreshold"
@@ -156,10 +174,10 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
                   <span className="text-xs text-muted-foreground">%</span>
                 </div>
               </SettingRow>
-              <SettingRow label="Notify Parents" sub="Send SMS/WhatsApp to parent on student absence">
+              <SettingRow label={t("attendance.settings.notifyParents")} sub={t("attendance.settings.notifyParentsDesc")}>
                 <Switch checked={settingsDraft.notifyParents} onCheckedChange={(value) => upd("notifyParents", value)} />
               </SettingRow>
-              <SettingRow label="Require Note for Absent" sub="Teacher must add a note when marking a student absent">
+              <SettingRow label={t("attendance.settings.requireAbsentNote")} sub={t("attendance.settings.requireAbsentNoteDesc")}>
                 <Switch checked={settingsDraft.requireNoteForAbsent} onCheckedChange={(value) => upd("requireNoteForAbsent", value)} />
               </SettingRow>
             </div>
@@ -169,16 +187,16 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
           <Card accentColor="success" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
             <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 pl-6.5">
               <Scan className="w-4 h-4 text-primary" />
-              <h2 className="text-sm font-bold text-foreground m-0">Advanced Features</h2>
+              <h2 className="text-sm font-bold text-foreground m-0">{t("attendance.settings.advanced")}</h2>
             </header>
             <div className="px-4 pl-6.5 pb-2">
-              <SettingRow label="Offline Mode" sub="Allow teachers to mark attendance without internet; syncs when reconnected">
+              <SettingRow label={t("attendance.settings.offlineMode")} sub={t("attendance.settings.offlineModeDesc")}>
                 <Switch checked={settingsDraft.offlineEnabled} onCheckedChange={(value) => upd("offlineEnabled", value)} />
               </SettingRow>
-              <SettingRow label="Geo-location Tagging" sub="Record teacher's GPS coordinates when submitting attendance">
+              <SettingRow label={t("attendance.settings.geoTagging")} sub={t("attendance.settings.geoTaggingDesc")}>
                 <Switch checked={settingsDraft.geoTagging} onCheckedChange={(value) => upd("geoTagging", value)} />
               </SettingRow>
-              <SettingRow label="Default View Layout" sub="Select default layout format for attendance records in work view">
+              <SettingRow label={t("attendance.settings.defaultLayout")} sub={t("attendance.settings.defaultLayoutDesc")}>
                 <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
                   <Button
                     type="button"
@@ -188,7 +206,7 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
                     className="h-7 text-xs font-semibold rounded-lg px-3 shadow-none bg-transparent data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
                     data-state={(settingsDraft.defaultViewLayout || "list") === "list" ? "active" : "inactive"}
                   >
-                    List View
+                    {t("attendance.settings.listView")}
                   </Button>
                   <Button
                     type="button"
@@ -198,17 +216,17 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
                     className="h-7 text-xs font-semibold rounded-lg px-3 shadow-none bg-transparent data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
                     data-state={settingsDraft.defaultViewLayout === "cards" ? "active" : "inactive"}
                   >
-                    Card Grid
+                    {t("attendance.settings.cardGrid")}
                   </Button>
                 </div>
               </SettingRow>
-              <SettingRow label="Facial Recognition" sub="AI-powered face scan for attendance (coming soon)">
+              <SettingRow label={t("attendance.settings.facialRecognition")} sub={t("attendance.settings.facialRecognitionDesc")}>
                 <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.warningStrong)}>{t("attendance.settings.comingSoon")}</span>
               </SettingRow>
-              <SettingRow label="Daily Auto-Lock" sub="Automatically lock attendance after end-of-day submission">
+              <SettingRow label={t("attendance.settings.dailyAutoLock")} sub={t("attendance.settings.dailyAutoLockDesc")}>
                 <Switch checked={settingsDraft.lockAfterSubmit} onCheckedChange={(value) => upd("lockAfterSubmit", value)} />
               </SettingRow>
-              <SettingRow label="Audit Logging" sub="Record all edits and submissions in an audit trail (always on)">
+              <SettingRow label={t("attendance.settings.auditLogging")} sub={t("attendance.settings.auditLoggingDesc")}>
                 <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.successStrong)}>{t("attendance.settings.active")}</span>
               </SettingRow>
             </div>
@@ -227,13 +245,15 @@ export function AttendanceSettings({ mode }: AttendanceSettingsProps) {
       {/* Actions */}
       <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
         <Button
-          onClick={handleSave}
-          className={cn("ml-auto", saved && "bg-success hover:bg-success/90 text-success-foreground")}
+          onClick={() => void handleSave()}
+          className={cn("ms-auto", saved && "bg-success hover:bg-success/90 text-success-foreground")}
         >
           <Save className="w-3.5 h-3.5" />
-          {saved ? "Saved!" : "Save Settings"}
+          {saved ? t("settings.savedBadge") : t("common.save")}
         </Button>
       </footer>
+      </>
+      )}
     </section>
   );
 }

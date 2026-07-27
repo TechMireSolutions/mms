@@ -27,6 +27,7 @@ import { AttendanceFilterState } from "@/tenant/features/attendance/components/A
 import {
   type ModuleCustomField,
 } from "@mms/shared";
+import { notify } from "@/lib/notify";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -59,7 +60,7 @@ interface MarkAttendanceProps {
   filters: AttendanceFilterState;
   role: string;
   records: AttendanceRecord[];
-  setRecords: React.Dispatch<React.SetStateAction<AttendanceRecord[]>>;
+  persistBatch: (records: AttendanceRecord[]) => Promise<void>;
 }
 
 interface AuditEntry {
@@ -268,7 +269,7 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
 /**
  * MarkAttendance
  */
-export function MarkAttendance({ filters, role, records, setRecords }: MarkAttendanceProps) {
+export function MarkAttendance({ filters, role, records, persistBatch }: MarkAttendanceProps) {
   const { t } = useTranslation();
   const { statuses, customFields, orderedFields, isFieldEnabled } = useAttendanceConfig();
   const { canWrite: canWriteAttendance } = useModulePermissions(ATTENDANCE_MODULE_CONTRACT);
@@ -414,17 +415,17 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
     }
   };
 
-  const handleSaveDraft = () => {
-    const newRecords: AttendanceRecord[] = rows.map((row) => {
+  const buildRecords = (attendanceRows: AttendanceRow[], classId = filters.classId, date = filters.date): AttendanceRecord[] =>
+    attendanceRows.map((row) => {
       const customFieldValues: Record<string, unknown> = {};
       customFields.forEach((customField: ModuleCustomField) => {
         customFieldValues[customField.id] = row[customField.id];
       });
 
       return {
-        id: `${filters.classId}-${filters.date}-${row.studentId}`,
-        classId: filters.classId,
-        date: filters.date,
+        id: `${classId}-${date}-${row.studentId}`,
+        classId,
+        date,
         studentId: row.studentId,
         studentName: row.name,
         rollNo: row.rollNo,
@@ -436,92 +437,82 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
       } as unknown as AttendanceRecord;
     });
 
-    setRecords((previousRecords) => {
-      const filteredRecords = previousRecords.filter((attendanceRecord) => !(attendanceRecord.classId === filters.classId && attendanceRecord.date === filters.date));
-      return [...filteredRecords, ...newRecords];
-    });
-
-    setIsDraft(true);
-    addAuditEntry(filters.classId, filters.date, { action: "draft_saved", by: role });
+  const queueOfflinePayload = (payload: OfflinePayload) => {
+    const nextQueue = [
+      ...offlineQueue.filter((queued) => !(queued.classId === payload.classId && queued.date === payload.date)),
+      payload,
+    ];
+    saveQueue(nextQueue);
+    setOfflineQueue(nextQueue);
   };
 
-  const handleSubmit = () => {
-    const newRecords: AttendanceRecord[] = rows.map((row) => {
-      const customFieldValues: Record<string, unknown> = {};
-      customFields.forEach((customField: ModuleCustomField) => {
-        customFieldValues[customField.id] = row[customField.id];
-      });
+  const currentOfflinePayload = (): OfflinePayload => ({
+    classId: filters.classId,
+    date: filters.date,
+    rows,
+    geo: typeof geo === "object" ? geo : null,
+    submittedBy: role,
+    ts: new Date().toISOString(),
+  });
 
-      return {
-        id: `${filters.classId}-${filters.date}-${row.studentId}`,
-        classId: filters.classId,
-        date: filters.date,
-        studentId: row.studentId,
-        studentName: row.name,
-        rollNo: row.rollNo,
-        status: row.status,
-        timeIn: row.status !== "absent" ? row.timeIn : "",
-        timeOut: row.status !== "absent" ? row.timeOut : "",
-        notes: row.notes || "",
-        customFields: customFieldValues,
-      } as unknown as AttendanceRecord;
-    });
-
-    setRecords((previousRecords) => {
-      const filteredRecords = previousRecords.filter((attendanceRecord) => !(attendanceRecord.classId === filters.classId && attendanceRecord.date === filters.date));
-      return [...filteredRecords, ...newRecords];
-    });
-
-    const finalGeo = typeof geo === "object" ? geo : null;
-    const payload: OfflinePayload = { classId: filters.classId, date: filters.date, rows, geo: finalGeo, submittedBy: role, ts: new Date().toISOString() };
-    addAuditEntry(filters.classId, filters.date, { action: "submitted", count: rows.length, by: role, geo: finalGeo });
-    
+  const handleSaveDraft = async () => {
     if (isOffline) {
-      const nextQueue = [...offlineQueue, payload];
-      saveQueue(nextQueue);
-      setOfflineQueue(nextQueue);
-      setSubmitted(true);
-    } else {
-      setSubmitted(true);
+      queueOfflinePayload(currentOfflinePayload());
+      setIsDraft(true);
+      addAuditEntry(filters.classId, filters.date, { action: "draft_saved", by: role });
+      return;
+    }
+
+    try {
+      await persistBatch(buildRecords(rows));
+      setIsDraft(true);
+      addAuditEntry(filters.classId, filters.date, { action: "draft_saved", by: role });
+      notify.success(t("attendance.toast.draftSaved"));
+    } catch (error) {
+      notify.error(t("attendance.toast.saveFailed"), {
+        description: error instanceof Error ? error.message : String(error),
+      });
     }
   };
 
-  const handleSync = () => {
+  const handleSubmit = async () => {
+    const payload = currentOfflinePayload();
+    if (isOffline) {
+      queueOfflinePayload(payload);
+      setSubmitted(true);
+      addAuditEntry(filters.classId, filters.date, { action: "submitted", count: rows.length, by: role, geo: payload.geo });
+      return;
+    }
+
+    try {
+      await persistBatch(buildRecords(rows));
+      setSubmitted(true);
+      addAuditEntry(filters.classId, filters.date, { action: "submitted", count: rows.length, by: role, geo: payload.geo });
+      notify.success(t("attendance.toast.submitted"));
+    } catch (error) {
+      notify.error(t("attendance.toast.saveFailed"), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
+  };
+
+  const handleSync = async () => {
     if (isOffline) return;
 
-    let updatedRecords = [...records];
-    offlineQueue.forEach((payload) => {
-      const newRecords: AttendanceRecord[] = payload.rows.map((row) => {
-        const customFieldValues: Record<string, unknown> = {};
-        customFields.forEach((customField: ModuleCustomField) => {
-          customFieldValues[customField.id] = row[customField.id];
-        });
-
-        return {
-          id: `${payload.classId}-${payload.date}-${row.studentId}`,
-          classId: payload.classId,
-          date: payload.date,
-          studentId: row.studentId,
-          studentName: row.name,
-          rollNo: row.rollNo,
-          status: row.status,
-          timeIn: row.status !== "absent" ? row.timeIn : "",
-          timeOut: row.status !== "absent" ? row.timeOut : "",
-          notes: row.notes || "",
-          customFields: customFieldValues,
-        } as unknown as AttendanceRecord;
-      });
-      updatedRecords = updatedRecords.filter(
-        (attendanceRecord) => !(attendanceRecord.classId === payload.classId && attendanceRecord.date === payload.date)
+    try {
+      const queuedRecords = offlineQueue.flatMap((payload) =>
+        buildRecords(payload.rows, payload.classId, payload.date),
       );
-      updatedRecords.push(...newRecords);
-    });
-    setRecords(updatedRecords);
-
-    saveQueue([]);
-    setOfflineQueue([]);
-    setSyncedMsg(true);
-    setTimeout(() => setSyncedMsg(false), 3000);
+      await persistBatch(queuedRecords);
+      saveQueue([]);
+      setOfflineQueue([]);
+      setSyncedMsg(true);
+      setTimeout(() => setSyncedMsg(false), 3000);
+    } catch (error) {
+      notify.error(t("attendance.toast.syncFailed"), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
   };
 
   if (!filters.classId) {
@@ -537,7 +528,7 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
   return (
     <section className="space-y-4">
       {/* Offline Banner */}
-      <OfflineBanner offline={isOffline} queue={offlineQueue} onSync={handleSync} />
+      <OfflineBanner offline={isOffline} queue={offlineQueue} onSync={() => void handleSync()} />
       {syncedMsg && <div className="px-4 py-2 rounded-xl bg-success/10 border border-success/30 text-success text-sm font-semibold">✓ {t("attendance.mark.syncSuccess")}</div>}
 
       {/* Facial Recognition Placeholder */}
@@ -750,11 +741,11 @@ export function MarkAttendance({ filters, role, records, setRecords }: MarkAtten
       <footer className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-xs text-muted-foreground">{t("attendance.mark.summary", { total: rows.length, shown: filteredRows.length })}</p>
         <div className="flex gap-2">
-          <Button onClick={handleSaveDraft} variant="outline"
+          <Button onClick={() => void handleSaveDraft()} variant="outline"
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-card text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors h-auto">
             <Save className="w-3.5 h-3.5" aria-hidden="true" /> {t("attendance.mark.saveDraft")}
           </Button>
-          <Button onClick={handleSubmit}
+          <Button onClick={() => void handleSubmit()}
             disabled={!canWriteAttendance}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors h-auto">
             <Send className="w-3.5 h-3.5" aria-hidden="true" />

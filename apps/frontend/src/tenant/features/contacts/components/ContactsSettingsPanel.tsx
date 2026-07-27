@@ -27,7 +27,7 @@ const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
 
 export interface ContactsSettingsPanelProps {
   contacts: Contact[];
-  onImport: (list: Contact[]) => void;
+  onImport: (list: Contact[]) => void | Promise<void>;
   canWrite: boolean;
   canEditSetup: boolean;
 }
@@ -39,7 +39,7 @@ export default function ContactsSettingsPanel({
   canEditSetup,
 }: ContactsSettingsPanelProps): JSX.Element {
   const { t } = useTranslation();
-  const { fieldConfig, updateConfig } = useContactConfig();
+  const { fieldConfig, updateConfig, updateConfigAsync } = useContactConfig();
 
   const settingsSubTabs = useMemo(() => {
     const tabsFromConfig = fieldConfig.settingsSubTabs || [];
@@ -76,10 +76,20 @@ export default function ContactsSettingsPanel({
           </p>
         ) : null}
         {sub === "fields" && canEditSetup && (
-          <ContactsSetupPanel config={fieldConfig} onConfigChange={updateConfig} mode="fields" />
+          <ContactsSetupPanel
+            config={fieldConfig}
+            onConfigChange={updateConfig}
+            onConfigChangeAsync={updateConfigAsync}
+            mode="fields"
+          />
         )}
         {sub === "preferences" && canEditSetup && (
-          <ContactsSetupPanel config={fieldConfig} onConfigChange={updateConfig} mode="preferences" />
+          <ContactsSetupPanel
+            config={fieldConfig}
+            onConfigChange={updateConfig}
+            onConfigChangeAsync={updateConfigAsync}
+            mode="preferences"
+          />
         )}
         {sub === "sync" && (
           <ContactSyncPanel contacts={contacts} onImport={onImport} canWrite={canWrite} />

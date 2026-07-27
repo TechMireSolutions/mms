@@ -34,7 +34,7 @@ interface ContactFormProps {
   open?: boolean;
   contact?: Contact;
   onClose: () => void;
-  onSave: (contact: Contact) => void;
+  onSave: (contact: Contact) => void | Promise<void>;
   defaultCountry?: string;
   defaultCity?: string;
   defaultProvince?: string;
@@ -276,7 +276,7 @@ export default function ContactForm({
     });
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async (): Promise<void> => {
     setValidationErrors([]);
     const cleanedDraft = cleanContactDraft(contactDraft);
     const formErrors = validate(cleanedDraft);
@@ -329,7 +329,7 @@ export default function ContactForm({
       const titleCased = applyTitleCaseToContact(contactRaw) as Contact;
       const finalized = syncContactScalarFields(titleCased);
 
-      onSave(finalized);
+      await onSave(finalized);
       notify.success(
         contact ? t("contacts.form.contactUpdated") : t("contacts.form.contactCreated"),
       );
@@ -480,7 +480,9 @@ export default function ContactForm({
       lang={language}
       cancelLabel={t("common.cancel")}
       saveLabel={t("contacts.form.saveContact")}
-      onSave={handleSave}
+      onSave={() => {
+        void handleSave();
+      }}
       saving={saving}
       saveDisabled={!contactDraft.firstName?.trim()}
       footerStart={footerStart}

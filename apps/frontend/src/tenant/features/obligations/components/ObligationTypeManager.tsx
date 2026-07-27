@@ -33,7 +33,7 @@ const EMPTY: Partial<ObligationType> = { name: "", quantity_based: false, design
 
 export interface ObligationTypeManagerProps {
   types: ObligationType[];
-  onChange: (types: ObligationType[]) => void;
+  onChange: (types: ObligationType[]) => void | Promise<void>;
 }
 
 interface ModalState {
@@ -50,17 +50,18 @@ interface ModalState {
 export function ObligationTypeManager({ types, onChange }: ObligationTypeManagerProps) {
   const [modal, setModal] = useState<ModalState | null>(null);
 
-  const handleSave = (form: Partial<ObligationType>) => {
+  const handleSave = async (form: Partial<ObligationType>) => {
     if (modal?.mode === "add") {
-      onChange([...types, { ...form, id: `ot${Date.now()}`, created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as ObligationType]);
+      await onChange([...types, { ...form, id: `ot${Date.now()}`, created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as ObligationType]);
     } else if (modal?.mode === "edit") {
-      onChange(types.map((obligationType) => obligationType.id === form.id ? { ...obligationType, ...form, updated_at: new Date().toISOString() } : obligationType));
+      await onChange(types.map((obligationType) => obligationType.id === form.id ? { ...obligationType, ...form, updated_at: new Date().toISOString() } : obligationType));
     }
     setModal(null);
   };
 
-  const handleDelete = (obligationTypeId: string) => {
-    if (confirm("Delete this obligation type?")) onChange(types.filter((obligationType) => obligationType.id !== obligationTypeId));
+  const handleDelete = async (obligationTypeId: string) => {
+    if (!confirm("Delete this obligation type?")) return;
+    await onChange(types.filter((obligationType) => obligationType.id !== obligationTypeId));
   };
 
   return (

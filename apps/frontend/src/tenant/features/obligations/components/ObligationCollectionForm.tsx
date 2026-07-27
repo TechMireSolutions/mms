@@ -44,7 +44,7 @@ const EMPTY: FormState = {
 
 export interface ObligationCollectionFormProps {
   onClose: () => void;
-  onSave: (collection: ObligationCollection) => void;
+  onSave: (collection: ObligationCollection) => void | Promise<void>;
   obligationTypes: ObligationType[];
   wakalaTypes: WakalaType[];
   reps: MujtahidRep[];
@@ -67,6 +67,7 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
 
   const [form, setForm] = useState<FormState>({ ...EMPTY, receipt_no: generateReceiptNo(existingCollections) });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   const completeness = useMemo(
     () =>
@@ -115,17 +116,22 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
     return nextErrors;
   };
 
-  const handleSave = (): void => {
+  const handleSave = async (): Promise<void> => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length) { setErrors(validationErrors); return; }
-    onSave({
-      ...form,
-      id: `oc${Date.now()}`,
-      amount: parseFloat(form.amount),
-      reference_id: form.reference_id || null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    } as ObligationCollection);
+    setSubmitting(true);
+    try {
+      await onSave({
+        ...form,
+        id: `oc${Date.now()}`,
+        amount: parseFloat(form.amount),
+        reference_id: form.reference_id || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } as ObligationCollection);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const formField = (key: keyof FormState, label: string, required: boolean, children: React.ReactNode) => (
@@ -152,7 +158,8 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
       progressLabel={t("common.formProgress")}
       cancelLabel={t("common.cancel")}
       saveLabel="Save Collection"
-      onSave={handleSave}
+      onSave={() => { void handleSave(); }}
+      saving={submitting}
       error={Object.values(errors)}
     >
       <div className="space-y-6">

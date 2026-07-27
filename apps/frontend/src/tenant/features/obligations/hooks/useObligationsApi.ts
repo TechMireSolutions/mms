@@ -24,6 +24,8 @@ export const OBLIGATIONS_METRICS_QUERY_KEY = ['obligations', 'metrics'] as const
 
 const OBLIGATIONS_API = OBLIGATIONS_MODULE_CONTRACT.restBasePath;
 
+export class NotifiedObligationsMutationError extends Error {}
+
 export function useObligationsTypes(options?: { enabled?: boolean }) {
   return useCollectionSync<ObligationType>({
     queryKey: OBLIGATIONS_TYPES_QUERY_KEY,
@@ -94,17 +96,21 @@ export function useObligationsDistributionsCollection(options?: { enabled?: bool
   return useObligationsDistributions(options).syncedData;
 }
 
-export function useObligationsCollections(options?: { enabled?: boolean }) {
+export function useObligationsCollections(options?: { enabled?: boolean; includeDeleted?: boolean }) {
+  const includeDeleted = options?.includeDeleted ?? false;
   return useCollectionSync<ObligationCollection>({
-    queryKey: OBLIGATIONS_COLLECTIONS_QUERY_KEY,
-    apiPath: `${OBLIGATIONS_API}/collections`,
+    queryKey: [...OBLIGATIONS_COLLECTIONS_QUERY_KEY, { includeDeleted }],
+    apiPath: `${OBLIGATIONS_API}/collections?includeDeleted=${includeDeleted}`,
     responseKey: 'collections',
     collectionName: 'obligation_collections',
     enabled: options?.enabled,
   });
 }
 
-export function useObligationsCollectionsCollection(options?: { enabled?: boolean }): ObligationCollection[] {
+export function useObligationsCollectionsCollection(options?: {
+  enabled?: boolean;
+  includeDeleted?: boolean;
+}): ObligationCollection[] {
   return useObligationsCollections(options).syncedData;
 }
 
@@ -118,6 +124,11 @@ export function useObligationsMetrics(options?: { enabled?: boolean }) {
 
 export function useObligationsMutations() {
   const queryClient = useQueryClient();
+
+  const invalidateCollections = () => {
+    void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_COLLECTIONS_QUERY_KEY });
+    void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
+  };
 
   const replaceTypes = useMutation({
     mutationFn: async (types: ObligationType[]) =>
@@ -192,9 +203,43 @@ export function useObligationsMutations() {
       }),
     onSuccess: (collectionsResponse) => {
       saveCollection('obligation_collections', collectionsResponse.collections);
-      void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_COLLECTIONS_QUERY_KEY });
-      void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
+      invalidateCollections();
     },
+  });
+
+  const deleteCollection = useMutation({
+    mutationFn: async (id: string) =>
+      apiJson<{ success: boolean }>(`${OBLIGATIONS_API}/collections/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      }),
+    onSuccess: () => invalidateCollections(),
+  });
+
+  const restoreCollection = useMutation({
+    mutationFn: async (id: string) =>
+      apiJson<{ success: boolean }>(
+        `${OBLIGATIONS_API}/collections/${encodeURIComponent(id)}/restore`,
+        { method: 'POST' },
+      ),
+    onSuccess: () => invalidateCollections(),
+  });
+
+  const bulkDeleteCollections = useMutation({
+    mutationFn: async (ids: string[]) =>
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(
+        `${OBLIGATIONS_API}/collections/bulk-delete`,
+        { method: 'POST', body: JSON.stringify({ ids }) },
+      ),
+    onSuccess: () => invalidateCollections(),
+  });
+
+  const bulkRestoreCollections = useMutation({
+    mutationFn: async (ids: string[]) =>
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(
+        `${OBLIGATIONS_API}/collections/bulk-restore`,
+        { method: 'POST', body: JSON.stringify({ ids }) },
+      ),
+    onSuccess: () => invalidateCollections(),
   });
 
   return {
@@ -204,5 +249,9 @@ export function useObligationsMutations() {
     replaceWakala,
     replaceDistributions,
     replaceCollections,
+    deleteCollection,
+    restoreCollection,
+    bulkDeleteCollections,
+    bulkRestoreCollections,
   };
 }

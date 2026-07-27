@@ -1,0 +1,97 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Invoice, Payment } from '@mms/shared';
+
+const mockFindInvoiceById = vi.fn();
+const mockFindPaymentById = vi.fn();
+const mockSaveInvoice = vi.fn();
+const mockSavePayment = vi.fn();
+const mockRunInTransaction = vi.fn();
+
+vi.mock('../lib/tenantContext.js', () => ({
+  getRequestTenant: () => 'demo',
+}));
+
+vi.mock('../db/database.js', () => ({
+  runInTransaction: (callback: () => Promise<unknown>) => mockRunInTransaction(callback),
+}));
+
+vi.mock('../db/repositories/financeRepository.js', () => ({
+  listInvoicesByWorkspace: vi.fn().mockResolvedValue([]),
+  findInvoiceById: (...args: unknown[]) => mockFindInvoiceById(...args),
+  saveInvoice: (...args: unknown[]) => mockSaveInvoice(...args),
+  listPaymentsByWorkspace: vi.fn().mockResolvedValue([]),
+  findPaymentById: (...args: unknown[]) => mockFindPaymentById(...args),
+  savePayment: (...args: unknown[]) => mockSavePayment(...args),
+}));
+
+vi.mock('../services/websocketService.js', () => ({
+  broadcastTenantUpdate: vi.fn(),
+}));
+
+import { createPayment } from '../services/financeService.js';
+
+const invoice: Invoice = {
+  id: 'inv-1',
+  studentId: 'student-1',
+  studentName: 'Student One',
+  class: 'Class A',
+  session: '2026',
+  baseFee: 100,
+  discountType: null,
+  discountValue: 0,
+  discountAmt: 0,
+  finalAmt: 100,
+  status: 'partial',
+  dueDate: '2026-08-01',
+  paidDate: null,
+  method: null,
+  paidAmt: 40,
+};
+
+const payment: Payment = {
+  id: 'pay-1',
+  invoiceId: invoice.id,
+  studentId: invoice.studentId,
+  studentName: invoice.studentName,
+  amount: 60,
+  date: '2026-07-27',
+  method: 'Cash',
+  note: '',
+};
+
+describe('financeService createPayment', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockRunInTransaction.mockImplementation((callback: () => Promise<unknown>) => callback());
+    mockFindPaymentById.mockResolvedValue(null);
+    mockFindInvoiceById.mockResolvedValue(invoice);
+    mockSaveInvoice.mockResolvedValue(undefined);
+    mockSavePayment.mockResolvedValue(undefined);
+  });
+
+  it('updates the invoice and saves payment in one transaction', async () => {
+    await expect(createPayment(payment)).resolves.toEqual(payment);
+    expect(mockRunInTransaction).toHaveBeenCalledTimes(1);
+    expect(mockSaveInvoice).toHaveBeenCalledWith('demo', expect.objectContaining({
+      paidAmt: 100,
+      status: 'paid',
+    }));
+    expect(mockSavePayment).toHaveBeenCalledWith('demo', payment);
+  });
+
+  it('rejects overpayment without saving either record', async () => {
+    await expect(createPayment({ ...payment, amount: 61 })).rejects.toThrow(
+      'Payment amount exceeds the remaining invoice balance',
+    );
+    expect(mockSaveInvoice).not.toHaveBeenCalled();
+    expect(mockSavePayment).not.toHaveBeenCalled();
+  });
+
+  it('returns an existing payment without double-counting it', async () => {
+    mockFindPaymentById.mockResolvedValue(payment);
+    await expect(createPayment(payment)).resolves.toEqual(payment);
+    expect(mockFindInvoiceById).not.toHaveBeenCalled();
+    expect(mockSaveInvoice).not.toHaveBeenCalled();
+    expect(mockSavePayment).not.toHaveBeenCalled();
+  });
+});

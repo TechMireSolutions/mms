@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Save, DollarSign } from "lucide-react";
 import { useFinanceConfig } from "@/hooks/useStandardModuleConfig";
@@ -6,6 +6,8 @@ import {
   FINANCE_TAB_REGISTRY,
   INITIAL_FINANCE_FIELD_SEED,
   DEFAULT_CURRENCIES,
+  FINANCE_MODULE_CONTRACT,
+  type AppTranslationKey,
 } from "@mms/shared";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
@@ -14,31 +16,51 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
+import { SubTabBar } from "@/components/ui/SubTabBar";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { notify } from "@/lib/notify";
 
-interface FinanceSettingsProps {
-  mode?: "fields" | "preferences";
-}
+const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
+  fields: "finance.setup.fields",
+  preferences: "finance.setup.preferences",
+};
 
-export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElement {
+export function FinanceSettings(): React.ReactElement {
+  const { t } = useTranslation();
+  const { canEditSetup } = useModulePermissions(FINANCE_MODULE_CONTRACT);
   const config = useFinanceConfig();
   const {
+    settings,
     settingsDraft,
     fieldsEditor,
     saved,
     setSaved,
     upd,
-    saveSettings,
+    saveSettingsAsync,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: FINANCE_TAB_REGISTRY,
   });
 
-  const handleSave = () => {
-    saveSettings();
+  const handleSave = async (): Promise<void> => {
+    try {
+      await saveSettingsAsync();
+      notify.success(t("finance.settings.saved"));
+    } catch (error: unknown) {
+      notify.error(t("finance.settings.saveFailed"), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
   };
 
-  const showPrefs = mode === "preferences";
-  const showFields = mode === "fields";
+  const settingsSubTabs = useMemo(() => FINANCE_MODULE_CONTRACT.setupSubTabs.map((key) => ({
+    key,
+    label: t(SETUP_TAB_LABEL_KEYS[key]),
+  })), [t]);
+  const [sub, setSub] = useState<string>("fields");
+  const showPrefs = sub === "preferences";
+  const showFields = sub === "fields";
 
   const ALL_METHODS = ["cash", "bank_transfer", "cheque", "online", "card", "other"];
   const toggleMethod = (method: string) => {
@@ -50,19 +72,26 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
   };
 
   return (
+    <div className="space-y-4">
+      <SubTabBar tabs={settingsSubTabs} value={sub} onChange={setSub} />
+      {!canEditSetup ? (
+        <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
+          {t("finance.setup.readOnly")}
+        </p>
+      ) : (
     <Card accentColor="primary" className="p-5 space-y-4 shadow-sm hover:shadow-md border-border/80" aria-labelledby="finance-settings-title">
       <div className="flex items-center gap-2.5 pb-1 border-b border-border/40 pl-1">
         <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
           <DollarSign className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         </div>
-        <h3 id="finance-settings-title" className="text-[13px] font-bold text-foreground">Finance Module Settings</h3>
+        <h3 id="finance-settings-title" className="text-[13px] font-bold text-foreground">{t("finance.settings.title")}</h3>
       </div>
 
       {showPrefs && (
         <>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="finance-currency" className={FORM_LABEL}>Currency</label>
+              <label htmlFor="finance-currency" className={FORM_LABEL}>{t("finance.settings.currency")}</label>
               <FormSelect
                 id="finance-currency"
                 value={settingsDraft.currency}
@@ -74,17 +103,17 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
               />
             </div>
             <div>
-              <label htmlFor="inv-prefix" className={FORM_LABEL}>Invoice Prefix</label>
+              <label htmlFor="inv-prefix" className={FORM_LABEL}>{t("finance.settings.invoicePrefix")}</label>
               <Input
                 id="inv-prefix"
                 className={FORM_INPUT}
                 value={settingsDraft.invoicePrefix || ""}
                 onChange={(event) => upd("invoicePrefix", event.target.value)}
-                placeholder="INV"
+                placeholder={settings.invoicePrefix}
               />
             </div>
             <div>
-              <label htmlFor="due-days" className={FORM_LABEL}>Default Due Days</label>
+              <label htmlFor="due-days" className={FORM_LABEL}>{t("finance.settings.dueDays")}</label>
               <Input
                 id="due-days"
                 type="number"
@@ -94,7 +123,7 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
               />
             </div>
             <div>
-              <label htmlFor="late-fee" className={FORM_LABEL}>Late Fee (%)</label>
+              <label htmlFor="late-fee" className={FORM_LABEL}>{t("finance.settings.lateFee")}</label>
               <Input
                 id="late-fee"
                 type="number"
@@ -104,7 +133,7 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
               />
             </div>
             <div>
-              <label htmlFor="tax-rate" className={FORM_LABEL}>Tax Rate (%)</label>
+              <label htmlFor="tax-rate" className={FORM_LABEL}>{t("finance.settings.taxRate")}</label>
               <Input
                 id="tax-rate"
                 type="number"
@@ -114,7 +143,7 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
               />
             </div>
             <div>
-              <label htmlFor="reminder-days" className={FORM_LABEL}>Reminder Days Before Due</label>
+              <label htmlFor="reminder-days" className={FORM_LABEL}>{t("finance.settings.reminderDays")}</label>
               <Input
                 id="reminder-days"
                 type="number"
@@ -126,8 +155,8 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
           </div>
 
           <div>
-            <span className={FORM_LABEL}>Accepted Payment Methods</span>
-            <div className="flex flex-wrap gap-2" role="group" aria-label="Select payment methods">
+            <span className={FORM_LABEL}>{t("finance.settings.paymentMethods")}</span>
+            <div className="flex flex-wrap gap-2" role="group" aria-label={t("finance.settings.paymentMethods")}>
               {ALL_METHODS.map((method) => {
                 const active = (settingsDraft.paymentMethods || []).includes(method);
                 return (
@@ -140,20 +169,20 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
                       active ? "bg-primary/10 border-primary/30 text-primary font-bold" : "border-border text-muted-foreground hover:bg-muted"
                     }`}
                   >
-                    {method.replace("_", " ")}
+                    {t(`finance.paymentMethod.${method}` as AppTranslationKey)}
                   </Button>
                 );
               })}
             </div>
           </div>
 
-          <div className="space-y-2 pt-1" role="group" aria-label="Financial registry feature flags toggles">
-            <ToggleRow label="Auto-generate Invoices" description="Automatically create invoices on enrollment" value={settingsDraft.autoGenerateInvoice} onChange={(value) => upd("autoGenerateInvoice", value)} />
-            <ToggleRow label="Send Invoice by Email" description="Email invoice to guardian on creation" value={settingsDraft.sendInvoiceEmail} onChange={(value) => upd("sendInvoiceEmail", value)} />
-            <ToggleRow label="Allow Partial Payment" description="Accept payments less than the full amount" value={settingsDraft.allowPartialPayment} onChange={(value) => upd("allowPartialPayment", value)} />
-            <ToggleRow label="Require Approval for Discounts" description="Discounts need admin approval before applying" value={settingsDraft.requireApproval} onChange={(value) => upd("requireApproval", value)} />
-            <ToggleRow label="Overdue Reminders" description="Send reminders for overdue invoices" value={settingsDraft.overdueReminder} onChange={(value) => upd("overdueReminder", value)} />
-            <ToggleRow label="Fee Reminders" description="Send notifications when fees are due or overdue" value={settingsDraft.feeReminders} onChange={(value) => upd("feeReminders", value)} />
+          <div className="space-y-2 pt-1" role="group" aria-label={t("finance.settings.flags")}>
+            <ToggleRow label={t("finance.settings.autoGenerate")} description={t("finance.settings.autoGenerateDescription")} value={settingsDraft.autoGenerateInvoice} onChange={(value) => upd("autoGenerateInvoice", value)} />
+            <ToggleRow label={t("finance.settings.sendEmail")} description={t("finance.settings.sendEmailDescription")} value={settingsDraft.sendInvoiceEmail} onChange={(value) => upd("sendInvoiceEmail", value)} />
+            <ToggleRow label={t("finance.settings.partialPayment")} description={t("finance.settings.partialPaymentDescription")} value={settingsDraft.allowPartialPayment} onChange={(value) => upd("allowPartialPayment", value)} />
+            <ToggleRow label={t("finance.settings.discountApproval")} description={t("finance.settings.discountApprovalDescription")} value={settingsDraft.requireApproval} onChange={(value) => upd("requireApproval", value)} />
+            <ToggleRow label={t("finance.settings.overdueReminders")} description={t("finance.settings.overdueRemindersDescription")} value={settingsDraft.overdueReminder} onChange={(value) => upd("overdueReminder", value)} />
+            <ToggleRow label={t("finance.settings.feeReminders")} description={t("finance.settings.feeRemindersDescription")} value={settingsDraft.feeReminders} onChange={(value) => upd("feeReminders", value)} />
           </div>
         </>
       )}
@@ -174,9 +203,11 @@ export function FinanceSettings({ mode }: FinanceSettingsProps): React.ReactElem
           onClick={handleSave}
           className={saved ? "bg-success hover:bg-success/90 text-success-foreground ml-auto" : "ml-auto"}
         >
-          <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? "Saved!" : "Save Settings"}
+          <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? t("settings.savedBadge") : t("common.save")}
         </Button>
       </footer>
     </Card>
+      )}
+    </div>
   );
 }

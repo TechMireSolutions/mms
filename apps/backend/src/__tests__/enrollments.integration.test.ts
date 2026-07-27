@@ -23,14 +23,16 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 });
 
 const mockLoadEnrollments = vi.fn();
+const mockLoadEnrollmentsPage = vi.fn();
 
-vi.mock('../services/enrollmentService.js', () => ({
-  loadEnrollments: (...args: unknown[]) => mockLoadEnrollments(...args),
-  createEnrollment: vi.fn(),
-  updateEnrollmentById: vi.fn(),
-  deleteEnrollmentById: vi.fn(),
-  restoreEnrollmentById: vi.fn(),
-}));
+vi.mock('../services/enrollmentService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/enrollmentService.js')>();
+  return {
+    ...actual,
+    loadEnrollments: (...args: unknown[]) => mockLoadEnrollments(...args),
+    loadEnrollmentsPage: (...args: unknown[]) => mockLoadEnrollmentsPage(...args),
+  };
+});
 
 function adminToken(app: Awaited<ReturnType<typeof buildApp>>): string {
   return app.jwt.sign({
@@ -48,6 +50,13 @@ describe('enrollments REST routes integration', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
     mockLoadEnrollments.mockReset().mockResolvedValue([]);
+    mockLoadEnrollmentsPage.mockReset().mockResolvedValue({
+      enrollments: [],
+      total: 0,
+      page: 1,
+      limit: 20,
+      hasMore: false,
+    });
   });
 
   afterEach(() => {
@@ -76,7 +85,13 @@ describe('enrollments REST routes integration', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ enrollments: [] });
+    expect(res.json()).toEqual({
+      enrollments: [],
+      total: 0,
+      page: 1,
+      limit: 20,
+      hasMore: false,
+    });
     await app.close();
   });
 });

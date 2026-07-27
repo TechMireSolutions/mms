@@ -38,19 +38,27 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 });
 
 const mockLoadAccounts = vi.fn();
-const mockReplaceAccounts = vi.fn();
+const mockUpsertAccounts = vi.fn();
 const mockLoadEntries = vi.fn();
-const mockReplaceEntries = vi.fn();
+const mockUpsertEntries = vi.fn();
 const mockLoadFiscalYears = vi.fn();
-const mockReplaceFiscalYears = vi.fn();
+const mockUpsertFiscalYears = vi.fn();
+const mockDeleteJournalEntryById = vi.fn();
+const mockRestoreJournalEntryById = vi.fn();
+const mockBulkSoftDeleteJournalEntries = vi.fn();
+const mockBulkRestoreJournalEntries = vi.fn();
 
 vi.mock('../services/accountingService.js', () => ({
   loadAccounts: (...args: unknown[]) => mockLoadAccounts(...args),
-  replaceAccounts: (...args: unknown[]) => mockReplaceAccounts(...args),
+  upsertAccounts: (...args: unknown[]) => mockUpsertAccounts(...args),
   loadEntries: (...args: unknown[]) => mockLoadEntries(...args),
-  replaceEntries: (...args: unknown[]) => mockReplaceEntries(...args),
+  upsertEntries: (...args: unknown[]) => mockUpsertEntries(...args),
   loadFiscalYears: (...args: unknown[]) => mockLoadFiscalYears(...args),
-  replaceFiscalYears: (...args: unknown[]) => mockReplaceFiscalYears(...args),
+  upsertFiscalYears: (...args: unknown[]) => mockUpsertFiscalYears(...args),
+  deleteJournalEntryById: (...args: unknown[]) => mockDeleteJournalEntryById(...args),
+  restoreJournalEntryById: (...args: unknown[]) => mockRestoreJournalEntryById(...args),
+  bulkSoftDeleteJournalEntries: (...args: unknown[]) => mockBulkSoftDeleteJournalEntries(...args),
+  bulkRestoreJournalEntries: (...args: unknown[]) => mockBulkRestoreJournalEntries(...args),
 }));
 
 const mockGetUserColumnPreferencesForModule = vi.fn();
@@ -135,11 +143,15 @@ describe('accounting REST routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
     mockLoadAccounts.mockReset().mockResolvedValue([sampleAccount]);
-    mockReplaceAccounts.mockReset().mockResolvedValue([sampleAccount]);
+    mockUpsertAccounts.mockReset().mockResolvedValue([sampleAccount]);
     mockLoadEntries.mockReset().mockResolvedValue([sampleEntry]);
-    mockReplaceEntries.mockReset().mockResolvedValue([sampleEntry]);
+    mockUpsertEntries.mockReset().mockResolvedValue([sampleEntry]);
     mockLoadFiscalYears.mockReset().mockResolvedValue([sampleFiscalYear]);
-    mockReplaceFiscalYears.mockReset().mockResolvedValue([sampleFiscalYear]);
+    mockUpsertFiscalYears.mockReset().mockResolvedValue([sampleFiscalYear]);
+    mockDeleteJournalEntryById.mockReset().mockResolvedValue(true);
+    mockRestoreJournalEntryById.mockReset().mockResolvedValue(true);
+    mockBulkSoftDeleteJournalEntries.mockReset().mockResolvedValue({ succeeded: 1, failed: 0 });
+    mockBulkRestoreJournalEntries.mockReset().mockResolvedValue({ succeeded: 1, failed: 0 });
     mockGetUserColumnPreferencesForModule.mockReset().mockResolvedValue([]);
     mockSetUserColumnPreferencesForModule.mockReset().mockResolvedValue(undefined);
   });
@@ -203,7 +215,7 @@ describe('accounting REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ accounts: [sampleAccount] });
-    expect(mockReplaceAccounts).toHaveBeenCalledWith([sampleAccount]);
+    expect(mockUpsertAccounts).toHaveBeenCalledWith([sampleAccount]);
     await app.close();
   });
 
@@ -237,7 +249,7 @@ describe('accounting REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ entries: [sampleEntry] });
-    expect(mockReplaceEntries).toHaveBeenCalledWith([sampleEntry]);
+    expect(mockUpsertEntries).toHaveBeenCalledWith([sampleEntry]);
     await app.close();
   });
 
@@ -271,7 +283,7 @@ describe('accounting REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ fiscalYears: [sampleFiscalYear] });
-    expect(mockReplaceFiscalYears).toHaveBeenCalledWith([sampleFiscalYear]);
+    expect(mockUpsertFiscalYears).toHaveBeenCalledWith([sampleFiscalYear]);
     await app.close();
   });
 
@@ -333,6 +345,36 @@ describe('accounting REST routes', () => {
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true, preferences: [{ key: 'ref', enabled: true, order: 0 }] });
     expect(mockSetUserColumnPreferencesForModule).toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('DELETE /api/accounting/entries/:id soft-deletes journal entry', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/accounting/entries/je-1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${accountantToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockDeleteJournalEntryById).toHaveBeenCalledWith('je-1', 'u-accountant');
+    await app.close();
+  });
+
+  it('POST /api/accounting/entries/:id/restore restores journal entry', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/accounting/entries/je-1/restore',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${accountantToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockRestoreJournalEntryById).toHaveBeenCalledWith('je-1');
     await app.close();
   });
 });

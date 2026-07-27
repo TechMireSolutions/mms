@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
@@ -35,9 +36,10 @@ interface ClassCardProps {
   onEdit: (sessionClass: Class) => void;
   onDelete: (id: string) => void;
   onMessage?: (channel: 'sms' | 'whatsapp' | 'email', sessionClass: Class) => void;
+  canWrite: boolean;
 }
 
-function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage }: ClassCardProps) {
+function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage, canWrite }: ClassCardProps) {
   const { t } = useTranslation();
   const capacityPercent = Math.round((sessionClass.enrolled / sessionClass.capacity) * 100);
   const barColor = capacityPercent >= 100 ? "bg-destructive" : capacityPercent >= 80 ? "bg-warning" : "bg-success";
@@ -56,48 +58,48 @@ function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage }: Clas
           </div>
           <div>
             <h4 className="text-[14px] font-bold text-foreground m-0">{sessionClass.name}</h4>
-            <p className="text-[11px] text-muted-foreground m-0">{sessionClass.room || "No room"}</p>
+            <p className="text-[11px] text-muted-foreground m-0">{sessionClass.room || t("sessions.classes.noRoom")}</p>
           </div>
         </div>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {canWrite && <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <Button
             variant="ghost"
             size="icon"
-            aria-label={`WhatsApp ${sessionClass.name}`}
+            aria-label={t("sessions.classes.messageWhatsApp", { name: sessionClass.name })}
             onClick={() => onMessage?.("whatsapp", sessionClass)}
             className="p-1.5 rounded-lg hover:bg-muted text-success hover:text-success transition-colors w-7 h-7"
-            title="WhatsApp Class Teacher"
+            title={t("sessions.classes.messageWhatsApp", { name: sessionClass.name })}
           >
             <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            aria-label={`SMS ${sessionClass.name}`}
+            aria-label={t("sessions.classes.messageSms", { name: sessionClass.name })}
             onClick={() => onMessage?.("sms", sessionClass)}
             className="p-1.5 rounded-lg hover:bg-muted text-info hover:text-info transition-colors w-7 h-7"
-            title="SMS Class Teacher"
+            title={t("sessions.classes.messageSms", { name: sessionClass.name })}
           >
             <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
           </Button>
-          <Button variant="ghost" size="icon" aria-label={`Edit ${sessionClass.name}`} onClick={() => onEdit(sessionClass)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors w-7 h-7">
+          <Button variant="ghost" size="icon" aria-label={t("sessions.classes.editNamed", { name: sessionClass.name })} onClick={() => onEdit(sessionClass)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors w-7 h-7">
             <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
           </Button>
-          <Button variant="ghost" size="icon" aria-label={`Delete ${sessionClass.name}`} onClick={() => onDelete(sessionClass.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors w-7 h-7">
+          <Button variant="ghost" size="icon" aria-label={t("sessions.classes.deleteNamed", { name: sessionClass.name })} onClick={() => onDelete(sessionClass.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors w-7 h-7">
             <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
           </Button>
-        </div>
+        </div>}
       </header>
 
       <div className="grid grid-cols-2 gap-2 mb-3">
         <div className="rounded-lg bg-muted/40 px-3 py-2">
-          <p className="text-[10px] text-muted-foreground font-medium m-0">Age Range</p>
-          <p className="text-[13px] font-semibold text-foreground m-0">{sessionClass.ageMin}–{sessionClass.ageMax} yrs</p>
+          <p className="text-[10px] text-muted-foreground font-medium m-0">{t("sessions.classes.ageRange")}</p>
+          <p className="text-[13px] font-semibold text-foreground m-0">{t("sessions.classes.ageYears", { min: sessionClass.ageMin, max: sessionClass.ageMax })}</p>
         </div>
         <div className="rounded-lg bg-muted/40 px-3 py-2">
-          <p className="text-[10px] text-muted-foreground font-medium m-0">Gender</p>
+          <p className="text-[10px] text-muted-foreground font-medium m-0">{t("sessions.classes.form.gender")}</p>
           <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full border ${GENDER_COLORS[sessionClass.gender] || GENDER_COLORS.any}`}>
-            {sessionClass.gender === "any" ? "Any" : sessionClass.gender === "male" ? "♂ Male" : "♀ Female"}
+            {t(`sessions.classes.gender.${sessionClass.gender}` as AppTranslationKey)}
           </span>
         </div>
       </div>
@@ -107,9 +109,9 @@ function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage }: Clas
         <span>{t('sessions.classes.teacher')}: <span className="font-medium text-foreground">{teacherLabel}</span></span>
       </div>
 
-      <div aria-label={`Enrolled ${sessionClass.enrolled} out of ${sessionClass.capacity}`}>
+      <div aria-label={t("sessions.classes.enrolledCapacity", { enrolled: sessionClass.enrolled, capacity: sessionClass.capacity })}>
         <div className="flex items-center justify-between mb-1" aria-hidden="true">
-          <span className="text-[11px] text-muted-foreground">Capacity</span>
+          <span className="text-[11px] text-muted-foreground">{t("sessions.classes.form.capacity")}</span>
           <span className="text-[11px] font-semibold text-foreground">{sessionClass.enrolled}/{sessionClass.capacity}</span>
         </div>
         <div className="h-1.5 rounded-full bg-border overflow-hidden" aria-hidden="true">
@@ -124,10 +126,11 @@ interface ClassModalProps {
   open: boolean;
   sessionClass: Class | null;
   onClose: () => void;
-  onSave: (sessionClass: Class) => void;
+  onSave: (sessionClass: Class) => void | Promise<void>;
+  saving: boolean;
 }
 
-function ClassModal({ open, sessionClass, onClose, onSave }: ClassModalProps) {
+function ClassModal({ open, sessionClass, onClose, onSave, saving }: ClassModalProps) {
   const { t } = useTranslation();
   const [classDraft, setClassDraft] = useState<Partial<Class>>(sessionClass ? { ...sessionClass } : { ...EMPTY_CLASS });
   const updateClassDraft = <K extends keyof Class>(field: K, value: Class[K]) => setClassDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
@@ -174,11 +177,11 @@ function ClassModal({ open, sessionClass, onClose, onSave }: ClassModalProps) {
     }
   }, [open, sessionClass]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const teacherFields = classDraft.teacherId
       ? assignClassTeacher(String(classDraft.teacherId))
       : { teacherId: '' };
-    onSave({
+    await onSave({
       ...classDraft,
       ...teacherFields,
       id: sessionClass?.id || `c${Date.now()}`,
@@ -189,45 +192,46 @@ function ClassModal({ open, sessionClass, onClose, onSave }: ClassModalProps) {
     <FormModal
       open={open}
       onClose={onClose}
-      title={sessionClass ? "Edit Class" : "Add Class"}
+      title={sessionClass ? t("sessions.classes.edit") : t("sessions.classes.add")}
       icon={GraduationCap}
-      cancelLabel="Cancel"
-      saveLabel="Save Class"
+      cancelLabel={t("common.cancel")}
+      saveLabel={t("common.save")}
       onSave={handleSave}
+      saving={saving}
       saveDisabled={!classDraft.name}
     >
       <div className="space-y-4">
         <div>
-          <label className={FORM_LABEL} htmlFor="class-name">Class Name *</label>
-          <Input id="class-name" value={classDraft.name || ""} onChange={(event) => updateClassDraft("name", event.target.value)} placeholder="e.g. Hifz A" required />
+          <label className={FORM_LABEL} htmlFor="class-name">{t("sessions.classes.form.name")} *</label>
+          <Input id="class-name" value={classDraft.name || ""} onChange={(event) => updateClassDraft("name", event.target.value)} placeholder={t("sessions.classes.form.namePlaceholder")} required />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={FORM_LABEL} htmlFor="class-min-age">Min Age</label>
+            <label className={FORM_LABEL} htmlFor="class-min-age">{t("sessions.classes.form.minAge")}</label>
             <Input id="class-min-age" type="number" value={classDraft.ageMin || 0} onChange={(event) => updateClassDraft("ageMin", +event.target.value)} min={1} max={100} />
           </div>
           <div>
-            <label className={FORM_LABEL} htmlFor="class-max-age">Max Age</label>
+            <label className={FORM_LABEL} htmlFor="class-max-age">{t("sessions.classes.form.maxAge")}</label>
             <Input id="class-max-age" type="number" value={classDraft.ageMax || 0} onChange={(event) => updateClassDraft("ageMax", +event.target.value)} min={1} max={100} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={FORM_LABEL} htmlFor="class-gender">Gender</label>
+            <label className={FORM_LABEL} htmlFor="class-gender">{t("sessions.classes.form.gender")}</label>
             <FormSelect
               id="class-gender"
               value={classDraft.gender || "any"}
               onChange={(value) => updateClassDraft("gender", value as Class["gender"])}
               options={[
-                { value: "any", label: "Any" },
-                { value: "male", label: "Male" },
-                { value: "female", label: "Female" },
+                { value: "any", label: t("sessions.classes.gender.any") },
+                { value: "male", label: t("sessions.classes.gender.male") },
+                { value: "female", label: t("sessions.classes.gender.female") },
               ]}
               className="w-full"
             />
           </div>
           <div>
-            <label className={FORM_LABEL} htmlFor="class-capacity">Capacity</label>
+            <label className={FORM_LABEL} htmlFor="class-capacity">{t("sessions.classes.form.capacity")}</label>
             <Input id="class-capacity" type="number" value={classDraft.capacity || 0} onChange={(event) => updateClassDraft("capacity", +event.target.value)} min={1} />
           </div>
         </div>
@@ -255,8 +259,8 @@ function ClassModal({ open, sessionClass, onClose, onSave }: ClassModalProps) {
           )}
         </div>
         <div>
-          <label className={FORM_LABEL} htmlFor="class-room">Room</label>
-            <Input id="class-room" value={classDraft.room || ""} onChange={(event) => updateClassDraft("room", event.target.value)} placeholder="e.g. Room A" />
+          <label className={FORM_LABEL} htmlFor="class-room">{t("sessions.classes.form.room")}</label>
+            <Input id="class-room" value={classDraft.room || ""} onChange={(event) => updateClassDraft("room", event.target.value)} placeholder={t("sessions.classes.form.roomPlaceholder")} />
         </div>
       </div>
     </FormModal>
@@ -265,7 +269,8 @@ function ClassModal({ open, sessionClass, onClose, onSave }: ClassModalProps) {
 
 interface ClassesTabProps {
   session: Session;
-  onUpdate: (session: Session) => void;
+  onUpdate: (session: Session) => void | Promise<void>;
+  canWrite: boolean;
 }
 
 /**
@@ -273,7 +278,8 @@ interface ClassesTabProps {
  *
  * Renders the classes tab for a session, allowing managing individual classes.
  */
-export function ClassesTab({ session, onUpdate }: ClassesTabProps) {
+export function ClassesTab({ session, onUpdate, canWrite }: ClassesTabProps) {
+  const { t } = useTranslation();
   const teacherIds = useMemo(
     () => collectTeacherIdsFromClasses(session.classes),
     [session.classes],
@@ -282,17 +288,20 @@ export function ClassesTab({ session, onUpdate }: ClassesTabProps) {
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const [showModal, setShowModal] = useState(false);
   const [classBeingEdited, setClassBeingEdited] = useState<Class | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Class | null>(null);
+  const [saving, setSaving] = useState(false);
+  const deletePendingRef = React.useRef(false);
 
   const handleClassMessage = (channel: 'sms' | 'whatsapp' | 'email', sessionClass: Class) => {
     const teacher = teachers.find((t) => t.id === sessionClass.teacherId);
-    const recipientName = (teacher ? teacher.name : sessionClass.teacherName || sessionClass.name) || "Class";
+    const recipientName = (teacher ? teacher.name : sessionClass.teacherName || sessionClass.name) || t("sessions.classes.fallbackName");
     const teacherObj = teacher as unknown as { phone?: string; email?: string } | undefined;
     const phoneStr: string = teacherObj?.phone ?? "";
     const emailStr: string | undefined = teacherObj?.email ?? undefined;
     openComposer(channel, [{ id: sessionClass.id, name: recipientName, phone: phoneStr, email: emailStr }]);
   };
 
-  const handleSave = (sessionClass: Class) => {
+  const handleSave = async (sessionClass: Class) => {
     const teacherFields = sessionClass.teacherId
       ? assignClassTeacher(String(sessionClass.teacherId))
       : { teacherId: '' };
@@ -303,37 +312,51 @@ export function ClassesTab({ session, onUpdate }: ClassesTabProps) {
     const updatedClasses = existing
       ? classes.map((classItem) => classItem.id === classWithTeacher.id ? classWithTeacher : classItem)
       : [...classes, classWithTeacher];
-    onUpdate({ ...session, classes: updatedClasses });
-    setShowModal(false);
-    setClassBeingEdited(null);
+    setSaving(true);
+    try {
+      await onUpdate({ ...session, classes: updatedClasses });
+      setShowModal(false);
+      setClassBeingEdited(null);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = (id: string) => onUpdate({ ...session, classes: session.classes.filter((classItem) => classItem.id !== id) });
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    deletePendingRef.current = true;
+    try {
+      await onUpdate({ ...session, classes: session.classes.filter((classItem) => classItem.id !== deleteTarget.id) });
+      setDeleteTarget(null);
+    } finally {
+      deletePendingRef.current = false;
+    }
+  };
 
   const handleEdit = (sessionClass: Class) => { setClassBeingEdited(sessionClass); setShowModal(true); };
 
   return (
-    <section aria-label="Session Classes" className="space-y-4">
+    <section aria-label={t("sessions.classes.ariaLabel")} className="space-y-4">
       <header className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-foreground m-0">{session.classes?.length || 0} class{session.classes?.length !== 1 ? "es" : ""}</p>
-        <Button
+        <p className="text-sm font-semibold text-foreground m-0">{t("sessions.classes.count", { count: session.classes?.length || 0 })}</p>
+        {canWrite && <Button
           onClick={() => { setClassBeingEdited(null); setShowModal(true); }}
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors h-auto"
         >
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Class
-        </Button>
+          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.classes.add")}
+        </Button>}
       </header>
 
       {(!session.classes || session.classes.length === 0) ? (
         <div className="py-12 text-center rounded-xl border-2 border-dashed border-border">
           <GraduationCap className="w-8 h-8 text-muted-foreground mx-auto mb-2" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground m-0">No classes yet</p>
-          <p className="text-xs text-muted-foreground mt-0.5 m-0">Add your first class to get started</p>
+          <p className="text-sm font-medium text-foreground m-0">{t("sessions.classes.emptyTitle")}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 m-0">{t("sessions.classes.emptySubtitle")}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {session.classes.map((sessionClass) => (
-            <ClassCard key={sessionClass.id} sessionClass={sessionClass} teachers={teachers} onEdit={handleEdit} onDelete={handleDelete} onMessage={handleClassMessage} />
+            <ClassCard key={sessionClass.id} sessionClass={sessionClass} teachers={teachers} onEdit={handleEdit} onDelete={() => setDeleteTarget(sessionClass)} onMessage={handleClassMessage} canWrite={canWrite} />
           ))}
         </div>
       )}
@@ -341,12 +364,12 @@ export function ClassesTab({ session, onUpdate }: ClassesTabProps) {
       <ClassModal
         open={showModal}
         sessionClass={classBeingEdited}
-        onClose={() => { setShowModal(false); setClassBeingEdited(null); }}
+        onClose={() => { if (!saving) { setShowModal(false); setClassBeingEdited(null); } }}
         onSave={handleSave}
+        saving={saving}
       />
 
-      {/* Message Composer Modal */}
-      {messagingTarget && (
+      {canWrite && messagingTarget && (
         <React.Suspense fallback={null}>
           <MessageComposer
             channel={messagingTarget.channel}
@@ -355,6 +378,15 @@ export function ClassesTab({ session, onUpdate }: ClassesTabProps) {
           />
         </React.Suspense>
       )}
+      <ConfirmAlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open && !deletePendingRef.current) setDeleteTarget(null); }}
+        title={t("sessions.classes.confirmDeleteTitle")}
+        description={t("sessions.classes.confirmDeleteDescription", { name: deleteTarget?.name ?? "" })}
+        confirmLabel={t("common.delete")}
+        destructive
+        onConfirm={() => { void handleDelete(); }}
+      />
     </section>
   );
 }
