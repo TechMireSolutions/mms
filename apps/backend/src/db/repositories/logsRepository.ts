@@ -2,8 +2,13 @@ import { type ActivityLog, type AuditLogEntry } from '@mms/shared';
 import { userActivityLogs, auditLogEntries } from '../schema.js';
 import { createGenericRepository } from './genericRepository.js';
 
-const activityLogsRepo = createGenericRepository<ActivityLog, typeof userActivityLogs>(userActivityLogs);
-const auditLogsRepo = createGenericRepository<AuditLogEntry, typeof auditLogEntries>(auditLogEntries, { updateStrategy: 'overwrite' });
+const activityLogsRepo = createGenericRepository<ActivityLog, typeof userActivityLogs>(userActivityLogs, {
+  conflictTarget: [userActivityLogs.workspaceSubdomain, userActivityLogs.id],
+});
+const auditLogsRepo = createGenericRepository<AuditLogEntry, typeof auditLogEntries>(auditLogEntries, {
+  updateStrategy: 'overwrite',
+  conflictTarget: [auditLogEntries.workspaceSubdomain, auditLogEntries.id],
+});
 
 export const listActivityLogsByWorkspace = activityLogsRepo.listByWorkspace;
 export const replaceActivityLogsForWorkspace = activityLogsRepo.replaceForWorkspace;

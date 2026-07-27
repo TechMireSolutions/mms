@@ -26,14 +26,16 @@ const mockLoadMessageTemplates = vi.fn();
 const mockLoadFilteredMessageLogs = vi.fn();
 const mockClearAllMessageLogs = vi.fn();
 const mockComputeMessagingMetrics = vi.fn();
+const mockSaveMessageTemplate = vi.fn();
+const mockRecordMessageLogs = vi.fn();
 
 vi.mock('../services/messagingService.js', () => ({
   loadMessageTemplates: (...args: unknown[]) => mockLoadMessageTemplates(...args),
-  saveMessageTemplate: vi.fn(),
+  saveMessageTemplate: (...args: unknown[]) => mockSaveMessageTemplate(...args),
   removeMessageTemplate: vi.fn(),
   loadMessageLogs: vi.fn().mockResolvedValue([]),
   loadFilteredMessageLogs: (...args: unknown[]) => mockLoadFilteredMessageLogs(...args),
-  recordMessageLogs: vi.fn(),
+  recordMessageLogs: (...args: unknown[]) => mockRecordMessageLogs(...args),
   clearAllMessageLogs: (...args: unknown[]) => mockClearAllMessageLogs(...args),
   computeMessagingMetrics: (...args: unknown[]) => mockComputeMessagingMetrics(...args),
 }));
@@ -59,6 +61,8 @@ describe('messaging REST routes', () => {
     mockLoadMessageTemplates.mockReset().mockResolvedValue([]);
     mockLoadFilteredMessageLogs.mockReset().mockResolvedValue([]);
     mockClearAllMessageLogs.mockReset().mockResolvedValue(undefined);
+    mockSaveMessageTemplate.mockReset().mockImplementation(async (_tenant: string, template: unknown) => template);
+    mockRecordMessageLogs.mockReset().mockImplementation(async (_tenant: string, logs: unknown[]) => logs);
     mockComputeMessagingMetrics.mockReset().mockResolvedValue({
       total: 0,
       smsCount: 0,
@@ -159,6 +163,85 @@ describe('messaging REST routes', () => {
       },
     });
     expect(res.statusCode).toBe(400);
+    await app.close();
+  });
+
+  it('POST /api/messaging/templates creates with UUID id and tenant', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/messaging/templates',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${tokenFor(app, 'admin')}`,
+      },
+      payload: { label: 'Fee Reminder', body: 'Hello {name}', category: 'financial', channel: 'sms' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockSaveMessageTemplate).toHaveBeenCalledTimes(1);
+    const [tenant, template] = mockSaveMessageTemplate.mock.calls[0] as [
+      string,
+      { id: string; label: string; body: string; category: string; channel: string },
+    ];
+    expect(tenant).toBe('demo');
+    expect(template.id).toMatch(/^custom_[0-9a-f-]{36}$/i);
+    expect(template.label).toBe('Fee Reminder');
+    expect(template.category).toBe('financial');
+    expect(res.json().template.id).toBe(template.id);
+    await app.close();
+  });
+
+  it('POST /api/messaging/templates rejects invalid body', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/messaging/templates',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${tokenFor(app, 'admin')}`,
+      },
+      payload: { label: '', body: '' },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(mockSaveMessageTemplate).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/messaging/logs forces authenticated userId and strips deletedAt', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/messaging/logs',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${tokenFor(app, 'admin')}`,
+      },
+      payload: {
+        logs: [
+          {
+            id: 'msg-1',
+            userId: 'forged-user',
+            contactId: 'c1',
+            channel: 'sms',
+            body: 'Assalamu Alaikum',
+            sentAt: '2026-01-01T00:00:00.000Z',
+            status: 'sent',
+            deletedAt: '2026-01-02T00:00:00.000Z',
+          },
+        ],
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ recorded: 1 });
+    expect(mockRecordMessageLogs).toHaveBeenCalledTimes(1);
+    const [tenant, logs] = mockRecordMessageLogs.mock.calls[0] as [
+      string,
+      Array<{ userId: string; deletedAt?: string; id: string }>,
+    ];
+    expect(tenant).toBe('demo');
+    expect(logs[0].userId).toBe('u-admin');
+    expect(logs[0].deletedAt).toBeUndefined();
+    expect(logs[0].id).toBe('msg-1');
     await app.close();
   });
 });

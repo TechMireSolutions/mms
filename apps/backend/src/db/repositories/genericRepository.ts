@@ -1,10 +1,11 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import type { AnyPgColumn, AnyPgTable } from 'drizzle-orm/pg-core';
 import { applyTitleCaseRecursive } from '@mms/shared';
-import { getDb } from '../dbClient.js';
+import { withTenantTransaction } from '../withTenantTransaction.js';
 
 export interface GenericRepoOptions {
   updateStrategy?: 'merge' | 'overwrite';
+  /** Required for bulkSave on composite-PK tenant tables. */
   conflictTarget?: AnyPgColumn | AnyPgColumn[];
 }
 
@@ -36,31 +37,37 @@ export function createGenericRepository<
 
   async function listByWorkspace(workspaceSubdomain: string): Promise<T[]> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
-    const rows = await getDb()
-      .select()
-      .from(dbTable)
-      .where(eq(table.workspaceSubdomain, subdomain));
-    return (rows as GenericTableRow[]).map(rowToRecord);
+    return withTenantTransaction(subdomain, async (tx) => {
+      const rows = await tx
+        .select()
+        .from(dbTable)
+        .where(eq(table.workspaceSubdomain, subdomain));
+      return (rows as GenericTableRow[]).map(rowToRecord);
+    });
   }
 
   async function findById(workspaceSubdomain: string, id: string): Promise<T | null> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
-    const rows = await getDb()
-      .select()
-      .from(dbTable)
-      .where(and(eq(table.workspaceSubdomain, subdomain), eq(table.id, id)));
-    const row = (rows as GenericTableRow[])[0];
-    return row ? rowToRecord(row) : null;
+    return withTenantTransaction(subdomain, async (tx) => {
+      const rows = await tx
+        .select()
+        .from(dbTable)
+        .where(and(eq(table.workspaceSubdomain, subdomain), eq(table.id, id)));
+      const row = (rows as GenericTableRow[])[0];
+      return row ? rowToRecord(row) : null;
+    });
   }
 
   async function findByIds(workspaceSubdomain: string, ids: string[]): Promise<T[]> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     if (ids.length === 0) return [];
-    const rows = await getDb()
-      .select()
-      .from(dbTable)
-      .where(and(eq(table.workspaceSubdomain, subdomain), inArray(table.id, ids)));
-    return (rows as GenericTableRow[]).map(rowToRecord);
+    return withTenantTransaction(subdomain, async (tx) => {
+      const rows = await tx
+        .select()
+        .from(dbTable)
+        .where(and(eq(table.workspaceSubdomain, subdomain), inArray(table.id, ids)));
+      return (rows as GenericTableRow[]).map(rowToRecord);
+    });
   }
 
   async function save(workspaceSubdomain: string, record: T): Promise<void> {
@@ -68,9 +75,8 @@ export function createGenericRepository<
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     const id = String(processedRecord.id);
     const { id: _, ...extra } = processedRecord;
-    const db = getDb();
 
-    await db.transaction(async (tx) => {
+    await withTenantTransaction(subdomain, async (tx) => {
       const existing = await tx
         .select({ id: table.id })
         .from(dbTable)
@@ -107,9 +113,11 @@ export function createGenericRepository<
 
   async function bulkSave(workspaceSubdomain: string, list: T[]): Promise<void> {
     if (list.length === 0) return;
+    if (!options.conflictTarget) {
+      throw new Error('bulkSave requires conflictTarget for composite tenant primary keys');
+    }
     const processedList = applyTitleCaseRecursive(list) as T[];
     const subdomain = workspaceSubdomain.trim().toLowerCase();
-    const db = getDb();
 
     const values = processedList.map((record) => {
       const id = String(record.id);
@@ -122,23 +130,27 @@ export function createGenericRepository<
       };
     });
 
-    await db
-      .insert(dbTable)
-      .values(values)
-      .onConflictDoUpdate({
-        target: options.conflictTarget || table.id,
-        set: {
-          customData: sql`COALESCE(${table.customData}, '{}'::jsonb) || excluded.custom_data`,
-          updatedAt: sql`excluded.updated_at`,
-        },
-      });
+    await withTenantTransaction(subdomain, async (tx) => {
+      await tx
+        .insert(dbTable)
+        .values(values)
+        .onConflictDoUpdate({
+          target: options.conflictTarget!,
+          set: {
+            customData: sql`COALESCE(${table.customData}, '{}'::jsonb) || excluded.custom_data`,
+            updatedAt: sql`excluded.updated_at`,
+          },
+        });
+    });
   }
 
   async function deleteById(workspaceSubdomain: string, id: string): Promise<void> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
-    await getDb()
-      .delete(dbTable)
-      .where(and(eq(table.workspaceSubdomain, subdomain), eq(table.id, id)));
+    await withTenantTransaction(subdomain, async (tx) => {
+      await tx
+        .delete(dbTable)
+        .where(and(eq(table.workspaceSubdomain, subdomain), eq(table.id, id)));
+    });
   }
 
   async function replaceForWorkspace(
@@ -146,9 +158,8 @@ export function createGenericRepository<
     list: T[],
   ): Promise<void> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
-    const db = getDb();
 
-    await db.transaction(async (tx) => {
+    await withTenantTransaction(subdomain, async (tx) => {
       await tx.delete(dbTable).where(eq(table.workspaceSubdomain, subdomain));
 
       if (list.length === 0) return;
@@ -177,9 +188,9 @@ export function createGenericRepository<
 
   async function deleteByWorkspace(workspaceSubdomain: string): Promise<void> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
-    await getDb()
-      .delete(dbTable)
-      .where(eq(table.workspaceSubdomain, subdomain));
+    await withTenantTransaction(subdomain, async (tx) => {
+      await tx.delete(dbTable).where(eq(table.workspaceSubdomain, subdomain));
+    });
   }
 
   return {

@@ -98,7 +98,9 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                   id="account-type"
                   name="type"
                   value={form.type || "Asset"}
-                  onChange={(val) => setForm({ ...form, type: val as AccountType, subtype: "" })}
+                  onChange={(val) =>
+                    setForm((prev) => ({ ...prev, type: val as AccountType, subtype: "" }))
+                  }
                   options={ACCOUNT_TYPES.map((accType) => ({ value: accType, label: t(`accounting.type.${accType}` as AppTranslationKey) }))}
                 />
               </div>

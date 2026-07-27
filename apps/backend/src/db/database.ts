@@ -55,6 +55,7 @@ import { runMigration031 } from './migrations/031_migrate_accounting_to_tables.j
 import { runMigration032 } from './migrations/032_migrate_question_bank_to_tables.js';
 import { runMigration033 } from './migrations/033_migrate_logs_to_tables.js';
 import { runMigration034 } from './migrations/034_purge_overdue_obligations.js';
+import { runMigration035 } from './migrations/035_migrate_messaging_to_tables.js';
 import { deleteAuthArtifactsForWorkspace, purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
 import { initPlatformSettings } from '../services/platform/platformSettingsService.js';
@@ -115,12 +116,19 @@ export async function initDb(): Promise<void> {
     _rootDb = drizzle(pool, { schema });
     setDb(_rootDb);
 
-    // Run Drizzle migrations dynamically on start
+    // Run Drizzle migrations dynamically on start (dedicated client so RLS bypass is session-local)
     const backendRoot = resolveBackendRoot();
     const srcMigrations = join(backendRoot, 'src/db/migrations_drizzle');
     const distMigrations = join(backendRoot, 'dist/db/migrations_drizzle');
     const migrationsFolder = existsSync(srcMigrations) ? srcMigrations : distMigrations;
-    await migrate(_rootDb, { migrationsFolder });
+    const migrateClient = await pool.connect();
+    try {
+      await migrateClient.query(`SELECT set_config('app.rls_bypass', 'on', false)`);
+      const migrateDb = drizzle(migrateClient, { schema });
+      await migrate(migrateDb, { migrationsFolder });
+    } finally {
+      migrateClient.release();
+    }
 
     // Run pending data migrations — failures are fatal and halt startup
     const dataMigrationsToRun = [
@@ -158,6 +166,7 @@ export async function initDb(): Promise<void> {
       { id: '032', run: runMigration032 },
       { id: '033', run: runMigration033 },
       { id: '034', run: runMigration034 },
+      { id: '035', run: runMigration035 },
     ];
 
     const migrationLockClient = await pool.connect();
@@ -585,7 +594,15 @@ export async function runInTransaction<T>(cb: () => Promise<T>): Promise<T> {
   const existing = txStorage.getStore();
   if (existing) return cb();
 
+  const tenant = getRequestTenant();
   return await getDb().transaction(async (tx) => {
+    if (tenant && tenant.trim()) {
+      const normalized = tenant.trim().toLowerCase();
+      await tx.execute(sql`SELECT set_config('app.current_tenant', ${normalized}, true)`);
+      await tx.execute(sql`SELECT set_config('app.rls_bypass', 'off', true)`);
+    } else {
+      await tx.execute(sql`SELECT set_config('app.rls_bypass', 'on', true)`);
+    }
     return await txStorage.run(tx, cb);
   });
 }

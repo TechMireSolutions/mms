@@ -27,7 +27,11 @@ export function sendNotFound(
 export function sendDatabaseError(
   reply: FastifyReply,
   message = 'Database error occurred',
+  cause?: unknown,
 ): ReturnType<FastifyReply['status']> {
+  if (cause !== undefined) {
+    console.error('[database_error]', message, cause);
+  }
   return reply.status(500).send({ type: 'database_error', message });
 }
 

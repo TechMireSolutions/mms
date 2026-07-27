@@ -204,6 +204,13 @@
       "when": 1785177200000,
       "tag": "0028_message_templates_and_logs",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1785178800000,
+      "tag": "0029_tighten_tenant_rls",
+      "breakpoints": true
     }
   ]
 }

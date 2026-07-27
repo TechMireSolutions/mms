@@ -13,6 +13,7 @@ import {
   listMessageLogsByWorkspace,
   replaceMessageLogsForWorkspace,
   bulkSaveMessageLogs,
+  softDeleteActiveMessageLogs,
 } from '../db/repositories/messagingRepository.js';
 import { defineTenantBulkCollectionService } from './tenantBulkService.js';
 import { z } from 'zod';
@@ -105,12 +106,7 @@ export async function recordMessageLogs(workspaceSubdomain: string, logs: Messag
 
 /** Soft-deletes all active message logs for the workspace (sets deletedAt). */
 export async function clearAllMessageLogs(workspaceSubdomain: string): Promise<void> {
-  const logs = await listMessageLogsByWorkspace(workspaceSubdomain);
-  const now = new Date().toISOString();
-  const softDeleted = logs.map((log) =>
-    log.deletedAt ? log : { ...log, deletedAt: now },
-  );
-  await replaceMessageLogsForWorkspace(workspaceSubdomain, softDeleted);
+  await softDeleteActiveMessageLogs(workspaceSubdomain);
 }
 
 export async function computeMessagingMetrics(workspaceSubdomain?: string): Promise<MessagingMetricsDto> {

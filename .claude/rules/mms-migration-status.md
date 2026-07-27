@@ -68,7 +68,8 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 - **Contacts gender list filter**: `filterContactsForQuery` / student gender filters match case-insensitively so Father/Mother pickers (`filterGender=male|female`) find Title-Case stored values.
 - **ContactPicker label association**: Search inputs use `<label htmlFor>` for a11y and stable Playwright `getByLabel` selectors.
 - **Onboarding E2E critical path**: `e2e/tests/onboarding-login.spec.ts` covers platform setup → tenant onboard → contacts (with phone) → student with guardians → attendance bulk submit → module tier shells → teacher create → finance invoice → record payment → session + class → enrollment wizard → messaging preset template → SMS campaign compose + message log.
-- **Messaging templates/logs tables**: Drizzle `0028_message_templates_and_logs` creates composite-PK tenant tables + RLS; messaging repos use composite `conflictTarget` for upserts.
+- **Messaging templates/logs tables**: Drizzle `0028` creates composite-PK tables; `0029` tightens tenant RLS (bypass GUC or exact tenant) and FORCE RLS on messaging tables; data migration `035` imports legacy `messages_u:*` / `whatsappTemplates_u:*`; repos use composite `conflictTarget` + `withTenantTransaction` SET LOCAL.
+- **Messaging write hardening**: Template IDs use `crypto.randomUUID()`; log POST forces `userId` from session and strips `deletedAt`; clear-logs is a single tenant-scoped JSONB update; DB errors no longer echo SQL to clients.
 - **Teacher create without client id**: `teacherCoreSchema.id` is optional on POST; server assigns `tch-{timestamp}` (parity with students).
 - **Finance invoice studentName strip**: InvoiceForm no longer invents a slug `studentId` from the free-text name (that triggered `normalizeIdLinkedName` to drop `studentName` on cache save).
 - **Session create client id**: SessionForm assigns `sess-{timestamp}` on create so POST validates against required `SessionSchema.id`.

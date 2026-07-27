@@ -361,13 +361,13 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     expect(browserFailures, browserFailures.join('\n')).toEqual([]);
   });
 
-  test('should expose module shells and create teacher, invoice, session, enrollment, payment, message template, and campaign', async ({ page }) => {
-    test.setTimeout(210_000);
+  test('should expose module shells and create teacher, invoice, session, enrollment, payment, message template, campaign, and accounting entry', async ({ page }) => {
+    test.setTimeout(240_000);
 
     await loginTenant(page, tenantOrigin, adminEmail, changedAdminPassword);
     await expect(page.locator('h1')).toContainText('Assalamu Alaikum');
 
-    for (const modulePath of ['/teachers', '/finance', '/sessions', '/messaging', '/users'] as const) {
+    for (const modulePath of ['/teachers', '/finance', '/sessions', '/messaging', '/users', '/accounting'] as const) {
       await assertModuleTierSmoke(page, modulePath, tenantOrigin);
     }
 
@@ -673,6 +673,86 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     await messagingReportsNav.getByRole('button', { name: 'Reports', exact: true }).click();
     await expect(
       page.locator('table:visible tbody tr').filter({ hasText: 'Jane Doe' }).first(),
+    ).toBeVisible({ timeout: 20_000 });
+
+    // Accounting — two accounts + balanced journal entry (bulk PUT upsert)
+    await page.goto(`${tenantOrigin}/accounting`);
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('button', { name: 'Chart of Accounts', exact: true }).click();
+    await expect(page.getByRole('region', { name: 'Chart of Accounts' })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    for (const account of [
+      { code: '1100', name: 'E2E Cash', type: 'Asset' },
+      { code: '4100', name: 'E2E Tuition Income', type: 'Revenue' },
+    ] as const) {
+      await page.getByRole('button', { name: 'Add Account' }).click();
+      const accountDialog = page.getByRole('dialog', { name: 'Add Account' });
+      await expect(accountDialog).toBeVisible();
+      await accountDialog.locator('#account-type').selectOption(account.type);
+      await accountDialog.locator('#account-code').fill(account.code);
+      await accountDialog.locator('#account-name').fill(account.name);
+      await expect(accountDialog.locator('#account-code')).toHaveValue(account.code);
+
+      const accountSave = page.waitForResponse(
+        (response) =>
+          response.url().includes('/api/accounting/accounts/bulk') &&
+          response.request().method() === 'PUT',
+        { timeout: 30_000 },
+      );
+      await accountDialog.getByRole('button', { name: 'Save' }).click();
+      const accountResponse = await accountSave;
+      if (!accountResponse.ok()) {
+        throw new Error(
+          `Accounting account save failed: HTTP ${accountResponse.status()} ${await accountResponse.text()}`,
+        );
+      }
+      await expect(accountDialog).toBeHidden({ timeout: 20_000 });
+      await expect(page.getByText(account.name).locator('visible=true').first()).toBeVisible({
+        timeout: 20_000,
+      });
+    }
+
+    await page.getByRole('button', { name: 'Journal Entries', exact: true }).click();
+    await page.getByRole('button', { name: 'Advanced', exact: true }).click();
+    await expect(page.getByRole('region', { name: 'Advanced Journal Entries' })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.getByRole('button', { name: 'New Entry' }).click();
+    const entryDialog = page.getByRole('dialog', { name: 'New Journal Entry' });
+    await expect(entryDialog).toBeVisible();
+    await entryDialog.locator('#journal-entry-description').fill('E2E fee collection journal');
+
+    const line1Account = entryDialog.getByLabel('Account for line 1');
+    const cashAccountValue = await line1Account.locator('option', { hasText: /1100.*E2e Cash/i }).getAttribute('value');
+    if (!cashAccountValue) throw new Error('E2E Cash account option not found in journal form');
+    await line1Account.selectOption(cashAccountValue);
+    await entryDialog.getByLabel('Debit amount for line 1').fill('2500');
+
+    const line2Account = entryDialog.getByLabel('Account for line 2');
+    const incomeAccountValue = await line2Account.locator('option', { hasText: /4100.*E2e Tuition Income/i }).getAttribute('value');
+    if (!incomeAccountValue) throw new Error('E2E Tuition Income account option not found in journal form');
+    await line2Account.selectOption(incomeAccountValue);
+    await entryDialog.getByLabel('Credit amount for line 2').fill('2500');
+
+    const entrySave = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/accounting/entries/bulk') &&
+        response.request().method() === 'PUT',
+      { timeout: 30_000 },
+    );
+    await entryDialog.getByRole('button', { name: 'Post Entry' }).click();
+    const entryResponse = await entrySave;
+    if (!entryResponse.ok()) {
+      throw new Error(
+        `Accounting entry save failed: HTTP ${entryResponse.status()} ${await entryResponse.text()}`,
+      );
+    }
+    await expect(entryDialog).toBeHidden({ timeout: 20_000 });
+    await expect(
+      page.getByText('E2e Fee Collection Journal').locator('visible=true').first(),
     ).toBeVisible({ timeout: 20_000 });
   });
 });

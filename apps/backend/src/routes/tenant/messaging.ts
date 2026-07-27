@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
@@ -16,6 +17,20 @@ import {
 import { type MessageTemplate, type Message, messageTemplateInputSchema, recordMessageLogsSchema, messagingLogsQuerySchema, type User } from '@mms/shared';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
+function normalizeDispatchLogs(user: User, logs: Message[]): Message[] {
+  const sentAtFallback = new Date().toISOString();
+  return logs.map((log) => {
+    const { deletedAt: _deletedAt, ...rest } = log;
+    return {
+      ...rest,
+      id: rest.id?.trim() ? rest.id : randomUUID(),
+      userId: user.id,
+      sentAt: rest.sentAt?.trim() ? rest.sentAt : sentAtFallback,
+      status: rest.status || 'sent',
+    };
+  });
+}
+
 export default async function messagingRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
@@ -30,7 +45,7 @@ export default async function messagingRoutes(
       const templates = await loadMessageTemplates();
       return reply.send({ templates });
     } catch (err) {
-      return sendDatabaseError(reply, String(err));
+      return sendDatabaseError(reply, 'Failed to load message templates', err);
     }
   });
 
@@ -44,7 +59,7 @@ export default async function messagingRoutes(
     if (!tenantSubdomain) return reply.status(400).send({ message: 'Tenant context required' });
 
     const template: MessageTemplate = {
-      id: parsed.data.id || `custom_${Date.now()}`,
+      id: parsed.data.id || `custom_${randomUUID()}`,
       label: parsed.data.label,
       body: parsed.data.body,
       category: parsed.data.category,
@@ -56,7 +71,7 @@ export default async function messagingRoutes(
       const saved = await saveMessageTemplate(tenantSubdomain, template);
       return reply.send({ template: saved });
     } catch (err) {
-      return sendDatabaseError(reply, String(err));
+      return sendDatabaseError(reply, 'Failed to save message template', err);
     }
   });
 
@@ -71,7 +86,7 @@ export default async function messagingRoutes(
       await removeMessageTemplate(tenantSubdomain, id);
       return reply.send({ success: true });
     } catch (err) {
-      return sendDatabaseError(reply, String(err));
+      return sendDatabaseError(reply, 'Failed to delete message template', err);
     }
   });
 
@@ -88,7 +103,7 @@ export default async function messagingRoutes(
         : await loadMessageLogs();
       return reply.send({ logs });
     } catch (err) {
-      return sendDatabaseError(reply, String(err));
+      return sendDatabaseError(reply, 'Failed to load message logs', err);
     }
   });
 
@@ -102,10 +117,11 @@ export default async function messagingRoutes(
     if (!tenantSubdomain) return reply.status(400).send({ message: 'Tenant context required' });
 
     try {
-      const recorded = await recordMessageLogs(tenantSubdomain, parsed.data.logs as Message[]);
+      const normalized = normalizeDispatchLogs(user, parsed.data.logs as Message[]);
+      const recorded = await recordMessageLogs(tenantSubdomain, normalized);
       return reply.send({ recorded: recorded.length });
     } catch (err) {
-      return sendDatabaseError(reply, String(err));
+      return sendDatabaseError(reply, 'Failed to record message logs', err);
     }
   });
 
@@ -119,7 +135,7 @@ export default async function messagingRoutes(
       await clearAllMessageLogs(tenantSubdomain);
       return reply.send({ success: true });
     } catch (err) {
-      return sendDatabaseError(reply, String(err));
+      return sendDatabaseError(reply, 'Failed to clear message logs', err);
     }
   });
 
@@ -132,8 +148,7 @@ export default async function messagingRoutes(
       const metrics = await computeMessagingMetrics(tenantSubdomain || undefined);
       return reply.send({ metrics });
     } catch (err) {
-      return sendDatabaseError(reply, String(err));
+      return sendDatabaseError(reply, 'Failed to load messaging metrics', err);
     }
   });
 }
-
