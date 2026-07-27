@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { normalizeStoredTeacher } from './teacherUtils.js';
 
 export const teacherCoreSchema = z.object({
-  id: z.union([z.string(), z.number()]),
+  /** Optional on create — server assigns `{idPrefix}-{timestamp}` when omitted. */
+  id: z.union([z.string(), z.number()]).optional(),
   contactId: z.union([z.string(), z.number()]),
   employeeId: z.string().optional(),
   specialization: z.string().optional(),

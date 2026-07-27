@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { execSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { assertModuleTierSmoke, loginTenant } from '../helpers/moduleTiers.js';
 
 // Ensure JWT_SECRET and NODE_ENV are set for backend DB CLI scripts in CI/test environments
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
@@ -16,7 +17,7 @@ async function waitForToastOverlayToClear(page: Page, context: string): Promise<
     .catch(() => console.log(`Toast overlay still visible ${context}.`));
 }
 
-test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
+test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
   // Generate a unique subdomain for each test run to prevent tenant conflicts in the database
   const subdomain = `testmadrasa${Date.now()}`;
   const adminEmail = `admin@${subdomain}.com`;
@@ -24,6 +25,7 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
   const changedAdminPassword = 'Madrasa@5678'; // Must be at least 12 characters per password policy
   const platformEmail = 'platform@test.com';
   const platformPassword = 'Pa$$w0rd123';
+  const tenantOrigin = `http://${subdomain}.localhost:5173`;
 
   test.beforeAll(async () => {
     console.log('Resetting platform users database state...');
@@ -351,5 +353,122 @@ test.describe('Platform Onboarding and Tenant Login E2E Flow', () => {
     console.log('Attendance successfully marked and submitted.');
 
     expect(browserFailures, browserFailures.join('\n')).toEqual([]);
+  });
+
+  test('should expose module shells and create teacher, invoice, and session', async ({ page }) => {
+    test.setTimeout(120_000);
+
+    await loginTenant(page, tenantOrigin, adminEmail, changedAdminPassword);
+    await expect(page.locator('h1')).toContainText('Assalamu Alaikum');
+
+    for (const modulePath of ['/teachers', '/finance', '/sessions', '/messaging', '/users'] as const) {
+      await assertModuleTierSmoke(page, modulePath, tenantOrigin);
+    }
+
+    // Soft-delete trash toggle on Students (Contacts-style Work trash)
+    await page.goto(`${tenantOrigin}/students`);
+    await page.waitForLoadState('networkidle');
+    const trashToggle = page.getByRole('button', { name: /Show deleted|Show active/i });
+    await expect(trashToggle).toBeVisible({ timeout: 20_000 });
+    await trashToggle.click();
+    await expect(page.getByRole('button', { name: /Show active/i })).toBeVisible();
+    await page.getByRole('button', { name: /Show active/i }).click();
+
+    // Settings shell
+    await page.goto(`${tenantOrigin}/settings`);
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible({
+      timeout: 20_000,
+    });
+
+    // Teacher from existing John Doe contact
+    await page.goto(`${tenantOrigin}/teachers`);
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('button', { name: 'Add Teacher' }).click();
+    const teacherDialog = page.getByRole('dialog', { name: 'Add teacher' });
+    await expect(teacherDialog).toBeVisible();
+
+    const teacherContactSearch = teacherDialog.getByRole('combobox', { name: 'Contact' });
+    await teacherContactSearch.fill('John Doe');
+    const johnTeacherOption = page.getByRole('option', { name: /John Doe/ }).first();
+    await expect(johnTeacherOption).toBeVisible({ timeout: 15_000 });
+    await johnTeacherOption.click();
+
+    await expect(teacherDialog.getByLabel('Employee ID')).not.toHaveValue('', { timeout: 15_000 });
+
+    const teacherCreate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/teachers') &&
+        response.request().method() === 'POST' &&
+        !response.url().includes('/bulk'),
+      { timeout: 30_000 },
+    );
+    await teacherDialog.getByRole('button', { name: 'Save' }).click();
+    const teacherResponse = await teacherCreate;
+    if (!teacherResponse.ok()) {
+      throw new Error(`Teacher create failed: HTTP ${teacherResponse.status()} ${await teacherResponse.text()}`);
+    }
+    await expect(teacherDialog).toBeHidden({ timeout: 20_000 });
+    await expect(
+      page.locator('table:visible tbody tr').filter({ hasText: 'John Doe' }),
+    ).toBeVisible({ timeout: 20_000 });
+
+    // Finance invoice for Jane Doe
+    await page.goto(`${tenantOrigin}/finance`);
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('button', { name: 'New Invoice' }).click();
+    const invoiceDialog = page.getByRole('dialog', { name: 'New Invoice' });
+    await expect(invoiceDialog).toBeVisible();
+
+    await invoiceDialog.locator('#invoice-student-name').fill('Jane Doe');
+    await invoiceDialog.locator('#invoice-class').fill('Morning Quran Class');
+    await invoiceDialog.locator('#invoice-session').fill('Hifz 2026');
+    await invoiceDialog.locator('#invoice-base-fee').fill('1500');
+
+    const invoiceCreate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/finance/invoices') &&
+        response.request().method() === 'POST',
+      { timeout: 30_000 },
+    );
+    await invoiceDialog.getByRole('button', { name: 'Create Invoice' }).click();
+    const invoiceResponse = await invoiceCreate;
+    if (!invoiceResponse.ok()) {
+      throw new Error(`Invoice create failed: HTTP ${invoiceResponse.status()} ${await invoiceResponse.text()}`);
+    }
+    await expect(invoiceDialog).toBeHidden({ timeout: 20_000 });
+    await expect(
+      page.locator('table:visible tbody tr').filter({ hasText: 'Jane Doe' }),
+    ).toBeVisible({ timeout: 20_000 });
+
+    // Session create (server-assigned shape via client sess-* id)
+    await page.goto(`${tenantOrigin}/sessions`);
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('button', { name: 'New session' }).click();
+    const sessionDialog = page.getByRole('dialog', { name: 'New session' });
+    await expect(sessionDialog).toBeVisible();
+
+    await sessionDialog.getByLabel('Session name').fill('Afternoon Tajweed 2026');
+    // DatePicker inputs use format-based aria-labels (start already defaults to today)
+    const endDate = sessionDialog.getByLabel(/Enter date in DD\/MM\/YYYY format/).nth(1);
+    await endDate.fill('31/12/2026');
+    await endDate.blur();
+
+    const sessionCreate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/sessions') &&
+        response.request().method() === 'POST' &&
+        !response.url().includes('/bulk'),
+      { timeout: 30_000 },
+    );
+    await sessionDialog.getByRole('button', { name: 'Create session' }).click();
+    const sessionResponse = await sessionCreate;
+    if (!sessionResponse.ok()) {
+      throw new Error(`Session create failed: HTTP ${sessionResponse.status()} ${await sessionResponse.text()}`);
+    }
+    await expect(sessionDialog).toBeHidden({ timeout: 20_000 });
+    await expect(
+      page.getByRole('heading', { name: 'Afternoon Tajweed 2026' }).first(),
+    ).toBeVisible({ timeout: 20_000 });
   });
 });

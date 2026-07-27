@@ -1,6 +1,6 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
-import { DollarSign, TrendingUp, AlertCircle, Tag } from "lucide-react";
+import { DollarSign, TrendingUp, AlertCircle, Tag, Filter, X } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, Legend,
 } from "recharts";
@@ -13,6 +13,8 @@ import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Button } from "@/components/ui/button";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 import RevenueChart from "@/components/dashboard-widgets/charts/RevenueChart";
 import FeeCollectionSummary from "@/components/dashboard-widgets/FeeCollectionSummary";
@@ -50,6 +52,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
   const palette = useBrandPalette();
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const PIE_COLORS = useMemo(
     () => [palette.primary, palette.secondary, palette.charts[2], palette.charts[3], palette.charts[0]],
     [palette],
@@ -117,8 +120,19 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
         invoice.studentName.toLowerCase().includes(filters.student.toLowerCase()),
       );
     }
+    if (selectedMonth) {
+      filteredInvoices = filteredInvoices.filter((invoice) => {
+        const dueDate = new Date(invoice.dueDate);
+        if (isNaN(dueDate.getTime())) return false;
+        return formatMonthYear(dueDate) === selectedMonth;
+      });
+    }
     return filteredInvoices;
-  }, [filters, financeInvoices]);
+  }, [filters, financeInvoices, selectedMonth]);
+
+  const toggleMonthFilter = (month: string) => {
+    setSelectedMonth((current) => (current === month ? null : month));
+  };
 
   return (
     <div className="space-y-4">
@@ -132,7 +146,14 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
       {/* Revenue trend */}
       <SectionCard title={t("finance.report.chartTitle")}>
         <SafeResponsiveContainer width="100%" height={200}>
-          <AreaChart data={monthlyFeeCollection}>
+          <AreaChart
+            data={monthlyFeeCollection}
+            onClick={(state) => {
+              const month = (state as { activeLabel?: string } | undefined)?.activeLabel;
+              if (typeof month === "string" && month.length > 0) toggleMonthFilter(month);
+            }}
+            style={{ cursor: "pointer" }}
+          >
             <defs>
               <linearGradient id="colorCollected" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%"  stopColor="hsl(var(--primary))" stopOpacity={0.2} />
@@ -154,13 +175,22 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
         <SectionCard title={t("finance.report.collectionRateTitle")}>
           <div className="space-y-2">
             {monthlyFeeCollection.map((monthTotals) => (
-              <div key={monthTotals.month} className="flex items-center gap-3">
-                <span className="text-xs text-muted-foreground w-20 shrink-0">{monthTotals.month}</span>
+              <Button
+                key={monthTotals.month}
+                type="button"
+                variant="ghost"
+                onClick={() => toggleMonthFilter(monthTotals.month)}
+                aria-pressed={selectedMonth === monthTotals.month}
+                className={`flex h-auto w-full items-center gap-3 px-2 py-1.5 justify-start ${
+                  selectedMonth === monthTotals.month ? "bg-primary/10 text-primary" : ""
+                }`}
+              >
+                <span className="text-xs text-muted-foreground w-20 shrink-0 text-start">{monthTotals.month}</span>
                 <div className="flex-1 h-2 rounded-full bg-muted">
                   <div className="h-2 rounded-full bg-primary" style={{ width: `${monthTotals.rate}%` }} />
                 </div>
                 <span className="text-xs font-bold text-foreground w-10 text-right">{monthTotals.rate}%</span>
-              </div>
+              </Button>
             ))}
           </div>
         </SectionCard>
@@ -188,6 +218,28 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
           </SafeResponsiveContainer>
         </SectionCard>
       </div>
+
+      {selectedMonth && (
+        <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-muted/40 border border-border text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Filter className="w-3.5 h-3.5 text-primary" />
+            <span className="font-medium text-foreground">{t("finance.report.monthFilterLabel")}</span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[11px] border border-primary/20">
+              {selectedMonth}
+            </span>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedMonth(null)}
+            className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+          >
+            <X className="w-3 h-3 me-1" />
+            {t("finance.report.clearMonthFilter")}
+          </Button>
+        </div>
+      )}
 
       <ExportToolbar 
         title={t("finance.report.invoiceReportTitle")} 
@@ -238,11 +290,11 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
                     <StatusBadge
                       status={inv.status}
                       config={{
-                        paid: { label: t("finance.invoiceStatus.paid"), cls: "bg-success/10 text-success border-success/20" },
-                        pending: { label: t("finance.invoiceStatus.pending"), cls: "bg-warning/10 text-warning border-warning/20" },
-                        overdue: { label: t("finance.invoiceStatus.overdue"), cls: "bg-destructive/10 text-destructive border-destructive/20" },
-                        partial: { label: t("finance.invoiceStatus.partial"), cls: "bg-info/10 text-info border-info/20" },
-                        cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: "bg-muted text-muted-foreground border-border" },
+                        paid: { label: t("finance.invoiceStatus.paid"), cls: SEMANTIC_BADGE.success },
+                        pending: { label: t("finance.invoiceStatus.pending"), cls: SEMANTIC_BADGE.warning },
+                        overdue: { label: t("finance.invoiceStatus.overdue"), cls: SEMANTIC_BADGE.destructive },
+                        partial: { label: t("finance.invoiceStatus.partial"), cls: SEMANTIC_BADGE.info },
+                        cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: SEMANTIC_BADGE.muted },
                       }}
                     />
                   </td>

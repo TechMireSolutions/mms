@@ -1,13 +1,13 @@
 import { useMemo } from 'react';
-import type { ReportCollection } from '@/tenant/features/reports/components/reportMetadata';
-import type { CustomWidget } from '@/tenant/features/reports/components/pinnedWidgets/types';
+import type { ReportCollection } from '@/lib/reports/reportMetadata';
+import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import type { DashboardRole } from '@/lib/dashboardRole';
 import { widgetMatchesDashboardRole } from '@/lib/dashboardRole';
 import { getRequiredDashboardCollections } from '@/lib/dashboardCollections';
 import { useStudentsMetrics, useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
 import { useTeachersMetrics, useTeachersWidgetAggregates } from '@/tenant/hooks/collections/teachers';
 import { useContactsMetrics, useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
-import { useAttendanceRecordsCollection } from '@/tenant/features/attendance/hooks/useAttendance';
+import { useAttendanceRecordsCollection } from '@/tenant/hooks/collections/attendance';
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useFinanceInvoicesCollection } from '@/tenant/hooks/collections/finance';
 import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from '@/tenant/hooks/collections/hasanat';

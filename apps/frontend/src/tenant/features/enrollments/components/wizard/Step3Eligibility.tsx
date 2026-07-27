@@ -3,6 +3,7 @@ import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { runFullEligibility, CheckResult } from '@/lib/data/enrollmentData';
 import { Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
+import { useTranslation } from "@/hooks/useTranslation";
 
 const ICONS: Record<string, React.ReactElement> = {
   pass: <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" aria-hidden="true" />,
@@ -29,6 +30,7 @@ interface Step3EligibilityProps {
 }
 
 export function Step3Eligibility({ student, session, suggestedClass }: Step3EligibilityProps): React.ReactElement {
+  const { t } = useTranslation();
   const checks = useMemo<CheckResult[]>(() =>
     runFullEligibility(student, session, suggestedClass, []),
     [student, session, suggestedClass]
@@ -42,34 +44,34 @@ export function Step3Eligibility({ student, session, suggestedClass }: Step3Elig
   return (
     <section className="space-y-4" aria-labelledby="step3-title">
       <div>
-        <h3 id="step3-title" className="text-base font-bold text-foreground">Eligibility Check</h3>
+        <h3 id="step3-title" className="text-base font-bold text-foreground">{t("enrollments.wizard.step3Title")}</h3>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Checking <strong>{student.name}</strong> for <strong>{session.name}</strong>
+          {t("enrollments.wizard.step3Desc", { student: student.name || "—", session: session.name || "—" })}
         </p>
       </div>
 
       {/* Summary bar */}
-      <div className="flex items-center gap-3 flex-wrap" role="status" aria-label="Eligibility summary">
+      <div className="flex items-center gap-3 flex-wrap" role="status" aria-label={t("enrollments.wizard.step3SummaryAria")}>
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-success/10 border border-success/30">
           <CheckCircle2 className="w-3.5 h-3.5 text-success" aria-hidden="true" />
-          <span className="text-xs font-bold text-success">{passCount} Passed</span>
+          <span className="text-xs font-bold text-success">{t("enrollments.wizard.step3Passed", { count: passCount })}</span>
         </div>
         {failCount > 0 && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-destructive/10 border border-destructive/30">
             <XCircle className="w-3.5 h-3.5 text-destructive" aria-hidden="true" />
-            <span className="text-xs font-bold text-destructive">{failCount} Failed</span>
+            <span className="text-xs font-bold text-destructive">{t("enrollments.wizard.step3Failed", { count: failCount })}</span>
           </div>
         )}
         {warnCount > 0 && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-warning/10 border border-warning/30">
             <AlertTriangle className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
-            <span className="text-xs font-bold text-warning">{warnCount} Warning{warnCount > 1 ? "s" : ""}</span>
+            <span className="text-xs font-bold text-warning">{t("enrollments.wizard.step3Warnings", { count: warnCount })}</span>
           </div>
         )}
       </div>
 
       {/* Check rows */}
-      <div className="space-y-2" role="list" aria-label="Eligibility check details">
+      <div className="space-y-2" role="list" aria-label={t("enrollments.wizard.step3DetailsAria")}>
         {checks.map((check) => (
           <div key={check.id} className={`flex items-start gap-3 p-3 rounded-xl border ${ROW_COLORS[check.status]}`} role="listitem">
             <div className="mt-0.5">{ICONS[check.status]}</div>
@@ -85,12 +87,12 @@ export function Step3Eligibility({ student, session, suggestedClass }: Step3Elig
       {canProceed ? (
         <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-success/10 border border-success/30 text-success text-sm font-semibold" role="status">
           <CheckCircle2 className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-          Student is eligible — you may proceed to class assignment.
+          {t("enrollments.wizard.step3Eligible")}
         </div>
       ) : (
         <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-sm font-semibold" role="alert">
           <XCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-          {failCount} eligibility check{failCount > 1 ? "s" : ""} failed. Review issues above before proceeding.
+          {t("enrollments.wizard.step3FailedBanner", { count: failCount })}
         </div>
       )}
     </section>

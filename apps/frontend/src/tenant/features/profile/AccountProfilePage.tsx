@@ -694,7 +694,7 @@ export default function AccountProfile(): React.JSX.Element {
                           />
                           {newPassword && confirmPassword && (
                             <p className={`text-xs mt-1 font-medium ${newPassword === confirmPassword ? "text-success" : "text-destructive"}`}>
-                              {newPassword === confirmPassword ? t("account.passwordSecure") || "Passwords match" : t("account.passwordMismatch")}
+                              {newPassword === confirmPassword ? t("account.passwordSecure") : t("account.passwordMismatch")}
                             </p>
                           )}
                         </div>

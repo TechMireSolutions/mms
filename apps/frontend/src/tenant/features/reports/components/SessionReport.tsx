@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { CalendarCheck, Users, TrendingUp, BarChart2 } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { CalendarCheck, Users, TrendingUp, BarChart2, Filter, X } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   LineChart, Line,
@@ -14,6 +14,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
+import { Button } from "@/components/ui/button";
 
 import SessionsTable from "@/components/dashboard-widgets/SessionsTable";
 
@@ -32,6 +33,8 @@ interface SessionReportProps {
 }
 
 export interface SessionCapacityItem {
+  sessionId: string;
+  classId: string;
   session: string;
   class: string;
   enrolled: number;
@@ -43,6 +46,7 @@ export interface SessionCapacityItem {
 export interface EnrollmentTrendItem {
   month: string;
   students: number;
+  sessionName: string | null;
 }
 
 /** Bar chart data shape derived from session capacity records. */
@@ -75,12 +79,16 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
   const { t } = useTranslation();
   const sessions = useSessionsCollection();
   const enrollments = useEnrollmentsCollection();
+  const [selectedSession, setSelectedSession] = useState<string | null>(null);
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
 
   const sessionCapacity = useMemo<SessionCapacityItem[]>(() => {
     const sessionCapacityRows: SessionCapacityItem[] = [];
     sessions.forEach((session) => {
       (session.classes || []).forEach((sessionClass) => {
         sessionCapacityRows.push({
+          sessionId: session.id,
+          classId: sessionClass.id,
           session: session.name,
           class: sessionClass.name,
           enrolled: sessionClass.enrolled,
@@ -95,12 +103,18 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
 
   const enrollmentTrends = useMemo<EnrollmentTrendItem[]>(() => {
     const counts: Record<number, number> = {};
+    const sessionCountsByMonth: Record<number, Record<string, number>> = {};
     enrollments.forEach((enrollment) => {
       if (enrollment.enrolledDate) {
         const enrolledDate = new Date(enrollment.enrolledDate);
         if (!isNaN(enrolledDate.getTime())) {
           const m = enrolledDate.getMonth();
           counts[m] = (counts[m] || 0) + 1;
+          const sessionName = sessions.find((session) => session.id === enrollment.sessionId)?.name ?? null;
+          if (sessionName) {
+            if (!sessionCountsByMonth[m]) sessionCountsByMonth[m] = {};
+            sessionCountsByMonth[m][sessionName] = (sessionCountsByMonth[m][sessionName] || 0) + 1;
+          }
         }
       }
     });
@@ -109,15 +123,17 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
     for (let i = 0; i < 12; i++) {
       if (counts[i] !== undefined) {
         const monthName = formatMonthName(new Date(2023, i, 15));
-        trends.push({ month: monthName, students: counts[i] });
+        const monthSessions = sessionCountsByMonth[i] ?? {};
+        const topSessionName = Object.entries(monthSessions).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+        trends.push({ month: monthName, students: counts[i], sessionName: topSessionName });
       }
     }
     if (trends.length === 0) {
       const currentMonthName = formatMonthName(new Date());
-      return [{ month: currentMonthName, students: enrollments.length }];
+      return [{ month: currentMonthName, students: enrollments.length, sessionName: null }];
     }
     return trends;
-  }, [enrollments]);
+  }, [enrollments, sessions]);
 
   const sessionCapacityData = useMemo<SessionCapacityItem[]>(() => {
     let filteredSessionCapacity = sessionCapacity;
@@ -127,8 +143,14 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
         filteredSessionCapacity = filteredSessionCapacity.filter((capacityItem) => capacityItem.session === targetSessionName);
       }
     }
+    if (selectedSession) {
+      filteredSessionCapacity = filteredSessionCapacity.filter((capacityItem) => capacityItem.session === selectedSession);
+    }
+    if (selectedClass) {
+      filteredSessionCapacity = filteredSessionCapacity.filter((capacityItem) => capacityItem.class === selectedClass);
+    }
     return filteredSessionCapacity;
-  }, [filters, sessionCapacity, sessions]);
+  }, [filters, sessionCapacity, sessions, selectedSession, selectedClass]);
 
   const totalEnrolled  = sessionCapacityData.reduce((total, capacityItem) => total + capacityItem.enrolled, 0);
   const totalCapacity  = sessionCapacityData.reduce((total, capacityItem) => total + capacityItem.capacity, 0);
@@ -144,6 +166,14 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
     available: capacityItem.capacity - capacityItem.enrolled,
   }));
 
+  const toggleSessionFilter = (sessionName: string): void => {
+    setSelectedSession((currentSession) => (currentSession === sessionName ? null : sessionName));
+  };
+
+  const toggleClassFilter = (className: string): void => {
+    setSelectedClass((currentClass) => (currentClass === className ? null : className));
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -157,7 +187,15 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionCard title={t("sessions.report.capacityByClass")}>
           <SafeResponsiveContainer width="100%" height={180}>
-            <BarChart data={capacityChartData} barSize={28}>
+            <BarChart
+              data={capacityChartData}
+              barSize={28}
+              onClick={(state) => {
+                const className = (state as { activeLabel?: string } | undefined)?.activeLabel;
+                if (typeof className === "string" && className.length > 0) toggleClassFilter(className);
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="class" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
@@ -170,7 +208,14 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
 
         <SectionCard title={t("sessions.report.enrollmentTrend")}>
           <SafeResponsiveContainer width="100%" height={180}>
-            <LineChart data={enrollmentTrends}>
+            <LineChart
+              data={enrollmentTrends}
+              onClick={(state) => {
+                const trendPayload = (state as { activePayload?: Array<{ payload?: EnrollmentTrendItem }> } | undefined)?.activePayload?.[0]?.payload;
+                if (trendPayload?.sessionName) toggleSessionFilter(trendPayload.sessionName);
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="month" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
@@ -180,6 +225,56 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
           </SafeResponsiveContainer>
         </SectionCard>
       </div>
+
+      {(selectedSession || selectedClass) && (
+        <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-muted/40 border border-border text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Filter className="w-3.5 h-3.5 text-primary" />
+            {selectedSession && (
+              <>
+                <span className="font-medium text-foreground">{t("sessions.report.sessionFilterLabel")}</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[11px] border border-primary/20">
+                  {selectedSession}
+                </span>
+              </>
+            )}
+            {selectedClass && (
+              <>
+                <span className="font-medium text-foreground">{t("sessions.report.classFilterLabel")}</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[11px] border border-primary/20">
+                  {selectedClass}
+                </span>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            {selectedSession && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedSession(null)}
+                className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-3 h-3 me-1" />
+                {t("sessions.report.clearSessionFilter")}
+              </Button>
+            )}
+            {selectedClass && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedClass(null)}
+                className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-3 h-3 me-1" />
+                {t("sessions.report.clearClassFilter")}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       <ExportToolbar 
@@ -214,10 +309,28 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {sessionCapacityData.map((sessionCapacity, index) => (
-                <tr key={index} className="hover:bg-muted/30">
-                  <td className="px-3 py-2.5 font-medium max-w-[180px] truncate">{sessionCapacity.session}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{sessionCapacity.class}</td>
+              {sessionCapacityData.map((sessionCapacity) => (
+                <tr key={`${sessionCapacity.sessionId}-${sessionCapacity.classId}`} className="hover:bg-muted/30">
+                  <td className="px-3 py-2.5 font-medium max-w-[180px] truncate">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => toggleSessionFilter(sessionCapacity.session)}
+                      className="h-auto px-0 py-0 max-w-[180px] truncate font-medium text-foreground hover:text-primary"
+                    >
+                      {sessionCapacity.session}
+                    </Button>
+                  </td>
+                  <td className="px-3 py-2.5 text-muted-foreground">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => toggleClassFilter(sessionCapacity.class)}
+                      className="h-auto px-0 py-0 font-normal text-muted-foreground hover:text-primary"
+                    >
+                      {sessionCapacity.class}
+                    </Button>
+                  </td>
                   <td className="px-3 py-2.5 font-semibold text-foreground">{sessionCapacity.enrolled}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{sessionCapacity.capacity}</td>
                   <td className="px-3 py-2.5 w-36">

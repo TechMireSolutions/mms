@@ -5,7 +5,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Modal } from "@/components/ui/Modal";
+import { FormModal } from "@/components/ui/FormModal";
 import { CoreFieldEditorList } from "@/components/ui/CoreFieldEditorList";
 import { CustomFieldsBuilder, type CustomFieldConfig } from "@/components/ui/CustomFieldsBuilder";
 import { type FieldDefinition, type TabDefinition, toTitleCase } from "@mms/shared";
@@ -109,9 +109,9 @@ export function ModuleFieldsSetup({
       <div className="flex items-start gap-3 p-4 rounded-xl bg-info/10 border border-info/30 text-sm text-info text-left">
         <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
         <div>
-          <h4 className="font-semibold text-xs">{introTitle || t("contacts.setup.fieldsIntroTitle") || "Dynamic Fields Manager"}</h4>
+          <h4 className="font-semibold text-xs">{introTitle || t("contacts.setup.fieldsIntroTitle")}</h4>
           <p className="text-[11px] mt-0.5 text-info/90">
-            {introDescription || t("contacts.setup.fieldsIntroDescription") || "Configure visible sections, reorder fields, and manage custom metadata definitions."}
+            {introDescription || t("contacts.setup.fieldsIntroDescription")}
           </p>
         </div>
       </div>
@@ -120,11 +120,11 @@ export function ModuleFieldsSetup({
       <div className="flex items-center justify-between flex-wrap gap-2 text-left">
         <div className="flex items-center gap-2">
           <Layout className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-bold text-foreground">{t("contacts.setup.fieldsByTab") || "Fields By Tab"}</h3>
+          <h3 className="text-sm font-bold text-foreground">{t("contacts.setup.fieldsByTab")}</h3>
           <span className="text-xs text-muted-foreground ml-1 flex items-center gap-1">
-            <span>— {t("contacts.setup.dragToReorder") || "drag"} </span>
+            <span>— {t("contacts.setup.dragToReorder")} </span>
             <GripVertical className="w-3.5 h-3.5 text-muted-foreground/60 inline align-middle" />
-            <span>{t("contacts.setup.toReorder") || "to reorder"}</span>
+            <span>{t("contacts.setup.toReorder")}</span>
           </span>
         </div>
       </div>
@@ -134,7 +134,7 @@ export function ModuleFieldsSetup({
         {editor.formTabs.map((tab) => {
           const tabId = tab.key;
           const tabLabel = toTitleCase(tab.label);
-          const tabDesc = tab.description || (tab.isSystem === false ? t("contacts.setup.customTabDescription") || "Custom user-defined tab" : "");
+          const tabDesc = tab.description || (tab.isSystem === false ? t("contacts.setup.customTabDescription") : "");
           const tabDefs = editor.tabFields[tabId] || [];
           const enabledSet = editor.tabFieldEnabled[tabId] || new Set();
           const requiredSet = editor.tabFieldRequired[tabId] || new Set();
@@ -148,7 +148,7 @@ export function ModuleFieldsSetup({
                   <Checkbox
                     checked={isOn}
                     onCheckedChange={tabId !== "basic" ? () => handleToggleTabEnabled(tabId) : undefined}
-                    aria-label={`${t("contacts.setup.enableTab") || "Enable Tab"} ${tabLabel}`}
+                    aria-label={`${t("contacts.setup.enableTab")} ${tabLabel}`}
                     disabled={tabId === "basic"}
                   />
                 </div>
@@ -165,7 +165,7 @@ export function ModuleFieldsSetup({
                             setRenameTabLabel(tab.label);
                           }}
                           className="p-1 h-6 w-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none flex items-center justify-center"
-                          title={t("common.edit") || "Rename"}
+                          title={t("common.edit")}
                         >
                           <Pencil className="w-3 h-3" />
                         </Button>
@@ -174,7 +174,7 @@ export function ModuleFieldsSetup({
                           variant="ghost"
                           onClick={() => handleDeleteTabLocal(tabId)}
                           className="p-1 h-6 w-6 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none flex items-center justify-center"
-                          title={t("common.delete") || "Delete"}
+                          title={t("common.delete")}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
@@ -198,7 +198,7 @@ export function ModuleFieldsSetup({
                           : "bg-muted border-border text-muted-foreground hover:text-foreground"
                       }`}
                   >
-                    {isReq ? t("contacts.setup.fieldRequired") || "Required" : t("contacts.setup.fieldOptional") || "Optional"}
+                    {isReq ? t("contacts.setup.fieldRequired") : t("contacts.setup.fieldOptional")}
                   </Button>
                 )}
               </div>
@@ -258,110 +258,74 @@ export function ModuleFieldsSetup({
             className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all shadow-none"
           >
             <Plus className="w-4 h-4" />
-            <span>{t("contacts.setup.addCustomTab") || "Add Custom Tab"}</span>
+            <span>{t("contacts.setup.addCustomTab")}</span>
           </Button>
         </div>
       </div>
 
       {/* Add Tab Modal */}
-      <Modal
+      <FormModal
         open={isAddTabModalOpen}
         onClose={() => {
           setIsAddTabModalOpen(false);
           setNewTabLabel("");
         }}
-        title={t("contacts.setup.addCustomTab") || "Add Custom Tab"}
+        title={t("contacts.setup.addCustomTab")}
         icon={Plus}
-        footer={
-          <div className="flex justify-end gap-2.5">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsAddTabModalOpen(false);
-                setNewTabLabel("");
-              }}
-              type="button"
-            >
-              {t("common.cancel") || "Cancel"}
-            </Button>
-            <Button
-              onClick={() => {
-                handleAddTabLocal(newTabLabel);
-                setIsAddTabModalOpen(false);
-                setNewTabLabel("");
-              }}
-              disabled={!newTabLabel.trim()}
-              type="button"
-            >
-              {t("contacts.setup.addTab") || "Add Tab"}
-            </Button>
-          </div>
-        }
+        onSave={() => {
+          handleAddTabLocal(newTabLabel);
+          setIsAddTabModalOpen(false);
+          setNewTabLabel("");
+        }}
+        saveDisabled={!newTabLabel.trim()}
+        saveLabel={t("contacts.setup.addTab")}
       >
         <div className="space-y-3 text-left">
           <label htmlFor="newTabLabel" className="text-xs font-semibold text-foreground">
-            {t("contacts.setup.customTabName") || "Tab Name"} *
+            {t("contacts.setup.customTabName")} *
           </label>
           <Input
             id="newTabLabel"
             value={newTabLabel}
             onChange={(event) => setNewTabLabel(event.target.value)}
-            placeholder={t("contacts.setup.addCustomTabPlaceholder") || "e.g. Extra Info"}
+            placeholder={t("contacts.setup.addCustomTabPlaceholder")}
             autoFocus
           />
         </div>
-      </Modal>
+      </FormModal>
 
       {/* Rename Tab Modal */}
-      <Modal
+      <FormModal
         open={renamingTabKey !== null}
         onClose={() => {
           setRenamingTabKey(null);
           setRenameTabLabel("");
         }}
-        title={t("contacts.setup.renameTab") || "Rename Custom Tab"}
+        title={t("contacts.setup.renameTab")}
         icon={Pencil}
-        footer={
-          <div className="flex justify-end gap-2.5">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setRenamingTabKey(null);
-                setRenameTabLabel("");
-              }}
-              type="button"
-            >
-              {t("common.cancel") || "Cancel"}
-            </Button>
-            <Button
-              onClick={() => {
-                if (renamingTabKey) {
-                  handleRenameTabLocal(renamingTabKey, renameTabLabel);
-                }
-                setRenamingTabKey(null);
-                setRenameTabLabel("");
-              }}
-              disabled={!renameTabLabel.trim()}
-              type="button"
-            >
-              {t("contacts.setup.renameTabButton") || "Rename Tab"}
-            </Button>
-          </div>
-        }
+        onSave={() => {
+          if (renamingTabKey) {
+            handleRenameTabLocal(renamingTabKey, renameTabLabel);
+          }
+          setRenamingTabKey(null);
+          setRenameTabLabel("");
+        }}
+        saveDisabled={!renameTabLabel.trim()}
+        saveLabel={t("contacts.setup.renameTabButton")}
       >
         <div className="space-y-3 text-left">
           <label htmlFor="renameTabLabel" className="text-xs font-semibold text-foreground">
-            {t("contacts.setup.customTabName") || "Tab Name"} *
+            {t("contacts.setup.customTabName")} *
           </label>
           <Input
             id="renameTabLabel"
             value={renameTabLabel}
             onChange={(event) => setRenameTabLabel(event.target.value)}
-            placeholder={t("contacts.setup.addCustomTabPlaceholder") || "e.g. Extra Info"}
+            placeholder={t("contacts.setup.addCustomTabPlaceholder")}
             autoFocus
           />
         </div>
-      </Modal>
+      </FormModal>
     </div>
   );
 }

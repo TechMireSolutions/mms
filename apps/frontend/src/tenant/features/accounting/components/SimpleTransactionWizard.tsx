@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { generateJERef, Account, JournalEntry, FiscalYear } from '@/lib/data/accountingData';
 import { DatePicker } from "@/components/ui/DatePicker";
-import { Modal } from "@/components/ui/Modal";
+import { FormModal } from "@/components/ui/FormModal";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -453,15 +453,16 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
   ];
 
   return (
-    <Modal
+    <FormModal
       open={open}
       onClose={onClose}
       title={t("accounting.journal.dashboard.recordTransaction")}
       subtitle={t("accounting.journal.dashboard.subtitleSimple")}
       size="lg"
       panelClassName="max-h-[92vh]"
+      hideFooter
       headerExtra={
-        <nav aria-label="Wizard Steps" className="flex items-center gap-2">
+        <nav aria-label={t("accounting.journal.dashboard.wizard.stepsAria")} className="flex items-center gap-2">
           {steps.map((stepDefinition, index) => (
             <React.Fragment key={stepDefinition.stepNumber}>
               <div className="flex items-center gap-1.5">
@@ -477,7 +478,15 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
           ))}
         </nav>
       }
-      footer={
+    >
+      <div className="space-y-4">
+        <AnimatePresence mode="wait">
+          <motion.div key={step} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.15 }}>
+            {step === 1 && <StepTypeSelection selected={selectedType} onSelect={handleTypeSelect} />}
+            {step === 2 && selectedType && <StepTransactionForm type={selectedType} form={form} setForm={setForm} accounts={accounts} currencySymbol={activeCurrency.symbol} />}
+            {step === 3 && selectedType && <StepReview type={selectedType} form={form} accounts={accounts} showAdvanced={showAdvanced} setShowAdvanced={setShowAdvanced} formatCurrency={formatCurrency} />}
+          </motion.div>
+        </AnimatePresence>
         <div className="flex w-full items-center justify-between gap-3">
           <Button type="button" variant="outline" onClick={() => step > 1 ? setStep(step - 1) : onClose()}>
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -501,15 +510,7 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
             )}
           </div>
         </div>
-      }
-    >
-      <AnimatePresence mode="wait">
-        <motion.div key={step} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.15 }}>
-          {step === 1 && <StepTypeSelection selected={selectedType} onSelect={handleTypeSelect} />}
-          {step === 2 && selectedType && <StepTransactionForm type={selectedType} form={form} setForm={setForm} accounts={accounts} currencySymbol={activeCurrency.symbol} />}
-          {step === 3 && selectedType && <StepReview type={selectedType} form={form} accounts={accounts} showAdvanced={showAdvanced} setShowAdvanced={setShowAdvanced} formatCurrency={formatCurrency} />}
-        </motion.div>
-      </AnimatePresence>
-    </Modal>
+      </div>
+    </FormModal>
   );
 }

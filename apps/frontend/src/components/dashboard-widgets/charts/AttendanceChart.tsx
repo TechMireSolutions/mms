@@ -11,7 +11,7 @@ import {
 } from "recharts";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
+import { useAttendanceRecordsCollection } from "@/tenant/hooks/collections/attendance";
 import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/hooks/collections/hasanat";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 import { getDenominationPoints, formatNumber, formatShortWeekdayLabels } from "@mms/shared";

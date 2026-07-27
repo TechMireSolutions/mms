@@ -105,14 +105,16 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
     return true;
   }, [orderedFields, data, totalAvailable, isFieldEnabled, isFieldRequired]);
 
+  const getCustomFieldPlaceholder = (fieldLabel: string): string => t("hasanat.form.enterField", { field: fieldLabel.toLowerCase() });
+
   return (
     <FormModal
       open={open}
       onClose={onClose}
-      title="Distribute Cards"
+      title={t("hasanat.distributeCards")}
       icon={Star}
-      cancelLabel="Cancel"
-      saveLabel="Distribute"
+      cancelLabel={t("common.cancel")}
+      saveLabel={t("hasanat.form.distributeAction")}
       saving={submitting}
       onSave={() => {
         void (async () => {
@@ -150,14 +152,14 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
               if (field.id === "denominationId") {
                 return (
                   <div key="denominationId" className="sm:col-span-2">
-                    <label htmlFor="denom" className={FORM_LABEL}>Denomination *</label>
+                    <label htmlFor="denom" className={FORM_LABEL}>{t("hasanat.form.denomination")} *</label>
                     <FormSelect
                       id="denom"
                       value={data.denominationId || ""}
                       onChange={(value) => updateField("denominationId", value)}
                       options={denoms.filter((denomination) => denomination.active).map((denomination) => ({
                         value: denomination.id,
-                        label: `${denomination.icon} ${denomination.name} (${denomination.points} pts)`
+                        label: `${denomination.icon} ${denomination.name} (${t("hasanat.form.pointsShort", { points: denomination.points })})`
                       }))}
                     />
                     {selectedDenomination && (
@@ -166,7 +168,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                           <span>{selectedDenomination.icon}</span><span>{selectedDenomination.name}</span>
                         </div>
                         <span className={`text-[11px] font-semibold ${totalAvailable === 0 ? "text-destructive" : "text-success"}`}>
-                          {totalAvailable} available
+                          {t("hasanat.form.availableCount", { count: totalAvailable })}
                         </span>
                       </div>
                     )}
@@ -177,11 +179,11 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
               if (field.id === "recipientType") {
                 return (
                   <div key="recipientType" className="sm:col-span-2">
-                    <label className={FORM_LABEL}>Recipient Type *</label>
+                    <label className={FORM_LABEL}>{t("hasanat.form.recipientType")} *</label>
                     <div className="flex gap-2">
                       {([
-                        { id: "student" as const, label: "Student", icon: User },
-                        { id: "faculty" as const, label: "Faculty", icon: Users2 }
+                        { id: "student" as const, label: t("hasanat.form.recipientType.student"), icon: User },
+                        { id: "faculty" as const, label: t("hasanat.form.recipientType.faculty"), icon: Users2 }
                       ]).map((recipientTypeOption) => {
                         const Icon = recipientTypeOption.icon;
                         return (
@@ -242,8 +244,8 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                 const isRequired = !!fields[field.id]?.required;
                 return (
                   <div key="recipientClass">
-                    <label htmlFor="recp-class" className={FORM_LABEL}>{data.recipientType === "student" ? "Class" : "Department"} {isRequired ? "*" : ""}</label>
-                    <Input id="recp-class" className={FORM_INPUT} value={data.recipientClass || ""} onChange={(event) => updateField("recipientClass", event.target.value)} placeholder="e.g. Hifz A" required={isRequired} />
+                    <label htmlFor="recp-class" className={FORM_LABEL}>{data.recipientType === "student" ? t("hasanat.form.classLabel") : t("hasanat.form.departmentLabel")} {isRequired ? "*" : ""}</label>
+                    <Input id="recp-class" className={FORM_INPUT} value={data.recipientClass || ""} onChange={(event) => updateField("recipientClass", event.target.value)} placeholder={t("hasanat.form.recipientClassPlaceholder")} required={isRequired} />
                   </div>
                 );
               }
@@ -251,7 +253,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
               if (field.id === "quantity") {
                 return (
                   <div key="quantity">
-                    <label htmlFor="qty" className={FORM_LABEL}>Quantity *</label>
+                    <label htmlFor="qty" className={FORM_LABEL}>{t("hasanat.form.quantity")} *</label>
                     <Input id="qty" type="number" className={FORM_INPUT} value={data.quantity || 1} onChange={(event) => updateField("quantity", Math.min(+event.target.value, totalAvailable))} min={1} max={totalAvailable} required />
                   </div>
                 );
@@ -260,7 +262,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
               if (field.id === "issuedDate") {
                 return (
                   <div key="issuedDate">
-                    <label htmlFor="issue-date" className={FORM_LABEL}>Issued Date *</label>
+                    <label htmlFor="issue-date" className={FORM_LABEL}>{t("hasanat.form.issuedDate")} *</label>
                     <DatePicker
                       id="issue-date"
                       value={data.issuedDate || ""}
@@ -274,8 +276,8 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
               if (field.id === "reason") {
                 return (
                   <div key="reason" className="sm:col-span-2">
-                    <label htmlFor="reason" className={FORM_LABEL}>Reason / Achievement *</label>
-                    <Input id="reason" className={FORM_INPUT} value={data.reason || ""} onChange={(event) => updateField("reason", event.target.value)} placeholder="e.g. Completed Juz 5" required />
+                    <label htmlFor="reason" className={FORM_LABEL}>{t("hasanat.form.reason")} *</label>
+                    <Input id="reason" className={FORM_INPUT} value={data.reason || ""} onChange={(event) => updateField("reason", event.target.value)} placeholder={t("hasanat.form.reasonPlaceholder")} required />
                   </div>
                 );
               }
@@ -310,14 +312,14 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                         name={field.id}
                         value={fieldValue as string}
                         onChange={(event) => updateField(field.id, event.target.value)}
-                        placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
+                        placeholder={field.placeholder || getCustomFieldPlaceholder(field.label)}
                         required={field.required}
                       />
                     ) : field.type === "select" ? (
                       <FormSelect
                         value={fieldValue as string}
                         onChange={(value) => updateField(field.id, value)}
-                        placeholder="Select option…"
+                        placeholder={t("hasanat.form.selectOption")}
                         options={field.options || []}
                       />
                     ) : field.type === "boolean" ? (
@@ -334,7 +336,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                         className={FORM_INPUT}
                         value={fieldValue as string | number}
                         onChange={(event) => updateField(field.id, event.target.value)}
-                        placeholder={field.placeholder || `Enter number…`}
+                        placeholder={field.placeholder || t("hasanat.form.enterNumber")}
                         required={field.required}
                       />
                     ) : field.type === "date" ? (
@@ -349,7 +351,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                         className={FORM_INPUT}
                         value={fieldValue as string}
                         onChange={(event) => updateField(field.id, event.target.value)}
-                        placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
+                        placeholder={field.placeholder || getCustomFieldPlaceholder(field.label)}
                         required={field.required}
                       />
                     )}

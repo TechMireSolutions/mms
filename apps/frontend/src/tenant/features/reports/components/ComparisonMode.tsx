@@ -9,13 +9,14 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
+import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 
 import { useContactsReportAnalytics } from '@/tenant/hooks/collections/contacts';
 
 import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
-import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
+import { useAttendanceRecordsCollection } from "@/tenant/hooks/collections/attendance";
 import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
 import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/hooks/collections/hasanat";
 import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/tenant/hooks/collections/examinations";
@@ -313,6 +314,13 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
   const [valB, setValB] = useState<string>("s2");
   const [rangeA, setRangeA] = useState<DateRange>({ from: "2025-01-01", to: "2025-03-31" });
   const [rangeB, setRangeB] = useState<DateRange>({ from: "2026-01-01", to: "2026-03-31" });
+  const modeTabs = useMemo(
+    () => [
+      { key: "sessions" as const, label: t("reports.comparison.sessions") },
+      { key: "daterange" as const, label: t("reports.comparison.dateRanges") },
+    ],
+    [t],
+  );
 
   const compareYears = useMemo(() => {
     if (!isContacts || mode !== "daterange") return undefined;
@@ -449,24 +457,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
         </div>
         <div className="flex items-center gap-3">
           {!isContacts && (
-            <div className="flex rounded-lg border border-border/50 overflow-hidden text-xs font-semibold">
-              <Button
-                onClick={() => setMode("sessions")}
-                variant={mode === "sessions" ? "default" : "ghost"}
-                className={`px-3 py-1.5 h-auto text-xs font-semibold rounded-none ${mode === "sessions" ? "bg-primary text-primary-foreground hover:bg-primary/95" : "bg-card/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
-                type="button"
-              >
-                {t("reports.comparison.sessions")}
-              </Button>
-              <Button
-                onClick={() => setMode("daterange")}
-                variant={mode === "daterange" ? "default" : "ghost"}
-                className={`px-3 py-1.5 h-auto text-xs font-semibold rounded-none ${mode === "daterange" ? "bg-primary text-primary-foreground hover:bg-primary/95" : "bg-card/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
-                type="button"
-              >
-                {t("reports.comparison.dateRanges")}
-              </Button>
-            </div>
+            <SubTabBar tabs={modeTabs} value={mode} onChange={setMode} panelIdPrefix="comparison-mode" />
           )}
           <Button
             onClick={onClose}

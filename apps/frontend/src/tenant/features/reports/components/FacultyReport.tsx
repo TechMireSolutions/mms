@@ -1,5 +1,5 @@
-import React, { useMemo, useCallback } from "react";
-import { GraduationCap, BookOpen, Users, Clock } from "lucide-react";
+import React, { useMemo, useCallback, useState } from "react";
+import { GraduationCap, BookOpen, Users, Clock, Filter, X } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
@@ -13,6 +13,8 @@ import { teacherNameById } from '@/lib/teachers/teacherAssignment';
 import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { useTranslation } from "@/hooks/useTranslation";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export interface FacultyWorkloadItem {
   faculty: string;
@@ -44,6 +46,7 @@ interface FacultyReportProps {
  */
 export default function FacultyReport({ filters: _filters }: FacultyReportProps): React.JSX.Element {
   const { t } = useTranslation();
+  const [selectedFaculty, setSelectedFaculty] = useState<string | null>(null);
   const sessions = useSessionsCollection();
   const teacherIds = useMemo(() => collectTeacherIdsFromSessions(sessions), [sessions]);
   const { data: teachers = [] } = useTeachersByIds(teacherIds);
@@ -82,6 +85,17 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
   const avgStudents = totalFaculty
     ? (totalStudents / totalFaculty).toFixed(1)
     : 0;
+  const filteredFacultyWorkload = useMemo(
+    () => (
+      selectedFaculty
+        ? facultyWorkload.filter((facultyItem) => facultyItem.faculty === selectedFaculty)
+        : facultyWorkload
+    ),
+    [facultyWorkload, selectedFaculty],
+  );
+  const toggleFacultyFilter = (faculty: string) => {
+    setSelectedFaculty((current) => (current === faculty ? null : faculty));
+  };
 
   return (
     <div className="space-y-4">
@@ -95,7 +109,18 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
       {/* Chart */}
       <SectionCard title={t("teachers.report.workloadOverview")}>
         <SafeResponsiveContainer width="100%" height={200}>
-          <BarChart data={facultyWorkload} barSize={28} layout="vertical">
+          <BarChart
+            data={facultyWorkload}
+            barSize={28}
+            layout="vertical"
+            onClick={(state) => {
+              const faculty = (
+                state as { activePayload?: Array<{ payload?: { faculty?: string } }> } | undefined
+              )?.activePayload?.[0]?.payload?.faculty;
+              if (typeof faculty === "string" && faculty.length > 0) toggleFacultyFilter(faculty);
+            }}
+            style={{ cursor: "pointer" }}
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis type="number" tick={{ fontSize: 11 }} />
             <YAxis dataKey="faculty" type="category" tick={{ fontSize: 11 }} width={120} />
@@ -106,10 +131,32 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
         </SafeResponsiveContainer>
       </SectionCard>
 
+      {selectedFaculty && (
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/40 px-3.5 py-2 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2">
+            <Filter className="h-3.5 w-3.5 text-primary" />
+            <span className="font-medium text-foreground">{t("teachers.report.facultyFilterLabel")}</span>
+            <span className="inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+              {selectedFaculty}
+            </span>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedFaculty(null)}
+            className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+          >
+            <X className="me-1 h-3 w-3" />
+            {t("teachers.report.clearFacultyFilter")}
+          </Button>
+        </div>
+      )}
+
       {/* Table */}
       <ExportToolbar 
         title={t("teachers.report.workloadReportTitle")} 
-        data={facultyWorkload}
+        data={filteredFacultyWorkload}
         headers={[
           t("teachers.report.colFaculty"),
           t("teachers.report.colClasses"),
@@ -118,44 +165,62 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
           t("teachers.report.colHoursWeek"),
         ]}
       />
-      <Card className="overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50">
-            <tr>
-              {[
-                t("teachers.report.colFaculty"),
-                t("teachers.report.colClasses"),
-                t("teachers.report.colSessions"),
-                t("teachers.report.colStudents"),
-                t("teachers.report.colHoursWeek"),
-              ].map((heading) => (
-                <th key={heading} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{heading}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {facultyWorkload.map((faculty) => (
-              <tr key={faculty.faculty} className="hover:bg-muted/30">
-                <td className="px-3 py-3 font-medium">{faculty.faculty}</td>
-                <td className="px-3 py-3 text-muted-foreground">{faculty.classes}</td>
-                <td className="px-3 py-3 text-muted-foreground">{faculty.sessions}</td>
-                <td className="px-3 py-3 font-semibold text-foreground">{faculty.totalStudents}</td>
-                <td className="px-3 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-16 h-1.5 rounded-full bg-muted">
-                      <div
-                        className="h-1.5 rounded-full bg-primary"
-                        style={{ width: `${(faculty.hoursPerWeek / 12) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-bold text-foreground">{faculty.hoursPerWeek}h</span>
-                  </div>
-                </td>
+      {filteredFacultyWorkload.length === 0 ? (
+        <EmptyState icon={GraduationCap} title={t("teachers.report.noFacultyData")} compact />
+      ) : (
+        <Card className="overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50">
+              <tr>
+                {[
+                  t("teachers.report.colFaculty"),
+                  t("teachers.report.colClasses"),
+                  t("teachers.report.colSessions"),
+                  t("teachers.report.colStudents"),
+                  t("teachers.report.colHoursWeek"),
+                ].map((heading) => (
+                  <th key={heading} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{heading}</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filteredFacultyWorkload.map((faculty) => (
+                <tr
+                  key={faculty.faculty}
+                  className={`hover:bg-muted/30 ${selectedFaculty === faculty.faculty ? "bg-primary/10" : ""}`}
+                >
+                  <td className="px-3 py-3 font-medium">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => toggleFacultyFilter(faculty.faculty)}
+                      className={`h-auto px-0 py-0 font-medium hover:bg-transparent hover:text-foreground ${
+                        selectedFaculty === faculty.faculty ? "text-primary" : "text-foreground"
+                      }`}
+                    >
+                      {faculty.faculty}
+                    </Button>
+                  </td>
+                  <td className="px-3 py-3 text-muted-foreground">{faculty.classes}</td>
+                  <td className="px-3 py-3 text-muted-foreground">{faculty.sessions}</td>
+                  <td className="px-3 py-3 font-semibold text-foreground">{faculty.totalStudents}</td>
+                  <td className="px-3 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="h-1.5 w-16 rounded-full bg-muted">
+                        <div
+                          className="h-1.5 rounded-full bg-primary"
+                          style={{ width: `${(faculty.hoursPerWeek / 12) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-bold text-foreground">{faculty.hoursPerWeek}h</span>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </Card>
+      )}
     </div>
   );
 }

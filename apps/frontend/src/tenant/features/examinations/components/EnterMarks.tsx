@@ -13,6 +13,7 @@ import { FORM_INPUT_COMPACT } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface EnterMarksProps {
   exams: Exam[];
@@ -30,6 +31,7 @@ interface EnterMarksProps {
  * @returns The EnterMarks component.
  */
 export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): React.ReactElement {
+  const { t } = useTranslation();
   const [selectedExam, setSelectedExam] = useState<string>(exams[0]?.id || "");
   const [marks, setMarks] = useState<Record<string, number | string>>({});
   const [saved, setSaved] = useState<boolean>(false);
@@ -104,8 +106,8 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
     <section className="space-y-5" aria-labelledby="enter-marks-title">
       {/* Exam selector */}
       <div>
-        <span id="enter-marks-title" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Select Exam</span>
-        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Select exam to mark">
+        <span id="enter-marks-title" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">{t("examinations.selectExam")}</span>
+        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("examinations.enterMarks.selectExamAria")}>
           {exams.map((examOption) => {
             const isSelected = selectedExam === examOption.id;
             return (
@@ -127,18 +129,18 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
       {exam && (
         <>
           {/* Exam info */}
-          <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 flex flex-wrap gap-4 text-[12px]" role="status" aria-label="Exam details brief">
+          <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 flex flex-wrap gap-4 text-[12px]" role="status" aria-label={t("examinations.enterMarks.examDetailsAria")}>
             <span><strong className="text-foreground">{exam.subject}</strong></span>
-            <span className="text-muted-foreground">Total: <strong className="text-foreground">{exam.totalMarks}</strong></span>
-            <span className="text-muted-foreground">Passing: <strong className="text-foreground">{exam.passingMarks}</strong></span>
-            <span className="text-muted-foreground">Students: <strong className="text-foreground">{students.length}</strong></span>
+            <span className="text-muted-foreground">{t("examinations.enterMarks.totalLabel")}: <strong className="text-foreground">{exam.totalMarks}</strong></span>
+            <span className="text-muted-foreground">{t("examinations.enterMarks.passingLabel")}: <strong className="text-foreground">{exam.passingMarks}</strong></span>
+            <span className="text-muted-foreground">{t("examinations.stats.students")}: <strong className="text-foreground">{students.length}</strong></span>
           </div>
 
           {/* Marks entry table */}
           <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
             <div className="px-4 py-3 border-b border-border/40 flex items-center gap-2 pl-6.5 bg-muted/20">
               <Users className="w-4 h-4 text-primary" aria-hidden="true" />
-              <h3 className="text-[13px] font-bold text-foreground">Enter Marks</h3>
+              <h3 className="text-[13px] font-bold text-foreground">{t("examinations.marks")}</h3>
             </div>
             <div className="divide-y divide-border/50 pl-6.5" role="list">
               {students.map((student, index) => {
@@ -156,7 +158,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
                   >
                     <UserAvatar id={student.id} name={student.name} className="w-7 h-7 rounded-full text-[11px] font-bold" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-semibold text-foreground">{student.name ?? "—"}</p>
+                      <p className="text-[13px] font-semibold text-foreground">{student.name ?? t("examinations.enterMarks.studentFallback")}</p>
                       <p className="text-[10px] text-muted-foreground">{classNamesById.get(student.classId) || student.classId} · {student.rollNo}</p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -171,7 +173,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
                           min={0}
                           max={exam.totalMarks}
                           value={markValue}
-                          aria-label={`Marks for ${student.name ?? "student"}`}
+                          aria-label={t("examinations.enterMarks.marksInputAria", { name: student.name ?? t("examinations.enterMarks.studentLabel") })}
                           onChange={(event) => { setMarks((previousMarks) => ({ ...previousMarks, [String(student.id)]: event.target.value })); setSaved(false); }}
                           className={FORM_INPUT_COMPACT}
                           placeholder="—"
@@ -188,7 +190,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
           <div className="flex justify-end">
             {saved ? (
               <div className="flex items-center gap-2 text-success text-sm font-semibold" role="status">
-                <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> Marks saved!
+                <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> {t("examinations.enterMarks.saved")}
               </div>
             ) : (
               <Button
@@ -196,7 +198,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
                 onClick={() => { void handleSave(); }}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90"
               >
-                <Save className="w-4 h-4" aria-hidden="true" /> Save Marks
+                <Save className="w-4 h-4" aria-hidden="true" /> {t("examinations.enterMarks.save")}
               </Button>
             )}
           </div>

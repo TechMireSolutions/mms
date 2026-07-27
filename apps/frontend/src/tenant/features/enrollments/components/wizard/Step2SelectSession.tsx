@@ -46,13 +46,13 @@ export function Step2SelectSession({ value, onChange, sessions = [] }: Step2Sele
   return (
     <section className="space-y-4" aria-labelledby="step2-title">
       <div>
-        <h3 id="step2-title" className="text-base font-bold text-foreground">Select Session</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">Choose from active sessions only.</p>
+        <h3 id="step2-title" className="text-base font-bold text-foreground">{t("enrollments.wizard.step2Title")}</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">{t("enrollments.wizard.step2Desc")}</p>
       </div>
 
-      <div className="space-y-3" role="radiogroup" aria-label="Active sessions list">
+      <div className="space-y-3" role="radiogroup" aria-label={t("enrollments.wizard.step2SessionsAria")}>
         {activeSessions.length === 0 && (
-          <div className="text-center py-10 text-muted-foreground text-sm" role="status">No active sessions found</div>
+          <div className="text-center py-10 text-muted-foreground text-sm" role="status">{t("enrollments.wizard.step2Empty")}</div>
         )}
         {activeSessions.map((session) => {
           const selected = value?.id === session.id;
@@ -91,7 +91,7 @@ export function Step2SelectSession({ value, onChange, sessions = [] }: Step2Sele
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Users className="w-3.5 h-3.5" aria-hidden="true" />
-                      <span>{spotsLeft} spot{spotsLeft !== 1 ? "s" : ""} left</span>
+                      <span>{t("enrollments.wizard.step2SpotsLeft", { count: spotsLeft })}</span>
                     </div>
                     <div className="flex items-center gap-1 text-xs font-bold text-foreground">
                       <DollarSign className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
@@ -102,7 +102,10 @@ export function Step2SelectSession({ value, onChange, sessions = [] }: Step2Sele
                     <div className="mt-2 flex flex-wrap gap-1">
                       {session.classes.map((sessionClass) => (
                         <span key={sessionClass.id} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
-                          {sessionClass.name} ({sessionClass.capacity - sessionClass.enrolled} spots)
+                          {t("enrollments.wizard.step2ClassSpots", {
+                            name: sessionClass.name,
+                            count: sessionClass.capacity - sessionClass.enrolled,
+                          })}
                         </span>
                       ))}
                     </div>

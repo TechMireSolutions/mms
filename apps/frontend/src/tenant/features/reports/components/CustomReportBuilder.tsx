@@ -9,7 +9,7 @@ import { useStudentsPaginated } from '@/tenant/hooks/collections/students';
 import { CONTACTS_MODULE_MANIFEST, STUDENTS_MODULE_MANIFEST } from '@mms/shared';
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
-import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
+import { useAttendanceRecordsCollection } from "@/tenant/hooks/collections/attendance";
 import { useHasanatDistributionsCollection } from "@/tenant/hooks/collections/hasanat";
 import { useExaminationsResultsCollection } from "@/tenant/hooks/collections/examinations";
 import { useTranslation } from "@/hooks/useTranslation";

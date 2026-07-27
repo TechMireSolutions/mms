@@ -64,7 +64,7 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
         className="w-full"
       />
 
-      <div className="space-y-2 max-h-80 overflow-y-auto pr-1" role="radiogroup" aria-label="Students list">
+      <div className="space-y-2 max-h-80 overflow-y-auto pr-1" role="radiogroup" aria-label={t("enrollments.wizard.step1StudentsAria")}>
         {!isFetching && students.length === 0 && (
           <div className="text-center py-10 text-muted-foreground text-sm" role="status">{t("enrollments.wizard.noStudents")}</div>
         )}
@@ -90,7 +90,7 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
                   <p className="text-sm font-bold text-foreground">{student.name}</p>
                   {student.grNumber && (
                     <span className="bg-primary/5 text-primary text-[9px] px-1.5 py-0.5 rounded border border-primary/10 font-bold uppercase tracking-wider">
-                      GR: {student.grNumber}
+                      {t("enrollments.wizard.step1GrPrefix")}: {student.grNumber}
                     </span>
                   )}
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
@@ -99,7 +99,7 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
                   <StatusBadge status={student.status || "active"} size="sm" />
                 </div>
                 <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
-                  <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" aria-hidden="true" /> Age {age ?? "?"}</span>
+                  <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" aria-hidden="true" /> {t("enrollments.wizard.step1Age", { age: age ?? "?" })}</span>
                   <span>{t("students.form.fatherLink")}: {student.fatherName}</span>
                   {student.city && <span>{student.city}</span>}
                 </div>

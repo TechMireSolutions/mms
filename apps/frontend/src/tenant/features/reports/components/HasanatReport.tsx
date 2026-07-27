@@ -1,6 +1,6 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
-import { Star, Gift, TrendingDown, Users } from "lucide-react";
+import { Star, Gift, TrendingDown, Users, Filter, X } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   PieChart, Pie, Cell,
@@ -14,11 +14,10 @@ import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getDenominationPoints, formatNumber } from "@mms/shared";
-
-
-/** Active filter state passed down from the parent report view. */
+import { Button } from "@/components/ui/button";
 import { HasanatChart } from "@/components/dashboard-widgets/charts/AttendanceChart";
 
+/** Active filter state passed down from the parent report view. */
 interface HasanatReportFilters {
   /** Class name to filter by, or "all" for no filter. */
   class: string;
@@ -71,6 +70,7 @@ interface PieDatum {
  */
 export default function HasanatReport({ filters }: HasanatReportProps): React.JSX.Element {
   const { t } = useTranslation();
+  const [selectedFaculty, setSelectedFaculty] = useState<string | null>(null);
   const palette = useBrandPalette();
   const PIE_COLORS = useMemo(
     () => [palette.primary, palette.secondary, palette.charts[2]],
@@ -138,8 +138,11 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
         hasanatItem.studentName.toLowerCase().includes(filters.student.toLowerCase()),
       );
     }
+    if (selectedFaculty) {
+      filteredDistribution = filteredDistribution.filter((hasanatItem) => hasanatItem.faculty === selectedFaculty);
+    }
     return filteredDistribution;
-  }, [filters, distributionData]);
+  }, [filters, distributionData, selectedFaculty]);
 
   const totalDistributed = distribution.reduce((total, hasanatItem) => total + hasanatItem.distributed, 0);
   const totalRedeemed    = distribution.reduce((total, hasanatItem) => total + hasanatItem.redeemed, 0);
@@ -150,11 +153,14 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
 
   const facultyChartData = useMemo<FacultyBarDatum[]>(() => {
     return hasanatByFaculty.map((facultyTotals) => ({
-      faculty:     facultyTotals.faculty.split(" ").slice(-1)[0] ?? facultyTotals.faculty,
+      faculty:     facultyTotals.faculty,
       distributed: facultyTotals.totalDistributed,
       redeemed:    facultyTotals.totalRedeemed,
     }));
   }, [hasanatByFaculty]);
+  const toggleFacultyFilter = (faculty: string) => {
+    setSelectedFaculty((current) => (current === faculty ? null : faculty));
+  };
 
   const redemptionPieData: PieDatum[] = [
     { name: t("hasanat.report.redeemedPieLabel"), value: totalRedeemed },
@@ -174,7 +180,17 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionCard title={t("hasanat.report.distributionByFaculty")}>
           <SafeResponsiveContainer width="100%" height={180}>
-            <BarChart data={facultyChartData} barSize={22}>
+            <BarChart
+              data={facultyChartData}
+              barSize={22}
+              onClick={(state) => {
+                const faculty = (
+                  state as { activePayload?: Array<{ payload?: { faculty?: string } }> } | undefined
+                )?.activePayload?.[0]?.payload?.faculty;
+                if (typeof faculty === "string" && faculty.length > 0) toggleFacultyFilter(faculty);
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="faculty" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
@@ -220,6 +236,28 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
         </SectionCard>
       </div>
 
+      {selectedFaculty && (
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/40 px-3.5 py-2 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2">
+            <Filter className="h-3.5 w-3.5 text-primary" />
+            <span className="font-medium text-foreground">{t("hasanat.report.facultyFilterLabel")}</span>
+            <span className="inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+              {selectedFaculty}
+            </span>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedFaculty(null)}
+            className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+          >
+            <X className="me-1 h-3 w-3" />
+            {t("hasanat.report.clearFacultyFilter")}
+          </Button>
+        </div>
+      )}
+
 
       <ExportToolbar 
         title={t("hasanat.report.distributionTitle")} 
@@ -254,10 +292,21 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
             </thead>
             <tbody className="divide-y divide-border">
               {distribution.map((hasanatRow) => (
-                <tr key={hasanatRow.studentName} className="hover:bg-muted/30">
+                <tr key={hasanatRow.studentName} className={`hover:bg-muted/30 ${selectedFaculty === hasanatRow.faculty ? "bg-primary/10" : ""}`}>
                   <td className="px-3 py-2.5 font-medium">{hasanatRow.studentName}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{hasanatRow.class}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{hasanatRow.faculty}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => toggleFacultyFilter(hasanatRow.faculty)}
+                      className={`h-auto px-0 py-0 font-normal text-muted-foreground hover:bg-transparent hover:text-foreground ${
+                        selectedFaculty === hasanatRow.faculty ? "text-primary" : ""
+                      }`}
+                    >
+                      {hasanatRow.faculty}
+                    </Button>
+                  </td>
                   <td className="px-3 py-2.5 font-semibold text-primary">{hasanatRow.distributed}</td>
                   <td className="px-3 py-2.5 font-semibold text-success">{hasanatRow.redeemed}</td>
                   <td className="px-3 py-2.5">

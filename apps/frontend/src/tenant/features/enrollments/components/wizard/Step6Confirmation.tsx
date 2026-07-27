@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface RowProps {
   label: string;
@@ -78,6 +79,7 @@ export function Step6Confirmation({
   customFieldValues,
   onCustomFieldChange,
 }: Step6ConfirmationProps): React.ReactElement {
+  const { t } = useTranslation();
   const age = student ? calcAge(student.dob) : null;
 
   const { orderedFields: allOrderedFields, isFieldEnabled } = useEnrollmentConfig();
@@ -90,37 +92,37 @@ export function Step6Confirmation({
   return (
     <section className="space-y-4" aria-labelledby="step6-title">
       <div>
-        <h3 id="step6-title" className="text-base font-bold text-foreground">Confirm Enrollment</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">Review all details before submitting.</p>
+        <h3 id="step6-title" className="text-base font-bold text-foreground">{t("enrollments.wizard.step6Title")}</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">{t("enrollments.wizard.step6Desc")}</p>
       </div>
 
       <div className="space-y-3">
-        <Section icon={User} title="Student">
-          <Row label="Name"   value={student?.name} />
-          <Row label="Gender" value={student?.gender} />
-          <Row label="Age"    value={age ? `${age} years old` : "Unknown"} />
-          <Row label="Father" value={student?.fatherName} />
+        <Section icon={User} title={t("enrollments.wizard.step6SectionStudent")}>
+          <Row label={t("enrollments.detail.name")} value={student?.name} />
+          <Row label={t("enrollments.wizard.step6RowGender")} value={student?.gender} />
+          <Row label={t("enrollments.wizard.step6RowAge")} value={age ? t("enrollments.wizard.step6YearsOld", { age }) : t("enrollments.wizard.step6Unknown")} />
+          <Row label={t("enrollments.wizard.step6RowFather")} value={student?.fatherName} />
         </Section>
 
-        <Section icon={BookOpen} title="Session">
-          <Row label="Session" value={session?.name} />
-          <Row label="Type"    value={session?.type} />
-          <Row label="Starts"  value={session?.startDate ? formatDate(session.startDate) : undefined} />
-          <Row label="Ends"    value={session?.endDate ? formatDate(session.endDate) : undefined} />
+        <Section icon={BookOpen} title={t("enrollments.wizard.step6SectionSession")}>
+          <Row label={t("enrollments.detail.session")} value={session?.name} />
+          <Row label={t("enrollments.wizard.step6RowType")} value={session?.type} />
+          <Row label={t("enrollments.wizard.step6RowStarts")} value={session?.startDate ? formatDate(session.startDate) : undefined} />
+          <Row label={t("enrollments.wizard.step6RowEnds")} value={session?.endDate ? formatDate(session.endDate) : undefined} />
         </Section>
 
-        <Section icon={Layers} title="Class">
-          <Row label="Class"   value={classInfo?.name} />
-          <Row label="Teacher" value={classInfo?.teacherName} />
-          {classInfo?.room && <Row label="Room"    value={classInfo.room} />}
-          <Row label="Age Range" value={classInfo ? `${classInfo.ageMin}–${classInfo.ageMax} yrs` : "—"} />
+        <Section icon={Layers} title={t("enrollments.wizard.step6SectionClass")}>
+          <Row label={t("enrollments.detail.class")} value={classInfo?.name} />
+          <Row label={t("enrollments.wizard.step6RowTeacher")} value={classInfo?.teacherName} />
+          {classInfo?.room && <Row label={t("enrollments.wizard.step6RowRoom")} value={classInfo.room} />}
+          <Row label={t("enrollments.wizard.step6RowAgeRange")} value={classInfo ? t("enrollments.wizard.step6AgeRangeValue", { min: classInfo.ageMin, max: classInfo.ageMax }) : "—"} />
         </Section>
 
-        <Section icon={DollarSign} title="Fee">
-          <Row label="Base Fee" value={session ? formatCurrency(session.baseFee) : "—"} />
-          <Row label={feeResult?.label || "Discount"} value={feeResult && feeResult.pct > 0 ? `– ${formatCurrency(feeResult.discountAmt)} (${feeResult.pct}%)` : "None"} />
+        <Section icon={DollarSign} title={t("enrollments.wizard.step6SectionFee")}>
+          <Row label={t("enrollments.detail.baseFee")} value={session ? formatCurrency(session.baseFee) : "—"} />
+          <Row label={feeResult?.label || t("enrollments.detail.discount")} value={feeResult && feeResult.pct > 0 ? `– ${formatCurrency(feeResult.discountAmt)} (${feeResult.pct}%)` : t("enrollments.detail.none")} />
           <div className="flex items-center justify-between py-2">
-            <span className="text-xs font-bold text-foreground">Total Due</span>
+            <span className="text-xs font-bold text-foreground">{t("enrollments.detail.totalDue")}</span>
             <span className="text-sm font-bold text-primary">{formatCurrency(feeResult?.finalFee)}</span>
           </div>
         </Section>
@@ -136,14 +138,14 @@ export function Step6Confirmation({
             return (
               <div key="notes">
                 <label htmlFor="enrollment-notes" className={FORM_LABEL}>
-                  Notes {field.required ? "*" : ""}
+                  {t("attendance.columns.notes")} {field.required ? "*" : ""}
                 </label>
                 <Textarea
                   id="enrollment-notes"
                   name="notes"
                   value={notes}
                   onChange={(event) => onNotesChange(event.target.value)}
-                  placeholder="Any additional notes about this enrollment…"
+                  placeholder={t("enrollments.wizard.step6NotesPlaceholder")}
                   className="min-h-[80px]"
                   required={field.required}
                 />
@@ -176,7 +178,7 @@ export function Step6Confirmation({
                     value={stringValue}
                     onChange={(val) => onCustomFieldChange(field.id, val)}
                     options={field.options || []}
-                    placeholder="Select option…"
+                    placeholder={t("enrollments.wizard.step6SelectOption")}
                   />
                 ) : field.type === "boolean" ? (
                   <label className="flex items-center gap-2.5 py-2 cursor-pointer select-none">
@@ -195,7 +197,7 @@ export function Step6Confirmation({
                     type={field.type === "number" ? "number" : field.type === "date" ? "date" : field.type === "email" ? "email" : field.type === "url" ? "url" : "text"}
                     value={stringValue}
                     onChange={(event) => onCustomFieldChange(field.id, event.target.value)}
-                    placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
+                    placeholder={field.placeholder || t("enrollments.wizard.step6EnterField", { label: field.label.toLowerCase() })}
                     required={field.required}
                   />
                 )}
@@ -208,13 +210,13 @@ export function Step6Confirmation({
       </div>
 
       {/* What happens next */}
-      <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 space-y-1.5" role="note" aria-label="Process steps after confirmation">
-        <p className="text-xs font-bold text-foreground">What happens next?</p>
+      <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 space-y-1.5" role="note" aria-label={t("enrollments.wizard.step6NextAria")}>
+        <p className="text-xs font-bold text-foreground">{t("enrollments.wizard.step6NextTitle")}</p>
         {[
-          "Enrollment record created with Pending status",
-          "Invoice auto-generated for " + (formatCurrency(feeResult?.finalFee) || "—"),
-          "Notification sent to parent/guardian",
-          "Status → Confirmed once payment is received",
+          t("enrollments.wizard.step6NextCreated"),
+          t("enrollments.wizard.step6NextInvoice", { amount: formatCurrency(feeResult?.finalFee) || "—" }),
+          t("enrollments.wizard.step6NextNotification"),
+          t("enrollments.wizard.step6NextConfirmed"),
         ].map((item, index) => (
           <div key={`${index}-${item}`} className="flex items-start gap-2 text-xs text-muted-foreground">
             <CheckCircle2 className="w-3 h-3 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />

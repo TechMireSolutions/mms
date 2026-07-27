@@ -3,6 +3,7 @@ import { Layers, AlertTriangle, Users, CheckCircle2 } from "lucide-react";
 import { Session, Class } from '@/lib/data/sessionsData';
 import { Student } from '@/lib/data/studentsData';
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Step4ClassAssignmentProps {
   session: Session | null | undefined;
@@ -24,6 +25,7 @@ interface Step4ClassAssignmentProps {
  * @returns The Step4ClassAssignment component.
  */
 export function Step4ClassAssignment({ session, student: _student, suggestedClass, value, onChange }: Step4ClassAssignmentProps): React.ReactElement {
+  const { t } = useTranslation();
   const [override, setOverride] = useState<boolean>(false);
   const classes = session?.classes || [];
 
@@ -36,8 +38,8 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
   return (
     <section className="space-y-4" aria-labelledby="step4-title">
       <div>
-        <h3 id="step4-title" className="text-base font-bold text-foreground">Class Assignment</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">Select a class within <strong>{session?.name}</strong>.</p>
+        <h3 id="step4-title" className="text-base font-bold text-foreground">{t("enrollments.wizard.step4Title")}</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">{t("enrollments.wizard.step4Desc", { session: session?.name || "—" })}</p>
       </div>
 
       {/* Auto-suggestion banner */}
@@ -46,10 +48,10 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
           <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" aria-hidden="true" />
           <div>
             <p className="text-sm font-semibold text-foreground">
-              Auto-suggested: <span className="text-primary">{suggestedClass.name}</span>
+              {t("enrollments.wizard.step4AutoSuggested", { name: suggestedClass.name })}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Best match based on student age, gender, and available capacity.
+              {t("enrollments.wizard.step4AutoSuggestedHint")}
             </p>
           </div>
         </div>
@@ -58,7 +60,7 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
       {!suggestedClass && (
         <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-warning/10 border border-warning/30 text-warning text-sm" role="status">
           <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
-          No auto-match found. Manually select a class below.
+          {t("enrollments.wizard.step4NoAutoMatch")}
         </div>
       )}
 
@@ -66,16 +68,16 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
       {override && (
         <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-warning/10 border border-warning/30 text-warning text-sm font-semibold" role="alert">
           <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
-          Manual override — selected class differs from auto-suggestion. Confirm this is intentional.
+          {t("enrollments.wizard.step4OverrideWarning")}
         </div>
       )}
 
       {/* Class list */}
-      <div className="space-y-2" role="radiogroup" aria-label="Available classes list">
+      <div className="space-y-2" role="radiogroup" aria-label={t("enrollments.wizard.step4ClassesAria")}>
         {classes.length === 0 && (
           <div className="text-center py-10 text-sm text-muted-foreground" role="status">
             <Layers className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" aria-hidden="true" />
-            No eligible classes found for this session.
+            {t("enrollments.wizard.step4Empty")}
           </div>
         )}
         {classes.map((sessionClass) => {
@@ -104,11 +106,11 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
                   <div>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="text-sm font-bold text-foreground">{sessionClass.name}</p>
-                      {isSuggested && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">Recommended</span>}
-                      {full && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive">Full</span>}
+                      {isSuggested && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{t("enrollments.wizard.step4Recommended")}</span>}
+                      {full && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive">{t("enrollment.session.full")}</span>}
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5 flex-wrap">
-                      <span>Age {sessionClass.ageMin}–{sessionClass.ageMax}</span>
+                      <span>{t("enrollments.wizard.step4AgeRange", { min: sessionClass.ageMin, max: sessionClass.ageMax })}</span>
                       <span className="capitalize">{sessionClass.gender}</span>
                       <span>{sessionClass.teacherName}</span>
                       {sessionClass.room && <span>{sessionClass.room}</span>}
@@ -126,7 +128,7 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
                       style={{ width: `${(sessionClass.enrolled / sessionClass.capacity) * 100}%` }}
                     />
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{spotsLeft} left</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{t("enrollments.wizard.step4SpotsLeft", { count: spotsLeft })}</p>
                 </div>
               </div>
             </Button>

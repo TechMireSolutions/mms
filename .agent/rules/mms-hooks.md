@@ -26,7 +26,7 @@ Pattern: `enabled: isAuthenticated`, export `QUERY_KEY` constant, use `apiJson` 
 
 Hook **implementations** stay in `tenant/features/{module}/hooks/`. Cross-feature and shared UI (`components/`, dashboard, reports) **must** import the public surface from:
 
-`@/tenant/hooks/collections/{contacts|students|teachers|sessions|enrollments|users|finance|accounting|hasanat|examinations|questionBank}`
+`@/tenant/hooks/collections/{contacts|students|teachers|sessions|enrollments|users|finance|accounting|hasanat|examinations|questionBank|attendance}`
 
 Same-feature files may keep direct `@/tenant/features/{module}/hooks/...` imports. Do not import another feature’s hooks path from outside that feature.
 

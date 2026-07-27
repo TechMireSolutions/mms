@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const MotionCard = motion.create(Card);
 
@@ -23,6 +24,7 @@ interface DenomModalProps {
 }
 
 function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
+  const { t } = useTranslation();
   const [data, setData] = useState<Denomination>(denom || { ...EMPTY });
   const [submitting, setSubmitting] = useState(false);
   const presetColors = getDenominationPresetColors();
@@ -38,10 +40,10 @@ function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
     <FormModal
       open={open}
       onClose={onClose}
-      title={denom ? "Edit Denomination" : "New Denomination"}
+      title={denom ? t("hasanat.denominations.edit") : t("hasanat.denominations.new")}
       icon={CreditCard}
-      cancelLabel="Cancel"
-      saveLabel="Save"
+      cancelLabel={t("common.cancel")}
+      saveLabel={t("hasanat.denominations.save")}
       saving={submitting}
       onSave={() => {
         void (async () => {
@@ -64,21 +66,21 @@ function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="denom-name" className={FORM_LABEL}>Card Name *</label>
-            <Input id="denom-name" className={FORM_INPUT} value={data.name} onChange={(event) => updateField("name", event.target.value)} placeholder="e.g. Gold Card" />
+            <label htmlFor="denom-name" className={FORM_LABEL}>{t("hasanat.denominations.cardName")} *</label>
+            <Input id="denom-name" className={FORM_INPUT} value={data.name} onChange={(event) => updateField("name", event.target.value)} placeholder={t("hasanat.denominations.cardNamePlaceholder")} />
           </div>
           <div>
-            <label htmlFor="denom-pts" className={FORM_LABEL}>Points Value *</label>
+            <label htmlFor="denom-pts" className={FORM_LABEL}>{t("hasanat.denominations.pointsValue")} *</label>
             <Input id="denom-pts" type="number" className={FORM_INPUT} value={data.points} onChange={(event) => updateField("points", +event.target.value)} min={1} />
           </div>
         </div>
         <div>
-          <label htmlFor="denom-desc" className={FORM_LABEL}>Description</label>
-          <Input id="denom-desc" className={FORM_INPUT} value={data.description} onChange={(event) => updateField("description", event.target.value)} placeholder="When is this card awarded?" />
+          <label htmlFor="denom-desc" className={FORM_LABEL}>{t("hasanat.denominations.description")}</label>
+          <Input id="denom-desc" className={FORM_INPUT} value={data.description} onChange={(event) => updateField("description", event.target.value)} placeholder={t("hasanat.denominations.descriptionPlaceholder")} />
         </div>
 
         <fieldset>
-          <legend className={FORM_LABEL}>Icon</legend>
+          <legend className={FORM_LABEL}>{t("hasanat.denominations.icon")}</legend>
           <div className="flex gap-2 flex-wrap">
             {PRESET_ICONS.map((icon) => (
               <Button
@@ -95,27 +97,27 @@ function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
         </fieldset>
 
         <fieldset>
-          <legend className={FORM_LABEL}>Color</legend>
+          <legend className={FORM_LABEL}>{t("hasanat.denominations.color")}</legend>
           <div className="flex gap-2 flex-wrap items-center">
             {presetColors.map((color) => (
               <Button
                 type="button"
                 aria-pressed={data.color === color}
-                aria-label={`Select color ${color}`}
+                aria-label={t("hasanat.denominations.selectColor", { color })}
                 key={color}
                 onClick={() => updateField("color", color)}
                 className={`w-7 h-7 rounded-full border-2 transition-all ${data.color === color ? "border-foreground scale-110" : "border-transparent"}`}
                 style={{ background: color }}
               />
             ))}
-            <label className="sr-only" htmlFor="custom-color">Custom Color</label>
-            <Input id="custom-color" type="color" value={data.color} onChange={(event) => updateField("color", event.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 p-0" title="Custom color" />
+            <label className="sr-only" htmlFor="custom-color">{t("hasanat.denominations.customColor")}</label>
+            <Input id="custom-color" type="color" value={data.color} onChange={(event) => updateField("color", event.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 p-0" title={t("hasanat.denominations.customColor")} />
           </div>
         </fieldset>
 
         <label className="flex items-center gap-2.5 cursor-pointer">
           <Checkbox checked={data.active} onCheckedChange={(checked) => updateField("active", !!checked)} />
-          <span className="text-sm font-medium text-foreground">Active</span>
+          <span className="text-sm font-medium text-foreground">{t("hasanat.status.active")}</span>
         </label>
       </div>
     </FormModal>
@@ -139,6 +141,7 @@ export interface DenominationsManagerProps {
  * @returns React element representing the reward card denominations manager UI.
  */
 export function DenominationsManager({ denoms, onUpdate, canWrite = true }: DenominationsManagerProps) {
+  const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
   const [editDenom, setEditDenom] = useState<Denomination | null>(null);
 
@@ -165,7 +168,7 @@ export function DenominationsManager({ denoms, onUpdate, canWrite = true }: Deno
             onClick={() => { setEditDenom(null); setShowModal(true); }}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
           >
-            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> New Denomination
+            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("hasanat.denominations.new")}
           </Button>
         )}
       </header>

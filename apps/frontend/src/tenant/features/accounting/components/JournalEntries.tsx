@@ -3,7 +3,7 @@ import { formatDate, formatMoney, type AppTranslationKey } from "@mms/shared";
 import {
   Plus, Eye, Pencil, Trash2, CheckCircle2,
   RotateCcw, Filter, Download, BookOpen,
-  DollarSign, Heart, Zap, UserCheck, Layers,
+  DollarSign, Heart, Zap, UserCheck,
   Sparkles,
   TrendingUp
 } from "lucide-react";
@@ -125,6 +125,13 @@ export function JournalEntries({
     () => [
       { key: "transactions" as const, label: t("accounting.journal.tabs.transactions") },
       { key: "cashbook" as const, label: t("accounting.journal.tabs.cashbook") },
+    ],
+    [t],
+  );
+  const modeTabs = useMemo(
+    () => [
+      { key: "simple" as const, label: t("accounting.journal.dashboard.simple") },
+      { key: "advanced" as const, label: t("accounting.journal.dashboard.advanced") },
     ],
     [t],
   );
@@ -289,32 +296,6 @@ export function JournalEntries({
   const grandDebit  = filtered.reduce((sum, journalEntry) => sum + journalEntry.lines.reduce((lineTotal, journalLine) => lineTotal + journalLine.debit, 0), 0);
   const grandCredit = filtered.reduce((sum, journalEntry) => sum + journalEntry.lines.reduce((lineTotal, journalLine) => lineTotal + journalLine.credit, 0), 0);
 
-  // ── Mode toggle bar ────────────────────────────────────────────────────────
-  const ModeToggle = () => (
-    <nav aria-label="View Mode" className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-muted/30">
-      <Button 
-        type="button"
-        variant={mode === "simple" ? "default" : "ghost"}
-        size="sm"
-        aria-pressed={mode === "simple"}
-        onClick={() => setMode("simple")}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold"
-      >
-        <Sparkles className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.simple")}
-      </Button>
-      <Button 
-        type="button"
-        variant={mode === "advanced" ? "default" : "ghost"}
-        size="sm"
-        aria-pressed={mode === "advanced"}
-        onClick={() => setMode("advanced")}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold"
-      >
-        <Layers className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.advanced")}
-      </Button>
-    </nav>
-  );
-
   // ── SIMPLE MODE ────────────────────────────────────────────────────────────
   if (mode === "simple") {
     return (
@@ -325,7 +306,7 @@ export function JournalEntries({
             <h2 className="text-base font-bold text-foreground m-0">{t("accounting.journal.dashboard.recordTransaction")}</h2>
             <p className="text-xs text-muted-foreground m-0">{t("accounting.journal.dashboard.subtitleSimple")}</p>
           </div>
-          <ModeToggle />
+          <SubTabBar tabs={modeTabs} value={mode} onChange={setMode} panelIdPrefix="journal-mode-simple" />
         </header>
 
         <SubTabBar
@@ -460,7 +441,7 @@ export function JournalEntries({
     <section aria-label="Advanced Journal Entries" className="space-y-4">
       {/* Mode toggle + header */}
       <nav aria-label="Journal controls" className="flex flex-wrap gap-2 items-center">
-        <ModeToggle />
+        <SubTabBar tabs={modeTabs} value={mode} onChange={setMode} panelIdPrefix="journal-mode-advanced" />
         <div className="flex-1" />
         <SearchBar
           value={search}

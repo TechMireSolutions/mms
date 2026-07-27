@@ -81,21 +81,21 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
     const newErrors: Record<string, string> = {};
 
     if (!examDraft.name?.trim()) {
-      newErrors.name = "Exam Name is required.";
+      newErrors.name = t("examinations.form.validation.nameRequired");
     }
     if (!examDraft.date) {
-      newErrors.date = "Exam Date is required.";
+      newErrors.date = t("examinations.form.validation.dateRequired");
     }
     if (!examDraft.classIds || examDraft.classIds.length === 0) {
-      newErrors.classIds = "At least one Class must be assigned.";
+      newErrors.classIds = t("examinations.form.validation.classRequired");
     }
     if (Number(examDraft.passingMarks) > Number(examDraft.totalMarks)) {
-      newErrors.passingMarks = "Passing Marks cannot exceed Total Marks.";
+      newErrors.passingMarks = t("examinations.form.validation.passingExceedsTotal");
     }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      notify.error("Please fix validation errors");
+      notify.error(t("examinations.form.toast.validationError"));
       return;
     }
 
@@ -106,10 +106,10 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
         name: toTitleCase(examDraft.name || ""),
         id: exam?.id || `ex${Date.now()}`
       } as unknown as Exam);
-      notify.success(exam ? "Exam updated successfully" : "Exam created successfully");
+      notify.success(exam ? t("examinations.form.toast.updated") : t("examinations.form.toast.created"));
       onClose();
     } catch (err: unknown) {
-      notify.error("Failed to save exam", { description: err instanceof Error ? err.message : String(err) });
+      notify.error(t("examinations.form.toast.saveFailed"), { description: err instanceof Error ? err.message : String(err) });
     } finally {
       setSaving(false);
     }
@@ -121,10 +121,10 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
     <FormModal
       open={open}
       onClose={onClose}
-      title={exam ? "Edit Exam" : "Create Exam"}
+      title={exam ? t("examinations.form.title.edit") : t("examinations.form.title.create")}
       icon={BookOpen}
-      cancelLabel="Cancel"
-      saveLabel={exam ? "Save Changes" : "Create Exam"}
+      cancelLabel={t("examinations.form.cancel")}
+      saveLabel={exam ? t("examinations.form.saveChanges") : t("examinations.form.create")}
       onSave={handleSave}
       saving={saving}
       saveDisabled={!valid}
@@ -133,12 +133,12 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
         <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm">
           <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
             <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Exam Parameters</h3>
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("examinations.form.section.parameters")}</h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <Field label="Exam Name" required error={errors.name}>
+              <Field label={t("examinations.form.fields.name")} required error={errors.name}>
                 <div className="relative flex items-center group/input">
                   <BookOpen className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                   <Input
@@ -146,19 +146,19 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                     className={`${FORM_INPUT} pl-10`}
                     value={examDraft.name || ""}
                     onChange={(event) => updateDraft({ name: event.target.value })}
-                    placeholder="e.g. Tajweed Mid-Term"
+                    placeholder={t("examinations.form.placeholders.name")}
                     required
                   />
                 </div>
               </Field>
             </div>
 
-            <Field label="Subject">
+            <Field label={t("examinations.form.fields.subject")}>
               <FormSelect
                 id="exam-subject"
                 value={examDraft.subject || ""}
                 onChange={(val) => updateDraft({ subject: val })}
-                placeholder="Select subject…"
+                placeholder={t("examinations.form.placeholders.subject")}
                 options={SUBJECT_OPTIONS.map((subjectOption) => ({
                   value: subjectOption.value,
                   label: t(subjectOption.labelKey),
@@ -166,20 +166,20 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
               />
             </Field>
 
-            <Field label="Status">
+            <Field label={t("examinations.form.fields.status")}>
               <FormSelect
                 id="exam-status"
                 value={examDraft.status || "upcoming"}
                 onChange={(val) => updateDraft({ status: val as Exam["status"] })}
                 options={[
-                  { value: "upcoming", label: "Upcoming" },
-                  { value: "ongoing", label: "Ongoing" },
-                  { value: "completed", label: "Completed" },
+                  { value: "upcoming", label: t("examinations.status.upcoming") },
+                  { value: "ongoing", label: t("examinations.status.ongoing") },
+                  { value: "completed", label: t("examinations.status.completed") },
                 ]}
               />
             </Field>
 
-            <Field label="Total Marks">
+            <Field label={t("examinations.form.fields.totalMarks")}>
               <div className="relative flex items-center group/input">
                 <Trophy className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
@@ -194,7 +194,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
               </div>
             </Field>
 
-            <Field label="Passing Marks" error={errors.passingMarks}>
+            <Field label={t("examinations.form.fields.passingMarks")} error={errors.passingMarks}>
               <div className="relative flex items-center group/input">
                 <CheckCircle2 className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
@@ -211,7 +211,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
             </Field>
 
             <div className="sm:col-span-2">
-              <Field label="Duration (min)">
+              <Field label={t("examinations.form.fields.durationMinutes")}>
                 <div className="relative flex items-center group/input">
                   <Clock className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                   <Input
@@ -228,7 +228,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
             </div>
 
             <div className="sm:col-span-2">
-              <Field label="Exam Date" required error={errors.date}>
+              <Field label={t("examinations.form.fields.examDate")} required error={errors.date}>
                 <DatePicker
                   id="exam-date"
                   value={examDraft.date || ""}
@@ -239,8 +239,8 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
             </div>
 
             <div className="sm:col-span-2">
-              <Field label="Assign to Classes" required error={errors.classIds}>
-                <div className="flex flex-wrap gap-2" role="group" aria-label="Assign to classes list">
+              <Field label={t("examinations.form.fields.assignClasses")} required error={errors.classIds}>
+                <div className="flex flex-wrap gap-2" role="group" aria-label={t("examinations.form.aria.assignClassesList")}>
                   {classes.map((sessionClass) => {
                     const active = !!(examDraft.classIds && examDraft.classIds.includes(sessionClass.id));
                     return (
@@ -267,13 +267,13 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
             </div>
 
             <div className="sm:col-span-2">
-              <Field label="Description">
+              <Field label={t("examinations.form.fields.description")}>
                 <Textarea
                   id="exam-desc"
                   name="description"
                   value={examDraft.description || ""}
                   onChange={(event) => updateDraft({ description: event.target.value })}
-                  placeholder="Optional notes about this exam…"
+                  placeholder={t("examinations.form.placeholders.description")}
                 />
               </Field>
             </div>

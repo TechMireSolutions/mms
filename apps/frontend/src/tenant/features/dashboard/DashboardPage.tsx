@@ -10,8 +10,8 @@ import { resolveDashboardRole, widgetMatchesDashboardRole } from '@/lib/dashboar
 import { usePermissions } from '@/tenant/hooks/usePermissions';
 import {
   DashboardWidgets,
-  CustomWidget,
-} from '@/tenant/features/reports/components/PinnedWidgets';
+} from '@/lib/reports/pinnedWidgets';
+import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import { useDashboardData } from '@/tenant/features/dashboard/hooks/useDashboardData';
 import { useDashboardMetricCards } from '@/tenant/features/dashboard/hooks/useDashboardMetricCards';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';

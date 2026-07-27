@@ -9,26 +9,27 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 
 | Area | Current state | Target (rules) |
 |------|---------------|----------------|
-| Hardcoded labels/colours | Widespread in modules | Config/registry + `t()` — `mms-settings-i18n.mdc` |
+| Hardcoded labels/colours | Major shells/forms/reports localized in cleanup; residual deep niche copy | Config/registry + `t()` — `mms-settings-i18n.mdc` |
 | Permission matrix completeness | Module manifests + `useModulePermissions` on major write surfaces; some setup/role UIs still special-case | Full registry-driven matrix everywhere — `mms-auth-security.mdc` |
 | Inline `role ===` checks | Residual: platform console `super_user`, chat `msg.role`, metrics counting, `useViewerRole` teacher→staff alias | Prefer `can()` / contract permissions; no new module write gates via `role ===` |
 | Custom tab provisioning | JSON document store only | Table + migration + CRUD per custom tab — `mms-fields.mdc` |
 | WebSockets | Not implemented | Replace polling for server push — `mms-core.mdc` |
-| Work/Reports sub-tabs | Residual inline bars in deep components | `SubTabBar` per `mms-ui-ux-design.mdc` |
+| Work/Reports sub-tabs | ComparisonMode + JournalEntries on SubTabBar; residual deep bars | `SubTabBar` per `mms-ui-ux-design.mdc` |
 | `category="academic"` in reports/KPI | Removed from module pages | Module-specific categories only (`mms-module-architecture.mdc`) |
-| Legacy entity forms | Some deep module sheets | `FormModal` / `Modal` / `DetailDrawerShell` — `mms-ui-ux-design.mdc` |
-| Status colours inline | Residual in chart color maps | `StatusBadge` + semantic tokens — `mms-ui-ux-design.mdc` |
-| Automated tests | Shared + backend (auth, rbac, health, security); frontend apiClient + hooks; Playwright onboard/login + Contacts + navigation in `e2e/` | Broaden Playwright beyond Contacts/onboard critical path — `mms-testing-observability.mdc` |
+| Legacy entity forms | Create/edit/builders on `FormModal` (incl. fields setup tabs, wizards); Modal reserved for confirm/preview | `FormModal` / `Modal` / `DetailDrawerShell` — `mms-ui-ux-design.mdc` |
+| Status colours inline | Most StatusBadge configs on SEMANTIC_BADGE; residual chart palette maps | `StatusBadge` + semantic tokens — `mms-ui-ux-design.mdc` |
+| Automated tests | Shared + backend; frontend hooks; Playwright onboard + Contacts/Students/Attendance + teacher/invoice/session create + module tier shells + settings | Broaden remaining module write flows (enrollments wizard, etc.) — `mms-testing-observability.mdc` |
 | Global a11y pass | Partial (dropdowns + ContactPicker labels); not a full WCAG sweep | WCAG baseline on new UI — `mms-ui-ux-design.mdc` |
 | Universal module architecture | All modules have `{Module}ModuleManifest` + command centre metric strips | Report drill-down on remaining modules |
 | Soft deletion (remaining gaps) | Work trash + restore shipped for Contacts, Students, Teachers, Sessions, Attendance, Enrollments, Finance, Accounting, Obligations, Hasanat, Examinations, Question Bank (questions), Users (`tenant_users.deleted_at`); Messaging logs soft-archive via admin clear; Question Bank tests/results remain upsert-only | Keep intentional Messaging clear + QB papers/results upsert-only variants |
 | Contact lifecycle / tag / persona | Retired — SSOT `CONTACT_RETIRED_CLASSIFICATION_KEYS` + seed/object sanitizers; contacts are persons only | Do not reintroduce CRM stages or role tags on contacts |
-| Report drill-down | Contacts chart → Work filters wired | Same pattern on other module reports |
+| Report drill-down | Contacts + Finance/Attendance/Sessions/Academic/Faculty/Hasanat chart→table | Niche panels without chart+table (QB charts-only, Contacts saved-reports) |
 | Saved reports re-run | Contacts `ContactsSavedReports` + REST; generic `SavedReports` empty | Per-module saved logic presets |
 | Background job queue | Async off-request workers; Contacts CSV export + duplicate scan; artifact download API; accounting/obligations tray exports | Dedicated job queue infra (Redis/worker process) for multi-instance deploy |
 
 ## Recently Resolved (Do not reintroduce)
 
+- **Frontend gold-standard / boundary cleanup**: Work `ErrorState` on Students/Teachers/Enrollments; Query mutation `onSuccess` no longer dual-writes via `saveCollection` (mirroring stays in `useCollectionSync` queryFn); `ContactPicker`/`ContactCreateModal` under `@/components/contactLink/`; cross-module collection hooks via `@/tenant/hooks/collections/*`; shared report metadata/widget utils live in `@/lib/reports/*` (feature paths re-export); enrollment/add-user/marks/accounting simple wizard + ModuleFieldsSetup tabs on `FormModal`; stripped `t() || "English"` fallbacks on reviewed surfaces; Question Bank + Hasanat primary forms localized; KPISummary stable ids + i18n; ComparisonMode/JournalEntries `SubTabBar`; report chart→table drill-down on Finance/Attendance/Sessions/Academic/Faculty/Hasanat; FinancialReport StatusBadge uses `SEMANTIC_BADGE`.
 - **Client Error Reporting (Sentry)**: Integrated client-side error boundaries with Sentry instrumentation in `main.tsx`.
 - **Per-Entity REST APIs**: Migrated students, contacts, teachers, finance, enrollments, obligations, accounting, hasanat, examinations, question-bank, users, attendance, and sessions to dedicated server-authoritative REST routes.
 - **Internal API Communications**: Banned raw `fetch('/api/...')` calls in favor of the typesafe `apiClient` (`apiFetch`/`apiJson`).
@@ -67,7 +68,10 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 - **Question Bank gold-standard parity**: Upsert bulk for questions/tests/results; soft-delete + Work trash on questions (JSONB `deletedAt`); Setup Fields|Preferences + `canEditSetup`; awaited question saves; ErrorState + Cmd/Ctrl+N; tests/papers and assessment_results remain upsert-only (documented in contract).
 - **Contacts gender list filter**: `filterContactsForQuery` / student gender filters match case-insensitively so Father/Mother pickers (`filterGender=male|female`) find Title-Case stored values.
 - **ContactPicker label association**: Search inputs use `<label htmlFor>` for a11y and stable Playwright `getByLabel` selectors.
-- **Onboarding E2E critical path**: `e2e/tests/onboarding-login.spec.ts` covers platform setup → tenant onboard → contacts → student with guardians → attendance bulk submit.
+- **Onboarding E2E critical path**: `e2e/tests/onboarding-login.spec.ts` covers platform setup → tenant onboard → contacts → student with guardians → attendance bulk submit → module tier shells → teacher create (contact-linked) → finance invoice create → session create.
+- **Teacher create without client id**: `teacherCoreSchema.id` is optional on POST; server assigns `tch-{timestamp}` (parity with students).
+- **Finance invoice studentName strip**: InvoiceForm no longer invents a slug `studentId` from the free-text name (that triggered `normalizeIdLinkedName` to drop `studentName` on cache save).
+- **Session create client id**: SessionForm assigns `sess-{timestamp}` on create so POST validates against required `SessionSchema.id`.
 
 Do not reintroduce resolved violations.
 

@@ -70,10 +70,10 @@ interface EditableSelectProps {
 }
 
 const formatOptionLabel = (option: string, t: TranslationFunction): string => {
-  if (option === "male") return t("contacts.gender.male") || "Male";
-  if (option === "female") return t("contacts.gender.female") || "Female";
-  if (option === "other") return t("contacts.gender.other") || "Other";
-  if (option === "unspecified") return t("contacts.gender.unspecified") || "Unspecified";
+  if (option === "male") return t("contacts.gender.male");
+  if (option === "female") return t("contacts.gender.female");
+  if (option === "other") return t("contacts.gender.other");
+  if (option === "unspecified") return t("contacts.gender.unspecified");
   return option;
 };
 

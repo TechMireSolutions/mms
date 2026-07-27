@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { BookOpen, Trophy, TrendingUp, Star } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { BookOpen, Trophy, TrendingUp, Star, Filter, X } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
@@ -14,6 +14,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Button } from "@/components/ui/button";
 
 /** Grade badge colour mapping. */
 const GRADE_COLOR: Record<string, string> = {
@@ -71,6 +72,8 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
   const { t } = useTranslation();
   const examResults = useExaminationsResultsCollection();
   const exams = useExaminationsExamsCollection();
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const studentIds = useMemo(
     () => uniqueRegistryIds(examResults.map((examResult) => examResult.studentId)),
     [examResults],
@@ -152,18 +155,42 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
     return classRankingItems;
   }, [filters, examResults, exams, students]);
 
-  const averageMarks = academicResultsData.length
-    ? (academicResultsData.reduce((totalMarks, academicResult) => totalMarks + academicResult.marks, 0) / academicResultsData.length).toFixed(1)
+  const filteredAcademicResultsData = useMemo(() => {
+    let filteredAcademicResults = academicResultsData;
+    if (selectedClass) {
+      filteredAcademicResults = filteredAcademicResults.filter((academicResult) => academicResult.class === selectedClass);
+    }
+    if (selectedStudent) {
+      filteredAcademicResults = filteredAcademicResults.filter((academicResult) => academicResult.studentName === selectedStudent);
+    }
+    return filteredAcademicResults;
+  }, [academicResultsData, selectedClass, selectedStudent]);
+
+  const filteredClassRankings = useMemo(
+    () => (selectedClass ? classRankings.filter((classRanking) => classRanking.class === selectedClass) : classRankings),
+    [classRankings, selectedClass],
+  );
+
+  const averageMarks = filteredAcademicResultsData.length
+    ? (filteredAcademicResultsData.reduce((totalMarks, academicResult) => totalMarks + academicResult.marks, 0) / filteredAcademicResultsData.length).toFixed(1)
     : 0;
-  const topScore = academicResultsData.length ? Math.max(...academicResultsData.map((academicResult) => academicResult.marks)) : 0;
-  const passRate = academicResultsData.length
-    ? ((academicResultsData.filter((academicResult) => academicResult.marks >= 50).length / academicResultsData.length) * 100).toFixed(0)
+  const topScore = filteredAcademicResultsData.length ? Math.max(...filteredAcademicResultsData.map((academicResult) => academicResult.marks)) : 0;
+  const passRate = filteredAcademicResultsData.length
+    ? ((filteredAcademicResultsData.filter((academicResult) => academicResult.marks >= 50).length / filteredAcademicResultsData.length) * 100).toFixed(0)
     : 0;
+
+  const toggleClassFilter = (className: string): void => {
+    setSelectedClass((currentClass) => (currentClass === className ? null : className));
+  };
+
+  const toggleStudentFilter = (studentName: string): void => {
+    setSelectedStudent((currentStudent) => (currentStudent === studentName ? null : studentName));
+  };
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard icon={BookOpen}   label={t("examinations.report.totalRecords")} value={academicResultsData.length} color="primary" />
+        <StatCard icon={BookOpen}   label={t("examinations.report.totalRecords")} value={filteredAcademicResultsData.length} color="primary" />
         <StatCard icon={TrendingUp} label={t("examinations.report.classAvg")}     value={`${averageMarks}%`} color="blue"    />
         <StatCard icon={Trophy}     label={t("examinations.report.topScore")}     value={`${topScore}%`}      color="amber"   />
         <StatCard icon={Star}       label={t("examinations.report.passRate")}     value={`${passRate}%`} color="green"   />
@@ -173,7 +200,15 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionCard title={t("examinations.report.marksDistribution")}>
           <SafeResponsiveContainer width="100%" height={180}>
-            <BarChart data={academicResultsData} barSize={28}>
+            <BarChart
+              data={filteredAcademicResultsData}
+              barSize={28}
+              onClick={(state) => {
+                const studentName = (state as { activeLabel?: string } | undefined)?.activeLabel;
+                if (typeof studentName === "string" && studentName.length > 0) toggleStudentFilter(studentName);
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="studentName" tick={{ fontSize: 10 }} angle={-25} textAnchor="end" height={40} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
@@ -184,9 +219,18 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
         </SectionCard>
 
         <SectionCard title={t("examinations.report.classComparison")}>
-          {classRankings.length > 0 ? (
+          {filteredClassRankings.length > 0 ? (
             <SafeResponsiveContainer width="100%" height={180}>
-              <BarChart data={classRankings} barSize={32} layout="vertical">
+              <BarChart
+                data={filteredClassRankings}
+                barSize={32}
+                layout="vertical"
+                onClick={(state) => {
+                  const className = (state as { activeLabel?: string } | undefined)?.activeLabel;
+                  if (typeof className === "string" && className.length > 0) toggleClassFilter(className);
+                }}
+                style={{ cursor: "pointer" }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
                 <YAxis dataKey="class" type="category" tick={{ fontSize: 11 }} width={90} />
@@ -201,16 +245,73 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
         </SectionCard>
       </div>
 
+      {(selectedStudent || selectedClass) && (
+        <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-muted/40 border border-border text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Filter className="w-3.5 h-3.5 text-primary" />
+            {selectedStudent && (
+              <>
+                <span className="font-medium text-foreground">{t("examinations.report.studentFilterLabel")}</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[11px] border border-primary/20">
+                  {selectedStudent}
+                </span>
+              </>
+            )}
+            {selectedClass && (
+              <>
+                <span className="font-medium text-foreground">{t("examinations.report.classFilterLabel")}</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[11px] border border-primary/20">
+                  {selectedClass}
+                </span>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            {selectedStudent && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedStudent(null)}
+                className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-3 h-3 me-1" />
+                {t("examinations.report.clearStudentFilter")}
+              </Button>
+            )}
+            {selectedClass && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedClass(null)}
+                className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-3 h-3 me-1" />
+                {t("examinations.report.clearClassFilter")}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Class Rankings */}
       <p className="text-sm font-semibold text-foreground">{t("examinations.report.classRankings")}</p>
-      {classRankings.length === 0 ? (
+      {filteredClassRankings.length === 0 ? (
         <EmptyState icon={Trophy} title={t("examinations.report.noClassRankingData")} compact />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {classRankings.map((classRanking, index) => (
+          {filteredClassRankings.map((classRanking, index) => (
             <Card key={classRanking.class} className="p-5">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-semibold text-foreground">{classRanking.class}</p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => toggleClassFilter(classRanking.class)}
+                  className="h-auto px-0 py-0 text-sm font-semibold text-foreground hover:text-primary"
+                >
+                  {classRanking.class}
+                </Button>
                 <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
                   #{index + 1}
                 </span>
@@ -231,7 +332,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
 
       <ExportToolbar 
         title={t("examinations.report.examResultsTitle")} 
-        data={academicResultsData}
+        data={filteredAcademicResultsData}
         headers={[
           t("examinations.report.colRank"),
           t("examinations.report.colStudent"),
@@ -241,7 +342,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
           t("examinations.report.colGrade"),
         ]}
       />
-      {academicResultsData.length === 0 ? (
+      {filteredAcademicResultsData.length === 0 ? (
         <EmptyState icon={BookOpen} title={t("examinations.report.noResultsFound")} compact />
       ) : (
         <Card className="overflow-hidden">
@@ -261,7 +362,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {academicResultsData.map((academicResult) => (
+              {filteredAcademicResultsData.map((academicResult) => (
                 <tr key={`${academicResult.studentName}-${academicResult.class}`} className="hover:bg-muted/30">
                   <td className="px-3 py-2.5">
                     {academicResult.rank === 1

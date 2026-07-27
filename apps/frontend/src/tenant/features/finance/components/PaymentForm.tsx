@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { ReceiptText, Coins, DollarSign, FileText } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { Card } from "@/components/ui/card";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
-import { todayISO, type PaymentCreateInput } from "@mms/shared";
+import { AppTranslationKey, todayISO, type PaymentCreateInput } from "@mms/shared";
 import { NotifiedFinanceMutationError } from "@/tenant/features/finance/hooks/useFinanceApi";
 
 interface PaymentFormProps {
@@ -23,6 +23,14 @@ interface PaymentFormProps {
   onClose: () => void;
   onSave: (payment: PaymentCreateInput) => void | Promise<void>;
 }
+
+const PAYMENT_METHOD_LABEL_KEYS: Record<(typeof PAYMENT_METHODS)[number], AppTranslationKey> = {
+  Cash: "finance.paymentMethod.cash",
+  "Bank Transfer": "finance.paymentMethod.bank_transfer",
+  Online: "finance.paymentMethod.online",
+  Cheque: "finance.paymentMethod.cheque",
+  Other: "finance.paymentMethod.other",
+};
 
 export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps): React.JSX.Element {
   const { user: authUser } = useAuth();
@@ -40,6 +48,15 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
     receivedByUserId: authUser?.id || "",
     note: "",
   }));
+
+  const paymentMethodOptions = useMemo(
+    () =>
+      PAYMENT_METHODS.map((method) => ({
+        value: method,
+        label: t(PAYMENT_METHOD_LABEL_KEYS[method]),
+      })),
+    [t],
+  );
 
   const updateDraft = (patch: Partial<typeof paymentDraft>) => {
     setPaymentDraft((prev) => ({ ...prev, ...patch }));
@@ -172,7 +189,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
                 name="method"
                 value={paymentDraft.method || "Cash"}
                 onChange={(val) => updateDraft({ method: val })}
-                options={PAYMENT_METHODS}
+                options={paymentMethodOptions}
               />
             </Field>
 

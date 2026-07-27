@@ -100,11 +100,11 @@ export function QuestionForm({
 
   const sourceBooks = useMemo<QuestionSourceBook[]>(() => {
     return [
-      { id: 'quran', name: 'Noble Quran', fieldIds: ['sourceSurah', 'sourceAyah'], metadata: {} },
-      { id: 'hadith', name: 'Sahih Bukhari', fieldIds: ['sourceHadithNumber'], metadata: {} },
-      { id: 'fiqh', name: 'Fiqh basics', fieldIds: ['sourceBookName', 'sourcePageNumber'], metadata: {} },
+      { id: 'quran', name: t('questionBank.sourceBook.nobleQuran'), fieldIds: ['sourceSurah', 'sourceAyah'], metadata: {} },
+      { id: 'hadith', name: t('questionBank.sourceBook.sahihBukhari'), fieldIds: ['sourceHadithNumber'], metadata: {} },
+      { id: 'fiqh', name: t('questionBank.sourceBook.fiqhBasics'), fieldIds: ['sourceBookName', 'sourcePageNumber'], metadata: {} },
     ];
-  }, []);
+  }, [t]);
 
   const handleSave = async () => {
     setErrors({});
@@ -155,10 +155,10 @@ export function QuestionForm({
       <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm">
         <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
           <Tag className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Classification & Tags</h3>
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t('questionBank.form.classification')}</h3>
         </div>
 
-        <Field label="Question Language">
+        <Field label={t('questionBank.form.questionLanguage')}>
           <FormSelect
             id="qb-question-language"
             className={FORM_SELECT}
@@ -168,16 +168,16 @@ export function QuestionForm({
           />
         </Field>
 
-        <Field label="Difficulty">
+        <Field label={t('questionBank.form.difficulty')}>
           <FormSelect
             id="qb-difficulty"
             className={FORM_SELECT}
             value={questionDraft.difficulty}
             onChange={(val) => updateDraft({ difficulty: val as QuestionDifficulty })}
             options={[
-              { value: 'easy', label: 'Easy' },
-              { value: 'medium', label: 'Medium' },
-              { value: 'hard', label: 'Hard' },
+              { value: 'easy', label: t('questionBank.difficulty.easy') },
+              { value: 'medium', label: t('questionBank.difficulty.medium') },
+              { value: 'hard', label: t('questionBank.difficulty.hard') },
             ]}
           />
         </Field>
@@ -191,7 +191,7 @@ export function QuestionForm({
             updateDraft({ categoryIds: list });
           }}
           required
-          translate={(key) => t(key as AppTranslationKey) || String(key)}
+          translate={(key) => t(key as AppTranslationKey)}
         />
         {errors.categoryIds && (
           <p className="text-[10px] text-destructive font-medium">{errors.categoryIds}</p>
@@ -201,31 +201,31 @@ export function QuestionForm({
   );
 
   const renderQuestionTab = () => {
-    const trueLabel = 'True';
-    const falseLabel = 'False';
+    const trueLabel = t('questionBank.true');
+    const falseLabel = t('questionBank.false');
     return (
       <div className="space-y-5 text-left">
         <Card accentColor="indigo" className="p-5.5 px-6.5 pb-6 space-y-4.5 shadow-sm">
           <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
             <BookOpen className="w-4 h-4 text-indigo-500/70 group-hover:text-indigo-500 transition-colors" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Question Content</h3>
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t('questionBank.form.content')}</h3>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <Field label="Question Text" required error={errors.text}>
+              <Field label={t('questionBank.questionText')} required error={errors.text}>
                 <Textarea
                   id="qb-text"
                   name="text"
                   value={questionDraft.text || ''}
                   onChange={(e) => updateDraft({ text: e.target.value })}
-                  placeholder="Type the question content..."
+                  placeholder={t('questionBank.questionTextPlaceholder')}
                 />
               </Field>
             </div>
 
             <div className="sm:col-span-2">
-              <Field label="Question Type">
+              <Field label={t('questionBank.type')}>
                 <FormSelect
                   id="qb-type"
                   className={FORM_SELECT}
@@ -236,13 +236,13 @@ export function QuestionForm({
                     updateDraft({ type: nextType, options, answer: '' });
                   }}
                   options={[
-                    { value: 'mcq', label: '📝 Multiple Choice (MCQ)' },
-                    { value: 'true_false', label: '⚖️ True / False' },
-                    { value: 'short', label: '✍️ Short Answer' },
-                    { value: 'fill_blank', label: '🕳️ Fill in the Blanks' },
-                    { value: 'matching', label: '🧩 Matching Pairs' },
-                    { value: 'ordering', label: '🔢 Ordering Items' },
-                    { value: 'numeric', label: '🧮 Numeric Answer' },
+                    { value: 'mcq', label: t('questionBank.type.mcq') },
+                    { value: 'true_false', label: t('questionBank.type.true_false') },
+                    { value: 'short', label: t('questionBank.type.short') },
+                    { value: 'fill_blank', label: t('questionBank.type.fill_blank') },
+                    { value: 'matching', label: t('questionBank.type.matching') },
+                    { value: 'ordering', label: t('questionBank.type.ordering') },
+                    { value: 'numeric', label: t('questionBank.type.numeric') },
                   ]}
                 />
               </Field>
@@ -250,7 +250,7 @@ export function QuestionForm({
 
             {questionDraft.type === 'mcq' && (
               <div className="sm:col-span-2">
-                <span className={FORM_LABEL}>Choices * (Select the radio of the correct choice)</span>
+                <span className={FORM_LABEL}>{t('questionBank.optionsLabel')}</span>
                 <div className="space-y-2 mt-1.5" role="radiogroup">
                   {questionDraft.options.slice(0, 4).map((optionValue, optionIndex) => (
                     <div key={optionIndex} className="relative flex items-center group/input w-full gap-2">
@@ -261,7 +261,7 @@ export function QuestionForm({
                         value={optionValue}
                         checked={questionDraft.answer === optionValue && !!optionValue}
                         onChange={() => updateDraft({ answer: optionValue })}
-                        aria-label={`Mark choice ${optionIndex + 1} as correct`}
+                        aria-label={t('questionBank.markChoiceCorrect', { n: optionIndex + 1 })}
                         className="h-4 w-4 flex-shrink-0 accent-primary"
                       />
                       <div className="relative flex items-center w-full">
@@ -275,7 +275,7 @@ export function QuestionForm({
                             nextOptions[optionIndex] = e.target.value;
                             updateDraft({ options: nextOptions });
                           }}
-                          placeholder={`Option ${optionIndex + 1}`}
+                          placeholder={t('questionBank.optionN', { n: optionIndex + 1 })}
                         />
                       </div>
                     </div>
@@ -289,7 +289,7 @@ export function QuestionForm({
 
             {questionDraft.type === 'true_false' && (
               <div className="sm:col-span-2">
-                <span className={FORM_LABEL}>Correct Answer *</span>
+                <span className={FORM_LABEL}>{t('questionBank.correctAnswer')} *</span>
                 <div className="flex gap-3 mt-1.5">
                   {[trueLabel, falseLabel].map((answerValue) => (
                     <Button
@@ -311,13 +311,13 @@ export function QuestionForm({
 
             {questionDraft.type === 'short' && (
               <div className="sm:col-span-2">
-                <Field label="Model Answer">
+                <Field label={t('questionBank.modelAnswer')}>
                   <Textarea
                     id="qb-answer"
                     name="answer"
                     value={questionDraft.answer || ''}
                     onChange={(e) => updateDraft({ answer: e.target.value })}
-                    placeholder="Enter the correct standard answer key..."
+                    placeholder={t('questionBank.modelAnswerPlaceholder')}
                   />
                 </Field>
               </div>
@@ -331,7 +331,7 @@ export function QuestionForm({
                 answer={String(questionDraft.answer ?? '')}
                 onOptionsChange={(next) => updateDraft({ options: next })}
                 onAnswerChange={(next) => updateDraft({ answer: next })}
-                t={(key) => t(key as AppTranslationKey) || String(key)}
+                t={(key) => t(key as AppTranslationKey)}
               />
             )}
           </div>
@@ -342,11 +342,11 @@ export function QuestionForm({
 
   const renderSourcesTab = () => {
     const sourceFields = [
-      { id: 'sourceSurah', label: 'Surah', type: 'text', required: false, enabled: true },
-      { id: 'sourceAyah', label: 'Ayah', type: 'text', required: false, enabled: true },
-      { id: 'sourceHadithNumber', label: 'Hadith Number', type: 'text', required: false, enabled: true },
-      { id: 'sourceBookName', label: 'Reference Book', type: 'text', required: false, enabled: true },
-      { id: 'sourcePageNumber', label: 'Page Number', type: 'text', required: false, enabled: true },
+      { id: 'sourceSurah', label: t('questionBank.source.surah'), type: 'text', required: false, enabled: true },
+      { id: 'sourceAyah', label: t('questionBank.source.ayah'), type: 'text', required: false, enabled: true },
+      { id: 'sourceHadithNumber', label: t('questionBank.source.hadithNumber'), type: 'text', required: false, enabled: true },
+      { id: 'sourceBookName', label: t('questionBank.source.bookName'), type: 'text', required: false, enabled: true },
+      { id: 'sourcePageNumber', label: t('questionBank.source.pageNumber'), type: 'text', required: false, enabled: true },
     ];
     const availableFieldIds = ['sourceSurah', 'sourceAyah', 'sourceHadithNumber', 'sourceBookName', 'sourcePageNumber'] as QuestionSourceFieldId[];
 
@@ -355,7 +355,7 @@ export function QuestionForm({
         <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm">
           <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
             <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Source Citations</h3>
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t('questionBank.formTab.sources')}</h3>
           </div>
           <QuestionSourcesTab
             sourceBooks={sourceBooks}
@@ -364,8 +364,8 @@ export function QuestionForm({
             orderedSourceFields={sourceFields as ModuleFieldDef[]}
             onCitationsChange={(next) => updateDraft({ sourceCitations: next })}
             onBooksUpdated={() => {}}
-            fieldLabel={(id, fallback) => fallback || String(id)}
-            translate={(key) => t(key as AppTranslationKey) || String(key)}
+            fieldLabel={(id, fallback) => fallback ?? String(id)}
+            translate={(key) => t(key as AppTranslationKey)}
           />
         </Card>
       </div>
@@ -379,16 +379,16 @@ export function QuestionForm({
       </span>
       <div className="flex items-center gap-1.5">
         <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px] capitalize">
-          {questionDraft.type.replace('_', ' ')}
+          {t(`questionBank.type.${questionDraft.type}` as AppTranslationKey)}
         </span>
         <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-info/10 text-info font-semibold border border-info/20 text-[10px] capitalize">
-          {questionDraft.difficulty}
+          {t(`questionBank.difficulty.${questionDraft.difficulty}` as AppTranslationKey)}
         </span>
       </div>
     </div>
   ) : (
     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-[11px] font-bold border border-destructive/20">
-      Question Text is required
+      {t('questionBank.validation.textRequired')}
     </span>
   );
 
@@ -396,13 +396,13 @@ export function QuestionForm({
     <FormModal
       open={open}
       onClose={onClose}
-      title={question ? "Edit Question" : "Add Question"}
-      subtitle="Define question tags, choices, and answers"
+      title={question ? t('questionBank.editQuestion') : t('questionBank.addQuestion')}
+      subtitle={t('questionBank.form.subtitle')}
       icon={BookOpen}
       lang={language}
       dir={getLanguageDirection(language)}
-      cancelLabel="Cancel"
-      saveLabel="Save Question"
+      cancelLabel={t('questionBank.cancel')}
+      saveLabel={t('questionBank.saveQuestion')}
       onSave={handleSave}
       saving={saving}
       saveDisabled={!questionDraft.text?.trim() || questionDraft.categoryIds.length === 0}

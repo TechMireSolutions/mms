@@ -1,15 +1,16 @@
-import React, { useMemo } from "react";
-import { UserCheck, Users, AlertTriangle, Award } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { UserCheck, Users, AlertTriangle, Award, Filter, X } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { Card } from "@/components/ui/card";
 import { SectionCard } from "@/components/ui/SectionCard";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
-import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
+import { useAttendanceRecordsCollection } from "@/tenant/hooks/collections/attendance";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
+import { Button } from "@/components/ui/button";
 
 import { AttendanceChart } from "@/components/dashboard-widgets/charts/AttendanceChart";
 import TodayAttendanceWidget from "@/components/dashboard-widgets/TodayAttendanceWidget";
@@ -50,6 +51,7 @@ export interface StudentAttendanceItem {
 export default function AttendanceReport({ filters }: AttendanceReportProps): React.JSX.Element {
   const { t } = useTranslation();
   const attendanceRecords = useAttendanceRecordsCollection();
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
 
   const sessions = useSessionsCollection();
   const sessionClasses = useMemo(() => sessions.flatMap((session) => session.classes || []), [sessions]);
@@ -125,12 +127,29 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
      }));
   }, [studentAttendanceRows]);
 
-  const avgRate = summary.length
-    ? (summary.reduce((totalRate, summaryItem) => totalRate + summaryItem.avgRate, 0) / summary.length).toFixed(1)
+  const filteredSummary = useMemo(
+    () => (selectedClass ? summary.filter((summaryItem) => summaryItem.class === selectedClass) : summary),
+    [summary, selectedClass],
+  );
+
+  const filteredStudentAttendanceRows = useMemo(
+    () =>
+      selectedClass
+        ? studentAttendanceRows.filter((studentAttendance) => studentAttendance.class === selectedClass)
+        : studentAttendanceRows,
+    [studentAttendanceRows, selectedClass],
+  );
+
+  const avgRate = filteredSummary.length
+    ? (filteredSummary.reduce((totalRate, summaryItem) => totalRate + summaryItem.avgRate, 0) / filteredSummary.length).toFixed(1)
     : "0";
     
-  const perfect = summary.reduce((totalPerfect, summaryItem) => totalPerfect + summaryItem.perfectAttendance, 0);
-  const belowThreshold = summary.reduce((totalBelowThreshold, summaryItem) => totalBelowThreshold + summaryItem.belowThreshold, 0);
+  const perfect = filteredSummary.reduce((totalPerfect, summaryItem) => totalPerfect + summaryItem.perfectAttendance, 0);
+  const belowThreshold = filteredSummary.reduce((totalBelowThreshold, summaryItem) => totalBelowThreshold + summaryItem.belowThreshold, 0);
+
+  const toggleClassFilter = (className: string): void => {
+    setSelectedClass((currentClass) => (currentClass === className ? null : className));
+  };
 
   const rateColor = (rate: number): string => {
     if (rate >= 90) return "text-success";
@@ -154,16 +173,24 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
     <div className="space-y-4 text-left">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard icon={UserCheck} label={t("attendance.report.avgAttendance")} value={`${avgRate}%`} color="green" />
-        <StatCard icon={Users} label={t("attendance.report.classesCount")} value={summary.length} color="primary" />
+        <StatCard icon={Users} label={t("attendance.report.classesCount")} value={filteredSummary.length} color="primary" />
         <StatCard icon={Award} label={t("attendance.report.perfectAttendance")} value={perfect} color="amber" />
         <StatCard icon={AlertTriangle} label={t("attendance.report.belowThreshold")} value={belowThreshold} color="red" />
       </div>
 
       {/* Chart */}
-      {summary.length > 0 && (
+      {filteredSummary.length > 0 && (
         <SectionCard title={t("attendance.report.rateByClass")}>
           <SafeResponsiveContainer width="100%" height={180}>
-            <BarChart data={summary} barSize={36}>
+            <BarChart
+              data={filteredSummary}
+              barSize={36}
+              onClick={(state) => {
+                const className = (state as { activeLabel?: string } | undefined)?.activeLabel;
+                if (typeof className === "string" && className.length > 0) toggleClassFilter(className);
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="class" tick={{ fontSize: 12 }} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
@@ -174,10 +201,32 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
         </SectionCard>
       )}
 
+      {selectedClass && (
+        <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-muted/40 border border-border text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Filter className="w-3.5 h-3.5 text-primary" />
+            <span className="font-medium text-foreground">{t("attendance.report.classFilterLabel")}</span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[11px] border border-primary/20">
+              {selectedClass}
+            </span>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedClass(null)}
+            className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+          >
+            <X className="w-3 h-3 me-1" />
+            {t("attendance.report.clearClassFilter")}
+          </Button>
+        </div>
+      )}
+
       {/* Class Summary Table */}
       <ExportToolbar 
         title={t("attendance.report.summaryTitle")} 
-        data={summary}
+        data={filteredSummary}
         headers={[
           t("attendance.report.colClass"),
           t("attendance.report.colTotalStudents"),
@@ -186,7 +235,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
           t("attendance.report.colBelowThreshold"),
         ]}
       />
-      {summary.length === 0 ? (
+      {filteredSummary.length === 0 ? (
         <EmptyState icon={UserCheck} title={t("attendance.report.noData")} description={t("attendance.report.adjustFilters")} compact />
       ) : (
         <Card className="overflow-hidden">
@@ -205,9 +254,18 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {summary.map((summaryRow) => (
+              {filteredSummary.map((summaryRow) => (
                 <tr key={summaryRow.class} className="hover:bg-muted/30">
-                  <td className="px-3 py-3 font-medium text-foreground">{summaryRow.class}</td>
+                  <td className="px-3 py-3 font-medium text-foreground">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => toggleClassFilter(summaryRow.class)}
+                      className="h-auto px-0 py-0 font-medium text-foreground hover:text-primary"
+                    >
+                      {summaryRow.class}
+                    </Button>
+                  </td>
                   <td className="px-3 py-3 text-muted-foreground">{summaryRow.total}</td>
                   <td className="px-3 py-3 w-44">{rateBar(summaryRow.avgRate)}</td>
                   <td className="px-3 py-3">
@@ -228,7 +286,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
         <h3 className="text-sm font-semibold text-foreground">{t("attendance.report.studentDetailTitle")}</h3>
         <ExportToolbar 
           title={t("attendance.report.studentDetailTitle")} 
-          data={studentAttendanceRows}
+          data={filteredStudentAttendanceRows}
           headers={[
             t("attendance.report.colStudent"),
             t("attendance.report.colStudentClass"),
@@ -240,7 +298,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
           ]}
         />
       </div>
-      {studentAttendanceRows.length === 0 ? (
+      {filteredStudentAttendanceRows.length === 0 ? (
         <EmptyState icon={Users} title={t("attendance.report.noStudentRecords")} compact />
       ) : (
         <Card className="overflow-hidden">
@@ -261,7 +319,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {studentAttendanceRows.map((studentAttendance) => (
+              {filteredStudentAttendanceRows.map((studentAttendance) => (
                 <tr key={studentAttendance.studentName} className="hover:bg-muted/30">
                   <td className="px-3 py-2.5 font-medium text-foreground">{studentAttendance.studentName}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{studentAttendance.class}</td>

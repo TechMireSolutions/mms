@@ -93,7 +93,7 @@ export function InvoiceForm({
     try {
       await onSave({
       id: nextInvoiceId(settings.invoicePrefix.trim() || "INV"),
-      studentId: draft.studentId.trim() || draft.studentName.trim().toLowerCase().replace(/\s+/g, "-"),
+      studentId: draft.studentId.trim(),
       studentName: draft.studentName.trim(),
       class: draft.class.trim(),
       session: draft.session.trim(),

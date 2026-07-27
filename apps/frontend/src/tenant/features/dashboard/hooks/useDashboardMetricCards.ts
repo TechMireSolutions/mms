@@ -3,13 +3,13 @@ import {
   getCollectedAmountForMonth,
   getOutstandingAmountForMonth,
 } from '@mms/shared';
-import type { CustomWidget } from '@/tenant/features/reports/components/PinnedWidgets';
-import { computeCustomCard as computeCustomCardShared } from '@/tenant/features/reports/components/reportMetadata';
+import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
+import { computeCustomCard as computeCustomCardShared } from '@/lib/reports/reportMetadata';
 import {
   computeContactsCustomCardValue,
   computeStudentsCustomCardValue,
   computeTeachersCustomCardValue,
-} from '@/tenant/features/reports/components/pinnedWidgets/widgetDataUtils';
+} from '@/lib/reports/widgetDataUtils';
 import { resolveWidgetTitle, resolveWidgetSubText } from '@/lib/dashboardWidgets';
 import { widgetMatchesDashboardRole, type DashboardRole } from '@/lib/dashboardRole';
 import {

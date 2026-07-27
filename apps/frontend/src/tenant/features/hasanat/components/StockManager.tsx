@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Card } from "@/components/ui/card";
 import { todayISO } from "@mms/shared";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface AddBatchModalProps {
   open: boolean;
@@ -20,6 +21,7 @@ interface AddBatchModalProps {
 }
 
 function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
+  const { t } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
   const [data, setData] = useState<Partial<StockBatch>>({
     denominationId: denoms[0]?.id || "",
@@ -48,10 +50,10 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
     <FormModal
       open={open}
       onClose={onClose}
-      title="Add Stock Batch"
+      title={t("hasanat.stock.addBatchTitle")}
       icon={Package}
-      cancelLabel="Cancel"
-      saveLabel="Add Batch"
+      cancelLabel={t("common.cancel")}
+      saveLabel={t("hasanat.stock.addBatchAction")}
       saving={submitting}
       onSave={() => {
         void (async () => {
@@ -68,14 +70,14 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
     >
       <div className="space-y-4">
         <div>
-          <label htmlFor="denom" className={FORM_LABEL}>Denomination *</label>
+          <label htmlFor="denom" className={FORM_LABEL}>{t("hasanat.form.denomination")} *</label>
           <FormSelect
             id="denom"
             value={data.denominationId || ""}
             onChange={(value) => updateField("denominationId", value)}
             options={denoms.filter((denomination) => denomination.active).map((denomination) => ({
               value: denomination.id,
-              label: `${denomination.icon} ${denomination.name} (${denomination.points} pts)`
+              label: `${denomination.icon} ${denomination.name} (${t("hasanat.form.pointsShort", { points: denomination.points })})`
             }))}
           />
         </div>
@@ -86,11 +88,11 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
         )}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="qty" className={FORM_LABEL}>Quantity *</label>
+            <label htmlFor="qty" className={FORM_LABEL}>{t("hasanat.form.quantity")} *</label>
             <Input id="qty" type="number" className={FORM_INPUT} value={data.quantity || ""} onChange={(event) => updateField("quantity", Number(event.target.value))} placeholder="0" min={1} />
           </div>
           <div>
-            <label htmlFor="add-date" className={FORM_LABEL}>Date</label>
+            <label htmlFor="add-date" className={FORM_LABEL}>{t("hasanat.stock.date")}</label>
             <DatePicker
               id="add-date"
               value={data.addedDate || ""}
@@ -100,14 +102,14 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
         </div>
         <UserActorSelect
           id="added-by"
-          label="Added By"
+          label={t("hasanat.stock.addedBy")}
           value={data.addedByUserId || ""}
           onChange={(id) => updateField("addedByUserId", id)}
           allowEmpty
         />
         <div>
-          <label htmlFor="note" className={FORM_LABEL}>Note</label>
-          <Input id="note" className={FORM_INPUT} value={data.note} onChange={(event) => updateField("note", event.target.value)} placeholder="e.g. January batch" />
+          <label htmlFor="note" className={FORM_LABEL}>{t("hasanat.stock.note")}</label>
+          <Input id="note" className={FORM_INPUT} value={data.note} onChange={(event) => updateField("note", event.target.value)} placeholder={t("hasanat.stock.notePlaceholder")} />
         </div>
       </div>
     </FormModal>
@@ -132,6 +134,7 @@ export interface StockManagerProps {
  * @returns React element representing the stock manager UI.
  */
 export function StockManager({ batches, denoms, onUpdate, canWrite = true }: StockManagerProps) {
+  const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
 
   const handleAdd = async (batch: StockBatch) => {
@@ -156,7 +159,7 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
             onClick={() => setShowModal(true)}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
           >
-            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add Batch
+            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("hasanat.stock.addBatchAction")}
           </Button>
         )}
       </header>

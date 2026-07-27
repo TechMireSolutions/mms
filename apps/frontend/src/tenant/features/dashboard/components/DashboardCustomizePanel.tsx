@@ -8,14 +8,14 @@ import {
   ATTENDANCE_MODULE_MANIFEST,
 } from '@mms/shared';
 import {
-  CustomWidget,
   WidgetBuilder,
-} from '@/tenant/features/reports/components/PinnedWidgets';
+} from '@/lib/reports/pinnedWidgets';
+import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import {
   METADATA_FIELDS,
   getCollectionLabel,
   type ReportCollection,
-} from '@/tenant/features/reports/components/reportMetadata';
+} from '@/lib/reports/reportMetadata';
 import { useTranslation } from '@/hooks/useTranslation';
 import { isSeededDashboardWidget, resolveWidgetTitle } from '@/lib/dashboardWidgets';
 import { Button } from '@/components/ui/button';

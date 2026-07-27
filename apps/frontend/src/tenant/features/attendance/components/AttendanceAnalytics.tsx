@@ -16,6 +16,7 @@ import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
 import { useStudentsByIds } from '@/tenant/hooks/collections/students';
 import { AlertTriangle, TrendingDown, Award } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 import { StatCard } from "@/components/ui/StatCard";
 
@@ -39,6 +40,7 @@ interface AttendanceAnalyticsProps {
  * @returns {React.ReactElement} The rendered analytics dashboard.
  */
 export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsProps) {
+  const { t } = useTranslation();
   const { statuses } = useAttendanceConfig();
   const { primary, secondary, charts } = useBrandPalette();
   const COLORS = useMemo(
@@ -108,13 +110,13 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
 
   const studentRates = useMemo<StudentRateEntry[]>(() =>
     students.map((student) => {
-      const sName = student.name || "Unknown";
+      const sName = student.name || t("attendance.analytics.unknown");
       return {
         name: sName.split(" ")[0] + " " + (sName.split(" ")[1]?.[0] ?? "") + ".",
         rate: calcStudentRate(student.id, records),
       };
     }).sort((firstStudent, secondStudent) => firstStudent.rate - secondStudent.rate),
-    [students, records]
+    [students, records, t]
   );
 
   const lowAttendance = studentRates.filter((studentRate) => studentRate.rate < 75);
@@ -133,10 +135,10 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
     <section className="space-y-6">
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Overall Attendance" value={`${overallRate}%`} sub="All classes" icon={Award} accent="success" delayIndex={0} />
-        <StatCard label="Total Present" value={totalStats.present} sub="Across all records" icon={Award} accent="primary" delayIndex={1} />
-        <StatCard label="Low Attendance" value={lowAttendance.length} sub="Below 75%" icon={AlertTriangle} accent="warning" delayIndex={2} />
-        <StatCard label="Most Absent" value={studentRates[0]?.name || "—"} sub={`${studentRates[0]?.rate || 0}%`} icon={TrendingDown} accent="destructive" delayIndex={3} />
+        <StatCard label={t("attendance.analytics.kpi.overallAttendance")} value={`${overallRate}%`} sub={t("attendance.analytics.kpi.allClasses")} icon={Award} accent="success" delayIndex={0} />
+        <StatCard label={t("attendance.analytics.kpi.totalPresent")} value={totalStats.present} sub={t("attendance.analytics.kpi.allRecords")} icon={Award} accent="primary" delayIndex={1} />
+        <StatCard label={t("attendance.analytics.kpi.lowAttendance")} value={lowAttendance.length} sub={t("attendance.analytics.kpi.belowThreshold")} icon={AlertTriangle} accent="warning" delayIndex={2} />
+        <StatCard label={t("attendance.analytics.kpi.mostAbsent")} value={studentRates[0]?.name || "—"} sub={`${studentRates[0]?.rate || 0}%`} icon={TrendingDown} accent="destructive" delayIndex={3} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -147,14 +149,14 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
           transition={{ duration: 0.35, delay: 0.2, ease: "easeOut" }}
         >
           <Card accentColor="primary" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
-            <h2 className="text-sm font-bold text-foreground mb-3 m-0">Attendance % by Class</h2>
+            <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.classRateTitle")}</h2>
             <SafeResponsiveContainer height={200}>
               <BarChart data={classStats} barSize={32}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
                 <Tooltip formatter={(value) => `${value}%`} />
-                <Bar dataKey="rate" name="Attendance" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}
+                <Bar dataKey="rate" name={t("attendance.analytics.attendanceLabel")} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}
                   label={{ position: "top", fontSize: 10, fill: "hsl(var(--muted-foreground))", formatter: (value) => value !== undefined && value !== null ? `${value}%` : "" }} />
               </BarChart>
             </SafeResponsiveContainer>
@@ -168,7 +170,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
           transition={{ duration: 0.35, delay: 0.25, ease: "easeOut" }}
         >
           <Card accentColor="info" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
-            <h2 className="text-sm font-bold text-foreground mb-3 m-0">Monthly Attendance Trend</h2>
+            <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.monthlyTrendTitle")}</h2>
             <SafeResponsiveContainer height={200}>
               <AreaChart data={monthlyTrend}>
                 <defs>
@@ -181,7 +183,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
                 <Tooltip formatter={(value) => `${value}%`} />
-                <Area type="monotone" dataKey="rate" name="Attendance%" stroke="hsl(var(--primary))" fill="url(#att-grad)" strokeWidth={2} dot={{ r: 3 }} />
+                <Area type="monotone" dataKey="rate" name={t("attendance.analytics.attendancePercentLabel")} stroke="hsl(var(--primary))" fill="url(#att-grad)" strokeWidth={2} dot={{ r: 3 }} />
               </AreaChart>
             </SafeResponsiveContainer>
           </Card>
@@ -194,13 +196,13 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
           transition={{ duration: 0.35, delay: 0.3, ease: "easeOut" }}
         >
           <Card accentColor="indigo" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
-            <h2 className="text-sm font-bold text-foreground mb-3 m-0">Student Attendance Rates</h2>
+            <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.studentRatesTitle")}</h2>
             <SafeResponsiveContainer height={220}>
               <BarChart data={studentRates} layout="vertical" barSize={12}>
                 <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} unit="%" />
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={80} />
                 <Tooltip formatter={(value) => `${value}%`} />
-                <Bar dataKey="rate" name="Rate" radius={[0, 4, 4, 0]}
+                <Bar dataKey="rate" name={t("attendance.analytics.rateLabel")} radius={[0, 4, 4, 0]}
                   fill="hsl(var(--primary))"
                   background={{ fill: "hsl(var(--muted))", radius: 4 }} />
               </BarChart>
@@ -215,7 +217,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
           transition={{ duration: 0.35, delay: 0.35, ease: "easeOut" }}
         >
           <Card accentColor="primary" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
-            <h2 className="text-sm font-bold text-foreground mb-3 m-0">Status Distribution</h2>
+            <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.statusDistributionTitle")}</h2>
             <div className="flex items-center gap-4">
               <SafeResponsiveContainer width="60%" height={200}>
                 <PieChart>
@@ -249,7 +251,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
         >
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-warning" aria-hidden="true" />
-            <h3 className="text-sm font-bold text-warning m-0">Low Attendance Alert — {lowAttendance.length} student{lowAttendance.length > 1 ? "s" : ""} below 75%</h3>
+            <h3 className="text-sm font-bold text-warning m-0">{t("attendance.analytics.lowAlertTitle", { count: lowAttendance.length })}</h3>
           </div>
           <div className="flex flex-wrap gap-2">
             {lowAttendance.map((studentRate) => (
@@ -269,7 +271,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
         transition={{ duration: 0.35, delay: 0.45, ease: "easeOut" }}
       >
         <Card accentColor="success" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
-          <h2 className="text-sm font-bold text-foreground mb-3 m-0">Top Performers</h2>
+          <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.topPerformersTitle")}</h2>
           <div className="space-y-2">
             {topStudents.map((studentRate, index) => (
               <div key={studentRate.name} className="flex items-center gap-3">

@@ -19,9 +19,7 @@ import { Button } from "@/components/ui/button";
 
 import EnrollmentChart from "@/components/dashboard-widgets/charts/EnrollmentChart";
 
-/** Sub-tab labels available within the student report. */
-const _SUB_TABS = ["Student List", "Enrollment History"] as const;
-type SubTab = (typeof _SUB_TABS)[number];
+type StudentReportSubTab = "list" | "history";
 
 export interface ReportStudent {
   id: string;
@@ -75,12 +73,12 @@ function mapStudentRow(student: Student): ReportStudent {
 
 export default function StudentReport({ filters }: StudentReportProps): React.JSX.Element {
   const { t } = useTranslation();
-  const [activeSubTab, setActiveSubTab] = useState<SubTab>("Student List");
+  const [activeSubTab, setActiveSubTab] = useState<StudentReportSubTab>("list");
 
-  const REPORT_TABS = useMemo<readonly UINavTab<SubTab>[]>(
+  const REPORT_TABS = useMemo<readonly UINavTab<StudentReportSubTab>[]>(
     () => [
-      { key: "Student List", label: t("students.report.studentListTab") },
-      { key: "Enrollment History", label: t("students.report.enrollmentHistoryTab") },
+      { key: "list", label: t("students.report.studentListTab") },
+      { key: "history", label: t("students.report.enrollmentHistoryTab") },
     ],
     [t]
   );
@@ -156,7 +154,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
           value={metrics?.total ?? 0}
           color="primary"
           isActive={!reportStatusFilter}
-          onClick={() => { setReportStatusFilter(null); setActiveSubTab("Student List"); }}
+          onClick={() => { setReportStatusFilter(null); setActiveSubTab("list"); }}
         />
         <StatCard
           icon={UserCheck}
@@ -164,7 +162,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
           value={metrics?.active ?? 0}
           color="green"
           isActive={reportStatusFilter === "active"}
-          onClick={() => { setReportStatusFilter(reportStatusFilter === "active" ? null : "active"); setActiveSubTab("Student List"); }}
+          onClick={() => { setReportStatusFilter(reportStatusFilter === "active" ? null : "active"); setActiveSubTab("list"); }}
         />
         <StatCard
           icon={UserX}
@@ -172,14 +170,14 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
           value={metrics?.inactive ?? 0}
           color="red"
           isActive={reportStatusFilter === "inactive"}
-          onClick={() => { setReportStatusFilter(reportStatusFilter === "inactive" ? null : "inactive"); setActiveSubTab("Student List"); }}
+          onClick={() => { setReportStatusFilter(reportStatusFilter === "inactive" ? null : "inactive"); setActiveSubTab("list"); }}
         />
         <StatCard
           icon={TrendingUp}
           label={t("students.report.genderSplit")}
           value={`${male}M / ${female}F`}
           color="blue"
-          onClick={() => { setActiveSubTab("Student List"); }}
+          onClick={() => { setActiveSubTab("list"); }}
         />
       </div>
 
@@ -187,7 +185,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
         <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-muted/40 border border-border text-xs text-muted-foreground">
           <div className="flex items-center gap-2 flex-wrap">
             <Filter className="w-3.5 h-3.5 text-primary" />
-            <span className="font-medium text-foreground">Filter:</span>
+            <span className="font-medium text-foreground">{t("students.report.filterLabel")}</span>
             {reportStatusFilter && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[11px] border border-primary/20">
                 {toTitleCase(reportStatusFilter)}
@@ -208,7 +206,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
               className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
             >
               <X className="w-3 h-3 me-1" />
-              Clear Filter
+              {t("students.report.clearFilter")}
             </Button>
           )}
         </div>
@@ -222,9 +220,9 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
       />
 
       <ExportToolbar 
-        title={activeSubTab === "Student List" ? t("students.report.studentListTab") : t("students.report.enrollmentHistoryTab")} 
-        data={activeSubTab === "Student List" ? students : enrollments}
-        headers={activeSubTab === "Student List" 
+        title={activeSubTab === "list" ? t("students.report.studentListTab") : t("students.report.enrollmentHistoryTab")} 
+        data={activeSubTab === "list" ? students : enrollments}
+        headers={activeSubTab === "list" 
           ? [
               t("students.report.colName"),
               t("students.report.colGender"),
@@ -245,7 +243,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
         }
       />
 
-      {activeSubTab === "Student List" && (
+      {activeSubTab === "list" && (
         students.length === 0 ? (
           <EmptyState icon={Users} title={t("students.report.noStudentsFound")} description={t("students.report.adjustFilters")} compact />
         ) : (
@@ -297,7 +295,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
         )
       )}
 
-      {activeSubTab === "Enrollment History" && (
+      {activeSubTab === "history" && (
         enrollments.length === 0 ? (
           <EmptyState icon={Users} title={t("students.report.noEnrollmentsFound")} compact />
         ) : (

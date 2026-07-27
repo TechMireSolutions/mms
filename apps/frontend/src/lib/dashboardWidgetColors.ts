@@ -1,4 +1,4 @@
-import { COLOR_MAP } from '@/tenant/features/reports/components/pinnedWidgets/types';
+import { COLOR_MAP } from '@/lib/reports/pinnedWidgetTypes';
 import type { QuickActionColor } from '@/lib/dashboardQuickActions';
 
 export type WidgetCardAccent =

@@ -8,6 +8,7 @@ import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface CertificatePreviewProps {
   result: StudentResultItem;
@@ -27,6 +28,7 @@ interface CertificatePreviewProps {
 export function CertificatePreview({ result, exam, onClose }: CertificatePreviewProps): React.ReactElement {
   const certRef = useRef<HTMLDivElement | null>(null);
   const { primary, secondary } = useBrandPalette();
+  const { t } = useTranslation();
 
   const handlePrint = () => {
     if (!certRef.current) return;
@@ -37,7 +39,7 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Certificate — ${result.student?.name || "Student"}</title>
+          <title>${t("examinations.certificatePreview.windowTitle", { name: result.student?.name || t("examinations.certificatePreview.studentFallback") })}</title>
           <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -65,7 +67,7 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
     <Modal
       open
       onClose={onClose}
-      title="Certificate Preview"
+      title={t("examinations.certificatePreview.title")}
       size="lg"
       headerActions={
         <Button
@@ -73,7 +75,7 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
           onClick={handlePrint}
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-[12px] font-semibold hover:bg-primary/90"
         >
-          <Printer className="w-3.5 h-3.5" aria-hidden="true" /> Print / Download
+          <Printer className="w-3.5 h-3.5" aria-hidden="true" /> {t("examinations.certificatePreview.printDownload")}
         </Button>
       }
     >
@@ -115,14 +117,14 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
 
               {/* Institution */}
               <p style={{ fontSize: "11px", fontWeight: "700", letterSpacing: "4px", color: PRINT_NEUTRAL.caption, textTransform: "uppercase", marginBottom: "16px" }}>
-                Madrasa Management System
+                {t("examinations.certificatePreview.institutionName")}
               </p>
 
               {/* Title */}
               <h1 style={{ fontSize: "32px", fontWeight: "700", color: primary, fontFamily: "'Amiri', serif", marginBottom: "4px" }}>
-                Certificate of Achievement
+                {t("examinations.certificatePreview.certificateTitle")}
               </h1>
-              <p style={{ fontSize: "12px", color: PRINT_NEUTRAL.subcaption, marginBottom: "24px" }}>This is to certify that</p>
+              <p style={{ fontSize: "12px", color: PRINT_NEUTRAL.subcaption, marginBottom: "24px" }}>{t("examinations.certificatePreview.certifyText")}</p>
 
               {/* Student name */}
               <h2 style={{ fontSize: "28px", fontWeight: "700", color: PRINT_NEUTRAL.text, borderBottom: `2px solid ${secondary}`, display: "inline-block", padding: "0 24px 6px", marginBottom: "20px" }}>
@@ -131,12 +133,13 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
 
               {/* Body text */}
               <p style={{ fontSize: "13px", color: PRINT_NEUTRAL.body, lineHeight: "1.8", maxWidth: "480px", margin: "0 auto 20px" }}>
-                has successfully completed the examination in{" "}
-                <strong style={{ color: primary }}>{exam.subject}</strong> — <em>{exam.name}</em>,
-                achieving a score of{" "}
-                <strong style={{ color: primary }}>{result.marksObtained} out of {exam.totalMarks}</strong>{" "}
-                ({result.pct}%) and securing{" "}
-                <strong style={{ color: secondary }}>{rankLabel} position</strong> in class.
+                {t("examinations.certificatePreview.bodyPrefix")}{" "}
+                <strong style={{ color: primary }}>{exam.subject}</strong> — <em>{exam.name}</em>,{" "}
+                {t("examinations.certificatePreview.bodyScore")}{" "}
+                <strong style={{ color: primary }}>{result.marksObtained} {t("examinations.certificatePreview.outOf")} {exam.totalMarks}</strong>{" "}
+                ({result.pct}%) {t("examinations.certificatePreview.bodyRank")}{" "}
+                <strong style={{ color: secondary }}>{rankLabel} {t("examinations.certificatePreview.position")}</strong>{" "}
+                {t("examinations.certificatePreview.bodySuffix")}
               </p>
 
               {/* Grade badge */}
@@ -151,7 +154,7 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
                 marginBottom: "24px",
               }}>
                 <span style={{ fontSize: "24px", fontWeight: "700", color: result.grade.color }}>{result.grade.label}</span>
-                <span style={{ fontSize: "12px", color: PRINT_NEUTRAL.caption }}>Grade</span>
+                <span style={{ fontSize: "12px", color: PRINT_NEUTRAL.caption }}>{t("examinations.certificatePreview.gradeLabel")}</span>
                 <div style={{ width: "1px", height: "24px", background: result.grade.border }} />
                 <span style={{ fontSize: "16px", fontWeight: "700", color: result.grade.color }}>{result.pct}%</span>
               </div>
@@ -160,15 +163,15 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: "24px", borderTop: `1px solid ${PRINT_NEUTRAL.border}`, paddingTop: "16px" }}>
                 <div style={{ textAlign: "left" }}>
                   <div style={{ width: "120px", borderBottom: `1px solid ${PRINT_NEUTRAL.subcaption}`, marginBottom: "4px" }} />
-                  <p style={{ fontSize: "10px", color: PRINT_NEUTRAL.caption }}>Class Teacher</p>
+                  <p style={{ fontSize: "10px", color: PRINT_NEUTRAL.caption }}>{t("examinations.certificatePreview.classTeacher")}</p>
                 </div>
                 <div style={{ textAlign: "center" }}>
-                  <p style={{ fontSize: "10px", color: PRINT_NEUTRAL.subcaption }}>Date of Examination</p>
+                  <p style={{ fontSize: "10px", color: PRINT_NEUTRAL.subcaption }}>{t("examinations.certificatePreview.examDate")}</p>
                   <p style={{ fontSize: "12px", fontWeight: "600", color: PRINT_NEUTRAL.emphasis }}>{date}</p>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ width: "120px", borderBottom: `1px solid ${PRINT_NEUTRAL.subcaption}`, marginBottom: "4px", marginLeft: "auto" }} />
-                  <p style={{ fontSize: "10px", color: PRINT_NEUTRAL.caption }}>Principal / Director</p>
+                  <p style={{ fontSize: "10px", color: PRINT_NEUTRAL.caption }}>{t("examinations.certificatePreview.principalDirector")}</p>
                 </div>
               </div>
             </div>

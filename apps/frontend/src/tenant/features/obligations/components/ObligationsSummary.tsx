@@ -15,6 +15,7 @@ import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { useTranslation } from "@/hooks/useTranslation";
 
 
 import { formatMonthYear, getInitials, formatMoney } from "@mms/shared";
@@ -62,6 +63,7 @@ export interface ObligationsSummaryProps {
 export function ObligationsSummary({
   collections, obligationTypes, reps, mujtahids, wakalaTypes, distributions
 }: ObligationsSummaryProps) {
+  const { t } = useTranslation();
   const { formatCurrency, activeCurrency } = useFinanceCurrency();
   
   const formatValueOnly = (amount: number | string | null | undefined): string => {
@@ -119,7 +121,7 @@ export function ObligationsSummary({
       const key = wakalaType?.id || `no-wakala-${collection.mujtahid_representative_id}`;
       const label = wakalaType
         ? `${rep?.name ?? "?"} – ${obligationTypes.find((obligationType) => obligationType.id === collection.obligation_type_id)?.name ?? "?"}`
-        : `${rep?.name ?? "No Rep"} (No Wakala)`;
+        : `${rep?.name ?? t("obligations.summary.noRep")} (${t("obligations.summary.noWakalaShort")})`;
       if (!wakalaSummaryByKey[key]) {
         wakalaSummaryByKey[key] = {
           key, label,
@@ -151,7 +153,7 @@ export function ObligationsSummary({
       const key = collection.mujtahid_representative_id || "none";
       if (!repSummaryByKey[key]) {
         repSummaryByKey[key] = {
-          key, repName: rep?.name ?? "No Rep",
+          key, repName: rep?.name ?? t("obligations.summary.noRep"),
           mujtahidName: mujtahid?.name ?? "—",
           count: 0, total: 0, due: 0,
           byType: {},
@@ -172,7 +174,7 @@ export function ObligationsSummary({
       } else {
         repSummaryByKey[key].due += amount; // No wakala config = full amount is due
       }
-      const typeName = obligationTypes.find((obligationType) => obligationType.id === collection.obligation_type_id)?.name ?? "Other";
+      const typeName = obligationTypes.find((obligationType) => obligationType.id === collection.obligation_type_id)?.name ?? t("obligations.summary.other");
       repSummaryByKey[key].byType[typeName] = (repSummaryByKey[key].byType[typeName] ?? 0) + amount;
     });
     return Object.values(repSummaryByKey).sort((a, b) => b.total - a.total);
@@ -184,7 +186,7 @@ export function ObligationsSummary({
   const typeBreakdown = useMemo(() => {
     const typeBreakdownByName: Record<string, TypeBreakdownEntry> = {};
     filtered.forEach((collection) => {
-      const name = obligationTypes.find((obligationType) => obligationType.id === collection.obligation_type_id)?.name ?? "Other";
+      const name = obligationTypes.find((obligationType) => obligationType.id === collection.obligation_type_id)?.name ?? t("obligations.summary.other");
       if (!typeBreakdownByName[name]) typeBreakdownByName[name] = { name, total: 0, count: 0 };
       typeBreakdownByName[name].total += collection.amount;
       typeBreakdownByName[name].count++;
@@ -198,7 +200,7 @@ export function ObligationsSummary({
   const monthlyTrend = useMemo(() => {
     const monthlyTrendByMonth: Record<string, MonthlyEntry> = {};
     filtered.forEach((collection) => {
-      const month = collection.received_date?.slice(0, 7) ?? "Unknown";
+      const month = collection.received_date?.slice(0, 7) ?? t("obligations.summary.unknown");
       if (!monthlyTrendByMonth[month]) monthlyTrendByMonth[month] = { month, total: 0, count: 0 };
       monthlyTrendByMonth[month].total += collection.amount;
       monthlyTrendByMonth[month].count++;
@@ -212,19 +214,19 @@ export function ObligationsSummary({
   const hasFilters = dateFrom || dateTo || repFilter !== "all" || typeFilter !== "all" || userFilter !== "all" || search;
 
   const repOptions = useMemo(() => [
-    { value: "all", label: "All Reps" },
+    { value: "all", label: t("obligations.summary.filters.allReps") },
     ...reps.map((rep) => ({ value: rep.id, label: rep.name }))
-  ], [reps]);
+  ], [reps, t]);
 
   const typeOptions = useMemo(() => [
-    { value: "all", label: "All Obligation Types" },
+    { value: "all", label: t("obligations.summary.filters.allTypes") },
     ...obligationTypes.map((obligationType) => ({ value: obligationType.id, label: obligationType.name }))
-  ], [obligationTypes]);
+  ], [obligationTypes, t]);
 
   const userOptions = useMemo(() => [
-    { value: "all", label: "All Collectors" },
+    { value: "all", label: t("obligations.summary.filters.allCollectors") },
     ...users.map((user) => ({ value: user.id, label: user.name || "" }))
-  ], [users]);
+  ], [users, t]);
 
   return (
     <div className="space-y-6">
@@ -232,11 +234,11 @@ export function ObligationsSummary({
       <Card accentColor="primary" className="p-4 space-y-3 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
         <header className="flex items-center gap-2 mb-1 pl-1">
           <Filter className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-          <h2 className="text-sm font-bold text-foreground m-0">Filters</h2>
+          <h2 className="text-sm font-bold text-foreground m-0">{t("obligations.summary.filters.title")}</h2>
           {hasFilters && (
             <Button type="button" onClick={() => { setDateFrom(""); setDateTo(""); setRepFilter("all"); setTypeFilter("all"); setUserFilter("all"); setSearch(""); }}
               variant="link"
-              className="ml-auto p-0 text-[11px] h-auto text-primary font-semibold hover:underline shadow-none">Clear all</Button>
+              className="ml-auto p-0 text-[11px] h-auto text-primary font-semibold hover:underline shadow-none">{t("obligations.summary.filters.clearAll")}</Button>
           )}
         </header>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
@@ -245,10 +247,10 @@ export function ObligationsSummary({
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
             <Input 
               type="search"
-              aria-label="Search by receipt, rep, or type"
+              aria-label={t("obligations.summary.filters.searchAria")}
               value={search} 
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Receipt, rep, type…"
+              placeholder={t("obligations.summary.filters.searchPlaceholder")}
               className="w-full pl-8 pr-3 py-2 text-xs rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" 
             />
           </div>
@@ -257,7 +259,7 @@ export function ObligationsSummary({
             <DatePicker
               value={dateFrom}
               onChange={setDateFrom}
-              placeholder="From Date"
+              placeholder={t("obligations.summary.filters.fromDate")}
               className="w-full px-2 py-2 text-xs rounded-lg border border-border bg-background"
             />
           </div>
@@ -266,13 +268,13 @@ export function ObligationsSummary({
             <DatePicker
               value={dateTo}
               onChange={setDateTo}
-              placeholder="To Date"
+              placeholder={t("obligations.summary.filters.toDate")}
               className="w-full px-2 py-2 text-xs rounded-lg border border-border bg-background"
             />
           </div>
           {/* Rep filter */}
           <FormSelect 
-            aria-label="Filter by representative"
+            aria-label={t("obligations.summary.filters.byRepresentativeAria")}
             value={repFilter} 
             onChange={(val) => setRepFilter(val)}
             options={repOptions}
@@ -280,7 +282,7 @@ export function ObligationsSummary({
           />
           {/* Type filter */}
           <FormSelect 
-            aria-label="Filter by obligation type"
+            aria-label={t("obligations.summary.filters.byTypeAria")}
             value={typeFilter} 
             onChange={(val) => setTypeFilter(val)}
             options={typeOptions}
@@ -288,7 +290,7 @@ export function ObligationsSummary({
           />
           {/* Received by */}
           <FormSelect 
-            aria-label="Filter by collector"
+            aria-label={t("obligations.summary.filters.byCollectorAria")}
             value={userFilter} 
             onChange={(val) => setUserFilter(val)}
             options={userOptions}
@@ -298,19 +300,19 @@ export function ObligationsSummary({
       </Card>
 
       {/* ── KPI Cards ── */}
-      <section aria-label="Key Performance Indicators" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard icon={Receipt}  label="Total Collections"     value={totalRecords}               accent="primary" />
-        <StatCard icon={TrendingUp} label="Total Amount Received" value={formatCurrency(totalAmount)}          accent="emerald" />
-        <StatCard icon={Users}    label="Active Reps"            value={uniqueReps}                 accent="blue" />
-        <StatCard icon={Layers}   label="Obligation Types"       value={typeBreakdown.length}        accent="amber" />
+      <section aria-label={t("obligations.summary.kpi.aria")} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <StatCard icon={Receipt}  label={t("obligations.summary.kpi.totalCollections")} value={totalRecords} accent="primary" />
+        <StatCard icon={TrendingUp} label={t("obligations.summary.kpi.totalAmountReceived")} value={formatCurrency(totalAmount)} accent="emerald" />
+        <StatCard icon={Users} label={t("obligations.summary.kpi.activeReps")} value={uniqueReps} accent="blue" />
+        <StatCard icon={Layers} label={t("obligations.summary.kpi.obligationTypes")} value={typeBreakdown.length} accent="amber" />
       </section>
 
       {/* ── Charts row ── */}
       {filtered.length > 0 && (
-        <section aria-label="Charts" className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <section aria-label={t("obligations.summary.charts.aria")} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Obligation Type Breakdown */}
           <Card accentColor="primary" className="p-4 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
-            <SectionTitle icon={BarChart2} title="Collection by Obligation Type" subtitle="Total amount per type" />
+            <SectionTitle icon={BarChart2} title={t("obligations.summary.charts.byTypeTitle")} subtitle={t("obligations.summary.charts.byTypeSubtitle")} />
             <SafeResponsiveContainer height={200}>
               <BarChart data={typeBreakdown} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
@@ -326,7 +328,7 @@ export function ObligationsSummary({
           {/* Monthly trend */}
           {monthlyTrend.length > 1 ? (
             <Card accentColor="indigo" className="p-4 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
-              <SectionTitle icon={TrendingUp} title="Monthly Collection Trend" subtitle="Amounts received per month" />
+              <SectionTitle icon={TrendingUp} title={t("obligations.summary.charts.monthlyTrendTitle")} subtitle={t("obligations.summary.charts.monthlyTrendSubtitle")} />
               <SafeResponsiveContainer height={200}>
                 <BarChart data={monthlyTrend} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                   <XAxis dataKey="label" tick={{ fontSize: 11 }} />
@@ -339,7 +341,7 @@ export function ObligationsSummary({
           ) : (
             /* Pie fallback if single month */
             <Card accentColor="success" className="p-4 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
-              <SectionTitle icon={Layers} title="Distribution by Type" subtitle="Share of total" />
+              <SectionTitle icon={Layers} title={t("obligations.summary.charts.distributionTitle")} subtitle={t("obligations.summary.charts.distributionSubtitle")} />
               <SafeResponsiveContainer height={200}>
                 <PieChart>
                   <Pie data={typeBreakdown} dataKey="total" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${((percent ?? 0)*100).toFixed(0)}%`} labelLine={false}>
@@ -354,21 +356,21 @@ export function ObligationsSummary({
       )}
 
       {/* ── Wakala-wise Summary ── */}
-      <section aria-label="Wakala-wise Collection Summary">
+      <section aria-label={t("obligations.summary.wakala.aria")}>
         <header className="flex items-center justify-between mb-3">
-          <SectionTitle icon={Layers} title="Wakala-wise Collection Summary" subtitle="Breakdown per Wakala configuration" noMargin />
+          <SectionTitle icon={Layers} title={t("obligations.summary.wakala.title")} subtitle={t("obligations.summary.wakala.subtitle")} noMargin />
           <ExportToolbar
-            title="Wakala-wise Collection Summary"
+            title={t("obligations.summary.wakala.title")}
             filename="wakala_summary"
             moduleId="obligations"
-            exportLabel="Wakala summary export"
+            exportLabel={t("obligations.summary.wakala.exportLabel")}
             columns={[
-              { header: "Rep / Wakala", key: "repName" },
-              { header: "Mujtahid", key: "mujtahidName" },
-              { header: "Obligation Type", key: "obligationType" },
-              { header: "Collections", key: "count" },
-              { header: `Total Amount (${activeCurrency.code})`, key: "totalFmt" },
-              { header: "Distributions", key: "distFmt" },
+              { header: t("obligations.summary.wakala.colRepWakala"), key: "repName" },
+              { header: t("obligations.summary.wakala.colMujtahid"), key: "mujtahidName" },
+              { header: t("obligations.summary.wakala.colObligationType"), key: "obligationType" },
+              { header: t("obligations.summary.wakala.colCollections"), key: "count" },
+              { header: t("obligations.summary.wakala.colTotalAmount", { currency: activeCurrency.code }), key: "totalFmt" },
+              { header: t("obligations.summary.wakala.colDistributions"), key: "distFmt" },
             ]}
             rows={wakalaSummary.map((w) => ({
               ...w,
@@ -378,19 +380,19 @@ export function ObligationsSummary({
           />
         </header>
         {wakalaSummary.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground" role="alert">No data for selected filters.</div>
+          <div className="rounded-xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground" role="alert">{t("obligations.summary.emptyFiltered")}</div>
         ) : (
           <div className="rounded-xl border border-border overflow-hidden">
             <table className="w-full text-sm">
-              <caption className="sr-only">Wakala-wise Collection Summary</caption>
+              <caption className="sr-only">{t("obligations.summary.wakala.title")}</caption>
               <thead className="bg-muted/60 border-b border-border">
                 <tr>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Wakala / Rep</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Mujtahid</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Obligation</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">Collections</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">Total Amount</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Distributions</th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colRepWakala")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colMujtahid")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colObligation")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colCollections")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colTotalAmountShort")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colDistributions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -399,8 +401,8 @@ export function ObligationsSummary({
                     <td className="px-3 py-3">
                       <p className="font-semibold text-foreground text-sm m-0">{w.repName}</p>
                       {!w.hasWakala && (
-                        <span className="inline-flex items-center gap-1 text-[10px] text-warning font-bold mt-0.5" aria-label="No Wakala Config">
-                          <AlertCircle className="w-3 h-3" aria-hidden="true" /> No Wakala Config
+                        <span className="inline-flex items-center gap-1 text-[10px] text-warning font-bold mt-0.5" aria-label={t("obligations.summary.wakala.noConfigAria")}>
+                          <AlertCircle className="w-3 h-3" aria-hidden="true" /> {t("obligations.summary.wakala.noConfig")}
                         </span>
                       )}
                     </td>
@@ -426,7 +428,7 @@ export function ObligationsSummary({
               </tbody>
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
-                  <td colSpan={4} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{wakalaSummary.length} wakala config{wakalaSummary.length !== 1 ? "s" : ""}</td>
+                  <td colSpan={4} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{t("obligations.summary.wakala.configCount", { count: wakalaSummary.length })}</td>
                   <td className="px-3 py-2 text-right font-mono font-bold text-success text-xs">{formatCurrency(totalAmount)}</td>
                   <td />
                 </tr>
@@ -437,21 +439,21 @@ export function ObligationsSummary({
       </section>
 
       {/* ── Rep-wise Dues Summary ── */}
-      <section aria-label="Rep-wise Dues Summary">
+      <section aria-label={t("obligations.summary.rep.aria")}>
         <header className="flex items-center justify-between mb-3">
-          <SectionTitle icon={Users} title="Rep-wise Dues Summary" subtitle="How much is due to each representative based on distribution" noMargin />
+          <SectionTitle icon={Users} title={t("obligations.summary.rep.title")} subtitle={t("obligations.summary.rep.subtitle")} noMargin />
           <ExportToolbar
-            title="Rep-wise Dues Summary"
+            title={t("obligations.summary.rep.title")}
             filename="rep_dues_summary"
             moduleId="obligations"
-            exportLabel="Rep dues summary export"
+            exportLabel={t("obligations.summary.rep.exportLabel")}
             columns={[
-              { header: "Representative", key: "repName" },
-              { header: "Mujtahid", key: "mujtahidName" },
-              { header: "By Obligation Type", key: "byTypeFmt" },
-              { header: "Collections", key: "count" },
-              { header: `Total Collected (${activeCurrency.code})`, key: "totalFmt" },
-              { header: `Due to Rep (${activeCurrency.code})`, key: "dueFmt" },
+              { header: t("obligations.summary.rep.colRepresentative"), key: "repName" },
+              { header: t("obligations.summary.rep.colMujtahid"), key: "mujtahidName" },
+              { header: t("obligations.summary.rep.colByType"), key: "byTypeFmt" },
+              { header: t("obligations.summary.rep.colCollections"), key: "count" },
+              { header: t("obligations.summary.rep.colTotalCollected", { currency: activeCurrency.code }), key: "totalFmt" },
+              { header: t("obligations.summary.rep.colDueToRep", { currency: activeCurrency.code }), key: "dueFmt" },
             ]}
             rows={repSummary.map((r) => ({
               ...r,
@@ -462,19 +464,19 @@ export function ObligationsSummary({
           />
         </header>
         {repSummary.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground" role="alert">No data for selected filters.</div>
+          <div className="rounded-xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground" role="alert">{t("obligations.summary.emptyFiltered")}</div>
         ) : (
           <div className="rounded-xl border border-border overflow-hidden">
             <table className="w-full text-sm">
-              <caption className="sr-only">Rep-wise Dues Summary</caption>
+              <caption className="sr-only">{t("obligations.summary.rep.title")}</caption>
               <thead className="bg-muted/60 border-b border-border">
                 <tr>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Representative</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">Mujtahid</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">By Obligation Type</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">Collections</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">Total Collected</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-destructive uppercase">Due to Rep</th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.summary.rep.colRepresentative")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.summary.rep.colMujtahid")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.summary.rep.colByType")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.summary.rep.colCollections")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.summary.rep.colTotalCollectedShort")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-destructive uppercase">{t("obligations.summary.rep.colDueToRepShort")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -508,7 +510,7 @@ export function ObligationsSummary({
               </tbody>
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
-                  <td colSpan={4} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{repSummary.length} rep{repSummary.length !== 1 ? "s" : ""}</td>
+                  <td colSpan={4} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{t("obligations.summary.rep.repCount", { count: repSummary.length })}</td>
                   <td className="px-3 py-2 text-right font-mono font-bold text-foreground text-xs">{formatCurrency(totalAmount)}</td>
                   <td className="px-3 py-2 text-right font-mono font-bold text-destructive text-xs">{formatCurrency(repSummary.reduce((sum, representativeSummary) => sum + representativeSummary.due, 0))}</td>
                 </tr>
@@ -519,19 +521,19 @@ export function ObligationsSummary({
       </section>
 
       {/* ── Obligation type detailed table ── */}
-      <section aria-label="Obligation Type Breakdown">
+      <section aria-label={t("obligations.summary.types.aria")}>
         <header className="flex items-center justify-between mb-3">
-          <SectionTitle icon={BarChart2} title="Obligation Type Breakdown" subtitle="Collection count and totals per type" noMargin />
+          <SectionTitle icon={BarChart2} title={t("obligations.summary.types.title")} subtitle={t("obligations.summary.types.subtitle")} noMargin />
           <ExportToolbar
-            title="Obligation Type Breakdown"
+            title={t("obligations.summary.types.title")}
             filename="obligation_type_breakdown"
             moduleId="obligations"
-            exportLabel="Obligation type breakdown export"
+            exportLabel={t("obligations.summary.types.exportLabel")}
             columns={[
-              { header: "Obligation Type", key: "name" },
-              { header: "Collections", key: "count" },
-              { header: `Total Amount (${activeCurrency.code})`, key: "totalFmt" },
-              { header: "Share (%)", key: "shareFmt" },
+              { header: t("obligations.summary.types.colType"), key: "name" },
+              { header: t("obligations.summary.types.colCollections"), key: "count" },
+              { header: t("obligations.summary.types.colTotalAmount", { currency: activeCurrency.code }), key: "totalFmt" },
+              { header: t("obligations.summary.types.colShare"), key: "shareFmt" },
             ]}
             rows={typeBreakdown.map((t) => ({
               ...t,
@@ -541,21 +543,21 @@ export function ObligationsSummary({
           />
         </header>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {typeBreakdown.map((t, i) => (
-            <Card key={t.name} accentColor="primary" className="p-4 space-y-1.5 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md transition-all">
+          {typeBreakdown.map((typeItem, i) => (
+            <Card key={typeItem.name} accentColor="primary" className="p-4 space-y-1.5 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md transition-all">
               <header className="flex items-center justify-between">
-                <h3 className="text-xs font-bold text-foreground m-0">{t.name}</h3>
+                <h3 className="text-xs font-bold text-foreground m-0">{typeItem.name}</h3>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold text-white" style={{ background: COLORS[i % COLORS.length] }}>
-                  {t.count}
+                  {typeItem.count}
                 </span>
               </header>
-              <p className="text-lg font-bold text-foreground font-mono m-0">{formatValueOnly(t.total)}</p>
-              <p className="text-[10px] text-muted-foreground m-0">{activeCurrency.code} · {t.count} collection{t.count !== 1 ? "s" : ""}</p>
-              <div className="w-full bg-muted rounded-full h-1.5 mt-1" role="progressbar" aria-valuenow={totalAmount ? (t.total / totalAmount) * 100 : 0} aria-valuemin={0} aria-valuemax={100}>
+              <p className="text-lg font-bold text-foreground font-mono m-0">{formatValueOnly(typeItem.total)}</p>
+              <p className="text-[10px] text-muted-foreground m-0">{t("obligations.summary.types.countWithCurrency", { currency: activeCurrency.code, count: typeItem.count })}</p>
+              <div className="w-full bg-muted rounded-full h-1.5 mt-1" role="progressbar" aria-valuenow={totalAmount ? (typeItem.total / totalAmount) * 100 : 0} aria-valuemin={0} aria-valuemax={100}>
                 <div className="h-1.5 rounded-full transition-all"
-                  style={{ width: `${totalAmount ? (t.total / totalAmount) * 100 : 0}%`, background: COLORS[i % COLORS.length] }} />
+                  style={{ width: `${totalAmount ? (typeItem.total / totalAmount) * 100 : 0}%`, background: COLORS[i % COLORS.length] }} />
               </div>
-              <p className="text-[10px] text-muted-foreground text-right m-0">{totalAmount ? ((t.total / totalAmount) * 100).toFixed(1) : 0}%</p>
+              <p className="text-[10px] text-muted-foreground text-right m-0">{totalAmount ? ((typeItem.total / totalAmount) * 100).toFixed(1) : 0}%</p>
             </Card>
           ))}
         </div>

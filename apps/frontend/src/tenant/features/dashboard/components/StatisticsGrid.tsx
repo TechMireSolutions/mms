@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
-import { ICONS_LIST as ICONS } from "@/tenant/features/reports/components/pinnedWidgets/types";
+import { ICONS_LIST as ICONS } from "@/lib/reports/pinnedWidgetTypes";
 import {
   getWidgetColorTheme,
   widgetColorToAccent,

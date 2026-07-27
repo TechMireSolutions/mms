@@ -25,6 +25,14 @@ interface SessionFormProps {
 
 const SESSION_STATUSES = ["active", "upcoming", "completed", "cancelled"];
 const CURRENCIES = DEFAULT_CURRENCIES.map((currency) => currency.code);
+const SESSION_TYPE_LABEL_KEYS: Record<string, AppTranslationKey> = {
+  Hifz: "sessions.types.hifz",
+  Qaidah: "sessions.types.qaidah",
+  Tajweed: "sessions.types.tajweed",
+  "Islamic Studies": "sessions.types.islamicStudies",
+  Arabic: "sessions.types.arabic",
+  Other: "sessions.types.other",
+};
 
 export function SessionForm({
   open = true,
@@ -113,7 +121,7 @@ export function SessionForm({
       const name = toTitleCase(sessionDraft.name?.trim() || "");
       const saved = {
         ...sessionDraft,
-        ...(session?.id != null ? { id: session.id } : {}),
+        id: session?.id ?? `sess-${Date.now()}`,
         name,
         baseFee: Number(sessionDraft.baseFee) || 0,
         _blueprintId: "1.0",
@@ -136,6 +144,18 @@ export function SessionForm({
     const translated = t(translationKey);
     return translated === translationKey ? toTitleCase(status) : translated;
   }, [sessionDraft.status, t]);
+
+  const sessionTypeOptions = useMemo(
+    () =>
+      typeOptions.map((sessionType) => {
+        const translationKey = SESSION_TYPE_LABEL_KEYS[sessionType];
+        return {
+          value: sessionType,
+          label: translationKey ? t(translationKey) : sessionType,
+        };
+      }),
+    [typeOptions, t],
+  );
 
   const footerStart = sessionDraft.name ? (
     <div className="flex flex-wrap items-center gap-2.5 text-xs">
@@ -203,7 +223,7 @@ export function SessionForm({
                 <FormSelect
                   value={sessionDraft.type || defaultType}
                   onChange={(val) => updateDraft({ type: val })}
-                  options={typeOptions}
+                  options={sessionTypeOptions}
                 />
               </Field>
 
