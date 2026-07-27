@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Save, QrCode, Bell, Clock, Scan } from "lucide-react";
 import {
   ATTENDANCE_TAB_REGISTRY,
-  ATTENDANCE_MODULE_CONTRACT,
+  ATTENDANCE_MODULE_MANIFEST,
   INITIAL_ATTENDANCE_FIELD_SEED,
   type AppTranslationKey,
 } from "@mms/shared";
@@ -44,7 +44,7 @@ function SettingRow({ label, sub, children }: SettingRowProps) {
 }
 
 export function AttendanceSettings() {
-  const { canEditSetup } = useModulePermissions(ATTENDANCE_MODULE_CONTRACT);
+  const { canEditSetup } = useModulePermissions(ATTENDANCE_MODULE_MANIFEST);
   const { t } = useTranslation();
   const config = useAttendanceConfig();
   const {
@@ -60,7 +60,7 @@ export function AttendanceSettings() {
   });
 
   const settingsSubTabs = useMemo(
-    () => ATTENDANCE_MODULE_CONTRACT.setupSubTabs.map((key) => ({
+    () => ATTENDANCE_MODULE_MANIFEST.setupSubTabs.map((key) => ({
       key,
       label: t(SETUP_TAB_LABEL_KEYS[key]),
     })),

@@ -27,6 +27,14 @@ export const invoiceCreateSchema = invoiceRecordSchema.extend({ id: z.string().o
 export type InvoiceCreateInput = z.infer<typeof invoiceCreateSchema>;
 export const invoiceListSchema = z.array(invoiceRecordSchema);
 
+/** Invoice statuses that still carry an unpaid balance (shared finance/dashboard SSOT). */
+export const OPEN_INVOICE_STATUSES = ['pending', 'overdue', 'partial'] as const;
+export type OpenInvoiceStatus = (typeof OPEN_INVOICE_STATUSES)[number];
+
+export function isOpenInvoiceStatus(status: string | undefined | null): boolean {
+  return status != null && (OPEN_INVOICE_STATUSES as readonly string[]).includes(status);
+}
+
 export const paymentRecordSchema = z.object({
   id: z.string(),
   invoiceId: z.string(),
@@ -48,8 +56,8 @@ export const paymentCreateSchema = paymentRecordSchema.extend({ id: z.string().o
 export type PaymentCreateInput = z.infer<typeof paymentCreateSchema>;
 export const paymentListSchema = z.array(paymentRecordSchema);
 
-/** Finance module contract — aligns with globle1 universal module architecture. */
-export const FINANCE_MODULE_CONTRACT = {
+/** Finance module manifest — aligns with globle1 universal module architecture. */
+export const FINANCE_MODULE_MANIFEST = {
   moduleId: 'finance',
   entityType: 'Invoice',
   collectionKey: 'finance_invoices',
@@ -84,7 +92,7 @@ export const FINANCE_MODULE_CONTRACT = {
   maxPageSize: 500,
 } as const;
 
-export type FinanceModuleTier = (typeof FINANCE_MODULE_CONTRACT.tiers)[number];
+export type FinanceModuleTier = (typeof FINANCE_MODULE_MANIFEST.tiers)[number];
 
 /**
  * Calculates the collected amount for a single invoice.

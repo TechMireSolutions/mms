@@ -3,7 +3,7 @@ import { Save, ClipboardList } from "lucide-react";
 import {
   ENROLLMENTS_TAB_REGISTRY,
   INITIAL_ENROLLMENTS_FIELD_SEED,
-  ENROLLMENTS_MODULE_CONTRACT,
+  ENROLLMENTS_MODULE_MANIFEST,
   type AppTranslationKey,
 } from "@mms/shared";
 import { useEnrollmentConfig } from "@/hooks/useStandardModuleConfig";
@@ -25,7 +25,7 @@ const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
 
 export function EnrollmentsSettings(): React.JSX.Element {
   const { t } = useTranslation();
-  const { canEditSetup } = useModulePermissions(ENROLLMENTS_MODULE_CONTRACT);
+  const { canEditSetup } = useModulePermissions(ENROLLMENTS_MODULE_MANIFEST);
   const config = useEnrollmentConfig();
   const {
     settingsDraft,
@@ -41,7 +41,7 @@ export function EnrollmentsSettings(): React.JSX.Element {
 
   const settingsSubTabs = useMemo(
     () =>
-      ENROLLMENTS_MODULE_CONTRACT.setupSubTabs.map((key, index) => ({
+      ENROLLMENTS_MODULE_MANIFEST.setupSubTabs.map((key, index) => ({
         key,
         label: t(SETUP_TAB_LABEL_KEYS[key]),
         order: index,

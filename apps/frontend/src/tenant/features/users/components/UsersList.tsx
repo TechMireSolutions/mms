@@ -2,8 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserPlus, Eye, Pencil, KeyRound,
-  CheckCircle2, XCircle,
-  Power, Mail, MessageCircle, MessageSquare,
+  Mail, MessageCircle, MessageSquare, Trash2, RotateCcw,
 } from 'lucide-react';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { FormSelect } from '@/components/ui/FormSelect';
@@ -37,11 +36,17 @@ export interface UsersListProps {
   users: SystemUser[];
   onView: (user: SystemUser) => void;
   onEdit: (user: SystemUser) => void;
-  onToggleStatus: (id: string, status: 'active' | 'inactive') => void;
+  onDelete: (id: string) => void;
+  onRestore: (id: string) => void;
+  onBulkDelete: (ids: string[]) => void;
+  onBulkRestore: (ids: string[]) => void;
   onResetPassword: (user: SystemUser) => void;
   onAddUser: () => void;
   onMessage?: (channel: 'sms' | 'whatsapp' | 'email', users: SystemUser[]) => void;
   canWrite?: boolean;
+  canDelete?: boolean;
+  showDeleted?: boolean;
+  onToggleDeleted?: (next: boolean) => void;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
 }
@@ -50,11 +55,17 @@ export function UsersList({
   users,
   onView,
   onEdit,
-  onToggleStatus,
+  onDelete,
+  onRestore,
+  onBulkDelete,
+  onBulkRestore,
   onResetPassword,
   onAddUser,
   onMessage,
   canWrite = true,
+  canDelete = true,
+  showDeleted = false,
+  onToggleDeleted,
   getColumnWidth,
   onColumnResize,
 }: UsersListProps): React.JSX.Element {
@@ -70,28 +81,20 @@ export function UsersList({
     () =>
       users.filter((user) => {
         if (roleFilter !== 'all' && user.role !== roleFilter) return false;
-        if (statusFilter !== 'all' && user.status !== statusFilter) return false;
+        if (!showDeleted && statusFilter !== 'all' && user.status !== statusFilter) return false;
         if (search) {
           const searchQuery = search.toLowerCase();
           if (!user.name.toLowerCase().includes(searchQuery) && !user.email.toLowerCase().includes(searchQuery)) return false;
         }
         return true;
       }),
-    [users, search, roleFilter, statusFilter],
+    [users, search, roleFilter, statusFilter, showDeleted],
   );
 
   const toggleSelect = (id: string): void =>
     setSelected((selectedIds) => (selectedIds.includes(id) ? selectedIds.filter((selectedId) => selectedId !== id) : [...selectedIds, id]));
   const toggleAll = (): void =>
     setSelected(selected.length === filtered.length ? [] : filtered.map((user) => user.id));
-
-  const bulkAction = (action: 'activate' | 'deactivate'): void => {
-    selected.forEach((userId) => {
-      const selectedUser = users.find((user) => user.id === userId);
-      if (selectedUser) onToggleStatus(userId, action === 'activate' ? 'active' : 'inactive');
-    });
-    setSelected([]);
-  };
 
   const handleBulkMessage = (channel: 'sms' | 'whatsapp' | 'email') => {
     const selectedUsers = users.filter((u) => selected.includes(u.id));
@@ -127,20 +130,41 @@ export function UsersList({
           aria-label={t('users.filterRole')}
           className="w-auto"
         />
-        <FormSelect
-          id="status-filter"
-          name="status-filter"
-          value={statusFilter}
-          onChange={setStatus}
-          options={[
-            { value: 'all', label: t('users.filterAllStatuses') },
-            { value: 'active', label: t('users.status.active') },
-            { value: 'inactive', label: t('users.status.inactive') },
-            { value: 'suspended', label: t('users.status.suspended') },
-          ]}
-          aria-label={t('users.filterStatus')}
-          className="w-auto"
-        />
+        {!showDeleted ? (
+          <FormSelect
+            id="status-filter"
+            name="status-filter"
+            value={statusFilter}
+            onChange={setStatus}
+            options={[
+              { value: 'all', label: t('users.filterAllStatuses') },
+              { value: 'active', label: t('users.status.active') },
+              { value: 'inactive', label: t('users.status.inactive') },
+              { value: 'suspended', label: t('users.status.suspended') },
+            ]}
+            aria-label={t('users.filterStatus')}
+            className="w-auto"
+          />
+        ) : null}
+
+        {canDelete ? (
+          <Button
+            type="button"
+            size="sm"
+            variant={showDeleted ? 'outline' : 'destructive'}
+            onClick={() => {
+              setSelected([]);
+              onToggleDeleted?.(!showDeleted);
+            }}
+          >
+            {showDeleted ? (
+              <RotateCcw className="w-3.5 h-3.5" aria-hidden />
+            ) : (
+              <Trash2 className="w-3.5 h-3.5" aria-hidden />
+            )}
+            {showDeleted ? t('users.trash.showActive') : t('users.trash.showDeleted')}
+          </Button>
+        ) : null}
       </div>
 
       <AnimatePresence>
@@ -155,32 +179,51 @@ export function UsersList({
               {t('users.selectedCount', { count: selected.length })}
             </span>
             <div className="flex gap-2 items-center flex-wrap">
-              {onMessage && (
+              {onMessage && !showDeleted && (
                 <>
                   <Button type="button" size="sm" variant="outline" onClick={() => handleBulkMessage('email')}>
                     <Mail className="h-3 w-3 me-1 text-primary" />
-                    Email
+                    {t('users.sendEmail')}
                   </Button>
                   <Button type="button" size="sm" variant="outline" onClick={() => handleBulkMessage('whatsapp')}>
                     <MessageCircle className="h-3 w-3 me-1 text-success" />
-                    WhatsApp
+                    {t('messaging.channel.whatsapp')}
                   </Button>
                   <Button type="button" size="sm" variant="outline" onClick={() => handleBulkMessage('sms')}>
                     <MessageSquare className="h-3 w-3 me-1 text-info" />
-                    SMS
+                    {t('users.sendSms')}
                   </Button>
                 </>
               )}
-              {canWrite && (
+              {canDelete && (
                 <>
-                  <Button type="button" size="sm" variant="secondary" onClick={() => bulkAction('activate')}>
-                    <CheckCircle2 className="h-3 w-3" />
-                    {t('users.bulkActivate')}
-                  </Button>
-                  <Button type="button" size="sm" variant="outline" onClick={() => bulkAction('deactivate')}>
-                    <XCircle className="h-3 w-3" />
-                    {t('users.bulkDeactivate')}
-                  </Button>
+                  {showDeleted ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        onBulkRestore(selected);
+                        setSelected([]);
+                      }}
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                      {t('users.trash.bulkRestore')}
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        onBulkDelete(selected);
+                        setSelected([]);
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                      {t('users.trash.bulkDelete')}
+                    </Button>
+                  )}
                 </>
               )}
               <Button type="button" size="sm" variant="ghost" onClick={() => setSelected([])}>
@@ -199,12 +242,12 @@ export function UsersList({
           <div>
             <p className="text-sm font-semibold text-foreground">{t('users.emptyTitle')}</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              {search || roleFilter !== 'all' || statusFilter !== 'all'
+              {showDeleted || search || roleFilter !== 'all' || statusFilter !== 'all'
                 ? t('users.emptyFiltered')
                 : t('users.emptyHint')}
             </p>
           </div>
-          {canWrite && !search && roleFilter === 'all' && statusFilter === 'all' && (
+          {canWrite && !showDeleted && !search && roleFilter === 'all' && statusFilter === 'all' && (
             <Button type="button" onClick={onAddUser}>
               <UserPlus className="h-3.5 w-3.5" />
               {t('users.addFirst')}
@@ -217,7 +260,7 @@ export function UsersList({
             <table className="w-full text-sm table-fixed">
               <thead className="border-b border-border bg-muted/60">
                 <tr>
-                  {canWrite && (
+                  {canDelete && (
                     <th className="w-8 px-3 py-2.5">
                       <input
                         type="checkbox"
@@ -284,7 +327,7 @@ export function UsersList({
               <tbody className="divide-y divide-border">
                 {filtered.map((user) => (
                   <motion.tr key={user.id} layout className="transition-colors hover:bg-muted/20">
-                    {canWrite && (
+                    {canDelete && (
                       <td className="px-3 py-2.5">
                         <input
                           type="checkbox"
@@ -332,7 +375,7 @@ export function UsersList({
                         >
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
-                        {canWrite && (
+                        {canWrite && !showDeleted && (
                           <>
                             <Button
                               type="button"
@@ -352,18 +395,26 @@ export function UsersList({
                             >
                               <KeyRound className="h-3.5 w-3.5" />
                             </Button>
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              onClick={() =>
-                                onToggleStatus(user.id, user.status === 'active' ? 'inactive' : 'active')
-                              }
-                              aria-label={t('users.actionToggleStatus', { name: user.name })}
-                            >
-                              <Power className="h-3.5 w-3.5" />
-                            </Button>
                           </>
+                        )}
+                        {canDelete && (
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => (showDeleted ? onRestore(user.id) : onDelete(user.id))}
+                            aria-label={
+                              showDeleted
+                                ? t('users.trash.restore')
+                                : t('users.trash.delete', { name: user.name })
+                            }
+                          >
+                            {showDeleted ? (
+                              <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                            )}
+                          </Button>
                         )}
                       </div>
                     </td>

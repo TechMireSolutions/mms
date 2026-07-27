@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  MESSAGING_MODULE_CONTRACT,
+  MESSAGING_MODULE_MANIFEST,
   buildMessagingRecipientsWorkColumnRegistry,
   buildMessagingHistoryWorkColumnRegistry,
   buildMessagingTemplatesWorkColumnRegistry,
@@ -22,7 +22,7 @@ export function useMessagingRecipientsColumnLayout() {
   );
 
   return useModuleColumnLayout({
-    moduleId: `${MESSAGING_MODULE_CONTRACT.moduleId}_recipients`,
+    moduleId: `${MESSAGING_MODULE_MANIFEST.moduleId}_recipients`,
     tenantRegistry,
     translationPrefix: 'messaging.columns',
   });
@@ -43,7 +43,7 @@ export function useMessagingHistoryColumnLayout() {
   );
 
   return useModuleColumnLayout({
-    moduleId: `${MESSAGING_MODULE_CONTRACT.moduleId}_history`,
+    moduleId: `${MESSAGING_MODULE_MANIFEST.moduleId}_history`,
     tenantRegistry,
     translationPrefix: 'messaging.columns',
   });
@@ -63,7 +63,7 @@ export function useMessagingTemplatesColumnLayout() {
   );
 
   return useModuleColumnLayout({
-    moduleId: `${MESSAGING_MODULE_CONTRACT.moduleId}_templates`,
+    moduleId: `${MESSAGING_MODULE_MANIFEST.moduleId}_templates`,
     tenantRegistry,
     translationPrefix: 'messaging.columns',
   });

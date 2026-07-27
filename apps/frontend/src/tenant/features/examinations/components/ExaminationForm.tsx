@@ -33,7 +33,7 @@ interface ExamFormProps {
   open?: boolean;
   exam: Exam | null;
   onClose: () => void;
-  onSave: (exam: Exam) => void;
+  onSave: (exam: Exam) => void | Promise<void>;
 }
 
 export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFormProps): React.JSX.Element {
@@ -91,8 +91,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
 
     setSaving(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      onSave({
+      await onSave({
         ...examDraft,
         name: toTitleCase(examDraft.name || ""),
         id: exam?.id || `ex${Date.now()}`

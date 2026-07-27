@@ -1,4 +1,4 @@
-import type { Enrollment } from './enrollmentsModuleContract.js';
+import type { Enrollment } from './enrollmentsModuleManifest.js';
 import { paginateArray } from './utils.js';
 
 export interface EnrollmentsListQuery {

@@ -4,13 +4,16 @@ import { Sparkles } from 'lucide-react';
 import { formatDayName, formatLongDate, formatHijriDate } from '@mms/shared';
 import type { AppTranslationKey } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
-import { useStudentsMetrics } from '@/tenant/features/students/hooks/useStudents';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { DashboardRole } from '@/lib/dashboardRole';
+import type { Session } from '@/lib/data/sessionsData';
 
 interface WelcomeBannerProps {
   dashboardRole: DashboardRole;
+  /** Active sessions from dashboard data (avoids a second Query fetch). */
+  sessions: Session[];
+  /** Active student count from student metrics (admin subtitle). */
+  activeStudentCount: number;
 }
 
 const GREETING_BY_ROLE: Record<DashboardRole, AppTranslationKey> = {
@@ -25,59 +28,54 @@ const BADGE_BY_ROLE: Record<DashboardRole, AppTranslationKey> = {
   admin: 'dashboard.badge.admin',
 };
 
+const DATE_CHIP_CLASS =
+  'bg-primary-foreground/10 hover:bg-primary-foreground/15 backdrop-blur-md border border-primary-foreground/20 rounded-xl px-4 py-2.5 transition-all duration-300 flex items-center gap-2 shadow-sm';
+
 /** Dashboard welcome header with dashboardRole-specific messaging and localized date. */
-export default function WelcomeBanner({ dashboardRole }: WelcomeBannerProps): React.JSX.Element {
+export default function WelcomeBanner({
+  dashboardRole,
+  sessions,
+  activeStudentCount,
+}: WelcomeBannerProps): React.JSX.Element {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const sessions = useSessionsCollection({ enabled: true });
-  const { data: studentMetrics } = useStudentsMetrics({ enabled: dashboardRole === 'admin' });
 
-  const dayName = useMemo(() => {
-    return formatDayName(new Date());
-  }, []);
-
-  const gregDate = useMemo(() => {
-    return formatLongDate(new Date());
-  }, []);
-
-  const hijriDate = useMemo(() => {
-    return formatHijriDate(new Date());
-  }, []);
+  const dayName = useMemo(() => formatDayName(new Date()), []);
+  const gregDate = useMemo(() => formatLongDate(new Date()), []);
+  const hijriDate = useMemo(() => formatHijriDate(new Date()), []);
 
   const userId = user?.id ?? '';
   const userName = user?.name ?? '';
 
-  let subtitle = t('dashboard.overview');
-
-  if (dashboardRole === 'teacher') {
-    const teacherSessionsCount = sessions.filter((session) =>
-      (session.classes || []).some(
-        (sessionClass) =>
-          sessionClass.teacherId === userId ||
-          (userName && String(sessionClass.teacherName || '').toLowerCase() === userName.toLowerCase()),
-      ),
-    ).length;
-    subtitle =
-      teacherSessionsCount === 1
+  const subtitle = useMemo(() => {
+    if (dashboardRole === 'teacher') {
+      const teacherSessionsCount = sessions.filter((session) =>
+        (session.classes || []).some(
+          (sessionClass) =>
+            sessionClass.teacherId === userId ||
+            (userName && String(sessionClass.teacherName || '').toLowerCase() === userName.toLowerCase()),
+        ),
+      ).length;
+      return teacherSessionsCount === 1
         ? t('dashboard.sessionsTodayOne')
         : t('dashboard.sessionsToday', { count: teacherSessionsCount });
-  } else if (dashboardRole === 'admin') {
-    const activeCount = studentMetrics?.active ?? 0;
-    if (activeCount > 0) {
-      subtitle = t('dashboard.overviewActiveStudents', { count: activeCount });
     }
-  } else if (dashboardRole === 'accountant') {
-    subtitle = t('dashboard.accountantOverview');
-  }
+    if (dashboardRole === 'admin' && activeStudentCount > 0) {
+      return t('dashboard.overviewActiveStudents', { count: activeStudentCount });
+    }
+    if (dashboardRole === 'accountant') {
+      return t('dashboard.accountantOverview');
+    }
+    return t('dashboard.overview');
+  }, [dashboardRole, sessions, userId, userName, activeStudentCount, t]);
 
   return (
     <motion.header
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
       className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/95 to-primary/80 p-6 md:p-8 text-primary-foreground shadow-lg shadow-primary/10"
     >
-      {/* Glow effects & Islamic pattern */}
       <div className="absolute inset-0 islamic-pattern opacity-[0.06] mix-blend-overlay pointer-events-none" aria-hidden="true" />
       <div className="absolute -top-24 -end-16 w-80 h-80 rounded-full bg-secondary/15 blur-3xl opacity-70 pointer-events-none" aria-hidden="true" />
       <div className="absolute -bottom-20 -start-16 w-72 h-72 rounded-full bg-warning/10 blur-3xl opacity-50 pointer-events-none" aria-hidden="true" />
@@ -97,34 +95,22 @@ export default function WelcomeBanner({ dashboardRole }: WelcomeBannerProps): Re
         </div>
 
         <div className="flex-shrink-0 flex items-center gap-3 self-start lg:self-auto flex-wrap">
-          {/* Box 1: Weekday */}
-          <div
-            className="bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.15)] backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 transition-all duration-300 flex items-center gap-2 shadow-sm"
-          >
+          <div className={DATE_CHIP_CLASS}>
             <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" aria-hidden="true" />
             <span className="text-[12px] font-bold text-white whitespace-nowrap tracking-wide">{dayName}</span>
           </div>
-          
-          {/* Box 2: Gregorian Date */}
-          <div
-            className="bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.15)] backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 transition-all duration-300 flex items-center gap-2 shadow-sm"
-          >
+          <div className={DATE_CHIP_CLASS}>
             <span className="w-1.5 h-1.5 rounded-full bg-info" aria-hidden="true" />
             <span className="text-[12px] font-bold text-white whitespace-nowrap tracking-wide">{gregDate}</span>
           </div>
-          
-          {/* Box 3: Hijri Date */}
-          {hijriDate && (
-            <div
-              className="bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.15)] backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 transition-all duration-300 flex items-center gap-2 shadow-sm"
-            >
+          {hijriDate ? (
+            <div className={DATE_CHIP_CLASS}>
               <span className="w-1.5 h-1.5 rounded-full bg-success" aria-hidden="true" />
               <span className="text-[12px] font-bold text-white whitespace-nowrap tracking-wide">{hijriDate}</span>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </motion.header>
   );
 }
-

@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { canDeleteCollection } from '../../services/rbacService.js';
-import { ENROLLMENTS_MODULE_CONTRACT, computeEnrollmentsCommandMetrics, type User } from '@mms/shared';
+import { ENROLLMENTS_MODULE_MANIFEST, computeEnrollmentsCommandMetrics, type User } from '@mms/shared';
 import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
 import {
   enrollmentRecordSchema,
@@ -22,7 +22,7 @@ import {
   bulkRestoreEnrollments,
 } from '../../services/enrollmentService.js';
 
-const ENROLLMENTS_COLLECTION = ENROLLMENTS_MODULE_CONTRACT.collectionKey;
+const ENROLLMENTS_COLLECTION = ENROLLMENTS_MODULE_MANIFEST.collectionKey;
 
 /**
  * Enrollments module routes — CRUD, metrics, soft-delete, and column preferences.
@@ -37,7 +37,7 @@ export default async function enrollmentsRoutes(
     collection: ENROLLMENTS_COLLECTION,
     schema: enrollmentRecordSchema,
     listQuerySchema: enrollmentsListQuerySchema,
-    defaultPageSize: ENROLLMENTS_MODULE_CONTRACT.defaultPageSize,
+    defaultPageSize: ENROLLMENTS_MODULE_MANIFEST.defaultPageSize,
     errorMessagePrefix: 'enrollments',
     nameSingular: 'enrollment',
     namePlural: 'enrollments',
@@ -48,7 +48,7 @@ export default async function enrollmentsRoutes(
     deleteFn: deleteEnrollmentById,
     restoreFn: restoreEnrollmentById,
     computeMetricsFn: (records) => computeEnrollmentsCommandMetrics(records),
-    columnPreferencesObjectKey: ENROLLMENTS_MODULE_CONTRACT.columnPreferencesObjectKey,
+    columnPreferencesObjectKey: ENROLLMENTS_MODULE_MANIFEST.columnPreferencesObjectKey,
   });
 
   fastify.post('/bulk-delete', async (request, reply) => {

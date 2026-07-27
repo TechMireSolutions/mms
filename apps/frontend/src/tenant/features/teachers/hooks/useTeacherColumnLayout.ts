@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  TEACHERS_MODULE_CONTRACT,
+  TEACHERS_MODULE_MANIFEST,
   buildTeacherWorkColumnRegistry,
   type TeachersSettings,
 } from '@mms/shared';
@@ -23,9 +23,9 @@ export function useTeacherColumnLayout(settings: TeachersSettings) {
   );
 
   return useModuleColumnLayout({
-    moduleId: TEACHERS_MODULE_CONTRACT.moduleId,
+    moduleId: TEACHERS_MODULE_MANIFEST.moduleId,
     tenantRegistry,
-    apiPath: TEACHERS_MODULE_CONTRACT.restBasePath,
+    apiPath: TEACHERS_MODULE_MANIFEST.restBasePath,
     translationPrefix: 'teachers.columns',
   });
 }

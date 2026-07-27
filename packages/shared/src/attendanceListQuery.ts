@@ -1,4 +1,4 @@
-import type { AttendanceRecord } from './attendanceModuleContract.js';
+import type { AttendanceRecord } from './attendanceModuleManifest.js';
 import { compareByField, paginateArray } from './utils.js';
 
 /** Supported attendance list filters and pagination options. */

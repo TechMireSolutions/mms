@@ -26,7 +26,11 @@ Setup (tier id: setup)
 │   └── {contract.setupSubTabs extras}
 ```
 
-Register sub-tab ids in `{Module}ModuleContract.setupSubTabs`.
+Register sub-tab ids in `{Module}ModuleManifest.setupSubTabs`.
+
+Drive Setup SubTabBar from the manifest (Hasanat / Examinations / Users pattern) — do not hardcode tab ids in the page.
+
+Gate edits with `canEditSetup`: show SubTabBar even when view-only; use a read-only message (or view-only panels) instead of silently omitting Setup. Prefer `saveSettingsAsync` / awaited mutations for Preferences saves.
 
 ## Contacts reference map
 

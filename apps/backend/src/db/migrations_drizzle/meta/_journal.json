@@ -190,6 +190,13 @@
       "when": 1784775797237,
       "tag": "0026_numerous_betty_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1785149400000,
+      "tag": "0027_tenant_users_soft_delete",
+      "breakpoints": true
     }
   ]
 }

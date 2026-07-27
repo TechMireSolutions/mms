@@ -1,22 +1,23 @@
 ---
-description: Fix documented MMS technical debt (auth seeds, providers, RBAC, duplicates)
+description: Fix documented MMS technical debt from migration-status
 ---
 
 # Workflow: Fix Migration Debt
 
 ## Steps
 
-1. Load skills: `mms-migration-fixes` + task-specific skill (`mms-backend-security`, `mms-frontend`, etc.)
-2. Read `rules/mms-migration-status.md` — confirm item is in scope
+1. Load skills: `mms-migration-fixes` + task-specific skill (`mms-backend-security`, `mms-frontend`, `mms-module-page`, etc.)
+2. Read `rules/mms-migration-status.md` — confirm item is in the open gaps table (not Recently Resolved)
 3. Implement minimal fix for chosen item only
-4. Run `pnpm typecheck` (+ `pnpm lint` if frontend)
-5. Update `mms-migration-status` rule if item fully resolved
+4. Run `pnpm typecheck` (+ lint / tests as scoped)
+5. Move item to Recently Resolved (and update `mms-migration-fixes` open priorities) when fully done
+6. `bash .agent/scripts/sync-all.sh` if standards files changed
 
-## Common tasks
+## Current P1 focus
 
 | Debt | Skill |
 |------|-------|
-| Auth seed mismatch | `mms-backend-security` |
-| Nested ContactConfigProvider | `mms-frontend` |
-| DraggableFieldList duplicate | `mms-fields-registry` |
-| RBAC on `/api/db` | `mms-backend-api` + `mms-backend-security` |
+| Messaging clear / QB papers-results variants (intentional — do not regress) | `mms-module-work`, `mms-messaging` |
+| Residual `role ===` / setup matrix special cases | `mms-backend-security`, `mms-frontend` |
+| Report drill-down & saved reports beyond Contacts | `mms-reports-export` |
+| Custom tabs relational schema | `mms-fields-registry` |

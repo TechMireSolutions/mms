@@ -1,4 +1,4 @@
-import type { Invoice, Payment } from './financeModuleContract.js';
+import type { Invoice, Payment } from './financeModuleManifest.js';
 import { paginateArray } from './utils.js';
 
 /** Query accepted by finance invoice and payment list endpoints. */

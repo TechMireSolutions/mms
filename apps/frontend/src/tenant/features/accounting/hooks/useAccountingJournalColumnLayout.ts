@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  ACCOUNTING_MODULE_CONTRACT,
+  ACCOUNTING_MODULE_MANIFEST,
   buildAccountingJournalWorkColumnRegistry,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -11,7 +11,7 @@ const STORAGE_SUFFIX = 'journal';
 export function useAccountingJournalColumnLayout() {
   const { t } = useTranslation();
 
-  const storageModuleId = `${ACCOUNTING_MODULE_CONTRACT.moduleId}_${STORAGE_SUFFIX}`;
+  const storageModuleId = `${ACCOUNTING_MODULE_MANIFEST.moduleId}_${STORAGE_SUFFIX}`;
 
   const tenantRegistry = useMemo(
     () =>
@@ -30,7 +30,7 @@ export function useAccountingJournalColumnLayout() {
   return useModuleColumnLayout({
     moduleId: storageModuleId,
     tenantRegistry,
-    apiPath: `${ACCOUNTING_MODULE_CONTRACT.restBasePath}/journal`,
+    apiPath: `${ACCOUNTING_MODULE_MANIFEST.restBasePath}/journal`,
     translationPrefix: 'accounting.columns',
   });
 }

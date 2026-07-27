@@ -3,7 +3,7 @@ import { Save, Calendar } from "lucide-react";
 import {
   SESSIONS_TAB_REGISTRY,
   INITIAL_SESSIONS_FIELD_SEED,
-  SESSIONS_MODULE_CONTRACT,
+  SESSIONS_MODULE_MANIFEST,
   formatMonthName,
   type AppTranslationKey,
 } from "@mms/shared";
@@ -28,7 +28,7 @@ const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
 
 export function SessionsSettings(): React.JSX.Element {
   const { t } = useTranslation();
-  const { canEditSetup } = useModulePermissions(SESSIONS_MODULE_CONTRACT);
+  const { canEditSetup } = useModulePermissions(SESSIONS_MODULE_MANIFEST);
   const config = useSessionConfig();
   const { types } = config;
   const {
@@ -46,7 +46,7 @@ export function SessionsSettings(): React.JSX.Element {
 
   const settingsSubTabs = useMemo(
     () =>
-      SESSIONS_MODULE_CONTRACT.setupSubTabs.map((key, index) => ({
+      SESSIONS_MODULE_MANIFEST.setupSubTabs.map((key, index) => ({
         key,
         label: t(SETUP_TAB_LABEL_KEYS[key]),
         order: index,

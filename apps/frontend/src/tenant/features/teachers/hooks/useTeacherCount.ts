@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import { TEACHERS_MODULE_CONTRACT } from '@mms/shared';
+import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 
-export const TEACHER_COUNT_QUERY_KEY = [TEACHERS_MODULE_CONTRACT.collectionKey, 'count'] as const;
+export const TEACHER_COUNT_QUERY_KEY = [TEACHERS_MODULE_MANIFEST.collectionKey, 'count'] as const;
 
 async function fetchTeacherCount(): Promise<number> {
-  const countResponse = await apiJson<{ count: number }>(`${TEACHERS_MODULE_CONTRACT.restBasePath}/count`);
+  const countResponse = await apiJson<{ count: number }>(`${TEACHERS_MODULE_MANIFEST.restBasePath}/count`);
   return countResponse.count;
 }
 

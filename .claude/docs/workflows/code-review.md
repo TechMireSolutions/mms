@@ -13,9 +13,9 @@ description: Review MMS changes against project rules and migration status
    pnpm typecheck
    cd apps/frontend && pnpm lint
    ```
-4. Review diff against checklist in `skills/mms-code-review/SKILL.md`
+4. Review diff against checklist in `skills/mms-code-review/SKILL.md` (incl. soft-delete + gold-standard §7)
 5. Classify findings: Critical / Major / Minor
-6. Note any new violations of migration-status table
+6. Note any new violations of migration-status table (do not reintroduce Recently Resolved items)
 
 ## Output format
 

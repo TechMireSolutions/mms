@@ -13,7 +13,7 @@ import {
   Contact,
   ContactActivity,
   canViewContactField,
-  CONTACTS_MODULE_CONTRACT,
+  CONTACTS_MODULE_MANIFEST,
   DEFAULT_DETAIL_TABS,
   getDisplayName,
   getPrimaryPhone,
@@ -372,7 +372,7 @@ export default function ContactDetailDrawer({
   });
 
   const heroFieldSet = useMemo(
-    () => new Set<string>(CONTACTS_MODULE_CONTRACT.heroFieldKeys),
+    () => new Set<string>(CONTACTS_MODULE_MANIFEST.heroFieldKeys),
     [],
   );
 

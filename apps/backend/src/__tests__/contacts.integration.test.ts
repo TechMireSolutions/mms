@@ -105,7 +105,7 @@ vi.mock('../services/backgroundJobWorkerService.js', async (importOriginal) => {
 });
 
 import { buildApp } from '../app.js';
-import { CONTACTS_MODULE_CONTRACT } from '@mms/shared';
+import { CONTACTS_MODULE_MANIFEST } from '@mms/shared';
 
 
 const sampleContact = {
@@ -638,7 +638,7 @@ describe('contacts REST routes', () => {
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ preferences: [{ key: 'name', enabled: true, order: 0 }] });
     expect(mockGetUserColumnPreferencesForModule).toHaveBeenCalledWith(
-      CONTACTS_MODULE_CONTRACT.columnPreferencesObjectKey,
+      CONTACTS_MODULE_MANIFEST.columnPreferencesObjectKey,
       'u-teacher',
     );
     await app.close();
@@ -659,7 +659,7 @@ describe('contacts REST routes', () => {
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true, preferences });
     expect(mockSetUserColumnPreferencesForModule).toHaveBeenCalledWith(
-      CONTACTS_MODULE_CONTRACT.columnPreferencesObjectKey,
+      CONTACTS_MODULE_MANIFEST.columnPreferencesObjectKey,
       'u-teacher',
       preferences,
     );

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  MESSAGING_MODULE_CONTRACT,
+  MESSAGING_MODULE_MANIFEST,
   MESSAGING_ROLE_OPTIONS,
   MESSAGING_GENDER_OPTIONS,
   MESSAGING_STATUS_OPTIONS,
@@ -8,17 +8,19 @@ import {
   getChannelLabelKey,
   getMessageCategoryLabelKey,
   toMessagingRecipient,
-} from '../messagingModuleContract.js';
+} from '../messagingModuleManifest.js';
 
-describe('messagingModuleContract', () => {
-  it('defines the correct module contract metadata and tiers', () => {
-    expect(MESSAGING_MODULE_CONTRACT.moduleId).toBe('messaging');
-    expect(MESSAGING_MODULE_CONTRACT.entityType).toBe('Message');
-    expect(MESSAGING_MODULE_CONTRACT.restBasePath).toBe('/api/messaging');
-    expect(MESSAGING_MODULE_CONTRACT.tiers).toEqual(['work', 'reports', 'setup']);
-    expect(MESSAGING_MODULE_CONTRACT.permissions.read).toBe('messaging.read');
-    expect(MESSAGING_MODULE_CONTRACT.permissions.write).toBe('messaging.write');
-    expect(MESSAGING_MODULE_CONTRACT.permissions.clearLogs).toBe('messaging.clearLogs');
+describe('messagingModuleManifest', () => {
+  it('defines the correct module manifest metadata and tiers', () => {
+    expect(MESSAGING_MODULE_MANIFEST.moduleId).toBe('messaging');
+    expect(MESSAGING_MODULE_MANIFEST.entityType).toBe('Message');
+    expect(MESSAGING_MODULE_MANIFEST.restBasePath).toBe('/api/messaging');
+    expect(MESSAGING_MODULE_MANIFEST.tiers).toEqual(['work', 'reports', 'setup']);
+    expect(MESSAGING_MODULE_MANIFEST.setupSubTabs).toEqual(['templates']);
+    expect(MESSAGING_MODULE_MANIFEST.softDelete.workExcludesDeleted).toBe(true);
+    expect(MESSAGING_MODULE_MANIFEST.permissions.read).toBe('messaging.read');
+    expect(MESSAGING_MODULE_MANIFEST.permissions.write).toBe('messaging.write');
+    expect(MESSAGING_MODULE_MANIFEST.permissions.clearLogs).toBe('messaging.clearLogs');
   });
 
   it('contains expected contract options mapping to i18n keys', () => {

@@ -62,6 +62,8 @@ export interface WorkspaceUser {
   failedLoginAttempts: number;
   activeSessions: number;
   avatarInitials: string;
+  deletedAt?: string | null;
+  deletedBy?: string | null;
 }
 
 export type SystemUser = WorkspaceUser;
@@ -368,6 +370,8 @@ export function normalizeWorkspaceUser(
     failedLoginAttempts: raw.failedLoginAttempts ?? 0,
     activeSessions: raw.activeSessions ?? 0,
     avatarInitials: initials,
+    deletedAt: raw.deletedAt ?? null,
+    deletedBy: raw.deletedBy ?? null,
   };
 }
 

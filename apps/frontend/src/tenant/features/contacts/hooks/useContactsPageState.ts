@@ -12,7 +12,7 @@ import {
   filterContactsForQuery,
   sortContacts,
   contactMatchesSearch,
-  CONTACTS_MODULE_CONTRACT,
+  CONTACTS_MODULE_MANIFEST,
   syncContactScalarFields,
   toMessagingRecipient,
 } from "@mms/shared";
@@ -286,7 +286,7 @@ export function useContactsPageState({
   });
 
   const useServerWork = effectiveTab === "work";
-  const workLimit = CONTACTS_MODULE_CONTRACT.defaultPageSize;
+  const workLimit = CONTACTS_MODULE_MANIFEST.defaultPageSize;
 
   const {
     data: workPageData,
@@ -306,7 +306,7 @@ export function useContactsPageState({
     enabled: useServerWork,
   });
 
-  const contacts = rawContacts || [];
+  const contacts = useMemo(() => rawContacts || [], [rawContacts]);
 
   const applyDrillDown = useCallback(
     (filter: ContactsWorkDrillDown) => {
@@ -346,14 +346,14 @@ export function useContactsPageState({
         if (err) reportClientError(err, { scope: "contacts.export_csv" });
       };
 
-      if (rows.length > CONTACTS_MODULE_CONTRACT.exportInlineMaxRows) {
+      if (rows.length > CONTACTS_MODULE_MANIFEST.exportInlineMaxRows) {
         const jobId = startContactsBackgroundJob(
           "export",
           t("contacts.jobs.exportLabel", { count: rows.length }),
           rows.length,
         );
         void downloadContactsCsvChunked(rows, tableColumns, exportLabels, filename, {
-          chunkSize: CONTACTS_MODULE_CONTRACT.exportChunkSize,
+          chunkSize: CONTACTS_MODULE_MANIFEST.exportChunkSize,
           onProgress: (processed, total) => {
             updateContactsBackgroundJobProgress(jobId, processed, total);
           },
@@ -440,7 +440,7 @@ export function useContactsPageState({
 
   const handleOpenDuplicates = useCallback(async () => {
     if (openingDuplicates) return;
-    const needsAsyncScan = shownCount >= CONTACTS_MODULE_CONTRACT.duplicateScanAsyncMinContacts;
+    const needsAsyncScan = shownCount >= CONTACTS_MODULE_MANIFEST.duplicateScanAsyncMinContacts;
     if (needsAsyncScan) {
       setOpeningDuplicates(true);
       try {
@@ -606,6 +606,7 @@ export function useContactsPageState({
     filterGender,
     sortField,
     sortDir,
+    quickFilter,
     tableColumns,
     t,
     logExportAudit,

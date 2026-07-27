@@ -1,32 +1,51 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
+import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../services/rbacService.js';
 import {
-  HASANAT_MODULE_CONTRACT,
+  HASANAT_MODULE_MANIFEST,
   denomListSchema,
   batchListSchema,
   distributionListSchema,
   redemptionListSchema,
   computeHasanatCommandMetrics,
+  type User,
 } from '@mms/shared';
+import { z } from 'zod';
 import { registerBulkRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
+import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
+import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { sendDatabaseError, sendForbidden, sendNotFound } from '../../lib/httpErrors.js';
 import {
   loadDenoms,
-  replaceDenoms,
+  upsertDenoms,
   loadBatches,
-  replaceBatches,
+  upsertBatches,
   loadDistributions,
-  replaceDistributions,
+  upsertDistributions,
   loadRedemptions,
-  replaceRedemptions,
+  upsertRedemptions,
+  deleteDistributionById,
+  restoreDistributionById,
+  bulkSoftDeleteDistributions,
+  bulkRestoreDistributions,
 } from '../../services/hasanatService.js';
 
-const HASANAT_DISTRIBUTIONS_COLLECTION = HASANAT_MODULE_CONTRACT.collectionKey;
-const HASANAT_DENOMS_COLLECTION = HASANAT_MODULE_CONTRACT.denomCollectionKey;
-const HASANAT_BATCHES_COLLECTION = HASANAT_MODULE_CONTRACT.batchCollectionKey;
-const HASANAT_REDEMPTIONS_COLLECTION = HASANAT_MODULE_CONTRACT.redemptionCollectionKey;
+const HASANAT_DISTRIBUTIONS_COLLECTION = HASANAT_MODULE_MANIFEST.collectionKey;
+const HASANAT_DENOMS_COLLECTION = HASANAT_MODULE_MANIFEST.denomCollectionKey;
+const HASANAT_BATCHES_COLLECTION = HASANAT_MODULE_MANIFEST.batchCollectionKey;
+const HASANAT_REDEMPTIONS_COLLECTION = HASANAT_MODULE_MANIFEST.redemptionCollectionKey;
+
+const includeDeletedQuerySchema = z.object({
+  includeDeleted: z.enum(['true', 'false']).optional(),
+});
+
+const bulkIdsSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1),
+  deletionReason: z.string().optional(),
+});
 
 /**
- * Hasanat module routes — denoms, batches, distributions, redemptions, metrics, and column preferences.
+ * Hasanat module routes — bulk upsert + soft-delete distributions.
  */
 export default async function hasanatRoutes(
   fastify: FastifyInstance,
@@ -34,7 +53,6 @@ export default async function hasanatRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
-  // --- Metrics ---
   registerMetricsRoute(fastify, {
     collection: HASANAT_DISTRIBUTIONS_COLLECTION,
     loadMetricsFn: async () => {
@@ -50,49 +68,124 @@ export default async function hasanatRoutes(
     errorMessagePrefix: 'hasanat',
   });
 
-  // --- Denominations ---
   registerBulkRoutes(fastify, {
     path: '/denoms',
     collection: HASANAT_DENOMS_COLLECTION,
     schema: denomListSchema,
     loadFn: loadDenoms,
-    saveFn: replaceDenoms,
+    saveFn: upsertDenoms,
     responseKey: 'denoms',
     errorMessagePrefix: 'denominations',
   });
 
-  // --- Batches ---
   registerBulkRoutes(fastify, {
     path: '/batches',
     collection: HASANAT_BATCHES_COLLECTION,
     schema: batchListSchema,
     loadFn: loadBatches,
-    saveFn: replaceBatches,
+    saveFn: upsertBatches,
     responseKey: 'batches',
     errorMessagePrefix: 'batches',
   });
 
-  // --- Distributions ---
-  registerBulkRoutes(fastify, {
-    path: '/distributions',
-    collection: HASANAT_DISTRIBUTIONS_COLLECTION,
-    schema: distributionListSchema,
-    loadFn: loadDistributions,
-    saveFn: replaceDistributions,
-    responseKey: 'distributions',
-    errorMessagePrefix: 'distributions',
-    columnPreferencesObjectKey: HASANAT_MODULE_CONTRACT.distributionColumnPreferencesObjectKey,
+  fastify.get('/distributions', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, HASANAT_DISTRIBUTIONS_COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(includeDeletedQuerySchema, request.query);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    const includeDeleted = parsed.data.includeDeleted === 'true';
+    if (includeDeleted && !canDeleteCollection(user, HASANAT_DISTRIBUTIONS_COLLECTION)) {
+      return sendForbidden(reply);
+    }
+    try {
+      const distributions = await loadDistributions({ includeDeleted });
+      return reply.send({ distributions });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to load distributions');
+    }
   });
 
-  // --- Redemptions ---
+  fastify.put('/distributions/bulk', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, HASANAT_DISTRIBUTIONS_COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(distributionListSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const distributions = await upsertDistributions(parsed.data);
+      return reply.send({ distributions });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to update distributions');
+    }
+  });
+
+  fastify.delete<{ Params: { id: string } }>('/distributions/:id', async (request, reply) => {
+    const user = request.user as User;
+    if (!canDeleteCollection(user, HASANAT_DISTRIBUTIONS_COLLECTION)) return sendForbidden(reply);
+    try {
+      const ok = await deleteDistributionById(request.params.id, String(user.id));
+      if (!ok) return sendNotFound(reply, 'Distribution not found');
+      return reply.send({ success: true });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to delete distribution');
+    }
+  });
+
+  fastify.post<{ Params: { id: string } }>('/distributions/:id/restore', async (request, reply) => {
+    const user = request.user as User;
+    if (!canDeleteCollection(user, HASANAT_DISTRIBUTIONS_COLLECTION)) return sendForbidden(reply);
+    try {
+      const ok = await restoreDistributionById(request.params.id);
+      if (!ok) return sendNotFound(reply, 'Distribution not found');
+      return reply.send({ success: true });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to restore distribution');
+    }
+  });
+
+  fastify.post('/distributions/bulk-delete', async (request, reply) => {
+    const user = request.user as User;
+    if (!canDeleteCollection(user, HASANAT_DISTRIBUTIONS_COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(bulkIdsSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const result = await bulkSoftDeleteDistributions(
+        parsed.data.ids,
+        String(user.id),
+        parsed.data.deletionReason,
+      );
+      return reply.send({ success: true, ...result });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to bulk delete distributions');
+    }
+  });
+
+  fastify.post('/distributions/bulk-restore', async (request, reply) => {
+    const user = request.user as User;
+    if (!canDeleteCollection(user, HASANAT_DISTRIBUTIONS_COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(bulkIdsSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const result = await bulkRestoreDistributions(parsed.data.ids);
+      return reply.send({ success: true, ...result });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to bulk restore distributions');
+    }
+  });
+
+  registerColumnPreferencesRoutes(fastify, {
+    path: '/distributions/column-preferences',
+    collection: HASANAT_DISTRIBUTIONS_COLLECTION,
+    objectKey: HASANAT_MODULE_MANIFEST.distributionColumnPreferencesObjectKey,
+  });
+
   registerBulkRoutes(fastify, {
     path: '/redemptions',
     collection: HASANAT_REDEMPTIONS_COLLECTION,
     schema: redemptionListSchema,
     loadFn: loadRedemptions,
-    saveFn: replaceRedemptions,
+    saveFn: upsertRedemptions,
     responseKey: 'redemptions',
     errorMessagePrefix: 'redemptions',
-    columnPreferencesObjectKey: HASANAT_MODULE_CONTRACT.redemptionColumnPreferencesObjectKey,
+    columnPreferencesObjectKey: HASANAT_MODULE_MANIFEST.redemptionColumnPreferencesObjectKey,
   });
 }

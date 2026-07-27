@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../services/rbacService.js';
 import {
-  ACCOUNTING_MODULE_CONTRACT,
+  ACCOUNTING_MODULE_MANIFEST,
   accountListSchema,
   journalEntryListSchema,
   fiscalYearListSchema,
@@ -29,9 +29,9 @@ import {
   bulkRestoreJournalEntries,
 } from '../../services/accountingService.js';
 
-const ACCOUNTING_ENTRIES_COLLECTION = ACCOUNTING_MODULE_CONTRACT.collectionKey;
-const ACCOUNTING_ACCOUNTS_COLLECTION = ACCOUNTING_MODULE_CONTRACT.accountCollectionKey;
-const ACCOUNTING_FISCAL_YEARS_COLLECTION = ACCOUNTING_MODULE_CONTRACT.fiscalYearCollectionKey;
+const ACCOUNTING_ENTRIES_COLLECTION = ACCOUNTING_MODULE_MANIFEST.collectionKey;
+const ACCOUNTING_ACCOUNTS_COLLECTION = ACCOUNTING_MODULE_MANIFEST.accountCollectionKey;
+const ACCOUNTING_FISCAL_YEARS_COLLECTION = ACCOUNTING_MODULE_MANIFEST.fiscalYearCollectionKey;
 
 const includeDeletedQuerySchema = z.object({
   includeDeleted: z.enum(['true', 'false']).optional(),
@@ -85,7 +85,7 @@ export default async function accountingRoutes(
   registerColumnPreferencesRoutes(fastify, {
     path: '/accounts/column-preferences',
     collection: ACCOUNTING_ACCOUNTS_COLLECTION,
-    objectKey: ACCOUNTING_MODULE_CONTRACT.accountColumnPreferencesObjectKey,
+    objectKey: ACCOUNTING_MODULE_MANIFEST.accountColumnPreferencesObjectKey,
   });
 
   // --- Entries ---
@@ -179,7 +179,7 @@ export default async function accountingRoutes(
   registerColumnPreferencesRoutes(fastify, {
     path: '/journal/column-preferences',
     collection: ACCOUNTING_ENTRIES_COLLECTION,
-    objectKey: ACCOUNTING_MODULE_CONTRACT.journalColumnPreferencesObjectKey,
+    objectKey: ACCOUNTING_MODULE_MANIFEST.journalColumnPreferencesObjectKey,
   });
 
   // --- Fiscal Years ---

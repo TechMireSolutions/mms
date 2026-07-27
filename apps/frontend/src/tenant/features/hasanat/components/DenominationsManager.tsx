@@ -19,11 +19,12 @@ interface DenomModalProps {
   open: boolean;
   denom: Denomination | null;
   onClose: () => void;
-  onSave: (denom: Denomination) => void;
+  onSave: (denom: Denomination) => void | Promise<void>;
 }
 
 function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
   const [data, setData] = useState<Denomination>(denom || { ...EMPTY });
+  const [submitting, setSubmitting] = useState(false);
   const presetColors = getDenominationPresetColors();
   const updateField = <K extends keyof Denomination>(field: K, value: Denomination[K]) => setData((previousData: Denomination) => ({ ...previousData, [field]: value }));
 
@@ -41,7 +42,17 @@ function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
       icon={CreditCard}
       cancelLabel="Cancel"
       saveLabel="Save"
-      onSave={() => onSave({ ...data, id: denom?.id || `den${Date.now()}` })}
+      saving={submitting}
+      onSave={() => {
+        void (async () => {
+          setSubmitting(true);
+          try {
+            await onSave({ ...data, id: denom?.id || `den${Date.now()}` });
+          } finally {
+            setSubmitting(false);
+          }
+        })();
+      }}
       saveDisabled={!data.name || !data.points}
     >
       <div className="space-y-4">
@@ -113,7 +124,7 @@ function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
 
 export interface DenominationsManagerProps {
   denoms: Denomination[];
-  onUpdate: (denoms: Denomination[]) => void;
+  onUpdate: (denoms: Denomination[]) => void | Promise<void>;
   canWrite?: boolean;
 }
 
@@ -131,14 +142,18 @@ export function DenominationsManager({ denoms, onUpdate, canWrite = true }: Deno
   const [showModal, setShowModal] = useState(false);
   const [editDenom, setEditDenom] = useState<Denomination | null>(null);
 
-  const handleSave = (denomination: Denomination) => {
+  const handleSave = async (denomination: Denomination) => {
     const existing = denoms.find((candidate) => candidate.id === denomination.id);
-    onUpdate(existing ? denoms.map((candidate) => candidate.id === denomination.id ? denomination : candidate) : [...denoms, denomination]);
+    await onUpdate(existing ? denoms.map((candidate) => candidate.id === denomination.id ? denomination : candidate) : [...denoms, denomination]);
     setShowModal(false); setEditDenom(null);
   };
 
-  const toggleActive = (id: string) => onUpdate(denoms.map((denomination) => denomination.id === id ? { ...denomination, active: !denomination.active } : denomination));
-  const handleDelete = (id: string) => onUpdate(denoms.filter((denomination) => denomination.id !== id));
+  const toggleActive = (id: string) => {
+    void onUpdate(denoms.map((denomination) => denomination.id === id ? { ...denomination, active: !denomination.active } : denomination));
+  };
+  const handleDelete = (id: string) => {
+    void onUpdate(denoms.filter((denomination) => denomination.id !== id));
+  };
 
   return (
     <section aria-label="Denominations Manager" className="space-y-4">

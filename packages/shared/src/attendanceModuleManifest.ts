@@ -30,8 +30,8 @@ export const attendanceBulkSchema = z.object({
 export type AttendanceRecord = z.infer<typeof attendanceRecordSchema>;
 
 
-/** Attendance module contract — aligns with globle1 universal module architecture. */
-export const ATTENDANCE_MODULE_CONTRACT = {
+/** Attendance module manifest — aligns with globle1 universal module architecture. */
+export const ATTENDANCE_MODULE_MANIFEST = {
   moduleId: 'attendance',
   entityType: 'AttendanceRecord',
   collectionKey: 'attendance_records',
@@ -64,4 +64,4 @@ export const ATTENDANCE_MODULE_CONTRACT = {
   maxPageSize: 500,
 } as const;
 
-export type AttendanceModuleTier = (typeof ATTENDANCE_MODULE_CONTRACT.tiers)[number];
+export type AttendanceModuleTier = (typeof ATTENDANCE_MODULE_MANIFEST.tiers)[number];

@@ -1,5 +1,5 @@
 import {
-  CONTACTS_MODULE_CONTRACT,
+  CONTACTS_MODULE_MANIFEST,
   canDeleteContactsSavedReport,
   canViewContactsSavedReport,
   type ContactColumnPreference,
@@ -13,7 +13,7 @@ import {
   setUserColumnPreferencesForModule,
 } from './userColumnPreferencesService.js';
 
-const COLUMN_PREFERENCES_KEY = CONTACTS_MODULE_CONTRACT.columnPreferencesObjectKey;
+const COLUMN_PREFERENCES_KEY = CONTACTS_MODULE_MANIFEST.columnPreferencesObjectKey;
 const LEGACY_COLUMN_PREFERENCES_KEY = 'contact_user_column_prefs';
 
 export async function getUserColumnPreferences(userId: string): Promise<ContactColumnPreference[]> {
@@ -21,8 +21,8 @@ export async function getUserColumnPreferences(userId: string): Promise<ContactC
   return getUserColumnPreferencesForModule(COLUMN_PREFERENCES_KEY, userId) as Promise<ContactColumnPreference[]>;
 }
 
-const SAVED_REPORTS_KEY = CONTACTS_MODULE_CONTRACT.savedReportsObjectKey;
-const PREFERENCES_KEY = CONTACTS_MODULE_CONTRACT.preferencesObjectKey;
+const SAVED_REPORTS_KEY = CONTACTS_MODULE_MANIFEST.savedReportsObjectKey;
+const PREFERENCES_KEY = CONTACTS_MODULE_MANIFEST.preferencesObjectKey;
 const LEGACY_PREFERENCES_KEY = 'contact_prefs';
 
 export async function loadContactPreferences(): Promise<ContactPreferences | null> {

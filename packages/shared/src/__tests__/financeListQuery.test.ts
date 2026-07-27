@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Invoice, Payment } from '../financeModuleContract.js';
+import type { Invoice, Payment } from '../financeModuleManifest.js';
 import { paginateFinanceInvoices, paginateFinancePayments } from '../financeListQuery.js';
 
 const invoice: Invoice = {

@@ -62,8 +62,8 @@ export const fiscalYearRecordSchema = z.object({
 export type FiscalYear = z.infer<typeof fiscalYearRecordSchema>;
 export const fiscalYearListSchema = z.array(fiscalYearRecordSchema);
 
-/** Accounting module contract — aligns with globle1 universal module architecture. */
-export const ACCOUNTING_MODULE_CONTRACT = {
+/** Accounting module manifest — aligns with globle1 universal module architecture. */
+export const ACCOUNTING_MODULE_MANIFEST = {
   moduleId: 'accounting',
   entityType: 'JournalEntry',
   collectionKey: 'accounting_entries',
@@ -98,4 +98,4 @@ export const ACCOUNTING_MODULE_CONTRACT = {
   defaultPageSize: 15,
 } as const;
 
-export type AccountingModuleTier = (typeof ACCOUNTING_MODULE_CONTRACT.tiers)[number];
+export type AccountingModuleTier = (typeof ACCOUNTING_MODULE_MANIFEST.tiers)[number];

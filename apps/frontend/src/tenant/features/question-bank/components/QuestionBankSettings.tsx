@@ -29,7 +29,7 @@ interface QuestionBankSettingsProps {
 
 export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { settings, updateSettings } = useQuestionBankConfig();
+  const { settings, updateSettings, updateSettingsAsync } = useQuestionBankConfig();
 
   const load = useCallback((): QuestionBankSettingsData => {
     return settings;
@@ -37,15 +37,15 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
 
   const onSave = useCallback(
     async (draft: QuestionBankSettingsData) => {
-      updateSettings(draft);
+      await updateSettingsAsync(draft);
       notify.success(t('questionBank.settingsSaved'), {
         description: t('questionBank.settingsSavedDesc'),
       });
     },
-    [updateSettings, t],
+    [updateSettingsAsync, t],
   );
 
-  const { data: questionBankSettings, dirty, saving, upd } = useSettingsDraft({
+  const { data: questionBankSettings, dirty, saving, upd, handleSave } = useSettingsDraft({
     load,
     onPreview: () => {},
     onSave,
@@ -57,19 +57,33 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
 
   const editorConfig = React.useMemo(() => ({
     settings: questionBankSettings,
-    updateSettings: onSave,
-  }), [questionBankSettings, onSave]);
+    updateSettings,
+    updateSettingsAsync,
+  }), [questionBankSettings, updateSettings, updateSettingsAsync]);
 
   const {
     fieldsEditor,
-    saveSettings,
+    saveSettingsAsync,
   } = useModuleSettingsEditor({
     config: editorConfig,
     tabRegistry: QUESTION_BANK_TAB_REGISTRY,
   });
 
-  const executeSave = () => {
-    saveSettings({});
+  const executeSave = async () => {
+    try {
+      if (showFields) {
+        await saveSettingsAsync();
+        notify.success(t('questionBank.settingsSaved'), {
+          description: t('questionBank.settingsSavedDesc'),
+        });
+      } else {
+        await handleSave();
+      }
+    } catch (error: unknown) {
+      notify.error(t('questionBank.settingsSaveFailed'), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
   };
 
   const toggleQuestionType = (questionTypeId: string): void => {

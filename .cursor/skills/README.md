@@ -11,8 +11,8 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | [antigravity-workspace](antigravity-workspace/SKILL.md) | Antigravity orientation, rules/skills sync |
 | [mms-dev-setup](mms-dev-setup/SKILL.md) | Install, run servers, env, typecheck |
 | [mms-frontend](mms-frontend/SKILL.md) | Frontend pages, hooks, apiClient, Vite, FE tests |
-| [mms-module-page](mms-module-page/SKILL.md) | New module or three-tier page — `mms-module-architecture.mdc` |
-| [mms-module-work](mms-module-work/SKILL.md) | Command centre and Work tier — metrics, directory, drawer, bulk actions (`mms-module-architecture.mdc` §2–§3) |
+| [mms-module-page](mms-module-page/SKILL.md) | New module or three-tier page — `mms-module-architecture.mdc` (incl. §7 gold-standard) |
+| [mms-module-work](mms-module-work/SKILL.md) | Command centre and Work tier — metrics, directory, drawer, bulk actions, soft-delete trash (`mms-module-architecture.mdc` §2–§3, §6–§7) |
 | [mms-module-setup](mms-module-setup/SKILL.md) | Module Setup tier — Fields, Preferences, audit, field guards (`mms-module-architecture.mdc` §4, `mms-fields.mdc`) |
 | [mms-background-jobs](mms-background-jobs/SKILL.md) | Queued processing — large exports, imports, bulk ops, dedup scans, progress, artifacts (`mms-module-architecture.mdc` §5) |
 | [mms-form-architecture](mms-form-architecture/SKILL.md) | Blueprint schemas, branded IDs, IEEE 754 math bypass, tenant RLS transaction, JSONB deep merge, React 19 inputs, S3 uploads |

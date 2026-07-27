@@ -1,17 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import type { Teacher, TeachersCommandMetricsSnapshot, TeachersListPageResult, TeachersWidgetAggregateResult } from '@mms/shared';
-import { normalizeStoredTeacher, TEACHERS_MODULE_CONTRACT, teachersWidgetQueryFromWidget } from '@mms/shared';
+import { normalizeStoredTeacher, TEACHERS_MODULE_MANIFEST, teachersWidgetQueryFromWidget } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { TEACHER_COUNT_QUERY_KEY } from '@/tenant/features/teachers/hooks/useTeacherCount';
 import { uniqueRegistryIds } from '@/lib/registryResolve';
-export const TEACHERS_QUERY_KEY = [TEACHERS_MODULE_CONTRACT.collectionKey, 'list'] as const;
-export const TEACHERS_METRICS_QUERY_KEY = [TEACHERS_MODULE_CONTRACT.collectionKey, 'metrics'] as const;
-export const TEACHERS_WIDGET_AGGREGATES_QUERY_KEY = [TEACHERS_MODULE_CONTRACT.collectionKey, 'widget-aggregates'] as const;
+export const TEACHERS_QUERY_KEY = [TEACHERS_MODULE_MANIFEST.collectionKey, 'list'] as const;
+export const TEACHERS_METRICS_QUERY_KEY = [TEACHERS_MODULE_MANIFEST.collectionKey, 'metrics'] as const;
+export const TEACHERS_WIDGET_AGGREGATES_QUERY_KEY = [TEACHERS_MODULE_MANIFEST.collectionKey, 'widget-aggregates'] as const;
 
-const TEACHERS_API = TEACHERS_MODULE_CONTRACT.restBasePath;
+const TEACHERS_API = TEACHERS_MODULE_MANIFEST.restBasePath;
 
 export interface TeachersPaginatedParams {
   page: number;
@@ -28,7 +28,7 @@ export interface TeachersPaginatedParams {
 function buildTeachersPageUrl(params: TeachersPaginatedParams): string {
   const queryParams = new URLSearchParams();
   queryParams.set('page', String(params.page));
-  queryParams.set('limit', String(params.limit ?? TEACHERS_MODULE_CONTRACT.defaultPageSize));
+  queryParams.set('limit', String(params.limit ?? TEACHERS_MODULE_MANIFEST.defaultPageSize));
   if (params.search?.trim()) queryParams.set('search', params.search.trim());
   if (params.status?.trim()) queryParams.set('status', params.status.trim());
   if (params.specialization) queryParams.set('specialization', params.specialization);
@@ -195,8 +195,8 @@ export function useTeacherNextEmployeeId(params: TeacherNextEmployeeIdParams = {
 
 export function useTeachersMetrics(options?: { enabled?: boolean }) {
   return useServerMetrics<TeachersCommandMetricsSnapshot>({
-    moduleId: TEACHERS_MODULE_CONTRACT.moduleId,
-    apiPath: TEACHERS_MODULE_CONTRACT.restBasePath,
+    moduleId: TEACHERS_MODULE_MANIFEST.moduleId,
+    apiPath: TEACHERS_MODULE_MANIFEST.restBasePath,
     enabled: options?.enabled,
   });
 }

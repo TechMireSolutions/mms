@@ -18,7 +18,7 @@ import {
   updateTeacherById,
 } from '../../services/teacherService.js';
 import type { User } from '@mms/shared';
-import { TEACHERS_MODULE_CONTRACT, computeTeachersCommandMetrics } from '@mms/shared';
+import { TEACHERS_MODULE_MANIFEST, computeTeachersCommandMetrics } from '@mms/shared';
 import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
 import {
   teacherRecordSchema,
@@ -45,7 +45,7 @@ export default async function teachersRoutes(
     collection: 'teachers',
     schema: teacherRecordSchema,
     listQuerySchema: teachersListQuerySchema,
-    defaultPageSize: TEACHERS_MODULE_CONTRACT.defaultPageSize,
+    defaultPageSize: TEACHERS_MODULE_MANIFEST.defaultPageSize,
     errorMessagePrefix: 'teachers',
     nameSingular: 'teacher',
     namePlural: 'teachers',
@@ -60,7 +60,7 @@ export default async function teachersRoutes(
     loadWidgetAggregatesFn: loadTeachersWidgetAggregates as unknown as (queries: unknown[]) => Promise<unknown>,
     loadByIdsFn: loadTeachersByIds,
     loadLinkedContactIdsFn: loadTeacherLinkedContactIds,
-    columnPreferencesObjectKey: TEACHERS_MODULE_CONTRACT.columnPreferencesObjectKey,
+    columnPreferencesObjectKey: TEACHERS_MODULE_MANIFEST.columnPreferencesObjectKey,
   });
 
   fastify.post('/bulk-delete', async (request, reply) => {

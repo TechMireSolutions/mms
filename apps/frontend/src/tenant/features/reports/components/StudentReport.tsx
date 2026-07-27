@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { SubTabBar, type SubTab as UINavTab } from "@/components/ui/SubTabBar";
 import { Users, UserCheck, UserX, TrendingUp, Filter, X } from "lucide-react";
-import { STUDENTS_MODULE_CONTRACT, type Student, calcAge, formatDate, toTitleCase } from "@mms/shared";
+import { STUDENTS_MODULE_MANIFEST, type Student, calcAge, formatDate, toTitleCase } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import {
@@ -110,7 +110,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
 
   const { data: studentsPage } = useStudentsPaginated({
     page: listPage,
-    limit: STUDENTS_MODULE_CONTRACT.defaultPageSize,
+    limit: STUDENTS_MODULE_MANIFEST.defaultPageSize,
     search: filters.student || undefined,
     status: reportStatusFilter || (filters.status !== "all" ? filters.status : undefined),
   });
@@ -286,7 +286,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
               <ListPagination
                 page={listPage}
                 total={studentsPage.total}
-                limit={STUDENTS_MODULE_CONTRACT.defaultPageSize}
+                limit={STUDENTS_MODULE_MANIFEST.defaultPageSize}
                 hasMore={hasMoreStudents}
                 onPageChange={setListPage}
                 i18nNamespace="students"

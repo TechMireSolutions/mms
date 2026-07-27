@@ -8,11 +8,13 @@ import {
   type User,
 } from '@mms/shared';
 import type { Contact } from '@mms/shared';
-import { getCollection, saveCollection } from '../../db/database.js';
+import { getCollection } from '../../db/database.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import {
   findTenantUserRowById,
   listTenantUsersByWorkspace,
+  upsertTenantUserRow,
+  type TenantUserRow,
 } from '../../db/repositories/tenantUserRepository.js';
 import { hashPassword, verifyPassword } from './passwordService.js';
 import { loadContacts, updateContactById } from '../contactService.js';
@@ -55,10 +57,12 @@ async function getContacts(): Promise<ContactLike[]> {
   return raw as ContactLike[];
 }
 
-async function getRawUsers(): Promise<PersistedUser[]> {
+async function getRawUsers(options?: { includeDeleted?: boolean }): Promise<PersistedUser[]> {
   const subdomain = requireTenantSubdomain();
-  const fromTable = await listTenantUsersByWorkspace(subdomain);
-  if (fromTable.length > 0) {
+  const fromTable = await listTenantUsersByWorkspace(subdomain, {
+    includeDeleted: options?.includeDeleted === true,
+  });
+  if (fromTable.length > 0 || options?.includeDeleted === true) {
     return fromTable as PersistedUser[];
   }
 
@@ -67,9 +71,11 @@ async function getRawUsers(): Promise<PersistedUser[]> {
   return raw as PersistedUser[];
 }
 
-export async function getHydratedUsers(): Promise<PersistedUser[]> {
+export async function getHydratedUsers(options?: {
+  includeDeleted?: boolean;
+}): Promise<PersistedUser[]> {
   const contacts = await getContacts();
-  const users = await getRawUsers();
+  const users = await getRawUsers(options);
   return users.map((user) =>
     hydrateWorkspaceUserProfile(user, contacts) as PersistedUser,
   );
@@ -149,7 +155,10 @@ export async function saveUsers(next: PersistedUser[]): Promise<void> {
       };
     }),
   );
-  await saveCollection(COLLECTION, prepared);
+  // Upsert-only: never wipe soft-deleted (or other) rows missing from the payload.
+  for (const user of prepared) {
+    await upsertTenantUserRow(user as TenantUserRow);
+  }
 }
 
 export async function getWorkspaceUserRow(userId: string): Promise<PersistedUser | undefined> {
@@ -291,6 +300,7 @@ export async function validateCredentials(
 
 export async function verifyUserPassword(userId: string, password: string): Promise<boolean> {
   const row = await findTenantUserRowById(userId);
+  if (row?.deletedAt) return false;
   const passwordHash = typeof row?.passwordHash === 'string' ? row.passwordHash : '';
   if (!passwordHash) {
     const users = await getRawUsers();

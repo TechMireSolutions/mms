@@ -5,7 +5,7 @@ import { Session, Class } from '@/lib/data/sessionsData';
 import type { Teacher, AppTranslationKey } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTeachersByIds, useTeachersPaginated } from '@/tenant/features/teachers/hooks/useTeachers';
-import { TEACHERS_MODULE_CONTRACT } from '@mms/shared';
+import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
 import { collectTeacherIdsFromClasses } from '@/lib/registryResolve';
 import {
   assignClassTeacher,
@@ -137,7 +137,7 @@ function ClassModal({ open, sessionClass, onClose, onSave, saving }: ClassModalP
 
   const { data: activeTeachersPage } = useTeachersPaginated({
     page: 1,
-    limit: TEACHERS_MODULE_CONTRACT.maxPageSize,
+    limit: TEACHERS_MODULE_MANIFEST.maxPageSize,
     status: 'active',
     enabled: open,
   });

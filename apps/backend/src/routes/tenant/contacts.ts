@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import type { BackgroundJobRecord, Contact, ContactsListPageResult, User } from '@mms/shared';
 import {
-  CONTACTS_MODULE_CONTRACT,
+  CONTACTS_MODULE_MANIFEST,
   roleHasPermission,
   sanitizeContactForViewer,
   sanitizeContactsForViewer,
@@ -185,7 +185,7 @@ export async function contactRoutes(
   registerPaginatedListRoute(fastify, {
     collection: 'contacts',
     schema: contactsListQuerySchema,
-    defaultPageSize: CONTACTS_MODULE_CONTRACT.defaultPageSize,
+    defaultPageSize: CONTACTS_MODULE_MANIFEST.defaultPageSize,
     errorMessagePrefix: 'contacts',
     canWriteDeletedCheck: canDeleteContacts,
     loadPageFn: (query) => loadContactsPage(query),
@@ -306,7 +306,7 @@ export async function contactRoutes(
     const label = parsed.data.label?.trim() || 'Scanning for duplicate contacts…';
     const runningJob: BackgroundJobRecord = {
       id: jobId,
-      moduleId: CONTACTS_MODULE_CONTRACT.moduleId,
+      moduleId: CONTACTS_MODULE_MANIFEST.moduleId,
       kind: 'duplicate-scan',
       status: 'running',
       label,
@@ -319,7 +319,7 @@ export async function contactRoutes(
 
   registerColumnPreferencesRoutes(fastify, {
     collection: 'contacts',
-    objectKey: CONTACTS_MODULE_CONTRACT.columnPreferencesObjectKey,
+    objectKey: CONTACTS_MODULE_MANIFEST.columnPreferencesObjectKey,
   });
 
   fastify.get('/saved-reports', async (request, reply) => {
@@ -657,7 +657,7 @@ export async function contactRoutes(
 
     const runningJob: BackgroundJobRecord = {
       id: jobId,
-      moduleId: CONTACTS_MODULE_CONTRACT.moduleId,
+      moduleId: CONTACTS_MODULE_MANIFEST.moduleId,
       kind: 'export',
       status: 'running',
       label,
@@ -712,7 +712,7 @@ export async function contactRoutes(
 
   fastify.post('/setup-audit', async (request, reply) => {
     const user = request.user as User;
-    if (!roleHasPermission(user.role, CONTACTS_MODULE_CONTRACT.permissions.setupWrite)) return sendForbidden(reply);
+    if (!roleHasPermission(user.role, CONTACTS_MODULE_MANIFEST.permissions.setupWrite)) return sendForbidden(reply);
 
     const parsed = parseRequest(contactSetupAuditSchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);

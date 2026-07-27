@@ -12,6 +12,7 @@ import { useContactsWidgetAggregates } from "@/tenant/features/contacts/hooks/us
 import { useStudentsWidgetAggregates } from "@/tenant/features/students/hooks/useStudents";
 import { useTeachersWidgetAggregates } from "@/tenant/features/teachers/hooks/useTeachers";
 import { applyContactsWorkDrillDown } from "@/lib/contacts/contactsWorkDrillDown";
+import { isSeededDashboardWidget } from "@/lib/dashboardWidgets";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { notify } from "@/lib/notify";
 
@@ -62,7 +63,7 @@ export function DashboardWidgets({
       window.removeEventListener("local-database-update", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
     };
-  }, [widgets]);
+  }, [widgets, t]);
 
   const activeWidgets = widgets ?? localWidgets;
   useContactsWidgetAggregates(activeWidgets);
@@ -253,7 +254,7 @@ export function DashboardWidgets({
                       <Pencil className="w-3 h-3" />
                     </button>
                   )}
-                  {isEditMode && onDeleteWidget && !widget.id.startsWith("def-") && (
+                  {isEditMode && onDeleteWidget && !isSeededDashboardWidget(widget.id) && (
                     <button
                       onClick={(event) => {
                         event.stopPropagation();

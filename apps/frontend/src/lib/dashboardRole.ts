@@ -1,13 +1,26 @@
-import type { Permission } from '@mms/shared';
+import {
+  ATTENDANCE_MODULE_MANIFEST,
+  FINANCE_MODULE_MANIFEST,
+  USERS_MODULE_MANIFEST,
+  DASHBOARD_MODULE_MANIFEST,
+  type Permission,
+} from '@mms/shared';
 
 export type DashboardRole = 'admin' | 'teacher' | 'accountant';
 
 /** Resolve dashboard layout role from RBAC without inline `role ===` checks. */
 export function resolveDashboardRole(can: (permission: Permission) => boolean): DashboardRole {
-  if (can('users.manage') || can('settings.global.write')) return 'admin';
-  if (can('finance.write') && !can('attendance.write')) return 'accountant';
-  if (can('attendance.write')) return 'teacher';
-  if (can('finance.write')) return 'accountant';
+  if (
+    can(USERS_MODULE_MANIFEST.permissions.write) ||
+    can(DASHBOARD_MODULE_MANIFEST.permissions.setupWrite)
+  ) {
+    return 'admin';
+  }
+  if (can(FINANCE_MODULE_MANIFEST.permissions.write) && !can(ATTENDANCE_MODULE_MANIFEST.permissions.write)) {
+    return 'accountant';
+  }
+  if (can(ATTENDANCE_MODULE_MANIFEST.permissions.write)) return 'teacher';
+  if (can(FINANCE_MODULE_MANIFEST.permissions.write)) return 'accountant';
   // Least-privilege layout among existing role buckets (not admin).
   return 'teacher';
 }

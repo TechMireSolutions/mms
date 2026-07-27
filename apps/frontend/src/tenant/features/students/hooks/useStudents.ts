@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import {
   normalizeStoredStudent,
-  STUDENTS_MODULE_CONTRACT,
+  STUDENTS_MODULE_MANIFEST,
   type Student,
   type StudentDuplicateCheckInput,
   type StudentDuplicateReason,
@@ -20,11 +20,11 @@ import { uniqueRegistryIds } from '@/lib/registryResolve';
 
 export type { StudentRecord };
 
-export const STUDENTS_QUERY_KEY = [STUDENTS_MODULE_CONTRACT.collectionKey, 'list'] as const;
-export const STUDENTS_METRICS_QUERY_KEY = [STUDENTS_MODULE_CONTRACT.collectionKey, 'metrics'] as const;
-export const STUDENTS_WIDGET_AGGREGATES_QUERY_KEY = [STUDENTS_MODULE_CONTRACT.collectionKey, 'widget-aggregates'] as const;
+export const STUDENTS_QUERY_KEY = [STUDENTS_MODULE_MANIFEST.collectionKey, 'list'] as const;
+export const STUDENTS_METRICS_QUERY_KEY = [STUDENTS_MODULE_MANIFEST.collectionKey, 'metrics'] as const;
+export const STUDENTS_WIDGET_AGGREGATES_QUERY_KEY = [STUDENTS_MODULE_MANIFEST.collectionKey, 'widget-aggregates'] as const;
 
-const STUDENTS_API = STUDENTS_MODULE_CONTRACT.restBasePath;
+const STUDENTS_API = STUDENTS_MODULE_MANIFEST.restBasePath;
 
 export interface StudentsPaginatedParams {
   page: number;
@@ -41,7 +41,7 @@ export interface StudentsPaginatedParams {
 function buildStudentsPageUrl(params: StudentsPaginatedParams): string {
   const queryParams = new URLSearchParams();
   queryParams.set('page', String(params.page));
-  queryParams.set('limit', String(params.limit ?? STUDENTS_MODULE_CONTRACT.defaultPageSize));
+  queryParams.set('limit', String(params.limit ?? STUDENTS_MODULE_MANIFEST.defaultPageSize));
   if (params.search?.trim()) queryParams.set('search', params.search.trim());
   if (params.status?.trim()) queryParams.set('status', params.status.trim());
   if (params.gender?.trim()) queryParams.set('gender', params.gender.trim());
@@ -77,7 +77,7 @@ export async function fetchAllStudentsForQuery(
   params: Omit<StudentsPaginatedParams, 'page' | 'enabled'>,
   onProgress?: (fetched: number, total: number) => void,
 ): Promise<StudentRecord[]> {
-  const limit = STUDENTS_MODULE_CONTRACT.maxPageSize;
+  const limit = STUDENTS_MODULE_MANIFEST.maxPageSize;
   const all: StudentRecord[] = [];
   let page = 1;
   let total = 0;
@@ -245,8 +245,8 @@ export async function checkStudentRegistrationDuplicate(
 
 export function useStudentsMetrics(options?: { enabled?: boolean }) {
   return useServerMetrics<StudentsCommandMetricsSnapshot>({
-    moduleId: STUDENTS_MODULE_CONTRACT.moduleId,
-    apiPath: STUDENTS_MODULE_CONTRACT.restBasePath,
+    moduleId: STUDENTS_MODULE_MANIFEST.moduleId,
+    apiPath: STUDENTS_MODULE_MANIFEST.restBasePath,
     enabled: options?.enabled,
   });
 }

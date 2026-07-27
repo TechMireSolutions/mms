@@ -31,19 +31,27 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 });
 
 const mockLoadQuestions = vi.fn();
-const mockReplaceQuestions = vi.fn();
+const mockUpsertQuestions = vi.fn();
 const mockLoadTests = vi.fn();
-const mockReplaceTests = vi.fn();
+const mockUpsertTests = vi.fn();
 const mockLoadResults = vi.fn();
-const mockReplaceResults = vi.fn();
+const mockUpsertResults = vi.fn();
+const mockDeleteQuestionById = vi.fn();
+const mockRestoreQuestionById = vi.fn();
+const mockBulkSoftDeleteQuestions = vi.fn();
+const mockBulkRestoreQuestions = vi.fn();
 
 vi.mock('../services/questionBankService.js', () => ({
   loadQuestions: (...args: unknown[]) => mockLoadQuestions(...args),
-  replaceQuestions: (...args: unknown[]) => mockReplaceQuestions(...args),
+  upsertQuestions: (...args: unknown[]) => mockUpsertQuestions(...args),
   loadTests: (...args: unknown[]) => mockLoadTests(...args),
-  replaceTests: (...args: unknown[]) => mockReplaceTests(...args),
+  upsertTests: (...args: unknown[]) => mockUpsertTests(...args),
   loadResults: (...args: unknown[]) => mockLoadResults(...args),
-  replaceResults: (...args: unknown[]) => mockReplaceResults(...args),
+  upsertResults: (...args: unknown[]) => mockUpsertResults(...args),
+  deleteQuestionById: (...args: unknown[]) => mockDeleteQuestionById(...args),
+  restoreQuestionById: (...args: unknown[]) => mockRestoreQuestionById(...args),
+  bulkSoftDeleteQuestions: (...args: unknown[]) => mockBulkSoftDeleteQuestions(...args),
+  bulkRestoreQuestions: (...args: unknown[]) => mockBulkRestoreQuestions(...args),
 }));
 
 const mockGetUserColumnPreferencesForModule = vi.fn();
@@ -146,11 +154,15 @@ describe('question bank REST routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
     mockLoadQuestions.mockReset().mockResolvedValue([sampleQuestion]);
-    mockReplaceQuestions.mockReset().mockResolvedValue([sampleQuestion]);
+    mockUpsertQuestions.mockReset().mockResolvedValue([sampleQuestion]);
     mockLoadTests.mockReset().mockResolvedValue([sampleTest]);
-    mockReplaceTests.mockReset().mockResolvedValue([sampleTest]);
+    mockUpsertTests.mockReset().mockResolvedValue([sampleTest]);
     mockLoadResults.mockReset().mockResolvedValue([sampleResult]);
-    mockReplaceResults.mockReset().mockResolvedValue([sampleResult]);
+    mockUpsertResults.mockReset().mockResolvedValue([sampleResult]);
+    mockDeleteQuestionById.mockReset().mockResolvedValue(true);
+    mockRestoreQuestionById.mockReset().mockResolvedValue(true);
+    mockBulkSoftDeleteQuestions.mockReset().mockResolvedValue({ succeeded: 1, failed: 0 });
+    mockBulkRestoreQuestions.mockReset().mockResolvedValue({ succeeded: 1, failed: 0 });
     mockGetUserColumnPreferencesForModule.mockReset().mockResolvedValue([]);
     mockSetUserColumnPreferencesForModule.mockReset().mockResolvedValue(undefined);
     mockLoadQuestionBankCommandMetrics.mockReset().mockResolvedValue({ totalQuestions: 1, totalTests: 1 });
@@ -197,11 +209,11 @@ describe('question bank REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ questions: [sampleQuestion] });
-    expect(mockLoadQuestions).toHaveBeenCalled();
+    expect(mockLoadQuestions).toHaveBeenCalledWith({ includeDeleted: false });
     await app.close();
   });
 
-  it('PUT /api/question-bank/questions/bulk updates questions', async () => {
+  it('PUT /api/question-bank/questions/bulk upserts questions', async () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'PUT',
@@ -215,7 +227,52 @@ describe('question bank REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ questions: [sampleQuestion] });
-    expect(mockReplaceQuestions).toHaveBeenCalledWith([sampleQuestion]);
+    expect(mockUpsertQuestions).toHaveBeenCalledWith([sampleQuestion]);
+    await app.close();
+  });
+
+  it('DELETE /api/question-bank/questions/:id soft-deletes a question', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/question-bank/questions/q-1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockDeleteQuestionById).toHaveBeenCalledWith('q-1', 'u-teacher');
+    await app.close();
+  });
+
+  it('POST /api/question-bank/questions/:id/restore restores a question', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/question-bank/questions/q-1/restore',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockRestoreQuestionById).toHaveBeenCalledWith('q-1');
+    await app.close();
+  });
+
+  it('GET /api/question-bank/questions?includeDeleted=true loads trash', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/question-bank/questions?includeDeleted=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadQuestions).toHaveBeenCalledWith({ includeDeleted: true });
     await app.close();
   });
 
@@ -249,12 +306,12 @@ describe('question bank REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ tests: [sampleTest] });
-    expect(mockReplaceTests).toHaveBeenCalledWith([sampleTest]);
+    expect(mockUpsertTests).toHaveBeenCalledWith([sampleTest]);
     await app.close();
   });
 
   it('PUT /api/question-bank/tests/bulk preserves manual paper builder metadata', async () => {
-    mockReplaceTests.mockResolvedValueOnce([samplePaperTest]);
+    mockUpsertTests.mockResolvedValueOnce([samplePaperTest]);
     const app = await buildApp();
     const res = await app.inject({
       method: 'PUT',
@@ -268,7 +325,7 @@ describe('question bank REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ tests: [samplePaperTest] });
-    expect(mockReplaceTests).toHaveBeenCalledWith([samplePaperTest]);
+    expect(mockUpsertTests).toHaveBeenCalledWith([samplePaperTest]);
     await app.close();
   });
 
@@ -302,7 +359,7 @@ describe('question bank REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ results: [sampleResult] });
-    expect(mockReplaceResults).toHaveBeenCalledWith([sampleResult]);
+    expect(mockUpsertResults).toHaveBeenCalledWith([sampleResult]);
     await app.close();
   });
 

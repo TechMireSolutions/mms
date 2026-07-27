@@ -80,6 +80,8 @@ vi.mock('../services/financeService.js', () => ({
 
 const mockDeleteObligationCollectionById = vi.fn();
 const mockRestoreObligationCollectionById = vi.fn();
+const mockDeleteHasanatDistributionById = vi.fn();
+const mockRestoreHasanatDistributionById = vi.fn();
 
 vi.mock('../services/obligationService.js', () => ({
   loadObligationTypes: vi.fn().mockResolvedValue([]),
@@ -98,6 +100,49 @@ vi.mock('../services/obligationService.js', () => ({
   restoreObligationCollectionById: (...args: unknown[]) => mockRestoreObligationCollectionById(...args),
   bulkSoftDeleteObligationCollections: vi.fn(),
   bulkRestoreObligationCollections: vi.fn(),
+}));
+
+vi.mock('../services/hasanatService.js', () => ({
+  loadDenoms: vi.fn().mockResolvedValue([]),
+  upsertDenoms: vi.fn(),
+  loadBatches: vi.fn().mockResolvedValue([]),
+  upsertBatches: vi.fn(),
+  loadDistributions: vi.fn().mockResolvedValue([]),
+  upsertDistributions: vi.fn(),
+  loadRedemptions: vi.fn().mockResolvedValue([]),
+  upsertRedemptions: vi.fn(),
+  deleteDistributionById: (...args: unknown[]) => mockDeleteHasanatDistributionById(...args),
+  restoreDistributionById: (...args: unknown[]) => mockRestoreHasanatDistributionById(...args),
+  bulkSoftDeleteDistributions: vi.fn(),
+  bulkRestoreDistributions: vi.fn(),
+}));
+
+const mockDeleteExamById = vi.fn();
+const mockRestoreExamById = vi.fn();
+
+vi.mock('../services/examinationService.js', () => ({
+  loadExams: vi.fn().mockResolvedValue([]),
+  upsertExams: vi.fn(),
+  loadExamResults: vi.fn().mockResolvedValue([]),
+  upsertExamResults: vi.fn(),
+  deleteExamById: (...args: unknown[]) => mockDeleteExamById(...args),
+  restoreExamById: (...args: unknown[]) => mockRestoreExamById(...args),
+  bulkSoftDeleteExams: vi.fn(),
+  bulkRestoreExams: vi.fn(),
+}));
+
+const mockDeleteUserById = vi.fn();
+const mockRestoreUserById = vi.fn();
+
+vi.mock('../services/usersService.js', () => ({
+  loadWorkspaceUsers: vi.fn().mockResolvedValue([]),
+  upsertWorkspaceUsers: vi.fn(),
+  loadLogs: vi.fn().mockResolvedValue([]),
+  replaceLogs: vi.fn(),
+  deleteUserById: (...args: unknown[]) => mockDeleteUserById(...args),
+  restoreUserById: (...args: unknown[]) => mockRestoreUserById(...args),
+  bulkSoftDeleteUsers: vi.fn(),
+  bulkRestoreUsers: vi.fn(),
 }));
 
 function adminToken(app: Awaited<ReturnType<typeof buildApp>>): string {
@@ -283,6 +328,102 @@ describe('soft deletion and restore integrations', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(mockRestoreObligationCollectionById).toHaveBeenCalledWith('oc1');
+    await app.close();
+  });
+
+  it('DELETE /api/hasanat/distributions/:id soft-deletes distribution', async () => {
+    mockDeleteHasanatDistributionById.mockResolvedValue(true);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/hasanat/distributions/dist1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockDeleteHasanatDistributionById).toHaveBeenCalledWith('dist1', 'u-admin');
+    await app.close();
+  });
+
+  it('POST /api/hasanat/distributions/:id/restore restores distribution', async () => {
+    mockRestoreHasanatDistributionById.mockResolvedValue(true);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/hasanat/distributions/dist1/restore',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockRestoreHasanatDistributionById).toHaveBeenCalledWith('dist1');
+    await app.close();
+  });
+
+  it('DELETE /api/examinations/exams/:id soft-deletes exam', async () => {
+    mockDeleteExamById.mockResolvedValue(true);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/examinations/exams/ex1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockDeleteExamById).toHaveBeenCalledWith('ex1', 'u-admin');
+    await app.close();
+  });
+
+  it('POST /api/examinations/exams/:id/restore restores exam', async () => {
+    mockRestoreExamById.mockResolvedValue(true);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/examinations/exams/ex1/restore',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockRestoreExamById).toHaveBeenCalledWith('ex1');
+    await app.close();
+  });
+
+  it('DELETE /api/users/:id soft-deletes user', async () => {
+    mockDeleteUserById.mockResolvedValue(true);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/users/u-1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockDeleteUserById).toHaveBeenCalledWith('u-1', 'u-admin');
+    await app.close();
+  });
+
+  it('POST /api/users/:id/restore restores user', async () => {
+    mockRestoreUserById.mockResolvedValue(true);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/users/u-1/restore',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockRestoreUserById).toHaveBeenCalledWith('u-1');
     await app.close();
   });
 });

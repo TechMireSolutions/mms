@@ -102,10 +102,10 @@ export const contactListSchema = z.array(contactRecordSchema);
 
 
 /**
- * Contacts module contract — single source of truth per globle1.md §1.1.
+ * Contacts module manifest — single source of truth per globle1.md §1.1.
  * UI, API, exports, and Setup must align with these constants.
  */
-export const CONTACTS_MODULE_CONTRACT = {
+export const CONTACTS_MODULE_MANIFEST = {
   moduleId: 'contacts',
   entityType: 'Contact',
   collectionKey: 'contacts',
@@ -157,4 +157,4 @@ export const CONTACTS_MODULE_CONTRACT = {
   mergedNotePrefix: '--- Merged from Duplicate ---',
 } as const;
 
-export type ContactsModuleTier = (typeof CONTACTS_MODULE_CONTRACT.tiers)[number];
+export type ContactsModuleTier = (typeof CONTACTS_MODULE_MANIFEST.tiers)[number];

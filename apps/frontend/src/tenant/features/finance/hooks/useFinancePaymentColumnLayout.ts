@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  FINANCE_MODULE_CONTRACT,
+  FINANCE_MODULE_MANIFEST,
   buildFinancePaymentWorkColumnRegistry,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -11,7 +11,7 @@ const STORAGE_SUFFIX = 'payments';
 export function useFinancePaymentColumnLayout() {
   const { t } = useTranslation();
 
-  const storageModuleId = `${FINANCE_MODULE_CONTRACT.moduleId}_${STORAGE_SUFFIX}`;
+  const storageModuleId = `${FINANCE_MODULE_MANIFEST.moduleId}_${STORAGE_SUFFIX}`;
 
   const tenantRegistry = useMemo(
     () =>
@@ -30,7 +30,7 @@ export function useFinancePaymentColumnLayout() {
   return useModuleColumnLayout({
     moduleId: storageModuleId,
     tenantRegistry,
-    apiPath: `${FINANCE_MODULE_CONTRACT.restBasePath}/payments`,
+    apiPath: `${FINANCE_MODULE_MANIFEST.restBasePath}/payments`,
     translationPrefix: 'finance.columns',
   });
 }

@@ -5,7 +5,7 @@ import { DASHBOARD_PREFERENCES_KEY, DASHBOARD_WIDGETS_KEY } from './settingsType
  * Dashboard home shell contract — not a three-tier CRUD module.
  * Owns layout prefs / pinned widgets and customize permission only.
  */
-export const DASHBOARD_MODULE_CONTRACT = {
+export const DASHBOARD_MODULE_MANIFEST = {
   moduleId: 'dashboard',
   entityType: 'Dashboard',
   preferencesObjectKey: DASHBOARD_PREFERENCES_KEY,
@@ -21,4 +21,4 @@ export const DASHBOARD_MODULE_CONTRACT = {
   } satisfies Record<string, Permission>,
 } as const;
 
-export type DashboardModulePermission = keyof typeof DASHBOARD_MODULE_CONTRACT.permissions;
+export type DashboardModulePermission = keyof typeof DASHBOARD_MODULE_MANIFEST.permissions;

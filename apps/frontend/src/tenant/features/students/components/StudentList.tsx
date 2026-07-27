@@ -77,7 +77,7 @@ export default function StudentList({
 }: StudentListProps): JSX.Element {
   const { t } = useTranslation();
   const sessions = useSessionsCollection();
-  const { settings, statuses, isFieldEnabled } = useStudentConfig();
+  const { statuses, isFieldEnabled } = useStudentConfig();
   const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
   const studentStatusOptions = useMemo(() => resolveStudentStatuses(statuses), [statuses]);
 
@@ -108,7 +108,7 @@ export default function StudentList({
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize] = useState(10);
 
   // Preview State
   const [viewStudent, setViewStudent] = useState<Student | null>(null);
@@ -178,7 +178,6 @@ export default function StudentList({
   }, [students, sortField, sortDir]);
 
   // Paginated data
-  const totalPages = Math.max(Math.ceil(sortedStudents.length / pageSize), 1);
   const paginatedStudents = useMemo(() => {
     if (serverPagination) return sortedStudents;
     const start = (currentPage - 1) * pageSize;

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Denomination, StockBatch, Distribution, Redemption, HasanatCommandMetricsSnapshot } from '@mms/shared';
-import { HASANAT_MODULE_CONTRACT } from '@mms/shared';
+import { HASANAT_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
@@ -12,7 +12,9 @@ export const HASANAT_DISTRIBUTIONS_QUERY_KEY = ['hasanat', 'distributions', 'lis
 export const HASANAT_REDEMPTIONS_QUERY_KEY = ['hasanat', 'redemptions', 'list'] as const;
 export const HASANAT_METRICS_QUERY_KEY = ['hasanat', 'metrics', 'snapshot'] as const;
 
-const HASANAT_API = HASANAT_MODULE_CONTRACT.restBasePath;
+const HASANAT_API = HASANAT_MODULE_MANIFEST.restBasePath;
+
+export class NotifiedHasanatMutationError extends Error {}
 
 export function useHasanatDenoms(options?: { enabled?: boolean }) {
   return useCollectionSync<Denomination>({
@@ -42,17 +44,21 @@ export function useHasanatBatchesCollection(options?: { enabled?: boolean }): St
   return useHasanatBatches(options).syncedData;
 }
 
-export function useHasanatDistributions(options?: { enabled?: boolean }) {
+export function useHasanatDistributions(options?: { enabled?: boolean; includeDeleted?: boolean }) {
+  const includeDeleted = options?.includeDeleted ?? false;
   return useCollectionSync<Distribution>({
-    queryKey: HASANAT_DISTRIBUTIONS_QUERY_KEY,
-    apiPath: `${HASANAT_API}/distributions`,
+    queryKey: [...HASANAT_DISTRIBUTIONS_QUERY_KEY, { includeDeleted }],
+    apiPath: `${HASANAT_API}/distributions?includeDeleted=${includeDeleted}`,
     responseKey: 'distributions',
     collectionName: 'hasanat_distributions',
     enabled: options?.enabled,
   });
 }
 
-export function useHasanatDistributionsCollection(options?: { enabled?: boolean }): Distribution[] {
+export function useHasanatDistributionsCollection(options?: {
+  enabled?: boolean;
+  includeDeleted?: boolean;
+}): Distribution[] {
   return useHasanatDistributions(options).syncedData;
 }
 
@@ -72,14 +78,19 @@ export function useHasanatRedemptionsCollection(options?: { enabled?: boolean })
 
 export function useHasanatMetrics(options?: { enabled?: boolean }) {
   return useServerMetrics<HasanatCommandMetricsSnapshot>({
-    moduleId: HASANAT_MODULE_CONTRACT.moduleId,
-    apiPath: HASANAT_MODULE_CONTRACT.restBasePath,
+    moduleId: HASANAT_MODULE_MANIFEST.moduleId,
+    apiPath: HASANAT_MODULE_MANIFEST.restBasePath,
     enabled: options?.enabled,
   });
 }
 
 export function useHasanatMutations() {
   const queryClient = useQueryClient();
+
+  const invalidateDistributions = () => {
+    void queryClient.invalidateQueries({ queryKey: HASANAT_DISTRIBUTIONS_QUERY_KEY });
+    void queryClient.invalidateQueries({ queryKey: HASANAT_METRICS_QUERY_KEY });
+  };
 
   const replaceDenoms = useMutation({
     mutationFn: async (denoms: Denomination[]) =>
@@ -115,8 +126,7 @@ export function useHasanatMutations() {
       }),
     onSuccess: (response) => {
       saveCollection('hasanat_distributions', response.distributions);
-      void queryClient.invalidateQueries({ queryKey: HASANAT_DISTRIBUTIONS_QUERY_KEY });
-      void queryClient.invalidateQueries({ queryKey: HASANAT_METRICS_QUERY_KEY });
+      invalidateDistributions();
     },
   });
 
@@ -133,10 +143,49 @@ export function useHasanatMutations() {
     },
   });
 
+  const deleteDistribution = useMutation({
+    mutationFn: async (id: string) =>
+      apiJson<{ success: boolean }>(`${HASANAT_API}/distributions/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      }),
+    onSuccess: () => invalidateDistributions(),
+  });
+
+  const restoreDistribution = useMutation({
+    mutationFn: async (id: string) =>
+      apiJson<{ success: boolean }>(
+        `${HASANAT_API}/distributions/${encodeURIComponent(id)}/restore`,
+        { method: 'POST' },
+      ),
+    onSuccess: () => invalidateDistributions(),
+  });
+
+  const bulkDeleteDistributions = useMutation({
+    mutationFn: async (ids: string[]) =>
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(
+        `${HASANAT_API}/distributions/bulk-delete`,
+        { method: 'POST', body: JSON.stringify({ ids }) },
+      ),
+    onSuccess: () => invalidateDistributions(),
+  });
+
+  const bulkRestoreDistributions = useMutation({
+    mutationFn: async (ids: string[]) =>
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(
+        `${HASANAT_API}/distributions/bulk-restore`,
+        { method: 'POST', body: JSON.stringify({ ids }) },
+      ),
+    onSuccess: () => invalidateDistributions(),
+  });
+
   return {
     replaceDenoms,
     replaceBatches,
     replaceDistributions,
     replaceRedemptions,
+    deleteDistribution,
+    restoreDistribution,
+    bulkDeleteDistributions,
+    bulkRestoreDistributions,
   };
 }

@@ -42,6 +42,7 @@ export interface DashboardCollectionData {
   assessmentResults: QuestionBankResult[];
   dataVolume: number;
   studentMetricsInactive: number;
+  studentMetricsActive: number;
   studentMetricsNew: number;
   teacherMetricsNew: number;
   contactMetricsNew: number;
@@ -72,7 +73,7 @@ export function useDashboardData(
   const requiresCollection = (collection: ReportCollection): boolean =>
     requiredDashboardCollections.has(collection);
   const shouldLoadContacts = requiresCollection('contacts');
-  const shouldLoadStudents = requiresCollection('students');
+  const shouldLoadStudents = requiresCollection('students') || dashboardRole === 'admin';
   const shouldLoadTeachers = requiresCollection('teachers');
 
   const contactWidgets = useMemo(
@@ -139,6 +140,7 @@ export function useDashboardData(
     students: [] as Student[],
     studentsTotal,
     studentMetricsInactive,
+    studentMetricsActive: studentMetrics?.active ?? 0,
     teachers: [] as Teacher[],
     teachersTotal,
     sessions,

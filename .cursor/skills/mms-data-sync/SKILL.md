@@ -51,7 +51,7 @@ import {
 | Paginated Work + resolve | `useStudentsPaginated`, `useContactsPaginated`, `useXxxByIds` — no full-list fetch |
 | Metrics / aggregates | KPI, dashboard, reports — `useStudentsMetrics`, `useContactsReportAnalytics`, widget-aggregates |
 
-**Writes on REST modules:** use `useXxxMutations()` only — mutations invalidate Query; do not also `saveCollection` in the page for the same entity. UI saved/success state must wait for `mutateAsync` or an explicit mutation success callback; fire-and-forget `mutate()` must not immediately show "saved".
+**Writes on REST modules:** use `useXxxMutations()` only — mutations invalidate Query; do not also `saveCollection` in the page for the same entity. UI saved/success state must wait for `mutateAsync` or an explicit mutation success callback; fire-and-forget `mutate()` must not immediately show "saved". Backend bulk PUT must upsert (never wipe missing rows via `replaceForWorkspace` on normal save paths — `mms-api-interface.mdc`).
 
 ## Backend document store
 

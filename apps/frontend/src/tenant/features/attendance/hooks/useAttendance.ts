@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AttendanceCommandMetricsSnapshot, AttendanceListPageResult } from '@mms/shared';
-import { ATTENDANCE_MODULE_CONTRACT } from '@mms/shared';
+import { ATTENDANCE_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
@@ -11,7 +11,7 @@ import { ATTENDANCE_RECORDS } from '@/lib/data/attendanceData';
 export const ATTENDANCE_QUERY_KEY = ['attendance', 'list'] as const;
 export const ATTENDANCE_METRICS_QUERY_KEY = ['attendance', 'metrics'] as const;
 
-const ATTENDANCE_API = ATTENDANCE_MODULE_CONTRACT.restBasePath;
+const ATTENDANCE_API = ATTENDANCE_MODULE_MANIFEST.restBasePath;
 
 export interface AttendancePaginatedParams {
   page: number;
@@ -29,7 +29,7 @@ export interface AttendancePaginatedParams {
 function buildAttendancePageUrl(params: AttendancePaginatedParams): string {
   const queryParams = new URLSearchParams();
   queryParams.set('page', String(params.page));
-  queryParams.set('limit', String(params.limit ?? ATTENDANCE_MODULE_CONTRACT.defaultPageSize));
+  queryParams.set('limit', String(params.limit ?? ATTENDANCE_MODULE_MANIFEST.defaultPageSize));
   if (params.search?.trim()) queryParams.set('search', params.search.trim());
   if (params.classId?.trim()) queryParams.set('classId', params.classId.trim());
   if (params.date?.trim()) queryParams.set('date', params.date.trim());
@@ -54,7 +54,7 @@ export function useAttendancePaginated(params: AttendancePaginatedParams) {
 export function useAttendanceRecords(options?: { enabled?: boolean }) {
   return useCollectionSync<AttendanceRecord>({
     queryKey: ATTENDANCE_QUERY_KEY,
-    apiPath: `${ATTENDANCE_API}?page=1&limit=${ATTENDANCE_MODULE_CONTRACT.maxPageSize}`,
+    apiPath: `${ATTENDANCE_API}?page=1&limit=${ATTENDANCE_MODULE_MANIFEST.maxPageSize}`,
     responseKey: 'records',
     collectionName: 'attendance_records',
     defaultData: ATTENDANCE_RECORDS,
@@ -149,8 +149,8 @@ export function useAttendanceRecordsCollection(options?: { enabled?: boolean }):
 
 export function useAttendanceMetrics(selectedDate: string, options?: { enabled?: boolean }) {
   return useServerMetrics<AttendanceCommandMetricsSnapshot>({
-    moduleId: ATTENDANCE_MODULE_CONTRACT.moduleId,
-    apiPath: ATTENDANCE_MODULE_CONTRACT.restBasePath,
+    moduleId: ATTENDANCE_MODULE_MANIFEST.moduleId,
+    apiPath: ATTENDANCE_MODULE_MANIFEST.restBasePath,
     extraParam: selectedDate,
     enabled: options?.enabled,
   });

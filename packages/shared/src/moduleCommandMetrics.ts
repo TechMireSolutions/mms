@@ -1,3 +1,5 @@
+import { isOpenInvoiceStatus } from './financeModuleManifest.js';
+
 /** Default rolling window for "new records" command-centre metrics (globle1 §2.1). */
 export const MODULE_METRICS_DEFAULT_PERIOD_DAYS = 30;
 
@@ -94,10 +96,9 @@ export function computeFinanceCommandMetrics(
   invoices: InvoiceRecord[],
   payments: PaymentRecord[],
 ): FinanceCommandMetricsSnapshot {
-  const outstandingStatuses = new Set(['pending', 'overdue', 'partial']);
   return {
     totalInvoices: invoices.length,
-    outstanding: invoices.filter((inv) => outstandingStatuses.has(inv.status ?? '')).length,
+    outstanding: invoices.filter((inv) => isOpenInvoiceStatus(inv.status)).length,
     overdue: countRecordsWithStatus(invoices, 'overdue'),
     paid: countRecordsWithStatus(invoices, 'paid'),
     partial: countRecordsWithStatus(invoices, 'partial'),

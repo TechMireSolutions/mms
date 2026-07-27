@@ -59,9 +59,9 @@ Engineering layout & naming (file-scoped): `mms-structure.md`, `mms-naming.md`.
 | `antigravity-workspace` | Where rules/skills live; sync policy |
 | `mms-dev-setup` | Install, run, env verify |
 | `mms-frontend` | React app shell, apiClient, Query vs localStorage, FE tests |
-| `mms-module-page` | Three-tier module pages per `globle.md` |
-| `mms-module-work` | Command centre and Work tab — metrics, directory, drawer, bulk actions |
-| `mms-module-setup` | Module Setup tier — Fields, Preferences, audit (`globle.md` §5–§7) |
+| `mms-module-page` | Three-tier module pages + gold-standard parity (`mms-module-architecture.md` §7) |
+| `mms-module-work` | Command centre and Work tab — metrics, directory, drawer, bulk actions, soft-delete trash |
+| `mms-module-setup` | Module Setup tier — Fields, Preferences, audit, `setupSubTabs` / `canEditSetup` |
 | `mms-background-jobs` | Queued processing — exports, imports, dedup scans, progress, artifacts |
 | `mms-form-architecture` | Blueprint schemas, branded IDs, IEEE 754 math bypass, tenant RLS transaction, JSONB deep merge, React 19 inputs, S3 uploads |
 | `mms-fields-registry` | Fields & tabs |

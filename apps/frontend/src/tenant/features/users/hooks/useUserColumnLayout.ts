@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  USERS_MODULE_CONTRACT,
+  USERS_MODULE_MANIFEST,
   buildUsersWorkColumnRegistry,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -23,9 +23,9 @@ export function useUserColumnLayout() {
   );
 
   return useModuleColumnLayout({
-    moduleId: USERS_MODULE_CONTRACT.moduleId,
+    moduleId: USERS_MODULE_MANIFEST.moduleId,
     tenantRegistry,
-    apiPath: USERS_MODULE_CONTRACT.restBasePath,
+    apiPath: USERS_MODULE_MANIFEST.restBasePath,
     translationPrefix: 'users.columns',
   });
 }

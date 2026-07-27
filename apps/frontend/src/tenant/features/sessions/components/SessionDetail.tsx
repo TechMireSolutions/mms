@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { formatMoney, SESSIONS_MODULE_CONTRACT, formatDate, toTitleCase, type AppTranslationKey } from "@mms/shared";
+import { formatMoney, SESSIONS_MODULE_MANIFEST, formatDate, toTitleCase, type AppTranslationKey } from "@mms/shared";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -53,7 +53,7 @@ interface SessionDetailProps {
 
 export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDetailProps) {
   const { t } = useTranslation();
-  const { canWrite } = useModulePermissions(SESSIONS_MODULE_CONTRACT);
+  const { canWrite } = useModulePermissions(SESSIONS_MODULE_MANIFEST);
   const { statuses: statusOptions } = useSessionConfig();
   const [tab, setTab] = useState<string>("classes");
   const TabContent = TAB_COMPONENTS[tab];

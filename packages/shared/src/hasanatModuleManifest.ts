@@ -34,7 +34,7 @@ export const distributionRecordSchema = z.object({
   batchId: z.string(),
   denominationId: z.string(),
   denominationName: z.string(),
-  recipientType: z.enum(["student", "faculty"]),
+  recipientType: z.enum(['student', 'faculty']),
   recipientStudentId: z.string().optional(),
   recipientTeacherId: z.string().optional(),
   recipientName: z.string().optional(),
@@ -44,7 +44,10 @@ export const distributionRecordSchema = z.object({
   issuedDate: z.string(),
   issuedByUserId: z.string().optional(),
   issuedBy: z.string().optional(),
-  status: z.enum(["active", "redeemed", "returned"]),
+  status: z.enum(['active', 'redeemed', 'returned']),
+  deletedAt: z.string().optional(),
+  deletedBy: z.string().optional(),
+  deletionReason: z.string().optional(),
 });
 
 export type Distribution = z.infer<typeof distributionRecordSchema>;
@@ -64,8 +67,8 @@ export const redemptionRecordSchema = z.object({
 export type Redemption = z.infer<typeof redemptionRecordSchema>;
 export const redemptionListSchema = z.array(redemptionRecordSchema);
 
-/** Hasanat Cards module contract — aligns with globle1 universal module architecture. */
-export const HASANAT_MODULE_CONTRACT = {
+/** Hasanat Cards module manifest — aligns with globle1 universal module architecture. */
+export const HASANAT_MODULE_MANIFEST = {
   moduleId: 'hasanat',
   entityType: 'Distribution',
   collectionKey: 'hasanat_distributions',
@@ -78,6 +81,13 @@ export const HASANAT_MODULE_CONTRACT = {
   restBasePath: '/api/hasanat',
   analyticsCategory: 'hasanat',
   tiers: ['work', 'reports', 'setup'] as const,
+  setupSubTabs: ['denominations', 'fields', 'preferences'] as const,
+  softDelete: {
+    workExcludesDeleted: true,
+    reportsIncludeDeleted: false,
+    exportsIncludeDeleted: false,
+    captureDeletionReason: false,
+  },
   permissions: {
     read: 'hasanat.read',
     write: 'hasanat.write',
@@ -89,10 +99,9 @@ export const HASANAT_MODULE_CONTRACT = {
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['overview', 'stock', 'distribute', 'redemptions'] as const,
-    bulkActions: [] as const,
+    bulkActions: ['delete'] as const,
   },
   defaultPageSize: 15,
 } as const;
 
-export type HasanatModuleTier = (typeof HASANAT_MODULE_CONTRACT.tiers)[number];
-
+export type HasanatModuleTier = (typeof HASANAT_MODULE_MANIFEST.tiers)[number];

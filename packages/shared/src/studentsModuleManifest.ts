@@ -34,8 +34,8 @@ export const studentListSchema = z.array(studentCoreSchema).transform((list) =>
 export type StudentRecord = z.infer<typeof studentCoreSchema>;
 
 
-/** Students module contract — aligns with globle1 universal module architecture. */
-export const STUDENTS_MODULE_CONTRACT = {
+/** Students module manifest — aligns with globle1 universal module architecture. */
+export const STUDENTS_MODULE_MANIFEST = {
   moduleId: 'students',
   entityType: 'Student',
   collectionKey: 'students',
@@ -69,4 +69,4 @@ export const STUDENTS_MODULE_CONTRACT = {
   maxPageSize: 500,
 } as const;
 
-export type StudentsModuleTier = (typeof STUDENTS_MODULE_CONTRACT.tiers)[number];
+export type StudentsModuleTier = (typeof STUDENTS_MODULE_MANIFEST.tiers)[number];

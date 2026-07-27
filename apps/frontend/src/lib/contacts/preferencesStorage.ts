@@ -1,5 +1,5 @@
 import {
-  CONTACTS_MODULE_CONTRACT,
+  CONTACTS_MODULE_MANIFEST,
   DEFAULT_CONTACT_PREFERENCES,
   type ContactPreferences,
   type FieldConfig,
@@ -21,7 +21,7 @@ function syncOptionsInConfig(config: FieldConfig, tabId: string, fieldKey: strin
 
 const PREFERENCES_KEY = "mms_contact_preferences";
 const CONFIG_KEY = "mms_contact_field_config";
-const PREFERENCES_OBJECT_KEY = CONTACTS_MODULE_CONTRACT.preferencesObjectKey;
+const PREFERENCES_OBJECT_KEY = CONTACTS_MODULE_MANIFEST.preferencesObjectKey;
 const LEGACY_PREFERENCES_OBJECT_KEY = "contact_prefs";
 
 function parseLocalPreferences(): Partial<ContactPreferences> {

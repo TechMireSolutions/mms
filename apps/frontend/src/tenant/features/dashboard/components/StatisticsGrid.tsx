@@ -5,7 +5,11 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
-import { COLOR_MAP, ICONS_LIST as ICONS } from "@/tenant/features/reports/components/pinnedWidgets/types";
+import { ICONS_LIST as ICONS } from "@/tenant/features/reports/components/pinnedWidgets/types";
+import {
+  getWidgetColorTheme,
+  widgetColorToAccent,
+} from "@/lib/dashboardWidgetColors";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 
 const MotionWidgetCard = motion.create(WidgetCard);
@@ -18,49 +22,6 @@ export interface StatItem {
   value: string | number;
   title: string;
   sub: string;
-  sparklineData?: number[];
-}
-
-function Sparkline({ data, color }: { data: number[]; color: string }) {
-  const points = data;
-
-  const min = Math.min(...points);
-  const max = Math.max(...points);
-  const range = max - min === 0 ? 1 : max - min;
-
-  const width = 60;
-  const height = 24;
-
-  const svgPoints = points.map((p, idx) => {
-    const x = (idx / (points.length - 1)) * width;
-    const y = height - ((p - min) / range) * (height - 4) - 2;
-    return { x, y };
-  });
-
-  const pathD = svgPoints.map((pt, idx) => `${idx === 0 ? 'M' : 'L'} ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`).join(' ');
-
-  const strokeColor = {
-    emerald: "stroke-success",
-    blue: "stroke-info",
-    violet: "stroke-primary",
-    amber: "stroke-warning",
-    red: "stroke-destructive",
-  }[color] || "stroke-success";
-
-  return (
-    <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} fill="none" className="overflow-visible">
-      <motion.path
-        d={pathD}
-        className={strokeColor}
-        strokeWidth={1.75}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 0.55, ease: "easeOut" }}
-      />
-    </svg>
-  );
 }
 
 interface StatsGridProps {
@@ -86,17 +47,10 @@ export default function StatsGrid({
     <section aria-label={t("dashboard.statsSectionLabel")} className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 font-sans">
       {statItems.map((statItem, statIndex) => {
         const Icon = ICONS[statItem.icon] || DollarSign;
-        const colorTheme = COLOR_MAP[statItem.color] || COLOR_MAP.emerald;
+        const colorTheme = getWidgetColorTheme(statItem.color);
         const hasPositiveTrend = statItem.trend >= 0;
         const isCustomCard = customCardIds.includes(statItem.id);
-
-        const accent = {
-          emerald: "success" as const,
-          blue: "info" as const,
-          violet: "primary" as const,
-          amber: "warning" as const,
-          red: "destructive" as const,
-        }[statItem.color] || "primary" as const;
+        const accent = widgetColorToAccent(statItem.color);
 
         return (
           <MotionWidgetCard
@@ -182,11 +136,6 @@ export default function StatsGrid({
                   {statItem.title}
                 </h4>
               </main>
-              {!isEditMode && Array.isArray(statItem.sparklineData) && statItem.sparklineData.length > 1 && (
-                <div className="w-16 h-8 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0 pointer-events-none flex-shrink-0 ms-2">
-                  <Sparkline data={statItem.sparklineData} color={statItem.color} />
-                </div>
-              )}
             </div>
 
             <footer className="text-[11px] text-muted-foreground mt-3 border-t border-border/30 pt-2 m-0 truncate">

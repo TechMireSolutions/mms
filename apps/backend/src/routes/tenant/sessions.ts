@@ -12,7 +12,7 @@ import {
   updateSessionById,
 } from '../../services/sessionService.js';
 import type { User } from '@mms/shared';
-import { computeSessionsCommandMetrics, SESSIONS_MODULE_CONTRACT } from '@mms/shared';
+import { computeSessionsCommandMetrics, SESSIONS_MODULE_MANIFEST } from '@mms/shared';
 import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
 import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
 import {
@@ -23,7 +23,7 @@ import {
 } from '../../validation/sessionSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
-const COLLECTION = SESSIONS_MODULE_CONTRACT.collectionKey;
+const COLLECTION = SESSIONS_MODULE_MANIFEST.collectionKey;
 
 /**
  * Server-first sessions resource routes (TanStack Query on FE).
@@ -38,7 +38,7 @@ export default async function sessionsRoutes(
     collection: COLLECTION,
     schema: sessionRecordSchema,
     listQuerySchema: sessionsListQuerySchema,
-    defaultPageSize: SESSIONS_MODULE_CONTRACT.defaultPageSize,
+    defaultPageSize: SESSIONS_MODULE_MANIFEST.defaultPageSize,
     errorMessagePrefix: 'sessions',
     nameSingular: 'session',
     namePlural: 'sessions',
@@ -49,7 +49,7 @@ export default async function sessionsRoutes(
     deleteFn: deleteSessionById,
     restoreFn: restoreSessionById,
     computeMetricsFn: (sessions) => computeSessionsCommandMetrics(sessions),
-    columnPreferencesObjectKey: SESSIONS_MODULE_CONTRACT.columnPreferencesObjectKey,
+    columnPreferencesObjectKey: SESSIONS_MODULE_MANIFEST.columnPreferencesObjectKey,
     customPostRoute: true,
   });
 

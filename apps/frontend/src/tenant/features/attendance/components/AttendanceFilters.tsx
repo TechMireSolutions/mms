@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
 import { useTeachersPaginated } from '@/tenant/features/teachers/hooks/useTeachers';
-import { TEACHERS_MODULE_CONTRACT } from '@mms/shared';
+import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
 import { activeTeachersForAssignment } from '@/lib/teachers/teacherAssignment';
 import { useTranslation } from '@/hooks/useTranslation';
 import { todayISO } from '@mms/shared';
@@ -43,7 +43,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
   const sessions = useSessionsCollection();
   const { data: activeTeachersPage } = useTeachersPaginated({
     page: 1,
-    limit: TEACHERS_MODULE_CONTRACT.maxPageSize,
+    limit: TEACHERS_MODULE_MANIFEST.maxPageSize,
     status: 'active',
   });
   const assignableTeachers = useMemo(

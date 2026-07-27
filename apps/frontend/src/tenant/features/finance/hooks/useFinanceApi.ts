@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Invoice, InvoiceCreateInput, Payment, PaymentCreateInput } from '@mms/shared';
-import { FINANCE_MODULE_CONTRACT } from '@mms/shared';
+import { FINANCE_MODULE_MANIFEST } from '@mms/shared';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
 
@@ -8,7 +8,7 @@ export const FINANCE_INVOICES_QUERY_KEY = ['finance', 'invoices', 'list'] as con
 export const FINANCE_PAYMENTS_QUERY_KEY = ['finance', 'payments', 'list'] as const;
 export const FINANCE_METRICS_QUERY_KEY = ['finance', 'metrics'] as const;
 
-const FINANCE_API = FINANCE_MODULE_CONTRACT.restBasePath;
+const FINANCE_API = FINANCE_MODULE_MANIFEST.restBasePath;
 
 export class NotifiedFinanceMutationError extends Error {}
 
@@ -16,7 +16,7 @@ export function useFinanceInvoices(options?: { enabled?: boolean; includeDeleted
   const includeDeleted = options?.includeDeleted ?? false;
   return useCollectionSync<Invoice>({
     queryKey: [...FINANCE_INVOICES_QUERY_KEY, { includeDeleted }],
-    apiPath: `${FINANCE_API}/invoices?page=1&limit=${FINANCE_MODULE_CONTRACT.maxPageSize}&includeDeleted=${includeDeleted}`,
+    apiPath: `${FINANCE_API}/invoices?page=1&limit=${FINANCE_MODULE_MANIFEST.maxPageSize}&includeDeleted=${includeDeleted}`,
     responseKey: 'invoices',
     collectionName: 'finance_invoices',
     enabled: options?.enabled,
@@ -27,7 +27,7 @@ export function useFinancePayments(options?: { enabled?: boolean; includeDeleted
   const includeDeleted = options?.includeDeleted ?? false;
   return useCollectionSync<Payment>({
     queryKey: [...FINANCE_PAYMENTS_QUERY_KEY, { includeDeleted }],
-    apiPath: `${FINANCE_API}/payments?page=1&limit=${FINANCE_MODULE_CONTRACT.maxPageSize}&includeDeleted=${includeDeleted}`,
+    apiPath: `${FINANCE_API}/payments?page=1&limit=${FINANCE_MODULE_MANIFEST.maxPageSize}&includeDeleted=${includeDeleted}`,
     responseKey: 'payments',
     collectionName: 'finance_payments',
     enabled: options?.enabled,

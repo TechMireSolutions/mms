@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings } from 'lucide-react';
-import { DASHBOARD_MODULE_CONTRACT } from '@mms/shared';
+import { DASHBOARD_MODULE_MANIFEST } from '@mms/shared';
 import StatsGrid from '@/tenant/features/dashboard/components/StatisticsGrid';
 import DashboardRolePanel from '@/tenant/features/dashboard/components/DashboardRolePanel';
 import DashboardCustomizePanel from '@/tenant/features/dashboard/components/DashboardCustomizePanel';
@@ -19,6 +19,7 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useDashboardConfig } from '@/hooks/useDashboardConfig';
 import { buildDashboardNotifications } from '@/lib/buildDashboardNotifications';
+import { isSeededDashboardWidget } from '@/lib/dashboardWidgets';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { Button } from '@/components/ui/button';
@@ -43,13 +44,15 @@ export default function Dashboard() {
   const [editingWidget, setEditingWidget] = useState<CustomWidget | null>(null);
   const [widgetBuilderType, setWidgetBuilderType] = useState<CustomWidget['widgetType']>('card');
 
-  const canCustomize = can(DASHBOARD_MODULE_CONTRACT.permissions.customize);
+  const canCustomize = can(DASHBOARD_MODULE_MANIFEST.permissions.customize);
 
   const dashboardData = useDashboardData(customWidgets, dashboardRole);
   const {
     invoices,
     attendanceRecords,
+    sessions,
     studentMetricsInactive,
+    studentMetricsActive,
   } = dashboardData;
 
   const closeBuilder = useCallback(() => {
@@ -111,7 +114,7 @@ export default function Dashboard() {
         (widget) =>
           widget.widgetType === 'card' &&
           widgetMatchesDashboardRole(widget.role, dashboardRole) &&
-          !widget.id.startsWith('def-'),
+          !isSeededDashboardWidget(widget.id),
       ),
     [customWidgets, dashboardRole],
   );
@@ -155,7 +158,11 @@ export default function Dashboard() {
       seoTitle={`MMS - ${t('dashboard.title')}`}
       seoDescription={t('dashboard.metaDescription')}
     >
-      <WelcomeBanner dashboardRole={dashboardRole} />
+      <WelcomeBanner
+        dashboardRole={dashboardRole}
+        sessions={sessions}
+        activeStudentCount={studentMetricsActive}
+      />
 
       {canCustomize && (
         <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2 select-none">

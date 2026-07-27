@@ -1,7 +1,7 @@
 import type { Permission } from './permissions.js';
 
-/** Sessions module contract — aligns with globle1 universal module architecture. */
-export const SESSIONS_MODULE_CONTRACT = {
+/** Sessions module manifest — aligns with globle1 universal module architecture. */
+export const SESSIONS_MODULE_MANIFEST = {
   moduleId: 'sessions',
   entityType: 'Session',
   collectionKey: 'sessions',
@@ -34,4 +34,4 @@ export const SESSIONS_MODULE_CONTRACT = {
   maxPageSize: 500,
 } as const;
 
-export type SessionsModuleTier = (typeof SESSIONS_MODULE_CONTRACT.tiers)[number];
+export type SessionsModuleTier = (typeof SESSIONS_MODULE_MANIFEST.tiers)[number];

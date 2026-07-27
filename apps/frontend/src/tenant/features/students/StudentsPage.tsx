@@ -24,7 +24,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import StudentList from "@/tenant/features/students/components/StudentList";
 import StudentForm from "@/tenant/features/students/components/StudentForm";
 import StudentsSettings from "@/tenant/features/students/components/StudentsSettings";
-import { type Student, STUDENTS_MODULE_CONTRACT, toTitleCase, resolveStudentStatuses } from "@mms/shared";
+import { type Student, STUDENTS_MODULE_MANIFEST, toTitleCase, resolveStudentStatuses } from "@mms/shared";
 import { studentStatusLabel } from "@/lib/students/studentStatusUi";
 
 
@@ -50,7 +50,7 @@ export default function Students() {
     canDelete,
     canReports: canViewReports,
     canViewSetup,
-  } = useModulePermissions(STUDENTS_MODULE_CONTRACT);
+  } = useModulePermissions(STUDENTS_MODULE_MANIFEST);
 
   const visibleTabs = useFilteredModuleTierTabs({
     canViewSetup,
@@ -111,8 +111,8 @@ export default function Students() {
   const useServerWork = activeTab === "work";
   const isListView = settings.defaultViewLayout === "list";
   const workLimit = isListView
-    ? STUDENTS_MODULE_CONTRACT.defaultPageSize
-    : STUDENTS_MODULE_CONTRACT.maxPageSize;
+    ? STUDENTS_MODULE_MANIFEST.defaultPageSize
+    : STUDENTS_MODULE_MANIFEST.maxPageSize;
 
   const { data: workPageData, isFetching: isWorkPageFetching, isLoading: isWorkPageLoading } = useStudentsPaginated({
     page: isListView ? listPage : 1,

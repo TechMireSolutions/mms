@@ -31,15 +31,23 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 });
 
 const mockLoadWorkspaceUsers = vi.fn();
-const mockReplaceWorkspaceUsers = vi.fn();
+const mockUpsertWorkspaceUsers = vi.fn();
 const mockLoadLogs = vi.fn();
 const mockReplaceLogs = vi.fn();
+const mockDeleteUserById = vi.fn();
+const mockRestoreUserById = vi.fn();
+const mockBulkSoftDeleteUsers = vi.fn();
+const mockBulkRestoreUsers = vi.fn();
 
 vi.mock('../services/usersService.js', () => ({
   loadWorkspaceUsers: (...args: unknown[]) => mockLoadWorkspaceUsers(...args),
-  replaceWorkspaceUsers: (...args: unknown[]) => mockReplaceWorkspaceUsers(...args),
+  upsertWorkspaceUsers: (...args: unknown[]) => mockUpsertWorkspaceUsers(...args),
   loadLogs: (...args: unknown[]) => mockLoadLogs(...args),
   replaceLogs: (...args: unknown[]) => mockReplaceLogs(...args),
+  deleteUserById: (...args: unknown[]) => mockDeleteUserById(...args),
+  restoreUserById: (...args: unknown[]) => mockRestoreUserById(...args),
+  bulkSoftDeleteUsers: (...args: unknown[]) => mockBulkSoftDeleteUsers(...args),
+  bulkRestoreUsers: (...args: unknown[]) => mockBulkRestoreUsers(...args),
 }));
 
 const mockGetUserColumnPreferencesForModule = vi.fn();
@@ -106,9 +114,13 @@ describe('users REST routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
     mockLoadWorkspaceUsers.mockReset().mockResolvedValue([sampleUser]);
-    mockReplaceWorkspaceUsers.mockReset().mockResolvedValue([sampleUser]);
+    mockUpsertWorkspaceUsers.mockReset().mockResolvedValue([sampleUser]);
     mockLoadLogs.mockReset().mockResolvedValue([sampleLog]);
     mockReplaceLogs.mockReset().mockResolvedValue([sampleLog]);
+    mockDeleteUserById.mockReset().mockResolvedValue(true);
+    mockRestoreUserById.mockReset().mockResolvedValue(true);
+    mockBulkSoftDeleteUsers.mockReset().mockResolvedValue({ succeeded: 1, failed: 0 });
+    mockBulkRestoreUsers.mockReset().mockResolvedValue({ succeeded: 1, failed: 0 });
     mockGetUserColumnPreferencesForModule.mockReset().mockResolvedValue([]);
     mockSetUserColumnPreferencesForModule.mockReset().mockResolvedValue(undefined);
   });
@@ -154,7 +166,29 @@ describe('users REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ users: [sampleUser] });
-    expect(mockLoadWorkspaceUsers).toHaveBeenCalled();
+    expect(mockLoadWorkspaceUsers).toHaveBeenCalledWith({ includeDeleted: false });
+    await app.close();
+  });
+
+  it('GET /api/users?includeDeleted=true loads trash for admin', async () => {
+    const deletedUser = {
+      ...sampleUser,
+      deletedAt: '2026-07-01T00:00:00.000Z',
+      deletedBy: 'u-admin',
+    };
+    mockLoadWorkspaceUsers.mockResolvedValueOnce([deletedUser]);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/users?includeDeleted=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ users: [deletedUser] });
+    expect(mockLoadWorkspaceUsers).toHaveBeenCalledWith({ includeDeleted: true });
     await app.close();
   });
 
@@ -172,7 +206,57 @@ describe('users REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ users: [sampleUser] });
-    expect(mockReplaceWorkspaceUsers).toHaveBeenCalledWith([sampleUser]);
+    expect(mockUpsertWorkspaceUsers).toHaveBeenCalledWith([sampleUser]);
+    await app.close();
+  });
+
+  it('DELETE /api/users/:id soft-deletes a user', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/users/u-1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ success: true });
+    expect(mockDeleteUserById).toHaveBeenCalledWith('u-1', 'u-admin');
+    await app.close();
+  });
+
+  it('POST /api/users/:id/restore restores a user', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/users/u-1/restore',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ success: true });
+    expect(mockRestoreUserById).toHaveBeenCalledWith('u-1');
+    await app.close();
+  });
+
+  it('POST /api/users/bulk-restore restores multiple users', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/users/bulk-restore',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ ids: ['u-1'] }),
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ success: true, succeeded: 1, failed: 0 });
+    expect(mockBulkRestoreUsers).toHaveBeenCalledWith(['u-1']);
     await app.close();
   });
 

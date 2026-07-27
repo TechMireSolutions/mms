@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  QUESTION_BANK_MODULE_CONTRACT,
+  QUESTION_BANK_MODULE_MANIFEST,
   buildQuestionBankWorkColumnRegistry,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -23,9 +23,9 @@ export function useQuestionBankColumnLayout() {
   );
 
   return useModuleColumnLayout({
-    moduleId: QUESTION_BANK_MODULE_CONTRACT.moduleId,
+    moduleId: QUESTION_BANK_MODULE_MANIFEST.moduleId,
     tenantRegistry,
-    apiPath: QUESTION_BANK_MODULE_CONTRACT.restBasePath,
+    apiPath: QUESTION_BANK_MODULE_MANIFEST.restBasePath,
     translationPrefix: 'questionBank.columns',
   });
 }

@@ -5,7 +5,7 @@ import {
   DEFAULT_STUDENT_REQUIRED_TABS,
   DEFAULT_STUDENT_COLUMN_REGISTRY,
   INITIAL_STUDENT_FIELD_SEED,
-  STUDENTS_MODULE_CONTRACT,
+  STUDENTS_MODULE_MANIFEST,
   type AppTranslationKey,
 } from "@mms/shared";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
@@ -28,7 +28,7 @@ const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
 
 export default function StudentsSettings(): React.ReactElement {
   const { t } = useTranslation();
-  const { canEditSetup } = useModulePermissions(STUDENTS_MODULE_CONTRACT);
+  const { canEditSetup } = useModulePermissions(STUDENTS_MODULE_MANIFEST);
   const config = useStudentConfig();
   const {
     settings,
@@ -47,7 +47,7 @@ export default function StudentsSettings(): React.ReactElement {
 
   const settingsSubTabs = useMemo(
     () =>
-      STUDENTS_MODULE_CONTRACT.setupSubTabs.map((key, index) => ({
+      STUDENTS_MODULE_MANIFEST.setupSubTabs.map((key, index) => ({
         key,
         label: t(SETUP_TAB_LABEL_KEYS[key]),
         order: index,

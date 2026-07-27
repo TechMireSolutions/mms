@@ -37,7 +37,7 @@ import { useSessionConfig } from "@/hooks/useStandardModuleConfig";
 import { SessionsCommandMetrics } from "@/tenant/features/sessions/components/SessionsCommandMetrics";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { type AppTranslationKey, formatMoney, SESSIONS_MODULE_CONTRACT, toTitleCase, formatDate } from "@mms/shared";
+import { type AppTranslationKey, formatMoney, SESSIONS_MODULE_MANIFEST, toTitleCase, formatDate } from "@mms/shared";
 import { notify } from "@/lib/notify";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
@@ -195,7 +195,7 @@ export default function Sessions() {
     canDelete,
     canReports: canViewReports,
     canViewSetup,
-  } = useModulePermissions(SESSIONS_MODULE_CONTRACT);
+  } = useModulePermissions(SESSIONS_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const { t } = useTranslation();
   const {
@@ -248,7 +248,7 @@ export default function Sessions() {
     refetch,
   } = useSessionsPaginated({
     page: listPage,
-    limit: SESSIONS_MODULE_CONTRACT.defaultPageSize,
+    limit: SESSIONS_MODULE_MANIFEST.defaultPageSize,
     search,
     status: filterStatus.length > 0 ? filterStatus.join(",") : undefined,
     type: filterType.length > 0 ? filterType.join(",") : undefined,

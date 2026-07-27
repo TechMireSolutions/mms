@@ -20,7 +20,7 @@ export function usePermissions(): UsePermissionsResult {
   return useMemo(() => ({ role, can }), [role, can]);
 }
 
-export interface ModulePermissionsContract {
+export interface ModulePermissionsManifest {
   permissions: {
     read?: Permission;
     write?: Permission;
@@ -33,11 +33,11 @@ export interface ModulePermissionsContract {
   };
 }
 
-/** Resolves all standard tier & action permissions for a module contract (Rule 11 / DRY). */
-export function useModulePermissions(contract: ModulePermissionsContract) {
+/** Resolves all standard tier & action permissions for a module manifest (Rule 11 / DRY). */
+export function useModulePermissions(manifest: ModulePermissionsManifest) {
   const { can } = usePermissions();
   return useMemo(() => {
-    const p = contract.permissions;
+    const p = manifest.permissions;
     return {
       canRead: p.read ? can(p.read) : false,
       canWrite: p.write ? can(p.write) : false,
@@ -48,6 +48,6 @@ export function useModulePermissions(contract: ModulePermissionsContract) {
       canEditSetup: p.setupWrite ? can(p.setupWrite) : false,
       canClearLogs: p.clearLogs ? can(p.clearLogs) : false,
     };
-  }, [can, contract.permissions]);
+  }, [can, manifest.permissions]);
 }
 

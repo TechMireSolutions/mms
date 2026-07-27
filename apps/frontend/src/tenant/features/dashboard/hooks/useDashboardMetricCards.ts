@@ -12,6 +12,10 @@ import {
 } from '@/tenant/features/reports/components/pinnedWidgets/widgetDataUtils';
 import { resolveWidgetTitle, resolveWidgetSubText } from '@/lib/dashboardWidgets';
 import { widgetMatchesDashboardRole, type DashboardRole } from '@/lib/dashboardRole';
+import {
+  isDashboardWidgetModuleEnabled,
+  resolveDashboardTrendMetric,
+} from '@/lib/dashboardCollections';
 import type { StatItem } from '@/tenant/features/dashboard/components/StatisticsGrid';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import {
@@ -60,8 +64,6 @@ export function useDashboardMetricCards({
   } = data;
 
   return useMemo(() => {
-    const isModuleEnabled = (moduleId: string) => enabledModules[moduleId] !== false;
-
     const studentTrend = studentsTotal && studentMetricsNew
       ? Math.round((studentMetricsNew / Math.max(1, studentsTotal - studentMetricsNew)) * 100)
       : 0;
@@ -113,20 +115,9 @@ export function useDashboardMetricCards({
       (widget) => widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole),
     );
 
-    const enabledDashboardCardWidgets = dashboardCardWidgets.filter((widget) => {
-      const widgetCollection = widget.collection;
-      const widgetId = widget.id;
-      if (widgetCollection === 'sessions') return isModuleEnabled('sessions');
-      if (widgetCollection === 'attendance_records') return isModuleEnabled('attendance');
-      if (widgetCollection === 'hasanat_distributions') return isModuleEnabled('hasanat');
-      if (widgetCollection === 'finance_invoices') {
-        if (widgetId.includes('revenue') || widgetId.includes('expenses') || widget.category === 'accounting') {
-          return isModuleEnabled('accounting');
-        }
-        return isModuleEnabled('finance');
-      }
-      return true;
-    });
+    const enabledDashboardCardWidgets = dashboardCardWidgets.filter((widget) =>
+      isDashboardWidgetModuleEnabled(widget, enabledModules),
+    );
 
     return enabledDashboardCardWidgets.map((widget): StatItem => {
       if (widget.collection === 'contacts') {
@@ -230,18 +221,15 @@ export function useDashboardMetricCards({
       );
 
       let resolvedTrend = computedCard.trend || 0;
-      const widgetIdLower = widget.id.toLowerCase();
-      if (widgetIdLower.includes('attendance') || widgetIdLower.includes('rate')) {
-        resolvedTrend = attendanceTrend;
-      } else if (widgetIdLower.includes('fees') || widgetIdLower.includes('revenue') || widgetIdLower.includes('income')) {
-        resolvedTrend = feesTrend;
-      } else if (widgetIdLower.includes('outstanding') || widgetIdLower.includes('debt') || widgetIdLower.includes('overdue')) {
-        resolvedTrend = outstandingTrend;
-      } else if (widgetIdLower.includes('hasanat') || widgetIdLower.includes('points')) {
-        resolvedTrend = hasanatTrend;
-      } else if (widgetIdLower.includes('sessions') || widgetIdLower.includes('classes')) {
-        resolvedTrend = sessionsTrend;
-      }
+      const trendMetric = resolveDashboardTrendMetric(widget.id);
+      if (trendMetric === 'attendance') resolvedTrend = attendanceTrend;
+      else if (trendMetric === 'fees') resolvedTrend = feesTrend;
+      else if (trendMetric === 'outstanding') resolvedTrend = outstandingTrend;
+      else if (trendMetric === 'hasanat') resolvedTrend = hasanatTrend;
+      else if (trendMetric === 'sessions') resolvedTrend = sessionsTrend;
+      else if (trendMetric === 'contacts') resolvedTrend = contactTrend;
+      else if (trendMetric === 'students') resolvedTrend = studentTrend;
+      else if (trendMetric === 'teachers') resolvedTrend = teacherTrend;
 
       return {
         id: computedCard.id,

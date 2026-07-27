@@ -20,6 +20,8 @@ export const workspaceUserRecordSchema = z.object({
   failedLoginAttempts: z.number(),
   activeSessions: z.number(),
   avatarInitials: z.string(),
+  deletedAt: z.string().nullable().optional(),
+  deletedBy: z.string().nullable().optional(),
 });
 
 export const workspaceUserListSchema = z.array(workspaceUserRecordSchema);
@@ -47,8 +49,8 @@ export const activityLogRecordSchema = z.object({
 export const activityLogListSchema = z.array(activityLogRecordSchema);
 
 
-/** Users module contract — aligns with globle1 universal module architecture. */
-export const USERS_MODULE_CONTRACT = {
+/** Users module manifest — aligns with globle1 universal module architecture. */
+export const USERS_MODULE_MANIFEST = {
   moduleId: 'users',
   entityType: 'User',
   collectionKey: 'users',
@@ -57,6 +59,14 @@ export const USERS_MODULE_CONTRACT = {
   restBasePath: '/api/users',
   analyticsCategory: 'users',
   tiers: ['work', 'reports', 'setup'] as const,
+  setupSubTabs: ['permissions', 'fields', 'preferences'] as const,
+  /** Soft-delete via tenant_users.deleted_at; status remains invite/suspend lifecycle. */
+  softDelete: {
+    workExcludesDeleted: true,
+    reportsIncludeDeleted: false,
+    exportsIncludeDeleted: false,
+    captureDeletionReason: false,
+  },
   permissions: {
     read: 'users.manage',
     write: 'users.manage',
@@ -74,4 +84,4 @@ export const USERS_MODULE_CONTRACT = {
   maxPageSize: 500,
 } as const;
 
-export type UsersModuleTier = (typeof USERS_MODULE_CONTRACT.tiers)[number];
+export type UsersModuleTier = (typeof USERS_MODULE_MANIFEST.tiers)[number];

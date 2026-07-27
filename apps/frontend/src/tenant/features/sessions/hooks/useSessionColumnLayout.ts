@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  SESSIONS_MODULE_CONTRACT,
+  SESSIONS_MODULE_MANIFEST,
   buildSessionWorkColumnRegistry,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -23,9 +23,9 @@ export function useSessionColumnLayout() {
   );
 
   return useModuleColumnLayout({
-    moduleId: SESSIONS_MODULE_CONTRACT.moduleId,
+    moduleId: SESSIONS_MODULE_MANIFEST.moduleId,
     tenantRegistry,
-    apiPath: SESSIONS_MODULE_CONTRACT.restBasePath,
+    apiPath: SESSIONS_MODULE_MANIFEST.restBasePath,
     translationPrefix: 'sessions.columns',
   });
 }

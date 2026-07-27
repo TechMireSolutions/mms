@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Shield, Save } from "lucide-react";
+import { Shield, Save, Loader2 } from "lucide-react";
 import {
   USERS_TAB_REGISTRY,
   INITIAL_USERS_FIELD_SEED,
@@ -27,15 +27,26 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
     saved,
     setSaved,
     upd,
-    saveSettings,
+    saveSettingsAsync,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: USERS_TAB_REGISTRY,
   });
 
-  const handleSave = (): void => {
-    saveSettings();
-    notify.success(t("users.settingsSaved"), { description: t("users.settingsSavedDesc") });
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async (): Promise<void> => {
+    setSaving(true);
+    try {
+      await saveSettingsAsync();
+      notify.success(t("users.settingsSaved"), { description: t("users.settingsSavedDesc") });
+    } catch (error: unknown) {
+      notify.error(t("errors.module.title"), {
+        description: error instanceof Error ? error.message : t("errors.module.description"),
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const showPrefs = mode === "preferences";
@@ -78,10 +89,11 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
       <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
         <Button
           type="button"
-          onClick={handleSave}
+          onClick={() => { void handleSave(); }}
+          disabled={saving}
           className={cn("ml-auto", saved && "bg-success hover:bg-success/90 text-success-foreground")}
         >
-          <Save className="w-3.5 h-3.5" />
+          {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
           <span>{saved ? t("users.settingsSavedShort") : t("users.settingsSaveBtn")}</span>
         </Button>
       </footer>

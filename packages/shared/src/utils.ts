@@ -6,7 +6,7 @@ import type {
   SocialLink as ContactSocial,
   EmergencyContact
 } from "./contactTypes.js";
-import { CONTACTS_MODULE_CONTRACT } from "./contactsModuleContract.js";
+import { CONTACTS_MODULE_MANIFEST } from "./contactsModuleManifest.js";
 import { PuppeteerWhatsAppProvider } from "./whatsappProvider.js";
 
 

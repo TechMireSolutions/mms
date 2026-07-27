@@ -6,7 +6,7 @@ import {
   FINANCE_TAB_REGISTRY,
   INITIAL_FINANCE_FIELD_SEED,
   DEFAULT_CURRENCIES,
-  FINANCE_MODULE_CONTRACT,
+  FINANCE_MODULE_MANIFEST,
   type AppTranslationKey,
 } from "@mms/shared";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
@@ -28,7 +28,7 @@ const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
 
 export function FinanceSettings(): React.ReactElement {
   const { t } = useTranslation();
-  const { canEditSetup } = useModulePermissions(FINANCE_MODULE_CONTRACT);
+  const { canEditSetup } = useModulePermissions(FINANCE_MODULE_MANIFEST);
   const config = useFinanceConfig();
   const {
     settings,
@@ -54,7 +54,7 @@ export function FinanceSettings(): React.ReactElement {
     }
   };
 
-  const settingsSubTabs = useMemo(() => FINANCE_MODULE_CONTRACT.setupSubTabs.map((key) => ({
+  const settingsSubTabs = useMemo(() => FINANCE_MODULE_MANIFEST.setupSubTabs.map((key) => ({
     key,
     label: t(SETUP_TAB_LABEL_KEYS[key]),
   })), [t]);

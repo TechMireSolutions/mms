@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../services/rbacService.js';
 import {
-  OBLIGATIONS_MODULE_CONTRACT,
+  OBLIGATIONS_MODULE_MANIFEST,
   obligationTypeListSchema,
   mujtahidListSchema,
   mujtahidRepListSchema,
@@ -37,7 +37,7 @@ import {
   bulkRestoreObligationCollections,
 } from '../../services/obligationService.js';
 
-const OBLIGATIONS_COLLECTION = OBLIGATIONS_MODULE_CONTRACT.collectionKey;
+const OBLIGATIONS_COLLECTION = OBLIGATIONS_MODULE_MANIFEST.collectionKey;
 
 const includeDeletedQuerySchema = z.object({
   includeDeleted: z.enum(['true', 'false']).optional(),
@@ -194,7 +194,7 @@ export default async function obligationsRoutes(
   registerColumnPreferencesRoutes(fastify, {
     path: '/column-preferences',
     collection: OBLIGATIONS_COLLECTION,
-    objectKey: OBLIGATIONS_MODULE_CONTRACT.columnPreferencesObjectKey,
+    objectKey: OBLIGATIONS_MODULE_MANIFEST.columnPreferencesObjectKey,
   });
 
   registerMetricsRoute(fastify, {

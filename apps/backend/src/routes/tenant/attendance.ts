@@ -13,7 +13,7 @@ import {
   upsertAttendanceRecords,
   updateAttendanceRecordById,
 } from '../../services/attendanceService.js';
-import { computeAttendanceCommandMetrics, ATTENDANCE_MODULE_CONTRACT, type User } from '@mms/shared';
+import { computeAttendanceCommandMetrics, ATTENDANCE_MODULE_MANIFEST, type User } from '@mms/shared';
 import { registerStandardTenantRoutes, registerBulkPutRoute } from '../../lib/crudRouter.js';
 import {
   attendanceBulkSchema,
@@ -41,7 +41,7 @@ export default async function attendanceRoutes(
     collection: COLLECTION,
     schema: attendanceRecordSchema,
     listQuerySchema: attendanceListQuerySchema,
-    defaultPageSize: ATTENDANCE_MODULE_CONTRACT.defaultPageSize,
+    defaultPageSize: ATTENDANCE_MODULE_MANIFEST.defaultPageSize,
     errorMessagePrefix: 'attendance',
     loadPageFn: loadAttendancePage,
     canWriteDeletedCheck: (user) => canDeleteCollection(user, COLLECTION),
@@ -52,7 +52,7 @@ export default async function attendanceRoutes(
     restoreFn: restoreAttendanceRecordById,
     nameSingular: 'record',
     namePlural: 'records',
-    columnPreferencesObjectKey: ATTENDANCE_MODULE_CONTRACT.columnPreferencesObjectKey,
+    columnPreferencesObjectKey: ATTENDANCE_MODULE_MANIFEST.columnPreferencesObjectKey,
     computeMetricsFn: (records, request) => {
       const dateParam = (request.query as { date?: string }).date;
       const selectedDate =

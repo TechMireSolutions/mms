@@ -1,6 +1,6 @@
 ---
-description: Universal module architecture — contract schemas, three-tier tab layout, Work/Reports/Setup scopes, background jobs, and module lifecycle rules.
-globs: apps/frontend/src/pages/**/*.tsx,apps/frontend/src/components/**,packages/shared/src/settingsTypes.ts,packages/shared/src/*ModuleContract.ts,apps/backend/src/routes/**/*.ts,apps/backend/src/services/backgroundJob*.ts
+description: Universal module architecture — manifest schemas, three-tier layout, soft-delete, gold-standard parity (§7), background jobs, and lifecycle rules.
+globs: apps/frontend/src/pages/**/*.tsx,apps/frontend/src/components/**,packages/shared/src/settingsTypes.ts,packages/shared/src/*ModuleManifest.ts,apps/backend/src/routes/**/*.ts,apps/backend/src/services/backgroundJob*.ts
 alwaysApply: false
 ---
 
@@ -10,10 +10,10 @@ Definitive specification for creating, structuring, and running directory-based 
 
 ---
 
-## 1. Monorepo Contracts & Domain Modeling
-Every module directory must register a single module contract in `packages/shared/src` (e.g., `contactsModuleContract.ts` defining `CONTACTS_MODULE_CONTRACT`):
-- **Contract Schema**: Defines `moduleId`, entity types, collection/REST database keys, default filters, searchable/filterable fields, and soft-delete/restore policies.
-- **Reference Overrides**: UI controls, list columns, layout hooks, and export services must import settings directly from the contract constants. Hardcoded entity configurations are forbidden.
+## 1. Monorepo Manifests & Domain Modeling
+Every module directory must register a single module manifest in `packages/shared/src` (e.g., `contactsModuleManifest.ts` defining `CONTACTS_MODULE_MANIFEST`):
+- **Manifest schema**: Defines `moduleId`, entity types, collection/REST database keys, default filters, searchable/filterable fields, and soft-delete/restore policies.
+- **Reference Overrides**: UI controls, list columns, layout hooks, and export services must import settings directly from the manifest constants. Hardcoded entity configurations are forbidden.
 
 ---
 
@@ -27,7 +27,7 @@ Every standard module page (e.g., `Contacts.tsx`, `Students.tsx`) must instantia
 ---
 
 ## 3. Work Directory & Detail Drawer
-- **Search & Filter**: Search and filter operations must only target fields defined as searchable/filterable in the contract.
+- **Search & Filter**: Search and filter operations must only target fields defined as searchable/filterable in the manifest.
 - **Detail Drawer**: Selecting an entity row opens an in-place detail drawer (instead of page navigation) respecting the module's tab/field order, read/write permissions, and custom fields.
 - **Bulk Actions**: Bulk operation bars slide in only when records are selected. Enforce backend permission checks, calculate partial failures, and audit all bulk updates/deletions.
 
@@ -52,5 +52,24 @@ Operations that exceed direct interaction limits or process massive records must
 - **Row-Level Security (RLS)**: Enforce transaction-scoped tenant RLS context using `set_config` with `is_local: true` (SET LOCAL) on pooled connections, as defined in **`mms-data-layer.mdc`**. Prohibit global config settings.
 - **RBAC**: Apply `can('module.action')` checks globally. Render options based on permissions (forbidden actions must be omitted entirely from the DOM, never rendered as disabled placeholders).
 - **Soft Deletion**: Use `deletedAt` and `deletedBy` instead of raw `DELETE` SQL operations. Filter deleted rows from standard queries while permitting permitted users to view/restore archives.
-  - **Reference FE**: Contacts, Students, and Teachers — Work trash toggle (`includeDeleted` + client filter `deletedAt`), row restore, bulk restore, omit messaging/delete in trash mode.
-  - **When adding REST CRUD**: Ship `DELETE` soft-delete + `POST :id/restore`, list `includeDeleted`, and Work trash UI (or document intentional hard-delete).
+  - **Reference FE**: Contacts / Students / Teachers pattern — Work trash toggle (`includeDeleted`), row restore, bulk restore, omit Add/messaging/destructive create in trash mode. Same pattern shipped on Sessions, Attendance, Enrollments, Finance, Accounting, Obligations, Hasanat, Examinations, Question Bank (questions), Users (`tenant_users.deleted_at`; `status` remains invite/suspend).
+  - **Documented variants**: Messaging admin clear soft-archives logs (not a row trash browser); Question Bank tests/papers and assessment_results remain upsert-only by design.
+  - **When adding REST CRUD**: Ship `DELETE` soft-delete + `POST :id/restore`, list `includeDeleted`, and Work trash UI (or document intentional hard-delete / variant in manifest `softDelete`).
+
+---
+
+## 7. Gold-standard module parity (required for REST modules)
+
+Align new or refactored modules with Students / Contacts as the bar. Checklist:
+
+| Requirement | Standard |
+|-------------|----------|
+| **Bulk PUT** | Upsert only — repository `bulkSave` + `conflictTarget` (or equivalent merge-by-id). **Never** call `replaceForWorkspace` / wipe-missing-rows from API bulk write paths. |
+| **Soft-delete** | `DELETE` + `POST :id/restore` (+ bulk when applicable); Work `showDeleted` / `includeDeleted` trash UI; manifest `softDelete` metadata. |
+| **Mutations** | `mutateAsync` + await form `onSave` / setup save; close modals only after success. |
+| **Setup** | Manifest `setupSubTabs`; `canEditSetup` gates edits (`saveSettingsAsync`); SubTabBar always visible; read-only message when view-only. |
+| **Work UX** | `ErrorState` + retry on list query failure; Cmd/Ctrl+N opens create when `canWrite` and not in trash. |
+| **Manifest** | `setupSubTabs`, `softDelete`, `work.bulkActions`, permissions — import constants; do not hardcode tier/sub-tab ids. |
+| **i18n / RBAC** | All copy via `t()`; `useModulePermissions(manifest)` — omit forbidden CTAs. |
+
+**Do not regress**: reintroducing bulk wipe on PUT, fire-and-forget `mutate()` that closes forms before success, or soft-delete API without Work trash (unless manifest documents the intentional variant).

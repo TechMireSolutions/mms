@@ -4,7 +4,7 @@ import {
   TEACHERS_TAB_REGISTRY,
   INITIAL_TEACHERS_FIELD_SEED,
   TEACHER_SPECIALIZATION_VALUES,
-  TEACHERS_MODULE_CONTRACT,
+  TEACHERS_MODULE_MANIFEST,
   type AppTranslationKey,
 } from "@mms/shared";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
@@ -27,7 +27,7 @@ const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
 
 export function TeachersSettings(): React.JSX.Element {
   const { t } = useTranslation();
-  const { canEditSetup } = useModulePermissions(TEACHERS_MODULE_CONTRACT);
+  const { canEditSetup } = useModulePermissions(TEACHERS_MODULE_MANIFEST);
   const config = useTeacherConfig();
   const { specializations } = config;
   const {
@@ -48,7 +48,7 @@ export function TeachersSettings(): React.JSX.Element {
 
   const settingsSubTabs = useMemo(
     () =>
-      TEACHERS_MODULE_CONTRACT.setupSubTabs.map((key, index) => ({
+      TEACHERS_MODULE_MANIFEST.setupSubTabs.map((key, index) => ({
         key,
         label: t(SETUP_TAB_LABEL_KEYS[key]),
         order: index,

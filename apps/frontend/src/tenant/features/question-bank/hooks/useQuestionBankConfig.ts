@@ -28,6 +28,7 @@ export interface QuestionBankConfig {
   questionLanguageLabel: (languageCode: string) => string;
   refresh: () => void;
   updateSettings: (settingsDraft: QuestionBankSettings) => void;
+  updateSettingsAsync: (settingsDraft: QuestionBankSettings) => Promise<void>;
 }
 
 export function useQuestionBankConfig(
@@ -40,6 +41,7 @@ export function useQuestionBankConfig(
     settings,
     orderedFields,
     updateSettings,
+    updateSettingsAsync,
     isFieldEnabled,
   } = useStandardModuleConfig('question-bank');
 
@@ -88,5 +90,6 @@ export function useQuestionBankConfig(
     questionLanguageLabel,
     refresh,
     updateSettings,
+    updateSettingsAsync,
   };
 }

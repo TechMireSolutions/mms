@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  EXAMINATIONS_MODULE_CONTRACT,
+  EXAMINATIONS_MODULE_MANIFEST,
   buildExaminationResultsWorkColumnRegistry,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -11,7 +11,7 @@ const STORAGE_SUFFIX = 'results';
 export function useExaminationResultsColumnLayout() {
   const { t } = useTranslation();
 
-  const storageModuleId = `${EXAMINATIONS_MODULE_CONTRACT.moduleId}_${STORAGE_SUFFIX}`;
+  const storageModuleId = `${EXAMINATIONS_MODULE_MANIFEST.moduleId}_${STORAGE_SUFFIX}`;
 
   const tenantRegistry = useMemo(
     () =>
@@ -30,7 +30,7 @@ export function useExaminationResultsColumnLayout() {
   return useModuleColumnLayout({
     moduleId: storageModuleId,
     tenantRegistry,
-    apiPath: `${EXAMINATIONS_MODULE_CONTRACT.restBasePath}/results`,
+    apiPath: `${EXAMINATIONS_MODULE_MANIFEST.restBasePath}/results`,
     translationPrefix: 'examinations.columns',
   });
 }

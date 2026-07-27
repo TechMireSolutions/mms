@@ -21,7 +21,7 @@ import { TeacherList, type TeacherSortField } from "@/tenant/features/teachers/c
 import { TeacherForm } from "@/tenant/features/teachers/components/TeacherForm";
 import { TeachersSettings as TeachersSettingsPanel } from "@/tenant/features/teachers/components/TeachersSettings";
 import type { Teacher } from '@/lib/data/teachersData';
-import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES, TEACHERS_MODULE_CONTRACT, type AppTranslationKey, toTitleCase } from '@mms/shared';
+import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES, TEACHERS_MODULE_MANIFEST, type AppTranslationKey, toTitleCase } from '@mms/shared';
 import ModuleReports from '@/tenant/features/reports/components/ModuleReports';
 import KPISummary from '@/tenant/features/reports/components/KPISummary';
 import { useTeacherCount } from '@/tenant/features/teachers/hooks/useTeacherCount';
@@ -53,7 +53,7 @@ export default function Teachers(): React.JSX.Element {
     canDelete,
     canReports: canViewReports,
     canViewSetup,
-  } = useModulePermissions(TEACHERS_MODULE_CONTRACT);
+  } = useModulePermissions(TEACHERS_MODULE_MANIFEST);
 
   const visibleTabs = useFilteredModuleTierTabs({
     canViewSetup,
@@ -142,7 +142,7 @@ export default function Teachers(): React.JSX.Element {
   const useServerWork = activeTab === 'work';
   const { data: workPageData, isFetching: isWorkPageFetching, isLoading: isWorkPageLoading } = useTeachersPaginated({
     page: listPage,
-    limit: TEACHERS_MODULE_CONTRACT.defaultPageSize,
+    limit: TEACHERS_MODULE_MANIFEST.defaultPageSize,
     search,
     status: filterStatus.length > 0 ? filterStatus.join(',') : undefined,
     specialization: filterSpecialization || undefined,

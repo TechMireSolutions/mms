@@ -34,7 +34,7 @@ interface QuestionFormProps {
   question: Question | null;
   questions?: Question[];
   onClose: () => void;
-  onSave: (q: Question) => void;
+  onSave: (q: Question) => void | Promise<void>;
 }
 
 const COMPOUND_ANSWER_TYPES = new Set<QuestionType>([
@@ -111,40 +111,40 @@ export function QuestionForm({
     const newErrors: Record<string, string> = {};
 
     if (!questionDraft.text?.trim()) {
-      newErrors.text = "Question text is required";
+      newErrors.text = t('questionBank.validation.textRequired');
     }
     if (!questionDraft.categoryIds || questionDraft.categoryIds.length === 0) {
-      newErrors.categoryIds = "At least one category is required";
+      newErrors.categoryIds = t('questionBank.validation.categoryRequired');
     }
 
     if (questionDraft.type === 'mcq') {
       const options = questionDraft.options || [];
       if (!questionDraft.answer || !options.includes(questionDraft.answer)) {
-        newErrors.answer = "An answer must be selected from the choices.";
+        newErrors.answer = t('questionBank.validation.answerFromChoices');
       }
     } else if (questionDraft.type === 'true_false') {
       if (!questionDraft.answer) {
-        newErrors.answer = "An answer (True or False) is required.";
+        newErrors.answer = t('questionBank.validation.trueFalseRequired');
       }
     }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      notify.error("Please fix validation errors");
+      notify.error(t('questionBank.validationFailed'));
       return;
     }
 
     setSaving(true);
     try {
-      onSave({
+      await onSave({
         ...questionDraft,
         id: question?.id || `q${Date.now()}`,
         sourceCitations: questionDraft.sourceCitations,
       } as unknown as Question);
-      notify.success(question ? "Question updated successfully" : "Question created successfully");
+      notify.success(question ? t('questionBank.updated') : t('questionBank.saved'));
       onClose();
     } catch (err: unknown) {
-      notify.error("Failed to save question", { description: err instanceof Error ? err.message : String(err) });
+      notify.error(t('questionBank.saveFailed'), { description: err instanceof Error ? err.message : String(err) });
     } finally {
       setSaving(false);
     }

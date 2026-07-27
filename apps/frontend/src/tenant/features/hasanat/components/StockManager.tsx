@@ -16,10 +16,11 @@ interface AddBatchModalProps {
   open: boolean;
   denoms: Denomination[];
   onClose: () => void;
-  onSave: (batch: StockBatch) => void;
+  onSave: (batch: StockBatch) => void | Promise<void>;
 }
 
 function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
+  const [submitting, setSubmitting] = useState(false);
   const [data, setData] = useState<Partial<StockBatch>>({
     denominationId: denoms[0]?.id || "",
     quantity: 0,
@@ -51,9 +52,17 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
       icon={Package}
       cancelLabel="Cancel"
       saveLabel="Add Batch"
+      saving={submitting}
       onSave={() => {
-        const denomination = denoms.find((candidate) => candidate.id === data.denominationId);
-        onSave({ ...data, id: `bat${Date.now()}`, quantity: Number(data.quantity), remaining: Number(data.quantity), denominationName: denomination?.name || "" } as StockBatch);
+        void (async () => {
+          const denomination = denoms.find((candidate) => candidate.id === data.denominationId);
+          setSubmitting(true);
+          try {
+            await onSave({ ...data, id: `bat${Date.now()}`, quantity: Number(data.quantity), remaining: Number(data.quantity), denominationName: denomination?.name || "" } as StockBatch);
+          } finally {
+            setSubmitting(false);
+          }
+        })();
       }}
       saveDisabled={!data.denominationId || !data.quantity}
     >
@@ -108,7 +117,7 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
 export interface StockManagerProps {
   batches: StockBatch[];
   denoms: Denomination[];
-  onUpdate: (batches: StockBatch[]) => void;
+  onUpdate: (batches: StockBatch[]) => void | Promise<void>;
   canWrite?: boolean;
 }
 
@@ -125,7 +134,10 @@ export interface StockManagerProps {
 export function StockManager({ batches, denoms, onUpdate, canWrite = true }: StockManagerProps) {
   const [showModal, setShowModal] = useState(false);
 
-  const handleAdd = (batch: StockBatch) => { onUpdate([...batches, batch]); setShowModal(false); };
+  const handleAdd = async (batch: StockBatch) => {
+    await onUpdate([...batches, batch]);
+    setShowModal(false);
+  };
 
   // Group by denomination
   const grouped = denoms.reduce((groups: Record<string, { den: Denomination, batches: StockBatch[] }>, denomination: Denomination) => {

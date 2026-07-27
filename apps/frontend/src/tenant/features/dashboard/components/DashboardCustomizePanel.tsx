@@ -1,28 +1,38 @@
 import React from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Pencil, Trash2, Plus } from 'lucide-react';
-import type { Permission } from '@mms/shared';
+import {
+  type Permission,
+  STUDENTS_MODULE_MANIFEST,
+  USERS_MODULE_MANIFEST,
+  ATTENDANCE_MODULE_MANIFEST,
+} from '@mms/shared';
 import {
   CustomWidget,
   WidgetBuilder,
 } from '@/tenant/features/reports/components/PinnedWidgets';
-import type { ReportCollection } from '@/tenant/features/reports/components/reportMetadata';
+import {
+  METADATA_FIELDS,
+  getCollectionLabel,
+  type ReportCollection,
+} from '@/tenant/features/reports/components/reportMetadata';
 import { useTranslation } from '@/hooks/useTranslation';
-import { resolveWidgetTitle } from '@/lib/dashboardWidgets';
+import { isSeededDashboardWidget, resolveWidgetTitle } from '@/lib/dashboardWidgets';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { StatItem } from '@/tenant/features/dashboard/components/StatisticsGrid';
 
-function defaultWidgetCollection(can: (permission: Permission) => boolean): ReportCollection {
-  if (can('students.write') || can('users.manage')) return 'students';
-  if (can('attendance.write')) return 'sessions';
-  return 'finance_invoices';
-}
-
-function defaultWidgetCategory(can: (permission: Permission) => boolean): string {
-  if (can('students.write') || can('users.manage')) return 'students';
-  if (can('attendance.write')) return 'sessions';
-  return 'financial';
+function defaultWidgetScope(can: (permission: Permission) => boolean): {
+  collection: ReportCollection;
+  category: string;
+} {
+  if (can(STUDENTS_MODULE_MANIFEST.permissions.write) || can(USERS_MODULE_MANIFEST.permissions.write)) {
+    return { collection: 'students', category: 'students' };
+  }
+  if (can(ATTENDANCE_MODULE_MANIFEST.permissions.write)) {
+    return { collection: 'sessions', category: 'sessions' };
+  }
+  return { collection: 'finance_invoices', category: 'financial' };
 }
 
 export interface DashboardCustomizePanelProps {
@@ -66,6 +76,7 @@ export default function DashboardCustomizePanel({
   onOpenWidgetBuilder,
 }: DashboardCustomizePanelProps): React.JSX.Element {
   const { t } = useTranslation();
+  const widgetScope = defaultWidgetScope(can);
 
   return (
     <div className="space-y-5 pb-1">
@@ -73,11 +84,11 @@ export default function DashboardCustomizePanel({
         {isWidgetBuilderOpen && (
           <div className="mb-5">
             <WidgetBuilder
-              initialCollection={defaultWidgetCollection(can)}
+              initialCollection={widgetScope.collection}
               editWidgetConfig={editingWidget}
               onCancelEdit={onCloseBuilder}
               onSaveWidget={onSaveWidget}
-              category={defaultWidgetCategory(can)}
+              category={widgetScope.category}
               mode="dashboard"
               initialWidgetType={widgetBuilderType}
             />
@@ -170,7 +181,11 @@ export default function DashboardCustomizePanel({
                           {resolveWidgetTitle(widget, t)}
                         </p>
                         <p className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider capitalize truncate">
-                          {widget.collection.replace('_', ' ')}
+                          {getCollectionLabel(
+                            widget.collection,
+                            METADATA_FIELDS[widget.collection]?.name || widget.collection,
+                            t,
+                          )}
                         </p>
                       </label>
                     </div>
@@ -185,7 +200,7 @@ export default function DashboardCustomizePanel({
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
-                      {!widget.id.startsWith('def-') && (
+                      {!isSeededDashboardWidget(widget.id) && (
                         <Button
                           onClick={() => onDeleteWidget(widget.id)}
                           variant="ghost"

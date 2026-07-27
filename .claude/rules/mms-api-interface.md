@@ -53,3 +53,11 @@ API errors must resolve to a uniform JSON payload format:
 - **Error Classifications**: Standard types include `auth_required`, `invalid_credentials`, `forbidden`, `two_factor_required`, `not_found`, `validation_error`, `conflict`, and `server_error`.
 - **Mask exceptions**: Never leak database exceptions, SQL failures, or raw Node stack traces to the client in production responses.
 - **Client Handling**: The frontend traps query errors using `notify.error(t('errors.{type}'))` to translate types into localized strings.
+
+---
+
+## 5. Bulk PUT / collection replace semantics
+Workspace bulk write endpoints (`PUT` that accept an array / `{ items }` payload) must **upsert** rows by composite tenant key (`bulkSave` + `conflictTarget`, or merge-by-id service helpers).
+- **Allowed**: Insert new ids; update existing ids; leave rows absent from the payload untouched.
+- **Forbidden on API bulk write paths**: `replaceForWorkspace` (or any wipe that deletes rows missing from the client payload). Keep replace helpers only for migrations, intentional admin clears, or documented one-shot archives (e.g. Messaging log clear after soft-archiving).
+- Frontend mutations must use `mutateAsync` and await success before closing forms or showing "saved" (`mms-data-layer.md`, `mms-module-architecture.md` §7).

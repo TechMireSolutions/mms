@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  HASANAT_MODULE_CONTRACT,
+  HASANAT_MODULE_MANIFEST,
   buildHasanatRedemptionWorkColumnRegistry,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -11,7 +11,7 @@ const STORAGE_SUFFIX = 'redemptions';
 export function useHasanatRedemptionColumnLayout() {
   const { t } = useTranslation();
 
-  const storageModuleId = `${HASANAT_MODULE_CONTRACT.moduleId}_${STORAGE_SUFFIX}`;
+  const storageModuleId = `${HASANAT_MODULE_MANIFEST.moduleId}_${STORAGE_SUFFIX}`;
 
   const tenantRegistry = useMemo(
     () =>
@@ -28,7 +28,7 @@ export function useHasanatRedemptionColumnLayout() {
   return useModuleColumnLayout({
     moduleId: storageModuleId,
     tenantRegistry,
-    apiPath: `${HASANAT_MODULE_CONTRACT.restBasePath}/redemptions`,
+    apiPath: `${HASANAT_MODULE_MANIFEST.restBasePath}/redemptions`,
     translationPrefix: 'hasanat.columns',
   });
 }

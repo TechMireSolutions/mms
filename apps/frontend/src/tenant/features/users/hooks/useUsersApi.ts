@@ -1,26 +1,30 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { WorkspaceUser, ActivityLog } from '@mms/shared';
-import { USERS_MODULE_CONTRACT } from '@mms/shared';
+import { USERS_MODULE_MANIFEST } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
 
-const USERS_API = USERS_MODULE_CONTRACT.restBasePath;
+const USERS_API = USERS_MODULE_MANIFEST.restBasePath;
 
-export const USERS_LIST_QUERY_KEY = [USERS_MODULE_CONTRACT.moduleId, 'users', 'list'] as const;
-export const ACTIVITY_LOGS_QUERY_KEY = [USERS_MODULE_CONTRACT.moduleId, 'logs', 'list'] as const;
+export const USERS_LIST_QUERY_KEY = [USERS_MODULE_MANIFEST.moduleId, 'users', 'list'] as const;
+export const ACTIVITY_LOGS_QUERY_KEY = [USERS_MODULE_MANIFEST.moduleId, 'logs', 'list'] as const;
 
-export function useUsers(options?: { enabled?: boolean }) {
+export function useUsers(options?: { enabled?: boolean; includeDeleted?: boolean }) {
+  const includeDeleted = options?.includeDeleted ?? false;
   return useCollectionSync<WorkspaceUser>({
-    queryKey: USERS_LIST_QUERY_KEY,
-    apiPath: USERS_API,
+    queryKey: [...USERS_LIST_QUERY_KEY, { includeDeleted }],
+    apiPath: `${USERS_API}?includeDeleted=${includeDeleted}`,
     responseKey: 'users',
     collectionName: 'users',
     enabled: options?.enabled,
   });
 }
 
-export function useUsersCollection(options?: { enabled?: boolean }): WorkspaceUser[] {
+export function useUsersCollection(options?: {
+  enabled?: boolean;
+  includeDeleted?: boolean;
+}): WorkspaceUser[] {
   return useUsers(options).syncedData;
 }
 
@@ -71,5 +75,47 @@ export function useUsersMutations() {
     },
   });
 
-  return { replaceUsers, replaceLogs };
+  const deleteUser = useMutation({
+    mutationFn: async (id: string) =>
+      apiJson<{ success: boolean }>(`${USERS_API}/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      }),
+    onSuccess: () => invalidate(),
+  });
+
+  const restoreUser = useMutation({
+    mutationFn: async (id: string) =>
+      apiJson<{ success: boolean }>(
+        `${USERS_API}/${encodeURIComponent(id)}/restore`,
+        { method: 'POST' },
+      ),
+    onSuccess: () => invalidate(),
+  });
+
+  const bulkDeleteUsers = useMutation({
+    mutationFn: async (ids: string[]) =>
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(
+        `${USERS_API}/bulk-delete`,
+        { method: 'POST', body: JSON.stringify({ ids }) },
+      ),
+    onSuccess: () => invalidate(),
+  });
+
+  const bulkRestoreUsers = useMutation({
+    mutationFn: async (ids: string[]) =>
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(
+        `${USERS_API}/bulk-restore`,
+        { method: 'POST', body: JSON.stringify({ ids }) },
+      ),
+    onSuccess: () => invalidate(),
+  });
+
+  return {
+    replaceUsers,
+    replaceLogs,
+    deleteUser,
+    restoreUser,
+    bulkDeleteUsers,
+    bulkRestoreUsers,
+  };
 }

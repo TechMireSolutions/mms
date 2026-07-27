@@ -22,6 +22,8 @@ export interface StoredTenantUser extends Partial<TenantAuthFields> {
   email?: string;
   name?: string;
   pendingLoginEmail?: string;
+  deletedAt?: string | null;
+  deletedBy?: string | null;
 }
 
 /** Resolves the canonical login email from persisted auth + optional hydrated contact email. */

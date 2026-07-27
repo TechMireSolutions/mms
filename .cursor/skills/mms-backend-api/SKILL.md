@@ -39,15 +39,19 @@ app.ts
 
 ## Soft delete on REST resources
 
-When the entity supports archives (Contacts / Students / Teachers pattern):
+When the entity supports archives (Contacts / Students / Teachers pattern — also Sessions, Attendance, Enrollments, Finance, Accounting, Obligations, Hasanat, Examinations):
 
 - Prefer `registerStandardTenantRoutes` with `deleteFn` + `restoreFn` (`POST :id/restore`)
 - List queries accept `includeDeleted`; default responses exclude soft-deleted rows
 - FE Work trash UI is required for full parity (skill `mms-module-work`) — do not leave restore API orphaned without UI when shipping soft-delete
+- Document intentional variants in `{Module}ModuleManifest.softDelete` (Messaging log clear; QB papers/results upsert-only)
 
+## Bulk PUT semantics
+
+API bulk write paths must **upsert** (`bulkSave` + `conflictTarget`, or merge-by-id service helpers). **Never** wire `replaceForWorkspace` as the route `saveFn` for normal client saves — that wipes rows absent from the payload (`mms-api-interface.mdc`, `mms-module-architecture.mdc` §7). Keep replace helpers for migrations / intentional clears only.
 ## Add a REST resource (preferred for new work)
 
-1. **`validation/{resource}Schemas.ts`** — Zod list + record schemas; export inferred types (or shared contract schemas in `@mms/shared`)
+1. **`validation/{resource}Schemas.ts`** — Zod list + record schemas; export inferred types (or shared manifest schemas in `@mms/shared`)
 2. **`routes/tenant/{resource}.ts`**
    ```ts
    fastify.addHook('preHandler', authenticateTenant);
@@ -56,14 +60,15 @@ When the entity supports archives (Contacts / Students / Teachers pattern):
    ```
 3. Register in `routes/index.ts` under `/api/{resource}`
 4. **Tests** — `app.inject()` with `host: 'tenant.localhost'` header
-5. **Frontend** — Query hooks + `useModulePermissions(contract)` (`mms-frontend`, `mms-data-layer.mdc`)
+5. **Frontend** — Query hooks + `useModulePermissions(manifest)` (`mms-frontend`, `mms-data-layer.mdc`)
 
 Reference implementations:
 
 - `apps/backend/src/routes/tenant/students.ts` — CRUD + soft-delete/restore
 - `apps/backend/src/routes/tenant/contacts.ts` — CRUD + soft-delete + E.164 + WhatsApp side effects
 - `apps/backend/src/routes/tenant/teachers.ts` — CRUD + soft-delete/restore
-
+- `apps/backend/src/routes/tenant/examinations.ts` / `hasanat.ts` — upsert bulk + soft-delete
+- Avoid as a soft-delete/upsert reference: none for primary Work entities — Question Bank questions now follow examinations upsert + soft-delete; keep migration-only `replace*` helpers.
 ## Add a document-store write (legacy path)
 
 Usually **no new route** — frontend calls `POST /api/db/collections/:name`.

@@ -29,7 +29,7 @@ import {
 import { useStudentMutations, type StudentRecord } from "@/tenant/features/students/hooks/useStudents";
 import { apiJson } from "@/lib/apiClient";
 import { notify } from "@/lib/notify";
-import { STUDENTS_MODULE_CONTRACT, ENROLLMENTS_MODULE_CONTRACT } from "@mms/shared";
+import { STUDENTS_MODULE_MANIFEST, ENROLLMENTS_MODULE_MANIFEST } from "@mms/shared";
 import { useEnrollmentViewerRole } from "@/tenant/hooks/useViewerRole";
 import { useEnrollmentColumnLayout } from "@/tenant/features/enrollments/hooks/useEnrollmentColumnLayout";
 
@@ -50,7 +50,7 @@ export default function EnrollmentsPage() {
     canDelete,
     canReports: canViewReports,
     canViewSetup,
-  } = useModulePermissions(ENROLLMENTS_MODULE_CONTRACT);
+  } = useModulePermissions(ENROLLMENTS_MODULE_MANIFEST);
   const TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const [tab, setTab]                 = usePersistedTabState<string>("enrollments_active_tab", "work");
   const [activeSubTab, setActiveSubTab] = useState("list");
@@ -60,7 +60,7 @@ export default function EnrollmentsPage() {
   const activeEnrollments = useEnrollmentsCollection();
   const { data: deletedPage } = useEnrollmentsPaginated({
     page: 1,
-    limit: ENROLLMENTS_MODULE_CONTRACT.maxPageSize,
+    limit: ENROLLMENTS_MODULE_MANIFEST.maxPageSize,
     includeDeleted: true,
     enabled: showDeleted,
   });
@@ -108,7 +108,7 @@ export default function EnrollmentsPage() {
       await createEnrollment.mutateAsync(enrollment);
       try {
         const studentsResponse = await apiJson<{ students: StudentRecord[] }>(
-          `${STUDENTS_MODULE_CONTRACT.restBasePath}/resolve`,
+          `${STUDENTS_MODULE_MANIFEST.restBasePath}/resolve`,
           {
             method: 'POST',
             body: JSON.stringify({ ids: [String(enrollment.studentId)] }),

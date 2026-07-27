@@ -21,7 +21,7 @@ import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Invoice } from '@/lib/data/financeData';
-import { FINANCE_MODULE_CONTRACT, type InvoiceCreateInput, type PaymentCreateInput } from "@mms/shared";
+import { FINANCE_MODULE_MANIFEST, type InvoiceCreateInput, type PaymentCreateInput } from "@mms/shared";
 import {
   useFinanceInvoices,
   useFinancePayments,
@@ -46,7 +46,7 @@ export default function Finance() {
     canDelete,
     canReports: canViewReports,
     canViewSetup,
-  } = useModulePermissions(FINANCE_MODULE_CONTRACT);
+  } = useModulePermissions(FINANCE_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const SUB_TABS = useMemo(
     () => [

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { questionBankTestRecordSchema } from './questionBankModuleContract.js';
+import { questionBankTestRecordSchema } from './questionBankModuleManifest.js';
 
 describe('questionBankTestRecordSchema', () => {
   it('accepts manual paper-builder metadata for persistence in tests.custom_data', () => {

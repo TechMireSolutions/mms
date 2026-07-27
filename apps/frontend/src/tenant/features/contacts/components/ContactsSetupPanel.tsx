@@ -8,7 +8,7 @@ import {
   getContactFieldRemovalIssues,
   DEFAULT_FORM_TABS,
   INITIAL_FIELD_SEED,
-  CONTACTS_MODULE_CONTRACT,
+  CONTACTS_MODULE_MANIFEST,
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -110,7 +110,7 @@ export default function ContactsSetupPanel({
 
     try {
       const { count } = await apiJson<{ count: number }>(
-        `${CONTACTS_MODULE_CONTRACT.restBasePath}/field-usage/${encodeURIComponent(fieldId)}`,
+        `${CONTACTS_MODULE_MANIFEST.restBasePath}/field-usage/${encodeURIComponent(fieldId)}`,
       );
       if (count > 0) {
         notify.error(t("contacts.setup.fieldHasContactData", { count }));

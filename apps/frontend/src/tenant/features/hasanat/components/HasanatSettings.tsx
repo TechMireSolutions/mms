@@ -7,17 +7,20 @@ import {
 } from "@mms/shared";
 import { useHasanatConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
+import { useTranslation } from "@/hooks/useTranslation";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
+import { notify } from "@/lib/notify";
 
 interface HasanatSettingsProps {
   mode?: "fields" | "preferences";
 }
 
 export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElement {
+  const { t } = useTranslation();
   const config = useHasanatConfig();
   const {
     settingsDraft,
@@ -25,14 +28,21 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
     saved,
     setSaved,
     upd,
-    saveSettings,
+    saveSettingsAsync,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: HASANAT_TAB_REGISTRY,
   });
 
-  const handleSave = () => {
-    saveSettings();
+  const handleSave = async () => {
+    try {
+      await saveSettingsAsync();
+      notify.success(t("hasanat.settings.saved"));
+    } catch (error: unknown) {
+      notify.error(t("hasanat.settings.saveFailed"), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
   };
 
   const showPrefs = mode === "preferences";
@@ -44,14 +54,16 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
         <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
           <Star className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         </div>
-        <h3 id="hasanat-settings-title" className="text-[13px] font-bold text-foreground">Hasanat Cards Settings</h3>
+        <h3 id="hasanat-settings-title" className="text-[13px] font-bold text-foreground">
+          {showFields ? t("hasanat.settings.titleFields") : t("hasanat.settings.titlePreferences")}
+        </h3>
       </div>
 
       {showPrefs && (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="points-per-unit" className={FORM_LABEL}>Points Per Card/Unit</label>
+              <label htmlFor="points-per-unit" className={FORM_LABEL}>{t("hasanat.settings.pointsPerUnit")}</label>
               <Input
                 id="points-per-unit"
                 type="number"
@@ -63,8 +75,8 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
           </div>
           <div className="pt-1">
             <ToggleRow
-              label="Auto-approve Payouts"
-              description="Automatically approve rewards redemption without manual review"
+              label={t("hasanat.settings.autoApprovePayouts")}
+              description={t("hasanat.settings.autoApprovePayoutsHint")}
               value={settingsDraft.autoApprovePayouts || false}
               onChange={(value) => upd("autoApprovePayouts", value)}
             />
@@ -83,10 +95,10 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
       <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
         <Button
           type="button"
-          onClick={handleSave}
+          onClick={() => { void handleSave(); }}
           className={saved ? "bg-success hover:bg-success/90 text-success-foreground ml-auto" : "ml-auto"}
         >
-          <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? "Saved!" : "Save Settings"}
+          <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? t("hasanat.settings.btnSaved") : t("hasanat.settings.btnSave")}
         </Button>
       </footer>
     </Card>

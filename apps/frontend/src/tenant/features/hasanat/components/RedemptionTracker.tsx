@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Gift, Plus, Star } from "lucide-react";
@@ -24,13 +24,14 @@ interface RedeemModalProps {
   open: boolean;
   distributions: Distribution[];
   onClose: () => void;
-  onSave: (redemption: Redemption) => void;
+  onSave: (redemption: Redemption) => void | Promise<void>;
 }
 
 function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps) {
   const { t } = useTranslation();
   const activeDistributions = distributions.filter((distribution) => distribution.status === "active");
   const users = useUsersCollection() as unknown as SystemUser[];
+  const [submitting, setSubmitting] = useState(false);
   const [data, setData] = useState<Partial<Redemption>>({
     distributionId: activeDistributions[0]?.id || "",
     reward: "",
@@ -63,16 +64,24 @@ function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps)
       icon={Gift}
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.save")}
+      saving={submitting}
       onSave={() => {
-        const selectedUser = users.find((user) => user.id === data.approvedByUserId);
-        const approvedBy = selectedUser ? selectedUser.name : (data.approvedByUserId ? `User #${data.approvedByUserId}` : '');
-        onSave({
-          ...data,
-          id: `red${Date.now()}`,
-          pointsUsed: Number(data.pointsUsed),
-          studentName: selectedDistribution?.recipientName || "",
-          approvedBy,
-        } as Redemption);
+        void (async () => {
+          const selectedUser = users.find((user) => user.id === data.approvedByUserId);
+          const approvedBy = selectedUser ? selectedUser.name : (data.approvedByUserId ? `User #${data.approvedByUserId}` : '');
+          setSubmitting(true);
+          try {
+            await onSave({
+              ...data,
+              id: `red${Date.now()}`,
+              pointsUsed: Number(data.pointsUsed),
+              studentName: selectedDistribution?.recipientName || "",
+              approvedBy,
+            } as Redemption);
+          } finally {
+            setSubmitting(false);
+          }
+        })();
       }}
       saveDisabled={!data.distributionId || !data.reward || !data.pointsUsed}
     >
@@ -124,7 +133,7 @@ function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps)
 
 export interface RedemptionTrackerProps {
   distributions: Distribution[];
-  onUpdateDistributions: (distributions: Distribution[]) => void;
+  onUpdateDistributions: (distributions: Distribution[]) => void | Promise<void>;
   onFilteredCountChange?: (count: number) => void;
   canWrite?: boolean;
   isColumnVisible?: (key: string) => boolean;
@@ -152,15 +161,11 @@ export function RedemptionTracker({
     onFilteredCountChange?.(redemptions.length);
   }, [redemptions.length, onFilteredCountChange]);
 
-  const saveRedemptions = useCallback((next: Redemption[]) => {
-    replaceRedemptions.mutate(next);
-  }, [replaceRedemptions]);
-
   const totalPoints = redemptions.reduce((sum: number, redemption: Redemption) => sum + redemption.pointsUsed, 0);
 
-  const handleSave = (redemption: Redemption) => {
-    saveRedemptions([...redemptions, redemption]);
-    onUpdateDistributions(distributions.map((distribution: Distribution) => distribution.id === redemption.distributionId ? { ...distribution, status: "redeemed" as const } : distribution));
+  const handleSave = async (redemption: Redemption) => {
+    await replaceRedemptions.mutateAsync([...redemptions, redemption]);
+    await onUpdateDistributions(distributions.map((distribution: Distribution) => distribution.id === redemption.distributionId ? { ...distribution, status: "redeemed" as const } : distribution));
     setShowModal(false);
   };
 

@@ -39,7 +39,7 @@ Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-m
 ## 3. Role-Based Access Control (RBAC)
 
 ### Permissions Matrix
-- **Permissions Hook**: Frontend gates use `can('permission.string')` via `usePermissions`, or **`useModulePermissions(X_MODULE_CONTRACT)`** for module pages (resolves `canWrite` / `canDelete` / `canExport` / `canViewSetup` / reports from the contract).
+- **Permissions Hook**: Frontend gates use `can('permission.string')` via `usePermissions`, or **`useModulePermissions(X_MODULE_MANIFEST)`** for module pages (resolves `canWrite` / `canDelete` / `canExport` / `canViewSetup` / reports from the manifest).
 - **Module pages**: Prefer contract-driven gates + `useFilteredModuleTierTabs({ canViewSetup, canViewReports })`. Do not introduce new `role === 'admin'|'teacher'|…` write gates on tenant modules.
 - **DOM Rendering**: Forbidden elements must be omitted from rendering entirely; do not render disabled placeholders for unauthorized actions.
 - **Backend Enforcement**: Enforce permission checks inside route preHandlers (e.g. `canWriteCollection(user, 'students')`). Denied operations must return `403` with a stable `type: 'forbidden'` payload.

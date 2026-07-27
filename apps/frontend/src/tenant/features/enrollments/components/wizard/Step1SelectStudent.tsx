@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { User, Calendar } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
-import { STUDENTS_MODULE_CONTRACT } from "@mms/shared";
+import { STUDENTS_MODULE_MANIFEST } from "@mms/shared";
 import { calcAge, Student } from '@/lib/data/studentsData';
 import { Session } from '@/lib/data/sessionsData';
 import { WIZARD_SELECTION_DOT } from "@/lib/semanticTone";
@@ -25,7 +25,7 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
 
   const { data: studentPage, isFetching } = useStudentsPaginated({
     page: 1,
-    limit: STUDENTS_MODULE_CONTRACT.maxPageSize,
+    limit: STUDENTS_MODULE_MANIFEST.maxPageSize,
     search,
     status: "active",
   });

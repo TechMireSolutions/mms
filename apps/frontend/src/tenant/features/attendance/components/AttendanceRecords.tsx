@@ -10,7 +10,7 @@ import { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { ATTENDANCE_MODULE_CONTRACT, type AppTranslationKey, formatDate } from "@mms/shared";
+import { ATTENDANCE_MODULE_MANIFEST, type AppTranslationKey, formatDate } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { Input } from "@/components/ui/input";
@@ -60,7 +60,7 @@ export function AttendanceRecords({
   const {
     canWrite: canWriteAttendance,
     canDelete: canDeleteAttendance,
-  } = useModulePermissions(ATTENDANCE_MODULE_CONTRACT);
+  } = useModulePermissions(ATTENDANCE_MODULE_MANIFEST);
   const sessions = useSessionsCollection();
 
   const allClasses = useMemo(() => {

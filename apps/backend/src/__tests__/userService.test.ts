@@ -5,6 +5,7 @@ import type { Contact } from '@mms/shared';
 const mockListTenantUsers = vi.fn();
 const mockFindTenantUserById = vi.fn();
 const mockReplaceTenantUsers = vi.fn();
+const mockUpsertTenantUserRow = vi.fn();
 const mockGetCollection = vi.fn();
 const mockSaveCollection = vi.fn();
 const mockHashPassword = vi.fn();
@@ -15,6 +16,7 @@ vi.mock('../db/repositories/tenantUserRepository.js', () => ({
   listTenantUsersByWorkspace: (...args: unknown[]) => mockListTenantUsers(...args),
   findTenantUserRowById: (...args: unknown[]) => mockFindTenantUserById(...args),
   replaceTenantUsersForWorkspace: (...args: unknown[]) => mockReplaceTenantUsers(...args),
+  upsertTenantUserRow: (...args: unknown[]) => mockUpsertTenantUserRow(...args),
 }));
 
 vi.mock('../db/database.js', () => ({
@@ -146,7 +148,7 @@ describe('userService', () => {
 
     expect(mockHashPassword).toHaveBeenCalledWith('TempAdmin123!');
     expect(mockHashPassword).toHaveBeenCalledWith('TempTeacher123!');
-    const savedUsers = mockSaveCollection.mock.calls[0][1];
+    const savedUsers = mockUpsertTenantUserRow.mock.calls.map((call) => call[0]);
     expect(savedUsers).toEqual([
       expect.objectContaining({
         id: 'admin-1',
@@ -186,7 +188,7 @@ describe('userService', () => {
 
     expect(mockVerifyPassword).toHaveBeenCalledWith('OldTemp123!', 'old-hash');
     expect(mockHashPassword).toHaveBeenCalledWith('NewTeacher123!');
-    const savedUsers = mockSaveCollection.mock.calls[0][1];
+    const savedUsers = mockUpsertTenantUserRow.mock.calls.map((call) => call[0]);
     expect(savedUsers[0]).toMatchObject({
       id: 'teacher-1',
       passwordHash: 'hashed:NewTeacher123!',

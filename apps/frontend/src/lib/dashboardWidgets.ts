@@ -1,5 +1,13 @@
 import type { AppTranslationKey } from '@mms/shared';
 
+/** Prefix for seeded default dashboard/report widgets (`widgetDefaults`). */
+export const SEED_WIDGET_ID_PREFIX = 'def-';
+
+/** True when the widget id is a system-seeded default (not user-created). */
+export function isSeededDashboardWidget(widgetId: string): boolean {
+  return widgetId.startsWith(SEED_WIDGET_ID_PREFIX);
+}
+
 /** Minimal widget/card shape for title/subtitle resolution. */
 export type WidgetI18nSource = {
   id: string;

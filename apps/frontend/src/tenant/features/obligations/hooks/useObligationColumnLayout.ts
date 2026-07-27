@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  OBLIGATIONS_MODULE_CONTRACT,
+  OBLIGATIONS_MODULE_MANIFEST,
   buildObligationCollectionWorkColumnRegistry,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -24,9 +24,9 @@ export function useObligationColumnLayout() {
   );
 
   return useModuleColumnLayout({
-    moduleId: OBLIGATIONS_MODULE_CONTRACT.moduleId,
+    moduleId: OBLIGATIONS_MODULE_MANIFEST.moduleId,
     tenantRegistry,
-    apiPath: OBLIGATIONS_MODULE_CONTRACT.restBasePath,
+    apiPath: OBLIGATIONS_MODULE_MANIFEST.restBasePath,
     translationPrefix: 'obligations.columns',
   });
 }

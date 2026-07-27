@@ -8,7 +8,7 @@ import type {
   ObligationCollection,
   ObligationsCommandMetricsSnapshot,
 } from '@mms/shared';
-import { OBLIGATIONS_MODULE_CONTRACT } from '@mms/shared';
+import { OBLIGATIONS_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
@@ -22,7 +22,7 @@ export const OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY = ['obligations', 'distribution
 export const OBLIGATIONS_COLLECTIONS_QUERY_KEY = ['obligations', 'collections', 'list'] as const;
 export const OBLIGATIONS_METRICS_QUERY_KEY = ['obligations', 'metrics'] as const;
 
-const OBLIGATIONS_API = OBLIGATIONS_MODULE_CONTRACT.restBasePath;
+const OBLIGATIONS_API = OBLIGATIONS_MODULE_MANIFEST.restBasePath;
 
 export class NotifiedObligationsMutationError extends Error {}
 
@@ -116,8 +116,8 @@ export function useObligationsCollectionsCollection(options?: {
 
 export function useObligationsMetrics(options?: { enabled?: boolean }) {
   return useServerMetrics<ObligationsCommandMetricsSnapshot>({
-    moduleId: OBLIGATIONS_MODULE_CONTRACT.moduleId,
-    apiPath: OBLIGATIONS_MODULE_CONTRACT.restBasePath,
+    moduleId: OBLIGATIONS_MODULE_MANIFEST.moduleId,
+    apiPath: OBLIGATIONS_MODULE_MANIFEST.restBasePath,
     enabled: options?.enabled,
   });
 }

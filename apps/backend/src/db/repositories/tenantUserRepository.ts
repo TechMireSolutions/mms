@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { type StoredTenantUser, resolveTenantLoginEmail, applyTitleCaseRecursive } from '@mms/shared';
 import { getDb } from '../dbClient.js';
 import { tenantUsers } from '../schema.js';
@@ -18,6 +18,8 @@ const TABLE_AUTH_KEYS = new Set([
   'createdAt',
   'email',
   'mustChangePassword',
+  'deletedAt',
+  'deletedBy',
 ]);
 
 function splitProfileFields(user: TenantUserRow): {
@@ -51,6 +53,18 @@ function splitProfileFields(user: TenantUserRow): {
       createdAt:
         typeof user.createdAt === 'string' ? new Date(user.createdAt) : new Date(),
       mustChangePassword: user.mustChangePassword === true,
+      deletedAt:
+        typeof user.deletedAt === 'string' && user.deletedAt
+          ? new Date(user.deletedAt)
+          : user.deletedAt === null
+            ? null
+            : undefined,
+      deletedBy:
+        typeof user.deletedBy === 'string' && user.deletedBy
+          ? user.deletedBy
+          : user.deletedBy === null
+            ? null
+            : undefined,
       profileJson: Object.keys(profile).length > 0 ? profile : null,
     },
     profile,
@@ -70,10 +84,13 @@ function rowToTenantUser(row: typeof tenantUsers.$inferSelect): TenantUserRow {
     pendingLoginEmail: row.pendingLoginEmail ?? undefined,
     createdAt: row.createdAt.toISOString(),
     mustChangePassword: row.mustChangePassword,
+    deletedAt: row.deletedAt?.toISOString() ?? null,
+    deletedBy: row.deletedBy ?? null,
   };
 
   if (row.profileJson) {
     const extra = row.profileJson as Record<string, unknown>;
+    // Auth/soft-delete columns win over profile_json mirrors.
     return { ...extra, ...base };
   }
 
@@ -85,16 +102,24 @@ export async function countTenantUsersByWorkspace(workspaceSubdomain: string): P
   const rows = await getDb()
     .select({ count: sql<string>`count(*)` })
     .from(tenantUsers)
-    .where(eq(tenantUsers.workspaceSubdomain, subdomain));
+    .where(and(eq(tenantUsers.workspaceSubdomain, subdomain), isNull(tenantUsers.deletedAt)));
   return parseInt(rows[0]?.count ?? '0', 10);
 }
 
-export async function listTenantUsersByWorkspace(workspaceSubdomain: string): Promise<TenantUserRow[]> {
+export async function listTenantUsersByWorkspace(
+  workspaceSubdomain: string,
+  options?: { includeDeleted?: boolean },
+): Promise<TenantUserRow[]> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
+  const includeDeleted = options?.includeDeleted === true;
   const rows = await getDb()
     .select()
     .from(tenantUsers)
-    .where(eq(tenantUsers.workspaceSubdomain, subdomain));
+    .where(
+      includeDeleted
+        ? and(eq(tenantUsers.workspaceSubdomain, subdomain), sql`${tenantUsers.deletedAt} is not null`)
+        : and(eq(tenantUsers.workspaceSubdomain, subdomain), isNull(tenantUsers.deletedAt)),
+    );
   return rows.map(rowToTenantUser);
 }
 
@@ -107,13 +132,21 @@ export async function findTenantUserRowById(id: string): Promise<TenantUserRow |
 export async function findTenantUserRowByLoginEmail(
   workspaceSubdomain: string,
   loginEmail: string,
+  options?: { includeDeleted?: boolean },
 ): Promise<TenantUserRow | null> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   const email = loginEmail.trim().toLowerCase();
+  const conditions = [
+    eq(tenantUsers.workspaceSubdomain, subdomain),
+    eq(tenantUsers.loginEmail, email),
+  ];
+  if (!options?.includeDeleted) {
+    conditions.push(isNull(tenantUsers.deletedAt));
+  }
   const rows = await getDb()
     .select()
     .from(tenantUsers)
-    .where(and(eq(tenantUsers.workspaceSubdomain, subdomain), eq(tenantUsers.loginEmail, email)));
+    .where(and(...conditions));
   const row = rows[0];
   return row ? rowToTenantUser(row) : null;
 }
@@ -137,6 +170,12 @@ export async function replaceTenantUsersForWorkspace(
   );
 }
 
+function omitUndefinedColumns<T extends Record<string, unknown>>(columns: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(columns).filter(([, value]) => value !== undefined),
+  ) as Partial<T>;
+}
+
 export async function upsertTenantUserRow(user: TenantUserRow): Promise<void> {
   const processedUser = applyTitleCaseRecursive(user) as TenantUserRow;
   const { columns } = splitProfileFields(processedUser);
@@ -146,12 +185,43 @@ export async function upsertTenantUserRow(user: TenantUserRow): Promise<void> {
   if (existing) {
     await db
       .update(tenantUsers)
-      .set({ ...columns, updatedAt: new Date() })
+      .set({ ...omitUndefinedColumns(columns), updatedAt: new Date() })
       .where(eq(tenantUsers.id, columns.id));
     return;
   }
 
-  await db.insert(tenantUsers).values(columns);
+  await db.insert(tenantUsers).values(omitUndefinedColumns(columns) as typeof columns);
+}
+
+export async function softDeleteTenantUserRow(
+  id: string,
+  deletedBy: string,
+): Promise<boolean> {
+  const existing = await findTenantUserRowById(id);
+  if (!existing || existing.deletedAt) return false;
+  await getDb()
+    .update(tenantUsers)
+    .set({
+      deletedAt: new Date(),
+      deletedBy,
+      updatedAt: new Date(),
+    })
+    .where(eq(tenantUsers.id, id));
+  return true;
+}
+
+export async function restoreTenantUserRow(id: string): Promise<boolean> {
+  const existing = await findTenantUserRowById(id);
+  if (!existing || !existing.deletedAt) return false;
+  await getDb()
+    .update(tenantUsers)
+    .set({
+      deletedAt: null,
+      deletedBy: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(tenantUsers.id, id));
+  return true;
 }
 
 export async function deleteTenantUsersByWorkspace(workspaceSubdomain: string): Promise<void> {

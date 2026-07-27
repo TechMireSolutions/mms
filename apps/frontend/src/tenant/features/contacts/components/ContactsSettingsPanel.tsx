@@ -1,6 +1,6 @@
 import { useMemo, useState, lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
-import { Contact, CONTACTS_MODULE_CONTRACT, type AppTranslationKey } from "@mms/shared";
+import { Contact, CONTACTS_MODULE_MANIFEST, type AppTranslationKey } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -43,7 +43,7 @@ export default function ContactsSettingsPanel({
 
   const settingsSubTabs = useMemo(() => {
     const tabsFromConfig = fieldConfig.settingsSubTabs || [];
-    return CONTACTS_MODULE_CONTRACT.setupSubTabs
+    return CONTACTS_MODULE_MANIFEST.setupSubTabs
       .map((key, index) => {
         const setupTabConfig = tabsFromConfig.find((tab) => tab.key === key);
         return {

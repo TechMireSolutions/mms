@@ -26,13 +26,20 @@ export const MESSAGING_STATUS_OPTIONS = MESSAGING_STATUS_FILTERS.map((status) =>
   labelKey: `messaging.status.${status}` as const,
 }));
 
-/** Messaging module contract — aligns with universal module architecture. */
-export const MESSAGING_MODULE_CONTRACT = {
+/** Messaging module manifest — aligns with universal module architecture. */
+export const MESSAGING_MODULE_MANIFEST = {
   moduleId: 'messaging',
   entityType: 'Message',
   collectionKey: 'messages',
   restBasePath: '/api/messaging',
   tiers: ['work', 'reports', 'setup'] as const,
+  setupSubTabs: ['templates'] as const,
+  softDelete: {
+    workExcludesDeleted: true,
+    reportsIncludeDeleted: false,
+    exportsIncludeDeleted: false,
+    captureDeletionReason: false,
+  },
   permissions: {
     read: 'messaging.read',
     write: 'messaging.write',
@@ -51,7 +58,7 @@ export const MESSAGING_MODULE_CONTRACT = {
   statusOptions: MESSAGING_STATUS_OPTIONS,
 } as const;
 
-export type MessagingModuleTier = (typeof MESSAGING_MODULE_CONTRACT.tiers)[number];
+export type MessagingModuleTier = (typeof MESSAGING_MODULE_MANIFEST.tiers)[number];
 
 /**
  * Resolves the visual badge styling for message channels.

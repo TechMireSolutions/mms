@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SessionsCommandMetricsSnapshot, SessionsListPageResult } from '@mms/shared';
-import { SESSIONS_MODULE_CONTRACT } from '@mms/shared';
+import { SESSIONS_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
@@ -10,7 +10,7 @@ import { SESSIONS_DATA, type Session } from '@/lib/data/sessionsData';
 export const SESSIONS_QUERY_KEY = ['sessions', 'list'] as const;
 export const SESSIONS_METRICS_QUERY_KEY = ['sessions', 'metrics'] as const;
 
-const SESSIONS_API = SESSIONS_MODULE_CONTRACT.restBasePath;
+const SESSIONS_API = SESSIONS_MODULE_MANIFEST.restBasePath;
 
 export interface SessionsPaginatedParams {
   page: number;
@@ -27,7 +27,7 @@ export interface SessionsPaginatedParams {
 function buildSessionsPageUrl(params: SessionsPaginatedParams): string {
   const queryParams = new URLSearchParams();
   queryParams.set('page', String(params.page));
-  queryParams.set('limit', String(params.limit ?? SESSIONS_MODULE_CONTRACT.defaultPageSize));
+  queryParams.set('limit', String(params.limit ?? SESSIONS_MODULE_MANIFEST.defaultPageSize));
   if (params.search?.trim()) queryParams.set('search', params.search.trim());
   if (params.status?.trim()) queryParams.set('status', params.status.trim());
   if (params.type?.trim()) queryParams.set('type', params.type.trim());
@@ -52,7 +52,7 @@ export function useSessionsPaginated(params: SessionsPaginatedParams) {
 export function useSessions(options?: { enabled?: boolean }) {
   return useCollectionSync<Session>({
     queryKey: SESSIONS_QUERY_KEY,
-    apiPath: `${SESSIONS_API}?page=1&limit=${SESSIONS_MODULE_CONTRACT.maxPageSize}`,
+    apiPath: `${SESSIONS_API}?page=1&limit=${SESSIONS_MODULE_MANIFEST.maxPageSize}`,
     responseKey: 'sessions',
     collectionName: 'sessions',
     defaultData: SESSIONS_DATA,
@@ -136,8 +136,8 @@ export function useSessionsCollection(options?: { enabled?: boolean }): Session[
 
 export function useSessionsMetrics(options?: { enabled?: boolean }) {
   return useServerMetrics<SessionsCommandMetricsSnapshot>({
-    moduleId: SESSIONS_MODULE_CONTRACT.moduleId,
-    apiPath: SESSIONS_MODULE_CONTRACT.restBasePath,
+    moduleId: SESSIONS_MODULE_MANIFEST.moduleId,
+    apiPath: SESSIONS_MODULE_MANIFEST.restBasePath,
     enabled: options?.enabled,
   });
 }

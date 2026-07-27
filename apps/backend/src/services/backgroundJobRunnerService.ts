@@ -1,4 +1,4 @@
-import { CONTACTS_MODULE_CONTRACT } from '@mms/shared';
+import { CONTACTS_MODULE_MANIFEST } from '@mms/shared';
 import type { ContactExportColumn } from '@mms/shared';
 import type { ContactsExportQueryInput } from './contactsExportService.js';
 import { buildContactsCsvExport } from './contactsExportService.js';
@@ -15,7 +15,7 @@ export interface ContactsExportJobPayload {
 }
 
 export function registerDefaultBackgroundJobRunners(): void {
-  const moduleId = CONTACTS_MODULE_CONTRACT.moduleId;
+  const moduleId = CONTACTS_MODULE_MANIFEST.moduleId;
 
   registerBackgroundJobRunner(`${moduleId}:export`, async (payload, ctx) => {
     const exportPayload = payload as ContactsExportJobPayload;

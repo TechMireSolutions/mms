@@ -55,6 +55,9 @@ export const questionBankQuestionRecordSchema = z.object({
   sourceCitations: z.array(questionBookCitationSchema).optional(),
   sources: z.array(questionSourceReferenceSchema).optional(),
   source: questionSourceReferenceSchema.optional(),
+  deletedAt: z.string().nullable().optional(),
+  deletedBy: z.string().nullable().optional(),
+  deletionReason: z.string().nullable().optional(),
 });
 
 export const questionBankQuestionListSchema = z.array(questionBankQuestionRecordSchema);
@@ -93,8 +96,10 @@ export const questionBankResultRecordSchema = z.object({
 export const questionBankResultListSchema = z.array(questionBankResultRecordSchema);
 
 
-/** Question Bank module contract — aligns with globle1 universal module architecture. */
-export const QUESTION_BANK_MODULE_CONTRACT = {
+/**
+ * Question Bank module manifest — soft-delete on questions (JSONB); tests/results upsert-only.
+ */
+export const QUESTION_BANK_MODULE_MANIFEST = {
   moduleId: 'questionBank',
   entityType: 'QuestionBankQuestion',
   collectionKey: 'questions',
@@ -105,6 +110,14 @@ export const QUESTION_BANK_MODULE_CONTRACT = {
   restBasePath: '/api/question-bank',
   analyticsCategory: 'questionBank',
   tiers: ['work', 'reports', 'setup'] as const,
+  setupSubTabs: ['fields', 'preferences'] as const,
+  /** Questions soft-delete via JSONB; tests/papers and assessment_results are upsert-only (no trash UI). */
+  softDelete: {
+    workExcludesDeleted: true,
+    reportsIncludeDeleted: false,
+    exportsIncludeDeleted: false,
+    captureDeletionReason: false,
+  },
   permissions: {
     read: 'students.read',
     write: 'students.write',
@@ -116,9 +129,9 @@ export const QUESTION_BANK_MODULE_CONTRACT = {
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['questions', 'generate'] as const,
-    bulkActions: [] as const,
+    bulkActions: ['delete'] as const,
   },
   defaultPageSize: 15,
 } as const;
 
-export type QuestionBankModuleTier = (typeof QUESTION_BANK_MODULE_CONTRACT.tiers)[number];
+export type QuestionBankModuleTier = (typeof QUESTION_BANK_MODULE_MANIFEST.tiers)[number];

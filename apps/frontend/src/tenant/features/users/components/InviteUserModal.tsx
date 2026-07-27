@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -21,10 +21,11 @@ import {
 import { inviteUserSchema, type InviteUserFormValues } from '@/lib/forms/userSchemas';
 import { firstZodFieldError } from '@/lib/forms/translateZodError';
 import { TranslatedFormMessage } from '@/lib/forms/TranslatedFormMessage';
+import { notify } from '@/lib/notify';
 
 export interface InviteUserModalProps {
   onClose: () => void;
-  onInvite: (user: SystemUser) => void;
+  onInvite: (user: SystemUser) => void | Promise<void>;
   existingContactIds?: (string | number)[];
 }
 
@@ -35,6 +36,7 @@ export function InviteUserModal({
 }: InviteUserModalProps): React.JSX.Element {
   const { t } = useTranslation();
   const workspaceRoles = useWorkspaceRoles();
+  const [submitting, setSubmitting] = useState(false);
 
   const excludeIds = useMemo(
     () => existingContactIds.map(String),
@@ -57,7 +59,7 @@ export function InviteUserModal({
     Boolean(watchedContactId),
   );
 
-  const handleSave = form.handleSubmit((values) => {
+  const handleSave = form.handleSubmit(async (values) => {
     const contact = selectedContact;
     if (!contact) return;
     const name = toTitleCase(contact.name.trim()) as string;
@@ -78,8 +80,17 @@ export function InviteUserModal({
       twoFactorEnabled: false,
       activeSessions: 0,
     };
-    onInvite(user);
-    onClose();
+    setSubmitting(true);
+    try {
+      await onInvite(user);
+      onClose();
+    } catch (error: unknown) {
+      notify.error(t('errors.module.title'), {
+        description: error instanceof Error ? error.message : t('errors.module.description'),
+      });
+    } finally {
+      setSubmitting(false);
+    }
   });
 
   return (
@@ -93,6 +104,7 @@ export function InviteUserModal({
       cancelLabel={t('users.cancel')}
       saveLabel={t('users.inviteSubmit')}
       onSave={handleSave}
+      saving={submitting}
     >
       <Form {...form}>
         <form className="space-y-4" onSubmit={handleSave}>

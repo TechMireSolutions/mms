@@ -1,6 +1,6 @@
 ---
 name: mms-module-page
-description: Creates or modifies MMS module pages per mms-module-architecture.md — Work, Reports, Setup tiers, module contract, PageHeader command centre, and settings panels. Use when adding a module, three-tier page, or aligning an existing module to universal architecture.
+description: Creates or modifies MMS module pages per mms-module-architecture.md — Work, Reports, Setup tiers, module manifest, PageHeader command centre, and settings panels. Use when adding a module, three-tier page, or aligning an existing module to universal architecture.
 ---
 
 # MMS Module Page Pattern
@@ -11,13 +11,14 @@ description: Creates or modifies MMS module pages per mms-module-architecture.md
 
 | Section | Topic | MMS rule / skill |
 |---|--------|------------------|
-| 1 | Global foundation (contract, RBAC, audit, offline, soft delete, integrity) | `mms-module-architecture.md`, `mms-auth-security.md` |
+| 1 | Global foundation (manifest, RBAC, audit, offline, soft delete, integrity) | `mms-module-architecture.md`, `mms-auth-security.md` |
 | 2 | Command centre (metrics, dedup, export, create) | `mms-ui-ux-design.md` PageHeader, `mms-module-architecture.md` |
 | 3 | Work directory | `mms-module-architecture.md`, `mms-ui-ux-design.md` |
 | 4 | Reports analytics | `mms-reports.md`, skill `mms-reports-export` |
 | 5 | Setup tab | `mms-module-architecture.md`, skill **`mms-module-setup`** |
 | 6 | Fields/tabs | `mms-fields.md`, skill `mms-fields-registry` |
 | 7 | Preferences | `mms-settings-i18n.md` |
+| 6–7 | Soft-delete + **gold-standard parity** | `mms-module-architecture.md` §6–§7 |
 | 8-14 | Jobs, errors, perf, a11y, security | `mms-module-architecture.md` |
 
 ## Required structure
@@ -32,18 +33,21 @@ work  |  reports  |  setup
 
 | Module | Architecture alignment | Data layer | Primary hooks |
 |--------|-------------------------|------------|---------------|
-| **Contacts** | **Full reference** — contract, metrics, dedup, soft delete + trash UI, field RBAC, cards, drill-down, sync outbox, saved reports | REST + Query | `useContactsPageState`, `useContacts`, `useContactMutations` |
-| **Students / Teachers** | Three-tier + soft-delete Work trash (restore/bulk restore) + `useModulePermissions` | REST + Query | `useStudents` / `useTeachers` mutations |
-| Finance / Accounting | Three-tier + write gates via contract | REST + Query | `useFinanceApi` / `useAccountingApi` |
+| **Contacts** | **Full reference** — manifest, metrics, dedup, soft delete + trash UI, field RBAC, cards, drill-down, sync outbox, saved reports | REST + Query | `useContactsPageState`, `useContacts`, `useContactMutations` |
+| **Students / Teachers** | Three-tier + soft-delete Work trash + `useModulePermissions` + Cmd/Ctrl+N | REST + Query | `useStudents` / `useTeachers` mutations |
+| **Hasanat / Examinations / Obligations / Finance / Accounting / Sessions / Attendance / Enrollments** | Gold-standard soft-delete trash + upsert bulk + awaited saves (pattern varies by entity) | REST + Query | Feature `useXxx` / `useXxxMutations` |
+| **Users** | Manifest `setupSubTabs`; soft-delete Work trash (`deleted_at`); ErrorState; awaited saves | REST + Query | `useUsers` / `useUsersMutations` |
+| **Messaging** | Templates Setup; log clear soft-archive; ErrorState; Cmd/Ctrl+N campaign | REST + Query | `useMessageTemplates` / `useMessagingMutations` |
+| Question Bank | Three-tier + soft-delete trash on questions + upsert bulk + gold-standard Setup/UX | REST + Query | `useQuestionBank*` |
 
-**Before building a new module:** read `ContactsPage.tsx` (or Students for soft-delete), `{module}ModuleContract.ts`, and skill `mms-module-work`.
+**Before building a new module:** read `ContactsPage.tsx` (or Students for soft-delete), `{module}ModuleManifest.ts`, `mms-module-architecture.md` §7, and skill `mms-module-work`.
 
-## Module contract (§1.1 — required for new modules)
+## Module manifest (§1.1 — required for new modules)
 
-Add `packages/shared/src/{module}ModuleContract.ts`:
+Add `packages/shared/src/{module}ModuleManifest.ts`:
 
 ```typescript
-export const STUDENTS_MODULE_CONTRACT = {
+export const STUDENTS_MODULE_MANIFEST = {
   moduleId: 'students',
   entityType: 'Student',
   collectionKey: 'students',
@@ -60,10 +64,23 @@ export const STUDENTS_MODULE_CONTRACT = {
 
 Hooks and pages import constants — no duplicated collection names or tier ids.
 
+## Gold-standard checklist (`mms-module-architecture.md` §7)
+
+```
+- [ ] Bulk PUT upsert-only (never replaceForWorkspace wipe on API write paths)
+- [ ] Soft-delete + Work trash UI (or documented manifest variant)
+- [ ] mutateAsync + await form/setup saves; close only after success
+- [ ] setupSubTabs + canEditSetup + saveSettingsAsync
+- [ ] ErrorState + retry on list query failure
+- [ ] Cmd/Ctrl+N create when canWrite and not in trash
+- [ ] useModulePermissions(manifest); omit forbidden CTAs
+- [ ] i18n via t() (en/ar/ur/fa)
+```
+
 ## Checklist
 
 ```
-- [ ] {Module}ModuleContract in @mms/shared
+- [ ] {Module}ModuleManifest in @mms/shared
 - [ ] Page in apps/frontend/src/pages/ — lazy route in HostRoutes.tsx
 - [ ] Nav: navConfig.tsx + SYSTEM_MODULES + SYSTEM_MODULE_NAV
 - [ ] PageHeader command centre: metrics, create, export, integrity tools (not tier-gated)
@@ -72,12 +89,12 @@ Hooks and pages import constants — no duplicated collection names or tier ids.
 - [ ] Work: directory + search/filter/sort + detail drawer + bulk bar + FormModal
 - [ ] Work mobile: card layout where appropriate (Contacts: ContactCards)
 - [ ] Reports: KPISummary(moduleCategory) + ModuleReports — reports tier only
-- [ ] Setup: SubTabBar → Fields + Preferences (+ contract setupSubTabs)
-- [ ] can() / useModulePermissions(contract) UI gates + API RBAC on writes
+- [ ] Setup: SubTabBar → Fields + Preferences (+ manifest setupSubTabs)
+- [ ] can() / useModulePermissions(manifest) UI gates + API RBAC on writes
 - [ ] Field/tab/column RBAC when registry-driven (Contacts pattern)
-- [ ] Soft delete in API when REST CRUD exists; Work trash UI (Contacts/Students/Teachers) or documented hard-delete
+- [ ] Soft delete in API when REST CRUD exists; Work trash UI or documented hard-delete/variant
 - [ ] Data: Query-first if REST exists; else useLiveCollection (do not expand legacy)
-- [ ] ErrorBoundary on Work + Reports
+- [ ] ErrorBoundary on Work + Reports; ErrorState on list load failure
 - [ ] i18n via t(); no new uiStrings keys
 - [ ] Audit on sensitive writes (Contacts REST + setup-audit shipped)
 - [ ] Field delete dependency checks when registry-driven Setup (Contacts: contactFieldDependencies)
@@ -110,6 +127,7 @@ Reference: `ContactsCommandMetrics.tsx`.
 - Directory views: list/table, optional kanban, **mobile cards**
 - Detail drawer — no route change; registry tabs + field RBAC
 - Bulk bar — partial failure reporting for large ops
+- Soft-delete trash toggle — skill `mms-module-work`
 - Lazy-load heavy overlays (`DuplicateDetection`, messaging panels)
 - Per-user column prefs on server when REST module exists
 
@@ -125,10 +143,11 @@ Reference: `ContactsCommandMetrics.tsx`.
 Skill: **`mms-module-setup`** · Rule: `mms-module-architecture.md`
 
 - Fields + Preferences sub-tabs via `SubTabBar`
-- Module extras registered in contract `setupSubTabs`
+- Module extras registered in manifest `setupSubTabs`
 - Field delete: `getContactFieldRemovalIssues()` pattern before remove
 - Copy via `t()` — do not add Setup `uiStrings` editors
 - Audit all Setup saves (Contacts: `setup-audit` shipped)
+- `canEditSetup` — read-only message when view-only; prefer `saveSettingsAsync`
 
 ## Module isolation
 
@@ -155,12 +174,14 @@ Each tier is **module-scoped only** (`mms-module-architecture.md`):
 - Use raw `fetch('/api/...')` — use `apiClient`
 - Duplicate data paths (Query mutations + parallel `saveCollection` for same entity)
 - Nest `ContactConfigProvider` on module pages
-- Hard-delete when contract specifies soft delete
+- Hard-delete when manifest specifies soft delete
+- Wipe workspace rows via bulk PUT `replaceForWorkspace`
+- Close forms after fire-and-forget `mutate()` without awaiting success
 - Reference removed `globlestructure.md` or `globle.md` — use `mms-module-architecture.md`
 
 ## Rules
 
-`mms-module-architecture.md`, `mms-module-architecture.md`, `mms-ui-ux-design.md`, `mms-settings-i18n.md`, `mms-data-layer.md`, `mms-api-interface.md`
+`mms-module-architecture.md`, `mms-ui-ux-design.md`, `mms-settings-i18n.md`, `mms-data-layer.md`, `mms-api-interface.md`
 
 ## Related skills
 

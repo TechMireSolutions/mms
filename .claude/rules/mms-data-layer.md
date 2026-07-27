@@ -75,7 +75,8 @@ Settings singletons (`branding`, `global_settings`) must survive authentication 
 - **Auth Gate**: Gate tenant-specific queries using `enabled: isAuthenticated` from the authentication context.
 - **Mutations**: Hook success handlers must invalidate list and count query keys simultaneously.
 - **Save Confirmation**: UI saved/success states must wait for `mutateAsync` or an explicit mutation success callback. Do not mark a REST-backed draft as saved immediately after calling fire-and-forget `mutate()`.
-- **Errors**: Propagate errors through `notify.error()`. Expose loading screens via `isPending` or `isFetching`.
+- **List load failures**: Module Work (and Reports when query-backed) surfaces must show `ErrorState` with retry when the primary list query `isError` — do not render an empty directory as success (`mms-module-architecture.md` §7).
+- **Errors**: Propagate mutation/toast errors through `notify.error()`. Expose loading screens via `isPending` or `isFetching`.
 
 ### Hybrid Trajectory (Deprecated)
 - **Banned for New Modules**: The hybrid pattern (saving query responses to local storage to satisfy legacy widgets) is a transition mechanism only. New feature modules must read directly from TanStack Query hooks without cache mirroring.

@@ -18,6 +18,7 @@ Colocate in `apps/frontend/src/hooks/`. Pure logic used in 2+ modules → extrac
 | `useContacts()` / `useContactMutations()` | Contact REST CRUD + soft-delete/restore |
 | `useContactsPaginated()` / `useContactsByIds()` | Paginated directory + resolve |
 | `useTeachersPaginated()` / `useTeacherMutations()` | Teachers directory + CRUD + soft-delete restore |
+| Feature `useXxx` / `useXxxMutations` | Per-module REST lists (Finance, Accounting, Hasanat, Examinations, Sessions, …) — include soft-delete restore when the module ships trash |
 
 Pattern: `enabled: isAuthenticated`, export `QUERY_KEY` constant, use `apiJson` in `queryFn`, `saveCollection` in fetch when hybrid (`mms-data-layer.md`).
 
@@ -26,14 +27,14 @@ Pattern: `enabled: isAuthenticated`, export `QUERY_KEY` constant, use `apiJson` 
 Reactive read of a localStorage collection. Subscribes to `local-database-update`.
 
 ```ts
-// ✅ Reactive (finance, obligations, etc.)
-const hasanat = useLiveCollection('hasanat');
+// ✅ Legacy / hybrid-only collections that are not Query-primary on this viewport
+const legacyRows = useLiveCollection('some_legacy_key');
 
 // ❌ Stale after external saves
 const [items] = useState(() => getCollection('contacts', CONTACTS));
 ```
 
-**Note:** `Students.tsx` / `Contacts.tsx` use Query collection hooks — not raw `useLiveCollection` for primary CRUD.
+**Note:** REST modules (Students, Contacts, Teachers, Hasanat, Examinations, Messaging, …) use Query collection hooks — not raw `useLiveCollection` for primary CRUD.
 
 ## Domain lookups
 
@@ -80,7 +81,7 @@ Provider at `App.tsx` root only — never nest on child pages.
 | Hook | Purpose |
 |------|---------|
 | `usePermissions()` / `can()` | `@mms/shared` permission matrix — **prefer over `role ===`** |
-| `useModulePermissions(contract)` | Resolves `canWrite` / `canDelete` / `canExport` / setup/reports from `{Module}ModuleContract.permissions` — **default for module pages** |
+| `useModulePermissions(manifest)` | Resolves `canWrite` / `canDelete` / `canExport` / setup/reports from `{Module}ModuleManifest.permissions` — **default for module pages** |
 | `useViewerRole()` / `useIsAdminViewer()` | Legacy role normalization — prefer contract/`can()` when touching write surfaces |
 
 Do **not** add new tenant-module write gates via `role ===`. Residual non-gate uses (platform `super_user`, LLM chat `msg.role`, counting admins in metrics, teacher→staff alias in `useViewerRole`) are fine.

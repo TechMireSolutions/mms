@@ -6,9 +6,16 @@ import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Library, ClipboardList, FileText, Plus } from 'lucide-react';
-import { QUESTION_BANK_MODULE_CONTRACT, resolveModuleTierTab } from '@mms/shared';
+import {
+  QUESTION_BANK_MODULE_MANIFEST,
+  resolveModuleTierTab,
+  type AppTranslationKey,
+  type QuestionBankQuestion,
+  type QuestionBankTest,
+} from '@mms/shared';
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { Button } from '@/components/ui/button';
@@ -22,14 +29,19 @@ import { QuestionBankSettings } from "@/tenant/features/question-bank/components
 import { QuestionBankCommandMetrics } from "@/tenant/features/question-bank/components/QuestionBankCommandMetrics";
 import ModuleReports from '@/tenant/features/reports/components/ModuleReports';
 import KPISummary from '@/tenant/features/reports/components/KPISummary';
-import type { QuestionBankQuestion, QuestionBankTest } from '@mms/shared';
 import { useQuestionBankColumnLayout } from '@/tenant/features/question-bank/hooks/useQuestionBankColumnLayout';
 import {
-  useQuestionBankQuestionsCollection,
+  useQuestionBankQuestions,
   useQuestionBankTestsCollection,
   useQuestionBankResultsCollection,
   useQuestionBankMutations,
 } from '@/tenant/features/question-bank/hooks/useQuestionBankApi';
+import { notify } from '@/lib/notify';
+
+const SETUP_TAB_LABEL_KEYS: Record<(typeof QUESTION_BANK_MODULE_MANIFEST.setupSubTabs)[number], AppTranslationKey> = {
+  fields: 'questionBank.setup.fields',
+  preferences: 'questionBank.setup.preferences',
+};
 
 /**
  * Question Bank — Work | Reports | Setup.
@@ -38,20 +50,31 @@ export default function QuestionBankPage(): React.JSX.Element {
   const { t } = useTranslation();
   const {
     canWrite,
+    canDelete,
+    canEditSetup,
     canReports: canViewReports,
     canViewSetup,
-  } = useModulePermissions(QUESTION_BANK_MODULE_CONTRACT);
+  } = useModulePermissions(QUESTION_BANK_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
-  const questions = useQuestionBankQuestionsCollection();
+  const SETUP_TABS = useMemo(
+    () => QUESTION_BANK_MODULE_MANIFEST.setupSubTabs.map((id) => ({
+      id,
+      label: t(SETUP_TAB_LABEL_KEYS[id]),
+    })),
+    [t],
+  );
+  const [showDeleted, setShowDeleted] = useState(false);
+  const questionsResult = useQuestionBankQuestions({ includeDeleted: showDeleted });
+  const questions = questionsResult.syncedData;
   const tests = useQuestionBankTestsCollection();
   const questionBankResults = useQuestionBankResultsCollection();
   const questionBankConfig = useQuestionBankConfig(questions);
   const OPS_SUB_TABS = useMemo(
     () => [
       { id: 'questions', label: t('questionBank.questions'), icon: ClipboardList },
-      ...(canWrite ? [{ id: 'generate', label: t('questionBank.generator'), icon: FileText }] : []),
+      ...(canWrite && !showDeleted ? [{ id: 'generate', label: t('questionBank.generator'), icon: FileText }] : []),
     ],
-    [t, canWrite],
+    [t, canWrite, showDeleted],
   );
   const PAPER_BUILDER_TABS = useMemo<FormModalTab<PaperBuilderTab>[]>(
     () => [
@@ -65,6 +88,7 @@ export default function QuestionBankPage(): React.JSX.Element {
   );
   const [activeTab, setActiveTab] = usePersistedTabState<string>('question_bank_active_tab', 'work');
   const [activeSubTab, setActiveSubTab] = usePersistedTabState<string>('question_bank_ops_subtab', 'questions');
+  const [configSubTab, setConfigSubTab] = usePersistedTabState<string>('question_bank_config_subtab', 'preferences');
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [editQuestion, setEditQuestion] = useState<QuestionBankQuestion | null>(null);
   const [filteredCount, setFilteredCount] = useState(0);
@@ -74,12 +98,19 @@ export default function QuestionBankPage(): React.JSX.Element {
   const columnLayout = useQuestionBankColumnLayout();
   const listLayout = (questionBankConfig.settings.defaultViewLayout || 'list') === 'list';
 
-  const { replaceQuestions, replaceTests } = useQuestionBankMutations();
+  const {
+    replaceQuestions,
+    replaceTests,
+    deleteQuestion,
+    restoreQuestion,
+    bulkDeleteQuestions,
+    bulkRestoreQuestions,
+  } = useQuestionBankMutations();
 
   const setQuestions = useCallback(
-    (updater: typeof questions | ((prev: typeof questions) => typeof questions)) => {
+    async (updater: typeof questions | ((prev: typeof questions) => typeof questions)) => {
       const nextQuestions = typeof updater === 'function' ? updater(questions) : updater;
-      replaceQuestions.mutate(nextQuestions);
+      await replaceQuestions.mutateAsync(nextQuestions);
     },
     [questions, replaceQuestions],
   );
@@ -100,9 +131,13 @@ export default function QuestionBankPage(): React.JSX.Element {
   }, [setActiveTab, setActiveSubTab]);
 
   const handleQuestionSave = useCallback(
-    (question: QuestionBankQuestion): void => {
+    async (question: QuestionBankQuestion): Promise<void> => {
       const existingQuestion = questions.find((questionItem) => questionItem.id === question.id);
-      setQuestions(existingQuestion ? questions.map((questionItem) => (questionItem.id === question.id ? question : questionItem)) : [...questions, question]);
+      await setQuestions(
+        existingQuestion
+          ? questions.map((questionItem) => (questionItem.id === question.id ? question : questionItem))
+          : [...questions, question],
+      );
       setShowQuestionModal(false);
       setEditQuestion(null);
     },
@@ -114,6 +149,66 @@ export default function QuestionBankPage(): React.JSX.Element {
     setEditQuestion(null);
   }, []);
 
+  const notifyTrashFailure = useCallback((error: unknown) => {
+    notify.error(t('questionBank.trash.actionFailed'), {
+      description: error instanceof Error ? error.message : String(error),
+    });
+  }, [t]);
+
+  const handleDeleteQuestion = useCallback(async (id: string) => {
+    try {
+      await deleteQuestion.mutateAsync(id);
+      notify.success(t('questionBank.trash.deleted'));
+    } catch (error: unknown) {
+      notifyTrashFailure(error);
+      throw error;
+    }
+  }, [deleteQuestion, notifyTrashFailure, t]);
+
+  const handleRestoreQuestion = useCallback(async (id: string) => {
+    try {
+      await restoreQuestion.mutateAsync(id);
+      notify.success(t('questionBank.trash.restored'));
+    } catch (error: unknown) {
+      notifyTrashFailure(error);
+      throw error;
+    }
+  }, [restoreQuestion, notifyTrashFailure, t]);
+
+  const handleBulkDelete = useCallback(async (ids: string[]) => {
+    try {
+      const result = await bulkDeleteQuestions.mutateAsync(ids);
+      if (result.failed > 0) {
+        notify.warning(t('questionBank.trash.bulkPartial', {
+          succeeded: result.succeeded,
+          failed: result.failed,
+        }));
+      } else {
+        notify.success(t('questionBank.trash.deleted'));
+      }
+    } catch (error: unknown) {
+      notifyTrashFailure(error);
+      throw error;
+    }
+  }, [bulkDeleteQuestions, notifyTrashFailure, t]);
+
+  const handleBulkRestore = useCallback(async (ids: string[]) => {
+    try {
+      const result = await bulkRestoreQuestions.mutateAsync(ids);
+      if (result.failed > 0) {
+        notify.warning(t('questionBank.trash.bulkPartial', {
+          succeeded: result.succeeded,
+          failed: result.failed,
+        }));
+      } else {
+        notify.success(t('questionBank.trash.restored'));
+      }
+    } catch (error: unknown) {
+      notifyTrashFailure(error);
+      throw error;
+    }
+  }, [bulkRestoreQuestions, notifyTrashFailure, t]);
+
   const effectiveTab = resolveModuleTierTab(
     activeTab,
     PAGE_TABS.map((tab) => tab.id),
@@ -121,11 +216,30 @@ export default function QuestionBankPage(): React.JSX.Element {
   const effectiveSubTab = OPS_SUB_TABS.find((tab) => tab.id === activeSubTab)
     ? activeSubTab
     : 'questions';
+  const effectiveConfigTab = SETUP_TABS.find((tab) => tab.id === configSubTab)?.id ?? 'preferences';
+  const listLoadFailed = questionsResult.queryResult.isError;
 
   useEffect(() => {
     if (effectiveTab === 'work' && effectiveSubTab === 'questions') return;
     setFilteredCount(questions.length);
   }, [effectiveTab, effectiveSubTab, questions.length]);
+
+  useEffect(() => {
+    if (!canWrite || showDeleted) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'n') {
+        const target = event.target as HTMLElement | null;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+          return;
+        }
+        if (effectiveTab !== 'work' || effectiveSubTab !== 'questions') return;
+        event.preventDefault();
+        openAddQuestion();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [canWrite, showDeleted, effectiveTab, effectiveSubTab, openAddQuestion]);
 
   return (
     <ModulePageShell
@@ -135,18 +249,31 @@ export default function QuestionBankPage(): React.JSX.Element {
       headerTitle={t('nav.questionBank')}
       headerSubtitle={t('page.questionBank.subtitle')}
       headerActions={
-        canWrite ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" size="sm" variant="outline" onClick={openCreatePaper}>
-              <FileText className="h-3.5 w-3.5" />
-              {t('questionBank.generator')}
+        <div className="flex flex-wrap items-center gap-2">
+          {effectiveTab === 'work' && effectiveSubTab === 'questions' && canDelete ? (
+            <Button
+              type="button"
+              variant={showDeleted ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setShowDeleted((prev) => !prev)}
+              className="gap-1.5"
+            >
+              {showDeleted ? t('questionBank.trash.showActive') : t('questionBank.trash.showDeleted')}
             </Button>
-            <Button type="button" size="sm" onClick={openAddQuestion}>
-              <Plus className="h-3.5 w-3.5" />
-              {t('questionBank.addQuestion')}
-            </Button>
-          </div>
-        ) : undefined
+          ) : null}
+          {canWrite && !showDeleted ? (
+            <>
+              <Button type="button" size="sm" variant="outline" onClick={openCreatePaper}>
+                <FileText className="h-3.5 w-3.5" />
+                {t('questionBank.generator')}
+              </Button>
+              <Button type="button" size="sm" onClick={openAddQuestion}>
+                <Plus className="h-3.5 w-3.5" />
+                {t('questionBank.addQuestion')}
+              </Button>
+            </>
+          ) : null}
+        </div>
       }
       metricsStrip={
         <QuestionBankCommandMetrics total={questions.length} shown={filteredCount} />
@@ -169,7 +296,7 @@ export default function QuestionBankPage(): React.JSX.Element {
         <ErrorBoundary>
           <AnimatePresence mode="wait">
             <motion.div
-              key={`${effectiveTab}-${effectiveSubTab}`}
+              key={`${effectiveTab}-${effectiveSubTab}-${String(showDeleted)}`}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
@@ -177,7 +304,20 @@ export default function QuestionBankPage(): React.JSX.Element {
               className="space-y-4"
             >
               {effectiveTab === 'setup' && (
-                <QuestionBankSettings mode="preferences" />
+                <div className="space-y-4">
+                  <SubTabBar
+                    tabs={SETUP_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
+                    value={effectiveConfigTab}
+                    onChange={setConfigSubTab}
+                  />
+                  {!canEditSetup ? (
+                    <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
+                      {t('questionBank.setup.readOnly')}
+                    </p>
+                  ) : (
+                    <QuestionBankSettings mode={effectiveConfigTab as 'fields' | 'preferences'} />
+                  )}
+                </div>
               )}
 
               {effectiveTab === 'reports' && (
@@ -196,7 +336,14 @@ export default function QuestionBankPage(): React.JSX.Element {
                 </div>
               )}
 
-              {effectiveTab === 'work' && effectiveSubTab === 'questions' && (
+              {effectiveTab === 'work' && effectiveSubTab === 'questions' && listLoadFailed && (
+                <ErrorState
+                  title={t('questionBank.loadFailed')}
+                  onRetry={() => { void questionsResult.queryResult.refetch(); }}
+                />
+              )}
+
+              {effectiveTab === 'work' && effectiveSubTab === 'questions' && !listLoadFailed && (
                 <QuestionsPanel
                   questions={questions}
                   onUpdate={setQuestions}
@@ -206,6 +353,12 @@ export default function QuestionBankPage(): React.JSX.Element {
                   onEditQuestionChange={setEditQuestion}
                   hideToolbarAdd
                   canWrite={canWrite}
+                  canDelete={canDelete}
+                  showDeleted={showDeleted}
+                  onDelete={handleDeleteQuestion}
+                  onRestore={handleRestoreQuestion}
+                  onBulkDelete={handleBulkDelete}
+                  onBulkRestore={handleBulkRestore}
                   listLayout={listLayout}
                   onFilteredCountChange={setFilteredCount}
                   isColumnVisible={columnLayout.isColumnVisible}
@@ -219,7 +372,7 @@ export default function QuestionBankPage(): React.JSX.Element {
                 />
               )}
 
-              {effectiveTab === 'work' && effectiveSubTab === 'generate' && canWrite && (
+              {effectiveTab === 'work' && effectiveSubTab === 'generate' && canWrite && !showDeleted && (
                 <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
@@ -238,7 +391,7 @@ export default function QuestionBankPage(): React.JSX.Element {
         </ErrorBoundary>
       </ResponsiveAccordionTabs>
 
-      {canWrite && (
+      {canWrite && !showDeleted && (
         <FormModal
           open={paperBuilderOpen}
           onClose={() => setPaperBuilderOpen(false)}
@@ -269,7 +422,7 @@ export default function QuestionBankPage(): React.JSX.Element {
         </FormModal>
       )}
 
-      {canWrite && (
+      {canWrite && !showDeleted && (
         <QuestionForm
           open={showQuestionModal}
           question={editQuestion}

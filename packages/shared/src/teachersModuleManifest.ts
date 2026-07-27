@@ -29,8 +29,8 @@ export const teacherListSchema = z.array(teacherCoreSchema).transform((list) =>
 export type TeacherRecord = z.infer<typeof teacherCoreSchema>;
 
 
-/** Teachers module contract — aligns with globle1 universal module architecture. */
-export const TEACHERS_MODULE_CONTRACT = {
+/** Teachers module manifest — aligns with globle1 universal module architecture. */
+export const TEACHERS_MODULE_MANIFEST = {
   moduleId: 'teachers',
   entityType: 'Teacher',
   collectionKey: 'teachers',
@@ -64,4 +64,4 @@ export const TEACHERS_MODULE_CONTRACT = {
   maxPageSize: 500,
 } as const;
 
-export type TeachersModuleTier = (typeof TEACHERS_MODULE_CONTRACT.tiers)[number];
+export type TeachersModuleTier = (typeof TEACHERS_MODULE_MANIFEST.tiers)[number];

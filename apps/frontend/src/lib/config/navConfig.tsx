@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { type AppTranslationKey } from "@mms/shared";
 import { ROUTES } from "@/lib/config/routes";
+import { QUICK_ACTION_ROUTE_KEYS as QUICK_ACTION_ROUTES } from "@/lib/dashboardQuickActions";
 
 export interface NavSubItem {
   labelKey: AppTranslationKey;
@@ -62,14 +63,5 @@ export const NAV_ITEMS: NavItem[] = [
   { labelKey: "nav.settings", icon: Settings, path: ROUTES.settings, moduleId: "settings" },
 ];
 
-/** Quick-action translation key → route */
-export const QUICK_ACTION_ROUTE_KEYS: Partial<Record<AppTranslationKey, string>> = {
-  "action.addStudent": ROUTES.enrollments,
-  "action.createSession": ROUTES.sessions,
-  "action.recordPayment": ROUTES.finance,
-  "action.takeAttendance": ROUTES.attendance,
-  "action.awardHasanat": ROUTES.hasanatCards,
-  "action.generateReport": ROUTES.accounting,
-  "action.printReceipt": ROUTES.finance,
-  "action.viewLedger": ROUTES.accounting,
-};
+/** @deprecated Use `DASHBOARD_QUICK_ACTIONS` from `@/lib/dashboardQuickActions`. */
+export const QUICK_ACTION_ROUTE_KEYS = QUICK_ACTION_ROUTES;

@@ -1,17 +1,16 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
-import { useConfigSubTabs } from '@/tenant/hooks/useConfigSubTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserCog, Users as UsersIcon, Activity, UserPlus } from 'lucide-react';
 import {
   normalizeWorkspaceUser,
   resolveModuleTierTab,
-  USERS_MODULE_CONTRACT,
+  USERS_MODULE_MANIFEST,
   type ActivityLog,
+  type AppTranslationKey,
   type SystemUser,
-  type UserStatus,
 } from '@mms/shared';
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
@@ -30,37 +29,45 @@ import { UsersCommandMetrics } from '@/tenant/features/users/components/UsersCom
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import {
-  useUsersCollection,
-  useActivityLogsCollection,
+  useUsers,
+  useActivityLogs,
   useUsersMutations,
 } from '@/tenant/features/users/hooks/useUsersApi';
 import { useUserColumnLayout } from '@/tenant/features/users/hooks/useUserColumnLayout';
 import { useUserActivityColumnLayout } from '@/tenant/features/users/hooks/useUserActivityColumnLayout';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { notify } from '@/lib/notify';
 import { useMessageComposerState } from '@/hooks/useMessageComposerState';
 
 const MessageComposer = React.lazy(() => import('@/components/ui/MessageComposer'));
 
+const SETUP_TAB_LABEL_KEYS: Record<(typeof USERS_MODULE_MANIFEST.setupSubTabs)[number], AppTranslationKey> = {
+  permissions: 'users.permissions',
+  fields: 'users.setup.fields',
+  preferences: 'users.setup.preferences',
+};
+
 /**
  * Users and roles — Work | Reports | Setup.
  */
 export default function Users(): React.JSX.Element {
-  const configSubTabs = useConfigSubTabs();
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
   const {
     canWrite,
+    canDelete,
+    canEditSetup,
     canReports: canViewReports,
     canViewSetup,
-  } = useModulePermissions(USERS_MODULE_CONTRACT);
+  } = useModulePermissions(USERS_MODULE_MANIFEST);
   const USERS_CONFIG_TABS = useMemo(
-    () => [
-      { id: 'permissions' as const, label: t('users.permissions') },
-      ...configSubTabs,
-    ],
-    [t, configSubTabs],
+    () => USERS_MODULE_MANIFEST.setupSubTabs.map((id) => ({
+      id,
+      label: t(SETUP_TAB_LABEL_KEYS[id]),
+    })),
+    [t],
   );
   const SUB_TABS = useMemo(
     () => [
@@ -75,32 +82,43 @@ export default function Users(): React.JSX.Element {
     'users_config_subtab',
     'permissions',
   );
-  const rawUsers = useUsersCollection();
+  const [showDeleted, setShowDeleted] = useState(false);
+  const usersResult = useUsers({ includeDeleted: showDeleted });
+  const logsResult = useActivityLogs();
   const users = useMemo(
-    () => rawUsers.map((u) => normalizeWorkspaceUser(u as Partial<SystemUser> & { roles?: string[]; role?: string })),
-    [rawUsers],
+    () => usersResult.syncedData.map((u) => normalizeWorkspaceUser(u as Partial<SystemUser> & { roles?: string[]; role?: string })),
+    [usersResult.syncedData],
   );
-  const logs = useActivityLogsCollection();
+  const logs = logsResult.syncedData;
+  const listLoadFailed = usersResult.queryResult.isError;
+  const logsLoadFailed = logsResult.queryResult.isError;
 
   const { getColumnWidth: getUserColumnWidth, setColumnWidth: setUserColumnWidth } =
     useUserColumnLayout();
   const { getColumnWidth: getActivityColumnWidth, setColumnWidth: setActivityColumnWidth } =
     useUserActivityColumnLayout();
 
-  const { replaceUsers, replaceLogs } = useUsersMutations();
+  const {
+    replaceUsers,
+    replaceLogs,
+    deleteUser,
+    restoreUser,
+    bulkDeleteUsers,
+    bulkRestoreUsers,
+  } = useUsersMutations();
 
   const saveUsers = useCallback(
-    (updater: SystemUser[] | ((prev: SystemUser[]) => SystemUser[])) => {
+    async (updater: SystemUser[] | ((prev: SystemUser[]) => SystemUser[])) => {
       const nextUsers = typeof updater === 'function' ? updater(users) : updater;
-      replaceUsers.mutate(nextUsers);
+      await replaceUsers.mutateAsync(nextUsers);
     },
     [users, replaceUsers],
   );
 
   const saveLogs = useCallback(
-    (updater: ActivityLog[] | ((prev: ActivityLog[]) => ActivityLog[])) => {
+    async (updater: ActivityLog[] | ((prev: ActivityLog[]) => ActivityLog[])) => {
       const nextLogs = typeof updater === 'function' ? updater(logs) : updater;
-      replaceLogs.mutate(nextLogs);
+      await replaceLogs.mutateAsync(nextLogs);
     },
     [logs, replaceLogs],
   );
@@ -119,8 +137,8 @@ export default function Users(): React.JSX.Element {
   const actorId = authUser?.id ?? 'system';
 
   const addLog = useCallback(
-    (entry: Partial<ActivityLog> & { action: ActivityLog['action']; module: string; detail: string }) => {
-      saveLogs((prev) => [
+    async (entry: Partial<ActivityLog> & { action: ActivityLog['action']; module: string; detail: string }) => {
+      await saveLogs((prev) => [
         {
           id: `log${Date.now()}`,
           userId: entry.userId ?? actorId,
@@ -136,17 +154,68 @@ export default function Users(): React.JSX.Element {
     [actorId, saveLogs],
   );
 
-  const handleToggleStatus = (id: string, newStatus: UserStatus): void => {
-    saveUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status: newStatus } : u)));
-    addLog({
-      action: 'update',
-      module: 'users',
-      detail: t('users.logStatusChanged', { id, status: t(`users.status.${newStatus}`) }),
-    });
+  const handleDeleteUser = async (id: string): Promise<void> => {
+    try {
+      await deleteUser.mutateAsync(id);
+      notify.success(t('users.trash.deleted'));
+      await addLog({ action: 'delete', module: 'users', detail: t('users.logDeleted', { id }) });
+    } catch (error: unknown) {
+      notify.error(t('users.trash.actionFailed'), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
+  };
+
+  const handleRestoreUser = async (id: string): Promise<void> => {
+    try {
+      await restoreUser.mutateAsync(id);
+      notify.success(t('users.trash.restored'));
+      await addLog({ action: 'update', module: 'users', detail: t('users.logRestored', { id }) });
+    } catch (error: unknown) {
+      notify.error(t('users.trash.actionFailed'), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
+  };
+
+  const handleBulkDelete = async (ids: string[]): Promise<void> => {
+    try {
+      const result = await bulkDeleteUsers.mutateAsync(ids);
+      if (result.failed > 0) {
+        notify.warning(t('users.trash.bulkPartial', {
+          succeeded: result.succeeded,
+          failed: result.failed,
+        }));
+      } else {
+        notify.success(t('users.trash.deleted'));
+      }
+    } catch (error: unknown) {
+      notify.error(t('users.trash.actionFailed'), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
+  };
+
+  const handleBulkRestore = async (ids: string[]): Promise<void> => {
+    try {
+      const result = await bulkRestoreUsers.mutateAsync(ids);
+      if (result.failed > 0) {
+        notify.warning(t('users.trash.bulkPartial', {
+          succeeded: result.succeeded,
+          failed: result.failed,
+        }));
+      } else {
+        notify.success(t('users.trash.restored'));
+      }
+    } catch (error: unknown) {
+      notify.error(t('users.trash.actionFailed'), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
   };
 
   const handleResetPassword = (user: SystemUser): void => {
-    addLog({
+    void addLog({
       action: 'update',
       module: 'users',
       detail: t('users.logPasswordReset', { name: user.name }),
@@ -157,14 +226,14 @@ export default function Users(): React.JSX.Element {
     });
   };
 
-  const handleSaveEdit = (updated: SystemUser): void => {
-    saveUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
-    addLog({ action: 'update', module: 'users', detail: t('users.logUpdated', { name: updated.name }) });
+  const handleSaveEdit = async (updated: SystemUser): Promise<void> => {
+    await saveUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+    await addLog({ action: 'update', module: 'users', detail: t('users.logUpdated', { name: updated.name }) });
   };
 
-  const handleInvite = (user: SystemUser): void => {
-    saveUsers((prev) => [user, ...prev]);
-    addLog({
+  const handleInvite = async (user: SystemUser): Promise<void> => {
+    await saveUsers((prev) => [user, ...prev]);
+    await addLog({
       action: 'create',
       module: 'users',
       detail: t('users.logInvited', { name: user.name, email: user.email }),
@@ -172,9 +241,9 @@ export default function Users(): React.JSX.Element {
     });
   };
 
-  const handleAddUser = (user: SystemUser): void => {
-    saveUsers((prev) => [user, ...prev]);
-    addLog({
+  const handleAddUser = async (user: SystemUser): Promise<void> => {
+    await saveUsers((prev) => [user, ...prev]);
+    await addLog({
       action: 'create',
       module: 'users',
       detail: t('users.logCreated', { name: user.name, email: user.email, role: user.role }),
@@ -191,6 +260,23 @@ export default function Users(): React.JSX.Element {
     visibleTopTabs.map((tab) => tab.id),
   );
   const effectiveSubTab = SUB_TABS.find((tab) => tab.id === activeSubTab) ? activeSubTab : 'users';
+  const effectiveConfigTab = USERS_CONFIG_TABS.find((tab) => tab.id === configSubTab)
+    ? configSubTab
+    : 'permissions';
+
+  useEffect(() => {
+    if (!canWrite || showDeleted) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
+        if (effectiveTab !== 'work' || effectiveSubTab !== 'users') return;
+        e.preventDefault();
+        setShowInvite(false);
+        setShowAddUser(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canWrite, showDeleted, effectiveTab, effectiveSubTab]);
 
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
 
@@ -214,7 +300,7 @@ export default function Users(): React.JSX.Element {
       headerTitle={t('page.users.title')}
       headerSubtitle={t('page.users.subtitle')}
       headerActions={
-        canWrite ? (
+        canWrite && !showDeleted ? (
           <div className="flex items-center gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => setShowInvite(true)}>
               <UserPlus className="h-3.5 w-3.5" />
@@ -266,30 +352,59 @@ export default function Users(): React.JSX.Element {
                 <div className="space-y-4">
                   <SubTabBar
                     tabs={USERS_CONFIG_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
-                    value={configSubTab}
-                    onChange={(key) => setConfigSubTab(key as typeof configSubTab)}
+                    value={effectiveConfigTab}
+                    onChange={setConfigSubTab}
                   />
-                  {configSubTab === 'permissions' && <RolesPermissions />}
-                  {configSubTab === 'preferences' && <UsersSettingsPanel mode="preferences" />}
+                  {!canEditSetup ? (
+                    <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
+                      {t('users.setup.readOnly')}
+                    </p>
+                  ) : (
+                    <>
+                      {effectiveConfigTab === 'permissions' && <RolesPermissions />}
+                      {effectiveConfigTab === 'fields' && <UsersSettingsPanel mode="fields" />}
+                      {effectiveConfigTab === 'preferences' && <UsersSettingsPanel mode="preferences" />}
+                    </>
+                  )}
                 </div>
               )}
 
-              {effectiveTab === 'work' && effectiveSubTab === 'users' && (
+              {effectiveTab === 'work' && effectiveSubTab === 'users' && listLoadFailed && (
+                <ErrorState
+                  title={t('users.loadFailed')}
+                  onRetry={() => { void usersResult.queryResult.refetch(); }}
+                />
+              )}
+
+              {effectiveTab === 'work' && effectiveSubTab === 'users' && !listLoadFailed && (
                 <UsersList
                   users={users}
                   onView={setViewing}
                   onEdit={setEditing}
-                  onToggleStatus={handleToggleStatus}
+                  onDelete={(id) => { void handleDeleteUser(id); }}
+                  onRestore={(id) => { void handleRestoreUser(id); }}
+                  onBulkDelete={(ids) => { void handleBulkDelete(ids); }}
+                  onBulkRestore={(ids) => { void handleBulkRestore(ids); }}
                   onResetPassword={handleResetPassword}
                   onAddUser={() => setShowAddUser(true)}
                   onMessage={handleMessageUsers}
                   canWrite={canWrite}
+                  canDelete={canDelete}
+                  showDeleted={showDeleted}
+                  onToggleDeleted={setShowDeleted}
                   getColumnWidth={getUserColumnWidth}
                   onColumnResize={setUserColumnWidth}
                 />
               )}
 
-              {effectiveTab === 'work' && effectiveSubTab === 'activity' && (
+              {effectiveTab === 'work' && effectiveSubTab === 'activity' && logsLoadFailed && (
+                <ErrorState
+                  title={t('users.loadFailed')}
+                  onRetry={() => { void logsResult.queryResult.refetch(); }}
+                />
+              )}
+
+              {effectiveTab === 'work' && effectiveSubTab === 'activity' && !logsLoadFailed && (
                 <ActivityLogs
                   logs={logs}
                   users={users}

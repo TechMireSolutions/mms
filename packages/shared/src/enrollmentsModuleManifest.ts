@@ -37,9 +37,9 @@ export const enrollmentRecordSchema = z.object({
 export type Enrollment = z.infer<typeof enrollmentRecordSchema>;
 export const enrollmentListSchema = z.array(enrollmentRecordSchema);
 
-/** Enrollments module contract — aligns with globle1 universal module architecture. */
+/** Enrollments module manifest — aligns with globle1 universal module architecture. */
 
-export const ENROLLMENTS_MODULE_CONTRACT = {
+export const ENROLLMENTS_MODULE_MANIFEST = {
   moduleId: 'enrollments',
   entityType: 'Enrollment',
   collectionKey: 'enrollments',
@@ -72,5 +72,5 @@ export const ENROLLMENTS_MODULE_CONTRACT = {
   maxPageSize: 500,
 } as const;
 
-export type EnrollmentsModuleTier = (typeof ENROLLMENTS_MODULE_CONTRACT.tiers)[number];
+export type EnrollmentsModuleTier = (typeof ENROLLMENTS_MODULE_MANIFEST.tiers)[number];
 

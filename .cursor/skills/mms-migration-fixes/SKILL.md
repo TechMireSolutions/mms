@@ -40,17 +40,19 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 | Unified Date Filters | `<AccountingDateFilterBar>` |
 | Module write-surface `can()` gates | `useModulePermissions(contract)` on major modules — omit forbidden CTAs |
 | Students & Teachers soft-delete Work UI | Trash toggle + restore/bulk restore (Contacts-style) |
+| Expanded soft-delete Work trash | Sessions, Attendance, Enrollments, Finance, Accounting, Obligations, Hasanat, Examinations, Question Bank (questions), Users (`tenant_users.deleted_at`) |
+| Module gold-standard parity | Hasanat → Examinations → Users → Messaging → Question Bank: upsert bulk PUT, awaited saves, setupSubTabs, ErrorState, Cmd/Ctrl+N |
 | Onboarding E2E critical path | `e2e/tests/onboarding-login.spec.ts` |
 
 ## Open priorities
 
-### P1 — Soft-delete FE parity (remaining REST modules)
+### P1 — Soft-delete / schema remaining gaps
 
-**Problem:** Enrollments, attendance, finance invoices/payments (and others) may soft-delete on the API without Contacts/Students/Teachers-style Work trash UI.
+**Problem:** Messaging log clear is intentional soft-archive (not a trash browser). Question Bank tests/papers and assessment_results remain upsert-only by design.
 
-**Fix:** When touching those modules, add `includeDeleted` + restore mutations + Show deleted toggle (or document intentional hard-delete). Reference: Contacts / Students / Teachers.
+**Fix:** Do not regress Messaging clear or QB papers/results variants without an explicit product change. Users real soft-delete is shipped (`0027_tenant_users_soft_delete`).
 
-**Skills:** `mms-module-work`, `mms-frontend`, `mms-backend-api`
+**Skills:** `mms-module-work`, `mms-module-page` (§7), `mms-frontend`, `mms-backend-api`
 
 ### P2 — Residual permission / role special cases
 

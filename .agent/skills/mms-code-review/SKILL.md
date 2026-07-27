@@ -54,14 +54,21 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Brand colour previews use derived tokens (`brandingTheme`) — not raw hex on surfaces
 
 ### RBAC (frontend)
-- [ ] Module pages use `useModulePermissions(X_MODULE_CONTRACT)` (or `can()`) — not `role ===` / `disabled={role === '…'}`
+- [ ] Module pages use `useModulePermissions(X_MODULE_MANIFEST)` (or `can()`) — not `role ===` / `disabled={role === '…'}`
 - [ ] Forbidden actions omitted — not disabled placeholders
-- [ ] Soft-delete modules: trash toggle + restore omit delete/messaging in archive mode (Contacts / Students / Teachers pattern)
 
 ### Soft delete (when entity supports it)
 - [ ] `DELETE` soft-deletes; `POST :id/restore` restores
 - [ ] List supports `includeDeleted`; Work default excludes deleted
-- [ ] FE trash UI or documented intentional hard-delete
+- [ ] FE trash UI or documented intentional hard-delete / manifest variant
+- [ ] Soft-delete modules: trash toggle + restore omit Add/messaging in archive mode
+
+### Gold-standard module parity (`mms-module-architecture.md` §7)
+- [ ] Bulk PUT upsert-only — no `replaceForWorkspace` wipe on API write paths
+- [ ] Forms/setup use `mutateAsync` / await; close only after success
+- [ ] Manifest `setupSubTabs` + `softDelete` metadata when applicable
+- [ ] Setup gated by `canEditSetup`; Work shows `ErrorState` on list failure
+- [ ] Cmd/Ctrl+N create when `canWrite` and not in trash
 
 ### Field persistence (new/changed fields)
 - [ ] Field on `@mms/shared` type + `DEFAULT_*` + merge helper

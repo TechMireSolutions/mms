@@ -2,7 +2,7 @@ import React, { useMemo, lazy, Suspense, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserPlus, AlertTriangle, Download, Users, UserX, Loader2, Trash2, X, MessageCircle, MessageSquare, RotateCcw, RefreshCw } from "lucide-react";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { CONTACTS_MODULE_CONTRACT } from "@mms/shared";
+import { CONTACTS_MODULE_MANIFEST } from "@mms/shared";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useContactsPageState } from "@/tenant/features/contacts/hooks/useContactsPageState";
 import { useContactConfig, useContactColumns } from "@/lib/contexts/ContactConfigContext";
@@ -42,8 +42,8 @@ function ContactsInner() {
     canReports: canViewReports,
     canViewSetup,
     canEditSetup,
-  } = useModulePermissions(CONTACTS_MODULE_CONTRACT);
-  const bulkActions = CONTACTS_MODULE_CONTRACT.work.bulkActions;
+  } = useModulePermissions(CONTACTS_MODULE_MANIFEST);
+  const bulkActions = CONTACTS_MODULE_MANIFEST.work.bulkActions;
   const { prefs } = useContactConfig();
   const tableColumns = useContactColumns();
 
@@ -275,7 +275,7 @@ function ContactsInner() {
               >
                 <AlertTriangle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                 {t("contacts.workTruncated", {
-                  limit: CONTACTS_MODULE_CONTRACT.maxPageSize,
+                  limit: CONTACTS_MODULE_MANIFEST.maxPageSize,
                   total: shownCount,
                 })}
               </div>

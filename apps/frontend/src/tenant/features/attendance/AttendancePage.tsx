@@ -7,7 +7,7 @@ import {
   UserCheck, ClipboardEdit, BookOpen, BarChart2,
   ShieldCheck, ClipboardList, Archive,
 } from "lucide-react";
-import { resolveModuleTierTab, todayISO, ATTENDANCE_MODULE_CONTRACT } from "@mms/shared";
+import { resolveModuleTierTab, todayISO, ATTENDANCE_MODULE_MANIFEST } from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -56,7 +56,7 @@ export default function Attendance() {
     canDelete: canDeleteAttendance,
     canRead: canAnalyticsView,
     canViewSetup,
-  } = useModulePermissions(ATTENDANCE_MODULE_CONTRACT);
+  } = useModulePermissions(ATTENDANCE_MODULE_MANIFEST);
   const { can } = usePermissions();
   const role = useViewerRole();
   const [activeTab, setActiveTab] = usePersistedTabState<string>("attendance_active_tab", "work");
@@ -73,7 +73,7 @@ export default function Attendance() {
   } = useAttendanceMutations();
   const attendancePageQuery = useAttendancePaginated({
     page: 1,
-    limit: ATTENDANCE_MODULE_CONTRACT.maxPageSize,
+    limit: ATTENDANCE_MODULE_MANIFEST.maxPageSize,
     includeDeleted: showDeleted,
     enabled: activeTab === "work",
   });

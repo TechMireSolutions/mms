@@ -3,7 +3,7 @@ import {
   DEFAULT_CURRENCIES,
   ACCOUNTING_TAB_REGISTRY,
   INITIAL_ACCOUNTING_FIELD_SEED,
-  ACCOUNTING_MODULE_CONTRACT,
+  ACCOUNTING_MODULE_MANIFEST,
   type AppTranslationKey,
   formatDate
 } from "@mms/shared";
@@ -192,7 +192,7 @@ export function AccountingSettings({
   onSaveFiscalYears,
 }: AccountingSettingsProps) {
   const { t } = useTranslation();
-  const { canEditSetup } = useModulePermissions(ACCOUNTING_MODULE_CONTRACT);
+  const { canEditSetup } = useModulePermissions(ACCOUNTING_MODULE_MANIFEST);
   const decimalSeparators = useMemo(() => [
     { label: t("accounting.settings.decimal.period"), value: "period" },
     { label: t("accounting.settings.decimal.comma"), value: "comma" },
@@ -212,7 +212,7 @@ export function AccountingSettings({
   });
   const [fyModal, setFyModal] = useState<Partial<FiscalYear> | null>(null);
   const settingsSubTabs = useMemo(
-    () => ACCOUNTING_MODULE_CONTRACT.setupSubTabs.map((key) => ({
+    () => ACCOUNTING_MODULE_MANIFEST.setupSubTabs.map((key) => ({
       key,
       label: t(key === "fields" ? "accounting.setup.fields" : "accounting.setup.preferences"),
     })),

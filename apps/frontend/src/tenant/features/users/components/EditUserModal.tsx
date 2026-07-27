@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -21,11 +21,12 @@ import {
 import { editUserSchema, type EditUserFormValues } from '@/lib/forms/userSchemas';
 import { firstZodFieldError } from '@/lib/forms/translateZodError';
 import { TranslatedFormMessage } from '@/lib/forms/TranslatedFormMessage';
+import { notify } from '@/lib/notify';
 
 export interface EditUserModalProps {
   user: SystemUser;
   onClose: () => void;
-  onSave: (user: SystemUser) => void;
+  onSave: (user: SystemUser) => void | Promise<void>;
 }
 
 function resolveContactId(user: SystemUser): string | number | null {
@@ -36,6 +37,7 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
   const { t } = useTranslation();
   const workspaceRoles = useWorkspaceRoles();
   const initialContactId = useMemo(() => resolveContactId(user), [user]);
+  const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<EditUserFormValues>({
     resolver: zodResolver(editUserSchema),
@@ -53,24 +55,33 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
     Boolean(watchedContactId),
   );
 
-  const handleSave = form.handleSubmit((values) => {
+  const handleSave = form.handleSubmit(async (values) => {
     const contact = selectedContact;
     if (!contact) return;
     const name = toTitleCase(contact.name.trim()) as string;
     const email = (getPrimaryEmail(contact) || '').toLowerCase();
     const phone = getPrimaryPhone(contact) || '';
-    onSave({
-      ...user,
-      contactId: contact.id,
-      name,
-      email,
-      phone,
-      role: values.role,
-      status: values.status,
-      twoFactorEnabled: values.twoFactorEnabled,
-      avatarInitials: getInitials(name),
-    });
-    onClose();
+    setSubmitting(true);
+    try {
+      await onSave({
+        ...user,
+        contactId: contact.id,
+        name,
+        email,
+        phone,
+        role: values.role,
+        status: values.status,
+        twoFactorEnabled: values.twoFactorEnabled,
+        avatarInitials: getInitials(name),
+      });
+      onClose();
+    } catch (error: unknown) {
+      notify.error(t('errors.module.title'), {
+        description: error instanceof Error ? error.message : t('errors.module.description'),
+      });
+    } finally {
+      setSubmitting(false);
+    }
   });
 
   return (
@@ -84,6 +95,7 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
       cancelLabel={t('users.cancel')}
       saveLabel={t('users.saveChanges')}
       onSave={handleSave}
+      saving={submitting}
     >
       <Form {...form}>
         <form className="space-y-4" onSubmit={handleSave}>

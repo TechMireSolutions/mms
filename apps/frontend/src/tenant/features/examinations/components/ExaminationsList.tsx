@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Edit2, BookOpen, Calendar, Clock, Users, CheckCircle, AlertCircle, Circle,
-  Search, Filter, ChevronDown
+  Search, Filter, ChevronDown, Trash2, RotateCcw
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
@@ -16,6 +16,7 @@ import { useSessionsCollection } from "@/tenant/features/sessions/hooks/useSessi
 import { useEnrollmentsCollection } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -37,6 +38,13 @@ interface ExamsListProps {
   onNew: () => void;
   onEdit: (exam: Exam) => void;
   canWrite?: boolean;
+  canDelete?: boolean;
+  showDeleted?: boolean;
+  createRequestKey?: number;
+  onDelete?: (id: string) => void | Promise<void>;
+  onRestore?: (id: string) => void | Promise<void>;
+  onBulkDelete?: (ids: string[]) => void | Promise<void>;
+  onBulkRestore?: (ids: string[]) => void | Promise<void>;
   listLayout?: boolean;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
@@ -53,6 +61,13 @@ export default function ExamsList({
   onNew,
   onEdit,
   canWrite = true,
+  canDelete = false,
+  showDeleted = false,
+  createRequestKey = 0,
+  onDelete,
+  onRestore,
+  onBulkDelete,
+  onBulkRestore,
   listLayout: _listLayout = false,
   onFilteredCountChange,
   isColumnVisible,
@@ -63,6 +78,7 @@ export default function ExamsList({
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const sessions = useSessionsCollection();
   const enrollments = useEnrollmentsCollection();
@@ -102,8 +118,46 @@ export default function ExamsList({
     onFilteredCountChange?.(filtered.length);
   }, [filtered.length, onFilteredCountChange]);
 
+  useEffect(() => {
+    if (createRequestKey > 0 && canWrite && !showDeleted) onNew();
+    // Intentionally omit onNew — parent passes a new function each render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- createRequestKey drives open
+  }, [createRequestKey, canWrite, showDeleted]);
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [showDeleted]);
+
   const toggleStatus = (status: string) =>
     setFilterStatus((currentStatuses) => (currentStatuses.includes(status) ? currentStatuses.filter((candidate) => candidate !== status) : [...currentStatuses, status]));
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => prev.includes(id) ? prev.filter((selectedId) => selectedId !== id) : [...prev, id]);
+  };
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((exam) => selectedIds.includes(exam.id));
+
+  const handleRowTrashAction = async (id: string) => {
+    if (showDeleted) {
+      if (!confirm(t("examinations.trash.bulkRestoreConfirm", { count: 1 }))) return;
+      await onRestore?.(id);
+      return;
+    }
+    if (!confirm(t("examinations.trash.deleteConfirm"))) return;
+    await onDelete?.(id);
+  };
+
+  const handleBulkAction = async () => {
+    if (selectedIds.length === 0) return;
+    if (showDeleted) {
+      if (!confirm(t("examinations.trash.bulkRestoreConfirm", { count: selectedIds.length }))) return;
+      await onBulkRestore?.(selectedIds);
+    } else {
+      if (!confirm(t("examinations.trash.bulkDeleteConfirm", { count: selectedIds.length }))) return;
+      await onBulkDelete?.(selectedIds);
+    }
+    setSelectedIds([]);
+  };
 
   const showName = isColumnVisible ? isColumnVisible("name") : true;
   const showSubject = isColumnVisible ? isColumnVisible("subject") : true;
@@ -184,7 +238,18 @@ export default function ExamsList({
               labels={columnCustomizer.labels}
             />
           )}
-          {canWrite && (
+          {canDelete && selectedIds.length > 0 && (
+            <Button
+              type="button"
+              variant={showDeleted ? "outline" : "destructive"}
+              onClick={() => { void handleBulkAction(); }}
+              className="flex items-center gap-1.5 whitespace-nowrap"
+            >
+              {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
+              {showDeleted ? t("examinations.trash.restore") : t("common.delete")} ({selectedIds.length})
+            </Button>
+          )}
+          {canWrite && !showDeleted && (
             <Button
               type="button"
               onClick={onNew}
@@ -240,7 +305,7 @@ export default function ExamsList({
                         <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{exam.subject}</p>
                       )}
                     </div>
-                    {canWrite && (
+                    {canWrite && !showDeleted && (
                       <Button
                         variant="ghost"
                         type="button"
@@ -249,6 +314,17 @@ export default function ExamsList({
                         className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
                       >
                         <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
+                      </Button>
+                    )}
+                    {canDelete && (showDeleted ? onRestore : onDelete) && (
+                      <Button
+                        variant="ghost"
+                        type="button"
+                        onClick={() => { void handleRowTrashAction(exam.id); }}
+                        aria-label={showDeleted ? t("examinations.trash.restore") : t("common.delete")}
+                        className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
+                      >
+                        {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
                       </Button>
                     )}
                   </div>
@@ -309,6 +385,18 @@ export default function ExamsList({
                 <caption className="sr-only">{t("examinations.exams")}</caption>
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
+                    {canDelete && (
+                      <th scope="col" className="px-3 py-2.5 w-10">
+                        <Checkbox
+                          checked={allFilteredSelected}
+                          onCheckedChange={(checked) => {
+                            if (checked) setSelectedIds(filtered.map((exam) => exam.id));
+                            else setSelectedIds([]);
+                          }}
+                          aria-label={t("examinations.trash.selectAll")}
+                        />
+                      </th>
+                    )}
                     {showName && (
                       <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t("examinations.columns.exam.name")}
@@ -359,6 +447,15 @@ export default function ExamsList({
                     const { assignedClasses } = renderExamMeta(exam);
                     return (
                       <motion.tr key={exam.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.03 }} className="hover:bg-muted/20 transition-colors group">
+                        {canDelete && (
+                          <td className="px-3 py-3">
+                            <Checkbox
+                              checked={selectedIds.includes(exam.id)}
+                              onCheckedChange={() => toggleSelected(exam.id)}
+                              aria-label={t("examinations.trash.selectExam", { name: exam.name })}
+                            />
+                          </td>
+                        )}
                         {showName && (
                           <td className="px-4 py-3 text-[13px] font-semibold text-foreground whitespace-nowrap">{exam.name}</td>
                         )}
@@ -391,7 +488,7 @@ export default function ExamsList({
                         )}
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            {canWrite && (
+                            {canWrite && !showDeleted && (
                               <Button
                                 variant="ghost"
                                 type="button"
@@ -400,6 +497,17 @@ export default function ExamsList({
                                 className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-all focus:opacity-100"
                               >
                                 <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
+                              </Button>
+                            )}
+                            {canDelete && (showDeleted ? onRestore : onDelete) && (
+                              <Button
+                                variant="ghost"
+                                type="button"
+                                onClick={() => { void handleRowTrashAction(exam.id); }}
+                                aria-label={showDeleted ? t("examinations.trash.restore") : t("common.delete")}
+                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-all focus:opacity-100"
+                              >
+                                {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
                               </Button>
                             )}
                           </div>

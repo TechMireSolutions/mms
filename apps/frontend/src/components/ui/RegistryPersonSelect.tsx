@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
-  STUDENTS_MODULE_CONTRACT,
-  TEACHERS_MODULE_CONTRACT,
+  STUDENTS_MODULE_MANIFEST,
+  TEACHERS_MODULE_MANIFEST,
 } from '@mms/shared';
 import { useStudentsPaginated } from '@/tenant/features/students/hooks/useStudents';
 import { useTeachersPaginated } from '@/tenant/features/teachers/hooks/useTeachers';
@@ -37,14 +37,14 @@ export function RegistryPersonSelect({
 
   const { data: studentPage } = useStudentsPaginated({
     page: 1,
-    limit: STUDENTS_MODULE_CONTRACT.maxPageSize,
+    limit: STUDENTS_MODULE_MANIFEST.maxPageSize,
     search,
     enabled: studentsEnabled,
   });
 
   const { data: teacherPage } = useTeachersPaginated({
     page: 1,
-    limit: TEACHERS_MODULE_CONTRACT.maxPageSize,
+    limit: TEACHERS_MODULE_MANIFEST.maxPageSize,
     search,
     enabled: teachersEnabled,
   });

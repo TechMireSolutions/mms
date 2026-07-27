@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import {
-  CONTACTS_MODULE_CONTRACT,
+  CONTACTS_MODULE_MANIFEST,
   type Contact,
   type ContactColumnPreference,
   type ContactGoogleSyncConfigClient,
@@ -25,16 +25,16 @@ import { apiFetch, apiJson } from '@/lib/apiClient';
 import { useSyncedCollection } from '@/hooks/useSyncedCollection';
 import { enqueueContactsOutbox } from '@/lib/contacts/contactsSyncOutbox';
 
-const CONTACTS_API = CONTACTS_MODULE_CONTRACT.restBasePath;
+const CONTACTS_API = CONTACTS_MODULE_MANIFEST.restBasePath;
 
-export const CONTACTS_QUERY_KEY = [CONTACTS_MODULE_CONTRACT.collectionKey, 'list'] as const;
-export const CONTACT_COLUMN_PREFERENCES_QUERY_KEY = [CONTACTS_MODULE_CONTRACT.collectionKey, 'column-preferences'] as const;
-export const CONTACTS_SAVED_REPORTS_QUERY_KEY = [CONTACTS_MODULE_CONTRACT.collectionKey, 'saved-reports'] as const;
-export const CONTACTS_GOOGLE_SYNC_QUERY_KEY = [CONTACTS_MODULE_CONTRACT.collectionKey, 'google-sync'] as const;
-export const CONTACTS_METRICS_QUERY_KEY = [CONTACTS_MODULE_CONTRACT.collectionKey, 'metrics'] as const;
-export const CONTACTS_REPORT_ANALYTICS_QUERY_KEY = [CONTACTS_MODULE_CONTRACT.collectionKey, 'report-analytics'] as const;
-export const CONTACTS_WIDGET_AGGREGATES_QUERY_KEY = [CONTACTS_MODULE_CONTRACT.collectionKey, 'widget-aggregates'] as const;
-export const CONTACTS_DUPLICATES_QUERY_KEY = [CONTACTS_MODULE_CONTRACT.collectionKey, 'duplicates'] as const;
+export const CONTACTS_QUERY_KEY = [CONTACTS_MODULE_MANIFEST.collectionKey, 'list'] as const;
+export const CONTACT_COLUMN_PREFERENCES_QUERY_KEY = [CONTACTS_MODULE_MANIFEST.collectionKey, 'column-preferences'] as const;
+export const CONTACTS_SAVED_REPORTS_QUERY_KEY = [CONTACTS_MODULE_MANIFEST.collectionKey, 'saved-reports'] as const;
+export const CONTACTS_GOOGLE_SYNC_QUERY_KEY = [CONTACTS_MODULE_MANIFEST.collectionKey, 'google-sync'] as const;
+export const CONTACTS_METRICS_QUERY_KEY = [CONTACTS_MODULE_MANIFEST.collectionKey, 'metrics'] as const;
+export const CONTACTS_REPORT_ANALYTICS_QUERY_KEY = [CONTACTS_MODULE_MANIFEST.collectionKey, 'report-analytics'] as const;
+export const CONTACTS_WIDGET_AGGREGATES_QUERY_KEY = [CONTACTS_MODULE_MANIFEST.collectionKey, 'widget-aggregates'] as const;
+export const CONTACTS_DUPLICATES_QUERY_KEY = [CONTACTS_MODULE_MANIFEST.collectionKey, 'duplicates'] as const;
 
 export interface ContactsPaginatedParams {
   page: number;
@@ -53,7 +53,7 @@ export interface ContactsPaginatedParams {
 function buildContactsPageUrl(params: ContactsPaginatedParams): string {
   const queryParams = new URLSearchParams();
   queryParams.set('page', String(params.page));
-  queryParams.set('limit', String(params.limit ?? CONTACTS_MODULE_CONTRACT.defaultPageSize));
+  queryParams.set('limit', String(params.limit ?? CONTACTS_MODULE_MANIFEST.defaultPageSize));
   if (params.search?.trim()) queryParams.set('search', params.search.trim());
   if (params.gender) queryParams.set('gender', params.gender);
   if (params.includeDeleted) queryParams.set('includeDeleted', 'true');
@@ -72,7 +72,7 @@ function buildContactsPageUrl(params: ContactsPaginatedParams): string {
 function contactsListQueryKeyParams(params: ContactsPaginatedParams) {
   return {
     page: params.page,
-    limit: params.limit ?? CONTACTS_MODULE_CONTRACT.defaultPageSize,
+    limit: params.limit ?? CONTACTS_MODULE_MANIFEST.defaultPageSize,
     search: params.search?.trim() || '',
     gender: params.gender || '',
     includeDeleted: Boolean(params.includeDeleted),
@@ -128,7 +128,7 @@ export async function fetchAllContactsForQuery(
   params: Omit<ContactsPaginatedParams, 'page' | 'enabled'>,
   onProgress?: (fetched: number, total: number) => void,
 ): Promise<Contact[]> {
-  const limit = CONTACTS_MODULE_CONTRACT.maxPageSize;
+  const limit = CONTACTS_MODULE_MANIFEST.maxPageSize;
   const all: Contact[] = [];
   let page = 1;
   let total = 0;
@@ -147,8 +147,8 @@ export async function fetchAllContactsForQuery(
 
 export function useContactsMetrics(options?: { enabled?: boolean }) {
   return useServerMetrics<ContactsCommandMetricsSnapshot>({
-    moduleId: CONTACTS_MODULE_CONTRACT.moduleId,
-    apiPath: CONTACTS_MODULE_CONTRACT.restBasePath,
+    moduleId: CONTACTS_MODULE_MANIFEST.moduleId,
+    apiPath: CONTACTS_MODULE_MANIFEST.restBasePath,
     enabled: options?.enabled,
   });
 }
@@ -610,7 +610,7 @@ export function useContactsCollectionState(options?: { enabled?: boolean; includ
   const contacts = useSyncedCollection<Contact>({
     queryData: queryResult.data,
     isSuccess: queryResult.isSuccess,
-    collectionName: CONTACTS_MODULE_CONTRACT.collectionKey,
+    collectionName: CONTACTS_MODULE_MANIFEST.collectionKey,
     enabled,
   });
   return {

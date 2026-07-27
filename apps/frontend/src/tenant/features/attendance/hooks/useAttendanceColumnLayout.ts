@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  ATTENDANCE_MODULE_CONTRACT,
+  ATTENDANCE_MODULE_MANIFEST,
   buildAttendanceWorkColumnRegistry,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -24,9 +24,9 @@ export function useAttendanceColumnLayout() {
   );
 
   return useModuleColumnLayout({
-    moduleId: ATTENDANCE_MODULE_CONTRACT.moduleId,
+    moduleId: ATTENDANCE_MODULE_MANIFEST.moduleId,
     tenantRegistry,
-    apiPath: ATTENDANCE_MODULE_CONTRACT.restBasePath,
+    apiPath: ATTENDANCE_MODULE_MANIFEST.restBasePath,
     translationPrefix: 'attendance.columns',
   });
 }

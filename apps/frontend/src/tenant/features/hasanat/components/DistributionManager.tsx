@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { Plus, Search, X, Star, User, Users2, Filter, ChevronDown, Eye } from "lucide-react";
+import { Plus, Search, X, Star, User, Users2, Filter, ChevronDown, Eye, Trash2, RotateCcw } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -49,12 +49,13 @@ interface DistributeModalProps {
   denoms: Denomination[];
   batches: StockBatch[];
   onClose: () => void;
-  onSave: (dist: Distribution) => void;
+  onSave: (dist: Distribution) => void | Promise<void>;
 }
 
 function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeModalProps) {
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
   const [data, setData] = useState<Partial<Distribution>>({
     ...EMPTY_DIST,
     denominationId: denoms[0]?.id || "",
@@ -112,7 +113,9 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
       icon={Star}
       cancelLabel="Cancel"
       saveLabel="Distribute"
+      saving={submitting}
       onSave={() => {
+        void (async () => {
         const denomination = denoms.find((candidate) => candidate.id === data.denominationId);
         const batch = batches.find((candidate) => candidate.denominationId === data.denominationId && candidate.remaining > 0);
         const payload: Distribution = {
@@ -129,7 +132,13 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
         } else {
           delete payload.recipientTeacherId;
         }
-        onSave(payload);
+        setSubmitting(true);
+        try {
+          await onSave(payload);
+        } finally {
+          setSubmitting(false);
+        }
+        })();
       }}
       saveDisabled={!isValid}
     >
@@ -359,9 +368,16 @@ export interface DistributionManagerProps {
   distributions: Distribution[];
   denoms: Denomination[];
   batches: StockBatch[];
-  onUpdate: (dists: Distribution[]) => void;
+  onUpdate: (dists: Distribution[]) => void | Promise<void>;
   onFilteredCountChange?: (count: number) => void;
   canWrite?: boolean;
+  canDelete?: boolean;
+  showDeleted?: boolean;
+  createRequestKey?: number;
+  onDelete?: (id: string) => void | Promise<void>;
+  onRestore?: (id: string) => void | Promise<void>;
+  onBulkDelete?: (ids: string[]) => void | Promise<void>;
+  onBulkRestore?: (ids: string[]) => void | Promise<void>;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -386,6 +402,13 @@ export function DistributionManager({
   onUpdate,
   onFilteredCountChange,
   canWrite = true,
+  canDelete = false,
+  showDeleted = false,
+  createRequestKey = 0,
+  onDelete,
+  onRestore,
+  onBulkDelete,
+  onBulkRestore,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
@@ -409,6 +432,7 @@ export function DistributionManager({
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const filtered = useMemo(() => {
     return distributions.filter((distribution) => {
@@ -426,6 +450,16 @@ export function DistributionManager({
     onFilteredCountChange?.(filtered.length);
   }, [filtered.length, onFilteredCountChange]);
 
+  useEffect(() => {
+    if (createRequestKey > 0 && canWrite && !showDeleted) {
+      setShowModal(true);
+    }
+  }, [createRequestKey, canWrite, showDeleted]);
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [showDeleted]);
+
   const showCard = isColumnVisible ? isColumnVisible("card") : true;
   const showRecipient = isColumnVisible ? isColumnVisible("recipient") : true;
   const showRecipientClass = isColumnVisible ? isColumnVisible("recipientClass") : true;
@@ -437,12 +471,42 @@ export function DistributionManager({
 
   const toggleStatus = (status: string) => setFilterStatus((selectedStatuses) => selectedStatuses.includes(status) ? selectedStatuses.filter((selectedStatus) => selectedStatus !== status) : [...selectedStatuses, status]);
 
-  const handleDistribute = (dist: Distribution) => {
-    onUpdate([...distributions, dist]);
+  const handleDistribute = async (dist: Distribution) => {
+    await onUpdate([...distributions, dist]);
     setShowModal(false);
   };
 
-  const changeStatus = (id: string, status: "active" | "redeemed" | "returned") => onUpdate(distributions.map((distribution) => distribution.id === id ? { ...distribution, status } : distribution));
+  const changeStatus = (id: string, status: "active" | "redeemed" | "returned") => {
+    void onUpdate(distributions.map((distribution) => distribution.id === id ? { ...distribution, status } : distribution));
+  };
+
+  const handleRowTrashAction = async (id: string) => {
+    if (showDeleted) {
+      if (!confirm(t("hasanat.trash.bulkRestoreConfirm", { count: 1 }))) return;
+      await onRestore?.(id);
+      return;
+    }
+    if (!confirm(t("hasanat.trash.deleteConfirm"))) return;
+    await onDelete?.(id);
+  };
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => prev.includes(id) ? prev.filter((selectedId) => selectedId !== id) : [...prev, id]);
+  };
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((distribution) => selectedIds.includes(distribution.id));
+
+  const handleBulkAction = async () => {
+    if (selectedIds.length === 0) return;
+    if (showDeleted) {
+      if (!confirm(t("hasanat.trash.bulkRestoreConfirm", { count: selectedIds.length }))) return;
+      await onBulkRestore?.(selectedIds);
+    } else {
+      if (!confirm(t("hasanat.trash.bulkDeleteConfirm", { count: selectedIds.length }))) return;
+      await onBulkDelete?.(selectedIds);
+    }
+    setSelectedIds([]);
+  };
 
   const getDenomination = (id: string) => denoms.find((denomination) => denomination.id === id);
 
@@ -478,7 +542,18 @@ export function DistributionManager({
             labels={columnCustomizer.labels}
           />
         )}
-        {canWrite && (
+        {canDelete && selectedIds.length > 0 && (
+          <Button
+            type="button"
+            variant={showDeleted ? "outline" : "destructive"}
+            onClick={() => { void handleBulkAction(); }}
+            className="flex items-center gap-1.5 whitespace-nowrap"
+          >
+            {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
+            {showDeleted ? t("hasanat.trash.restore") : t("common.delete")} ({selectedIds.length})
+          </Button>
+        )}
+        {canWrite && !showDeleted && (
           <Button type="button" onClick={() => setShowModal(true)} className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap">
             <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("hasanat.distributeCards")}
           </Button>
@@ -491,6 +566,18 @@ export function DistributionManager({
             <caption className="sr-only">Distributions</caption>
             <thead>
               <tr className="border-b border-border bg-muted/30">
+                {canDelete && (
+                  <th scope="col" className="px-3 py-2.5 w-10">
+                    <Checkbox
+                      checked={allFilteredSelected}
+                      onCheckedChange={(checked) => {
+                        if (checked) setSelectedIds(filtered.map((distribution) => distribution.id));
+                        else setSelectedIds([]);
+                      }}
+                      aria-label={t("hasanat.trash.selectAll")}
+                    />
+                  </th>
+                )}
                 {showCard && (
                   <ResizableTableHead columnKey="card" width={getColumnWidth?.("card")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("hasanat.columns.distribution.card")}
@@ -538,12 +625,21 @@ export function DistributionManager({
             </thead>
             <tbody className="divide-y divide-border/50">
               {filtered.length === 0 ? (
-                <tr><td colSpan={9} className="py-10 text-center text-sm text-muted-foreground">{t("hasanat.empty.distributions")}</td></tr>
+                <tr><td colSpan={canDelete ? 10 : 9} className="py-10 text-center text-sm text-muted-foreground">{t("hasanat.empty.distributions")}</td></tr>
               ) : (
                 filtered.map((distribution, index) => {
                   const denomination = getDenomination(distribution.denominationId);
                   return (
                     <motion.tr key={distribution.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.03 }} className="hover:bg-muted/20 transition-colors group">
+                      {canDelete && (
+                        <td className="px-3 py-3">
+                          <Checkbox
+                            checked={selectedIds.includes(distribution.id)}
+                            onCheckedChange={() => toggleSelected(distribution.id)}
+                            aria-label={t("hasanat.trash.selectDistribution", { name: distribution.recipientName || distribution.id })}
+                          />
+                        </td>
+                      )}
                       {showCard && (
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
@@ -588,8 +684,8 @@ export function DistributionManager({
                         </td>
                       )}
                       <td className="px-4 py-3">
-                        {(canWrite || onMessage) && (
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end gap-1">
+                          {(canWrite || onMessage) && !showDeleted && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" type="button" aria-label="Change status" className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground text-xs font-medium flex items-center gap-1">
@@ -629,8 +725,19 @@ export function DistributionManager({
                               )}
                             </DropdownMenuContent>
                           </DropdownMenu>
+                          )}
+                          {canDelete && (showDeleted ? onRestore : onDelete) && (
+                            <Button
+                              variant="ghost"
+                              type="button"
+                              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"
+                              onClick={() => { void handleRowTrashAction(distribution.id); }}
+                              aria-label={showDeleted ? t("hasanat.trash.restore") : t("common.delete")}
+                            >
+                              {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
+                            </Button>
+                          )}
                         </div>
-                        )}
                       </td>
                     </motion.tr>
                   );
@@ -641,7 +748,7 @@ export function DistributionManager({
         </div>
       </Card>
 
-      {canWrite && (
+      {canWrite && !showDeleted && (
         <DistributeModal
           open={showModal}
           denoms={denoms}

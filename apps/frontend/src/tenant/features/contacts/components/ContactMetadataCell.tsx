@@ -32,7 +32,7 @@ export interface ContactMetadataCellProps {
 export function ContactMetadataCell({
   colId,
   contact,
-  prefs,
+  prefs: _prefs,
   allContacts = [],
   contactsMap: externalContactsMap,
   variant = "table",

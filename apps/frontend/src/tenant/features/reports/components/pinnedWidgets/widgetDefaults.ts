@@ -1,16 +1,29 @@
 import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
-import { DEFAULT_WIDGET_TITLE_KEYS, DEFAULT_WIDGET_SUBTEXT_KEYS } from "@/lib/dashboardWidgets";
+import {
+  DEFAULT_WIDGET_TITLE_KEYS,
+  DEFAULT_WIDGET_SUBTEXT_KEYS,
+  isSeededDashboardWidget,
+} from "@/lib/dashboardWidgets";
 import { DASHBOARD_WIDGETS_KEY } from "@mms/shared";
 import { getObject, saveObject } from "@/lib/db";
 
 function withDefaultTitleKey(widget: CustomWidget): CustomWidget {
   const titleKey = widget.titleKey ?? DEFAULT_WIDGET_TITLE_KEYS[widget.id];
-  return titleKey ? { ...widget, titleKey } : widget;
+  if (!titleKey) return widget;
+  // Seeded widgets: titleKey is SSOT; drop redundant English title copies.
+  if (isSeededDashboardWidget(widget.id)) {
+    return { ...widget, titleKey, title: "" };
+  }
+  return { ...widget, titleKey };
 }
 
 function withDefaultSubTextKey(widget: CustomWidget): CustomWidget {
   const fixedSubTextKey = widget.fixedSubTextKey ?? DEFAULT_WIDGET_SUBTEXT_KEYS[widget.id];
-  return fixedSubTextKey ? { ...widget, fixedSubTextKey } : widget;
+  if (!fixedSubTextKey) return widget;
+  if (isSeededDashboardWidget(widget.id)) {
+    return { ...widget, fixedSubTextKey, fixedSubText: undefined };
+  }
+  return { ...widget, fixedSubTextKey };
 }
 
 function withDefaultI18nKeys(widget: CustomWidget): CustomWidget {

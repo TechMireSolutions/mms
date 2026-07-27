@@ -19,7 +19,7 @@ import {
   updateStudentById,
 } from '../../services/studentService.js';
 import type { User } from '@mms/shared';
-import { STUDENTS_MODULE_CONTRACT, computeStudentsCommandMetrics, studentRecordSchema } from '@mms/shared';
+import { STUDENTS_MODULE_MANIFEST, computeStudentsCommandMetrics, studentRecordSchema } from '@mms/shared';
 import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
 import {
   studentsListQuerySchema,
@@ -46,7 +46,7 @@ export default async function studentsRoutes(
     collection: 'students',
     schema: studentRecordSchema,
     listQuerySchema: studentsListQuerySchema,
-    defaultPageSize: STUDENTS_MODULE_CONTRACT.defaultPageSize,
+    defaultPageSize: STUDENTS_MODULE_MANIFEST.defaultPageSize,
     errorMessagePrefix: 'students',
     nameSingular: 'student',
     namePlural: 'students',
@@ -61,7 +61,7 @@ export default async function studentsRoutes(
     loadWidgetAggregatesFn: loadStudentsWidgetAggregates as unknown as (queries: unknown[]) => Promise<unknown>,
     loadByIdsFn: loadStudentsByIds,
     loadLinkedContactIdsFn: loadStudentLinkedContactIds,
-    columnPreferencesObjectKey: STUDENTS_MODULE_CONTRACT.columnPreferencesObjectKey,
+    columnPreferencesObjectKey: STUDENTS_MODULE_MANIFEST.columnPreferencesObjectKey,
     validateDynamicFn: validateStudentDynamic,
     canWriteDeletedCheck: (user) => canDeleteCollection(user, 'students'),
   });

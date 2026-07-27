@@ -27,7 +27,7 @@ import { useAccountingJournalColumnLayout } from "@/tenant/features/accounting/h
 import { useAccountingAccountColumnLayout } from "@/tenant/features/accounting/hooks/useAccountingAccountColumnLayout";
 import { useAccountingConfig } from "@/hooks/useStandardModuleConfig";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
-import { ACCOUNTING_MODULE_CONTRACT, type Account, type JournalEntry, type FiscalYear } from "@mms/shared";
+import { ACCOUNTING_MODULE_MANIFEST, type Account, type JournalEntry, type FiscalYear } from "@mms/shared";
 import {
   useAccountingAccounts,
   useAccountingEntries,
@@ -66,7 +66,7 @@ export default function Accounting() {
     canDelete,
     canReports: canViewReports,
     canViewSetup,
-  } = useModulePermissions(ACCOUNTING_MODULE_CONTRACT);
+  } = useModulePermissions(ACCOUNTING_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const SUB_TABS = useMemo(
     () => SUB_TAB_IDS.map((subTabId) => ({

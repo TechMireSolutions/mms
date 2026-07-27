@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { CONTACTS_MODULE_CONTRACT } from '@mms/shared';
+import { CONTACTS_MODULE_MANIFEST } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
 import {
   completeBackgroundJob,
@@ -11,7 +11,7 @@ import {
 } from '@/lib/backgroundJobs/backgroundJobStore';
 import { useBackgroundJobs } from '@/tenant/hooks/useBackgroundJobs';
 
-const MODULE_ID = CONTACTS_MODULE_CONTRACT.moduleId;
+const MODULE_ID = CONTACTS_MODULE_MANIFEST.moduleId;
 
 export type ContactsBackgroundJobKind = 'export' | 'sync' | 'import' | 'duplicate_scan';
 export type ContactsBackgroundJobStatus = 'running' | 'completed' | 'failed';
@@ -47,13 +47,13 @@ export function useContactsBackgroundJobs() {
 /** Resolves download REST URL for completed Contacts jobs with a downloadable artifact. */
 export function getContactsJobArtifactUrl(job: ContactsBackgroundJob): string | null {
   if (job.status !== 'completed' || !job.hasDownload) return null;
-  return `${CONTACTS_MODULE_CONTRACT.restBasePath}/export/download/${encodeURIComponent(job.id)}`;
+  return `${CONTACTS_MODULE_MANIFEST.restBasePath}/export/download/${encodeURIComponent(job.id)}`;
 }
 
 /** Requests server-side job cancellation and marks local status as failed. */
 export async function cancelContactsBackgroundJob(jobId: string): Promise<void> {
   try {
-    await apiJson(`${CONTACTS_MODULE_CONTRACT.restBasePath}/background-jobs/${encodeURIComponent(jobId)}/cancel`, {
+    await apiJson(`${CONTACTS_MODULE_MANIFEST.restBasePath}/background-jobs/${encodeURIComponent(jobId)}/cancel`, {
       method: 'POST',
     });
   } catch {

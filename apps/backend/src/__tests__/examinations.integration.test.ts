@@ -26,9 +26,15 @@ const mockLoadExams = vi.fn();
 
 vi.mock('../services/examinationService.js', () => ({
   loadExams: (...args: unknown[]) => mockLoadExams(...args),
+  upsertExams: vi.fn().mockResolvedValue([]),
   replaceExams: vi.fn(),
   loadExamResults: vi.fn().mockResolvedValue([]),
+  upsertExamResults: vi.fn().mockResolvedValue([]),
   replaceExamResults: vi.fn(),
+  deleteExamById: vi.fn(),
+  restoreExamById: vi.fn(),
+  bulkSoftDeleteExams: vi.fn(),
+  bulkRestoreExams: vi.fn(),
 }));
 
 function teacherToken(app: Awaited<ReturnType<typeof buildApp>>): string {

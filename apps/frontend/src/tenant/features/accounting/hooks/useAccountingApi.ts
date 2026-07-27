@@ -5,19 +5,19 @@ import type {
   JournalEntry,
   FiscalYear,
 } from '@mms/shared';
-import { ACCOUNTING_MODULE_CONTRACT } from '@mms/shared';
+import { ACCOUNTING_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
 import { saveCollection } from '@/lib/db';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
 
-const ACCOUNTING_API = ACCOUNTING_MODULE_CONTRACT.restBasePath;
+const ACCOUNTING_API = ACCOUNTING_MODULE_MANIFEST.restBasePath;
 
-export const ACCOUNTING_METRICS_QUERY_KEY = [ACCOUNTING_MODULE_CONTRACT.moduleId, 'metrics'] as const;
+export const ACCOUNTING_METRICS_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'metrics'] as const;
 
-export const ACCOUNTING_ACCOUNTS_QUERY_KEY = [ACCOUNTING_MODULE_CONTRACT.moduleId, 'accounts', 'list'] as const;
-export const ACCOUNTING_ENTRIES_QUERY_KEY = [ACCOUNTING_MODULE_CONTRACT.moduleId, 'entries', 'list'] as const;
-export const ACCOUNTING_FISCAL_YEARS_QUERY_KEY = [ACCOUNTING_MODULE_CONTRACT.moduleId, 'fiscal_years', 'list'] as const;
+export const ACCOUNTING_ACCOUNTS_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'accounts', 'list'] as const;
+export const ACCOUNTING_ENTRIES_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'entries', 'list'] as const;
+export const ACCOUNTING_FISCAL_YEARS_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'fiscal_years', 'list'] as const;
 
 export class NotifiedAccountingMutationError extends Error {}
 
@@ -167,8 +167,8 @@ export function useAccountingMutations() {
 
 export function useAccountingMetrics(options?: { enabled?: boolean }) {
   return useServerMetrics<AccountingCommandMetricsSnapshot>({
-    moduleId: ACCOUNTING_MODULE_CONTRACT.moduleId,
-    apiPath: ACCOUNTING_MODULE_CONTRACT.restBasePath,
+    moduleId: ACCOUNTING_MODULE_MANIFEST.moduleId,
+    apiPath: ACCOUNTING_MODULE_MANIFEST.restBasePath,
     enabled: options?.enabled,
   });
 }

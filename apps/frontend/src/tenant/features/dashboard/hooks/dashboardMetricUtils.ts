@@ -1,4 +1,4 @@
-import { formatDateToIso } from '@mms/shared';
+import { formatDateToIso, todayISO } from '@mms/shared';
 import type { Distribution } from '@/lib/data/hasanatData';
 import type { Session } from '@/lib/data/sessionsData';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
@@ -11,6 +11,24 @@ export function getAttendanceRateForDate(records: AttendanceRecord[], dateStr: s
     (record) => record.status === 'present' || record.status === 'late',
   ).length;
   return (present / dayRecords.length) * 100;
+}
+
+/**
+ * Attendance rate for today, or the most recent day with records.
+ * Returns a rounded percent, or null when there is no attendance data.
+ */
+export function getLatestAttendanceRate(records: AttendanceRecord[]): number | null {
+  const today = todayISO();
+  const todayRate = getAttendanceRateForDate(records, today);
+  if (todayRate !== null) return Math.round(todayRate);
+
+  const attendanceDates = [...new Set(records.map((record) => record.date as string))]
+    .filter(Boolean)
+    .sort()
+    .reverse();
+  if (attendanceDates.length === 0) return null;
+  const latestRate = getAttendanceRateForDate(records, attendanceDates[0]);
+  return latestRate === null ? null : Math.round(latestRate);
 }
 
 export function getPeriodBoundaries(daysStart: number, daysEnd: number): {

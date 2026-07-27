@@ -881,6 +881,9 @@ export interface QuestionBankQuestion {
   sources?: QuestionSourceReference[];
   /** @deprecated First source — kept for legacy reads; use `sourceCitations`. */
   source?: QuestionSourceReference;
+  deletedAt?: string | null;
+  deletedBy?: string | null;
+  deletionReason?: string | null;
 }
 
 export interface QuestionBankTest {

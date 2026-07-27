@@ -221,7 +221,7 @@ export function WidgetBuilder({
     builderColor, thresholdEnabled, thresholdCondition, thresholdValue, thresholdColor,
     switchActionType, switchStateKey, switchCollection, switchRecordId, switchField,
     switchLabelOn, switchLabelOff, editWidgetConfig,
-    builderIcon, subTextType, fixedSubText, trend, trendType, builderRole
+    builderIcon, subTextType, fixedSubText, trend, trendType, builderRole, t
   ]);
 
   const handleToggleSwitchStateLocal = () => {

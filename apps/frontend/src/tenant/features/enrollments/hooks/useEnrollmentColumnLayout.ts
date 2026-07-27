@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  ENROLLMENTS_MODULE_CONTRACT,
+  ENROLLMENTS_MODULE_MANIFEST,
   buildEnrollmentWorkColumnRegistry,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -24,9 +24,9 @@ export function useEnrollmentColumnLayout() {
   );
 
   return useModuleColumnLayout({
-    moduleId: ENROLLMENTS_MODULE_CONTRACT.moduleId,
+    moduleId: ENROLLMENTS_MODULE_MANIFEST.moduleId,
     tenantRegistry,
-    apiPath: ENROLLMENTS_MODULE_CONTRACT.restBasePath,
+    apiPath: ENROLLMENTS_MODULE_MANIFEST.restBasePath,
     translationPrefix: 'enrollments.columns',
   });
 }

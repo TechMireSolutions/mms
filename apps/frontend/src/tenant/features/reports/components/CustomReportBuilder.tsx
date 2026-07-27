@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useContactsPaginated } from '@/tenant/features/contacts/hooks/useContacts';
 import { useStudentsPaginated } from '@/tenant/features/students/hooks/useStudents';
-import { CONTACTS_MODULE_CONTRACT, STUDENTS_MODULE_CONTRACT } from '@mms/shared';
+import { CONTACTS_MODULE_MANIFEST, STUDENTS_MODULE_MANIFEST } from '@mms/shared';
 import { useSessionsCollection } from '@/tenant/features/sessions/hooks/useSessions';
 import { useFinanceInvoicesCollection } from "@/tenant/features/finance/hooks/useFinanceApi";
 import { useAttendanceRecordsCollection } from "@/tenant/features/attendance/hooks/useAttendance";
@@ -220,12 +220,12 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
 
   const { data: contactsPreviewPage } = useContactsPaginated({
     page: 1,
-    limit: CONTACTS_MODULE_CONTRACT.defaultPageSize,
+    limit: CONTACTS_MODULE_MANIFEST.defaultPageSize,
     enabled: source === "contacts",
   });
   const { data: studentsPreviewPage } = useStudentsPaginated({
     page: 1,
-    limit: STUDENTS_MODULE_CONTRACT.defaultPageSize,
+    limit: STUDENTS_MODULE_MANIFEST.defaultPageSize,
     enabled: source === "students",
   });
   const contactsColl = useMemo(() => (contactsPreviewPage?.contacts ?? []) as unknown as Record<string, unknown>[], [contactsPreviewPage?.contacts]);

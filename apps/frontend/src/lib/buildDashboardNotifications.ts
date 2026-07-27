@@ -1,7 +1,17 @@
-import { type AppTranslationKey, type Permission, formatMoney, todayISO, FINANCE_MODULE_CONTRACT, STUDENTS_MODULE_CONTRACT, ATTENDANCE_MODULE_CONTRACT } from '@mms/shared';
+import {
+  type AppTranslationKey,
+  type Permission,
+  formatMoney,
+  getOutstandingAmountForInvoice,
+  isOpenInvoiceStatus,
+  FINANCE_MODULE_MANIFEST,
+  STUDENTS_MODULE_MANIFEST,
+  ATTENDANCE_MODULE_MANIFEST,
+} from '@mms/shared';
 import type { DashboardRole } from '@/lib/dashboardRole';
 import type { Invoice } from '@/lib/data/financeData';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
+import { getLatestAttendanceRate } from '@/tenant/features/dashboard/hooks/dashboardMetricUtils';
 
 export interface DashboardNotificationItem {
   id: string;
@@ -14,41 +24,17 @@ export interface DashboardNotificationItem {
 
 type Translate = (key: AppTranslationKey, params?: Record<string, string | number>) => string;
 
+/** Alert when attendance rate drops below this percent. */
+export const DASHBOARD_LOW_ATTENDANCE_THRESHOLD = 75;
+/** Mark low-attendance notification urgent below this percent. */
+export const DASHBOARD_URGENT_ATTENDANCE_THRESHOLD = 60;
+
 function sumOutstanding(invoices: Invoice[]): number {
-  return invoices.reduce((sum, invoice) => {
-    if (invoice.status === 'cancelled' || invoice.status === 'paid') return sum;
-    if (invoice.status === 'partial') {
-      return sum + Math.max(0, Number(invoice.finalAmt || 0) - Number(invoice.paidAmt || 0));
-    }
-    return sum + Number(invoice.finalAmt || 0);
-  }, 0);
+  return invoices.reduce((sum, invoice) => sum + getOutstandingAmountForInvoice(invoice), 0);
 }
 
 function countOpenInvoices(invoices: Invoice[]): number {
-  return invoices.filter(
-    (invoice) =>
-      invoice.status === 'pending' || invoice.status === 'overdue' || invoice.status === 'partial',
-  ).length;
-}
-
-function todayAttendanceRate(attendanceRecords: AttendanceRecord[]): number | null {
-  const today = todayISO();
-  let attendanceRecordsForDay = attendanceRecords.filter((attendanceRecord) => attendanceRecord.date === today);
-
-  if (attendanceRecordsForDay.length === 0) {
-    const attendanceDates = [...new Set(attendanceRecords.map((attendanceRecord) => attendanceRecord.date))]
-      .sort()
-      .reverse();
-    if (attendanceDates.length === 0) return null;
-    attendanceRecordsForDay = attendanceRecords.filter(
-      (attendanceRecord) => attendanceRecord.date === attendanceDates[0],
-    );
-  }
-  if (attendanceRecordsForDay.length === 0) return null;
-  const presentOrLateCount = attendanceRecordsForDay.filter(
-    (attendanceRecord) => attendanceRecord.status === 'present' || attendanceRecord.status === 'late',
-  ).length;
-  return Math.round((presentOrLateCount / attendanceRecordsForDay.length) * 100);
+  return invoices.filter((invoice) => isOpenInvoiceStatus(invoice.status)).length;
 }
 
 export function buildDashboardNotifications(
@@ -65,12 +51,12 @@ export function buildDashboardNotifications(
   const dashboardNotifications: DashboardNotificationItem[] = [];
   const unpaidCount = countOpenInvoices(dashboardNotificationInput.invoices);
   const outstandingTotal = sumOutstanding(dashboardNotificationInput.invoices);
-  const attendanceRate = todayAttendanceRate(dashboardNotificationInput.attendanceRecords);
+  const attendanceRate = getLatestAttendanceRate(dashboardNotificationInput.attendanceRecords);
 
-  const canFinance = can ? can(FINANCE_MODULE_CONTRACT.permissions.write) : true;
-  const canStudents = can ? can(STUDENTS_MODULE_CONTRACT.permissions.read) : true;
+  const canFinance = can ? can(FINANCE_MODULE_MANIFEST.permissions.write) : true;
+  const canStudents = can ? can(STUDENTS_MODULE_MANIFEST.permissions.read) : true;
   const canAttendance = can
-    ? can(ATTENDANCE_MODULE_CONTRACT.permissions.write) || can(ATTENDANCE_MODULE_CONTRACT.permissions.read)
+    ? can(ATTENDANCE_MODULE_MANIFEST.permissions.write) || can(ATTENDANCE_MODULE_MANIFEST.permissions.read)
     : true;
 
   if ((dashboardRole === 'admin' || dashboardRole === 'accountant') && canFinance) {
@@ -103,14 +89,18 @@ export function buildDashboardNotifications(
     }
   }
 
-  if (canAttendance && attendanceRate !== null && attendanceRate < 75) {
+  if (
+    canAttendance &&
+    attendanceRate !== null &&
+    attendanceRate < DASHBOARD_LOW_ATTENDANCE_THRESHOLD
+  ) {
     dashboardNotifications.push({
       id: 'low-attendance',
       type: 'attendance',
       title: t('notifications.lowAttendanceTitle'),
       desc: t('notifications.lowAttendanceDesc', { rate: attendanceRate }),
       time: t('notifications.timeToday'),
-      urgent: attendanceRate < 60,
+      urgent: attendanceRate < DASHBOARD_URGENT_ATTENDANCE_THRESHOLD,
     });
   }
 

@@ -42,6 +42,7 @@ import { getGlobalSettings } from "@/lib/db";
 import { useUsersConfig } from "@/hooks/useStandardModuleConfig";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { notify } from '@/lib/notify';
 
 const STEP_DEFS = [
   { id: 1, labelKey: "users.addStepContact" as const, icon: User },
@@ -512,7 +513,7 @@ function Step3({ form, setForm, errors }: Step3Props): JSX.Element {
 
 export interface AddUserModalProps {
   onClose: () => void;
-  onAdd: (user: SystemUser) => void;
+  onAdd: (user: SystemUser) => void | Promise<void>;
   existingEmails?: string[];
 }
 
@@ -587,7 +588,7 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
     setStep((currentStep) => currentStep - 1);
   };
 
-  const handleSubmit = (): void => {
+  const handleSubmit = async (): Promise<void> => {
     if (!validate()) return;
     setSubmitting(true);
     const newUser: SystemUser = {
@@ -611,10 +612,17 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
         customFields.map((cf) => [cf.id, (form as unknown as Record<string, unknown>)[cf.id] ?? cf.defaultValue ?? ""])
       ),
     };
-    setSubmitting(false);
-    setSuccess(true);
-    onAdd(newUser);
-    onClose();
+    try {
+      await onAdd(newUser);
+      setSuccess(true);
+      onClose();
+    } catch (error: unknown) {
+      notify.error(t('errors.module.title'), {
+        description: error instanceof Error ? error.message : t('errors.module.description'),
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -645,7 +653,7 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
                 {t("users.addNext")} <ChevronRight className="h-3.5 w-3.5" />
               </Button>
             ) : (
-              <Button type="button" onClick={handleSubmit} disabled={submitting}>
+              <Button type="button" onClick={() => { void handleSubmit(); }} disabled={submitting}>
                 {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
                 {submitting ? t("users.addCreating") : t("users.addCreate")}
               </Button>

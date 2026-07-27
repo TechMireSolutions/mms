@@ -21,7 +21,7 @@ import { useStudentsByIds } from '@/tenant/features/students/hooks/useStudents';
 import type { Student } from "@/lib/data/studentsData";
 import type { Enrollment } from "@/lib/data/enrollmentData";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { ATTENDANCE_MODULE_CONTRACT } from "@mms/shared";
+import { ATTENDANCE_MODULE_MANIFEST } from "@mms/shared";
 import { StatusToggle } from "@/tenant/features/attendance/components/StatusToggle";
 import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
 import {
@@ -272,7 +272,7 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
 export function MarkAttendance({ filters, role, records, persistBatch }: MarkAttendanceProps) {
   const { t } = useTranslation();
   const { statuses, customFields, orderedFields, isFieldEnabled } = useAttendanceConfig();
-  const { canWrite: canWriteAttendance } = useModulePermissions(ATTENDANCE_MODULE_CONTRACT);
+  const { canWrite: canWriteAttendance } = useModulePermissions(ATTENDANCE_MODULE_MANIFEST);
   const sessions = useSessionsCollection();
   const enrollments = useEnrollmentsCollection();
   const studentIds = useMemo(() => {

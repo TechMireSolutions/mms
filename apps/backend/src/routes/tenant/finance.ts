@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { FINANCE_MODULE_CONTRACT, computeFinanceCommandMetrics, type User } from '@mms/shared';
+import { FINANCE_MODULE_MANIFEST, computeFinanceCommandMetrics, type User } from '@mms/shared';
 import { registerStandardTenantRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
 import {
   financeBulkIdsSchema,
@@ -33,8 +33,8 @@ import { canDeleteCollection, canWriteCollection } from '../../services/rbacServ
 import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
-const FINANCE_COLLECTION = FINANCE_MODULE_CONTRACT.collectionKey;
-const PAYMENT_COLLECTION = FINANCE_MODULE_CONTRACT.paymentCollectionKey;
+const FINANCE_COLLECTION = FINANCE_MODULE_MANIFEST.collectionKey;
+const PAYMENT_COLLECTION = FINANCE_MODULE_MANIFEST.paymentCollectionKey;
 
 /**
  * Finance module routes — invoices, payments, metrics, and column preferences.
@@ -65,7 +65,7 @@ export default async function financeRoutes(
     collection: FINANCE_COLLECTION,
     schema: invoiceRecordSchema,
     listQuerySchema: financeListQuerySchema,
-    defaultPageSize: FINANCE_MODULE_CONTRACT.defaultPageSize,
+    defaultPageSize: FINANCE_MODULE_MANIFEST.defaultPageSize,
     errorMessagePrefix: 'invoices',
     loadAllFn: loadInvoices,
     loadPageFn: loadInvoicesPage,
@@ -75,7 +75,7 @@ export default async function financeRoutes(
     restoreFn: restoreInvoiceById,
     nameSingular: 'invoice',
     namePlural: 'invoices',
-    columnPreferencesObjectKey: FINANCE_MODULE_CONTRACT.invoiceColumnPreferencesObjectKey,
+    columnPreferencesObjectKey: FINANCE_MODULE_MANIFEST.invoiceColumnPreferencesObjectKey,
     customPostRoute: true,
   });
 
@@ -97,7 +97,7 @@ export default async function financeRoutes(
     collection: PAYMENT_COLLECTION,
     schema: paymentRecordSchema,
     listQuerySchema: financeListQuerySchema,
-    defaultPageSize: FINANCE_MODULE_CONTRACT.defaultPageSize,
+    defaultPageSize: FINANCE_MODULE_MANIFEST.defaultPageSize,
     errorMessagePrefix: 'payments',
     loadAllFn: loadPayments,
     loadPageFn: loadPaymentsPage,
@@ -107,7 +107,7 @@ export default async function financeRoutes(
     restoreFn: restorePaymentById,
     nameSingular: 'payment',
     namePlural: 'payments',
-    columnPreferencesObjectKey: FINANCE_MODULE_CONTRACT.paymentColumnPreferencesObjectKey,
+    columnPreferencesObjectKey: FINANCE_MODULE_MANIFEST.paymentColumnPreferencesObjectKey,
     customPostRoute: true,
   });
 

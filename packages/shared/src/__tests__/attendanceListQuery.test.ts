@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { AttendanceRecord } from '../attendanceModuleContract.js';
+import type { AttendanceRecord } from '../attendanceModuleManifest.js';
 import { paginateAttendance } from '../attendanceListQuery.js';
 
 const records: AttendanceRecord[] = [

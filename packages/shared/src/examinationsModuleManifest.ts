@@ -12,6 +12,9 @@ export const examRecordSchema = z.object({
   classIds: z.array(z.string()),
   status: z.enum(["completed", "scheduled", "cancelled", "upcoming", "ongoing"]),
   description: z.string(),
+  deletedAt: z.string().optional(),
+  deletedBy: z.string().optional(),
+  deletionReason: z.string().optional(),
 });
 
 export type Exam = z.infer<typeof examRecordSchema>;
@@ -27,8 +30,8 @@ export const examResultRecordSchema = z.object({
 export type ExamResult = z.infer<typeof examResultRecordSchema>;
 export const examResultListSchema = z.array(examResultRecordSchema);
 
-/** Examinations module contract — aligns with globle1 universal module architecture. */
-export const EXAMINATIONS_MODULE_CONTRACT = {
+/** Examinations module manifest — aligns with globle1 universal module architecture. */
+export const EXAMINATIONS_MODULE_MANIFEST = {
   moduleId: 'examinations',
   entityType: 'Exam',
   collectionKey: 'exams',
@@ -39,6 +42,13 @@ export const EXAMINATIONS_MODULE_CONTRACT = {
   restBasePath: '/api/examinations',
   analyticsCategory: 'examinations',
   tiers: ['work', 'reports', 'setup'] as const,
+  setupSubTabs: ['fields', 'preferences'] as const,
+  softDelete: {
+    workExcludesDeleted: true,
+    reportsIncludeDeleted: false,
+    exportsIncludeDeleted: false,
+    captureDeletionReason: false,
+  },
   permissions: {
     read: 'students.read',
     write: 'students.write',
@@ -50,9 +60,9 @@ export const EXAMINATIONS_MODULE_CONTRACT = {
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['exams', 'results'] as const,
-    bulkActions: [] as const,
+    bulkActions: ['delete'] as const,
   },
   defaultPageSize: 12,
 } as const;
 
-export type ExaminationsModuleTier = (typeof EXAMINATIONS_MODULE_CONTRACT.tiers)[number];
+export type ExaminationsModuleTier = (typeof EXAMINATIONS_MODULE_MANIFEST.tiers)[number];

@@ -17,7 +17,7 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 interface EnterMarksProps {
   exams: Exam[];
   results: ExamResult[];
-  onSaveResults: (examId: string, results: ExamResult[]) => void;
+  onSaveResults: (examId: string, results: ExamResult[]) => void | Promise<void>;
 }
 
 /**
@@ -88,7 +88,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
     setSaved(false);
   }, [selectedExam, exam, results]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!exam) return;
     const newResults: ExamResult[] = students.map((student) => ({
       id: `er_${exam.id}_${student.id}`,
@@ -96,7 +96,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
       studentId: String(student.id),
       marksObtained: Number(marks[String(student.id)] || 0),
     }));
-    onSaveResults(exam.id, newResults);
+    await onSaveResults(exam.id, newResults);
     setSaved(true);
   };
 
@@ -193,7 +193,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
             ) : (
               <Button
                 type="button"
-                onClick={handleSave}
+                onClick={() => { void handleSave(); }}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90"
               >
                 <Save className="w-4 h-4" aria-hidden="true" /> Save Marks

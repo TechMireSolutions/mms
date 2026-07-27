@@ -76,7 +76,8 @@ Reference: `tenant/features/students/hooks/useStudents.ts`, `tenant/features/con
 - [ ] Copy via t() — mms-settings-i18n.mdc (no new uiStrings outside Contacts)
 - [ ] Internal API via apiClient
 - [ ] RBAC via useModulePermissions(contract) / can() — not role === (mms-auth-security.mdc)
-- [ ] Soft-delete: trash UI when REST supports restore (Contacts/Students/Teachers pattern)
+- [ ] Soft-delete: trash UI when REST supports restore (Contacts/Students pattern; see migration-status for gaps)
+- [ ] Gold-standard: upsert bulk PUT, `mutateAsync` awaits, ErrorState, Cmd/Ctrl+N, setupSubTabs (`mms-module-architecture.mdc` §7)
 - [ ] Status via StatusBadge — not text-green-500 (mms-ui-ux-design.mdc)
 ```
 

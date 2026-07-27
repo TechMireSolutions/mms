@@ -8,7 +8,7 @@ import {
   Scale, ClipboardList,
   Shield, BookOpen, Plus, Archive,
 } from "lucide-react";
-import { OBLIGATIONS_MODULE_CONTRACT, resolveModuleTierTab, type ObligationCollection } from "@mms/shared";
+import { OBLIGATIONS_MODULE_MANIFEST, resolveModuleTierTab, type ObligationCollection } from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -51,7 +51,7 @@ export default function Obligations() {
     canReports: canViewReports,
     canViewSetup,
     canEditSetup,
-  } = useModulePermissions(OBLIGATIONS_MODULE_CONTRACT);
+  } = useModulePermissions(OBLIGATIONS_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const CONFIG_SUB_TABS = useMemo(
     () => [

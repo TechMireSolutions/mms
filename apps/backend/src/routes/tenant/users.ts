@@ -1,24 +1,43 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
+import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../services/rbacService.js';
 import {
-  USERS_MODULE_CONTRACT,
+  USERS_MODULE_MANIFEST,
   workspaceUserListSchema,
   activityLogListSchema,
+  type User,
 } from '@mms/shared';
+import { z } from 'zod';
 import { registerBulkRoutes } from '../../lib/crudRouter.js';
+import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
+import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { sendDatabaseError, sendForbidden, sendNotFound } from '../../lib/httpErrors.js';
 
 import {
   loadWorkspaceUsers,
-  replaceWorkspaceUsers,
+  upsertWorkspaceUsers,
   loadLogs,
   replaceLogs,
+  deleteUserById,
+  restoreUserById,
+  bulkSoftDeleteUsers,
+  bulkRestoreUsers,
 } from '../../services/usersService.js';
 
-const USERS_COLLECTION = USERS_MODULE_CONTRACT.collectionKey;
+const USERS_COLLECTION = USERS_MODULE_MANIFEST.collectionKey;
 const LOGS_COLLECTION = 'user_activity_logs';
 
+const includeDeletedQuerySchema = z.object({
+  includeDeleted: z.enum(['true', 'false']).optional(),
+});
+
+const bulkIdsSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1),
+  deletionReason: z.string().optional(),
+});
+
 /**
- * Users module routes — workspace users CRUD, activity logs, and column preferences.
+ * Users module routes — workspace users CRUD, soft-delete, activity logs, column preferences.
  */
 export default async function usersRoutes(
   fastify: FastifyInstance,
@@ -26,19 +45,99 @@ export default async function usersRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
-  // --- Users ---
-  registerBulkRoutes(fastify, {
-    path: '/',
-    collection: USERS_COLLECTION,
-    schema: workspaceUserListSchema,
-    loadFn: loadWorkspaceUsers,
-    saveFn: replaceWorkspaceUsers,
-    responseKey: 'users',
-    errorMessagePrefix: 'workspace users',
-    columnPreferencesObjectKey: USERS_MODULE_CONTRACT.columnPreferencesObjectKey,
+  fastify.get('/', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, USERS_COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(includeDeletedQuerySchema, request.query);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    const includeDeleted = parsed.data.includeDeleted === 'true';
+    if (includeDeleted && !canDeleteCollection(user, USERS_COLLECTION)) {
+      return sendForbidden(reply);
+    }
+    try {
+      const users = await loadWorkspaceUsers({ includeDeleted });
+      return reply.send({ users });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to load workspace users');
+    }
   });
 
-  // --- Activity Logs ---
+  fastify.put('/bulk', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, USERS_COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(workspaceUserListSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const users = await upsertWorkspaceUsers(parsed.data);
+      return reply.send({ users });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to update workspace users');
+    }
+  });
+
+  // Static bulk paths before /:id to avoid parametric capture.
+  fastify.post('/bulk-delete', async (request, reply) => {
+    const user = request.user as User;
+    if (!canDeleteCollection(user, USERS_COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(bulkIdsSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const result = await bulkSoftDeleteUsers(parsed.data.ids, String(user.id));
+      return reply.send({ success: true, ...result });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to bulk delete users');
+    }
+  });
+
+  fastify.post('/bulk-restore', async (request, reply) => {
+    const user = request.user as User;
+    if (!canDeleteCollection(user, USERS_COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(bulkIdsSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const result = await bulkRestoreUsers(parsed.data.ids);
+      return reply.send({ success: true, ...result });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to bulk restore users');
+    }
+  });
+
+  fastify.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
+    const user = request.user as User;
+    if (!canDeleteCollection(user, USERS_COLLECTION)) return sendForbidden(reply);
+    try {
+      const ok = await deleteUserById(request.params.id, String(user.id));
+      if (!ok) return sendNotFound(reply, 'User not found');
+      return reply.send({ success: true });
+    } catch (error: unknown) {
+      if (error instanceof Error && (error as Error & { statusCode?: number }).statusCode === 400) {
+        return reply.status(400).send({
+          type: (error as Error & { type?: string }).type,
+          message: error.message,
+        });
+      }
+      return sendDatabaseError(reply, 'Failed to delete user');
+    }
+  });
+
+  fastify.post<{ Params: { id: string } }>('/:id/restore', async (request, reply) => {
+    const user = request.user as User;
+    if (!canDeleteCollection(user, USERS_COLLECTION)) return sendForbidden(reply);
+    try {
+      const ok = await restoreUserById(request.params.id);
+      if (!ok) return sendNotFound(reply, 'User not found');
+      return reply.send({ success: true });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to restore user');
+    }
+  });
+
+  registerColumnPreferencesRoutes(fastify, {
+    path: '/column-preferences',
+    collection: USERS_COLLECTION,
+    objectKey: USERS_MODULE_MANIFEST.columnPreferencesObjectKey,
+  });
+
   registerBulkRoutes(fastify, {
     path: '/activity',
     collection: LOGS_COLLECTION,

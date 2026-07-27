@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  STUDENTS_MODULE_CONTRACT,
+  STUDENTS_MODULE_MANIFEST,
   buildStudentWorkColumnRegistry,
   type StudentsSettings,
 } from '@mms/shared';
@@ -23,9 +23,9 @@ export function useStudentColumnLayout(settings: StudentsSettings) {
   );
 
   return useModuleColumnLayout({
-    moduleId: STUDENTS_MODULE_CONTRACT.moduleId,
+    moduleId: STUDENTS_MODULE_MANIFEST.moduleId,
     tenantRegistry,
-    apiPath: STUDENTS_MODULE_CONTRACT.restBasePath,
+    apiPath: STUDENTS_MODULE_MANIFEST.restBasePath,
     translationPrefix: 'students.columns',
   });
 }

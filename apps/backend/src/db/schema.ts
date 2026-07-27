@@ -1,4 +1,5 @@
 import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, serial, primaryKey, foreignKey } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import type { PlatformRole } from '@mms/shared';
 
 export const collections = pgTable('collections', {
@@ -75,11 +76,16 @@ export const tenantUsers = pgTable('tenant_users', {
   mustChangePassword: boolean('must_change_password').notNull().default(false),
   createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { mode: 'date' }),
+  deletedBy: text('deleted_by'),
   /** Non-auth profile fields from legacy JSON user rows. */
   profileJson: jsonb('profile_json').$type<Record<string, unknown>>(),
 }, (table) => [
-  uniqueIndex('tenant_users_workspace_login_email_idx').on(table.workspaceSubdomain, table.loginEmail),
+  uniqueIndex('tenant_users_workspace_login_email_active_idx')
+    .on(table.workspaceSubdomain, table.loginEmail)
+    .where(sql`${table.deletedAt} is null`),
   index('tenant_users_workspace_idx').on(table.workspaceSubdomain),
+  index('tenant_users_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
   foreignKey({
     columns: [table.workspaceSubdomain, table.contactId],
     foreignColumns: [contacts.workspaceSubdomain, contacts.id],

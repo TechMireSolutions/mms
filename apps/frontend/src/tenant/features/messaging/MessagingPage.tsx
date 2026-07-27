@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useMessageComposerState } from '@/hooks/useMessageComposerState';
@@ -18,6 +18,7 @@ import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -36,7 +37,7 @@ import {
   formatDateTime,
   getInitials,
   mergeMessageTemplates,
-  MESSAGING_MODULE_CONTRACT,
+  MESSAGING_MODULE_MANIFEST,
   getMessageCategoryLabelKey,
   toMessagingRecipient,
   appendVariableToken,
@@ -65,7 +66,7 @@ const CHART_COLORS = ['var(--color-info)', 'var(--color-success)', 'var(--color-
 export default function MessagingPage(): React.JSX.Element {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { canWrite, canViewSetup, canEditSetup, canClearLogs } = useModulePermissions(MESSAGING_MODULE_CONTRACT);
+  const { canWrite, canViewSetup, canEditSetup, canClearLogs } = useModulePermissions(MESSAGING_MODULE_MANIFEST);
 
   const contactsCollectionRaw = useContactsCollection();
   const allContacts = useMemo(() => contactsCollectionRaw || [], [contactsCollectionRaw]);
@@ -78,42 +79,42 @@ export default function MessagingPage(): React.JSX.Element {
 
   const categorySelectOptions = useMemo(() => [
     { value: 'all', label: t('messaging.category.all') },
-    ...MESSAGING_MODULE_CONTRACT.categoryOptions.map((opt) => ({
+    ...MESSAGING_MODULE_MANIFEST.categoryOptions.map((opt) => ({
       value: opt.value,
       label: t(opt.labelKey),
     })),
   ], [t]);
 
   const templateCategorySelectOptions = useMemo(() => 
-    MESSAGING_MODULE_CONTRACT.categoryOptions.map((opt) => ({
+    MESSAGING_MODULE_MANIFEST.categoryOptions.map((opt) => ({
       value: opt.value,
       label: t(opt.labelKey),
     })),
   [t]);
 
   const channelSelectOptions = useMemo(() => 
-    MESSAGING_MODULE_CONTRACT.channelOptions.map((opt) => ({
+    MESSAGING_MODULE_MANIFEST.channelOptions.map((opt) => ({
       value: opt.value,
       label: t(opt.labelKey),
     })),
   [t]);
 
   const roleOptions = useMemo(() => 
-    MESSAGING_MODULE_CONTRACT.roleOptions.map((opt) => ({
+    MESSAGING_MODULE_MANIFEST.roleOptions.map((opt) => ({
       value: opt.value,
       label: t(opt.labelKey),
     })),
   [t]);
 
   const genderOptions = useMemo(() => 
-    MESSAGING_MODULE_CONTRACT.genderOptions.map((opt) => ({
+    MESSAGING_MODULE_MANIFEST.genderOptions.map((opt) => ({
       value: opt.value,
       label: t(opt.labelKey),
     })),
   [t]);
 
   const statusOptions = useMemo(() => 
-    MESSAGING_MODULE_CONTRACT.statusOptions.map((opt) => ({
+    MESSAGING_MODULE_MANIFEST.statusOptions.map((opt) => ({
       value: opt.value,
       label: t(opt.labelKey),
     })),
@@ -146,13 +147,16 @@ export default function MessagingPage(): React.JSX.Element {
     canViewSetup: canViewSetup || canEditSetup,
   });
 
-  const { templates: customTemplates } = useMessageTemplates();
-  const { logs: messageLogs } = useMessageLogs({
+  const templatesQuery = useMessageTemplates();
+  const logsQuery = useMessageLogs({
     channel: channelFilter,
     category: logCategoryFilter,
     search: searchLog,
     status: statusFilter,
   });
+  const metricsQuery = useMessagingMetrics();
+  const { templates: customTemplates } = templatesQuery;
+  const { logs: messageLogs } = logsQuery;
 
   const { saveTemplate, deleteTemplate, clearLogs } = useMessagingMutations();
 
@@ -182,26 +186,25 @@ export default function MessagingPage(): React.JSX.Element {
       notify.error(t('messaging.createPresetDesc'));
       return;
     }
-
-    saveTemplate.mutate(
-      {
-        id: editingTemplateId || undefined,
-        label: templateLabel.trim(),
-        body: templateBody.trim(),
-        category: templateCategory,
-        channel: templateChannel,
-      },
-      {
-        onSuccess: () => {
-          notify.success(t('messaging.saveTemplate'));
-          setEditingTemplateId(null);
-          setTemplateLabel('');
-          setTemplateBody('');
-          setTemplateCategory('general');
-          setTemplateChannel('all');
-        },
+    void (async () => {
+      try {
+        await saveTemplate.mutateAsync({
+          id: editingTemplateId || undefined,
+          label: templateLabel.trim(),
+          body: templateBody.trim(),
+          category: templateCategory,
+          channel: templateChannel,
+        });
+        notify.success(t('messaging.saveTemplate'));
+        setEditingTemplateId(null);
+        setTemplateLabel('');
+        setTemplateBody('');
+        setTemplateCategory('general');
+        setTemplateChannel('all');
+      } catch {
+        // Hook onError already notified.
       }
-    );
+    })();
   };
 
   const handleEditTemplateClick = (tpl: MessageTemplate): void => {
@@ -214,19 +217,19 @@ export default function MessagingPage(): React.JSX.Element {
 
   const handleDuplicateTemplate = (tpl: MessageTemplate): void => {
     if (!user) return;
-    saveTemplate.mutate(
-      {
-        label: `${tpl.label} (${t('messaging.tagCustom')})`,
-        body: tpl.body,
-        category: tpl.category || 'general',
-        channel: tpl.channel || 'all',
-      },
-      {
-        onSuccess: () => {
-          notify.success(t('messaging.duplicateSuccess'));
-        },
+    void (async () => {
+      try {
+        await saveTemplate.mutateAsync({
+          label: `${tpl.label} (${t('messaging.tagCustom')})`,
+          body: tpl.body,
+          category: tpl.category || 'general',
+          channel: tpl.channel || 'all',
+        });
+        notify.success(t('messaging.duplicateSuccess'));
+      } catch {
+        // Hook onError already notified.
       }
-    );
+    })();
   };
 
   const handleCopyTemplateBody = (body: string): void => {
@@ -248,22 +251,28 @@ export default function MessagingPage(): React.JSX.Element {
 
   const confirmDeleteTemplate = (): void => {
     if (!user || !deleteTemplateId) return;
-    deleteTemplate.mutate(deleteTemplateId, {
-      onSuccess: () => {
+    void (async () => {
+      try {
+        await deleteTemplate.mutateAsync(deleteTemplateId);
         setDeleteTemplateId(null);
         notify.success(t('common.delete'));
-      },
-    });
+      } catch {
+        // Hook onError already notified.
+      }
+    })();
   };
 
   const confirmClearLogs = (): void => {
     if (!user) return;
-    clearLogs.mutate(undefined, {
-      onSuccess: () => {
+    void (async () => {
+      try {
+        await clearLogs.mutateAsync(undefined);
         setConfirmClearLogsOpen(false);
         notify.success(t('messaging.clearLogs'));
-      },
-    });
+      } catch {
+        // Hook onError already notified.
+      }
+    })();
   };
 
   const filteredContacts = useMemo(() => {
@@ -284,10 +293,10 @@ export default function MessagingPage(): React.JSX.Element {
     });
   }, [allContacts, searchContact, genderFilter, roleFilter]);
 
-  const getLogRecipientName = (contactId: string | number): string => {
+  const getLogRecipientName = useCallback((contactId: string | number): string => {
     const recipient = contactMap.get(contactId);
     return recipient ? getDisplayName(recipient) : t('messaging.contactFallback', { id: contactId });
-  };
+  }, [contactMap, t]);
 
   const filteredLogs = useMemo(() => {
     return messageLogs.filter((log) => {
@@ -297,7 +306,7 @@ export default function MessagingPage(): React.JSX.Element {
       const nameMatch = getLogRecipientName(log.contactId).toLowerCase().includes(searchLog.toLowerCase());
       return channelMatch && categoryMatch && (bodyMatch || nameMatch);
     });
-  }, [messageLogs, contactMap, searchLog, channelFilter, logCategoryFilter, t]);
+  }, [messageLogs, searchLog, channelFilter, logCategoryFilter, getLogRecipientName]);
 
   const handleToggleRecipient = (id: string | number): void => {
     setSelectedRecipients((prev) => ({
@@ -350,14 +359,14 @@ export default function MessagingPage(): React.JSX.Element {
 
   const allVisibleSelected = filteredContacts.length > 0 && filteredContacts.every((c) => selectedRecipients[c.id]);
 
-  const triggerCompose = (channel: 'sms' | 'whatsapp' | 'email', overrideRecipients?: MessagingRecipient[], initialMsg?: string, initialSubj?: string): void => {
+  const triggerCompose = useCallback((channel: 'sms' | 'whatsapp' | 'email', overrideRecipients?: MessagingRecipient[], initialMsg?: string, initialSubj?: string): void => {
     const targets = overrideRecipients || currentSelectedList;
     if (targets.length === 0) {
       notify.error(t('messaging.selectRecipientsDesc'));
       return;
     }
     openComposer(channel, targets, { initialMessage: initialMsg, initialSubject: initialSubj });
-  };
+  }, [currentSelectedList, openComposer, t]);
 
   const handleResendLog = (log: Message): void => {
     const recipient = contactMap.get(log.contactId);
@@ -374,7 +383,24 @@ export default function MessagingPage(): React.JSX.Element {
     notify.success(t('messaging.resendSuccess'));
   };
 
-  const { data: serverMetrics } = useMessagingMetrics();
+  useEffect(() => {
+    if (!canWrite) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        setActiveTab('work');
+        if (currentSelectedList.length > 0) {
+          triggerCompose('whatsapp');
+        } else {
+          notify.info(t('messaging.selectRecipientsDesc'));
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canWrite, currentSelectedList.length, setActiveTab, t, triggerCompose]);
+
+  const { data: serverMetrics } = metricsQuery;
 
   const stats = useMemo(() => {
     if (serverMetrics) {
@@ -445,6 +471,14 @@ export default function MessagingPage(): React.JSX.Element {
         panelIdPrefix="messaging-tab"
       >
         {activeTab === 'work' && (
+          templatesQuery.isError || logsQuery.isError ? (
+            <ErrorState
+              title={t('messaging.loadFailed')}
+              onRetry={() => {
+                void Promise.all([templatesQuery.refetch(), logsQuery.refetch()]);
+              }}
+            />
+          ) : (
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -653,9 +687,18 @@ export default function MessagingPage(): React.JSX.Element {
               </div>
             </div>
           </motion.div>
+          )
         )}
 
         {activeTab === 'reports' && (
+          logsQuery.isError || metricsQuery.isError ? (
+            <ErrorState
+              title={t('messaging.loadFailed')}
+              onRetry={() => {
+                void Promise.all([logsQuery.refetch(), metricsQuery.refetch()]);
+              }}
+            />
+          ) : (
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -859,6 +902,7 @@ export default function MessagingPage(): React.JSX.Element {
               )}
             </div>
           </motion.div>
+          )
         )}
 
         {activeTab === 'setup' && (
@@ -947,7 +991,11 @@ export default function MessagingPage(): React.JSX.Element {
                 </Button>
               </form>
               </>
-              ) : null}
+              ) : (
+                <p className="rounded-xl border border-border bg-muted/20 px-4 py-6 text-sm text-muted-foreground">
+                  {t('messaging.setup.readOnly')}
+                </p>
+              )}
             </div>
 
             <div className="md:col-span-2 border border-border rounded-xl bg-card p-4 space-y-4 shadow-xs">

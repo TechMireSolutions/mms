@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  USERS_MODULE_CONTRACT,
+  USERS_MODULE_MANIFEST,
   buildUsersActivityWorkColumnRegistry,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -24,7 +24,7 @@ export function useUserActivityColumnLayout() {
   );
 
   return useModuleColumnLayout({
-    moduleId: `${USERS_MODULE_CONTRACT.moduleId}_${STORAGE_SUFFIX}`,
+    moduleId: `${USERS_MODULE_MANIFEST.moduleId}_${STORAGE_SUFFIX}`,
     tenantRegistry,
     // Activity widths stay local until a dedicated prefs route exists.
     translationPrefix: 'users.columns',

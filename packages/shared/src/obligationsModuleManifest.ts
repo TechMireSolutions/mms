@@ -75,8 +75,8 @@ export const obligationCollectionListSchema = z.array(obligationCollectionRecord
 /** Tenant-scoped object key for the obligations invoice template. */
 export const INVOICE_TEMPLATE_OBJECT_KEY = 'mms_invoice_template';
 
-/** Obligations module contract — aligns with globle1 universal module architecture. */
-export const OBLIGATIONS_MODULE_CONTRACT = {
+/** Obligations module manifest — aligns with globle1 universal module architecture. */
+export const OBLIGATIONS_MODULE_MANIFEST = {
   moduleId: 'obligations',
   entityType: 'ObligationCollection',
   collectionKey: 'obligation_collections',
@@ -108,4 +108,4 @@ export const OBLIGATIONS_MODULE_CONTRACT = {
   defaultPageSize: 12,
 } as const;
 
-export type ObligationsModuleTier = (typeof OBLIGATIONS_MODULE_CONTRACT.tiers)[number];
+export type ObligationsModuleTier = (typeof OBLIGATIONS_MODULE_MANIFEST.tiers)[number];

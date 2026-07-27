@@ -1,12 +1,13 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, X, Filter, Edit2, Trash2, ChevronDown } from 'lucide-react';
+import { Plus, Search, X, Filter, Edit2, Trash2, ChevronDown, RotateCcw } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 import {
@@ -26,13 +27,19 @@ import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
 
 interface QuestionBankProps {
   questions: Question[];
-  onUpdate: (questions: Question[]) => void;
+  onUpdate: (questions: Question[]) => void | Promise<void>;
   modalOpen?: boolean;
   editQuestion?: Question | null;
   onModalOpenChange?: (open: boolean) => void;
   onEditQuestionChange?: (question: Question | null) => void;
   hideToolbarAdd?: boolean;
   canWrite?: boolean;
+  canDelete?: boolean;
+  showDeleted?: boolean;
+  onDelete?: (id: string) => void | Promise<void>;
+  onRestore?: (id: string) => void | Promise<void>;
+  onBulkDelete?: (ids: string[]) => void | Promise<void>;
+  onBulkRestore?: (ids: string[]) => void | Promise<void>;
   listLayout?: boolean;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
@@ -43,13 +50,19 @@ interface QuestionBankProps {
 
 export function QuestionBank({
   questions,
-  onUpdate,
+  onUpdate: _onUpdate,
   modalOpen: _controlledOpen,
   editQuestion: _controlledEdit,
   onModalOpenChange,
   onEditQuestionChange,
   hideToolbarAdd = false,
   canWrite = true,
+  canDelete = false,
+  showDeleted = false,
+  onDelete,
+  onRestore,
+  onBulkDelete,
+  onBulkRestore,
   listLayout: _listLayout = true,
   onFilteredCountChange,
   isColumnVisible,
@@ -62,6 +75,7 @@ export function QuestionBank({
   const [search, setSearch] = useState('');
   const [filterCats, setFilterCats] = useState<string[]>([]);
   const [filterDiff, setFilterDiff] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const setShowModal = (open: boolean): void => {
     onModalOpenChange?.(open);
     if (!open) {
@@ -123,7 +137,47 @@ export function QuestionBank({
     onFilteredCountChange?.(filtered.length);
   }, [filtered.length, onFilteredCountChange]);
 
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [showDeleted]);
+
   const getCat = (id: string) => config.categories.find((category) => category.id === id);
+
+  const handleRowTrashAction = async (id: string): Promise<void> => {
+    if (showDeleted) {
+      await onRestore?.(id);
+      return;
+    }
+    if (!confirm(t('questionBank.trash.deleteConfirm'))) return;
+    await onDelete?.(id);
+  };
+
+  const handleBulkTrashAction = async (): Promise<void> => {
+    if (selectedIds.length === 0) return;
+    if (showDeleted) {
+      if (!confirm(t('questionBank.trash.bulkRestoreConfirm', { count: selectedIds.length }))) return;
+      await onBulkRestore?.(selectedIds);
+    } else {
+      if (!confirm(t('questionBank.trash.bulkDeleteConfirm', { count: selectedIds.length }))) return;
+      await onBulkDelete?.(selectedIds);
+    }
+    setSelectedIds([]);
+  };
+
+  const toggleSelected = (id: string, checked: boolean): void => {
+    setSelectedIds((prev) => (checked ? [...prev, id] : prev.filter((item) => item !== id)));
+  };
+
+  const allFilteredSelected =
+    filtered.length > 0 && filtered.every((question) => selectedIds.includes(question.id));
+
+  const toggleSelectAllFiltered = (checked: boolean): void => {
+    if (!checked) {
+      setSelectedIds((prev) => prev.filter((id) => !filtered.some((question) => question.id === id)));
+      return;
+    }
+    setSelectedIds((prev) => Array.from(new Set([...prev, ...filtered.map((question) => question.id)])));
+  };
 
   const renderMetaChip = (question: Question, fieldId: string): React.ReactNode => {
     if (fieldId === 'categoryId') {
@@ -262,7 +316,7 @@ export function QuestionBank({
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-        {!hideToolbarAdd && canWrite && (
+        {!hideToolbarAdd && canWrite && !showDeleted && (
           <Button
             type="button"
             onClick={() => { setEditingQuestion(null); setShowModal(true); }}
@@ -270,6 +324,18 @@ export function QuestionBank({
           >
             <Plus className="h-3.5 w-3.5" aria-hidden />
             {t('questionBank.addQuestion')}
+          </Button>
+        )}
+        {canDelete && selectedIds.length > 0 && (showDeleted ? onBulkRestore : onBulkDelete) && (
+          <Button
+            type="button"
+            size="sm"
+            variant={showDeleted ? 'outline' : 'destructive'}
+            onClick={() => { void handleBulkTrashAction(); }}
+            className="gap-1.5"
+          >
+            {showDeleted ? <RotateCcw className="h-3.5 w-3.5" aria-hidden /> : <Trash2 className="h-3.5 w-3.5" aria-hidden />}
+            {showDeleted ? t('questionBank.trash.restore') : t('common.delete')} ({selectedIds.length})
           </Button>
         )}
         {columnCustomizer && (
@@ -388,29 +454,36 @@ export function QuestionBank({
                       })}
                   </div>
                   <div className="flex flex-shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-                    {canWrite && (
-                      <>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => { setEditingQuestion(question); setShowModal(true); }}
-                          className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                          aria-label={t('questionBank.editQuestionAria', { text: question.text })}
-                        >
-                          <Edit2 className="h-3.5 w-3.5" aria-hidden />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onUpdate(questions.filter((candidateQuestion) => candidateQuestion.id !== question.id))}
-                          className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                          aria-label={t('questionBank.deleteQuestionAria', { text: question.text })}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                        </Button>
-                      </>
+                    {canDelete && (
+                      <Checkbox
+                        checked={selectedIds.includes(question.id)}
+                        onCheckedChange={(checked) => toggleSelected(question.id, checked === true)}
+                        aria-label={t('questionBank.deleteQuestionAria', { text: question.text })}
+                      />
+                    )}
+                    {canWrite && !showDeleted && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => { setEditingQuestion(question); setShowModal(true); }}
+                        className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        aria-label={t('questionBank.editQuestionAria', { text: question.text })}
+                      >
+                        <Edit2 className="h-3.5 w-3.5" aria-hidden />
+                      </Button>
+                    )}
+                    {canDelete && (showDeleted ? onRestore : onDelete) && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => { void handleRowTrashAction(question.id); }}
+                        className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        aria-label={showDeleted ? t('questionBank.trash.restore') : t('questionBank.deleteQuestionAria', { text: question.text })}
+                      >
+                        {showDeleted ? <RotateCcw className="h-3.5 w-3.5" aria-hidden /> : <Trash2 className="h-3.5 w-3.5" aria-hidden />}
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -425,6 +498,15 @@ export function QuestionBank({
                 <caption className="sr-only">{t('questionBank.questions')}</caption>
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
+                    {canDelete && (
+                      <th className="w-10 px-3 py-2.5">
+                        <Checkbox
+                          checked={allFilteredSelected}
+                          onCheckedChange={(checked) => toggleSelectAllFiltered(checked === true)}
+                          aria-label={t('questionBank.trash.selectAll')}
+                        />
+                      </th>
+                    )}
                     {showText && (
                       <ResizableTableHead columnKey="text" width={getColumnWidth?.("text")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
                         {t('questionBank.columns.text')}
@@ -474,6 +556,15 @@ export function QuestionBank({
                         transition={{ delay: questionIndex * 0.03 }}
                         className="hover:bg-muted/20 transition-colors group"
                       >
+                        {canDelete && (
+                          <td className="px-3 py-3">
+                            <Checkbox
+                              checked={selectedIds.includes(question.id)}
+                              onCheckedChange={(checked) => toggleSelected(question.id, checked === true)}
+                              aria-label={t('questionBank.deleteQuestionAria', { text: question.text })}
+                            />
+                          </td>
+                        )}
                         {showText && (
                           <td className="px-4 py-3 text-[13px] font-semibold text-foreground max-w-[280px]">
                             <p className="line-clamp-2 m-0">{question.text}</p>
@@ -521,30 +612,32 @@ export function QuestionBank({
                           </td>
                         )}
                         <td className="px-4 py-3 text-right">
-                          {canWrite && (
                           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => { setEditingQuestion(question); setShowModal(true); }}
-                              className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                              aria-label={t('questionBank.editQuestionAria', { text: question.text })}
-                            >
-                              <Edit2 className="h-3.5 w-3.5" aria-hidden />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => onUpdate(questions.filter((candidateQuestion) => candidateQuestion.id !== question.id))}
-                              className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                              aria-label={t('questionBank.deleteQuestionAria', { text: question.text })}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                            </Button>
+                            {canWrite && !showDeleted && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => { setEditingQuestion(question); setShowModal(true); }}
+                                className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                aria-label={t('questionBank.editQuestionAria', { text: question.text })}
+                              >
+                                <Edit2 className="h-3.5 w-3.5" aria-hidden />
+                              </Button>
+                            )}
+                            {canDelete && (showDeleted ? onRestore : onDelete) && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => { void handleRowTrashAction(question.id); }}
+                                className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                aria-label={showDeleted ? t('questionBank.trash.restore') : t('questionBank.deleteQuestionAria', { text: question.text })}
+                              >
+                                {showDeleted ? <RotateCcw className="h-3.5 w-3.5" aria-hidden /> : <Trash2 className="h-3.5 w-3.5" aria-hidden />}
+                              </Button>
+                            )}
                           </div>
-                          )}
                         </td>
                       </motion.tr>
                     );
