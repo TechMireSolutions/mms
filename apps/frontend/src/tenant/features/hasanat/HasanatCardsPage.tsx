@@ -177,6 +177,8 @@ export default function HasanatCards() {
               onFilteredCountChange={setFilteredCount}
               canWrite={canWrite}
               isColumnVisible={distributionColumnLayout.isColumnVisible}
+              getColumnWidth={distributionColumnLayout.getColumnWidth}
+              onColumnResize={distributionColumnLayout.setColumnWidth}
               columnCustomizer={{
                 columnRegistry: distributionColumnLayout.columnRegistry,
                 updateUserColumnLayout: distributionColumnLayout.updateUserColumnLayout,
@@ -192,6 +194,8 @@ export default function HasanatCards() {
               onFilteredCountChange={setFilteredCount}
               canWrite={canWrite}
               isColumnVisible={redemptionColumnLayout.isColumnVisible}
+              getColumnWidth={redemptionColumnLayout.getColumnWidth}
+              onColumnResize={redemptionColumnLayout.setColumnWidth}
               columnCustomizer={{
                 columnRegistry: redemptionColumnLayout.columnRegistry,
                 updateUserColumnLayout: redemptionColumnLayout.updateUserColumnLayout,

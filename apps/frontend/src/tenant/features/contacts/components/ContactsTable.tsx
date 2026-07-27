@@ -21,11 +21,13 @@ import { ContactMetadataCell } from "@/tenant/features/contacts/components/Conta
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { CopyBtn } from "@/components/ui/CopyBtn";
+import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
 export interface ColumnConfig {
   id: string;
   label: string;
   sortField?: string;
+  width?: number;
 }
 
 export interface ContactsTableProps {
@@ -51,22 +53,33 @@ export interface ContactsTableProps {
 }
 
 interface TableHeaderCellProps {
+  columnKey: string;
   field: string;
   sortField: string;
   sortDir: "asc" | "desc";
   onSort: (field: string) => void;
+  width?: number;
+  onResize?: (columnKey: string, width: number) => void;
   children: React.ReactNode;
   className?: string;
+}
+
+function columnWidthStyle(width: number | undefined): React.CSSProperties | undefined {
+  if (typeof width !== "number") return undefined;
+  return { width, minWidth: width, maxWidth: width };
 }
 
 /**
  * Accessible table header cell with sort direction indicators and aria-sort state
  */
 const TableHeaderCell = memo(function TableHeaderCell({
+  columnKey,
   field,
   sortField,
   sortDir,
   onSort,
+  width,
+  onResize,
   children,
   className,
 }: TableHeaderCellProps): React.JSX.Element {
@@ -74,7 +87,10 @@ const TableHeaderCell = memo(function TableHeaderCell({
   const ariaSort = isSorted ? (sortDir === "asc" ? "ascending" : "descending") : "none";
 
   return (
-    <th
+    <ResizableTableHead
+      columnKey={columnKey}
+      width={width}
+      onResize={onResize}
       aria-sort={ariaSort}
       className={`px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer select-none hover:text-foreground transition-colors ${className || ""}`}
       onClick={() => onSort(field)}
@@ -91,7 +107,7 @@ const TableHeaderCell = memo(function TableHeaderCell({
           <ChevronUp className="w-3 h-3 opacity-20" />
         )}
       </div>
-    </th>
+    </ResizableTableHead>
   );
 });
 
@@ -99,6 +115,7 @@ interface ContactTableRowProps {
   contact: Contact;
   isSelected: boolean;
   columns: ColumnConfig[];
+  getColumnWidth: (key: string) => number | undefined;
   prefs: ReturnType<typeof useContactConfig>["prefs"];
   countryCodesMap: ReturnType<typeof useContactConfig>["countryCodesMap"];
   contactsMap: Map<string, Contact> | null;
@@ -124,6 +141,7 @@ const ContactTableRow = memo(function ContactTableRow({
   contact,
   isSelected,
   columns,
+  getColumnWidth,
   prefs,
   countryCodesMap,
   contactsMap,
@@ -144,10 +162,13 @@ const ContactTableRow = memo(function ContactTableRow({
   const displayName = getDisplayName(contact);
 
   const renderCell = (col: ColumnConfig): React.JSX.Element => {
+    const width = getColumnWidth(col.id) ?? col.width;
+    const widthStyle = columnWidthStyle(width);
+
     switch (col.id) {
       case "name":
         return (
-          <td key="name" className="px-4 py-3 sticky left-12 z-10 bg-card group-hover:bg-muted/40 transition-colors border-r border-border/30">
+          <td key="name" className="px-4 py-3 sticky left-12 z-10 bg-card group-hover:bg-muted/40 transition-colors border-r border-border/30" style={widthStyle}>
             <div className="flex items-center gap-3">
               <UserAvatar
                 id={contact.id}
@@ -179,7 +200,7 @@ const ContactTableRow = memo(function ContactTableRow({
         const hasWa = hasWhatsApp(contact);
 
         return (
-          <td key="phone" className="px-4 py-3">
+          <td key="phone" className="px-4 py-3" style={widthStyle}>
             <div className="flex items-center gap-2 group/phone">
               {primaryPhone ? (
                 <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted/40 border border-border/60">
@@ -214,7 +235,7 @@ const ContactTableRow = memo(function ContactTableRow({
       case "email": {
         const primaryEmail = getPrimaryEmail(contact);
         return (
-          <td key="email" className="px-4 py-3">
+          <td key="email" className="px-4 py-3" style={widthStyle}>
             <div className="flex items-center gap-1 group/email">
               <span className="text-[13px] text-muted-foreground">{primaryEmail || t('contacts.table.emptyDash')}</span>
               {primaryEmail && <CopyBtn text={primaryEmail} />}
@@ -232,6 +253,7 @@ const ContactTableRow = memo(function ContactTableRow({
             allContacts={allContacts}
             contactsMap={contactsMap}
             variant="table"
+            style={widthStyle}
           />
         );
     }
@@ -295,7 +317,7 @@ export default function ContactsTable({
   canWrite = false,
   canDelete = false,
 }: ContactsTableProps): React.JSX.Element {
-  const { prefs, countryCodesMap } = useContactConfig();
+  const { prefs, countryCodesMap, getColumnWidth, setColumnWidth } = useContactConfig();
   const { t } = useTranslation();
 
   const contactsMap = useMemo(() => buildContactsMap(allContacts), [allContacts]);
@@ -306,7 +328,7 @@ export default function ContactsTable({
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl shadow-xs">
-      <table className="w-full text-sm">
+      <table className="w-full text-sm table-fixed">
         <thead>
           <tr className="border-b border-border bg-muted/30">
             <th className="w-12 min-w-12 px-4 py-3 sticky left-0 z-20 bg-muted/95 backdrop-blur-md border-r border-border/30">
@@ -321,25 +343,32 @@ export default function ContactsTable({
               const sortFieldKey = col.sortField || col.id;
               const isNameCol = col.id === "name";
               const stickyClass = isNameCol ? "sticky left-12 z-20 bg-muted/95 backdrop-blur-md border-r border-border/30" : "";
+              const width = getColumnWidth(col.id) ?? col.width;
 
               return sortFieldKey ? (
                 <TableHeaderCell
                   key={col.id}
+                  columnKey={col.id}
                   field={sortFieldKey}
                   sortField={sortField}
                   sortDir={sortDir}
                   onSort={onSort}
+                  width={width}
+                  onResize={setColumnWidth}
                   className={stickyClass}
                 >
                   {col.label}
                 </TableHeaderCell>
               ) : (
-                <th
+                <ResizableTableHead
                   key={col.id}
+                  columnKey={col.id}
+                  width={width}
+                  onResize={setColumnWidth}
                   className={`px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide ${stickyClass}`}
                 >
                   {col.label}
-                </th>
+                </ResizableTableHead>
               );
             })}
             <th className="px-4 py-3 w-16" />
@@ -353,6 +382,7 @@ export default function ContactsTable({
                 contact={contact}
                 isSelected={selectedSet.has(contact.id)}
                 columns={columns}
+                getColumnWidth={getColumnWidth}
                 prefs={prefs}
                 countryCodesMap={countryCodesMap}
                 contactsMap={contactsMap}

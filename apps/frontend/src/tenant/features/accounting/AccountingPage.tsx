@@ -178,6 +178,8 @@ export default function Accounting() {
               canWrite={canWrite}
               canDelete={canDelete}
               isColumnVisible={journalColumnLayout.isColumnVisible}
+              getColumnWidth={journalColumnLayout.getColumnWidth}
+              onColumnResize={journalColumnLayout.setColumnWidth}
               columnCustomizer={{
                 columnRegistry: journalColumnLayout.columnRegistry,
                 updateUserColumnLayout: journalColumnLayout.updateUserColumnLayout,
@@ -198,6 +200,8 @@ export default function Accounting() {
               onFilteredCountChange={setFilteredCount}
               canWrite={canWrite}
               isColumnVisible={accountColumnLayout.isColumnVisible}
+              getColumnWidth={accountColumnLayout.getColumnWidth}
+              onColumnResize={accountColumnLayout.setColumnWidth}
               columnCustomizer={{
                 columnRegistry: accountColumnLayout.columnRegistry,
                 updateUserColumnLayout: accountColumnLayout.updateUserColumnLayout,

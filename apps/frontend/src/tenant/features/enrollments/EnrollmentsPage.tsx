@@ -196,6 +196,8 @@ export default function EnrollmentsPage() {
                 onCancel={handleCancel}
                 onFilteredCountChange={setFilteredCount}
                 isColumnVisible={columnLayout.isColumnVisible}
+                getColumnWidth={columnLayout.getColumnWidth}
+                onColumnResize={columnLayout.setColumnWidth}
                 columnCustomizer={{
                   columnRegistry: columnLayout.columnRegistry,
                   updateUserColumnLayout: columnLayout.updateUserColumnLayout,

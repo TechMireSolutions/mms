@@ -16,6 +16,7 @@ import { useHasanatRedemptionsCollection, useHasanatMutations } from "@/tenant/f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
 
 
@@ -127,6 +128,8 @@ export interface RedemptionTrackerProps {
   onFilteredCountChange?: (count: number) => void;
   canWrite?: boolean;
   isColumnVisible?: (key: string) => boolean;
+  getColumnWidth?: (key: string) => number | undefined;
+  onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
@@ -136,6 +139,8 @@ export function RedemptionTracker({
   onFilteredCountChange,
   canWrite = true,
   isColumnVisible,
+  getColumnWidth,
+  onColumnResize,
   columnCustomizer,
 }: RedemptionTrackerProps) {
   const { t } = useTranslation();
@@ -203,34 +208,34 @@ export function RedemptionTracker({
       ) : (
         <Card accentColor="primary" className="shadow-sm hover:shadow-md border-border/80 p-0 overflow-hidden bg-card/45 backdrop-blur-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
               <caption className="sr-only">{t("hasanat.tabs.redemptions")}</caption>
               <thead>
                 <tr className="border-b border-border bg-muted/30">
                   {showStudent && (
-                    <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.student")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   {showReward && (
-                    <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <ResizableTableHead columnKey="reward" width={getColumnWidth?.("reward")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.reward")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   {showPointsUsed && (
-                    <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <ResizableTableHead columnKey="pointsUsed" width={getColumnWidth?.("pointsUsed")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.pointsUsed")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   {showDate && (
-                    <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.date")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   {showApprovedBy && (
-                    <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <ResizableTableHead columnKey="approvedBy" width={getColumnWidth?.("approvedBy")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.approvedBy")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                 </tr>
               </thead>

@@ -19,6 +19,7 @@ import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { getAttendanceStatusInfo } from "@/lib/data/attendanceData";
 import { StatusToggle } from "@/tenant/features/attendance/components/StatusToggle";
 import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
+import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
 
 const PAGE_SIZE = 15;
@@ -30,6 +31,8 @@ interface AttendanceRecordsProps {
   records: AttendanceRecord[];
   setRecords: React.Dispatch<React.SetStateAction<AttendanceRecord[]>>;
   isColumnVisible?: (key: string) => boolean;
+  getColumnWidth?: (key: string) => number | undefined;
+  onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
   onMessage?: (channel: 'sms' | 'whatsapp' | 'email', records: AttendanceRecord[]) => void;
 }
@@ -39,6 +42,8 @@ export function AttendanceRecords({
   records,
   setRecords,
   isColumnVisible,
+  getColumnWidth,
+  onColumnResize,
   columnCustomizer,
   onMessage,
 }: AttendanceRecordsProps) {
@@ -176,43 +181,43 @@ export function AttendanceRecords({
 
       <article className="rounded-xl border border-border overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm table-fixed">
             <thead className="bg-muted/60 border-b border-border">
               <tr>
                 {showDate && (
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                  <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                     {t("attendance.columns.date")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showClass && (
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                  <ResizableTableHead columnKey="class" width={getColumnWidth?.("class")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                     {t("attendance.columns.class")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showStudent && (
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                  <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                     {t("attendance.columns.student")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showStatus && (
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                  <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                     {t("attendance.columns.status")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showTimeIn && (
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                  <ResizableTableHead columnKey="timeIn" width={getColumnWidth?.("timeIn")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                     {t("attendance.columns.timeIn")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showTimeOut && (
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                  <ResizableTableHead columnKey="timeOut" width={getColumnWidth?.("timeOut")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                     {t("attendance.columns.timeOut")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showNotes && (
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                  <ResizableTableHead columnKey="notes" width={getColumnWidth?.("notes")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                     {t("attendance.columns.notes")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 <th className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">
                   <span className="sr-only">{t("common.actions")}</span>

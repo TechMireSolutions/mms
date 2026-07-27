@@ -179,6 +179,8 @@ export default function Attendance() {
                 records={attendanceRecords}
                 setRecords={setRecords}
                 isColumnVisible={columnLayout.isColumnVisible}
+                getColumnWidth={columnLayout.getColumnWidth}
+                onColumnResize={columnLayout.setColumnWidth}
                 columnCustomizer={{
                   columnRegistry: columnLayout.columnRegistry,
                   updateUserColumnLayout: columnLayout.updateUserColumnLayout,

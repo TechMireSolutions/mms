@@ -162,6 +162,8 @@ export default function Examinations(): React.JSX.Element {
                   }}
                   onFilteredCountChange={setFilteredCount}
                   isColumnVisible={examColumnLayout.isColumnVisible}
+                  getColumnWidth={examColumnLayout.getColumnWidth}
+                  onColumnResize={examColumnLayout.setColumnWidth}
                   columnCustomizer={{
                     columnRegistry: examColumnLayout.columnRegistry,
                     updateUserColumnLayout: examColumnLayout.updateUserColumnLayout,

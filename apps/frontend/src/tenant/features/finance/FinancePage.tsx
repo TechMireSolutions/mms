@@ -139,6 +139,8 @@ export default function Finance() {
                 onRecord={setRecordInvoice}
                 canWrite={canWrite}
                 isColumnVisible={invoiceColumnLayout.isColumnVisible}
+                getColumnWidth={invoiceColumnLayout.getColumnWidth}
+                onColumnResize={invoiceColumnLayout.setColumnWidth}
                 columnCustomizer={{
                   columnRegistry: invoiceColumnLayout.columnRegistry,
                   updateUserColumnLayout: invoiceColumnLayout.updateUserColumnLayout,
@@ -150,6 +152,8 @@ export default function Finance() {
               <PaymentTracker
                 payments={payments}
                 isColumnVisible={paymentColumnLayout.isColumnVisible}
+                getColumnWidth={paymentColumnLayout.getColumnWidth}
+                onColumnResize={paymentColumnLayout.setColumnWidth}
                 columnCustomizer={{
                   columnRegistry: paymentColumnLayout.columnRegistry,
                   updateUserColumnLayout: paymentColumnLayout.updateUserColumnLayout,

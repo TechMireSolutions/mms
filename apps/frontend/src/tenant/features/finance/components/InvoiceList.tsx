@@ -17,6 +17,7 @@ import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusB
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
+import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
@@ -28,6 +29,8 @@ interface InvoiceListProps {
   onRecord: (invoice: Invoice) => void;
   canWrite?: boolean;
   isColumnVisible?: (key: string) => boolean;
+  getColumnWidth?: (key: string) => number | undefined;
+  onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
@@ -37,6 +40,8 @@ export function InvoiceList({
   onRecord,
   canWrite = true,
   isColumnVisible,
+  getColumnWidth,
+  onColumnResize,
   columnCustomizer,
 }: InvoiceListProps) {
   const { t } = useTranslation();
@@ -142,49 +147,49 @@ export function InvoiceList({
 
       <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm table-fixed">
             <caption className="sr-only">{t("finance.invoices")}</caption>
             <thead>
               <tr className="border-b border-border bg-muted/30">
                 {showInvoice && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="invoice" width={getColumnWidth?.("invoice")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.invoice")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showStudent && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.student")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showSessionClass && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="sessionClass" width={getColumnWidth?.("sessionClass")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.sessionClass")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showBaseFee && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="baseFee" width={getColumnWidth?.("baseFee")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.baseFee")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showDiscount && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="discount" width={getColumnWidth?.("discount")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.discount")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showFinal && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="final" width={getColumnWidth?.("final")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.final")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showStatus && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.status")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showDueDate && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="dueDate" width={getColumnWidth?.("dueDate")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.dueDate")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 <th scope="col" className="px-4 py-2.5 w-10">
                   <span className="sr-only">{t("common.actions")}</span>

@@ -39,6 +39,7 @@ type SessionType = string;
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { Card } from "@/components/ui/card";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
 const MotionCard = motion.create(Card);
 
@@ -328,38 +329,38 @@ export default function Sessions() {
             ) : listLayout ? (
               <div className="rounded-2xl border border-border bg-card/45 backdrop-blur-xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-sm table-fixed">
                     <thead>
                       <tr className="border-b border-border/50 bg-muted/20">
                         {showName && (
-                          <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                          <ResizableTableHead columnKey="name" width={columnLayout.getColumnWidth("name")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
                             {t("sessions.columns.name")}
-                          </th>
+                          </ResizableTableHead>
                         )}
                         {showType && (
-                          <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                          <ResizableTableHead columnKey="type" width={columnLayout.getColumnWidth("type")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
                             {t("sessions.columns.type")}
-                          </th>
+                          </ResizableTableHead>
                         )}
                         {showDuration && (
-                          <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                          <ResizableTableHead columnKey="duration" width={columnLayout.getColumnWidth("duration")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
                             {t("sessions.columns.duration")}
-                          </th>
+                          </ResizableTableHead>
                         )}
                         {showFee && (
-                          <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                          <ResizableTableHead columnKey="fee" width={columnLayout.getColumnWidth("fee")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
                             {t("sessions.columns.fee")}
-                          </th>
+                          </ResizableTableHead>
                         )}
                         {showEnrolled && (
-                          <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                          <ResizableTableHead columnKey="enrolled" width={columnLayout.getColumnWidth("enrolled")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
                             {t("sessions.columns.enrolled")}
-                          </th>
+                          </ResizableTableHead>
                         )}
                         {showStatus && (
-                          <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                          <ResizableTableHead columnKey="status" width={columnLayout.getColumnWidth("status")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
                             {t("sessions.columns.status")}
-                          </th>
+                          </ResizableTableHead>
                         )}
                       </tr>
                     </thead>

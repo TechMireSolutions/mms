@@ -1,4 +1,8 @@
-import type { ModuleColumnPref, ModuleColumnRegistryEntry } from '@mms/shared';
+import {
+  clampModuleColumnWidth,
+  type ModuleColumnPref,
+  type ModuleColumnRegistryEntry,
+} from '@mms/shared';
 
 const storageKey = (moduleId: string, userId: string) => `mms_${moduleId}_columns_${userId}`;
 
@@ -6,6 +10,7 @@ interface RawColumnPreference {
   key: string;
   enabled?: boolean | string | number;
   order?: number | string;
+  width?: number | string;
 }
 
 function isRawColumnPreference(item: unknown): item is RawColumnPreference {
@@ -29,11 +34,22 @@ function parseColumnPref(pref: RawColumnPreference, defaultOrder: number): Modul
     ? Math.floor(parsedOrder)
     : defaultOrder;
 
-  return {
+  const parsedWidth =
+    typeof pref.width === 'number'
+      ? pref.width
+      : parseFloat(String(pref.width ?? ''));
+
+  const columnPref: ModuleColumnPref = {
     key: pref.key.trim(),
     enabled,
     order,
   };
+
+  if (Number.isFinite(parsedWidth) && parsedWidth > 0) {
+    columnPref.width = clampModuleColumnWidth(parsedWidth);
+  }
+
+  return columnPref;
 }
 
 export function sanitizeModuleColumnPrefs(prefs: unknown[]): ModuleColumnPref[] {
@@ -66,19 +82,26 @@ export function saveModuleColumnPrefList(
   localStorage.setItem(storageKey(moduleId, userId), JSON.stringify(sanitized));
 }
 
+function toPreference(column: ModuleColumnRegistryEntry): ModuleColumnPref {
+  const preference: ModuleColumnPref = {
+    key: column.key,
+    enabled: column.enabled,
+    order: column.order,
+  };
+  if (typeof column.width === 'number') {
+    preference.width = clampModuleColumnWidth(column.width);
+  }
+  return preference;
+}
+
 export function saveModuleColumnRegistry(
   moduleId: string,
   userId: string,
   registry: ModuleColumnRegistryEntry[],
 ): void {
-  const prefs: ModuleColumnPref[] = registry.map(({ key, enabled, order }) => ({
-    key,
-    enabled,
-    order,
-  }));
+  const prefs: ModuleColumnPref[] = registry.map(toPreference);
   saveModuleColumnPrefList(moduleId, userId, prefs);
 }
 
 export const loadModuleColumnPreferences = loadModuleColumnPrefs;
 export const saveModuleColumnPreferenceList = saveModuleColumnPrefList;
-

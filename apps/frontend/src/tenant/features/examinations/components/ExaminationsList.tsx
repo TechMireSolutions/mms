@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
 const STATUS_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   upcoming: Circle,
@@ -39,6 +40,8 @@ interface ExamsListProps {
   listLayout?: boolean;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
+  getColumnWidth?: (key: string) => number | undefined;
+  onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
@@ -53,6 +56,8 @@ export default function ExamsList({
   listLayout: _listLayout = false,
   onFilteredCountChange,
   isColumnVisible,
+  getColumnWidth,
+  onColumnResize,
   columnCustomizer,
 }: ExamsListProps): React.ReactElement {
   const { t } = useTranslation();
@@ -300,49 +305,49 @@ export default function ExamsList({
           {/* Table view for desktop */}
           <div className="hidden lg:block rounded-xl border border-border overflow-hidden bg-card">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm table-fixed">
                 <caption className="sr-only">{t("examinations.exams")}</caption>
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
                     {showName && (
-                      <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t("examinations.columns.exam.name")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showSubject && (
-                      <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="subject" width={getColumnWidth?.("subject")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t("examinations.columns.exam.subject")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showDate && (
-                      <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t("examinations.columns.exam.date")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showDuration && (
-                      <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="duration" width={getColumnWidth?.("duration")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t("examinations.columns.exam.duration")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showStatus && (
-                      <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t("examinations.columns.exam.status")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showTotalMarks && (
-                      <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="totalMarks" width={getColumnWidth?.("totalMarks")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t("examinations.columns.exam.totalMarks")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showPassingMarks && (
-                      <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="passingMarks" width={getColumnWidth?.("passingMarks")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t("examinations.columns.exam.passingMarks")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showClasses && (
-                      <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="classes" width={getColumnWidth?.("classes")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t("examinations.columns.exam.classes")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     <th scope="col" className="px-4 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       <span className="sr-only">{t("examinations.columns.actions")}</span>

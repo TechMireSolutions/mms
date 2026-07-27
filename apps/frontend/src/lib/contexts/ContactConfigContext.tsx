@@ -102,8 +102,8 @@ export interface ContactConfigContextType {
 
   // Dynamic Columns
   columnRegistry: ColumnRegistryEntry[];
-  availableColumns: Array<{ id: string; label: string; sortField?: string }>;
-  visibleColumns: Array<{ id: string; label: string; sortField?: string }>;
+  availableColumns: Array<{ id: string; label: string; sortField?: string; width?: number }>;
+  visibleColumns: Array<{ id: string; label: string; sortField?: string; width?: number }>;
 
   // Mutators
   updateGenders: (genderOptions: string[]) => void;
@@ -117,6 +117,8 @@ export interface ContactConfigContextType {
   updateCountryCodes: (countryCodeOptions: Array<{ country: string; code: string }>) => void;
   updateColumnRegistry: (columnRegistry: ColumnRegistryEntry[]) => void;
   updateUserColumnLayout: (columnRegistry: ColumnRegistryEntry[]) => void;
+  getColumnWidth: (key: string) => number | undefined;
+  setColumnWidth: (key: string, width: number) => void;
   systemSortOptions: Array<{ field: string; label: string }>;
 }
 
@@ -407,7 +409,11 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     const userId = user?.id ? String(user.id) : "";
     if (!userId) return;
     saveModuleColumnRegistry("contacts", userId, columnRegistry);
-    const preferences: ContactColumnPreference[] = columnRegistry.map(({ key, enabled, order }) => ({ key, enabled, order }));
+    const preferences: ContactColumnPreference[] = columnRegistry.map(({ key, enabled, order, width }) => {
+      const preference: ContactColumnPreference = { key, enabled, order };
+      if (typeof width === "number") preference.width = width;
+      return preference;
+    });
     setLocalUserColumnOverlay(preferences);
     saveColumnPrefs(preferences);
   }, [user?.id, saveColumnPrefs]);
@@ -532,11 +538,31 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     () => applyModuleColumnOverlay(tenantColumnRegistry, rawUserColumnOverlay) as ColumnRegistryEntry[],
     [tenantColumnRegistry, rawUserColumnOverlay],
   );
+
+  const getColumnWidth = useCallback(
+    (key: string) => {
+      const column = columnRegistry.find((entry) => entry.key === key);
+      return typeof column?.width === "number" ? column.width : undefined;
+    },
+    [columnRegistry],
+  );
+
+  const setColumnWidth = useCallback(
+    (key: string, width: number) => {
+      const nextRegistry = columnRegistry.map((column) =>
+        column.key === key ? { ...column, width } : column,
+      );
+      updateUserColumnLayout(nextRegistry);
+    },
+    [columnRegistry, updateUserColumnLayout],
+  );
+
   const availableColumns = useMemo(() => {
     return columnRegistry.map((column) => ({
       id: column.key,
       label: column.label,
-      sortField: column.sortable !== false ? (column.sortField || column.key) : undefined
+      sortField: column.sortable !== false ? (column.sortField || column.key) : undefined,
+      width: column.width,
     }));
   }, [columnRegistry]);
 
@@ -547,7 +573,8 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
       .map((column) => ({
         id: column.key,
         label: column.label,
-        sortField: column.sortable !== false ? (column.sortField || column.key) : undefined
+        sortField: column.sortable !== false ? (column.sortField || column.key) : undefined,
+        width: column.width,
       }));
   }, [columnRegistry]);
 
@@ -606,6 +633,8 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
         updateCountryCodes,
         updateColumnRegistry,
         updateUserColumnLayout,
+        getColumnWidth,
+        setColumnWidth,
         systemSortOptions,
       }}
     >
@@ -632,7 +661,7 @@ export function useContactConfig(): ContactConfigContextType {
  *
  * @returns {Array<{ id: string; label: string; sortField?: string }>} The array of active column descriptors.
  */
-export function useContactColumns(): Array<{ id: string; label: string; sortField?: string }> {
+export function useContactColumns(): Array<{ id: string; label: string; sortField?: string; width?: number }> {
   return useContactConfig().visibleColumns;
 }
 

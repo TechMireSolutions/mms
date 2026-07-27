@@ -14,6 +14,7 @@ import { ActivityActionBadge } from '@/tenant/features/users/components/UserBadg
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
+import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
 import { useLocalPagination } from '@/hooks/useLocalPagination';
 
 const PAGE_SIZE = 15;
@@ -21,9 +22,16 @@ const PAGE_SIZE = 15;
 export interface ActivityLogsProps {
   logs: ActivityLog[];
   users: SystemUser[];
+  getColumnWidth?: (key: string) => number | undefined;
+  onColumnResize?: (key: string, width: number) => void;
 }
 
-export function ActivityLogs({ logs, users }: ActivityLogsProps): React.JSX.Element {
+export function ActivityLogs({
+  logs,
+  users,
+  getColumnWidth,
+  onColumnResize,
+}: ActivityLogsProps): React.JSX.Element {
   const { t } = useTranslation();
   const globalSettings = useGlobalSettings();
   const [userFilter, setUser] = useState('all');
@@ -110,24 +118,49 @@ export function ActivityLogs({ logs, users }: ActivityLogsProps): React.JSX.Elem
         </div>
       ) : (
         <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm table-fixed">
             <thead className="border-b border-border bg-muted/60">
               <tr>
-                <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground">
+                <ResizableTableHead
+                  columnKey="time"
+                  width={getColumnWidth?.('time')}
+                  onResize={onColumnResize}
+                  className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                >
                   {t('users.activityColTime')}
-                </th>
-                <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground">
+                </ResizableTableHead>
+                <ResizableTableHead
+                  columnKey="user"
+                  width={getColumnWidth?.('user')}
+                  onResize={onColumnResize}
+                  className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                >
                   {t('users.activityColUser')}
-                </th>
-                <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground">
+                </ResizableTableHead>
+                <ResizableTableHead
+                  columnKey="action"
+                  width={getColumnWidth?.('action')}
+                  onResize={onColumnResize}
+                  className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                >
                   {t('users.activityColAction')}
-                </th>
-                <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground">
+                </ResizableTableHead>
+                <ResizableTableHead
+                  columnKey="detail"
+                  width={getColumnWidth?.('detail')}
+                  onResize={onColumnResize}
+                  className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                >
                   {t('users.activityColDetail')}
-                </th>
-                <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground">
+                </ResizableTableHead>
+                <ResizableTableHead
+                  columnKey="ip"
+                  width={getColumnWidth?.('ip')}
+                  onResize={onColumnResize}
+                  className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                >
                   {t('users.activityColIp')}
-                </th>
+                </ResizableTableHead>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">

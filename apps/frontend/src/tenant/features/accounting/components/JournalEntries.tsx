@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
+import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
 interface QuickActionType {
   id: string;
@@ -70,6 +71,8 @@ interface JournalEntriesProps {
   canWrite?: boolean;
   canDelete?: boolean;
   isColumnVisible?: (key: string) => boolean;
+  getColumnWidth?: (key: string) => number | undefined;
+  onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
@@ -93,6 +96,8 @@ export function JournalEntries({
   canWrite = true,
   canDelete = true,
   isColumnVisible,
+  getColumnWidth,
+  onColumnResize,
   columnCustomizer,
 }: JournalEntriesProps) {
   const { t } = useTranslation();
@@ -492,44 +497,44 @@ export function JournalEntries({
       ) : (
         <div className="rounded-xl border border-border overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
               <caption className="sr-only">Journal Entries</caption>
               <thead className="bg-muted/60 border-b border-border">
                 <tr>
                   {showRef && (
-                    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="ref" width={getColumnWidth?.("ref")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.ref")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   {showDate && (
-                    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.date")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   {showDescription && (
-                    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="description" width={getColumnWidth?.("description")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.description")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   {showTags && (
-                    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden lg:table-cell">
+                    <ResizableTableHead columnKey="tags" width={getColumnWidth?.("tags")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden lg:table-cell">
                       {t("accounting.columns.journal.tags")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   {showDebit && (
-                    <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="debit" width={getColumnWidth?.("debit")} onResize={onColumnResize} className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.debit")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   {showCredit && (
-                    <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="credit" width={getColumnWidth?.("credit")} onResize={onColumnResize} className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.credit")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   {showStatus && (
-                    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.status")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">
                     {t("accounting.columns.actions")}

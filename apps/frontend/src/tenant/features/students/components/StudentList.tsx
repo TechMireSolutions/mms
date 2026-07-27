@@ -24,6 +24,7 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { GrBadge } from "@/tenant/features/students/components/GrBadge";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
@@ -46,6 +47,8 @@ export interface StudentListProps {
   onBulkStatusChange?: (ids: string[], status: string) => void;
   layout?: string;
   isColumnVisible?: (key: string) => boolean;
+  getColumnWidth?: (key: string) => number | undefined;
+  onColumnResize?: (key: string, width: number) => void;
   serverPagination?: StudentListServerPagination;
   showDeleted?: boolean;
   canWrite?: boolean;
@@ -65,6 +68,8 @@ export default function StudentList({
   onBulkStatusChange,
   layout = "list",
   isColumnVisible,
+  getColumnWidth,
+  onColumnResize,
   serverPagination,
   showDeleted = false,
   canWrite = true,
@@ -327,7 +332,7 @@ export default function StudentList({
       ) : (
       <div className="rounded-2xl border border-border/50 bg-card/45 backdrop-blur-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm table-fixed">
             <thead>
               <tr className="border-b border-border/50 bg-muted/20">
                 <th className="w-10 px-4 py-3">
@@ -336,49 +341,61 @@ export default function StudentList({
                     onCheckedChange={handleSelectAll}
                   />
                 </th>
-                <th
+                <ResizableTableHead
+                  columnKey="name"
+                  width={getColumnWidth?.("name")}
+                  onResize={onColumnResize}
                   onClick={() => handleSort("name")}
                   className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none"
                 >
                   <div className="flex items-center gap-1">
                     {t("students.columns.name")} {renderSortIcon("name")}
                   </div>
-                </th>
+                </ResizableTableHead>
                 {showDob && (
-                  <th
+                  <ResizableTableHead
+                    columnKey="dob"
+                    width={getColumnWidth?.("dob")}
+                    onResize={onColumnResize}
                     onClick={() => handleSort("age")}
                     className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden sm:table-cell"
                   >
                     <div className="flex items-center gap-1">
                       {t("students.columns.dob")} {renderSortIcon("age")}
                     </div>
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showParents && (
-                  <th
+                  <ResizableTableHead
+                    columnKey="parents"
+                    width={getColumnWidth?.("parents")}
+                    onResize={onColumnResize}
                     onClick={() => handleSort("fatherName")}
                     className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden md:table-cell"
                   >
                     <div className="flex items-center gap-1">
                       {t("students.columns.parents")} {renderSortIcon("fatherName")}
                     </div>
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showSessions && (
-                <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">
+                <ResizableTableHead columnKey="sessions" width={getColumnWidth?.("sessions")} onResize={onColumnResize} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">
                   {t("students.columns.sessions")}
-                </th>
+                </ResizableTableHead>
                 )}
 
                 {showStatus && (
-                <th
+                <ResizableTableHead
+                  columnKey="status"
+                  width={getColumnWidth?.("status")}
+                  onResize={onColumnResize}
                   onClick={() => handleSort("status")}
                   className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden sm:table-cell"
                 >
                   <div className="flex items-center gap-1">
                     {t("students.columns.status")} {renderSortIcon("status")}
                   </div>
-                </th>
+                </ResizableTableHead>
                 )}
                 <th className="px-4 py-3 w-12" />
               </tr>

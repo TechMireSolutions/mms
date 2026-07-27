@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
 
 const EMPTY_DIST: Partial<Distribution> = {
@@ -362,6 +363,8 @@ export interface DistributionManagerProps {
   onFilteredCountChange?: (count: number) => void;
   canWrite?: boolean;
   isColumnVisible?: (key: string) => boolean;
+  getColumnWidth?: (key: string) => number | undefined;
+  onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
   onMessage?: (channel: 'sms' | 'whatsapp' | 'email', distributions: Distribution[]) => void;
 }
@@ -384,6 +387,8 @@ export function DistributionManager({
   onFilteredCountChange,
   canWrite = true,
   isColumnVisible,
+  getColumnWidth,
+  onColumnResize,
   columnCustomizer,
   onMessage,
 }: DistributionManagerProps) {
@@ -482,49 +487,49 @@ export function DistributionManager({
 
       <Card accentColor="primary" className="shadow-sm hover:shadow-md border-border/80 p-0 overflow-hidden bg-card/45 backdrop-blur-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm table-fixed">
             <caption className="sr-only">Distributions</caption>
             <thead>
               <tr className="border-b border-border bg-muted/30">
                 {showCard && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="card" width={getColumnWidth?.("card")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("hasanat.columns.distribution.card")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showRecipient && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="recipient" width={getColumnWidth?.("recipient")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("hasanat.columns.distribution.recipient")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showRecipientClass && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="recipientClass" width={getColumnWidth?.("recipientClass")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("hasanat.columns.distribution.recipientClass")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showQuantity && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="quantity" width={getColumnWidth?.("quantity")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("hasanat.columns.distribution.quantity")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showReason && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="reason" width={getColumnWidth?.("reason")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("hasanat.columns.distribution.reason")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showIssuedDate && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="issuedDate" width={getColumnWidth?.("issuedDate")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("hasanat.columns.distribution.issuedDate")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showIssuedBy && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="issuedBy" width={getColumnWidth?.("issuedBy")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("hasanat.columns.distribution.issuedBy")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showStatus && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("hasanat.columns.distribution.status")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 <th scope="col" className="px-4 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                   <span className="sr-only">{t("hasanat.columns.actions")}</span>

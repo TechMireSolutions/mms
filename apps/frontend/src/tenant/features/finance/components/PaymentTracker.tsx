@@ -9,18 +9,23 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { formatDate } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
+import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
 
 
 interface PaymentTrackerProps {
   payments: Payment[];
   isColumnVisible?: (key: string) => boolean;
+  getColumnWidth?: (key: string) => number | undefined;
+  onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
 export function PaymentTracker({
   payments,
   isColumnVisible,
+  getColumnWidth,
+  onColumnResize,
   columnCustomizer,
 }: PaymentTrackerProps) {
   const { t } = useTranslation();
@@ -81,44 +86,44 @@ export function PaymentTracker({
           </div>
         </header>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm table-fixed">
             <caption className="sr-only">{t("finance.paymentLog")}</caption>
             <thead>
               <tr className="border-b border-border/50">
                 {showDate && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.paymentDate")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showStudent && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.student")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showInvoice && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="invoice" width={getColumnWidth?.("invoice")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.invoice")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showAmount && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="amount" width={getColumnWidth?.("amount")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.amount")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showMethod && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="method" width={getColumnWidth?.("method")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.method")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showReceivedBy && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="receivedBy" width={getColumnWidth?.("receivedBy")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.receivedBy")}
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showNote && (
-                  <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="note" width={getColumnWidth?.("note")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.note")}
-                  </th>
+                  </ResizableTableHead>
                 )}
               </tr>
             </thead>

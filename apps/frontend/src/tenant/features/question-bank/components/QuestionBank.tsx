@@ -20,6 +20,7 @@ import {
   type QuestionBankQuestion as Question,
 } from '@mms/shared';
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
+import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
 
 
 
@@ -35,6 +36,8 @@ interface QuestionBankProps {
   listLayout?: boolean;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
+  getColumnWidth?: (key: string) => number | undefined;
+  onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
@@ -50,6 +53,8 @@ export function QuestionBank({
   listLayout: _listLayout = true,
   onFilteredCountChange,
   isColumnVisible,
+  getColumnWidth,
+  onColumnResize,
   columnCustomizer,
 }: QuestionBankProps): React.ReactElement {
   const { t } = useTranslation();
@@ -416,39 +421,39 @@ export function QuestionBank({
           {/* Table view for desktop */}
           <div className="hidden lg:block rounded-xl border border-border overflow-hidden bg-card">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm table-fixed">
                 <caption className="sr-only">{t('questionBank.questions')}</caption>
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
                     {showText && (
-                      <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                      <ResizableTableHead columnKey="text" width={getColumnWidth?.("text")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
                         {t('questionBank.columns.text')}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showCategory && (
-                      <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="category" width={getColumnWidth?.("category")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t('questionBank.columns.category')}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showLanguage && (
-                      <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="language" width={getColumnWidth?.("language")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t('questionBank.columns.language')}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showType && (
-                      <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="type" width={getColumnWidth?.("type")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t('questionBank.columns.type')}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showDifficulty && (
-                      <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="difficulty" width={getColumnWidth?.("difficulty")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t('questionBank.columns.difficulty')}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showSource && (
-                      <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="source" width={getColumnWidth?.("source")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t('questionBank.columns.source')}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     <th scope="col" className="px-4 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       <span className="sr-only">{t('questionBank.columns.actions')}</span>

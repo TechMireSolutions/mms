@@ -23,7 +23,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 import StudentList from "@/tenant/features/students/components/StudentList";
 import StudentForm from "@/tenant/features/students/components/StudentForm";
-import StudentsSettingsPanel from "@/tenant/features/students/components/StudentsSettings";
+import StudentsSettings from "@/tenant/features/students/components/StudentsSettings";
 import { type Student, STUDENTS_MODULE_CONTRACT, toTitleCase, resolveStudentStatuses } from "@mms/shared";
 import { studentStatusLabel } from "@/lib/students/studentStatusUi";
 
@@ -78,6 +78,8 @@ export default function Students() {
   const {
     columnRegistry,
     isColumnVisible,
+    getColumnWidth,
+    setColumnWidth,
     updateUserColumnLayout,
     customizerLabels,
   } = useStudentColumnLayout(settings);
@@ -341,6 +343,8 @@ export default function Students() {
                     students={workStudents}
                     layout={settings.defaultViewLayout}
                     isColumnVisible={isColumnVisible}
+                    getColumnWidth={getColumnWidth}
+                    onColumnResize={setColumnWidth}
                     showDeleted={showDeleted}
                     canWrite={canWrite}
                     canDelete={canDelete}
@@ -408,7 +412,7 @@ export default function Students() {
             transition={{ duration: 0.18 }}
           >
             <ErrorBoundary>
-              <StudentsSettingsPanel />
+              <StudentsSettings />
             </ErrorBoundary>
           </motion.div>
         ) : null}

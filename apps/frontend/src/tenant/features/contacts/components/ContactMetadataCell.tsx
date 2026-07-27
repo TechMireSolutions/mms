@@ -22,6 +22,7 @@ export interface ContactMetadataCellProps {
   allContacts?: Contact[];
   contactsMap?: Map<string, Contact> | null;
   variant?: "table" | "card";
+  style?: React.CSSProperties;
 }
 
 /**
@@ -35,6 +36,7 @@ export function ContactMetadataCell({
   allContacts = [],
   contactsMap: externalContactsMap,
   variant = "table",
+  style,
 }: ContactMetadataCellProps): React.JSX.Element {
   const { t, language } = useTranslation();
 
@@ -207,7 +209,7 @@ export function ContactMetadataCell({
   };
 
   if (variant === "table") {
-    return <td className="px-4 py-3">{renderValue()}</td>;
+    return <td className="px-4 py-3" style={style}>{renderValue()}</td>;
   }
 
   return <>{renderValue()}</>;

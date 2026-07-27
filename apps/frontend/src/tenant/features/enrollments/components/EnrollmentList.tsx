@@ -15,6 +15,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { formatDate } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
+import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
@@ -29,6 +30,8 @@ interface EnrollmentListProps {
   onCancel: (id: string) => void;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
+  getColumnWidth?: (key: string) => number | undefined;
+  onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
@@ -42,6 +45,8 @@ export function EnrollmentList({
   onCancel,
   onFilteredCountChange,
   isColumnVisible,
+  getColumnWidth,
+  onColumnResize,
   columnCustomizer,
 }: EnrollmentListProps): React.ReactElement {
   const { t } = useTranslation();
@@ -158,43 +163,43 @@ export function EnrollmentList({
       ) : (
         <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
               <thead className="bg-muted/20 border-b border-border/50">
                 <tr>
                   {showStudent && (
-                    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                       {t("enrollments.columns.student")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   {showSession && (
-                    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="session" width={getColumnWidth?.("session")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                       {t("enrollments.columns.session")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   {showClass && (
-                    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="class" width={getColumnWidth?.("class")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                       {t("enrollments.columns.class")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   {showEnrolledDate && (
-                    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="enrolledDate" width={getColumnWidth?.("enrolledDate")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                       {t("enrollments.columns.enrolledDate")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   {showFinalFee && (
-                    <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="finalFee" width={getColumnWidth?.("finalFee")} onResize={onColumnResize} className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">
                       {t("enrollments.columns.finalFee")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   {showStatus && (
-                    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                       {t("enrollments.columns.status")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   {showPayment && (
-                    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="payment" width={getColumnWidth?.("payment")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                       {t("enrollments.columns.payment")}
-                    </th>
+                    </ResizableTableHead>
                   )}
                   <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">
                     {t("enrollments.columns.actions")}

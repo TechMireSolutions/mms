@@ -10,6 +10,8 @@ export interface ModuleColumnPreference {
   key: string;
   enabled: boolean;
   order: number;
+  /** Optional pixel width when the user has resized the column. */
+  width?: number;
 }
 
 export type ModuleColumnPref = ModuleColumnPreference;
@@ -20,6 +22,15 @@ export interface ModuleColumnRegistryEntry extends ModuleColumnPreference {
 }
 
 export type UserModuleColumnPreferencesMap = Record<string, ModuleColumnPreference[]>;
+
+export const MODULE_COLUMN_WIDTH_MIN = 80;
+export const MODULE_COLUMN_WIDTH_MAX = 640;
+
+/** Clamp a user-resized column width to the supported range. */
+export function clampModuleColumnWidth(width: number): number {
+  if (!Number.isFinite(width)) return MODULE_COLUMN_WIDTH_MIN;
+  return Math.min(MODULE_COLUMN_WIDTH_MAX, Math.max(MODULE_COLUMN_WIDTH_MIN, Math.round(width)));
+}
 
 export function applyModuleColumnOverlay(
   registry: ModuleColumnRegistryEntry[],
@@ -34,8 +45,18 @@ export function applyModuleColumnOverlay(
       ...column,
       enabled: column.fixed ? column.enabled : preference.enabled,
       order: preference.order,
+      width: preference.width ?? column.width,
     };
   });
+}
+
+/** Resolve stored pixel width for a Work column key. */
+export function getModuleColumnWidth(
+  registry: ModuleColumnRegistryEntry[],
+  key: string,
+): number | undefined {
+  const column = registry.find((registryColumn) => registryColumn.key === key);
+  return typeof column?.width === 'number' ? column.width : undefined;
 }
 
 export interface StudentWorkColumnLabels {
@@ -404,6 +425,92 @@ export function buildQuestionBankWorkColumnRegistry(
 ): ModuleColumnRegistryEntry[] {
   return createColumnRegistry(
     ['text', 'category', 'language', 'type', 'difficulty', 'source'],
+    labels,
+  );
+}
+
+export interface UsersWorkColumnLabels {
+  user: string;
+  role: string;
+  status: string;
+  lastLogin: string;
+  created: string;
+  twoFactor: string;
+}
+
+/** Builds tenant-default Work column registry for Users directory. */
+export function buildUsersWorkColumnRegistry(
+  labels: UsersWorkColumnLabels,
+): ModuleColumnRegistryEntry[] {
+  return createColumnRegistry(
+    ['user', 'role', 'status', 'lastLogin', 'created', 'twoFactor'],
+    labels,
+  );
+}
+
+export interface UsersActivityWorkColumnLabels {
+  time: string;
+  user: string;
+  action: string;
+  detail: string;
+  ip: string;
+}
+
+/** Builds tenant-default Work column registry for Users activity log. */
+export function buildUsersActivityWorkColumnRegistry(
+  labels: UsersActivityWorkColumnLabels,
+): ModuleColumnRegistryEntry[] {
+  return createColumnRegistry(
+    ['time', 'user', 'action', 'detail', 'ip'],
+    labels,
+  );
+}
+
+export interface MessagingRecipientsWorkColumnLabels {
+  recipient: string;
+  phone: string;
+  email: string;
+}
+
+/** Builds tenant-default Work column registry for Messaging compose recipient picker. */
+export function buildMessagingRecipientsWorkColumnRegistry(
+  labels: MessagingRecipientsWorkColumnLabels,
+): ModuleColumnRegistryEntry[] {
+  return createColumnRegistry(
+    ['recipient', 'phone', 'email'],
+    labels,
+  );
+}
+
+export interface MessagingHistoryWorkColumnLabels {
+  recipient: string;
+  channel: string;
+  body: string;
+  dateSent: string;
+}
+
+/** Builds tenant-default Work column registry for Messaging sent history. */
+export function buildMessagingHistoryWorkColumnRegistry(
+  labels: MessagingHistoryWorkColumnLabels,
+): ModuleColumnRegistryEntry[] {
+  return createColumnRegistry(
+    ['recipient', 'channel', 'body', 'dateSent'],
+    labels,
+  );
+}
+
+export interface MessagingTemplatesWorkColumnLabels {
+  label: string;
+  category: string;
+  body: string;
+}
+
+/** Builds tenant-default Work column registry for Messaging templates setup table. */
+export function buildMessagingTemplatesWorkColumnRegistry(
+  labels: MessagingTemplatesWorkColumnLabels,
+): ModuleColumnRegistryEntry[] {
+  return createColumnRegistry(
+    ['label', 'category', 'body'],
     labels,
   );
 }

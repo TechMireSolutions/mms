@@ -80,6 +80,8 @@ export default function Teachers(): React.JSX.Element {
   const {
     columnRegistry,
     isColumnVisible,
+    getColumnWidth,
+    setColumnWidth,
     updateUserColumnLayout,
     customizerLabels,
   } = useTeacherColumnLayout(settings);
@@ -375,6 +377,8 @@ export default function Teachers(): React.JSX.Element {
                       canWrite={canWrite}
                       showDeleted={showDeleted}
                       isColumnVisible={isColumnVisible}
+                      getColumnWidth={getColumnWidth}
+                      onColumnResize={setColumnWidth}
                     />
                     {useServerWork && workPageData && !showDeleted && (
                       <ListPagination

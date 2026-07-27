@@ -172,6 +172,8 @@ export default function Obligations() {
                 onView={setViewCollection}
                 onFilteredCountChange={setFilteredCount}
                 isColumnVisible={columnLayout.isColumnVisible}
+                getColumnWidth={columnLayout.getColumnWidth}
+                onColumnResize={columnLayout.setColumnWidth}
                 columnCustomizer={{
                   columnRegistry: columnLayout.columnRegistry,
                   updateUserColumnLayout: columnLayout.updateUserColumnLayout,

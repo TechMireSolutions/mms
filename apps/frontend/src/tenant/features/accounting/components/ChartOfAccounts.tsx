@@ -10,6 +10,7 @@ import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/comp
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { type AppTranslationKey } from "@mms/shared";
+import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
 
 
@@ -19,6 +20,8 @@ interface ChartOfAccountsProps {
   onFilteredCountChange?: (count: number) => void;
   canWrite?: boolean;
   isColumnVisible?: (key: string) => boolean;
+  getColumnWidth?: (key: string) => number | undefined;
+  onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
@@ -36,6 +39,8 @@ export function ChartOfAccounts({
   onFilteredCountChange,
   canWrite = true,
   isColumnVisible,
+  getColumnWidth,
+  onColumnResize,
   columnCustomizer,
 }: ChartOfAccountsProps) {
   const { t } = useTranslation();
@@ -187,34 +192,34 @@ export function ChartOfAccounts({
               </span>
             </header>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm table-fixed">
                 <caption className="sr-only">{type} Accounts</caption>
                 <thead className="bg-muted/40 border-b border-border">
                   <tr>
                     {showCode && (
-                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase w-16">
+                      <ResizableTableHead columnKey="code" width={getColumnWidth?.("code")} onResize={onColumnResize} className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                         {t("accounting.columns.account.code")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showName && (
-                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                         {t("accounting.columns.account.name")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showSubtype && (
-                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden md:table-cell">
+                      <ResizableTableHead columnKey="subtype" width={getColumnWidth?.("subtype")} onResize={onColumnResize} className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden md:table-cell">
                         {t("accounting.columns.account.subtype")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showDescription && (
-                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden lg:table-cell">
+                      <ResizableTableHead columnKey="description" width={getColumnWidth?.("description")} onResize={onColumnResize} className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden lg:table-cell">
                         {t("accounting.columns.account.description")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showNormalBalance && (
-                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="normalBalance" width={getColumnWidth?.("normalBalance")} onResize={onColumnResize} className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                         {t("accounting.columns.account.normalBalance")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     <th scope="col" className="px-4 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.actions")}

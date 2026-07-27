@@ -209,6 +209,8 @@ export default function QuestionBankPage(): React.JSX.Element {
                   listLayout={listLayout}
                   onFilteredCountChange={setFilteredCount}
                   isColumnVisible={columnLayout.isColumnVisible}
+                  getColumnWidth={columnLayout.getColumnWidth}
+                  onColumnResize={columnLayout.setColumnWidth}
                   columnCustomizer={{
                     columnRegistry: columnLayout.columnRegistry,
                     updateUserColumnLayout: columnLayout.updateUserColumnLayout,

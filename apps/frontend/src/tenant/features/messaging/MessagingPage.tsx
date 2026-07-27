@@ -51,7 +51,13 @@ import { MessagingVariableTokensBar } from '@/components/ui/MessagingVariableTok
 import { SegmentedPillFilter } from '@/components/ui/SegmentedPillFilter';
 import { notify } from '@/lib/notify';
 import { FORM_LABEL } from '@/components/ui/formStyles';
+import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
 import { useMessageTemplates, useMessageLogs, useMessagingMetrics, useMessagingMutations } from './hooks/useMessaging';
+import {
+  useMessagingRecipientsColumnLayout,
+  useMessagingHistoryColumnLayout,
+  useMessagingTemplatesColumnLayout,
+} from './hooks/useMessagingColumnLayouts';
 
 
 const CHART_COLORS = ['var(--color-info)', 'var(--color-success)', 'var(--color-warning)'];
@@ -149,6 +155,13 @@ export default function MessagingPage(): React.JSX.Element {
   });
 
   const { saveTemplate, deleteTemplate, clearLogs } = useMessagingMutations();
+
+  const { getColumnWidth: getRecipientsColumnWidth, setColumnWidth: setRecipientsColumnWidth } =
+    useMessagingRecipientsColumnLayout();
+  const { getColumnWidth: getHistoryColumnWidth, setColumnWidth: setHistoryColumnWidth } =
+    useMessagingHistoryColumnLayout();
+  const { getColumnWidth: getTemplatesColumnWidth, setColumnWidth: setTemplatesColumnWidth } =
+    useMessagingTemplatesColumnLayout();
 
   const templates = useMemo(() => {
     return mergeMessageTemplates(customTemplates);
@@ -495,7 +508,7 @@ export default function MessagingPage(): React.JSX.Element {
               </div>
 
               <div className="border border-border/60 rounded-lg overflow-hidden max-h-[380px] overflow-y-auto">
-                <table className="w-full text-xs text-left">
+                <table className="w-full text-xs text-left table-fixed">
                   <thead className="bg-muted/40 text-muted-foreground uppercase tracking-wider font-semibold">
                     <tr className="border-b border-border/60">
                       <th className="px-4 py-2 w-10">
@@ -505,9 +518,30 @@ export default function MessagingPage(): React.JSX.Element {
                           aria-label={t('contacts.table.selectAll')}
                         />
                       </th>
-                      <th className="px-4 py-2">{t('messaging.recipient')}</th>
-                      <th className="px-4 py-2">{t('contacts.form.primaryPhone')}</th>
-                      <th className="px-4 py-2">{t('contacts.form.primaryEmail')}</th>
+                      <ResizableTableHead
+                        columnKey="recipient"
+                        width={getRecipientsColumnWidth('recipient')}
+                        onResize={setRecipientsColumnWidth}
+                        className="px-4 py-2"
+                      >
+                        {t('messaging.recipient')}
+                      </ResizableTableHead>
+                      <ResizableTableHead
+                        columnKey="phone"
+                        width={getRecipientsColumnWidth('phone')}
+                        onResize={setRecipientsColumnWidth}
+                        className="px-4 py-2"
+                      >
+                        {t('contacts.form.primaryPhone')}
+                      </ResizableTableHead>
+                      <ResizableTableHead
+                        columnKey="email"
+                        width={getRecipientsColumnWidth('email')}
+                        onResize={setRecipientsColumnWidth}
+                        className="px-4 py-2"
+                      >
+                        {t('contacts.form.primaryEmail')}
+                      </ResizableTableHead>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
@@ -698,13 +732,41 @@ export default function MessagingPage(): React.JSX.Element {
 
               {filteredLogs.length > 0 ? (
                 <div className="overflow-x-auto border border-border/50 rounded-lg">
-                  <table className="w-full text-sm text-left">
+                  <table className="w-full text-sm text-left table-fixed">
                     <thead className="bg-muted/40 text-muted-foreground text-xs uppercase tracking-wider font-semibold">
                       <tr>
-                        <th className="px-4 py-3">{t('messaging.recipient')}</th>
-                        <th className="px-4 py-3">{t('messaging.channel')}</th>
-                        <th className="px-4 py-3">{t('messaging.messageBody')}</th>
-                        <th className="px-4 py-3">{t('messaging.dateSent')}</th>
+                        <ResizableTableHead
+                          columnKey="recipient"
+                          width={getHistoryColumnWidth('recipient')}
+                          onResize={setHistoryColumnWidth}
+                          className="px-4 py-3"
+                        >
+                          {t('messaging.recipient')}
+                        </ResizableTableHead>
+                        <ResizableTableHead
+                          columnKey="channel"
+                          width={getHistoryColumnWidth('channel')}
+                          onResize={setHistoryColumnWidth}
+                          className="px-4 py-3"
+                        >
+                          {t('messaging.channel')}
+                        </ResizableTableHead>
+                        <ResizableTableHead
+                          columnKey="body"
+                          width={getHistoryColumnWidth('body')}
+                          onResize={setHistoryColumnWidth}
+                          className="px-4 py-3"
+                        >
+                          {t('messaging.messageBody')}
+                        </ResizableTableHead>
+                        <ResizableTableHead
+                          columnKey="dateSent"
+                          width={getHistoryColumnWidth('dateSent')}
+                          onResize={setHistoryColumnWidth}
+                          className="px-4 py-3"
+                        >
+                          {t('messaging.dateSent')}
+                        </ResizableTableHead>
                         <th className="px-4 py-3 text-center">{t('common.actions')}</th>
                       </tr>
                     </thead>
@@ -914,12 +976,33 @@ export default function MessagingPage(): React.JSX.Element {
               </div>
 
               <div className="overflow-x-auto border border-border/50 rounded-lg">
-                <table className="w-full text-xs text-left">
+                <table className="w-full text-xs text-left table-fixed">
                   <thead className="bg-muted/40 text-muted-foreground uppercase tracking-wider font-semibold">
                     <tr className="border-b border-border/60">
-                      <th className="px-4 py-2.5">{t('messaging.templateLabel')}</th>
-                      <th className="px-4 py-2.5">{t('messaging.category')}</th>
-                      <th className="px-4 py-2.5">{t('messaging.templateCopy')}</th>
+                      <ResizableTableHead
+                        columnKey="label"
+                        width={getTemplatesColumnWidth('label')}
+                        onResize={setTemplatesColumnWidth}
+                        className="px-4 py-2.5"
+                      >
+                        {t('messaging.templateLabel')}
+                      </ResizableTableHead>
+                      <ResizableTableHead
+                        columnKey="category"
+                        width={getTemplatesColumnWidth('category')}
+                        onResize={setTemplatesColumnWidth}
+                        className="px-4 py-2.5"
+                      >
+                        {t('messaging.category')}
+                      </ResizableTableHead>
+                      <ResizableTableHead
+                        columnKey="body"
+                        width={getTemplatesColumnWidth('body')}
+                        onResize={setTemplatesColumnWidth}
+                        className="px-4 py-2.5"
+                      >
+                        {t('messaging.templateCopy')}
+                      </ResizableTableHead>
                       <th className="px-4 py-2.5 w-32 text-center">{t('common.actions')}</th>
                     </tr>
                   </thead>

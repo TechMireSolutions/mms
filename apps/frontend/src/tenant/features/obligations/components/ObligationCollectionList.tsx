@@ -11,6 +11,7 @@ import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/comp
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
 const PrintInvoiceModal = lazy(() => import("@/tenant/features/obligations/components/invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
 
@@ -23,6 +24,8 @@ export interface ObligationCollectionListProps {
   onView: (collection: ObligationCollection) => void;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
+  getColumnWidth?: (key: string) => number | undefined;
+  onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
   onMessage?: (channel: 'sms' | 'whatsapp' | 'email', collections: ObligationCollection[]) => void;
 }
@@ -36,6 +39,8 @@ export function ObligationCollectionList({
   onView,
   onFilteredCountChange,
   isColumnVisible,
+  getColumnWidth,
+  onColumnResize,
   columnCustomizer,
   onMessage,
 }: ObligationCollectionListProps) {
@@ -141,44 +146,44 @@ export function ObligationCollectionList({
         ) : (
           <div className="rounded-xl border border-border overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm table-fixed">
                 <caption className="sr-only">{t("obligations.collectionsList")}</caption>
                 <thead className="bg-muted/60 border-b border-border">
                   <tr>
                     {showReceiptNo && (
-                      <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="receiptNo" width={getColumnWidth?.("receiptNo")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.receiptNo")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showReceivedDate && (
-                      <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="receivedDate" width={getColumnWidth?.("receivedDate")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.receivedDate")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showSender && (
-                      <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="sender" width={getColumnWidth?.("sender")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.sender")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showObligationType && (
-                      <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="obligationType" width={getColumnWidth?.("obligationType")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.obligationType")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showRepMujtahid && (
-                      <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="repMujtahid" width={getColumnWidth?.("repMujtahid")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.repMujtahid")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showAmount && (
-                      <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="amount" width={getColumnWidth?.("amount")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.amount")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     {showPaymentMode && (
-                      <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="paymentMode" width={getColumnWidth?.("paymentMode")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.paymentMode")}
-                      </th>
+                      </ResizableTableHead>
                     )}
                     <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">
                       <span className="sr-only">{t("obligations.columns.actions")}</span>

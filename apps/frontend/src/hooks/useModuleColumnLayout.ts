@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   applyModuleColumnOverlay,
+  clampModuleColumnWidth,
+  getModuleColumnWidth,
   isModuleColumnVisible,
   type ModuleColumnPref,
   type ModuleColumnRegistryEntry,
@@ -29,6 +31,16 @@ export interface UseModuleColumnLayoutOptions {
   columnPrefsLoaded?: boolean;
   saveColumnPrefs?: (prefs: ModuleColumnPref[]) => void;
   translationPrefix: string;
+}
+
+function toStoredPreferences(registry: ModuleColumnRegistryEntry[]): ModuleColumnPref[] {
+  return registry.map(({ key, enabled, order, width }) => {
+    const preference: ModuleColumnPref = { key, enabled, order };
+    if (typeof width === 'number') {
+      preference.width = clampModuleColumnWidth(width);
+    }
+    return preference;
+  });
 }
 
 export function useModuleColumnLayout({
@@ -107,19 +119,32 @@ export function useModuleColumnLayout({
     [columnRegistry],
   );
 
+  const getColumnWidth = useCallback(
+    (key: string) => getModuleColumnWidth(columnRegistry, key),
+    [columnRegistry],
+  );
+
   const updateUserColumnLayout = useCallback(
     (newRegistry: ModuleColumnRegistryEntry[]) => {
       if (!userId) return;
       saveModuleColumnRegistry(moduleId, userId, newRegistry);
-      const preferences: ModuleColumnPref[] = newRegistry.map(({ key, enabled, order }) => ({
-        key,
-        enabled,
-        order,
-      }));
+      const preferences = toStoredPreferences(newRegistry);
       setUserOverlay(preferences);
       activeSavePrefs?.(preferences);
     },
     [userId, activeSavePrefs, moduleId],
+  );
+
+  const setColumnWidth = useCallback(
+    (key: string, width: number) => {
+      if (!userId) return;
+      const nextWidth = clampModuleColumnWidth(width);
+      const nextRegistry = columnRegistry.map((column) =>
+        column.key === key ? { ...column, width: nextWidth } : column,
+      );
+      updateUserColumnLayout(nextRegistry);
+    },
+    [columnRegistry, updateUserColumnLayout, userId],
   );
 
   const customizerLabels = useMemo(
@@ -137,6 +162,8 @@ export function useModuleColumnLayout({
   return {
     columnRegistry,
     isColumnVisible,
+    getColumnWidth,
+    setColumnWidth,
     updateUserColumnLayout,
     customizerLabels,
   };

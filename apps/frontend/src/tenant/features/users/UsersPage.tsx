@@ -34,6 +34,8 @@ import {
   useActivityLogsCollection,
   useUsersMutations,
 } from '@/tenant/features/users/hooks/useUsersApi';
+import { useUserColumnLayout } from '@/tenant/features/users/hooks/useUserColumnLayout';
+import { useUserActivityColumnLayout } from '@/tenant/features/users/hooks/useUserActivityColumnLayout';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { notify } from '@/lib/notify';
@@ -79,6 +81,11 @@ export default function Users(): React.JSX.Element {
     [rawUsers],
   );
   const logs = useActivityLogsCollection();
+
+  const { getColumnWidth: getUserColumnWidth, setColumnWidth: setUserColumnWidth } =
+    useUserColumnLayout();
+  const { getColumnWidth: getActivityColumnWidth, setColumnWidth: setActivityColumnWidth } =
+    useUserActivityColumnLayout();
 
   const { replaceUsers, replaceLogs } = useUsersMutations();
 
@@ -277,11 +284,18 @@ export default function Users(): React.JSX.Element {
                   onAddUser={() => setShowAddUser(true)}
                   onMessage={handleMessageUsers}
                   canWrite={canWrite}
+                  getColumnWidth={getUserColumnWidth}
+                  onColumnResize={setUserColumnWidth}
                 />
               )}
 
               {effectiveTab === 'work' && effectiveSubTab === 'activity' && (
-                <ActivityLogs logs={logs} users={users} />
+                <ActivityLogs
+                  logs={logs}
+                  users={users}
+                  getColumnWidth={getActivityColumnWidth}
+                  onColumnResize={setActivityColumnWidth}
+                />
               )}
             </motion.div>
           </AnimatePresence>

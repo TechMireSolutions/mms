@@ -17,6 +17,7 @@ import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
 import { formatDate } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
+import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
 import { UserRoleBadge, UserStatusBadge } from '@/tenant/features/users/components/UserBadges';
 import { FORM_CHECKBOX } from '@/components/ui/formStyles';
 
@@ -41,6 +42,8 @@ export interface UsersListProps {
   onAddUser: () => void;
   onMessage?: (channel: 'sms' | 'whatsapp' | 'email', users: SystemUser[]) => void;
   canWrite?: boolean;
+  getColumnWidth?: (key: string) => number | undefined;
+  onColumnResize?: (key: string, width: number) => void;
 }
 
 export function UsersList({
@@ -52,6 +55,8 @@ export function UsersList({
   onAddUser,
   onMessage,
   canWrite = true,
+  getColumnWidth,
+  onColumnResize,
 }: UsersListProps): React.JSX.Element {
   const { t } = useTranslation();
   const globalSettings = useGlobalSettings();
@@ -209,7 +214,7 @@ export function UsersList({
       ) : (
         <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
               <thead className="border-b border-border bg-muted/60">
                 <tr>
                   {canWrite && (
@@ -223,24 +228,54 @@ export function UsersList({
                       />
                     </th>
                   )}
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground">
+                  <ResizableTableHead
+                    columnKey="user"
+                    width={getColumnWidth?.('user')}
+                    onResize={onColumnResize}
+                    className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                  >
                     {t('users.colUser')}
-                  </th>
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground">
+                  </ResizableTableHead>
+                  <ResizableTableHead
+                    columnKey="role"
+                    width={getColumnWidth?.('role')}
+                    onResize={onColumnResize}
+                    className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                  >
                     {t('users.colRole')}
-                  </th>
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground">
+                  </ResizableTableHead>
+                  <ResizableTableHead
+                    columnKey="status"
+                    width={getColumnWidth?.('status')}
+                    onResize={onColumnResize}
+                    className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                  >
                     {t('users.colStatus')}
-                  </th>
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground">
+                  </ResizableTableHead>
+                  <ResizableTableHead
+                    columnKey="lastLogin"
+                    width={getColumnWidth?.('lastLogin')}
+                    onResize={onColumnResize}
+                    className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                  >
                     {t('users.colLastLogin')}
-                  </th>
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground">
+                  </ResizableTableHead>
+                  <ResizableTableHead
+                    columnKey="created"
+                    width={getColumnWidth?.('created')}
+                    onResize={onColumnResize}
+                    className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                  >
                     {t('users.colCreated')}
-                  </th>
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground">
+                  </ResizableTableHead>
+                  <ResizableTableHead
+                    columnKey="twoFactor"
+                    width={getColumnWidth?.('twoFactor')}
+                    onResize={onColumnResize}
+                    className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                  >
                     {t('users.col2fa')}
-                  </th>
+                  </ResizableTableHead>
                   <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase text-muted-foreground">
                     {t('users.colActions')}
                   </th>

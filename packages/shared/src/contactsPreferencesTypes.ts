@@ -8,6 +8,8 @@ export interface ContactColumnPreference {
   key: string;
   enabled: boolean;
   order: number;
+  /** Optional pixel width when the user has resized the column. */
+  width?: number;
 }
 
 export type ContactColumnPref = ContactColumnPreference;

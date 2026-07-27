@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { UserAvatar } from '@/components/ui/UserAvatar';
+import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
 
 
 export interface TeacherListProps {
@@ -34,6 +35,8 @@ export interface TeacherListProps {
   canWrite?: boolean;
   showDeleted?: boolean;
   isColumnVisible?: (key: string) => boolean;
+  getColumnWidth?: (key: string) => number | undefined;
+  onColumnResize?: (key: string, width: number) => void;
 }
 
 export function TeacherList({
@@ -49,6 +52,8 @@ export function TeacherList({
   canWrite = true,
   showDeleted = false,
   isColumnVisible,
+  getColumnWidth,
+  onColumnResize,
 }: TeacherListProps): React.JSX.Element {
   const { t } = useTranslation();
   const { settings, statuses } = useTeacherConfig();
@@ -165,7 +170,7 @@ export function TeacherList({
     <div className="space-y-4">
       <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm table-fixed">
             <thead className="bg-muted/40 border-b border-border/50">
               <tr>
                 {canWrite && (
@@ -176,45 +181,45 @@ export function TeacherList({
                     />
                   </th>
                 )}
-                <th className="px-4 py-3 text-start">
+                <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-3 text-start">
                   <Button type="button" variant="ghost" className="h-auto p-0 hover:bg-transparent flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('name')}>
                     {t('teachers.field.name')} {renderSortIcon('name')}
                   </Button>
-                </th>
+                </ResizableTableHead>
                 {showSpecialization && (
-                  <th className="px-4 py-3 text-start hidden sm:table-cell">
+                  <ResizableTableHead columnKey="specialization" width={getColumnWidth?.("specialization")} onResize={onColumnResize} className="px-4 py-3 text-start hidden sm:table-cell">
                     <Button type="button" variant="ghost" className="h-auto p-0 hover:bg-transparent flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('specialization')}>
                       {t('teachers.field.specialization')} {renderSortIcon('specialization')}
                     </Button>
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showQualification && (
-                  <th className="px-4 py-3 text-start hidden md:table-cell">
+                  <ResizableTableHead columnKey="qualification" width={getColumnWidth?.("qualification")} onResize={onColumnResize} className="px-4 py-3 text-start hidden md:table-cell">
                     <Button type="button" variant="ghost" className="h-auto p-0 hover:bg-transparent flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('qualification')}>
                       {t('teachers.field.qualification')} {renderSortIcon('qualification')}
                     </Button>
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showJoinDate && (
-                  <th className="px-4 py-3 text-start hidden md:table-cell">
+                  <ResizableTableHead columnKey="joinDate" width={getColumnWidth?.("joinDate")} onResize={onColumnResize} className="px-4 py-3 text-start hidden md:table-cell">
                     <Button type="button" variant="ghost" className="h-auto p-0 hover:bg-transparent flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('joinDate')}>
                       {t('teachers.field.joinDate')} {renderSortIcon('joinDate')}
                     </Button>
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {showStatus && (
-                  <th className="px-4 py-3 text-start">
+                  <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-4 py-3 text-start">
                     <Button type="button" variant="ghost" className="h-auto p-0 hover:bg-transparent flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('status')}>
                       {t('teachers.field.status')} {renderSortIcon('status')}
                     </Button>
-                  </th>
+                  </ResizableTableHead>
                 )}
                 {visibleCustomFields.map((field) => (
-                  <th key={field.id} className="px-4 py-3 text-start hidden lg:table-cell">
+                  <ResizableTableHead key={field.id} columnKey={`custom:${field.id}`} width={getColumnWidth?.(`custom:${field.id}`)} onResize={onColumnResize} className="px-4 py-3 text-start hidden lg:table-cell">
                     <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                       {field.label ?? field.id}
                     </span>
-                  </th>
+                  </ResizableTableHead>
                 ))}
                 {canWrite && <th className="px-4 py-3 w-10" scope="col"><span className="sr-only">{t('common.actions')}</span></th>}
               </tr>
