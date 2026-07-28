@@ -166,15 +166,26 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
                       {formatDate(row.date)}
                     </td>
                     <td className="px-3 py-3">
-                      <StatusBadge
-                        status={row.flowType}
-                        size="sm"
-                        config={{
-                          in: { label: row.flowLabel, cls: FLOW_TONE.in.badge },
-                          out: { label: row.flowLabel, cls: FLOW_TONE.out.badge },
-                          transfer: { label: row.flowLabel, cls: SEMANTIC_BADGE.infoStrong },
-                        }}
-                      />
+                      <div className="inline-flex items-center gap-1.5">
+                        {row.flowType === "in" && (
+                          <TrendingUp className="w-3.5 h-3.5 text-success shrink-0" aria-hidden="true" />
+                        )}
+                        {row.flowType === "out" && (
+                          <TrendingDown className="w-3.5 h-3.5 text-destructive shrink-0" aria-hidden="true" />
+                        )}
+                        {row.flowType === "transfer" && (
+                          <ArrowUpDown className="w-3.5 h-3.5 text-info shrink-0" aria-hidden="true" />
+                        )}
+                        <StatusBadge
+                          status={row.flowType}
+                          size="sm"
+                          config={{
+                            in: { label: row.flowLabel, cls: FLOW_TONE.in.badge },
+                            out: { label: row.flowLabel, cls: FLOW_TONE.out.badge },
+                            transfer: { label: row.flowLabel, cls: SEMANTIC_BADGE.infoStrong },
+                          }}
+                        />
+                      </div>
                     </td>
                     <td className="px-3 py-3 text-foreground max-w-[200px] truncate">
                       <p className="font-medium m-0">{row.description}</p>

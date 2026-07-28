@@ -303,7 +303,7 @@ function StepReview({
   ].filter(Boolean) as { label: string, value: string }[];
 
   return (
-    <section aria-label="Review Transaction details" className="space-y-4">
+    <section aria-label={t("accounting.wizard.reviewAria")} className="space-y-4">
       <header className="text-center space-y-1 pb-1">
         <h3 className="text-lg font-bold text-foreground m-0">{t("accounting.journal.dashboard.wizard.reviewTitle")}</h3>
         <p className="text-sm text-muted-foreground m-0">{t("accounting.journal.dashboard.wizard.reviewSubtitle")}</p>

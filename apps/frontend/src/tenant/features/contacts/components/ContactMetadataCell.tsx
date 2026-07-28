@@ -104,7 +104,7 @@ export function ContactMetadataCell({
         return (
           <div className="flex flex-col gap-0.5 text-[11px] leading-normal font-mono">
             <span className="font-semibold text-foreground flex items-center gap-1">
-              <span aria-hidden="true" className="text-amber-500 text-xs">☀️</span>
+              <span aria-hidden="true" className="text-warning text-xs">☀️</span>
               <span>{formatDate(contact.dob)}</span>
             </span>
             <span className="text-[10px] text-muted-foreground">
@@ -118,7 +118,7 @@ export function ContactMetadataCell({
         return (
           <div className="flex flex-col gap-0.5 text-[11px] leading-normal font-mono">
             <span className="font-semibold text-foreground flex items-center gap-1">
-              <span aria-hidden="true" className="text-indigo-400 text-xs">🌙</span>
+              <span aria-hidden="true" className="text-muted-foreground text-xs">🌙</span>
               <span>{getLunarDateString(contact.dob, language)}</span>
             </span>
             <span className="text-[10px] text-muted-foreground">

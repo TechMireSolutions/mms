@@ -1,5 +1,8 @@
 import React from "react";
 import { AlertTriangle, RefreshCw, WifiOff } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
+import { Button } from "@/components/ui/button";
+import type { AppTranslationKey } from "@mms/shared";
 
 export interface ErrorStateProps {
   title?: string;
@@ -11,9 +14,6 @@ export interface ErrorStateProps {
 
 /**
  * ErrorState — shown when a data fetch or validation fails.
- *
- * @param {ErrorStateProps} props - The component props.
- * @returns {React.ReactElement} The rendered ErrorState component.
  */
 export function ErrorState({
   title,
@@ -22,10 +22,15 @@ export function ErrorState({
   type = "generic",
   compact = false,
 }: ErrorStateProps): React.ReactElement {
-  const configs = {
-    generic:    { icon: AlertTriangle, color: "text-destructive", bg: "bg-destructive/10", defaultTitle: "Something went wrong" },
-    network:    { icon: WifiOff,       color: "text-warning",   bg: "bg-warning/10",       defaultTitle: "Connection error" },
-    permission: { icon: AlertTriangle, color: "text-warning",   bg: "bg-warning/10",       defaultTitle: "Access denied" },
+  const { t } = useTranslation();
+
+  const configs: Record<
+    NonNullable<ErrorStateProps["type"]>,
+    { icon: typeof AlertTriangle; color: string; bg: string; titleKey: AppTranslationKey }
+  > = {
+    generic: { icon: AlertTriangle, color: "text-destructive", bg: "bg-destructive/10", titleKey: "errors.state.generic" },
+    network: { icon: WifiOff, color: "text-warning", bg: "bg-warning/10", titleKey: "errors.state.network" },
+    permission: { icon: AlertTriangle, color: "text-warning", bg: "bg-warning/10", titleKey: "errors.state.permission" },
   };
 
   const stateConfig = configs[type] || configs.generic;
@@ -37,19 +42,21 @@ export function ErrorState({
         <Icon className={`${stateConfig.color} ${compact ? "w-5 h-5" : "w-7 h-7"}`} />
       </div>
       <p className={`font-semibold text-foreground ${compact ? "text-sm" : "text-[15px]"}`}>
-        {title || stateConfig.defaultTitle}
+        {title || t(stateConfig.titleKey)}
       </p>
       {description && (
         <p className={`text-muted-foreground mt-1.5 max-w-xs ${compact ? "text-xs" : "text-sm"}`}>{description}</p>
       )}
       {onRetry && (
-        <button
+        <Button
+          type="button"
+          variant="outline"
           onClick={onRetry}
-          className="mt-4 flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card text-sm font-medium hover:bg-muted transition-colors"
+          className="mt-4 flex items-center gap-2 px-4 py-2 h-auto rounded-lg text-sm font-medium"
         >
-          <RefreshCw className="w-3.5 h-3.5" />
-          Try again
-        </button>
+          <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+          {t("common.tryAgain")}
+        </Button>
       )}
     </div>
   );

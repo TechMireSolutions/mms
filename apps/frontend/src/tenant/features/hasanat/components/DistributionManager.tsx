@@ -513,18 +513,18 @@ export function DistributionManager({
   const getDenomination = (id: string) => denoms.find((denomination) => denomination.id === id);
 
   return (
-    <section aria-label="Distribution Manager" className="space-y-4">
+    <section aria-label={t("hasanat.distribution.aria")} className="space-y-4">
       <header className="flex gap-3 flex-col sm:flex-row">
         <div className="relative flex-1">
-          <label htmlFor="search-dist" className="sr-only">Search distributions</label>
+          <label htmlFor="search-dist" className="sr-only">{t("hasanat.distribution.searchLabel")}</label>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
           <Input id="search-dist" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("hasanat.searchDistributions")} className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border text-sm bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
-          {search && <Button variant="ghost" type="button" aria-label="Clear search" onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"><X className="w-3.5 h-3.5" aria-hidden="true" /></Button>}
+          {search && <Button variant="ghost" type="button" aria-label={t("common.clearSearch")} onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"><X className="w-3.5 h-3.5" aria-hidden="true" /></Button>}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button type="button" className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium ${filterStatus.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card hover:bg-muted"}`}>
-              <Filter className="w-3.5 h-3.5" aria-hidden="true" /> Status <ChevronDown className="w-3 h-3" aria-hidden="true" />
+              <Filter className="w-3.5 h-3.5" aria-hidden="true" /> {t("common.status")} <ChevronDown className="w-3 h-3" aria-hidden="true" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
@@ -565,7 +565,7 @@ export function DistributionManager({
       <Card accentColor="primary" className="shadow-sm hover:shadow-md border-border/80 p-0 overflow-hidden bg-card/45 backdrop-blur-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm table-fixed">
-            <caption className="sr-only">Distributions</caption>
+            <caption className="sr-only">{t("hasanat.distribution.aria")}</caption>
             <thead>
               <tr className="border-b border-border bg-muted/30">
                 {canDelete && (
@@ -690,7 +690,7 @@ export function DistributionManager({
                           {(canWrite || onMessage) && !showDeleted && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" type="button" aria-label="Change status" className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground text-xs font-medium flex items-center gap-1">
+                              <Button variant="ghost" type="button" aria-label={t("hasanat.changeStatus")} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground text-xs font-medium flex items-center gap-1">
                                 <Eye className="w-3.5 h-3.5" aria-hidden="true" />
                               </Button>
                             </DropdownMenuTrigger>

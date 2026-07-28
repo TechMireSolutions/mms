@@ -75,7 +75,7 @@ export function HasanatDashboard({
   return (
     <div className="space-y-5">
       {/* Stat cards */}
-      <section aria-label="Hasanat Dashboard Statistics" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <section aria-label={t("hasanat.dashboard.statsAria")} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {stats.map((stat, index) => (
           <StatCard
             key={stat.label}

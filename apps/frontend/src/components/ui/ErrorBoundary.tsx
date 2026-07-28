@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { reportClientError } from "@/lib/clientErrorReporting";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -10,6 +11,25 @@ interface ErrorBoundaryProps {
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
+}
+
+function ErrorBoundaryFallback({
+  error,
+  onRetry,
+}: {
+  error: Error | null;
+  onRetry: () => void;
+}): React.ReactElement {
+  const { t } = useTranslation();
+  return (
+    <div className="p-6 bg-card/40 backdrop-blur-xl border border-border/50 rounded-2xl shadow-sm my-4">
+      <ErrorState
+        title={t("errors.boundary.title")}
+        description={error?.message || t("errors.boundary.description")}
+        onRetry={onRetry}
+      />
+    </div>
+  );
 }
 
 /**
@@ -40,13 +60,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         return this.props.fallback;
       }
       return (
-        <div className="p-6 bg-card/40 backdrop-blur-xl border border-border/50 rounded-2xl shadow-sm my-4">
-          <ErrorState
-            title="Component Rendering Failure"
-            description={this.state.error?.message || "An unexpected error occurred while rendering this interface component."}
-            onRetry={this.handleRetry}
-          />
-        </div>
+        <ErrorBoundaryFallback error={this.state.error} onRetry={this.handleRetry} />
       );
     }
 

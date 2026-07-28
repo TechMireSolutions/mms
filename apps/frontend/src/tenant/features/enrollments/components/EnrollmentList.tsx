@@ -118,8 +118,7 @@ export function EnrollmentList({
   const paymentConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
     paid: { label: t("enrollments.payment.paid"), cls: SEMANTIC_BADGE.success },
     pending: { label: t("enrollments.payment.pending"), cls: SEMANTIC_BADGE.warning },
-    overdue: { label: t("enrollments.payment.overdue"), cls: SEMANTIC_BADGE.destructive },
-    unpaid: { label: t("enrollments.payment.unpaid"), cls: SEMANTIC_BADGE.muted },
+    none: { label: t("enrollments.payment.none"), cls: SEMANTIC_BADGE.muted },
   }), [t]);
 
   return (
@@ -324,7 +323,8 @@ export function EnrollmentList({
                                   openComposer("whatsapp", [{ id: enrollment.id, name: studentDisplayName, phone, email: student?.email }]);
                                 }}
                                 className="p-1.5 w-8 h-8 rounded-lg hover:bg-muted text-success hover:text-success transition-colors"
-                                title="WhatsApp Applicant"
+                                title={t("enrollments.list.actionWhatsApp")}
+                                aria-label={t("enrollments.list.actionWhatsApp")}
                               >
                                 <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
                               </Button>
@@ -336,7 +336,8 @@ export function EnrollmentList({
                                   openComposer("sms", [{ id: enrollment.id, name: studentDisplayName, phone, email: student?.email }]);
                                 }}
                                 className="p-1.5 w-8 h-8 rounded-lg hover:bg-muted text-info hover:text-info transition-colors"
-                                title="Send SMS"
+                                title={t("enrollments.list.actionSms")}
+                                aria-label={t("enrollments.list.actionSms")}
                               >
                                 <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
                               </Button>

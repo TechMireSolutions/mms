@@ -17,6 +17,7 @@ import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments
 import { useStudentsByIds } from '@/tenant/hooks/collections/students';
 import { AlertTriangle, TrendingDown, Award } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { attendanceStatusLabel } from "@/lib/attendanceStatusUi";
 
 import { StatCard } from "@/components/ui/StatCard";
 
@@ -125,10 +126,10 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
   // Pie data
   const pieData = useMemo(() =>
     statuses.map((status: AttendanceStatus) => ({
-      name: status.label,
+      name: attendanceStatusLabel(status, t),
       value: totalStats[status.id] ?? 0,
     })),
-    [statuses, totalStats]
+    [statuses, totalStats, t]
   );
 
   return (
@@ -231,7 +232,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
                 {statuses.map((status: AttendanceStatus, index: number) => (
                   <div key={status.id} className="flex items-center gap-2 text-xs">
                     <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: COLORS[index % COLORS.length] }} />
-                    <span className="text-muted-foreground">{status.label}</span>
+                    <span className="text-muted-foreground">{attendanceStatusLabel(status, t)}</span>
                     <span className="font-bold text-foreground ml-auto">{totalStats[status.id] || 0}</span>
                   </div>
                 ))}

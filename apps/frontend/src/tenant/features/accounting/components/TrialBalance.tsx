@@ -101,15 +101,15 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
             const groupDebit  = accountTypeRows.reduce((sum, trialBalanceRow) => sum + trialBalanceRow.totalDebit,  0);
             const groupCredit = accountTypeRows.reduce((sum, trialBalanceRow) => sum + trialBalanceRow.totalCredit, 0);
             return (
-              <section key={type} aria-label={`${type} Accounts`} className="rounded-xl border border-border overflow-hidden">
+              <section key={type} aria-label={t("accounting.coa.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })} className="rounded-xl border border-border overflow-hidden">
                 <header className={`px-4 py-2 border-b border-border ${ACCOUNT_TYPE_META[type]?.color} flex items-center justify-between`}>
                   <h3 className="text-xs font-bold uppercase tracking-wide m-0">
-                    {ACCOUNT_TYPE_META[type]?.icon} {t(`accounting.type.${type}` as AppTranslationKey)} — {ACCOUNT_TYPE_META[type]?.group}
+                    {ACCOUNT_TYPE_META[type]?.icon} {t(`accounting.type.${type}` as AppTranslationKey)} — {t(`accounting.reports.views.${ACCOUNT_TYPE_META[type]?.group}` as AppTranslationKey)}
                   </h3>
                   <span className="text-[10px] font-semibold text-muted-foreground">{t("accounting.tb.accountsCount", { count: accountTypeRows.length })}</span>
                 </header>
                 <table className="w-full text-sm">
-                  <caption className="sr-only">{type} Accounts Details</caption>
+                  <caption className="sr-only">{t("accounting.tb.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })}</caption>
                   <thead className="bg-muted/40 border-b border-border">
                     <tr>
                       <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase w-20">{t("accounting.columns.account.code")}</th>
@@ -145,7 +145,7 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
           {/* Grand total */}
           <div className="rounded-xl border-2 border-foreground/20 overflow-hidden bg-muted/30">
             <table className="w-full text-sm">
-              <caption className="sr-only">Grand Total</caption>
+              <caption className="sr-only">{t("accounting.tb.grandTotalCaption")}</caption>
               <tfoot>
                 <tr>
                   <td colSpan={3} className="px-4 py-3 text-sm font-bold text-foreground uppercase tracking-wide">{t("accounting.tb.grandTotal")}</td>

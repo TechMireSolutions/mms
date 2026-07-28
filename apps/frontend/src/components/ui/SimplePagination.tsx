@@ -2,6 +2,7 @@ import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface SimplePaginationProps {
   currentPage: number;
@@ -16,6 +17,7 @@ export function SimplePagination({
   onPageChange,
   className,
 }: SimplePaginationProps): React.JSX.Element | null {
+  const { t } = useTranslation();
   if (totalPages <= 1) return null;
 
   return (
@@ -26,7 +28,7 @@ export function SimplePagination({
         className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
         disabled={currentPage === 1}
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-        aria-label="Previous page"
+        aria-label={t("pagination.previousAria")}
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
@@ -39,7 +41,7 @@ export function SimplePagination({
         className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
         disabled={currentPage === totalPages}
         onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-        aria-label="Next page"
+        aria-label={t("pagination.nextAria")}
       >
         <ChevronRight className="h-4 w-4" />
       </Button>

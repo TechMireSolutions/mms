@@ -318,7 +318,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
         const classes = session.classes as { id: string; teacherName?: string; enrolled: number }[] | undefined;
         if (classes) {
           classes.forEach((sessionClass) => {
-            const facultyName = sessionClass.teacherName || "Unassigned";
+            const facultyName = sessionClass.teacherName || t("reports.builder.unassigned");
             if (!workloadByFacultyName[facultyName]) {
               workloadByFacultyName[facultyName] = { classes: new Set(), sessions: new Set(), students: 0, hours: 0 };
             }
@@ -335,7 +335,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
         sessions: workload.sessions.size,
         totalStudents: workload.students,
         hoursWeek: workload.hours,
-        specialization: "General Studies",
+        specialization: t("reports.builder.generalStudies"),
       }));
     }
 

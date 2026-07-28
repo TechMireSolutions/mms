@@ -157,7 +157,7 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
   }
 
   return (
-    <article className="space-y-6" aria-label="Enrollment Wizard Form">
+    <article className="space-y-6" aria-label={t("enrollments.wizard.formAria")}>
       {/* Step indicator */}
       <div className="overflow-x-auto pb-1">
         <StepIndicator steps={steps} current={step} />

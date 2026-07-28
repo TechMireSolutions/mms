@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface AccordionTabItem {
   id: string;
@@ -115,6 +116,7 @@ export function ResponsiveAccordionTabs({
   panelIdPrefix = "tab-panel",
   className,
 }: ResponsiveAccordionTabsProps): React.JSX.Element {
+  const { t } = useTranslation();
   const sectionRefs = useRef<Partial<Record<string, HTMLElement | null>>>({});
   const prefix = panelIdPrefix;
 
@@ -236,7 +238,7 @@ export function ResponsiveAccordionTabs({
       ) : (
         <div className="hidden gap-5 lg:flex lg:items-start">
           <nav
-            aria-label="Section navigation"
+            aria-label={t("nav.sectionAria")}
             className="sticky top-[4.75rem] w-[17.5rem] shrink-0 space-y-0.5 rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm backdrop-blur-sm"
           >
             {tabs.map((tab) => {

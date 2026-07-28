@@ -78,7 +78,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
   ];
 
   return (
-    <section aria-label="Accounting Dashboard" className="space-y-5">
+    <section aria-label={t("accounting.dashboard.aria")} className="space-y-5">
       {/* KPI row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label={t("accounting.dashboard.totalRevenue")}   value={formatCurrency(revenue)}    icon={TrendingUp}   accent="success" delayIndex={0} />

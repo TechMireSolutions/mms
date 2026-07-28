@@ -60,7 +60,7 @@ export function PlatformPageShell({
             </Link>
 
             {/* Navigation links */}
-            <nav className="hidden md:flex items-center gap-2" aria-label="Platform navigation">
+            <nav className="hidden md:flex items-center gap-2" aria-label={t("platform.navAria")}>
               <Button
                 asChild
                 variant="ghost"
@@ -206,7 +206,7 @@ export function PlatformPageShell({
 export function PlatformLogoMark(): React.JSX.Element {
   return (
     <div
-      className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-violet-600 shadow-md shadow-primary/20 hover:scale-105 transition-all duration-300"
+      className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-secondary shadow-md shadow-primary/20 hover:scale-105 transition-all duration-300"
       aria-hidden
     >
       <span className="font-display text-2xl font-black text-white">م</span>

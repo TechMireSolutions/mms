@@ -5,6 +5,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings"
+import { useTranslation } from "@/hooks/useTranslation"
 import {
   DEFAULT_GLOBAL_SETTINGS,
   formatIsoDateToDisplay,
@@ -59,6 +60,7 @@ export function DatePicker({
   const resolvedName = name || fallbackId
 
   const settings = useGlobalSettings()
+  const { t } = useTranslation()
 
   const dateFormat = normalizeDateFormat(
     settings.dateFormat,
@@ -190,7 +192,7 @@ export function DatePicker({
           type="button"
           disabled={disabled}
           className="mr-2 p-1 hover:bg-muted/80 rounded-md text-muted-foreground hover:text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0"
-          aria-label="Open calendar popup"
+          aria-label={t("datePicker.openAria")}
         >
           <CalendarIcon className="h-4 w-4 opacity-70" />
         </PopoverTrigger>
@@ -220,7 +222,7 @@ export function DatePicker({
         className="flex-1 bg-transparent border-0 p-0 text-sm focus:outline-none focus:ring-0 placeholder:text-muted-foreground/60 disabled:cursor-not-allowed disabled:opacity-50"
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={`Enter date in ${dateFormat} format`}
+        aria-label={t("datePicker.enterFormatAria", { format: dateFormat })}
       />
       
       {value && !disabled && (
@@ -228,7 +230,7 @@ export function DatePicker({
           type="button"
           onClick={handleClear}
           className="p-1 hover:bg-muted/80 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0 ml-1"
-          aria-label="Clear date"
+          aria-label={t("datePicker.clearAria")}
         >
           <X className="h-3.5 w-3.5" />
         </button>

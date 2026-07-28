@@ -35,7 +35,7 @@ export default function PlatformAuthLayout({
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute bottom-10 left-10 h-60 w-60 rounded-full bg-violet-500/5 blur-[80px]"
+        className="pointer-events-none absolute bottom-10 left-10 h-60 w-60 rounded-full bg-secondary/5 blur-[80px]"
         aria-hidden
       />
 

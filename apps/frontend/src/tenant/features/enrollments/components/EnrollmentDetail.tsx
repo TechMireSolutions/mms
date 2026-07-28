@@ -67,9 +67,7 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
   const paymentConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
     paid: { label: t("enrollments.payment.paid"), cls: SEMANTIC_BADGE.success },
     pending: { label: t("enrollments.payment.pending"), cls: SEMANTIC_BADGE.warning },
-    overdue: { label: t("enrollments.payment.overdue"), cls: SEMANTIC_BADGE.destructive },
-    unpaid: { label: t("enrollments.payment.unpaid"), cls: SEMANTIC_BADGE.muted },
-    partial: { label: t("enrollments.payment.partial"), cls: SEMANTIC_BADGE.info },
+    none: { label: t("enrollments.payment.none"), cls: SEMANTIC_BADGE.muted },
   }), [t]);
 
   if (!enrollment) return null;

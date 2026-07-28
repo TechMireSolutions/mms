@@ -86,7 +86,7 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
           icon={BookOpen}
           label={t("enrollments.metrics.cancelled")}
           value={cancelled}
-          sub={t("enrollments.metrics.newThisPeriod")}
+          sub={t("enrollments.reports.cancelledSub", { count: cancelled, total })}
           accent="destructive"
         />
         <StatCard

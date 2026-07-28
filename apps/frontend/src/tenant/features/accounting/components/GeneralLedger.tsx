@@ -83,17 +83,17 @@ export function GeneralLedger({ accounts, entries }: GeneralLedgerProps) {
   };
 
   return (
-    <section aria-label="General Ledger" className="space-y-4">
+    <section aria-label={t("accounting.ledger.aria")} className="space-y-4">
       {/* Selectors */}
-      <nav aria-label="Ledger filters" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <nav aria-label={t("accounting.ledger.filtersAria")} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <FormSelect 
-          aria-label="Filter accounts by type"
+          aria-label={t("accounting.coa.filterTypeAria")}
           value={typeFilter} 
           onChange={(accountTypeValue) => { setTypeFilter(accountTypeValue as AccountType | "all"); setSelectedAccount(""); }}
           options={[{ value: "all", label: t("accounting.ledger.allTypes") }, ...ACCOUNT_TYPES.map((type) => ({ value: type, label: t(`accounting.type.${type}` as AppTranslationKey) }))]}
         />
         <FormSelect 
-          aria-label="Select account"
+          aria-label={t("accounting.ledger.selectAccountAria")}
           value={selectedAccount} 
           onChange={setSelectedAccount}
           placeholder={t("accounting.ledger.selectAccount")}
@@ -175,7 +175,7 @@ export function GeneralLedger({ accounts, entries }: GeneralLedgerProps) {
             <div className="rounded-xl border border-border overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <caption className="sr-only">Ledger Entries for {activeAccount.name}</caption>
+                  <caption className="sr-only">{t("accounting.ledger.entriesCaption", { name: activeAccount.name })}</caption>
                   <thead className="bg-muted/60 border-b border-border">
                     <tr>
                       <th scope="col" className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.ledger.columns.date")}</th>

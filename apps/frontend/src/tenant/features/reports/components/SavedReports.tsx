@@ -183,7 +183,7 @@ export default function SavedReports({
                       size="sm"
                       config={{
                         [report.category]: {
-                          label: t(`reports.category.${report.category}` as AppTranslationKey) || report.category,
+                          label: t(`reports.category.${report.category}` as AppTranslationKey),
                           cls: CATEGORY_BADGE_CLS[report.category] ?? SEMANTIC_BADGE.muted,
                         },
                       }}

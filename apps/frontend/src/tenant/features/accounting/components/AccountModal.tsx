@@ -219,7 +219,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
         <div className={`mt-4 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border ${ACCOUNT_TYPE_META[type].color}`} aria-live="polite">
           <span aria-hidden="true">{ACCOUNT_TYPE_META[type].icon}</span>
           <span>
-            {t(`accounting.type.${type}` as AppTranslationKey)} · {t("accounting.columns.account.normalBalance")}: <strong>{ACCOUNT_TYPE_META[type].normalBalance === "debit" ? t("accounting.ledger.dr") : t("accounting.ledger.cr")}</strong> · {ACCOUNT_TYPE_META[type].group === "Balance Sheet" ? t("accounting.reports.views.balance") : ACCOUNT_TYPE_META[type].group === "Income Statement" ? t("accounting.reports.views.income") : ACCOUNT_TYPE_META[type].group}
+            {t(`accounting.type.${type}` as AppTranslationKey)} · {t("accounting.columns.account.normalBalance")}: <strong>{ACCOUNT_TYPE_META[type].normalBalance === "debit" ? t("accounting.ledger.dr") : t("accounting.ledger.cr")}</strong> · {t(`accounting.reports.views.${ACCOUNT_TYPE_META[type].group}` as AppTranslationKey)}
           </span>
         </div>
       )}

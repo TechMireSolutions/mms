@@ -64,7 +64,7 @@ export default function WizardLayout({
         aria-valuetext={t("onboarding.stepOf", { current: String(currentStep), total: String(steps.length) })}
       >
         <motion.div
-          className="h-full bg-gradient-to-r from-primary to-violet-600 rounded-full"
+          className="h-full bg-gradient-to-r from-primary to-secondary rounded-full"
           animate={{ width: `${(currentStep / steps.length) * 100}%` }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         />

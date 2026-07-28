@@ -13,9 +13,11 @@ import { StatCard } from "@/components/ui/StatCard";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Card } from "@/components/ui/card";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { Button } from "@/components/ui/button";
+import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 import EnrollmentChart from "@/components/dashboard-widgets/charts/EnrollmentChart";
 
@@ -74,6 +76,13 @@ function mapStudentRow(student: Student): ReportStudent {
 export default function StudentReport({ filters }: StudentReportProps): React.JSX.Element {
   const { t } = useTranslation();
   const [activeSubTab, setActiveSubTab] = useState<StudentReportSubTab>("list");
+  const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
+  const enrollmentStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    pending: { label: t("enrollments.status.pending"), cls: SEMANTIC_BADGE.warning },
+    confirmed: { label: t("enrollments.status.confirmed"), cls: SEMANTIC_BADGE.success },
+    cancelled: { label: t("enrollments.status.cancelled"), cls: SEMANTIC_BADGE.destructive },
+    completed: { label: t("enrollments.status.completed"), cls: SEMANTIC_BADGE.info },
+  }), [t]);
 
   const REPORT_TABS = useMemo<readonly UINavTab<StudentReportSubTab>[]>(
     () => [
@@ -273,7 +282,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
                       <td className="px-3 py-2.5 text-muted-foreground hidden md:table-cell">{student.age}</td>
                       <td className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{student.registered}</td>
                       <td className="px-3 py-2.5">
-                        <StatusBadge status={student.status} />
+                        <StatusBadge status={student.status} config={statusBadgeConfig} />
                       </td>
                     </tr>
                   ))}
@@ -322,7 +331,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
                     <td className="px-3 py-2.5 text-muted-foreground">{enrollment.class}</td>
                     <td className="px-3 py-2.5 text-muted-foreground">{enrollment.enrolled}</td>
                     <td className="px-3 py-2.5">
-                      <StatusBadge status={enrollment.status} />
+                      <StatusBadge status={enrollment.status} config={enrollmentStatusConfig} />
                     </td>
                   </tr>
                 ))}

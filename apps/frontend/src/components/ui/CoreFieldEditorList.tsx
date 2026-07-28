@@ -6,6 +6,7 @@ import { FieldEditor } from "@/components/ui/CustomFieldsBuilder";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface FieldItemProps {
   field: FieldDefinition;
@@ -51,10 +52,11 @@ const FieldItem = memo(function FieldItem({
   isCoreField = false,
   labels,
 }: FieldItemProps): React.JSX.Element {
-  const lblRequired = labels?.required || "Required";
-  const lblOptional = labels?.optional || "Optional";
-  const lblUnique = labels?.unique || "Unique";
-  const lblStandard = labels?.standard || "Standard";
+  const { t } = useTranslation();
+  const lblRequired = labels?.required || t("common.required");
+  const lblOptional = labels?.optional || t("common.optional");
+  const lblUnique = labels?.unique || t("common.unique");
+  const lblStandard = labels?.standard || t("common.standard");
 
   return (
     <div
@@ -69,7 +71,7 @@ const FieldItem = memo(function FieldItem({
     >
       <span
         {...(dragHandleProps || {})}
-        aria-label="Drag to reorder field"
+        aria-label={t("fields.dragReorderAria")}
         className="flex-shrink-0 cursor-grab text-muted-foreground/60 hover:text-foreground/80 active:cursor-grabbing"
       >
         <GripVertical className="w-4 h-4" />
@@ -78,7 +80,7 @@ const FieldItem = memo(function FieldItem({
       <Checkbox
         checked={isEnabled}
         onCheckedChange={onToggleEnabled}
-        aria-label="Enable field"
+        aria-label={t("fields.enableAria")}
         className="w-4 h-4"
       />
 
@@ -103,7 +105,7 @@ const FieldItem = memo(function FieldItem({
           className={`flex-shrink-0 h-7 px-3 text-xs font-semibold rounded-md border transition-all shadow-none
               ${
                 isRequired
-                  ? "bg-red-50 border-red-200 text-red-600 hover:bg-red-100/80 dark:bg-red-950/20 dark:border-red-900/30 dark:text-red-400"
+                  ? "bg-destructive/10 border-destructive/20 text-destructive hover:bg-destructive/15"
                   : "bg-muted border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/80"
               }`}
         >
@@ -120,7 +122,7 @@ const FieldItem = memo(function FieldItem({
           className={`flex-shrink-0 h-7 px-3 text-xs font-semibold rounded-md border transition-all shadow-none
               ${
                 isUnique
-                  ? "bg-amber-50 border-amber-200 text-amber-600 hover:bg-amber-100/80 dark:bg-amber-950/20 dark:border-amber-900/30 dark:text-amber-400"
+                  ? "bg-warning/10 border-warning/20 text-warning hover:bg-warning/15"
                   : "bg-muted border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/80"
               }`}
         >
@@ -134,7 +136,7 @@ const FieldItem = memo(function FieldItem({
           onClick={onEdit}
           variant="ghost"
           className="h-8 w-8 p-0 flex items-center justify-center flex-shrink-0 rounded-lg text-muted-foreground/80 hover:text-foreground hover:bg-muted transition-colors shadow-none"
-          title="Edit Defaults and Permissions"
+          title={t("fields.editDefaultsTitle")}
         >
           <SlidersHorizontal className="w-4 h-4" />
         </Button>
@@ -146,9 +148,9 @@ const FieldItem = memo(function FieldItem({
           onClick={onEditField}
           variant="ghost"
           className="h-8 px-2.5 flex items-center justify-center flex-shrink-0 rounded-lg text-xs font-semibold text-muted-foreground/80 hover:text-foreground hover:bg-muted transition-colors shadow-none"
-          title="Edit Custom Field Type / Options"
+          title={t("fields.editCustomFieldTitle")}
         >
-          <span>Edit</span>
+          <span>{t("common.edit")}</span>
         </Button>
       )}
 
@@ -158,9 +160,9 @@ const FieldItem = memo(function FieldItem({
           onClick={onDeleteField}
           variant="ghost"
           className="h-8 px-2.5 flex items-center justify-center flex-shrink-0 rounded-lg text-xs font-semibold text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors shadow-none"
-          title="Delete Custom Field"
+          title={t("fields.deleteCustomFieldTitle")}
         >
-          <span>Delete</span>
+          <span>{t("common.delete")}</span>
         </Button>
       )}
     </div>
@@ -211,6 +213,7 @@ export function CoreFieldEditorList({
   onDeleteField,
   labels,
 }: CoreFieldEditorListProps): React.JSX.Element {
+  const { t } = useTranslation();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [fullEditingId, setFullEditingId] = useState<string | null>(null);
 
@@ -225,7 +228,7 @@ export function CoreFieldEditorList({
   if (fields.length === 0) {
     return (
       <p className="text-xs text-muted-foreground text-center py-4 border-2 border-dashed border-border rounded-lg bg-card">
-        No fields available.
+        {t("fields.noFieldsAvailable")}
       </p>
     );
   }
@@ -267,25 +270,25 @@ export function CoreFieldEditorList({
                           <div className="ml-8 p-3 rounded-lg border border-border bg-muted/20 space-y-3 text-left">
                             <div>
                               <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1">
-                                Default Value
+                                {t("fields.defaultValueLabel")}
                               </label>
                               <Input
                                 className="text-xs py-1.5 h-8 bg-background"
                                 value={(defaultValues[field.key] as string) || ""}
                                 onChange={(event) => onChangeDefaults?.(field.key, event.target.value)}
-                                placeholder="Set default value"
+                                placeholder={t("fields.defaultValuePlaceholder")}
                               />
                             </div>
                             {!core && (
                               <div>
                                 <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1">
-                                  Permissions (comma-separated roles)
+                                  {t("fields.permissionsLabel")}
                                 </label>
                                 <Input
                                   className="text-xs py-1.5 h-8 bg-background"
                                   value={(permissions[field.key] || []).join(", ")}
                                   onChange={(event) => onChangePermissions?.(field.key, event.target.value.split(",").map((role) => role.trim()).filter(Boolean))}
-                                  placeholder="e.g. admin, manager"
+                                  placeholder={t("fields.permissionsPlaceholder")}
                                 />
                               </div>
                             )}

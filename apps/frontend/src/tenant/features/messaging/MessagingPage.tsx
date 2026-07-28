@@ -101,6 +101,13 @@ export default function MessagingPage(): React.JSX.Element {
     emergency: { label: t(getMessageCategoryLabelKey('emergency')), cls: SEMANTIC_BADGE.destructive },
   }), [t]);
 
+  const logStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    sent: { label: t('messaging.status.sent'), cls: SEMANTIC_BADGE.success },
+    delivered: { label: t('messaging.status.delivered'), cls: SEMANTIC_BADGE.successStrong },
+    failed: { label: t('messaging.status.failed'), cls: SEMANTIC_BADGE.destructive },
+    skipped: { label: t('messaging.status.skipped'), cls: SEMANTIC_BADGE.muted },
+  }), [t]);
+
   const channelSelectOptions = useMemo(() => 
     MESSAGING_MODULE_MANIFEST.channelOptions.map((opt) => ({
       value: opt.value,
@@ -836,7 +843,7 @@ export default function MessagingPage(): React.JSX.Element {
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-1.5">
                                 <ChannelBadge channel={log.channel} />
-                                <StatusBadge status={log.status || 'sent'} size="sm" />
+                                <StatusBadge status={log.status || 'sent'} size="sm" config={logStatusConfig} />
                               </div>
                             </td>
                             <td className="px-4 py-3 text-muted-foreground max-w-xs truncate" title={log.body}>

@@ -438,7 +438,7 @@ export default function AccountProfile(): React.JSX.Element {
             >
               <div className="grid gap-6 md:grid-cols-2">
                 <Card className="relative overflow-hidden group/login-card shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
-                  <div className="absolute start-0 top-0 bottom-0 w-1 bg-indigo-500/45 transition-colors group-hover/login-card:bg-indigo-500" />
+                  <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/login-card:bg-primary" />
                   <CardHeader className="pb-4 border-b border-border/40 bg-muted/20 pl-6.5">
                     <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
                       <Mail className="h-4 w-4 text-primary shrink-0" />
@@ -606,7 +606,7 @@ export default function AccountProfile(): React.JSX.Element {
                 </Card>
 
                 <Card className="relative overflow-hidden group/password-card shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
-                  <div className="absolute start-0 top-0 bottom-0 w-1 bg-emerald-500/45 transition-colors group-hover/password-card:bg-emerald-500" />
+                  <div className="absolute start-0 top-0 bottom-0 w-1 bg-success/45 transition-colors group-hover/password-card:bg-success" />
                   <CardHeader className="pb-4 border-b border-border/40 bg-muted/20 pl-6.5">
                     <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
                       <Lock className="h-4 w-4 text-primary shrink-0" />

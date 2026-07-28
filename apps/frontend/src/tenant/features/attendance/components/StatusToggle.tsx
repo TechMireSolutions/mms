@@ -4,6 +4,7 @@ import type { AttendanceStatus } from "@/lib/data/attendanceData";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { AppTranslationKey } from "@mms/shared";
+import { attendanceStatusLabel } from "@/lib/attendanceStatusUi";
 
 interface StatusToggleProps {
   value: string;
@@ -29,8 +30,7 @@ export function StatusToggle({ value, onChange }: StatusToggleProps) {
       className="flex rounded-lg border border-border overflow-hidden text-[11px] font-bold"
     >
       {statuses.map((status: AttendanceStatus) => {
-        const titleKey = `attendance.status.${status.id}` as AppTranslationKey;
-        const title = t(titleKey);
+        const title = attendanceStatusLabel(status, t);
         const shortKey = `attendance.status.${status.id}.short` as AppTranslationKey;
         const short = t(shortKey);
 
@@ -39,7 +39,7 @@ export function StatusToggle({ value, onChange }: StatusToggleProps) {
             key={status.id}
             type="button"
             onClick={() => onChange(status.id)}
-            title={title && title !== titleKey ? title : status.label}
+            title={title}
             aria-pressed={value === status.id}
             variant="ghost"
             className={`px-2.5 py-1.5 transition-colors rounded-none h-auto ${
@@ -48,7 +48,7 @@ export function StatusToggle({ value, onChange }: StatusToggleProps) {
                 : "bg-card text-muted-foreground hover:bg-muted"
             }`}
           >
-            {short && short !== shortKey ? short : status.short}
+            {short === shortKey ? status.short : short}
           </Button>
         );
       })}

@@ -5,14 +5,13 @@ import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Scale, Plus, Archive,
+  Scale, Plus,
 } from "lucide-react";
 import { OBLIGATIONS_MODULE_MANIFEST, resolveModuleTierTab, type AppTranslationKey, type ObligationCollection } from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ActionButton } from "@/components/ui/ActionButton";
-import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { ObligationsSummary as ObligationsSummaryComponent } from "@/tenant/features/obligations/components/ObligationsSummary";
 import { ObligationCollectionList } from "@/tenant/features/obligations/components/ObligationCollectionList";
@@ -257,20 +256,6 @@ export default function Obligations() {
         onTabChange={setActiveTab}
         panelIdPrefix="obligations-tab"
       >
-      {effectiveTab === "work" && canDelete && (
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            variant={showDeleted ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowDeleted((prev) => !prev)}
-            className="gap-1.5"
-          >
-            <Archive className="w-3.5 h-3.5" aria-hidden="true" />
-            {showDeleted ? t("obligations.trash.showActive") : t("obligations.trash.showDeleted")}
-          </Button>
-        </div>
-      )}
       {effectiveTab === "setup" && (
         <SubTabBar
           tabs={CONFIG_SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
@@ -317,6 +302,7 @@ export default function Obligations() {
                 canWrite={canWrite}
                 canDelete={canDelete}
                 showDeleted={showDeleted}
+                onToggleShowDeleted={() => setShowDeleted((prev) => !prev)}
                 onDelete={handleDelete}
                 onRestore={handleRestore}
                 onBulkDelete={handleBulkDelete}

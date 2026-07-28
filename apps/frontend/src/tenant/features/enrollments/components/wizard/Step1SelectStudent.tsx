@@ -9,6 +9,9 @@ import { useStudentsByIds, useStudentsPaginated } from "@/tenant/hooks/collectio
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 
 interface Step1SelectStudentProps {
   value: Student | null | undefined;
@@ -22,6 +25,11 @@ interface Step1SelectStudentProps {
 export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1SelectStudentProps): React.ReactElement {
   const { t } = useTranslation();
   const [search, setSearch] = useState<string>("");
+  const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
+  const genderConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    male: { label: t("sessions.classes.gender.male"), cls: SEMANTIC_BADGE.info },
+    female: { label: t("sessions.classes.gender.female"), cls: SEMANTIC_BADGE.secondary },
+  }), [t]);
 
   const { data: studentPage, isFetching } = useStudentsPaginated({
     page: 1,
@@ -93,10 +101,8 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
                       {t("enrollments.wizard.step1GrPrefix")}: {student.grNumber}
                     </span>
                   )}
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                    student.gender === "male" ? "bg-info/15 text-info" : "bg-secondary/15 text-secondary"
-                  }`}>{student.gender}</span>
-                  <StatusBadge status={student.status || "active"} size="sm" />
+                  <StatusBadge status={student.gender || "male"} config={genderConfig} size="sm" />
+                  <StatusBadge status={student.status || "active"} size="sm" config={statusBadgeConfig} />
                 </div>
                 <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
                   <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" aria-hidden="true" /> {t("enrollments.wizard.step1Age", { age: age ?? "?" })}</span>

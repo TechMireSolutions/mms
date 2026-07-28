@@ -443,12 +443,12 @@ export default function ContactForm({
           </span>
         )}
         {collectionCounts.filledEmails > 0 && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold border border-amber-500/20 text-[10px]">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-warning/10 text-warning font-semibold border border-warning/20 text-[10px]">
             {collectionCounts.filledEmails} {t("contacts.form.emailsLabel")}
           </span>
         )}
         {collectionCounts.filledEmergency > 0 && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold border border-rose-500/20 text-[10px]">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-destructive/10 text-destructive font-semibold border border-destructive/20 text-[10px]">
             {collectionCounts.filledEmergency} {t("contacts.detail.emergency")}
           </span>
         )}

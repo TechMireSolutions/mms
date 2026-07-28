@@ -300,7 +300,7 @@ export function JournalEntries({
   // ── SIMPLE MODE ────────────────────────────────────────────────────────────
   if (mode === "simple") {
     return (
-      <section aria-label="Simple Transactions" className="space-y-5">
+      <section aria-label={t("accounting.journal.simpleAria")} className="space-y-5">
         {/* Header row */}
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -331,7 +331,7 @@ export function JournalEntries({
               </header>
               <form onSubmit={handleNlSubmit} className="flex gap-2">
                 <div className="relative flex-1">
-                  <label htmlFor="nl-input" className="sr-only">Natural Language Transaction Entry</label>
+                  <label htmlFor="nl-input" className="sr-only">{t("accounting.journal.dashboard.nlInputAria")}</label>
                   <Input id="nl-input" value={nlInput} onChange={(event) => handleNlChange(event.target.value)}
                     placeholder={t("accounting.journal.dashboard.placeholderNl")}
                     className="w-full px-4 py-3" />
@@ -350,7 +350,7 @@ export function JournalEntries({
 
             {/* Quick action buttons */}
             {canWrite && (
-            <section aria-label="Quick Actions">
+            <section aria-label={t("accounting.journal.dashboard.quickActions")}>
               <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2.5 m-0">{t("accounting.journal.dashboard.quickActions")}</h3>
               <nav className="flex flex-wrap gap-2">
                 {QUICK_ACTIONS.map((qa) => {
@@ -371,7 +371,7 @@ export function JournalEntries({
             )}
 
             {/* Recent transactions list */}
-            <section aria-label="Recent Transactions">
+            <section aria-label={t("accounting.journal.dashboard.recentTransactions")}>
               <header className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide m-0">{t("accounting.journal.dashboard.recentTransactions")}</h3>
                 <Button type="button" variant="link" size="sm" onClick={exportCSV} className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors p-0 h-auto">
@@ -401,7 +401,9 @@ export function JournalEntries({
                             <span className="text-[11px] text-muted-foreground">{formatDate(entry.date)}</span>
                             <span className="text-[11px] font-mono text-muted-foreground">{entry.ref}</span>
                             {(entry.tags || []).map((tag) => (
-                              <span key={tag} className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">{tag}</span>
+                              <span key={tag} className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">
+                                {t(`accounting.journal.tag.${tag.toLowerCase()}` as AppTranslationKey)}
+                              </span>
                             ))}
                           </div>
                         </div>
@@ -439,9 +441,9 @@ export function JournalEntries({
 
   // ── ADVANCED MODE ──────────────────────────────────────────────────────────
   return (
-    <section aria-label="Advanced Journal Entries" className="space-y-4">
+    <section aria-label={t("accounting.journal.advancedAria")} className="space-y-4">
       {/* Mode toggle + header */}
-      <nav aria-label="Journal controls" className="flex flex-wrap gap-2 items-center">
+      <nav aria-label={t("accounting.journal.controlsAria")} className="flex flex-wrap gap-2 items-center">
         <SubTabBar tabs={modeTabs} value={mode} onChange={setMode} panelIdPrefix="journal-mode-advanced" />
         <div className="flex-1" />
         <SearchBar
@@ -451,7 +453,7 @@ export function JournalEntries({
           className="min-w-[180px]"
         />
         <FormSelect 
-          aria-label="Filter by status"
+          aria-label={t("accounting.journal.filterStatusAria")}
           value={statusFilter} 
           onChange={setStatusFilter}
           options={[
@@ -531,7 +533,13 @@ export function JournalEntries({
               id="filter-tag" 
               value={tagFilter} 
               onChange={setTagFilter}
-              options={[{ value: "all", label: t("accounting.journal.dashboard.allTags") }, ...JOURNAL_TAGS]}
+              options={[
+                { value: "all", label: t("accounting.journal.dashboard.allTags") },
+                ...JOURNAL_TAGS.map((tag) => ({
+                  value: tag,
+                  label: t(`accounting.journal.tag.${tag.toLowerCase()}` as AppTranslationKey),
+                })),
+              ]}
             />
           </div>
           <Button 
@@ -554,7 +562,7 @@ export function JournalEntries({
         <div className="rounded-xl border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm table-fixed">
-              <caption className="sr-only">Journal Entries</caption>
+              <caption className="sr-only">{t("accounting.journal.dashboard.tableCaption")}</caption>
               <thead className="bg-muted/60 border-b border-border">
                 <tr>
                   {canDelete && (
@@ -643,7 +651,9 @@ export function JournalEntries({
                         <td className="px-3 py-2.5 hidden lg:table-cell">
                           <div className="flex flex-wrap gap-1">
                             {(entry.tags || []).slice(0, 2).map((tag) => (
-                              <span key={tag} className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">{tag}</span>
+                              <span key={tag} className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">
+                                {t(`accounting.journal.tag.${tag.toLowerCase()}` as AppTranslationKey)}
+                              </span>
                             ))}
                             {(entry.tags || []).length > 2 && <span className="text-[10px] text-muted-foreground">+{entry.tags.length - 2}</span>}
                           </div>

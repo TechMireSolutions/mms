@@ -252,11 +252,11 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
           <Card accentColor="info" className="p-0">
             <fieldset className="p-5.5 px-6.5 pb-6 border-0 m-0 text-left">
             <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-3">
-              <Tag className="w-4 h-4 text-indigo-500/70 group-hover:text-indigo-500 transition-colors" />
+              <Tag className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
               <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("accounting.journal.form.tagsTitle")}</h3>
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
-              {JOURNAL_TAGS.map((tag) => (
+                  {JOURNAL_TAGS.map((tag) => (
                 <Button
                   key={tag}
                   type="button"
@@ -265,7 +265,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
                   aria-pressed={form.tags?.includes(tag)}
                   className="px-2.5 py-1 rounded-full text-xs font-semibold h-auto"
                 >
-                  {tag}
+                  {t(`accounting.journal.tag.${tag.toLowerCase()}` as AppTranslationKey)}
                 </Button>
               ))}
             </div>
@@ -293,14 +293,14 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
 
             <div className="rounded-xl border border-border overflow-hidden">
               <table className="w-full text-sm">
-                <caption className="sr-only">Journal Entry Lines</caption>
+                <caption className="sr-only">{t("accounting.journal.form.linesCaption")}</caption>
                 <thead className="bg-muted/60 border-b border-border">
                   <tr>
                     <th scope="col" className="px-3 py-2 text-start text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.journal.detail.account")}</th>
                     <th scope="col" className="px-3 py-2 text-start text-[11px] font-semibold text-muted-foreground uppercase hidden md:table-cell">{t("accounting.ledger.columns.lineNote")}</th>
                     <th scope="col" className="px-3 py-2 text-end text-[11px] font-semibold text-muted-foreground uppercase w-28">{t("accounting.ledger.columns.debit")}</th>
                     <th scope="col" className="px-3 py-2 text-end text-[11px] font-semibold text-muted-foreground uppercase w-28">{t("accounting.ledger.columns.credit")}</th>
-                    <th scope="col" className="px-3 py-2 w-8"><span className="sr-only">Actions</span></th>
+                    <th scope="col" className="px-3 py-2 w-8"><span className="sr-only">{t("common.actions")}</span></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">

@@ -1,5 +1,6 @@
 import React from "react";
 import { Check } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface Step {
   id: string;
@@ -21,12 +22,18 @@ interface StepIndicatorProps {
  * @returns StepIndicator layout.
  */
 export function StepIndicator({ steps, current }: StepIndicatorProps): React.ReactElement {
+  const { t } = useTranslation();
   return (
-    <div className="flex items-center gap-0" role="list" aria-label="Enrollment progress steps">
+    <div className="flex items-center gap-0" role="list" aria-label={t("enrollments.wizard.stepsAria")}>
       {steps.map((step, index) => {
         const done    = index < current;
         const active  = index === current;
         const Icon    = step.icon;
+        const stepState = done
+          ? t("enrollments.wizard.stepCompleted")
+          : active
+            ? t("enrollments.wizard.stepCurrent")
+            : t("enrollments.wizard.stepUpcoming");
         return (
           <React.Fragment key={step.id}>
             <div
@@ -40,7 +47,11 @@ export function StepIndicator({ steps, current }: StepIndicatorProps): React.Rea
                   active ? "bg-primary/10 border-primary text-primary" :
                            "bg-muted border-border text-muted-foreground"
                 }`}
-                aria-label={`Step ${index + 1}: ${step.label} (${done ? "Completed" : active ? "Current" : "Upcoming"})`}
+                aria-label={t("enrollments.wizard.stepStateAria", {
+                  step: index + 1,
+                  label: step.label,
+                  state: stepState,
+                })}
               >
                 {done ? (
                   <Check className="w-4 h-4" aria-hidden="true" />

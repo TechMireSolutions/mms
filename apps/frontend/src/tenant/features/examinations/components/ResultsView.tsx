@@ -98,7 +98,7 @@ export function ResultsView({
         const percentage = Math.round((examResult.marksObtained / exam.totalMarks) * 100);
         return {
           ...examResult,
-          student: student ? { name: student.name || "Unnamed student", rollNo: student.grNumber || String(student.id) } : undefined,
+          student: student ? { name: student.name || t("common.unnamedStudent"), rollNo: student.grNumber || String(student.id) } : undefined,
           cls: classId ? { name: classNamesById.get(classId) || classId } : undefined,
           pct: percentage,
           grade: getGrade(percentage),
@@ -107,7 +107,7 @@ export function ResultsView({
       })
       .sort((firstResult, secondResult) => secondResult.marksObtained - firstResult.marksObtained)
       .map((rankedResult, index) => ({ ...rankedResult, rank: index + 1 }));
-  }, [classByStudentId, classNamesById, exam, results, studentsById]);
+  }, [classByStudentId, classNamesById, exam, results, studentsById, t]);
 
   useEffect(() => {
     onFilteredCountChange?.(rankedResults.length);

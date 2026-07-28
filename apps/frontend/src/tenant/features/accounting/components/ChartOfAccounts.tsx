@@ -120,9 +120,9 @@ export function ChartOfAccounts({
   };
 
   return (
-    <section aria-label="Chart of Accounts" className="space-y-4">
+    <section aria-label={t("accounting.coa.aria")} className="space-y-4">
       {/* Toolbar */}
-      <nav aria-label="Account controls" className="flex flex-wrap gap-2 items-center">
+      <nav aria-label={t("accounting.coa.controlsAria")} className="flex flex-wrap gap-2 items-center">
         <SearchBar
           value={search}
           onChange={setSearch}
@@ -130,7 +130,7 @@ export function ChartOfAccounts({
           className="flex-1 min-w-[180px]"
         />
         <FormSelect 
-          aria-label="Filter by account type"
+          aria-label={t("accounting.coa.filterTypeAria")}
           value={typeFilter} 
           onChange={(accountTypeValue) => setTypeFilter(accountTypeValue as AccountType | "all")}
           options={[{ value: "all", label: t("accounting.ledger.allTypes") }, ...ACCOUNT_TYPES.map((type) => ({ value: type, label: t(`accounting.type.${type}` as AppTranslationKey) }))]}
@@ -173,7 +173,7 @@ export function ChartOfAccounts({
       </nav>
 
       {/* Summary stats */}
-      <div className="flex flex-wrap gap-2" aria-label="Account counts by type">
+      <div className="flex flex-wrap gap-2" aria-label={t("accounting.coa.countsAria")}>
         {ACCOUNT_TYPES.map((type) => {
           const count = accounts.filter((account) => account.type === type && account.isActive !== false).length;
           if (count === 0) return null;
@@ -193,7 +193,7 @@ export function ChartOfAccounts({
           <article key={type} className="rounded-xl border border-border overflow-hidden">
             <header className={`px-4 py-2.5 border-b border-border ${ACCOUNT_TYPE_META[type]?.color} flex items-center justify-between`}>
               <h3 className="text-xs font-bold uppercase tracking-wide m-0">
-                <span aria-hidden="true">{ACCOUNT_TYPE_META[type]?.icon}</span> {t("accounting.coa.groupHeader", { type: t(`accounting.type.${type}` as AppTranslationKey), group: ACCOUNT_TYPE_META[type]?.group })}
+                <span aria-hidden="true">{ACCOUNT_TYPE_META[type]?.icon}</span> {t("accounting.coa.groupHeader", { type: t(`accounting.type.${type}` as AppTranslationKey), group: t(`accounting.reports.views.${ACCOUNT_TYPE_META[type]?.group}` as AppTranslationKey) })}
               </h3>
               <span className="text-[10px] font-semibold text-muted-foreground">
                 {t("accounting.coa.groupMeta", {
@@ -204,7 +204,7 @@ export function ChartOfAccounts({
             </header>
             <div className="overflow-x-auto">
               <table className="w-full text-sm table-fixed">
-                <caption className="sr-only">{type} Accounts</caption>
+                <caption className="sr-only">{t("accounting.coa.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })}</caption>
                 <thead className="bg-muted/40 border-b border-border">
                   <tr>
                     {showCode && (
@@ -271,7 +271,7 @@ export function ChartOfAccounts({
                               type="button"
                               variant="ghost"
                               size="icon"
-                              aria-label={`Edit ${account.name}`}
+                              aria-label={t("accounting.coa.editAria", { name: account.name })}
                               onClick={() => setModal({ ...account })}
                               className="h-8 w-8 text-muted-foreground hover:text-foreground"
                             >
@@ -283,7 +283,7 @@ export function ChartOfAccounts({
                               type="button"
                               variant="ghost"
                               size="icon"
-                              aria-label={`Reactivate ${account.name}`}
+                              aria-label={t("accounting.coa.reactivateAria", { name: account.name })}
                               onClick={() => handleReactivate(account.id)}
                               className="h-8 w-8 text-muted-foreground hover:text-success"
                             >
@@ -294,7 +294,7 @@ export function ChartOfAccounts({
                               type="button"
                               variant="ghost"
                               size="icon"
-                              aria-label={`Deactivate ${account.name}`}
+                              aria-label={t("accounting.coa.deactivateAria", { name: account.name })}
                               onClick={() => handleDelete(account.id)}
                               className="h-8 w-8 text-muted-foreground hover:text-destructive"
                             >

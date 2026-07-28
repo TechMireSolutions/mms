@@ -98,7 +98,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
         <EmptyState
           icon={Globe}
           title={search ? t("platform.noAdmins") : t("apex.noMadrasasYet")}
-          description={search ? "No workspaces match your search criteria" : undefined}
+          description={search ? t("platform.noSearchResults") : undefined}
           compact
         />
       ) : (

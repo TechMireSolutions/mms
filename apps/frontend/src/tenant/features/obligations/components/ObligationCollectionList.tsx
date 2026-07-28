@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback, lazy, Suspense } from "react";
-import { Plus, Eye, Search, Receipt, Printer, MessageSquare, MessageCircle, Trash2, RotateCcw } from "lucide-react";
+import { Plus, Eye, Search, Receipt, Printer, MessageSquare, MessageCircle, Trash2, RotateCcw, Archive } from "lucide-react";
 import {
   ObligationCollection, ObligationType, MujtahidRep, Mujtahid
 } from '@/lib/data/obligationsData';
@@ -29,6 +29,7 @@ export interface ObligationCollectionListProps {
   canWrite?: boolean;
   canDelete?: boolean;
   showDeleted?: boolean;
+  onToggleShowDeleted?: () => void;
   onDelete?: (id: string) => void | Promise<void>;
   onRestore?: (id: string) => void | Promise<void>;
   onBulkDelete?: (ids: string[]) => void | Promise<void>;
@@ -51,6 +52,7 @@ export function ObligationCollectionList({
   canWrite = true,
   canDelete = true,
   showDeleted = false,
+  onToggleShowDeleted,
   onDelete,
   onRestore,
   onBulkDelete,
@@ -160,6 +162,22 @@ export function ObligationCollectionList({
             updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
             labels={columnCustomizer.labels}
           />
+        )}
+        {canDelete && onToggleShowDeleted && (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onToggleShowDeleted}
+            aria-pressed={showDeleted}
+            className={`flex items-center gap-1.5 px-3 min-h-[40px] rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
+              showDeleted
+                ? "border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10"
+                : "border-border bg-card text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Archive className="w-3.5 h-3.5" aria-hidden="true" />
+            {showDeleted ? t("obligations.trash.showActive") : t("obligations.trash.showDeleted")}
+          </Button>
         )}
         {canDelete && selectedIds.length > 0 && (
           <Button
@@ -314,13 +332,15 @@ export function ObligationCollectionList({
                                 <Button type="button" onClick={() => onMessage('whatsapp', [collection])}
                                   variant="ghost"
                                   className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-success shadow-none transition-colors"
-                                  title="Send WhatsApp Message">
+                                  title={t("obligations.list.actionWhatsApp")}
+                                  aria-label={t("obligations.list.actionWhatsApp")}>
                                   <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
                                 </Button>
                                 <Button type="button" onClick={() => onMessage('sms', [collection])}
                                   variant="ghost"
                                   className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-info shadow-none transition-colors"
-                                  title="Send SMS Message">
+                                  title={t("obligations.list.actionSms")}
+                                  aria-label={t("obligations.list.actionSms")}>
                                   <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
                                 </Button>
                               </>

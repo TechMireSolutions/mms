@@ -7,6 +7,7 @@ import { useMergedObligationContacts, useMergedObligationUsers } from "@/tenant/
 import { InvoicePrintPreview } from "@/tenant/features/obligations/components/invoice/InvoicePrintPreview";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface PrintInvoiceModalProps {
   collection: ObligationCollection;
@@ -32,6 +33,7 @@ export function PrintInvoiceModal({
   onClose,
   onOpenEditor = undefined,
 }: PrintInvoiceModalProps) {
+  const { t } = useTranslation();
   const template: InvoiceTemplate = loadTemplate();
   const size = PAGE_SIZES[template.pageSize] || PAGE_SIZES.A6;
   const printRef = useRef<HTMLDivElement>(null);
@@ -64,7 +66,7 @@ export function PrintInvoiceModal({
       <!DOCTYPE html>
       <html lang="en">
       <head>
-        <title>Receipt - ${collection.receipt_no}</title>
+        <title>${t("obligations.print.windowTitle", { number: collection.receipt_no })}</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { background: white; }
@@ -91,8 +93,8 @@ export function PrintInvoiceModal({
     <Modal
       open
       onClose={onClose}
-      title="Print Receipt"
-      subtitle={`Receipt No: ${collection.receipt_no}`}
+      title={t("obligations.print.title")}
+      subtitle={t("obligations.print.receiptNo", { number: collection.receipt_no })}
       icon={Printer}
       size="lg"
       headerActions={
@@ -103,14 +105,18 @@ export function PrintInvoiceModal({
             variant="outline"
             className="flex items-center gap-1.5 px-3 py-1.5 h-auto text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none"
           >
-            <Settings className="w-3.5 h-3.5" aria-hidden="true" /> Customize Template
+            <Settings className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.print.customizeTemplate")}
           </Button>
         ) : null
       }
       footer={
         <div className="flex w-full items-center justify-between">
           <p className="text-[10px] text-muted-foreground m-0">
-            Page size: <span className="font-semibold">{template.pageSize}</span> · {size.width}×{size.height}px
+            {t("obligations.print.pageSize", {
+              size: template.pageSize,
+              width: size.width,
+              height: size.height,
+            })}
           </p>
           <div className="flex items-center gap-2">
             <Button

@@ -21,6 +21,7 @@ import { useStudentsByIds } from '@/tenant/hooks/collections/students';
 import type { Student } from "@/lib/data/studentsData";
 import type { Enrollment } from "@/lib/data/enrollmentData";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { attendanceStatusLabel } from "@/lib/attendanceStatusUi";
 import { ATTENDANCE_MODULE_MANIFEST } from "@mms/shared";
 import { StatusToggle } from "@/tenant/features/attendance/components/StatusToggle";
 import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
@@ -150,6 +151,7 @@ function enrolledStudentsForClass(
   classId: string,
   enrollments: Enrollment[],
   students: Student[],
+  unnamedStudentLabel: string,
 ): ClassStudent[] {
   if (!classId) return [];
 
@@ -168,7 +170,7 @@ function enrolledStudentsForClass(
       seen.add(studentId);
 
       const student = studentsById.get(studentId);
-      const name = student?.name || enrollment.studentName || "Unnamed student";
+      const name = student?.name || enrollment.studentName || unnamedStudentLabel;
       const gender = student?.gender === "female" || student?.gender === "male"
         ? student.gender
         : "male";
@@ -298,9 +300,14 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
   const sessionInfo = useMemo(() => classInfo ? sessions.find((session) => session.id === classInfo.sessionId) : null, [sessions, classInfo]);
   const students: ClassStudent[] = useMemo(() => {
     if (!filters.classId) return [];
-    const fromEnrollments = enrolledStudentsForClass(filters.classId, enrollments, enrolledStudents);
+    const fromEnrollments = enrolledStudentsForClass(
+      filters.classId,
+      enrollments,
+      enrolledStudents,
+      t("common.unnamedStudent"),
+    );
     return fromEnrollments;
-  }, [enrollments, enrolledStudents, filters.classId]);
+  }, [enrollments, enrolledStudents, filters.classId, t]);
 
 
   const [rows, setRows] = useState<AttendanceRow[]>(() => {
@@ -565,7 +572,7 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted hover:text-foreground transition-colors h-auto">
             <Scan className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.faceAi")}
           </Button>
-          <div className="flex rounded-lg border border-border overflow-hidden text-xs font-semibold" role="group" aria-label="Bulk actions">
+          <div className="flex rounded-lg border border-border overflow-hidden text-xs font-semibold" role="group" aria-label={t("attendance.mark.bulkActionsAria")}>
             <Button onClick={() => markAll("present")} variant="ghost" className="px-3 py-1.5 rounded-none bg-success/10 text-success hover:bg-success/15 hover:text-success transition-colors flex items-center gap-1 h-auto font-semibold">
               <CheckCircle2 className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.allPresent")}
             </Button>
@@ -584,7 +591,7 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
         {statuses.map((status: AttendanceStatus) => (
           <div key={status.id} className={`rounded-xl ${status.bg} ${status.text} border ${status.border} px-3 py-2 text-center`}>
             <p className="text-lg font-bold">{stats[status.id] || 0}</p>
-            <p className="text-[11px] font-semibold">{status.label}</p>
+            <p className="text-[11px] font-semibold">{attendanceStatusLabel(status, t)}</p>
           </div>
         ))}
       </div>
@@ -623,7 +630,7 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
             </thead>
             <tbody className="divide-y divide-border">
               {filteredRows.length === 0 ? (
-                <tr><td colSpan={orderedFields.filter((field) => isFieldEnabled(field.id)).length + 2} className="px-4 py-10 text-center text-muted-foreground text-sm">No students found</td></tr>
+                <tr><td colSpan={orderedFields.filter((field) => isFieldEnabled(field.id)).length + 2} className="px-4 py-10 text-center text-muted-foreground text-sm">{t("attendance.mark.noStudents")}</td></tr>
               ) : filteredRows.map((row) => {
                 const statusInfo = getAttendanceStatusInfo(row.status, statuses);
                 return (
@@ -647,7 +654,7 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
                       if (field.id === "timeIn") {
                         return (
                           <td key="timeIn" className="px-3 py-2.5">
-                            <label htmlFor={`time-in-${row.studentId}`} className="sr-only">Time In</label>
+                            <label htmlFor={`time-in-${row.studentId}`} className="sr-only">{t("attendance.columns.timeIn")}</label>
                             <Input 
                               id={`time-in-${row.studentId}`}
                               type="time" 
@@ -663,7 +670,7 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
                       if (field.id === "timeOut") {
                         return (
                           <td key="timeOut" className="px-3 py-2.5">
-                            <label htmlFor={`time-out-${row.studentId}`} className="sr-only">Time Out</label>
+                            <label htmlFor={`time-out-${row.studentId}`} className="sr-only">{t("attendance.columns.timeOut")}</label>
                             <Input 
                               id={`time-out-${row.studentId}`}
                               type="time" 
@@ -705,7 +712,7 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
                                 value={stringValue}
                                 onChange={(value: string) => setRow(row.studentId, field.id, value)}
                                 options={field.options || []}
-                                placeholder="Select…"
+                                placeholder={t("common.selectPlaceholder")}
                                 className="min-w-[120px]"
                               />
                             ) : field.type === "boolean" ? (
@@ -719,7 +726,7 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
                                 type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"}
                                 value={stringValue}
                                 onChange={(event) => setRow(row.studentId, field.id, event.target.value)}
-                                placeholder={field.placeholder || "Enter…"}
+                                placeholder={field.placeholder || t("common.enterPlaceholder")}
                                 className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground h-8"
                               />
                             )}

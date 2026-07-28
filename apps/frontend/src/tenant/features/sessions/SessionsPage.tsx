@@ -420,11 +420,11 @@ export default function Sessions() {
   }, [typeOptions, t]);
 
   const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
-    active: { label: statusLabels.active || t("sessions.status.active"), cls: SEMANTIC_BADGE.success },
-    upcoming: { label: statusLabels.upcoming || t("sessions.status.upcoming"), cls: SEMANTIC_BADGE.info },
-    completed: { label: statusLabels.completed || t("sessions.status.completed"), cls: SEMANTIC_BADGE.muted },
-    cancelled: { label: statusLabels.cancelled || t("sessions.status.cancelled"), cls: SEMANTIC_BADGE.destructive },
-  }), [statusLabels, t]);
+    active: { label: statusLabels.active, cls: SEMANTIC_BADGE.success },
+    upcoming: { label: statusLabels.upcoming, cls: SEMANTIC_BADGE.info },
+    completed: { label: statusLabels.completed, cls: SEMANTIC_BADGE.muted },
+    cancelled: { label: statusLabels.cancelled, cls: SEMANTIC_BADGE.destructive },
+  }), [statusLabels]);
 
   const typeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => {
     const config: Record<string, StatusBadgeConfigItem> = {};

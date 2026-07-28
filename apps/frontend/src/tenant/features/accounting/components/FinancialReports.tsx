@@ -29,6 +29,7 @@ interface ReportSectionProps {
 }
 
 function ReportSection({ title, rows, totalLabel, total, debitNormal, color }: ReportSectionProps) {
+  const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
   const formatNumber = (amount: number) => formatCurrency(amount);
   const maxAmount = Math.max(...rows.map((reportRow) => {
@@ -42,7 +43,7 @@ function ReportSection({ title, rows, totalLabel, total, debitNormal, color }: R
         <h3 className="text-xs font-bold uppercase tracking-wide text-foreground m-0">{title}</h3>
       </header>
       <table className="w-full text-sm">
-        <caption className="sr-only">{title} Data</caption>
+        <caption className="sr-only">{t("accounting.reports.sectionDataCaption", { title })}</caption>
         <tbody className="divide-y divide-border">
           {rows.map((reportRow) => {
             const rowAmount = debitNormal ? (reportRow.totalDebit - reportRow.totalCredit) : (reportRow.totalCredit - reportRow.totalDebit);
@@ -182,7 +183,7 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
   const payablesChange = payablesRow ? payablesRow.totalCredit - payablesRow.totalDebit : 0;
 
   return (
-    <section aria-label="Financial Reports" className="space-y-5">
+    <section aria-label={t("accounting.reports.aria")} className="space-y-5">
       <AccountingDateFilterBar
         dateFrom={dateFrom}
         dateTo={dateTo}
@@ -212,7 +213,7 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
 
       {/* Income Statement */}
       {view === "income" && (
-        <section aria-label="Income Statement" className="space-y-4">
+        <section aria-label={t("accounting.reports.views.income")} className="space-y-4">
           <ReportSection title={t("accounting.reports.revenue")} rows={getRowsByAccountType("Revenue")} totalLabel={t("accounting.reports.totalRevenue")} total={revenue} debitNormal={false} color="bg-success/10/60" />
           <ReportSection title={t("accounting.reports.expenses")} rows={getRowsByAccountType("Expense")} totalLabel={t("accounting.reports.totalExpenses")} total={expenses} debitNormal={true} color="bg-destructive/10/60" />
           <div className={`flex items-center justify-between px-5 py-4 rounded-xl border-2 font-bold text-lg ${netSurplus >= 0 ? "border-success/40 bg-success/10 text-success" : "border-destructive/40 bg-destructive/10 text-destructive"}`}>
@@ -224,7 +225,7 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
 
       {/* Balance Sheet */}
       {view === "balance" && (
-        <section aria-label="Balance Sheet" className="space-y-4">
+        <section aria-label={t("accounting.reports.views.balance")} className="space-y-4">
           <ReportSection title={t("accounting.reports.assets")} rows={getRowsByAccountType("Asset")} totalLabel={t("accounting.reports.totalAssets")} total={assets} debitNormal={true} color="bg-info/10/60" />
           <ReportSection title={t("accounting.reports.liabilities")} rows={getRowsByAccountType("Liability")} totalLabel={t("accounting.reports.totalLiabilities")} total={liabilities} debitNormal={false} color="bg-destructive/10/60" />
           <ReportSection title={t("accounting.reports.equity")} rows={equityRows} totalLabel={t("accounting.reports.totalEquity")}
@@ -250,13 +251,13 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
 
       {/* Cash Flow Statement */}
       {view === "cashflow" && (
-        <section aria-label="Cash Flow Statement" className="space-y-4">
+        <section aria-label={t("accounting.reports.views.cashflow")} className="space-y-4">
           <div className="rounded-xl border border-border overflow-hidden">
             <header className="px-4 py-2.5 bg-info/10/60 border-b border-border">
               <h3 className="text-xs font-bold uppercase tracking-wide m-0">{t("accounting.reports.cashflow.title")}</h3>
             </header>
             <table className="w-full text-sm">
-              <caption className="sr-only">Cash Flow breakdown</caption>
+              <caption className="sr-only">{t("accounting.reports.cashflow.breakdownCaption")}</caption>
               <tbody className="divide-y divide-border">
                 <tr className="bg-muted/10">
                   <td className="px-4 py-3 font-semibold text-foreground">{t("accounting.reports.cashflow.netSurplusOrDeficit")}</td>

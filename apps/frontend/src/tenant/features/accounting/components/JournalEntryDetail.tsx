@@ -1,4 +1,6 @@
+import { useMemo } from "react";
 import { Pencil, CheckCircle2, RotateCcw, Tag } from "lucide-react";
+import type { AppTranslationKey } from "@mms/shared";
 import { formatDate } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
@@ -27,6 +29,16 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
     posted: { label: t("accounting.journal.status.posted"), cls: SEMANTIC_BADGE.successStrong },
     draft: { label: t("accounting.journal.status.draft"), cls: SEMANTIC_BADGE.warningStrong },
   };
+  const accountTypeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => {
+    const config: Record<string, StatusBadgeConfigItem> = {};
+    for (const [type, meta] of Object.entries(ACCOUNT_TYPE_META)) {
+      config[type] = {
+        label: t(`accounting.type.${type}` as AppTranslationKey),
+        cls: meta.color,
+      };
+    }
+    return config;
+  }, [t]);
   const getAccount = (id: string) => accounts.find((account) => account.id === id);
   const totalDebit = entry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
   const totalCredit = entry.lines.reduce((sum, journalLine) => sum + journalLine.credit, 0);
@@ -89,7 +101,9 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
             <div className="flex flex-wrap gap-1.5" aria-label={t("accounting.columns.journal.tags")}>
               <Tag className="w-3.5 h-3.5 text-muted-foreground mt-0.5" aria-hidden="true" />
               {entry.tags!.map((tag) => (
-                <span key={tag} className="px-2 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">{tag}</span>
+                <span key={tag} className="px-2 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                  {t(`accounting.journal.tag.${tag.toLowerCase()}` as AppTranslationKey)}
+                </span>
               ))}
             </div>
           )}
@@ -114,7 +128,9 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
                         <p className="font-semibold text-foreground m-0">{account?.name || t("accounting.journal.detail.unknownAccount")}</p>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="font-mono text-[10px] text-muted-foreground">{account?.code}</span>
-                          {account && <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${ACCOUNT_TYPE_META[account.type]?.color}`}>{account.type}</span>}
+                          {account && (
+                            <StatusBadge status={account.type} config={accountTypeConfig} size="sm" />
+                          )}
                         </div>
                       </td>
                       <td className="px-4 py-2.5 text-xs text-muted-foreground hidden sm:table-cell">{line.description || "—"}</td>

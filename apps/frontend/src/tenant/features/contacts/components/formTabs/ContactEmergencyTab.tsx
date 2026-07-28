@@ -67,8 +67,8 @@ export function ContactEmergencyTab({
                 id={getLocalId("emergency", idx)}
                 index={idx}
                 icon={Heart}
-                accentClass="bg-rose-500/60 group-hover:bg-rose-500"
-                iconClass="text-rose-500/70 group-hover:text-rose-500"
+                accentClass="bg-destructive/60 group-hover:bg-destructive"
+                iconClass="text-destructive/70 group-hover:text-destructive"
                 label={`${t("contacts.form.contact")} ${idx + 1}`}
                 onRemove={() => removeEmergency(idx)}
                 removeLabel={t("contacts.form.removeEmergencyContact", { index: idx + 1 })}

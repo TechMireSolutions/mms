@@ -5,18 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useTranslation } from "@/hooks/useTranslation";
+import type { AppTranslationKey } from "@mms/shared";
 
 /** All supported custom field types with UI labels. */
-const FIELD_TYPES = [
-  { value: "text", label: "Short Text" },
-  { value: "textarea", label: "Long Text" },
-  { value: "number", label: "Number" },
-  { value: "date", label: "Date" },
-  { value: "url", label: "URL" },
-  { value: "email", label: "Email" },
-  { value: "select", label: "Dropdown" },
-  { value: "tags", label: "Tags (multi-select)" },
-  { value: "boolean", label: "Yes / No" },
+const FIELD_TYPE_KEYS: { value: string; labelKey: AppTranslationKey }[] = [
+  { value: "text", labelKey: "fields.type.text" },
+  { value: "textarea", labelKey: "fields.type.textarea" },
+  { value: "number", labelKey: "fields.type.number" },
+  { value: "date", labelKey: "fields.type.date" },
+  { value: "url", labelKey: "fields.type.url" },
+  { value: "email", labelKey: "fields.type.email" },
+  { value: "select", labelKey: "fields.type.select" },
+  { value: "tags", labelKey: "fields.type.tags" },
+  { value: "boolean", labelKey: "fields.type.boolean" },
 ];
 
 
@@ -98,6 +100,11 @@ interface DraftFieldState extends Omit<CustomFieldConfig, "options"> {
  * @returns React element.
  */
 export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: FieldEditorProps): React.JSX.Element {
+  const { t } = useTranslation();
+  const fieldTypeOptions = FIELD_TYPE_KEYS.map((typeOption) => ({
+    value: typeOption.value,
+    label: t(typeOption.labelKey),
+  }));
   const [draft, setDraft] = useState<DraftFieldState>(() => ({
     ...field,
     options: normalizeOptions(field.options),
@@ -132,28 +139,28 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
       {/* Row 1: Label + Type */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className={FORM_LABEL} htmlFor={`label-${draft.key}`}>Field Name *</label>
+          <label className={FORM_LABEL} htmlFor={`label-${draft.key}`}>{t("fields.fieldName")}</label>
           <Input
             id={`label-${draft.key}`}
             value={draft.label}
             onChange={(event) => upd("label", event.target.value)}
-            placeholder="e.g. Father's Name"
+            placeholder={t("fields.namePlaceholder")}
             autoFocus
           />
           {isDuplicateLabel && (
-            <p className="text-[11px] text-destructive mt-1">A field with this name already exists.</p>
+            <p className="text-[11px] text-destructive mt-1">{t("fields.duplicateName")}</p>
           )}
           {trimmedLabel.length > 0 && trimmedLabel.length < 2 && (
-            <p className="text-[11px] text-warning mt-1">Name must be at least 2 characters.</p>
+            <p className="text-[11px] text-warning mt-1">{t("fields.nameTooShort")}</p>
           )}
         </div>
         <div>
-          <label className={FORM_LABEL} htmlFor={`type-${draft.key}`}>Field Type</label>
+          <label className={FORM_LABEL} htmlFor={`type-${draft.key}`}>{t("fields.fieldType")}</label>
           <FormSelect
             id={`type-${draft.key}`}
             value={draft.type}
             onChange={(val) => upd("type", val as FieldDefinition["type"])}
-            options={FIELD_TYPES}
+            options={fieldTypeOptions}
           />
         </div>
       </div>
@@ -162,22 +169,22 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className={FORM_LABEL} htmlFor={`desc-${draft.key}`}>
-            Description <span className="normal-case font-normal text-muted-foreground/70">(admin note)</span>
+            {t("fields.descriptionLabel")} <span className="normal-case font-normal text-muted-foreground/70">{t("fields.adminNote")}</span>
           </label>
           <Input
             id={`desc-${draft.key}`}
             value={draft.description || ""}
             onChange={(event) => upd("description", event.target.value)}
-            placeholder="What is this field for?"
+            placeholder={t("fields.descriptionPlaceholder")}
           />
         </div>
         <div>
-          <label className={FORM_LABEL} htmlFor={`placeholder-${draft.key}`}>Placeholder</label>
+          <label className={FORM_LABEL} htmlFor={`placeholder-${draft.key}`}>{t("fields.placeholderLabel")}</label>
           <Input
             id={`placeholder-${draft.key}`}
             value={draft.placeholder || ""}
             onChange={(event) => upd("placeholder", event.target.value)}
-            placeholder="Hint shown inside the input"
+            placeholder={t("fields.hintPlaceholder")}
           />
         </div>
       </div>
@@ -186,13 +193,13 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
       {draft.type !== "boolean" && draft.type !== "tags" && (
         <div>
           <label className={FORM_LABEL} htmlFor={`defVal-${draft.key}`}>
-            Default Value <span className="normal-case font-normal text-muted-foreground/70">(optional, pre-filled in the form)</span>
+            {t("fields.defaultValueLabel")} <span className="normal-case font-normal text-muted-foreground/70">{t("fields.defaultValueHint")}</span>
           </label>
           <Input
             id={`defVal-${draft.key}`}
             value={(draft.defaultValue as string | number | undefined) || ""}
             onChange={(event) => upd("defaultValue", event.target.value)}
-            placeholder="Leave blank for no default"
+            placeholder={t("fields.defaultBlankPlaceholder")}
           />
         </div>
       )}
@@ -201,17 +208,17 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
       {hasOptions && (
         <div>
           <label className={FORM_LABEL} htmlFor={`opts-${draft.key}`}>
-            {draft.type === "tags" ? "Predefined Tags" : "Options"}{" "}
-            <span className="normal-case font-normal text-muted-foreground/70">(comma-separated)</span>
+            {draft.type === "tags" ? t("fields.predefinedTags") : t("fields.options")}{" "}
+            <span className="normal-case font-normal text-muted-foreground/70">{t("fields.commaSeparated")}</span>
           </label>
           <Input
             id={`opts-${draft.key}`}
             value={draft._optionsString}
             onChange={(event) => upd("_optionsString", event.target.value)}
-            placeholder={draft.type === "tags" ? "e.g. Student, Alumni, Donor" : "Option A, Option B, Option C"}
+            placeholder={draft.type === "tags" ? t("fields.tagsPlaceholder") : t("fields.optionsPlaceholder")}
           />
           {draft.type === "tags" && (
-            <p className="text-[10px] text-muted-foreground mt-1">Users can also type and add custom tags not in this list.</p>
+            <p className="text-[10px] text-muted-foreground mt-1">{t("fields.tagsHint")}</p>
           )}
         </div>
       )}
@@ -219,25 +226,25 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
       {hasTextLength && (
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={FORM_LABEL} htmlFor={`minlen-${draft.key}`}>Min Length</label>
+            <label className={FORM_LABEL} htmlFor={`minlen-${draft.key}`}>{t("fields.minLength")}</label>
             <Input
               id={`minlen-${draft.key}`}
               type="number"
               min={0}
               value={draft.minLength ?? ""}
               onChange={(event) => upd("minLength", event.target.value ? Number(event.target.value) : undefined)}
-              placeholder="e.g. 2"
+              placeholder={t("fields.minLengthPlaceholder")}
             />
           </div>
           <div>
-            <label className={FORM_LABEL} htmlFor={`maxlen-${draft.key}`}>Max Length</label>
+            <label className={FORM_LABEL} htmlFor={`maxlen-${draft.key}`}>{t("fields.maxLength")}</label>
             <Input
               id={`maxlen-${draft.key}`}
               type="number"
               min={1}
               value={draft.maxLength ?? ""}
               onChange={(event) => upd("maxLength", event.target.value ? Number(event.target.value) : undefined)}
-              placeholder="e.g. 100"
+              placeholder={t("fields.maxLengthPlaceholder")}
             />
           </div>
         </div>
@@ -246,34 +253,34 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
       {hasNumRange && (
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className={FORM_LABEL} htmlFor={`min-${draft.key}`}>Min Value</label>
+            <label className={FORM_LABEL} htmlFor={`min-${draft.key}`}>{t("fields.minValue")}</label>
             <Input
               id={`min-${draft.key}`}
               type="number"
               value={draft.min ?? ""}
               onChange={(event) => upd("min", event.target.value ? Number(event.target.value) : undefined)}
-              placeholder="e.g. 0"
+              placeholder={t("fields.minValuePlaceholder")}
             />
           </div>
           <div>
-            <label className={FORM_LABEL} htmlFor={`max-${draft.key}`}>Max Value</label>
+            <label className={FORM_LABEL} htmlFor={`max-${draft.key}`}>{t("fields.maxValue")}</label>
             <Input
               id={`max-${draft.key}`}
               type="number"
               value={draft.max ?? ""}
               onChange={(event) => upd("max", event.target.value ? Number(event.target.value) : undefined)}
-              placeholder="e.g. 999"
+              placeholder={t("fields.maxValuePlaceholder")}
             />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor={`mask-${draft.key}`}>
-              Input Mask <span className="normal-case font-normal text-muted-foreground/70">(optional)</span>
+              {t("fields.inputMask")} <span className="normal-case font-normal text-muted-foreground/70">{t("fields.optionalHint")}</span>
             </label>
             <Input
               id={`mask-${draft.key}`}
               value={draft.mask || ""}
               onChange={(event) => upd("mask", event.target.value)}
-              placeholder="e.g. 99999-9999999-9"
+              placeholder={t("fields.maskPlaceholder")}
             />
           </div>
         </div>
@@ -285,17 +292,17 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
           <Checkbox
             checked={draft.required}
             onCheckedChange={() => upd("required", !draft.required)}
-            aria-label="Toggle field required status"
+            aria-label={t("fields.toggleRequiredAria")}
           />
-          <span>Required</span>
+          <span>{t("common.required")}</span>
         </div>
         <div className="flex items-center gap-2 select-none text-sm font-medium text-foreground">
           <Checkbox
             checked={draft.unique}
             onCheckedChange={() => upd("unique", !draft.unique)}
-            aria-label="Toggle field uniqueness guard"
+            aria-label={t("fields.toggleUniqueAria")}
           />
-          <span>Unique</span>
+          <span>{t("common.unique")}</span>
         </div>
         <div className="flex-1" />
         <Button
@@ -303,7 +310,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
           onClick={onCancel}
           variant="outline"
           className="px-3 py-1.5 h-8 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors bg-card shadow-none"
-          aria-label="Cancel editing"
+          aria-label={t("fields.cancelEditingAria")}
         >
           <X className="w-3.5 h-3.5" />
         </Button>
@@ -314,7 +321,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
           className="flex items-center gap-1.5 px-4 py-1.5 h-8 bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-40 transition-colors hover:bg-primary/90 shadow-none"
         >
           <Check className="w-3.5 h-3.5" />
-          <span>Save Field</span>
+          <span>{t("fields.saveField")}</span>
         </Button>
       </div>
     </div>
@@ -339,8 +346,10 @@ function FieldRow({
   onEdit,
   onDelete,
 }: FieldRowProps): React.JSX.Element {
+  const { t } = useTranslation();
   const [confirming, setConfirming] = useState<boolean>(false);
-  const typeLabel = FIELD_TYPES.find((t) => t.value === field.type)?.label ?? field.type;
+  const typeKey = FIELD_TYPE_KEYS.find((typeOption) => typeOption.value === field.type)?.labelKey;
+  const typeLabel = typeKey ? t(typeKey) : field.type;
   const optionCount = normalizeOptions(field.options).length;
 
   if (confirming) {
@@ -348,7 +357,7 @@ function FieldRow({
       <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-destructive/30 bg-destructive/10 dark:bg-destructive/20 dark:border-destructive/30">
         <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />
         <p className="flex-1 text-xs text-destructive dark:text-destructive font-medium">
-          Delete <strong>{field.label}</strong>? This cannot be undone.
+          {t("fields.deleteConfirm", { name: field.label })}
         </p>
         <Button
           type="button"
@@ -356,7 +365,7 @@ function FieldRow({
           variant="outline"
           className="px-2.5 py-1 h-8 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-colors bg-card shadow-none"
         >
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           type="button"
@@ -367,7 +376,7 @@ function FieldRow({
           variant="destructive"
           className="px-2.5 py-1 h-8 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold hover:bg-destructive/90 transition-colors shadow-none"
         >
-          Delete
+          {t("common.delete")}
         </Button>
       </div>
     );
@@ -381,7 +390,7 @@ function FieldRow({
       {/* Drag handle */}
       <span
         {...(dragHandleProps || {})}
-        aria-label="Drag to reorder field"
+        aria-label={t("fields.dragReorderAria")}
         className="flex-shrink-0 cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing"
       >
         <GripVertical className="w-4 h-4" />
@@ -420,7 +429,7 @@ function FieldRow({
         onClick={onEdit}
         variant="ghost"
         className="p-1.5 h-8 w-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none"
-        aria-label={`Edit ${field.label}`}
+        aria-label={t("fields.editNamedAria", { name: field.label })}
       >
         <Pencil className="w-3.5 h-3.5" />
       </Button>
@@ -429,7 +438,7 @@ function FieldRow({
         onClick={() => setConfirming(true)}
         variant="ghost"
         className="p-1.5 h-8 w-8 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors shadow-none"
-        aria-label={`Delete ${field.label}`}
+        aria-label={t("fields.deleteNamedAria", { name: field.label })}
       >
         <Trash2 className="w-3.5 h-3.5" />
       </Button>

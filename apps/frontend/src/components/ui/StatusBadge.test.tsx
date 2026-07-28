@@ -1,35 +1,49 @@
 import React from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { StatusBadge } from './StatusBadge';
+
+vi.mock('@/hooks/useTranslation', () => ({
+  useTranslation: () => ({
+    language: 'en',
+    t: (key: string) => {
+      const labels: Record<string, string> = {
+        'statusBadge.active': 'Active',
+      };
+      return labels[key] ?? key;
+    },
+    isLoading: false,
+    dir: 'ltr' as const,
+    isRtl: false,
+  }),
+}));
 
 describe('StatusBadge Component', () => {
   it('renders default label for active status', () => {
-    const badge = StatusBadge({ status: 'active' });
-    const props = badge.props as any;
-    expect(props.children[1]).toBe('Active');
-    expect(props.className).toContain('font-bold');
+    const html = renderToStaticMarkup(<StatusBadge status="active" />);
+    expect(html).toContain('Active');
+    expect(html).toContain('font-bold');
   });
 
   it('renders custom config mapping when supplied', () => {
     const customConfig = {
-      enrolled: { label: 'Enrolled in Hifz', cls: 'bg-emerald-50 text-emerald-700' },
+      enrolled: { label: 'Enrolled in Hifz', cls: 'bg-success/10 text-success' },
     };
 
-    const badge = StatusBadge({ status: 'enrolled', config: customConfig });
-    const props = badge.props as any;
-    expect(props.children[1]).toBe('Enrolled in Hifz');
-    expect(props.className).toContain('bg-emerald-50');
+    const html = renderToStaticMarkup(
+      <StatusBadge status="enrolled" config={customConfig} />,
+    );
+    expect(html).toContain('Enrolled in Hifz');
+    expect(html).toContain('bg-success/10');
   });
 
   it('falls back gracefully to status string for unknown status', () => {
-    const badge = StatusBadge({ status: 'unknown_status' });
-    const props = badge.props as any;
-    expect(props.children[1]).toBe('unknown_status');
+    const html = renderToStaticMarkup(<StatusBadge status="unknown_status" />);
+    expect(html).toContain('unknown_status');
   });
 
   it('applies small size styling when size is sm', () => {
-    const badge = StatusBadge({ status: 'active', size: 'sm' });
-    const props = badge.props as any;
-    expect(props.className).toContain('text-[9px]');
+    const html = renderToStaticMarkup(<StatusBadge status="active" size="sm" />);
+    expect(html).toContain('text-[9px]');
   });
 });

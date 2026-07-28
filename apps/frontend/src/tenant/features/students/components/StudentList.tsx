@@ -248,7 +248,7 @@ export default function StudentList({
                   <div className="absolute top-3 end-3">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label="Student actions" className="h-7 w-7 p-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                        <Button variant="ghost" size="icon" aria-label={t("students.list.actionsAria")} className="h-7 w-7 p-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                           <MoreHorizontal className="w-3.5 h-3.5" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -511,7 +511,7 @@ export default function StudentList({
                         <td className="px-4 py-3">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" aria-label="Student actions" className="h-8 w-8 p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100">
+                              <Button variant="ghost" size="icon" aria-label={t("students.list.actionsAria")} className="h-8 w-8 p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100">
                                 <MoreHorizontal className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
