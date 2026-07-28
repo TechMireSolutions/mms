@@ -22,6 +22,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | [mms-backend-api](mms-backend-api/SKILL.md) | Fastify routes, middleware, Zod, migrations, inject tests |
 | [mms-backend-security](mms-backend-security/SKILL.md) | Tenant isolation, RBAC, cookies, auth artifacts, rate limits |
 | [mms-reports-export](mms-reports-export/SKILL.md) | Analytics, charts, PDF/Excel |
+| [mms-messaging](mms-messaging/SKILL.md) | SMS/WhatsApp campaigns, MessageComposer, templates, message logs |
 | [mms-migration-fixes](mms-migration-fixes/SKILL.md) | Known tech debt from migration-status |
 | [mms-code-review](mms-code-review/SKILL.md) | PR / change review against MMS standards |
 | [mms-ops-deploy](mms-ops-deploy/SKILL.md) | Hetzner deploy, Apache isolation, PORT 5002, GitHub Actions |
@@ -32,7 +33,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 
 | Layer | Location | Behavior |
 |-------|----------|----------|
-| **Rules** | `.cursor/rules/*.md` | Auto-applied (always or by glob) |
+| **Rules** | `.cursor/rules/*.mdc` | Auto-applied (always or by glob) |
 | **Skills** | `.cursor/skills/*/SKILL.md` | Invoked when description matches task |
 
 Always-on rules: `antigravity-global`, `mms-core`, `mms-migration-status`, `mms-dependencies`, `mms-dry`, `mms-completion-review`.

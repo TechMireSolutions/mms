@@ -44,7 +44,21 @@ for (const file of fs.readdirSync(cursorDir).filter((f) => f.endsWith(".mdc"))) 
 const readmePath = path.join(cursorDir, "README.md");
 if (fs.existsSync(readmePath)) {
   const readmeContent = fs.readFileSync(readmePath, "utf8");
-  const translatedReadme = readmeContent.replace(/\.mdc\b/g, ".md");
+  // Convert rule filenames (.mdc → .md) but keep prose that documents Cursor's .mdc extension.
+  const translatedReadme = readmeContent
+    .replace(/\.mdc\b/g, ".md")
+    .replace(
+      /Cross-references use `\.md` in Cursor, `\.md` elsewhere\./g,
+      "Cross-references use `.mdc` in Cursor, `.md` elsewhere."
+    )
+    .replace(
+      /\.cursor\/rules\/\*\.md\b/g,
+      ".cursor/rules/*.mdc"
+    )
+    .replace(
+      /`(\.\/)?\.cursor\/rules\/([^`]*)\.md`/g,
+      "`$1.cursor/rules/$2.mdc`"
+    );
   fs.writeFileSync(path.join(agentsDir, "README.md"), translatedReadme, "utf8");
   console.log("synced README.md");
 }

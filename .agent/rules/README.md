@@ -15,7 +15,7 @@ Project rules for the Madrasa Management System. Cursor loads `.md` files from t
 | `mms-dry.md` | DRY — single source of truth, extraction thresholds, duplication bans, `@mms/shared` exports |
 | `mms-completion-review.md` | Self-review after code edits — verify, fix bugs, then mark done |
 
-## Scoped Rules (13)
+## Scoped Rules (14)
 
 | Rule | Focus / Topic |
 |------|---------------|
@@ -32,6 +32,7 @@ Project rules for the Madrasa Management System. Cursor loads `.md` files from t
 | `mms-api-interface.md` | Vite SPA shell, routing, apiClient, providers, Fastify server API routes, and schema validation |
 | `mms-reports.md` | Analytics implementation & exports |
 | `mms-testing-observability.md` | Vitest, API tests, CI expectations, logging formats, healthchecks, ErrorBoundary, and error reporting |
+| `mms-messaging.md` | SMS/WhatsApp campaigns, `MessageComposer`, templates, and message-log soft-archive semantics |
 
 ## Skills (Workflows)
 
@@ -43,9 +44,9 @@ Project rules for the Madrasa Management System. Cursor loads `.md` files from t
 |------|-------|--------|
 | **Antigravity** | `.agent/rules/*.md` | `.agent/skills/` |
 | **Claude Code** | `.claude/rules/*.md` | `.claude/skills/` |
-| **Cursor** | `.cursor/rules/*.md` (canonical for rule bodies) | `.cursor/skills/` |
+| **Cursor** | `.cursor/rules/*.mdc` (canonical for rule bodies) | `.cursor/skills/` |
 
-**Sync policy:** rule bodies identical across all three; only frontmatter differs (Cursor: `globs` + `alwaysApply`; Antigravity: `trigger`; Claude: `paths` or always-on). Cross-references use `.md` in Cursor, `.md` elsewhere.
+**Sync policy:** rule bodies identical across all three; only frontmatter differs (Cursor: `globs` + `alwaysApply`; Antigravity: `trigger`; Claude: `paths` or always-on). Cross-references use `.mdc` in Cursor, `.md` elsewhere.
 
 After editing standards:
 
@@ -85,4 +86,4 @@ bash .agent/scripts/sync-all.sh
 
 ## Verify in Cursor
 
-**Settings → Rules** — six always-apply rules + 13 file-scoped rules when matching paths are open (**19 total**).
+**Settings → Rules** — six always-apply rules + 14 file-scoped rules when matching paths are open (**20 total**).

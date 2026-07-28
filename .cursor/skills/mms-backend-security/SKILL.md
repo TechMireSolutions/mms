@@ -1,6 +1,6 @@
 ---
 name: mms-backend-security
-description: Hardens MMS backend auth, tenant isolation, RBAC, cookies, rate limits, and auth artifacts. Use when reviewing security, fixing auth bypass, adding protected routes, or auditing Fastify middleware and session handling.
+description: Hardens MMS backend auth, tenant isolation, RBAC, cookies, rate limits, and auth artifacts. Use when reviewing security, fixing auth bypass, adding protected routes, auditing Fastify middleware, cookies, CORS, Helmet/headers, or session/OTP flows.
 ---
 
 # MMS Backend Security Workflow
@@ -96,15 +96,21 @@ cd apps/backend && pnpm test
 ## Route audit checklist (new PR)
 
 1. Is the route tenant-scoped? → `authenticateTenant`
-2. Is it a mutation? → `rbacService` or `requireAdmin`
-3. Is body validated? → Zod or JSON Schema before service layer
-4. Does it touch auth? → rate limit preserved
-5. Integration test with wrong-subdomain host returns `403`?
+2. Is it a mutation **or** sensitive read? → `rbacService` / `canReadCollection` / `requireAdmin`
+3. Is body validated? → Zod via `parseRequest` before service layer
+4. Never trust body `workspaceSubdomain` / authz `userId` — session only
+5. Does it touch auth or messaging send? → rate limit preserved
+6. Prod cookies `Secure`; prefer Helmet/secure headers when touching `app.ts`
+7. Integration test with wrong-subdomain host returns `403`?
 
 ## Rules
 
-`mms-auth-security.mdc`, `mms-auth-security.mdc`, `mms-auth-security.mdc`, `mms-api-interface.mdc`, `mms-auth-security.mdc`
+`mms-auth-security.mdc`, `mms-api-interface.mdc`, `mms-testing-observability.mdc`
 
 ## Related skills
 
-`mms-backend-api`, `mms-backend-security`, `mms-code-review`
+`mms-backend-api`, `mms-code-review`, `mms-messaging`
+
+## Done
+
+Run `app.security.test.ts` / auth integration when touching auth — `mms-completion-review.mdc`.

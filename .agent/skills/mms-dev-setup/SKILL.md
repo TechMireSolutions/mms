@@ -62,6 +62,15 @@ cd apps/frontend && pnpm lint && pnpm typecheck
 cd apps/backend && pnpm typecheck && pnpm test && pnpm lint
 ```
 
+### Troubleshooting
+
+| Symptom | Check |
+|---------|--------|
+| `/ready` → 503 | PostgreSQL up; `DATABASE_URL` |
+| Missing table / auth_artifacts | Drizzle journal entry present |
+| JWT_SECRET exit | Backend `.env` required secrets |
+| Port conflict | Stop prior `restart_servers.sh` session |
+
 ## Layout
 
 ```
@@ -72,8 +81,12 @@ packages/shared/ @mms/shared
 
 ## Rules reference
 
-`.cursor/rules/mms-ops-infrastructure.md`, `mms-core.md`, `mms-api-interface.md`
+`.cursor/rules/mms-ops-infrastructure.md`, `mms-core.md`, `mms-api-interface.md`, `mms-completion-review.md`
 
 ## Related skills
 
-`mms-backend-api`, `mms-backend-security`, `mms-data-sync`
+`mms-backend-api`, `mms-backend-security`, `mms-data-sync`, `mms-linux-compatibility`
+
+## Done
+
+Env verified + `/health` + `/ready` green. After code changes, follow `mms-completion-review.md`. Never commit `.env`.

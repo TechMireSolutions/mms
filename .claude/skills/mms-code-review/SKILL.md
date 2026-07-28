@@ -5,6 +5,17 @@ description: Reviews MMS code against project rules, skills, and migration statu
 
 # MMS Code Review
 
+Agent self-review after edits → also follow always-on `mms-completion-review.md`.
+
+## Review order
+
+1. Automated gates (`pnpm typecheck`, scoped lint/tests)
+2. Security / tenant / RBAC
+3. Data layer (Query vs legacy, bulk upsert, RLS)
+4. Module §7 gold-standard (+ messaging variants when touched)
+5. i18n / a11y
+6. Scope creep
+
 ## Automated checks
 
 ```bash
@@ -70,6 +81,11 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Setup gated by `canEditSetup`; Work shows `ErrorState` on list failure
 - [ ] Cmd/Ctrl+N create when `canWrite` and not in trash
 
+### Messaging (when touched)
+- [ ] Composer uses `MessagingRecipient` — not contacts schemas
+- [ ] Clear-logs soft-archive semantics preserved
+- [ ] Session-forced `userId` on BE; no SQL echo; upsert templates/logs
+
 ### Field persistence (new/changed fields)
 - [ ] Field on `@mms/shared` type + `DEFAULT_*` + merge helper
 - [ ] Write reaches PostgreSQL
@@ -78,23 +94,25 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 ### Auth / security
 - [ ] No secrets in diff
 - [ ] OTP uses `crypto.randomInt()` — not `Math.random()`
-- [ ] Rate limit preserved on login/onboard when touching auth
+- [ ] Rate limit preserved on login/onboard/messaging send when touching those paths
 - [ ] No in-memory auth handoff / 2FA maps — use `auth_artifacts`
-- [ ] `AuthContext` mount effect stable (`useCallback`) — no render loops
+- [ ] Never trust client tenant/userId for authz
 - [ ] `ContactConfigProvider` not nested on child pages
 
 ### Testing
 - [ ] New `@mms/shared` pure helpers have unit tests
-- [ ] Auth/RBAC/tenant changes have `inject()` tests
-- [ ] Frontend tests use happy-dom when touching apiClient/hooks
+- [ ] Auth/RBAC/tenant changes have `inject()` allow+deny tests
+- [ ] Playwright: prefer `getByRole`/`getByLabel` — no `waitForTimeout` sleeps
 
 ### Accessibility
 - [ ] Icon buttons have `aria-label` from `t()`; forms use associated labels
 - [ ] Suspense fallbacks have `role="status"` / screen-reader text
+- [ ] Honor `prefers-reduced-motion` for decorative Framer Motion when adding motion
 
 ### Performance
 - [ ] jspdf/xlsx/html2canvas dynamically imported
 - [ ] No `setInterval` / `refetchInterval` polling added
+- [ ] No unnecessary `useMemo`/`useCallback` (React Compiler-first)
 
 ### Scope
 - [ ] No drive-by refactors
@@ -102,13 +120,13 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 
 ## Severity
 
-- **Critical:** security bypass, missing `authenticateTenant`, cross-tenant data leak, data loss
+- **Critical:** security bypass, missing `authenticateTenant`, cross-tenant leak, bulk wipe PUT, data loss
 - **Major:** missing RBAC on writes, raw `fetch('/api')`, dual data paths, broken migration journal, nested `ContactConfigProvider`
 - **Minor:** style, optional DRY, residual `role ===` in untouched files
 
 ## References
 
-- Frontend: `mms-api-interface.md`, `mms-data-layer.md`, `mms-hooks.md`, `mms-ui-ux-design.md`, `mms-auth-security.md`
+- Frontend: `mms-api-interface.md`, `mms-data-layer.md`, `mms-hooks.md`, `mms-ui-ux-design.md`, `mms-auth-security.md`, `mms-messaging.md`
 - Backend: `mms-api-interface.md`, `mms-auth-security.md`, `mms-data-layer.md`
 - Debt: `mms-migration-status.md`
-- Skills: `mms-backend-api`, `mms-backend-security`, `mms-data-sync`, `mms-frontend`
+- Skills: `mms-backend-api`, `mms-backend-security`, `mms-data-sync`, `mms-frontend`, `mms-messaging`

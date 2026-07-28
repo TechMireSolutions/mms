@@ -3,34 +3,41 @@ description: Unified SMS/WhatsApp campaign composition, templates, and message h
 paths:
   - "apps/frontend/src/tenant/features/messaging/**"
   - "apps/frontend/src/components/ui/MessageComposer.tsx"
+  - "apps/frontend/src/components/ui/MessagingVariableTokensBar.tsx"
   - "apps/frontend/src/hooks/useMessaging.ts"
   - "packages/shared/src/messagingModuleManifest.ts"
+  - "packages/shared/src/messagingSchemas.ts"
+  - "apps/backend/src/routes/tenant/messaging.ts"
+  - "apps/backend/src/db/repositories/messagingRepository.ts"
 ---
 
 # MMS Messaging & Campaign Specification
 
 Governs campaign composition, templates, and sent-history for the Messaging module and cross-module `MessageComposer`.
 
----
+## 1. Boundaries
 
-## 1. Modular Boundaries & Decoupled Architecture
-- All outbound campaigns use the decoupled `MessageComposer` component with the shared `MessagingRecipient` / `toMessagingRecipient` shapes from `@mms/shared`.
-- Do not import contacts-specific schemas into messaging primitives — keep a clean recipient interface.
-- Cross-module entry: `useMessageComposerState` from feature pages (Students, Contacts, Users, etc.).
+- Outbound campaigns use `MessageComposer` + `MessagingRecipient` / `toMessagingRecipient` from `@mms/shared`.
+- Do not import contacts-specific schemas into messaging primitives.
+- Cross-module entry: `useMessageComposerState` from feature pages.
 
 ## 2. Data layer (REST + Query)
-- Templates, logs, and metrics load via TanStack Query hooks (`useMessageTemplates`, `useMessageLogs`, `useMessagingMetrics` / `useMessagingMutations`) — not raw `fetch` or expanding localStorage-first writes.
-- Manifest: `MESSAGING_MODULE_MANIFEST` (`setupSubTabs: ['templates']`, `softDelete` metadata, channel/category helpers).
-- Bulk template/log writes must upsert (`bulkSave`); do not wipe via `replaceForWorkspace` on normal save paths.
-- **Log clear**: intentional soft-archive (`deletedAt`) then replace of the active view — document in contract; not a Contacts-style trash browser.
 
-## 3. Personalization & Safe Openers
-- Personalization placeholders (e.g. `{name}`) evaluate on the client.
-- Batch WhatsApp opens must be sequential with configurable delay to avoid popup blockers.
-- SMS falls back to `openDeviceSmsComposer`.
+- Templates, logs, metrics via TanStack Query (`useMessageTemplates`, `useMessageLogs`, `useMessagingMetrics` / `useMessagingMutations`) — not raw `fetch` or localStorage-first writes.
+- Manifest: `MESSAGING_MODULE_MANIFEST` (`setupSubTabs: ['templates']`, `softDelete` metadata).
+- Bulk writes upsert (`bulkSave`); do not wipe via `replaceForWorkspace` on normal save paths.
+- **Log clear**: intentional soft-archive (`deletedAt`) of the active view — not a Contacts-style trash browser.
+- BE: `authenticateTenant` + RLS/`withTenantTransaction`; force `userId` from session; strip client `deletedAt` on POST; never echo SQL to clients.
 
-## 4. Module page parity
-- Three tiers: Work | Reports | Setup (`mms-module-architecture.md` §7).
-- `useModulePermissions(MESSAGING_MODULE_MANIFEST)` — omit forbidden CTAs; Setup read-only when `!canEditSetup`.
-- Work/Reports: `ErrorState` + retry on query failure; Cmd/Ctrl+N for new campaign when `canWrite`.
-- Copy via `t()` (en/ar/ur/fa) — no hardcoded channel/status labels.
+## 3. Personalization & openers
+
+- Placeholders evaluate on the client; allowlist known tokens (e.g. `{name}`) — reject unknown tokens.
+- Template/body content is plain text — no executable HTML.
+- Batch WhatsApp opens: sequential with configurable delay; SMS: `openDeviceSmsComposer`.
+- Do not log full message bodies at info level; keep recipient identifiers minimal.
+
+## 4. Module page parity (§7)
+
+- Work | Reports | Setup; `useModulePermissions(MESSAGING_MODULE_MANIFEST)` — omit forbidden CTAs; Setup read-only when `!canEditSetup`.
+- Work/Reports: `ErrorState` + retry; Cmd/Ctrl+N for new campaign when `canWrite`.
+- Copy via `t()` (en/ar/ur/fa).

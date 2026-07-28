@@ -25,6 +25,10 @@ Rules describe **target architecture**. Open gaps below — fix when the task co
 | Report drill-down | Contacts + Finance/Attendance/Sessions/Academic/Faculty/Hasanat chart→table | Niche panels without chart+table (QB charts-only, Contacts saved-reports) |
 | Saved reports re-run | Contacts `ContactsSavedReports` + REST; generic `SavedReports` empty | Per-module saved logic presets |
 | Background job queue | Async off-request workers; Contacts CSV export + duplicate scan; artifact download API; accounting/obligations tray exports | Dedicated job queue infra (Redis/worker process) for multi-instance deploy |
+| Secure HTTP headers / CSP | Partial / not standardized across envs | Helmet (or equiv) + SPA-safe CSP — `mms-auth-security.md` |
+| React Compiler / memo hygiene | Ad-hoc `useMemo`/`useCallback` still appear | Compiler-first; memo only when measured — `antigravity-global.md` |
+| Query-first reports | Some panels still live-collection oriented | Server aggregates + Query for REST modules — `mms-reports.md` |
+| FORCE RLS on new tables | Messaging tables FORCE RLS; older tables may vary | Composite PK + RLS + FORCE on every new tenant table — `mms-data-layer.md` |
 
 ## Recently Resolved (Do not reintroduce)
 

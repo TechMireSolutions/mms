@@ -18,13 +18,16 @@ Stack majors are not frozen — upgrade React, Vite, Fastify, Drizzle, Tailwind,
 
 ## Upgrade workflow
 
+Run only on **dedicated upgrade PRs** — not mid-feature.
+
 1. `pnpm outdated -r` at repo root
-2. Bump **all** stale workspace deps (direct + transitive risk review)
+2. Bump stale workspace deps (direct + transitive risk review)
 3. `pnpm install && pnpm typecheck && pnpm test`
 4. Per-app lint if FE/BE touched: `cd apps/frontend && pnpm lint` · `cd apps/backend && pnpm lint`
-5. Fix breaking API changes in the same change — no deferred “follow-up” pins
+5. `pnpm audit` (or OSV review) — fix/document high+ findings; do not leave known CVEs silent
+6. Fix breaking API changes in the same change — no deferred “follow-up” pins
 
-Prefer **one coherent upgrade PR** over scattered partial bumps.
+Prefer **one coherent upgrade PR** over scattered partial bumps. Extra caution for native/binary deps (Puppeteer, etc.).
 
 ## Pinning rules
 
@@ -34,6 +37,7 @@ Prefer **one coherent upgrade PR** over scattered partial bumps.
 | Workspace protocol for `@mms/shared` | Duplicate shared code to dodge a major bump |
 | Read upstream migration guides for majors | Silence type errors with `any` or `@ts-ignore` |
 | Patch/minor bumps freely within semver | Leave known CVEs unpatched |
+| Align CI/Docker Node with `engines.node` | Mismatched CI images |
 
 ## Scope
 

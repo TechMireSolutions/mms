@@ -1,35 +1,39 @@
 ---
 name: mms-reports-export
-description: Builds MMS module analytics, CustomReportBuilder, Recharts dashboards, and PDF/Excel/print exports. Use when editing reports, analytics tabs, KPIs, ReportExportBar, or dashboard widgets.
+description: Builds MMS module analytics, CustomReportBuilder, Recharts dashboards, and PDF/Excel/print exports. Use when editing Reports tabs, KPIs, ReportExportBar, drill-down, saved reports, or dashboard widgets.
 ---
 
 # MMS Reports & Export Workflow
 
+**Rules:** `mms-reports.mdc`, `mms-module-architecture.mdc`, `mms-ui-ux-design.mdc`, `mms-settings-i18n.mdc`.
+
 ## Placement
 
-Reports tab **inside** each module — no standalone `/reports` page.
+Reports tab **inside** each module — no standalone `/reports` page. Shared UI: `apps/frontend/src/components/reports/` · utils: `@/lib/reports/*`.
 
-Components: `apps/frontend/src/components/reports/`
-
-## Data
-
-Live only:
+## Data (Query-first)
 
 ```ts
-const data = useLiveCollection('finance_invoices', SEED);
-// or getCollection at render — no stale snapshots
+// ✅ REST modules — Query / server aggregates / /metrics
+const { data, isError } = useModuleReportQuery(...)
+
+// ❌ Do not use as primary for REST entities
+useLiveCollection('finance_invoices', SEED)
 ```
 
-## Add module report
+- Module category must be module-specific — never `category="academic"`.
+- Cross-module ids via batch `/resolve` — no N+1 hydrate loops.
+- Charts: `lazy` + `SafeResponsiveContainer`.
 
-1. Register in `reportMetadata.ts` if shared definition needed
-2. Embed in module page Reports tab via `ModuleReports` / custom component
-3. Module-aware filters — hide irrelevant chips
-4. Recharts for charts; glassmorphism cards
+## Add / change a report
+
+1. Register metadata in `@/lib/reports` / `reportMetadata` when shared.
+2. Embed in module Reports tab; show `ErrorState` when query-backed and `isError`.
+3. Module-aware filters only.
+4. Drill-down target: chart/summary → Work with equivalent filters (URL params when practical).
+5. Saved reports: save **logic** (filters/columns/aggregates), not snapshots.
 
 ## Export
-
-Use `ReportExportBar` pattern:
 
 | Format | Import |
 |--------|--------|
@@ -37,14 +41,18 @@ Use `ReportExportBar` pattern:
 | Excel | `await import('xlsx')` |
 | PDF | `await import('jspdf')` + autotable |
 
-## Ad-hoc builder
+Escape formula-prefix cells (`=`, `+`, `-`, `@`). Respect filters, RBAC, field visibility, soft-delete policy, `can()`.
 
-`CustomReportBuilder`: drag columns, aggregates (Sum/Avg/Count), 20-row preview.
+## Checklist
 
-## Dashboard widgets
+```
+- [ ] Query/server data for REST modules
+- [ ] No academic category on module reports
+- [ ] lazy charts + SafeResponsiveContainer
+- [ ] Export labels via t(); formula injection escaped
+- [ ] Permissions match Work boundary
+```
 
-`PinnedWidgets.tsx` — config from `reports_*` collections/objects. Shared logic split into `components/reports/pinnedWidgets/` (types, widgetDataUtils, widgetDefaults). Re-export from `PinnedWidgets.tsx` for stable imports.
+## Done
 
-## Rules
-
-`.cursor/rules/mms-reports.mdc`, `mms-ui-ux-design.mdc`
+`pnpm typecheck` · FE lint — `mms-completion-review.mdc`.

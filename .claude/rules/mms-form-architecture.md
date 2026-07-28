@@ -1,75 +1,44 @@
 ---
-description: Master specification for MMS Static Form Architecture - ESM boundaries, branded IDs, Zod validation, IEEE 754 bypass, transaction-scoped RLS, React 19 state init, S3 uploads.
+description: Static FormModal architecture — Zod validation, React 19 defaults, decimal-as-string, RLS pointer, S3 uploads
 paths:
   - "packages/shared/src/**/*.ts"
   - "apps/frontend/src/components/ui/FormPrimitives.tsx"
+  - "apps/frontend/src/components/ui/FormModal.tsx"
   - "apps/backend/src/db/schema.ts"
-  - "apps/backend/src/routes/api/db/**/*.ts"
-  - "apps/backend/src/routes/api/contacts/**/*.ts"
   - "apps/backend/src/routes/**/*.ts"
 ---
 
-# 🏛️ MMS Form Architecture: Master Static Blueprint Specification
+# MMS Form Architecture
 
-This specification governs all code, form structure, layout, UX/UI patterns, and backend save payloads across the Madrasa Management System (MMS) `pnpm` monorepo. It establishes the rule of simple static forms using standard inputs, replacing dynamic form layout engines.
+Simple static forms with design-system primitives — not dynamic layout engines.
 
----
+## 1. Structure & primitives
 
-## PILLAR I: Monorepo Foundation & Validation
+- Use `FormModal` for create/edit/builders; raw `Modal` only for confirm/preview.
+- Inputs via central primitives (`Input`, `Textarea`, `Checkbox`, `FormSelect`, `DatePicker`) + `formStyles.ts` — no ad-hoc input chrome.
+- **Tabs:** one tab per persisted table when a record spans tables; workflow-only tabs OK when the saved payload stays explicit.
+- Ban dynamic form compilers / visual schema generators on the FE.
+- Stacked pickers need descending `z-index` so overlays are not clipped.
+- Dates: `<DatePicker>` only — never raw `<input type="date">`.
 
-### Rule 1: Form Structure and Layout Strategy
-- Forms must be implemented statically using React state and standard HTML/Tailwind input primitives.
-- Standard input elements (inputs, textareas, checkboxes) must utilize the central primitives (`Input`, `Textarea`, `Checkbox`) and resolve to style constants from `formStyles.ts` to ensure consistent borders, outline rings, and focus states. Inline custom stylings on inputs are prohibited.
-- **Persistence Tab Mapping**: Tabs that represent persisted record sections must map to target database tables on a 1-to-1 basis. If a record form persists inputs for exactly one table and has only a small field set, keep it as a single form flow. If the persisted record spans multiple tables, split fields across distinct tabs, allocating exactly one tab per table.
-- **Workflow Tabs**: Frontend-only builder/workflow forms may use task-oriented tabs even when saving to one logical record, provided tabs do not imply separate database tables. Examples include details, saved drafts, sections, question picker, and preview. Keep the saved payload explicit and normalized at the boundary.
-- Dynamic form compilation engines, visual builders, and dynamic schema generation configurations are prohibited on the frontend.
-- Structure must use a unified standard `<FormModal>` container to ensure visual and responsive consistency.
-- **Stacking Context & Dropdown Z-Indices**: When vertical sections, fieldsets, or cards containing pickers/dropdowns (like `ContactPicker`) are stacked in a single scrolling layout, they must be wrapped in container elements with descending z-indices (e.g. `z-30`, `z-20`, `z-10`) or dynamically styled based on list indices (`style={{ zIndex: 100 - idx }}`). This prevents absolute/floating picker list overlays from hiding underneath subsequent sibling cards or fields.
-- **DRY Date Pickers**: All dates requiring user selection or calendar input fields must use the central `<DatePicker>` component (`@/components/ui/DatePicker`) instead of native browser `<input type="date">` inputs. The date picker must render its calendar trigger icon inside the box on the left-hand side to maintain alignment with other icon-prepended inputs and settings-driven date formatting consistency.
+## 2. State & React 19 defaults
 
-### Rule 2: React Hook Form & Component State Initialization
-- To prevent React 19 uncontrolled-to-controlled component warning crashes, all form input fields must initialize with standard defaults:
-  - Strings (`text`, `email`, `url`, `currency` selectors) **MUST initialize to `""`**.
-  - Numbers, Dates, and Times **MUST initialize to `null` or appropriate defaults**.
-  - Multi-select choices and lists **MUST initialize to `[]`**.
-- Keep form state simple, clean, and flat to simplify payload validation mapping.
-- **Form Fields Accessibility**: Every input field, select box, textarea, and picker control must declare explicit `name` and `id` properties. Primitives must fallback automatically to `React.useId()` if not passed down.
-- **Unified Phone Fields**: Phone inputs must use a single, unified text input field (marked with `type="tel"`) instead of separate country code (`cc`) and number fields to support standard browser autofill and copy-paste. Apply a blur handler to parse and split it into country code and local number values for database storage.
-- **Zero-Click List Pre-population**: Forms with editable list sections (e.g. phones, emails, addresses, socials, emergency contacts) must pre-populate exactly one empty default item when the list is empty to save the user an initial "Add" click. Completely blank/unedited list rows must be stripped out by a sanitization/clean helper prior to validation and database saving.
+- Prefer simple controlled state (or RHF + zodResolver for complex multi-step forms). Same Zod schema as BE DTOs from `@mms/shared`.
+- Initialize fields to avoid uncontrolled→controlled warnings: strings `""`, numbers/dates `null`, lists `[]`.
+- Every control needs `name` + `id` (fallback `useId()`).
+- Phones: single `type="tel"` input; parse E.164 on blur via `parsePhoneNumber`.
+- List sections (phones/emails/…): pre-populate one empty row; strip blank rows before save.
 
-### Rule 3: Decimal Precision & Currency Math
-- Currency and fee values must be treated as strings on input and validated without floating-point arithmetic to prevent IEEE 754 precision inaccuracies.
-- Validate decimal boundaries by verifying decimals string length:
-  ```typescript
-  const decimals = val.toString().split('.')[1] ?? '';
-  if (decimals.length > precision) throw new Error('Precision exceeded');
-  ```
+## 3. Decimal / currency
 
----
+Treat money as **strings** through input + validation — no IEEE 754 float math. Validate decimal length against precision.
 
-## PILLAR II: Navigation & Directional Alignment
+## 4. RTL & errors
 
-### Rule 4: Tab Layouts & RTL Compatibility
-- Modal layouts requiring section segmentation must use `Tabs` within the sidebar or body triggers.
-- For RTL language support (Arabic/Urdu), sidebars and tabs must dock to the starting edge. Use logical Tailwind CSS variables (`start-0`, `border-e`, `ms-auto`) to ensure elements automatically adapt their position when the document direction changes.
+- Logical Tailwind (`start-0`, `border-e`, `ms-auto`) for RTL.
+- Inline validation; multi-tab forms auto-focus the first invalid tab.
 
-### Rule 5: User Error Routing
-- Forms must handle local errors explicitly, displaying readable inline validation indicators.
-- In multi-tab forms, validation failures must automatically focus the first tab containing invalid inputs, ensuring errors are immediately visible.
+## 5. Security pointers
 
----
-
-## PILLAR III: Security & Tenant Isolation
-
-### Rule 6: Row-Level Security (RLS) Transactions
-- Every database transaction must enforce tenant isolation using the transaction-scoped `app.current_tenant` parameter:
-  ```typescript
-  await db.transaction(async (tx) => {
-    await tx.execute(sql`SELECT set_config('app.current_tenant', ${tenantId}, true)`);
-    // execute operations...
-  });
-  ```
-
-### Rule 7: Zero-Trust File Uploads
-- File uploads are uploaded directly to S3 via presigned URLs.
-- The backend must perform an AWS SDK `HEAD Object` request to verify the file's `Content-Length` and `Content-Type` before persisting any metadata, maintaining zero-trust safety.
+- Tenant writes: transaction-scoped RLS — `mms-data-layer.md` (do not duplicate SET LOCAL recipes here).
+- S3 uploads: presigned PUT + backend `HEAD` for `Content-Length` / `Content-Type` before persisting metadata.

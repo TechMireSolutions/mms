@@ -82,9 +82,10 @@ REST resources (pilots): `GET/POST/PUT/DELETE /api/students`, `/api/contacts`.
 ## Add new collection (modern path)
 
 1. Backend REST route + Zod (`mms-backend-api` skill)
-2. Query hooks on frontend (`useQuery` + `useMutation`, export `QUERY_KEY`)
-3. Optional hybrid: Use `useCollectionSync` to manage server querying, local caching, and offline synchronization in a unified manner.
-4. Stop using `/api/db/collections/:name` for that entity
+2. Query hooks (`useQuery` + `useMutation`, export `QUERY_KEY`, pass `signal`)
+3. Soft-delete: default exclude deleted; trash uses `includeDeleted`
+4. **Banned for new modules:** hybrid Query→localStorage mirroring / new `useLiveCollection`
+5. Stop using `/api/db/collections/:name` for that entity
 
 ## Concurrency
 
@@ -92,11 +93,11 @@ Full-array read-modify-write — merge concurrent edits to same collection.
 
 ## Student / contact hydration
 
-`db.ts` hydrates students from linked contacts on read — preserve when editing links. Contact REST persists via `dbSyncService` on backend.
+`db.ts` hydrates students from linked contacts on read — preserve when editing links. Contact REST persists via repositories on backend.
 
 ## Value formatting intercepts
-- **Title Case Formatting**: All save updates, synchronizations, and database repository write actions must systematically format incoming text fields using `applyTitleCaseRecursive` (imported from `@mms/shared`).
-- **Target Boundaries**: Both frontend database sync updates (`db.ts`) and backend REST repository operations (e.g. `platformUserRepository`, `contactRepository`, `tenantUserRepository`) must enforce this intercept to maintain clean, unified text representation.
+- **Title Case**: `applyTitleCaseRecursive` on save paths (FE sync + BE repos).
+- **E.164**: `parsePhoneNumber` on phone save boundaries.
 
 ## Branding / global settings
 
@@ -107,8 +108,12 @@ Full-array read-modify-write — merge concurrent edits to same collection.
 
 ## Rules
 
-`mms-data-layer.mdc`, `mms-data-layer.mdc`, `mms-api-interface.mdc`
+`mms-data-layer.mdc`, `mms-api-interface.mdc`
 
 ## Related skills
 
-`mms-backend-api`, `mms-frontend`, `mms-form-architecture`
+`mms-backend-api`, `mms-frontend`, `mms-form-architecture`, `mms-messaging`
+
+## Done
+
+`mms-completion-review.mdc` — typecheck + scoped lint/tests.

@@ -33,6 +33,8 @@ Every standard module page (e.g., `Contacts.tsx`, `Students.tsx`) must instantia
 
 ## 3. Work Directory & Detail Drawer
 - **Search & Filter**: Search and filter operations must only target fields defined as searchable/filterable in the manifest.
+- **Pagination**: Work directories use server page/filter APIs — do not load full collections client-side for REST modules.
+- **Metrics**: Command-centre KPIs come from server `/metrics` (or manifest-defined endpoints), not client reduce of full lists.
 - **Detail Drawer**: Selecting an entity row opens an in-place detail drawer (instead of page navigation) respecting the module's tab/field order, read/write permissions, and custom fields.
 - **Bulk Actions**: Bulk operation bars slide in only when records are selected. Enforce backend permission checks, calculate partial failures, and audit all bulk updates/deletions.
 
@@ -49,7 +51,7 @@ Every standard module page (e.g., `Contacts.tsx`, `Students.tsx`) must instantia
 Operations that exceed direct interaction limits or process massive records must run as background jobs:
 - **Eligible Actions**: Large CSV data exports/imports, bulk messaging queues, database deduplication scans, and long report generations.
 - **User UX**: Staged tasks must update in the global `BackgroundJobsTray`. Show status (`running | completed | failed`), progress percentage, error counts, and download links.
-- **Backend Isolation**: Run background tasks in isolated workers. Job executions must run in `apps/backend/src/worker.ts` and `apps/backend/src/jobRunnerProcess.ts`. Enforce RBAC security checks at queue and execute times.
+- **Backend Isolation**: Run background tasks in isolated workers (`worker.ts` / `jobRunnerProcess.ts`). Enforce RBAC at enqueue **and** execute. Bind jobs to tenant + user; use an idempotency key when retries are expected.
 
 ---
 

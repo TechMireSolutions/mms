@@ -9,17 +9,18 @@ description: Creates or modifies MMS module pages per mms-module-architecture.md
 
 ## Module Architecture Section Map
 
-| Section | Topic | MMS rule / skill |
-|---|--------|------------------|
-| 1 | Global foundation (manifest, RBAC, audit, offline, soft delete, integrity) | `mms-module-architecture.mdc`, `mms-auth-security.mdc` |
-| 2 | Command centre (metrics, dedup, export, create) | `mms-ui-ux-design.mdc` PageHeader, `mms-module-architecture.mdc` |
-| 3 | Work directory | `mms-module-architecture.mdc`, `mms-ui-ux-design.mdc` |
-| 4 | Reports analytics | `mms-reports.mdc`, skill `mms-reports-export` |
-| 5 | Setup tab | `mms-module-architecture.mdc`, skill **`mms-module-setup`** |
-| 6 | Fields/tabs | `mms-fields.mdc`, skill `mms-fields-registry` |
-| 7 | Preferences | `mms-settings-i18n.mdc` |
-| 6–7 | Soft-delete + **gold-standard parity** | `mms-module-architecture.mdc` §6–§7 |
-| 8-14 | Jobs, errors, perf, a11y, security | `mms-module-architecture.mdc` |
+| Section | Topic | Skill / rule |
+|---------|--------|--------------|
+| §1 | Manifests | `mms-module-architecture.mdc` |
+| §2 | Three-tier shell | `mms-ui-ux-design.mdc`, this skill |
+| §3 | Work directory | skill **`mms-module-work`** |
+| §4 | Setup / fields | skill **`mms-module-setup`**, `mms-fields.mdc` |
+| §5 | Background jobs | skill **`mms-background-jobs`** |
+| §6 | Soft-delete / RBAC | `mms-auth-security.mdc` |
+| §7 | Gold-standard parity | checklist below |
+| Reports | Analytics / export | skill **`mms-reports-export`** |
+
+Modules live under `apps/frontend/src/tenant/features/{module}/` (not legacy `pages/` only).
 
 ## Required structure
 
@@ -185,4 +186,8 @@ Each tier is **module-scoped only** (`mms-module-architecture.mdc`):
 
 ## Related skills
 
-`mms-module-work` (reference implementation), `mms-module-setup`, `mms-fields-registry`, `mms-reports-export`, `mms-data-sync`
+`mms-module-work`, `mms-module-setup`, `mms-fields-registry`, `mms-reports-export`, `mms-messaging`, `mms-background-jobs`
+
+## Done
+
+`mms-completion-review.mdc` — typecheck + FE lint; new modules need §7 checklist green.

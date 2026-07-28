@@ -11,7 +11,7 @@ Authoritative standards for backend databases, migrations, caching architectures
 ## 1. Database & ORM Stack (PostgreSQL + Drizzle)
 - **Database Engine**: PostgreSQL is the unified relational database. Ensure connection secrets are configured via `DATABASE_URL`.
 - **Drizzle ORM**: Defines schemas in `apps/backend/src/db/schema.ts`. Circular imports are avoided via `dbClient.ts` dependencies.
-- **Access Pattern**: Controllers must not import direct database connection drivers or raw `pg` client pools. Route operations through `dbSyncService` or REST repositories.
+- **Access Pattern**: Controllers must not import raw `pg` drivers. Prefer **REST repositories**; use `dbSyncService` only for settings/legacy sync paths.
 
 ### Transaction-Scoped Tenant RLS (Pool Poisoning Prevention)
 - Enforce strict transaction boundaries on pooled connections. Global PG configurations are prohibited. Context settings must use `LOCAL` parameters (destroyed on commit/rollback):
@@ -23,6 +23,10 @@ Authoritative standards for backend databases, migrations, caching architectures
   });
   ```
 
+### New tenant tables
+- Composite PK `(workspace_subdomain, id)` (or equivalent tenant-scoped key).
+- RLS policy + **`FORCE ROW LEVEL SECURITY`** on the table (Messaging migrations pattern).
+- Writes go through `withTenantTransaction` / SET LOCAL — never rely on app filters alone.
 ### Data Migrations & Schema DDL
 - **DDL Changes**: Generate Drizzle migrations and ensure journal tracking (`meta/_journal.json`) is committed in the same change.
 - **TypeScript Transforms**: Implement idempotent data updates in `migrations/00N_*.ts` to execute on server startup.
@@ -60,14 +64,15 @@ Settings singletons (`branding`, `global_settings`) must survive authentication 
 - Set default client options: `refetchOnWindowFocus: false`, `retry: 1`. List responses use a default `staleTime: 30_000`.
 
 ### Fetching Standards
-- **Tuple Keys**: Export query keys as named tuple constants from the hook file.
+- **Tuple Keys**: Export query keys as named tuple constants from the hook file (prefer shared key factories over ad-hoc strings).
 - **Auth Gate**: Gate tenant-specific queries using `enabled: isAuthenticated` from the authentication context.
-- **Mutations**: Hook success handlers must invalidate list and count query keys simultaneously.
+- **Cancellation**: Pass Query `signal` into `apiFetch` / `queryFn` so in-flight work aborts on unmount/key change.
+- **Mutations**: Hook success handlers must invalidate list and count query keys narrowly — avoid blanket `invalidateQueries()`.
 - **Save Confirmation**: UI saved/success states must wait for `mutateAsync` or an explicit mutation success callback. Do not mark a REST-backed draft as saved immediately after calling fire-and-forget `mutate()`.
 - **List load failures**: Module Work (and Reports when query-backed) surfaces must show `ErrorState` with retry when the primary list query `isError` — do not render an empty directory as success (`mms-module-architecture.md` §7).
+- **Cross-module hydrate**: Use batch `/resolve` endpoints — ban N+1 per-id fetches in loops.
 - **Errors**: Propagate mutation/toast errors through `notify.error()`. Expose loading screens via `isPending` or `isFetching`.
 
 ### Hybrid Trajectory (Deprecated)
 - **Banned for New Modules**: The hybrid pattern (saving query responses to local storage to satisfy legacy widgets) is a transition mechanism only. New feature modules must read directly from TanStack Query hooks without cache mirroring.
-- **Constraint**: Never use `useLiveCollection` for an entity that is already fetched via Query on the same viewport.
-
+- **Constraint**: Never use `useLiveCollection` for an entity that is already fetched via Query on the same viewport. No new `useLiveCollection` for REST-migrated entities.

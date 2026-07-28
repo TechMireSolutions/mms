@@ -1,51 +1,54 @@
 ---
 name: mms-shared-package
-description: Extends @mms/shared with types, settings defaults, contact schemas, and pure utilities shared by frontend and backend. Use when adding shared types, formatDate, formatMoney, parsePhoneNumber, settings interfaces, or moving duplicated logic to packages/shared.
+description: Extends @mms/shared with types, settings defaults, module manifests, translation keys, messaging schemas, and pure utilities shared by frontend and backend. Use when adding shared types, formatDate, formatMoney, parsePhoneNumber, manifests, or moving duplicated logic to packages/shared.
 ---
 
 # @mms/shared Package Workflow
 
-## Structure
+## Structure (typical)
 
 ```
 packages/shared/src/
-  index.ts              # Re-exports
-  contactTypes.ts       # Contact, FieldDefinition, TAB_REGISTRY, …
-  settingsTypes.ts      # GlobalSettings, SYSTEM_MODULES, SYSTEM_MODULE_NAV, DEFAULT_*, image optimize
-  brandingTheme.ts      # CSS token derivation, light/dark surfaces, WCAG AA contrast
-  logoBrandColors.ts    # Accessible primary/secondary from logo palette
-  logoPaletteSampling.ts
-  utils.ts              # formatDate, formatMoney, parsePhoneNumber, toTitleCase, applyTitleCaseRecursive, …
+  index.ts                 # Named barrel only — no subpath imports in apps
+  *Types.ts / *Schemas.ts  # Domain models + Zod
+  *ModuleManifest.ts       # Module contracts / permissions metadata
+  appTranslations*.ts      # en (SSOT keys) + ar/ur/fa
+  messagingSchemas.ts
+  brandingTheme.ts / logoBrandColors.ts
+  utils.ts                 # formatDate, formatMoney, parsePhoneNumber, …
 ```
-
-Unit tests: `brandingTheme.test.ts`, `logoBrandColors.test.ts` — add tests for new pure helpers.
 
 ## Add export
 
-1. Add to appropriate file (or new file + export from `index.ts`)
+1. Add to the right module (or new file) + export from `index.ts`
 2. JSDoc on **public** exports only
-3. `pnpm typecheck` from repo root (turbo builds shared first)
-4. Import in apps: `import { X } from '@mms/shared'`
+3. Unit test for non-trivial pure helpers
+4. `pnpm typecheck` from repo root
+5. Import: `import { X } from '@mms/shared'`
+
+## Do / Don't
+
+| Do | Don't |
+|----|-------|
+| Named barrel exports | Subpath imports |
+| Shared Zod DTOs used by FE + BE | Fork the same shape in both apps |
+| `formatDate` / `formatMoney` / `parsePhoneNumber` | Ad-hoc `toLocale*` / currency prefixes |
+| Pure functions only | React, Fastify, DB, `localStorage`, DOM |
 
 ## Move logic from app
 
-If used in 2+ modules OR frontend + backend:
+If used in 2+ modules OR FE+BE → extract pure helper → replace duplicates → delete shims.
 
-1. Extract pure function (no React, no Fastify, no localStorage)
-2. Add to `utils.ts` or new typed module
-3. Replace duplicates in apps
-4. Remove legacy shim if `contactFields.ts` only re-exported
+## Checklist
 
-## Do not add to shared
+```
+- [ ] Named export from package root
+- [ ] JSDoc on public API
+- [ ] Unit test for non-trivial pure logic
+- [ ] No React/Fastify/browser APIs
+- [ ] pnpm typecheck
+```
 
-- React components (stay in `apps/frontend/src/components/ui/`)
-- DB access, route handlers
-- Browser-only APIs without abstraction
+## Done
 
-## Build order
-
-`@mms/shared` must build before apps (`dependsOn: ["^build"]` in turbo.json).
-
-## Rules
-
-`.cursor/rules/mms-dry.mdc`
+`mms-completion-review.mdc` · Rules: `mms-dry.mdc`, `mms-settings-i18n.mdc`.

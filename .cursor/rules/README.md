@@ -15,7 +15,7 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | `mms-dry.mdc` | DRY — single source of truth, extraction thresholds, duplication bans, `@mms/shared` exports |
 | `mms-completion-review.mdc` | Self-review after code edits — verify, fix bugs, then mark done |
 
-## Scoped Rules (13)
+## Scoped Rules (14)
 
 | Rule | Focus / Topic |
 |------|---------------|
@@ -32,6 +32,7 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | `mms-api-interface.mdc` | Vite SPA shell, routing, apiClient, providers, Fastify server API routes, and schema validation |
 | `mms-reports.mdc` | Analytics implementation & exports |
 | `mms-testing-observability.mdc` | Vitest, API tests, CI expectations, logging formats, healthchecks, ErrorBoundary, and error reporting |
+| `mms-messaging.mdc` | SMS/WhatsApp campaigns, `MessageComposer`, templates, and message-log soft-archive semantics |
 
 ## Skills (Workflows)
 
@@ -85,4 +86,4 @@ bash .agent/scripts/sync-all.sh
 
 ## Verify in Cursor
 
-**Settings → Rules** — six always-apply rules + 13 file-scoped rules when matching paths are open (**19 total**).
+**Settings → Rules** — six always-apply rules + 14 file-scoped rules when matching paths are open (**20 total**).

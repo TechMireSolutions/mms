@@ -1,6 +1,6 @@
 ---
 name: mms-background-jobs
-description: Implements or reviews MMS background jobs and queued processing from mms-module-architecture.md §5: large exports, imports, bulk operations, dedup scans, progress UI, download artifacts, tenant/user scoping, RBAC, and audit.
+description: Implements or reviews MMS background jobs and queued processing — large exports, imports, bulk ops, dedup scans, progress UI, artifacts. Use when adding or changing background processing, export downloads, job tray UX, or queued sync recovery.
 ---
 
 # MMS Background Jobs Workflow
@@ -24,7 +24,7 @@ Use this skill when adding or changing background processing, export/download ar
 1. Decide whether the work is inline or queued. Queue it when it is large, slow, retryable, or needs progress.
 2. Add an authenticated tenant route to enqueue the job. Check RBAC before creating the job.
 3. Register a runner with a stable `{moduleId}:{kind}` key.
-4. Run the job in tenant context and re-apply permission/visibility/soft-delete rules while generating results.
+4. Run the job in tenant context and re-apply permission/visibility/soft-delete rules while generating results. Bind tenant + user; prefer an idempotency key when retries are likely.
 5. Store job state and artifacts scoped by tenant and user.
 6. Update progress, complete with a clear label, or fail with an actionable reason.
 7. Surface status in `BackgroundJobsTray` and provide download/result links only for owned artifacts.

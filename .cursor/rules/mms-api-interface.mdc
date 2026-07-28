@@ -57,3 +57,8 @@ Workspace bulk write endpoints (`PUT` that accept an array / `{ items }` payload
 - **Allowed**: Insert new ids; update existing ids; leave rows absent from the payload untouched.
 - **Forbidden on API bulk write paths**: `replaceForWorkspace` (or any wipe that deletes rows missing from the client payload). Keep replace helpers only for migrations, intentional admin clears, or documented one-shot archives (e.g. Messaging log clear after soft-archiving).
 - Frontend mutations must use `mutateAsync` and await success before closing forms or showing "saved" (`mms-data-layer.mdc`, `mms-module-architecture.mdc` §7).
+
+## 6. Pagination & idempotency
+- Work/list endpoints: require `limit` with a server max cap, stable sort, never unbounded directory dumps.
+- POSTs that enqueue jobs or send campaigns should accept an idempotency key (header or body) when retries are likely.
+- Production error `message` fields must stay non-sensitive; keep verbose debug messages for development only.

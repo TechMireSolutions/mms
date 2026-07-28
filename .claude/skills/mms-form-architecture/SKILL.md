@@ -1,13 +1,13 @@
 ---
 name: mms-form-architecture
-description: Implements and verifies features within the MMS Dynamic Form Architecture — ESM boundaries, branded IDs, dynamic validation, decimal precision safeguards, transaction RLS, JSONB deep merge, React 19 uncontrolled inputs, and Zero-Trust S3 uploads.
+description: Implements static FormModal forms with shared Zod DTOs, React 19 defaults, decimal-as-string money, tenant RLS saves, and zero-trust S3 uploads. Use when building or auditing create/edit forms, FormModal tabs, DatePicker/phone fields, or upload flows.
 ---
 
-# MMS Dynamic Form Architecture Skill
+# MMS Form Architecture Skill
 
-This skill guides the implementation, extension, and auditing of dynamic form blueprints, custom fields, data validation, and secure S3 file ingestion in the MMS monorepo.
+Guides static FormModal forms, shared Zod DTOs, React 19 defaults, and secure uploads.
 
-**Reference Specification:** [`dcform.md`](../../dcform.md) · **Rule:** `mms-form-architecture.md`
+**Rule:** `mms-form-architecture.md` (static forms — not dynamic layout engines).
 
 ---
 

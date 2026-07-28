@@ -1,27 +1,33 @@
 ---
-description: Field/tab registry, Configuration/Fields, custom field provisioning target
+description: Field/tab registry, system vs custom fields, Setup Fields wiring
 globs: apps/frontend/src/lib/contactFieldsStore.ts,apps/frontend/src/components/ui/CustomFieldsBuilder.tsx,apps/frontend/src/components/ui/DraggableFieldList.tsx,apps/frontend/src/components/**/form/**,apps/frontend/src/components/**/settings/**,packages/shared/src/contactTypes.ts,packages/shared/src/contactFieldDependencies.ts
 alwaysApply: false
 ---
 
-# 🏛️ MMS Fields & Registry Specification
+# MMS Fields & Registry Specification
 
-This specification governs all column layouts, field validation schema rules, and configuration defaults across the monorepo. It aligns field management with the simple, static form architecture.
+Governs column layouts, field schemas, and Setup Fields configuration across the monorepo.
 
----
+## 1. System vs custom fields
 
-## 1. Column Layouts & Field Registry
-- Column configurations and list directories should be config-driven, allowing column visibility customizations to persist securely.
-- Fields are defined directly in code to maintain type safety and ease of maintenance. Dynamic visual field-provisioning or custom dynamic field creation is deprecated.
+| Kind | Where | Notes |
+|------|-------|--------|
+| **System fields** | Typed in `@mms/shared` + Drizzle columns | Preferred for core domain data |
+| **Custom fields** | Tenant `custom_data` JSONB + field config registries | Constrained via `CustomFieldsBuilder` — not free-form layout engines |
 
-## 2. Field Persistence & Database Gateway
-- Any new or modified field must be systematically wired from `@mms/shared` through Drizzle ORM, Fastify route schemas, and React hooks.
-- **Checklist for New/Changed Fields:**
-  - **Shared Layer**: Add type property to `@mms/shared` types/schemas.
-  - **Drizzle Schema**: Map property to a column inside the database schema (`apps/backend/src/db/schema.ts`).
-  - **REST API Routes**: Update Zod validation schemas on backend routes to process and sanitize the field.
-  - **React Form Component**: Bind input value directly to the state draft and register proper handlers.
+- Free-form dynamic form compilers / visual schema generators are **banned**.
+- Custom **tabs** remain JSON-document store until table+CRUD ships (`mms-migration-status.mdc`).
+- Column visibility prefs: server-side user prefs — not per-component localStorage SSOT.
+
+## 2. New / changed field checklist
+
+1. **Shared** — type + Zod in `@mms/shared`
+2. **Drizzle** — column or `custom_data` key + migration when needed
+3. **REST** — `parseRequest` Zod on BE routes
+4. **UI** — bind via registry / form draft; `labelKey` only (no hardcoded labels)
+5. **Removal** — call `get*FieldRemovalIssues()` before delete (`mms-module-architecture.mdc` §4)
 
 ## 3. Localization
-- Fields must prefer translation-key bindings (e.g. `labelKey: AppTranslationKey`) resolved at render using `t(labelKey)`.
-- Fallbacks are allowed, but hardcoded strings in form components must be avoided.
+
+- Prefer `labelKey: AppTranslationKey` resolved with `t(labelKey)`.
+- **Ban** English string fallbacks in form components (`t(key) || 'Label'`).

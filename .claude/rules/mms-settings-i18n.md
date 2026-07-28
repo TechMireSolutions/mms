@@ -51,15 +51,17 @@ MMS supports four languages configured in `languageUtils.ts` (`APP_LANGUAGES`):
 
 ### Best Practices & Standards
 
-- **No Hardcoded Strings**: All user-facing UI copy, labels, placeholders, titles, and alert messages must resolve through the translation hook: `t('key')`. Hardcoded UI strings are forbidden.
-- **Registry Key Bindings**: Settings, custom fields, and tables must use translation key references (e.g., `labelKey: AppTranslationKey`) and translate them at the render boundary using `t(labelKey)`.
-- **Strict Typesafe Interpolation**: All translation keys are compile-time checked. Interpolated parameters in translation values (e.g., `{count}`) must be automatically parsed using template literal types (`ExtractPlaceholders` / `TranslationArgs<K>`) to enforce correct variable passing.
-- **Cascading Translation Fallbacks**: Missing translations must fail gracefully. Systems resolve translations using a structured cascade: Farsi (`fa`) falls back to Arabic (`ar`), and all languages fall back to the English (`en`) map, preventing unrendered keys or blank fields.
-- **Dynamic Bundle Splitting & Lazy Loading**: To prevent bundle bloat, all non-English language packs must be dynamically loaded (`import()`) in a React `useEffect` inside `TranslationProvider` when requested. Loaded language packs are cached in-memory inside the client translation registry.
-- **Logical CSS Properties & RTL Styling**: RTL layouts (`ar`, `ur`, `fa`) must never use hardcoded directional positioning (e.g., `left`, `right`, `ml-*`, `pl-*`). Use CSS logical properties (Tailwind `text-start`, `text-end`, `ms-*`, `me-*`, `ps-*`, `pe-*`, `border-s-*`, `border-e-*`, and `rtl:*` modifiers) to ensure zero-code layout mirroring.
-- **Reactive Layout Direction Hook**: Components and UI elements must consume layout direction reactively via `useTranslation()` (`dir: 'ltr' | 'rtl'`, `isRtl: boolean`, `isLoading: boolean`). Avoid reading the DOM dir attributes directly. Use these properties to flip icons, set relative positioning, or align charts dynamically.
-- **Locale-Specific Typography & Font Stacking**: Apply language-specific typography stacks on the document root (`html`) when switching languages (`applyDocumentLanguage`). Proper fonts (e.g., Noto Nastaliq Urdu for `ur`, Vazirmatn for `fa`, Noto Sans Arabic for `ar`) must be loaded and applied via CSS variables (`--font-sans`, `--font-display`) to maintain readability and eliminate layout shifts (CLS).
-- **Non-Destructive Live Settings Previews**: The system must support immediate in-memory locale/theme switching previews (using `useSettingsDraft` and `applyAppTheme`) in settings panels before persisting the configuration to PostgreSQL or local storage.
-- **Settings-Aware Native `Intl` Formatting**: Date, time, and currency formatters must be localized using native browser `Intl` APIs (`Intl.DateTimeFormat`, `Intl.NumberFormat`) tied to the active locale tag (e.g., `ur-PK`, `fa-IR`, `ar-SA`, `en-GB`) to dynamically adapt formats without custom string manipulations.
-- **Error Codes Mapping**: Backend APIs return stable error identifier strings (`type: 'forbidden'`), which the frontend maps dynamically to localized translations via `t('errors.{type}')`.
+- **No Hardcoded Strings**: All user-facing UI copy must resolve through `t('key')`. Hardcoded UI strings are forbidden.
+- **Ban English fallbacks**: Never `t(key) || 'English label'` — keys must exist in `appTranslationsEn.ts` (type source), then ar/ur; fa as override pack.
+- **New keys checklist**: Add to `appTranslationsEn.ts` first → ar → ur → fa overrides as needed.
+- **Registry Key Bindings**: Settings, custom fields, and tables use `labelKey: AppTranslationKey` and translate at render with `t(labelKey)`.
+- **Strict Typesafe Interpolation**: Interpolated parameters (e.g. `{count}`) must match `ExtractPlaceholders` / `TranslationArgs<K>`. Prefer `Intl` plural rules for count-dependent copy.
+- **Cascading Translation Fallbacks**: `fa` → `ar` → `en` — never blank keys.
+- **Dynamic Bundle Splitting**: Non-English packs load via dynamic `import()` in `TranslationProvider`; cache in-memory.
+- **Logical CSS Properties & RTL**: Never hardcode `left`/`right`/`ml-*`/`pl-*` — use logical Tailwind (`text-start`, `ms-*`, `ps-*`, `border-s-*`, `rtl:*`).
+- **Reactive Layout Direction**: Consume `dir` / `isRtl` from `useTranslation()` — do not read DOM `dir` directly.
+- **Locale Typography**: Apply language font stacks via `applyDocumentLanguage` / CSS variables to avoid CLS.
+- **Non-Destructive Live Previews**: In-memory locale/theme previews via drafts before Save.
+- **Settings-Aware `Intl` Formatting**: Dates/money via settings-aware `formatDate` / `formatMoney` (+ `Intl`), not ad-hoc string math.
+- **Error Codes Mapping**: Map API `type` to `t('errors.{type}')`.
 

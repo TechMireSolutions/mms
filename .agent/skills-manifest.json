@@ -173,6 +173,19 @@
       ]
     },
     {
+      "name": "mms-messaging",
+      "path": "skills/mms-messaging",
+      "keywords": [
+        "messaging",
+        "sms",
+        "whatsapp",
+        "campaign",
+        "template",
+        "message composer",
+        "message logs"
+      ]
+    },
+    {
       "name": "mms-migration-fixes",
       "path": "skills/mms-migration-fixes",
       "keywords": [

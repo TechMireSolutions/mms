@@ -159,13 +159,19 @@ await app.inject({
 });
 ```
 
+Tenant writes must use `withTenantTransaction` / SET LOCAL RLS (`mms-data-layer.md`). New tables: composite tenant PK + FORCE RLS. Bulk PUT upsert only — never `replaceForWorkspace` wipe. Messaging REST: `routes/tenant/messaging.ts`.
+
 ## Rules
 
-`.cursor/rules/mms-api-interface.md`, `mms-data-layer.md`, `mms-auth-security.md`, `mms-auth-security.md`, `mms-testing-observability.md`
+`mms-api-interface.md`, `mms-data-layer.md`, `mms-auth-security.md`, `mms-testing-observability.md`, `mms-form-architecture.md`
 
 ## Related skills
 
 - `mms-backend-security` — tenant isolation, RBAC, cookies, rate limits
-- `mms-backend-security` — threat model, tenant isolation audit
-- `mms-data-sync` — `/api/db` contract
-- `mms-shared-package` — types used in validation
+- `mms-data-sync` — `/api/db` contract (legacy)
+- `mms-shared-package` — Zod DTOs
+- `mms-messaging` — messaging routes / soft-archive clear
+
+## Done
+
+`mms-completion-review.md` — typecheck + backend lint/tests; authz changes need allow+deny `inject()`.

@@ -18,9 +18,14 @@ Governs testing patterns (unit, API integration, E2E), system diagnostics, loggi
 ### When to Write Tests
 1. **Shared Package**: All new non-trivial pure function exports in `@mms/shared` must include unit tests.
 2. **Regression Fixes**: Bug fixes in core validations or data merge logic require a regression unit test.
-3. **Security Constraints**: New RBAC permissions or auth route rules require integration tests proving allow/deny.
+3. **Security Constraints**: New RBAC permissions or auth route rules require integration tests proving allow/deny (`inject()` with correct + wrong tenant).
 
 *Banned*: Test runs must not make live calls to external providers (e.g. WhatsApp / Puppeteer) or commit secrets.
+
+### E2E / Playwright
+- Prefer `getByRole` / `getByLabel` — avoid brittle CSS selectors.
+- Ban fixed `waitForTimeout` sleeps; wait on UI/network assertions instead.
+- Backend integration tests that touch tenant tables must set RLS context the same way as production (`withTenantTransaction` / SET LOCAL).
 
 ---
 
@@ -43,6 +48,7 @@ APIs must return a structured JSON response on failures:
 - **Fastify Logger**: Configurations reside under the `LOG_LEVEL` environment variable.
 - **Failure Logging**: Record endpoint errors with context on the backend `onResponse` hook for `4xx`/`5xx` responses.
 - **Secrets Protection**: NEVER log PII fields, collection payloads, user passwords, refresh tokens, JWTs, or OTP verification codes.
+- **Sentry**: Scrub PII from client reports; set tenant tag when available; do not double-report handled `notify.error` paths as unhandled exceptions.
 
 ---
 

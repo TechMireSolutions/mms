@@ -1,6 +1,6 @@
 ---
 name: mms-linux-compatibility
-description: Workflow to check and enforce Linux and Ubuntu VPS deployment compatibility (casing, line endings, permissions, PM2 management).
+description: Checks and enforces Linux/Ubuntu VPS compatibility — case-sensitive imports, LF line endings, permissions, PM2. Use when preparing deploy, fixing VPS path/casing issues, or reviewing shell scripts for CRLF.
 ---
 
 # Linux VPS Compatibility Verification Workflow

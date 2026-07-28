@@ -17,6 +17,7 @@ description: Antigravity agent cognition, behaviour, output economy, security, a
 - **Style:** Terse, functional code. No boilerplate or filler comments.
 - **Precision:** Prefer targeted patches — altered functions/blocks, not whole files unless requested.
 - **Names:** Semantic identifiers — full policy in `mms-structure-naming.md`
+- **React Compiler:** Do not add `useMemo` / `useCallback` / `React.memo` by default. Prefer `startTransition`, `useDeferredValue`, and `useEffectEvent` when appropriate.
 
 ## Communication (two modes)
 
@@ -35,15 +36,18 @@ Do not echo file contents already in context.
 
 ## Security & state
 
-- **Validation:** Zero-trust DTOs — Zod (frontend) or Fastify JSON Schema (backend).
+- **Validation:** Zero-trust DTOs — Zod schemas in `@mms/shared`; validate on FE forms and BE via `parseRequest` (no divergent hand-rolled shapes).
 - **State:** Prefer unidirectional flow; pure helpers for transforms.
+- **Concurrency:** Cancel in-flight work on unmount/dep change — pass `AbortSignal` into `apiFetch` / Query `queryFn`; clear timers/observers.
 - **Resilience:** Error boundaries on heavy module sections; degrade gracefully on API failure.
-- **Secrets:** Never log tokens, passwords, or PII — `mms-auth-security.md`, `mms-testing-observability.md`.
+- **Secrets:** Never log, commit, or paste tokens, passwords, OTP, or PII — `mms-auth-security.md`.
+- **XSS:** Treat user HTML/Markdown as untrusted — no `dangerouslySetInnerHTML` without an approved sanitizer.
 
 ## Standards
 
-- **TypeScript:** Strict mode. Use `unknown` + narrowing — never `any`.
+- **TypeScript:** Strict mode. Use `unknown` + narrowing — never `any`. Prefer narrowing over assertion casts on API boundaries.
 - **Errors:** Handle explicitly; no silent empty `catch`.
+- **A11y default:** New interactive controls ship with accessible name/label, keyboard path, and visible focus — `mms-ui-ux-design.md`.
 - **HTML/CSS:** Semantic HTML; Tailwind utilities unless design tokens override.
 - **Git:** Conventional Commits (`feat`/`fix`/`chore`). No direct commits to `main`. **Never commit unless the user asks.**
 - **Rules:** When changing MMS standards, run `bash .agent/scripts/sync-all.sh` to mirror `.cursor/rules`, `.agent/rules`, and `.claude/rules` (see `.cursor/rules/README.md`).

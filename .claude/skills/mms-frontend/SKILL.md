@@ -183,8 +183,14 @@ Full register: `mms-migration-status.md`. Skill: `mms-migration-fixes`.
 
 ## Related skills
 
-- `mms-module-page` — three-tier module layout
-- `mms-data-sync` — localStorage / db.ts / hybrid cache
-- `mms-form-architecture` — dynamic forms & blueprints
+- `mms-module-page` / `mms-module-work` — three-tier + Work
+- `mms-messaging` — campaigns / MessageComposer
+- `mms-settings-i18n` — `/settings` + i18n
+- `mms-data-sync` — legacy localStorage / hybrid (deprecated for new modules)
+- `mms-form-architecture` — FormModal / Zod forms
 - `mms-code-review` — PR checklist
 - `mms-migration-fixes` — open debt items
+
+## Done
+
+Per `mms-completion-review.md`: re-read diff → `pnpm typecheck` → `cd apps/frontend && pnpm lint` → tests if hooks/shared touched. Prefer `startTransition` / Query `signal`; no new `useMemo`/`useCallback` by default.

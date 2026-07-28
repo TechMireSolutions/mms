@@ -47,9 +47,13 @@ Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-m
 ---
 
 ## 4. Threat Mitigations & Security Checklist
-- **Rate Limiting**: Limit onboarding/login calls (`@fastify/rate-limit`); return `429` on abuse.
-- **Password Security**: Hash passwords utilizing `scrypt`. Enforce password policy constraints on onboarding. Verify using `timingSafeEqual`.
-- **OTP Generation**: Issue OTP codes utilizing `crypto.randomInt()`. The use of `Math.random()` is forbidden.
-- **CORS Configuration**: CORS must bind to explicit origins (`ALLOWED_ORIGIN`) when using credentials; wildcard `*` is forbidden.
-- **Logs Hygiene**: NEVER print user passwords, session tokens, JWT signatures, OTP codes, or bulk PII to console logs.
-- **Auditing**: `auditService` must capture an append-only entry on database collection modifications (writes, merges, soft-deletes).
+- **Rate Limiting**: Limit onboarding/login and write-heavy / messaging send endpoints (`@fastify/rate-limit`); return `429` on abuse.
+- **Password Security**: Hash with `scrypt`. Enforce onboarding password policy. Verify with `timingSafeEqual`.
+- **OTP Generation**: `crypto.randomInt()` only — `Math.random()` forbidden.
+- **CORS**: Explicit origins (`ALLOWED_ORIGIN`) when using credentials; wildcard `*` forbidden.
+- **Cookies (prod)**: Set `Secure` on session cookies under HTTPS / `NODE_ENV=production`.
+- **Headers**: Prefer `@fastify/helmet` (or equivalent) — at least `X-Content-Type-Options`, frame denial, HSTS in prod; CSP suitable for the SPA.
+- **IDOR**: Authorize via permission **and** tenant RLS. Never trust body `workspaceSubdomain` / authz `userId` — force from session (Messaging log POST pattern).
+- **XSS / exports**: No unsanitized HTML; encode user content in PDF/CSV/Excel cells.
+- **Logs Hygiene**: NEVER print passwords, session tokens, JWT signatures, OTP codes, or bulk PII.
+- **Auditing**: `auditService` append-only entry on collection writes, merges, soft-deletes.

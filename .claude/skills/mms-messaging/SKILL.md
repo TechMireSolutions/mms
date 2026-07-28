@@ -1,38 +1,32 @@
 ---
 name: mms-messaging
-description: Dynamic messaging module capability. Manages SMS and WhatsApp campaign composition, personalization rules, template presets, and sent log histories. Use when modifying MessagingPage, message history records, or the generic MessageComposer component.
+description: SMS/WhatsApp campaigns, MessageComposer, templates, message logs, and /api/messaging REST. Use when modifying MessagingPage, MessageComposer, messaging templates/campaigns/logs, MessagingVariableTokensBar, or backend messaging routes/repositories.
 ---
 
 # MMS Messaging Workflow
 
-**Rules:** `mms-messaging.md`, `mms-module-architecture.md` §7, `MESSAGING_MODULE_MANIFEST`.
+**Rules:** `mms-messaging.md`, `mms-module-architecture.md` §7, `mms-auth-security.md`, `mms-data-layer.md`.
 
-## Components Layout
+## Layout
 
-1. **`MessagingPage.tsx`**: Work (compose / history), Reports (charts / metrics), Setup (templates) with command metrics.
-2. **`MessageComposer.tsx`**: Universal modal — recipients, personalization tokens, channel, templates, logging.
-3. **`useMessageComposerState.ts`**: Shared open/close + channel target across feature modules.
-4. **Hooks**: `useMessageTemplates`, `useMessageLogs`, `useMessagingMetrics`, `useMessagingMutations` (Query + REST).
+| Area | Path |
+|------|------|
+| Page shell | `apps/frontend/src/tenant/features/messaging/MessagingPage.tsx` |
+| Work / Reports / Setup | feature panels under `messaging/` |
+| Composer | `components/ui/MessageComposer.tsx` + tokens bar |
+| Hooks | `useMessageTemplates`, `useMessageLogs`, `useMessagingMetrics`, `useMessagingMutations` |
+| Shared | `MESSAGING_MODULE_MANIFEST`, `messagingSchemas`, `MessagingRecipient` |
+| Backend | `routes/tenant/messaging.ts`, `messagingRepository.ts` |
 
----
+## Workflow
 
-## Core Operations
-
-### Universal Connection Across Modules
-Contactable modules connect via `useMessageComposerState` + `toMessagingRecipient` / `MessagingRecipient` from `@mms/shared`.
-
-### Personalization Logic
-Placeholders inside templates must be parsed and substituted on the client (shared helpers / composer).
-
-### Data authority
-- Templates and logs: TanStack Query against `/api/messaging` — upsert bulk writes; do not expand localStorage-first as primary.
-- **Clear logs**: soft-archive (`deletedAt`) then replace active view — intentional; not Contacts-style trash UI.
-- Mutations: `mutateAsync`; Setup gated by `canEditSetup`; Work/Reports use `ErrorState` + Cmd/Ctrl+N for new campaign.
-
-### Campaign Triggers
-- **SMS**: `openDeviceSmsComposer(phone, body)` fallback.
-- **WhatsApp**: sequential tab openers with delay.
-- **Email**: `mailto:` with subject & personalized body.
+1. Recipients via `toMessagingRecipient` / `MessagingRecipient` — never contacts schemas inside composer.
+2. Data via Query + `/api/messaging` only — no raw `fetch`, no localStorage-primary.
+3. Bulk template/log writes upsert (`bulkSave`); never `replaceForWorkspace` on normal PUT.
+4. Clear-logs: soft-archive (`deletedAt`) of active view — intentional variant, not Work trash.
+5. Personalization: allowlisted tokens only; plain text bodies; sequential WhatsApp delay; SMS device fallback.
+6. BE: `authenticateTenant` + RLS; force session `userId`; strip client `deletedAt`; no SQL in errors.
+7. §7 UX: `useModulePermissions`, omit forbidden CTAs, `canEditSetup`, `ErrorState`, Cmd/Ctrl+N, `mutateAsync`, `t()`.
 
 ## Checklist
 
@@ -40,7 +34,13 @@ Placeholders inside templates must be parsed and substituted on the client (shar
 - [ ] useModulePermissions(MESSAGING_MODULE_MANIFEST)
 - [ ] No raw fetch('/api/...')
 - [ ] Upsert template/log saves — no accidental wipe
-- [ ] Clear-logs soft-archive semantics preserved unless product changes
+- [ ] Clear-logs soft-archive semantics preserved
+- [ ] Token allowlist; no HTML injection in templates
 - [ ] ErrorState + retry; Cmd/Ctrl+N when canWrite
 - [ ] Copy via t() (en/ar/ur/fa)
+- [ ] BE: authenticateTenant + RLS; no client authz userId
 ```
+
+## Done
+
+`pnpm typecheck` · `cd apps/frontend && pnpm lint` · messaging tests if touched — `mms-completion-review.md`.

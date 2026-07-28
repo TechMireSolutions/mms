@@ -15,7 +15,7 @@ bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
 ```
 .agent/
   rules/             # behavioural rules (always_on + model_decision)
-  skills/            # 16 capability modules (SKILL.md per folder)
+  skills/            # 20 capability modules (SKILL.md per folder)
   workflows/         # multi-step procedures
   skills-manifest.json
 ```
@@ -52,7 +52,7 @@ CLAUDE.md            # Session entry (points here + sync commands)
 | `rules/mms-dry.md` | `rules/mms-dry.mdc` |
 | `rules/mms-completion-review.md` | `rules/mms-completion-review.mdc` |
 
-Engineering layout & naming (file-scoped): `mms-structure.md`, `mms-naming.md`.
+Engineering layout & naming (file-scoped): `mms-structure-naming`.
 
 | Skill | Purpose |
 |-------|---------|
@@ -72,6 +72,7 @@ Engineering layout & naming (file-scoped): `mms-structure.md`, `mms-naming.md`.
 | `mms-backend-security` | Tenant isolation, RBAC, cookies, rate limits |
 | `mms-ops-deploy` | Hetzner deploy, Apache, PORT 5002, GitHub Actions |
 | `mms-reports-export` | Analytics & export |
+| `mms-messaging` | SMS/WhatsApp campaigns, MessageComposer, templates, message logs |
 | `mms-migration-fixes` | Tech debt fixes |
 | `mms-code-review` | PR review |
 | `mms-settings-i18n` | Settings panels, sidebar/dropdown navigation registry, settings previews/drafts, and localization/i18n standards (en/ar/ur/fa) |
@@ -108,11 +109,11 @@ bash .agent/scripts/sync-all.sh
 
 Individual targets: `sync-rules.sh` (→ Antigravity), `sync-skills.sh` (→ Cursor), `sync-claude.sh` (→ Claude).
 
-**19 rules** (6 always-on + 13 scoped): product (`mms-ui-ux-design`, `mms-fields`, `mms-module-architecture`, `mms-form-architecture`, ...), platform (`mms-dependencies`, `mms-dry`, `mms-auth-security`, ...). Index: `.cursor/rules/README.md`.
+**20 rules** (6 always-on + 14 scoped): product (`mms-ui-ux-design`, `mms-fields`, `mms-module-architecture`, `mms-form-architecture`, `mms-messaging`, ...), platform (`mms-dependencies`, `mms-dry`, `mms-auth-security`, ...). Index: `.cursor/rules/README.md`.
 
 **Rule index:** [.cursor/rules/README.md](.cursor/rules/README.md) — canonical owner per topic (avoids duplicating tier/isolation/i18n prose).
 
-**Scoped highlights:** `mms-module-isolation`, `mms-i18n` (en/ar/ur/fa), `mms-tenant`, `mms-rbac`, `mms-ci`, `mms-query`.
+**Scoped highlights:** `mms-module-architecture`, `mms-settings-i18n` (en/ar/ur/fa), `mms-auth-security`, `mms-ops-infrastructure`, `mms-data-layer`, `mms-messaging`.
 
 ## Layout
 

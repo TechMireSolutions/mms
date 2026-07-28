@@ -9,17 +9,18 @@ description: Creates or modifies MMS module pages per mms-module-architecture.md
 
 ## Module Architecture Section Map
 
-| Section | Topic | MMS rule / skill |
-|---|--------|------------------|
-| 1 | Global foundation (manifest, RBAC, audit, offline, soft delete, integrity) | `mms-module-architecture.md`, `mms-auth-security.md` |
-| 2 | Command centre (metrics, dedup, export, create) | `mms-ui-ux-design.md` PageHeader, `mms-module-architecture.md` |
-| 3 | Work directory | `mms-module-architecture.md`, `mms-ui-ux-design.md` |
-| 4 | Reports analytics | `mms-reports.md`, skill `mms-reports-export` |
-| 5 | Setup tab | `mms-module-architecture.md`, skill **`mms-module-setup`** |
-| 6 | Fields/tabs | `mms-fields.md`, skill `mms-fields-registry` |
-| 7 | Preferences | `mms-settings-i18n.md` |
-| 6–7 | Soft-delete + **gold-standard parity** | `mms-module-architecture.md` §6–§7 |
-| 8-14 | Jobs, errors, perf, a11y, security | `mms-module-architecture.md` |
+| Section | Topic | Skill / rule |
+|---------|--------|--------------|
+| §1 | Manifests | `mms-module-architecture.md` |
+| §2 | Three-tier shell | `mms-ui-ux-design.md`, this skill |
+| §3 | Work directory | skill **`mms-module-work`** |
+| §4 | Setup / fields | skill **`mms-module-setup`**, `mms-fields.md` |
+| §5 | Background jobs | skill **`mms-background-jobs`** |
+| §6 | Soft-delete / RBAC | `mms-auth-security.md` |
+| §7 | Gold-standard parity | checklist below |
+| Reports | Analytics / export | skill **`mms-reports-export`** |
+
+Modules live under `apps/frontend/src/tenant/features/{module}/` (not legacy `pages/` only).
 
 ## Required structure
 
@@ -185,4 +186,8 @@ Each tier is **module-scoped only** (`mms-module-architecture.md`):
 
 ## Related skills
 
-`mms-module-work` (reference implementation), `mms-module-setup`, `mms-fields-registry`, `mms-reports-export`, `mms-data-sync`
+`mms-module-work`, `mms-module-setup`, `mms-fields-registry`, `mms-reports-export`, `mms-messaging`, `mms-background-jobs`
+
+## Done
+
+`mms-completion-review.md` — typecheck + FE lint; new modules need §7 checklist green.

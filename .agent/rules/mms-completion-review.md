@@ -16,7 +16,10 @@ After **creating or editing code**, run a completion review **before** marking t
 |-------|---------|
 | Any non-trivial TS change | `pnpm typecheck` |
 | Frontend touched | `cd apps/frontend && pnpm lint` |
-| Shared logic / hooks with tests | `pnpm test` |
+| Backend touched | `cd apps/backend && pnpm lint` |
+| Shared / hooks / API tests | `pnpm test` (or scoped Vitest path) |
+| Auth / tenant / RLS / RBAC touched | Relevant backend `inject()` allow+deny test — or state skip reason |
+| New `t()` keys | Add to `appTranslationsEn.ts` then ar/ur/fa packs |
 
 4. **Lint diagnostics** — check edited files; fix new issues you introduced.
 5. **Cleanup** — remove unused imports, dead code, and debug logging in the change boundary.
@@ -28,7 +31,7 @@ After **creating or editing code**, run a completion review **before** marking t
 | Type error | Fix and re-run typecheck |
 | ESLint error | Fix in changed files |
 | Failing test | Fix or revert — do not ship broken tests |
-| Hardcoded copy | Add `t()` keys — `mms-settings-i18n.md` |
+| Hardcoded copy | Add `t()` keys — `mms-settings-i18n.md` (ban `t(key) \|\| 'English'`) |
 | Rule violation in touched code | Fix when inside the change boundary |
 
 ## Skip verification only when

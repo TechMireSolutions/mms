@@ -28,7 +28,9 @@ packages/shared/   @mms/shared
 | Inter-module data | `local-database-update` event or DTOs — no global singletons |
 | `turbo.json` cache | Immutable |
 
-## Stack (fixed)
+## Stack (current)
+
+Lists the **current** stack agents should target. Freshness / upgrades → `mms-dependencies.mdc`.
 
 - **BE:** Fastify + tsx · Drizzle + PostgreSQL · no raw SQL
 - **FE:** React 19 · Vite · Tailwind v4 · Radix/shadcn · TanStack Query · Framer Motion · Recharts · Lucide
@@ -41,12 +43,22 @@ packages/shared/   @mms/shared
 | `local-database-update` event bus (current) | `setInterval` / polling loops |
 | WebSockets / SSE (target for live server push) | Repeated `fetch` in `useEffect` without Query |
 
+Do not invent half-polling hybrids or ad-hoc WS clients until the migration gap lands (`mms-migration-status.mdc`).
+
 ## Data authority (trajectory)
 
 | Phase | Pattern | Owner |
 |-------|---------|--------|
 | **Current** | REST APIs + TanStack Query cache | `mms-data-layer.mdc` |
 | **Target** | Per-entity API resources; localStorage as offline cache only | `mms-migration-status.mdc` |
+
+## Tenant write invariant
+
+Any new tenant write path must use **`authenticateTenant`** + transaction-scoped RLS (`SET LOCAL`) + `can()` / collection permission. Never trust client-supplied `workspaceSubdomain` or authz `userId`.
+
+## Validation SSOT
+
+Shared Zod schemas live in `@mms/shared`. FE forms and BE `parseRequest` must consume the same shapes — do not fork request/response schemas per app.
 
 ## Platform rules (modern app)
 
@@ -60,13 +72,19 @@ packages/shared/   @mms/shared
 | Logging, health, error boundaries | `mms-testing-observability.mdc` |
 | Accessibility baseline | `mms-ui-ux-design.mdc` |
 
+## Performance (agent-checkable)
+
+- Route-lazy heavy deps (charts, PDF, xlsx, editors) — do not grow the initial Work-tier bundle with report-only libs.
+- Declare size on media/charts to avoid CLS — `mms-ui-ux-design.mdc`.
+
 ## MMS edit discipline
 
 1. Read implicated files before editing; validate against `@mms/shared` and `schema.ts`.
 2. New UI must be config-driven (field/tab/column registry).
 3. Remove unused imports/dead code in the change boundary.
-4. Run `pnpm typecheck` after non-trivial changes.
+4. Run `pnpm typecheck` after non-trivial changes; completion review per `mms-completion-review.mdc`.
 5. Never commit unless the user asks; never commit `.env` or credentials.
+6. Do not expand into migration-status “Recently Resolved” items unless the task requires them.
 
 ### Anti-patterns
 

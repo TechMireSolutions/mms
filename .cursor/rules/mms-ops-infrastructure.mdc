@@ -60,9 +60,9 @@ pnpm test             # Run Vitest suites for all workspaces
 ## 3. Linux & Ubuntu VPS Compatibility
 To ensure seamless deployments on Ubuntu systems:
 - **Case-Sensitive Imports**: Every import path must match the exact directory and file casing on disk. Verify using `pnpm typecheck`.
-- **Line Endings (LF)**: Shell scripts (`.sh` files) must use Unix-style LF (`\n`) line endings. Configure git with `git config core.autocrlf input`.
+- **Line Endings (LF)**: Shell scripts (`.sh` files) must use Unix-style LF (`\n`). Enforce via `.gitattributes` / editor settings — **do not** change the user's global `git config` from agents.
 - **Path Formatting**: Always use forward slashes `/` or `node:path` utilities (`join`, `resolve`). Never hardcode backslashes `\`.
-- **Non-Root Execution**: PM2 and Node processes must run under a non-privileged system user (`node`, `www-data`, or the deploy user `syedaalin`).
+- **Non-Root Execution**: PM2 and Node processes must run under a non-privileged system user (`node`, `www-data`, or the deploy user).
 - **Write Limits**: Limit write access exclusively to `/var/www/mmsv2/data` and `/var/www/mmsv2/.logs`. Keep all application source files read-only.
 
 ---
@@ -73,6 +73,11 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) executes on every push/
 2. **pnpm typecheck**
 3. **pnpm lint** (frontend & backend)
 4. **pnpm test**
+
+CI Node/pnpm images must match root `engines` / `packageManager`. Never commit `.env` or secrets in artifacts.
+
+### Turbo cache
+Treat `turbo.json` inputs/outputs as sensitive — change only with intentional cache invalidation.
 
 ### Health Checks
 - **Liveness**: `GET /health` -> 200 (server up).

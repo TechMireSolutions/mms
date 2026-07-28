@@ -10,9 +10,10 @@ alwaysApply: true
 ---
 
 ## 1. Proactive Search & Duplication Audits
-- **Search First**: BEFORE writing any helper function, component, validation schema, utility hook, or CSS style, search `@mms/shared`, `apps/frontend/src/hooks/`, and `apps/frontend/src/components/ui/` for existing equivalents.
+- **Search First**: BEFORE writing any helper function, component, validation schema, utility hook, or CSS style, search `@mms/shared`, `apps/frontend/src/hooks/`, `apps/frontend/src/tenant/hooks/collections/`, `apps/frontend/src/lib/reports/`, and `apps/frontend/src/components/ui/` for existing equivalents.
 - **Extend, Don't Fork**: If an existing helper almost fits your use case, extend its parameters rather than copying it or creating a near-duplicate function.
 - **Scan & Refactor**: When editing code, actively scan the surrounding files for duplicate blocks and refactor them into a unified local utility.
+- **Zod SSOT**: Do not duplicate the same request/response shape in FE and BE — export once from `@mms/shared`.
 
 ---
 
@@ -35,13 +36,9 @@ apps/*/services Hooks, UI components, API route controllers, and database schema
 ```
 
 ### Shared Package (`@mms/shared`) Standards
-- **Exports Map**:
-  - `contactTypes.ts` / `userTypes.ts` / `settingsTypes.ts`: Domain models and default configs (e.g. `DEFAULT_*`).
-  - `appTranslations.ts`: Global i18n dictionaries and translation helpers.
-  - `brandingTheme.ts` / `logoBrandColors.ts`: CSS color math and accessibility contrast logic.
-  - `utils.ts`: Pure helpers (`formatDate`, `getDisplayName`, `parsePhoneNumber`, `getInitials`, `toTitleCase`, `applyTitleCaseRecursive`).
-- **Import Rule**: Always use named exports from `@mms/shared` (e.g., `import { Contact } from '@mms/shared'`). Subpath imports are forbidden.
-- **Do NOT Put in Shared**: React components, direct Fastify/DB query code, or browser APIs (like `localStorage` or DOM properties).
+- **Import Rule**: Named exports from `@mms/shared` only (e.g. `import { Contact } from '@mms/shared'`). Subpath imports are forbidden.
+- **Typical contents**: Domain types/schemas, `DEFAULT_*` configs, `*ModuleManifest`, `appTranslations*`, pure helpers (`formatDate`, `formatMoney`, `parsePhoneNumber`, …).
+- **Do NOT Put in Shared**: React components, Fastify/DB query code, or browser APIs (`localStorage`, DOM).
 
 ---
 
