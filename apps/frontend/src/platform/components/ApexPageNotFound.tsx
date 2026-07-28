@@ -3,55 +3,50 @@ import { Link, useLocation } from "react-router-dom";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { ROUTES } from "@/lib/config/routes";
 import { useTranslation } from "@/hooks/useTranslation";
+import { AuthCardShell, AuthPageFrame } from "@/components/entry/AuthPageShell";
+import { Button } from "@/components/ui/button";
 
 /** 404 page for platform apex routes only — no tenant auth/RBAC coupling. */
 export default function ApexPageNotFound(): React.JSX.Element {
   const location = useLocation();
   const { isPlatformAuthenticated } = usePlatformAuth();
-  const { t, dir } = useTranslation();
+  const { t } = useTranslation();
 
   const primaryLabel = isPlatformAuthenticated
     ? t("page.notFound.goDashboard")
     : t("page.notFound.goHome");
 
   return (
-    <main
-      id="main-content"
-      dir={dir}
-      className="min-h-screen flex items-center justify-center p-6 bg-background"
-    >
-      <div className="max-w-md w-full">
-        <div className="text-center space-y-6">
-          <div className="space-y-2">
-            <h1 className="text-7xl font-light text-muted-foreground/40">404</h1>
-            <div className="h-0.5 w-16 bg-border mx-auto" aria-hidden />
-          </div>
-
+    <AuthPageFrame>
+      <AuthCardShell
+        className="max-w-md"
+        header={
           <div className="space-y-3">
-            <h2 className="text-2xl font-medium text-foreground">{t("page.notFound.title")}</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              {t("page.notFound.message", { path: location.pathname })}
+            <p className="font-display text-6xl font-light text-muted-foreground/35" aria-hidden>
+              404
             </p>
+            <div className="space-y-1.5">
+              <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                {t("page.notFound.title")}
+              </h1>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {t("page.notFound.message", { path: location.pathname })}
+              </p>
+            </div>
           </div>
-
-          <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              to={ROUTES.home}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-muted transition-colors"
-            >
-              {primaryLabel}
-            </Link>
-            {isPlatformAuthenticated ? (
-              <Link
-                to={ROUTES.onboarding}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-primary hover:underline"
-              >
-                {t("auth.createMadrasa")}
-              </Link>
-            ) : null}
-          </div>
+        }
+      >
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button asChild size="lg" className="h-11 flex-1 rounded-xl font-semibold">
+            <Link to={ROUTES.home}>{primaryLabel}</Link>
+          </Button>
+          {isPlatformAuthenticated ? (
+            <Button asChild variant="outline" size="lg" className="h-11 flex-1 rounded-xl">
+              <Link to={ROUTES.onboarding}>{t("auth.createMadrasa")}</Link>
+            </Button>
+          ) : null}
         </div>
-      </div>
-    </main>
+      </AuthCardShell>
+    </AuthPageFrame>
   );
 }

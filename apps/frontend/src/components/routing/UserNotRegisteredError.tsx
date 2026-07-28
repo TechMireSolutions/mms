@@ -1,31 +1,55 @@
 import React from 'react';
+import { ShieldAlert } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { AuthCardShell, AuthPageFrame } from '@/components/entry/AuthPageShell';
+import { Button } from '@/components/ui/button';
 
 /** Shown when auth succeeds but the user is not registered in the tenant. */
 export default function UserNotRegisteredError(): React.JSX.Element {
   const { t } = useTranslation();
+  const { logout } = useAuth();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-background to-muted/30 p-6">
-      <div className="max-w-md w-full p-8 bg-card rounded-lg shadow-lg border border-border">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 mb-6 rounded-full bg-destructive/10">
-            <svg className="w-8 h-8 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+    <AuthPageFrame>
+      <AuthCardShell
+        className="max-w-md"
+        header={
+          <div className="space-y-4">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10">
+              <ShieldAlert className="h-7 w-7 text-destructive" aria-hidden />
+            </div>
+            <div className="space-y-1.5">
+              <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                {t('auth.userNotRegistered.title')}
+              </h1>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {t('auth.userNotRegistered.message')}
+              </p>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-4">{t('auth.userNotRegistered.title')}</h1>
-          <p className="text-muted-foreground mb-8">{t('auth.userNotRegistered.message')}</p>
-          <div className="p-4 bg-muted/50 rounded-md text-sm text-muted-foreground text-left">
-            <p>{t('auth.userNotRegistered.helpIntro')}</p>
-            <ul className="list-disc list-inside mt-2 space-y-1">
+        }
+      >
+        <div className="space-y-5">
+          <div className="rounded-xl border border-border/60 bg-muted/40 p-4 text-start text-sm text-muted-foreground">
+            <p className="font-medium text-foreground">{t('auth.userNotRegistered.helpIntro')}</p>
+            <ul className="mt-2 list-disc space-y-1.5 ps-5">
               <li>{t('auth.userNotRegistered.verifyAccount')}</li>
               <li>{t('auth.userNotRegistered.contactAdmin')}</li>
               <li>{t('auth.userNotRegistered.tryLogout')}</li>
             </ul>
           </div>
+
+          <Button
+            type="button"
+            size="lg"
+            className="h-11 w-full rounded-xl font-semibold"
+            onClick={() => logout(true)}
+          >
+            {t('auth.signOut')}
+          </Button>
         </div>
-      </div>
-    </div>
+      </AuthCardShell>
+    </AuthPageFrame>
   );
 }

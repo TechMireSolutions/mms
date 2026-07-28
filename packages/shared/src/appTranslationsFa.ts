@@ -44,6 +44,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "auth.maskedEmailFallback": "ایمیل شما",
   "auth.sendingResetLink": "در حال ارسال پیوند بازنشانی…",
   "auth.verifying": "در حال تأیید…",
+  "auth.signOut": "خروج",
   "account.loginEmail": "ایمیل ورود",
   "account.loginEmailChanged": "ایمیل ورود به‌روزرسانی شد",
   "account.loginSection": "ورود و امنیت",

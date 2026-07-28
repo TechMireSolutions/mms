@@ -177,6 +177,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('mms_user');
     setUser(null);
     setIsAuthenticated(false);
+    setAuthError(null);
     setAuthChecked(true);
 
     void apiFetch('/api/auth/logout', { method: 'POST' });

@@ -3,6 +3,8 @@ import { ShieldAlert } from "lucide-react";
 import { ROUTES } from "@/lib/config/routes";
 import { apexUrl, getAppDomain } from "@/lib/config/tenantConfig";
 import { useTranslation } from "@/hooks/useTranslation";
+import { AuthCardShell, AuthPageFrame } from "@/components/entry/AuthPageShell";
+import { Button } from "@/components/ui/button";
 
 interface WorkspaceDisabledScreenProps {
   madrasaName: string;
@@ -18,25 +20,35 @@ export default function WorkspaceDisabledScreen({
   const appDomain = getAppDomain();
 
   return (
-    <div
-      dir="ltr"
-      className="min-h-screen flex flex-col items-center justify-center p-6 text-center gap-5 bg-background"
-    >
-      <div className="w-14 h-14 rounded-2xl bg-destructive/10 flex items-center justify-center">
-        <ShieldAlert className="w-7 h-7 text-destructive" aria-hidden />
-      </div>
-      <div className="space-y-2 max-w-md">
-        <h1 className="text-xl font-semibold text-foreground">{t("platform.workspaceDisabledTitle")}</h1>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          {t("platform.workspaceDisabledMessage", { name: madrasaName, subdomain, domain: appDomain })}
-        </p>
-      </div>
-      <a
-        href={apexUrl(ROUTES.home)}
-        className="inline-flex items-center justify-center py-2.5 px-5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-all"
+    <AuthPageFrame>
+      <AuthCardShell
+        className="max-w-md"
+        header={
+          <div className="space-y-4">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10">
+              <ShieldAlert className="h-7 w-7 text-destructive" aria-hidden />
+            </div>
+            <div className="space-y-1.5">
+              <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                {t("platform.workspaceDisabledTitle")}
+              </h1>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {t("platform.workspaceDisabledMessage", {
+                  name: madrasaName,
+                  subdomain,
+                  domain: appDomain,
+                })}
+              </p>
+            </div>
+          </div>
+        }
       >
-        {t("platform.contactSuperAdmin")}
-      </a>
-    </div>
+        <Button asChild size="lg" className="h-11 w-full rounded-xl font-semibold">
+          <a href={apexUrl(ROUTES.home)}>
+            {t("platform.contactSuperAdmin")}
+          </a>
+        </Button>
+      </AuthCardShell>
+    </AuthPageFrame>
   );
 }

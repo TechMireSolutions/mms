@@ -342,6 +342,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "auth.maskedEmailFallback": "بريدك الإلكتروني",
   "auth.sendingResetLink": "جارٍ إرسال رابط إعادة التعيين…",
   "auth.verifying": "جارٍ التحقق…",
+  "auth.signOut": "تسجيل الخروج",
 
   "entry.productName": "Madrasa MS",
   "entry.meta.platformSignIn": "سجّل الدخول كمسؤول منصة لإنشاء مساحات عمل المدارس وإدارتها.",

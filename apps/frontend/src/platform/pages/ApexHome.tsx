@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from "react";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { usePlatformSetupStatus } from "@/platform/hooks/usePlatformSetupStatus";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
+import { AuthPageFrame } from "@/components/entry/AuthPageShell";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ErrorState } from "@/components/ui/ErrorState";
 
@@ -33,13 +34,15 @@ export default function ApexHome(): React.JSX.Element {
 
   if (isError) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
-        <ErrorState
-          title={t("errors.boundary.title")}
-          description={t("errors.boundary.description")}
-          onRetry={() => void refetch()}
-        />
-      </div>
+      <AuthPageFrame>
+        <div className="relative z-10 w-full max-w-md">
+          <ErrorState
+            title={t("errors.boundary.title")}
+            description={t("errors.boundary.description")}
+            onRetry={() => void refetch()}
+          />
+        </div>
+      </AuthPageFrame>
     );
   }
 

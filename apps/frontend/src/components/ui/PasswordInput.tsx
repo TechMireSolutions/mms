@@ -49,7 +49,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
           value={value}
           onChange={onChange}
           disabled={disabled}
-          className={`ps-9 ${showToggle ? 'pe-11' : ''} ${className}`}
+          className={`h-11 ps-9 ${showToggle ? 'pe-11' : ''} ${className}`}
           {...rest}
         />
         {showToggle ? (

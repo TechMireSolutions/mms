@@ -5,6 +5,7 @@ import type { AppTranslationKey, PublicWorkspaceSummary } from "@mms/shared";
 import { ROUTES } from "@/lib/config/routes";
 import { getAppDomain, tenantUrl } from "@/lib/config/tenantConfig";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useWorkspaceRegistry } from "@/platform/hooks/useWorkspaceRegistry";
 import WorkspaceLogo from "@/platform/components/WorkspaceLogo";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
@@ -31,6 +32,7 @@ export default function WorkspaceRegistryList({
 }: WorkspaceRegistryListProps): React.JSX.Element {
   const { t } = useTranslation();
   const appDomain = getAppDomain();
+  const reducedMotion = useReducedMotion();
   const { data: workspaces, isLoading, isError, refetch } = useWorkspaceRegistry();
 
   if (isLoading) {
@@ -50,19 +52,19 @@ export default function WorkspaceRegistryList({
 
   if (items.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground text-center py-2">{t(emptyMessageKey)}</p>
+      <p className="py-2 text-center text-sm text-muted-foreground">{t(emptyMessageKey)}</p>
     );
   }
 
   return (
-    <div className="space-y-3 w-full">
-      <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/80 text-center">
+    <div className="w-full space-y-3">
+      <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground/80">
         {t(headingKey)}
       </p>
-      <motion.ul 
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
+      <motion.ul
+        variants={reducedMotion ? undefined : containerVariants}
+        initial={reducedMotion ? false : "hidden"}
+        animate={reducedMotion ? undefined : "show"}
         className="space-y-3"
       >
         <AnimatePresence>
@@ -73,12 +75,13 @@ export default function WorkspaceRegistryList({
               appDomain={appDomain}
               destinationPath={destinationPath}
               actionLabelKey={actionLabelKey}
+              reducedMotion={reducedMotion}
             />
           ))}
         </AnimatePresence>
       </motion.ul>
-      <p className="text-[10px] font-bold text-muted-foreground/70 text-center flex items-center justify-center gap-1.5 pt-1">
-        <ExternalLink className="w-3.5 h-3.5" aria-hidden />
+      <p className="flex items-center justify-center gap-1.5 pt-1 text-center text-[10px] font-medium text-muted-foreground/70">
+        <ExternalLink className="h-3.5 w-3.5" aria-hidden />
         {t("apex.opensSignInHint")}
       </p>
     </div>
@@ -90,41 +93,53 @@ const RegistryWorkspaceRow = memo(function RegistryWorkspaceRow({
   appDomain,
   destinationPath,
   actionLabelKey,
+  reducedMotion,
 }: {
   workspace: PublicWorkspaceSummary;
   appDomain: string;
   destinationPath: WorkspaceLinkDestination;
   actionLabelKey: AppTranslationKey;
+  reducedMotion: boolean;
 }): React.JSX.Element {
   const { t } = useTranslation();
   const targetUrl = tenantUrl(workspace.subdomain, destinationPath);
+  const actionLabel = t(actionLabelKey, { name: workspace.madrasaName });
 
   return (
-    <motion.li variants={cardVariants} layout>
+    <motion.li variants={reducedMotion ? undefined : cardVariants} layout={!reducedMotion}>
       <a
         href={targetUrl}
-        className="block w-full rounded-2xl border border-border/40 bg-card/60 backdrop-blur-sm p-4.5 shadow-sm hover:border-primary/30 hover:bg-card hover:shadow-md hover:scale-[1.01] transition-all duration-300 cursor-pointer group text-start"
+        className="group block w-full cursor-pointer rounded-2xl border border-border/50 bg-card/70 p-4 text-start shadow-sm backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:bg-card hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+        aria-label={actionLabel}
       >
         <div className="flex items-center gap-3.5">
-          <div className="relative group-hover:scale-105 transition-transform duration-300">
-            <WorkspaceLogo logoUrl={workspace.logoUrl} madrasaName={workspace.madrasaName} className="border border-border/30 rounded-xl" />
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="relative transition-transform duration-300 group-hover:scale-105">
+            <WorkspaceLogo
+              logoUrl={workspace.logoUrl}
+              madrasaName={workspace.madrasaName}
+              className="rounded-xl border border-border/30"
+            />
           </div>
           <div className="min-w-0 flex-1 space-y-0.5">
-            <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+            <p className="text-sm font-bold text-foreground transition-colors group-hover:text-primary">
               {workspace.madrasaName}
             </p>
-            <p className="text-xs text-muted-foreground font-mono break-all opacity-85">
+            <p className="break-all font-mono text-xs text-muted-foreground opacity-85">
               {workspace.subdomain}.{appDomain}
             </p>
             {workspace.tagline ? (
-              <p className="text-[11px] font-medium text-muted-foreground/75 truncate">{workspace.tagline}</p>
+              <p className="truncate text-[11px] font-medium text-muted-foreground/75">
+                {workspace.tagline}
+              </p>
             ) : null}
           </div>
         </div>
-        <div className="mt-3.5 flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary h-10 text-xs font-bold text-primary-foreground group-hover:bg-primary/95 transition-colors shadow-sm shadow-primary/10 group-hover:shadow">
-          {t(actionLabelKey, { name: workspace.madrasaName })}
-          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform duration-250" aria-hidden />
+        <div className="mt-3.5 flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-primary text-xs font-bold text-primary-foreground shadow-sm shadow-primary/10 transition-colors group-hover:bg-primary/95">
+          {actionLabel}
+          <ArrowRight
+            className="h-3.5 w-3.5 transition-transform duration-250 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
+            aria-hidden
+          />
         </div>
       </a>
     </motion.li>

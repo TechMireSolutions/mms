@@ -8,6 +8,7 @@ import { AuthSubmitButton } from "@/components/entry/AuthFormControls";
 import { AuthStatusBanner } from "@/components/entry/AuthStatusBanner";
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
+import { apexUrl } from "@/lib/config/tenantConfig";
 import {
   clear2FAState,
   is2FAVerified,
@@ -147,7 +148,21 @@ export default function Login(): React.ReactElement {
   return (
     <>
       <EntryPageHead title={pageTitle} description={t("entry.meta.tenantSignIn")} />
-      <AuthLayout title={t("auth.signInTitle")} subtitle={t("auth.signInSubtitle")}>
+      <AuthLayout
+        title={t("auth.signInTitle")}
+        subtitle={t("auth.signInSubtitle")}
+        footer={
+          <p className="text-xs text-muted-foreground">
+            {t("auth.notYourMadrasa")}{" "}
+            <a
+              href={apexUrl(ROUTES.home)}
+              className="font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+            >
+              {t("auth.viewAllMadrasaLinks")}
+            </a>
+          </p>
+        }
+      >
         <form onSubmit={handleSubmit} className="space-y-4" noValidate aria-busy={isBusy}>
           {handoffProcessing ? (
             <AuthStatusBanner variant="info" message={t("auth.handoffProcessing")} />

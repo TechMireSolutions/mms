@@ -63,20 +63,26 @@ export function OtpInput({
   };
 
   return (
-    <div className="flex justify-center gap-2.5" role="group" aria-label={ariaLabel}>
+    <div
+      className="flex justify-center gap-2 sm:gap-2.5"
+      role="group"
+      aria-label={ariaLabel}
+      aria-invalid={hasError || undefined}
+    >
       {Array.from({ length }).map((_, index) => {
         const digit = value[index] || "";
         return (
           <input
             key={index}
             id={`${idPrefix}-${index}`}
-            name={`${idPrefix}-${index}`}
-            autoComplete="one-time-code"
+            name={index === 0 ? "one-time-code" : `${idPrefix}-${index}`}
+            autoComplete={index === 0 ? "one-time-code" : "off"}
             ref={(element) => {
               inputs.current[index] = element;
             }}
             type="text"
             inputMode="numeric"
+            pattern="[0-9]*"
             maxLength={1}
             value={digit}
             disabled={disabled}
@@ -86,9 +92,10 @@ export function OtpInput({
             className={cn(
               FORM_OTP_DIGIT,
               digit ? "border-primary/60 bg-primary/5" : "border-border",
-              hasError && "border-destructive/60 bg-destructive/5"
+              hasError && "border-destructive/60 bg-destructive/5",
             )}
             aria-label={`${ariaLabel} ${index + 1}`}
+            aria-invalid={hasError || undefined}
             autoFocus={index === 0}
           />
         );

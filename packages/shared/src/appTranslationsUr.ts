@@ -342,6 +342,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "auth.maskedEmailFallback": "آپ کی ای میل",
   "auth.sendingResetLink": "ری سیٹ لنک بھیجا جا رہا ہے…",
   "auth.verifying": "تصدیق ہو رہی ہے…",
+  "auth.signOut": "سائن آؤٹ",
 
   "entry.productName": "Madrasa MS",
   "entry.meta.platformSignIn": "مدرسہ ورک اسپیسز بنانے اور منظم کرنے کے لیے پلیٹ فارم منتظم کے طور پر سائن ان کریں۔",

@@ -22,18 +22,24 @@ export default function ApexEntryNav({
   }
 
   return (
-    <div className="text-center text-xs text-muted-foreground space-y-1.5">
+    <div className="space-y-1.5 text-center text-xs text-muted-foreground">
       {showForgotPasswordLink ? (
         <p>
           {t("apex.forgotPasswordPicker")}{" "}
-          <Link to={ROUTES.forgotPassword} className="font-medium text-primary hover:underline">
+          <Link
+            to={ROUTES.forgotPassword}
+            className="inline-flex min-h-10 items-center rounded-md px-1 font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+          >
             {t("apex.goToForgotPicker")}
           </Link>
         </p>
       ) : null}
       {showHomeLink ? (
         <p>
-          <Link to={ROUTES.home} className="font-medium text-primary hover:underline">
+          <Link
+            to={ROUTES.home}
+            className="inline-flex min-h-10 items-center rounded-md px-1 font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+          >
             {t("apex.backToMain")}
           </Link>
         </p>

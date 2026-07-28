@@ -327,6 +327,7 @@ export const APP_TRANSLATIONS_EN = {
   "auth.maskedEmailFallback": "your email",
   "auth.sendingResetLink": "Sending reset link…",
   "auth.verifying": "Verifying…",
+  "auth.signOut": "Sign out",
 
   "entry.productName": "Madrasa MS",
   "entry.meta.platformSignIn": "Sign in as platform administrator to create and manage madrasa workspaces.",
