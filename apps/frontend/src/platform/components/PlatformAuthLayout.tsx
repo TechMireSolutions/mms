@@ -1,6 +1,6 @@
 import React from "react";
 import { PlatformLogoMark } from "@/platform/components/PlatformPageShell";
-import { AuthCardShell, AuthPageFrame } from "@/components/entry/AuthPageShell";
+import { AuthCardShell, AuthFormHeading, AuthPageFrame } from "@/components/entry";
 
 export interface PlatformAuthLayoutProps {
   children: React.ReactNode;
@@ -23,16 +23,7 @@ export default function PlatformAuthLayout({
         header={
           <div className="space-y-4">
             <PlatformLogoMark />
-            <div className="space-y-1.5">
-              <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                {title}
-              </h1>
-              {subtitle ? (
-                <p className="text-sm font-medium leading-relaxed text-muted-foreground">
-                  {subtitle}
-                </p>
-              ) : null}
-            </div>
+            <AuthFormHeading title={title} subtitle={subtitle} />
           </div>
         }
       >

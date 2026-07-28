@@ -3,6 +3,7 @@ import { Eye, EyeOff, Lock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { useTranslation } from '@/hooks/useTranslation';
+import { cn } from '@/lib/utils';
 
 export interface PasswordInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
@@ -22,7 +23,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
   disabled,
   autoComplete = 'current-password',
   required = true,
-  className = '',
+  className,
   ...rest
 }) => {
   const { t } = useTranslation();
@@ -37,7 +38,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
       ) : null}
       <div className="relative">
         <Lock
-          className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/80 pointer-events-none"
+          className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80"
           aria-hidden
         />
         <Input
@@ -49,14 +50,14 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
           value={value}
           onChange={onChange}
           disabled={disabled}
-          className={`h-11 ps-9 ${showToggle ? 'pe-11' : ''} ${className}`}
+          className={cn('h-11 ps-9', showToggle && 'pe-11', className)}
           {...rest}
         />
         {showToggle ? (
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute end-0.5 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground cursor-pointer"
+            className="absolute end-0.5 top-1/2 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
             aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
             aria-pressed={showPassword}
           >

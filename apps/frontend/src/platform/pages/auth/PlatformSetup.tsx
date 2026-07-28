@@ -1,25 +1,21 @@
 import React, { useId, useState } from "react";
-import {
-  Loader2,
-  RefreshCw,
-  ShieldCheck,
-  User,
-} from "lucide-react";
+import { ShieldCheck, User } from "lucide-react";
 import { type PlatformSetupRegisterResult, maskEmail } from "@mms/shared";
 import {
   getPlatformRegisterError,
 } from "@/platform/lib/platformValidation";
 import PlatformAuthLayout from "@/platform/components/PlatformAuthLayout";
-import PasswordInput from "@/components/ui/PasswordInput";
-import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
-import { AuthEmailField } from "@/components/entry/AuthEmailField";
-import { AuthSubmitButton } from "@/components/entry/AuthFormControls";
-import { AuthStatusBanner } from "@/components/entry/AuthStatusBanner";
-import { Alert } from "@/components/ui/Alert";
+import {
+  AuthEmailField,
+  AuthPasswordField,
+  AuthResendCodeControl,
+  AuthStatusBanner,
+  AuthSubmitButton,
+  AuthTextField,
+  EntryPageHead,
+  formatEntryTitle,
+} from "@/components/entry";
 import { OtpInput, createEmptyOtp, isOtpComplete } from "@/components/ui/OtpInput";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { FORM_LABEL } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useResendCountdown } from "@/hooks/useResendCountdown";
 import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
@@ -150,55 +146,46 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
           subtitle={t("platform.setupVerifySubtitle", { email: maskEmail(setupSession.email) })}
         >
           <form onSubmit={(event) => void handleVerify(event)} className="space-y-4" noValidate aria-busy={loading}>
-            {error ? <AuthStatusBanner message={error} /> : null}
-            {setupNotice ? <Alert variant="info" message={setupNotice} /> : null}
-            {setupSession.devCode ? (
-              <Alert variant="warning" message={t("platform.setupDevCodeHint", { code: setupSession.devCode })} />
-            ) : null}
+            <fieldset disabled={loading} className="m-0 min-w-0 space-y-4 border-0 p-0">
+              {setupNotice ? <AuthStatusBanner variant="info" message={setupNotice} /> : null}
+              {setupSession.devCode ? (
+                <AuthStatusBanner
+                  variant="warning"
+                  message={t("platform.setupDevCodeHint", { code: setupSession.devCode })}
+                />
+              ) : null}
 
-            <OtpInput
-              value={code}
-              onChange={(next) => {
-                setCode(next);
-                if (error) setError(null);
-              }}
-              ariaLabel={t("platform.setupVerifyEmail")}
-              disabled={loading}
-              idPrefix="platform-otp"
-              hasError={Boolean(error)}
-            />
+              <OtpInput
+                value={code}
+                onChange={(next) => {
+                  setCode(next);
+                  if (error) setError(null);
+                }}
+                ariaLabel={t("platform.setupVerifyEmail")}
+                disabled={loading}
+                idPrefix="platform-otp"
+                hasError={Boolean(error)}
+              />
 
-            <Button
-              type="submit"
-              size="lg"
-              className="h-11 w-full rounded-xl font-semibold shadow-md shadow-primary/10"
-              disabled={loading || !isOtpComplete(code)}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                  {t("auth.verifying")}
-                </>
-              ) : (
-                <>
-                  <ShieldCheck className="h-4 w-4" aria-hidden />
-                  {t("platform.setupVerifyEmail")}
-                </>
-              )}
-            </Button>
+              {error ? <AuthStatusBanner message={error} /> : null}
 
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              disabled={loading || resendCountdown > 0}
-              onClick={() => void handleResend()}
-            >
-              <RefreshCw className="h-4 w-4" aria-hidden />
-              {resendCountdown > 0
-                ? t("platform.setupResendIn", { seconds: String(resendCountdown) })
-                : t("platform.setupResendCode")}
-            </Button>
+              <AuthSubmitButton
+                busy={loading}
+                busyLabel={t("auth.verifying")}
+                label={t("platform.setupVerifyEmail")}
+                disabled={!isOtpComplete(code)}
+                icon={ShieldCheck}
+                showArrow={false}
+              />
+
+              <AuthResendCodeControl
+                countdown={resendCountdown}
+                onResend={() => void handleResend()}
+                disabled={loading}
+                countdownLabel={t("auth.resendCountdown", { seconds: resendCountdown })}
+                resendLabel={t("auth.resendCode")}
+              />
+            </fieldset>
           </form>
         </PlatformAuthLayout>
       </>
@@ -211,36 +198,27 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
       <PlatformAuthLayout title={t("platform.setupTitle")} subtitle={t("platform.setupSubtitle")}>
         <form onSubmit={(event) => void handleRegister(event)} className="space-y-4" noValidate aria-busy={loading}>
           {!smtpConfigured && import.meta.env.PROD ? (
-            <Alert variant="warning" message={t("platform.setupSmtpRequired")} />
+            <AuthStatusBanner variant="warning" message={t("platform.setupSmtpRequired")} />
           ) : null}
           {error ? <AuthStatusBanner message={error} /> : null}
 
           <fieldset disabled={loading} className="m-0 min-w-0 space-y-4 border-0 p-0">
-            <div className="space-y-1.5 text-start">
-              <label htmlFor={nameFieldId} className={FORM_LABEL}>{t("platform.setupFullName")}</label>
-              <div className="relative">
-                <User
-                  className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80"
-                  aria-hidden
-                />
-                <Input
-                  id={nameFieldId}
-                  autoComplete="name"
-                  autoFocus
-                  required
-                  value={name}
-                  onChange={(event) => {
-                    setName(event.target.value);
-                    setError(null);
-                  }}
-                  className="h-11 ps-9"
-                />
-              </div>
-            </div>
+            <AuthTextField
+              id={nameFieldId}
+              label={t("platform.setupFullName")}
+              value={name}
+              autoFocus
+              autoComplete="name"
+              icon={User}
+              onChange={(value) => {
+                setName(value);
+                setError(null);
+              }}
+            />
 
             <AuthEmailField
               id={emailFieldId}
-              label={t("auth.email")}
+              label={t("auth.emailAddress")}
               value={email}
               autoComplete="email"
               placeholder={t("auth.emailPlaceholder")}
@@ -250,17 +228,15 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
               }}
             />
 
-            <PasswordInput
-              id="platform-setup-password"
+            <AuthPasswordField
+              id={`${formId}-password`}
               label={t("auth.password")}
               autoComplete="new-password"
-              required
               value={password}
-              onChange={(event) => {
-                setPassword(event.target.value);
+              onChange={(value) => {
+                setPassword(value);
                 setError(null);
               }}
-              className="h-11"
             />
 
             <AuthSubmitButton

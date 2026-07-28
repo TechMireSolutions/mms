@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { FORM_OTP_DIGIT } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface OtpInputProps {
   value: string[];
@@ -14,7 +15,6 @@ interface OtpInputProps {
 
 /**
  * Shared OTP Input component used for 2FA, platform registration, and password reset.
- * Implements DRY standard for code verification digit entries.
  */
 export function OtpInput({
   value,
@@ -26,6 +26,11 @@ export function OtpInput({
   idPrefix = "otp",
 }: OtpInputProps): React.JSX.Element {
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
+  const { t, isRtl } = useTranslation();
+
+  const focusIndex = (index: number): void => {
+    inputs.current[index]?.focus();
+  };
 
   const handleChange = (index: number, digit: string): void => {
     if (!/^\d?$/.test(digit)) return;
@@ -33,19 +38,26 @@ export function OtpInput({
     updatedValue[index] = digit;
     onChange(updatedValue);
     if (digit && index < length - 1) {
-      inputs.current[index + 1]?.focus();
+      focusIndex(index + 1);
     }
   };
 
   const handleKeyDown = (index: number, event: React.KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "Backspace" && !value[index] && index > 0) {
-      inputs.current[index - 1]?.focus();
+      focusIndex(index - 1);
+      return;
     }
-    if (event.key === "ArrowLeft" && index > 0) {
-      inputs.current[index - 1]?.focus();
+
+    const goPrevious = isRtl ? event.key === "ArrowRight" : event.key === "ArrowLeft";
+    const goNext = isRtl ? event.key === "ArrowLeft" : event.key === "ArrowRight";
+
+    if (goPrevious && index > 0) {
+      event.preventDefault();
+      focusIndex(index - 1);
     }
-    if (event.key === "ArrowRight" && index < length - 1) {
-      inputs.current[index + 1]?.focus();
+    if (goNext && index < length - 1) {
+      event.preventDefault();
+      focusIndex(index + 1);
     }
   };
 
@@ -59,7 +71,7 @@ export function OtpInput({
       }
     }
     onChange(updatedCode);
-    inputs.current[Math.min(pasted.length, length - 1)]?.focus();
+    focusIndex(Math.min(pasted.length, length - 1));
   };
 
   return (
@@ -94,7 +106,7 @@ export function OtpInput({
               digit ? "border-primary/60 bg-primary/5" : "border-border",
               hasError && "border-destructive/60 bg-destructive/5",
             )}
-            aria-label={`${ariaLabel} ${index + 1}`}
+            aria-label={t("auth.otpDigitLabel", { current: index + 1, total: length })}
             aria-invalid={hasError || undefined}
             autoFocus={index === 0}
           />

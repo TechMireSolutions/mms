@@ -1,9 +1,12 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import { FileQuestion } from "lucide-react";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { ROUTES } from "@/lib/config/routes";
 import { useTranslation } from "@/hooks/useTranslation";
+import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { AuthCardShell, AuthPageFrame } from "@/components/entry/AuthPageShell";
+import { AuthStatusHeader } from "@/components/entry/AuthStatusBanner";
 import { Button } from "@/components/ui/button";
 
 /** 404 page for platform apex routes only — no tenant auth/RBAC coupling. */
@@ -17,36 +20,34 @@ export default function ApexPageNotFound(): React.JSX.Element {
     : t("page.notFound.goHome");
 
   return (
-    <AuthPageFrame>
-      <AuthCardShell
-        className="max-w-md"
-        header={
-          <div className="space-y-3">
-            <p className="font-display text-6xl font-light text-muted-foreground/35" aria-hidden>
-              404
-            </p>
-            <div className="space-y-1.5">
-              <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                {t("page.notFound.title")}
-              </h1>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {t("page.notFound.message", { path: location.pathname })}
-              </p>
-            </div>
-          </div>
-        }
-      >
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button asChild size="lg" className="h-11 flex-1 rounded-xl font-semibold">
-            <Link to={ROUTES.home}>{primaryLabel}</Link>
-          </Button>
-          {isPlatformAuthenticated ? (
-            <Button asChild variant="outline" size="lg" className="h-11 flex-1 rounded-xl">
-              <Link to={ROUTES.onboarding}>{t("auth.createMadrasa")}</Link>
+    <>
+      <EntryPageHead
+        title={formatEntryTitle(t("page.notFound.title"), t("entry.productName"))}
+        description={t("entry.meta.apexNotFound")}
+      />
+      <AuthPageFrame>
+        <AuthCardShell
+          className="max-w-md"
+          header={
+            <AuthStatusHeader
+              icon={FileQuestion}
+              title={t("page.notFound.title")}
+              description={t("page.notFound.message", { path: location.pathname })}
+            />
+          }
+        >
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button asChild size="lg" className="h-11 flex-1 rounded-xl font-semibold">
+              <Link to={ROUTES.home}>{primaryLabel}</Link>
             </Button>
-          ) : null}
-        </div>
-      </AuthCardShell>
-    </AuthPageFrame>
+            {isPlatformAuthenticated ? (
+              <Button asChild variant="outline" size="lg" className="h-11 flex-1 rounded-xl">
+                <Link to={ROUTES.onboarding}>{t("auth.createMadrasa")}</Link>
+              </Button>
+            ) : null}
+          </div>
+        </AuthCardShell>
+      </AuthPageFrame>
+    </>
   );
 }

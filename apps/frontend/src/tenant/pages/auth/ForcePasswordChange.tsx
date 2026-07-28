@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DEFAULT_GLOBAL_SETTINGS, validatePasswordPolicy } from "@mms/shared";
-import PasswordInput from "@/components/ui/PasswordInput";
-import { Alert } from "@/components/ui/Alert";
+import { DEFAULT_GLOBAL_SETTINGS, getPasswordPolicyHintKey, validatePasswordPolicy } from "@mms/shared";
 import AuthLayout from "@/tenant/components/AuthLayout";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
+import { AuthPasswordField } from "@/components/entry/AuthPasswordField";
 import { AuthSubmitButton } from "@/components/entry/AuthFormControls";
 import { AuthStatusBanner } from "@/components/entry/AuthStatusBanner";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -16,6 +15,12 @@ export default function ForcePasswordChange(): React.ReactElement {
   const { t } = useTranslation();
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const formId = useId();
+  const currentId = `${formId}-current`;
+  const newId = `${formId}-new`;
+  const confirmId = `${formId}-confirm`;
+  const hintId = `${formId}-hint`;
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -62,41 +67,38 @@ export default function ForcePasswordChange(): React.ReactElement {
       <EntryPageHead title={pageTitle} description={t("account.forcePasswordBody")} />
       <AuthLayout title={t("account.forcePasswordTitle")}>
         <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4" noValidate aria-busy={busy}>
-          <Alert variant="warning" message={t("account.forcePasswordBody")} />
+          <AuthStatusBanner variant="warning" message={t("account.forcePasswordBody")} />
           {error ? <AuthStatusBanner message={error} /> : null}
 
           <fieldset disabled={busy} className="m-0 min-w-0 space-y-4 border-0 p-0">
-            <PasswordInput
-              id="current-password"
+            <AuthPasswordField
+              id={currentId}
               label={t("account.currentPassword")}
               autoComplete="current-password"
               value={currentPassword}
-              onChange={(event) => setCurrentPassword(event.target.value)}
-              className="h-11"
+              onChange={setCurrentPassword}
             />
 
             <div className="space-y-1.5">
-              <PasswordInput
-                id="new-password"
+              <AuthPasswordField
+                id={newId}
                 label={t("account.newPassword")}
                 autoComplete="new-password"
                 value={newPassword}
-                onChange={(event) => setNewPassword(event.target.value)}
-                className="h-11"
-                aria-describedby="password-rules-hint"
+                onChange={setNewPassword}
+                describedBy={hintId}
               />
-              <p id="password-rules-hint" className="text-xs leading-relaxed text-muted-foreground">
-                {t("account.passwordRulesHint")}
+              <p id={hintId} className="text-xs leading-relaxed text-muted-foreground">
+                {t(getPasswordPolicyHintKey(DEFAULT_GLOBAL_SETTINGS.passwordPolicy))}
               </p>
             </div>
 
-            <PasswordInput
-              id="confirm-password"
+            <AuthPasswordField
+              id={confirmId}
               label={t("account.confirmPassword")}
               autoComplete="new-password"
               value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              className="h-11"
+              onChange={setConfirmPassword}
             />
 
             <AuthSubmitButton

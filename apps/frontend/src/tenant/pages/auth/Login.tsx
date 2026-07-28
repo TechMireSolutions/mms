@@ -1,11 +1,17 @@
 import React, { useState, useEffect, useCallback, useId } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import PasswordInput from "@/components/ui/PasswordInput";
+import { useNavigate, useLocation } from "react-router-dom";
 import AuthLayout from "@/tenant/components/AuthLayout";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { AuthEmailField } from "@/components/entry/AuthEmailField";
+import { AuthPasswordField } from "@/components/entry/AuthPasswordField";
 import { AuthSubmitButton } from "@/components/entry/AuthFormControls";
 import { AuthStatusBanner } from "@/components/entry/AuthStatusBanner";
+import {
+  firstSignInErrorFieldId,
+  focusAuthField,
+  validateSignInCredentials,
+  type SignInFieldErrors,
+} from "@/components/entry/authValidation";
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
 import { apexUrl } from "@/lib/config/tenantConfig";
@@ -14,18 +20,11 @@ import {
   is2FAVerified,
   mark2FAVerified,
 } from "@/lib/twoFactor";
-import { requiresTwoFactor, isValidEmail } from "@mms/shared";
+import { requiresTwoFactor } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FORM_ERROR } from "@/components/ui/formStyles";
-import { cn } from "@/lib/utils";
 
 const REMEMBER_EMAIL_KEY = "mms_login_remember_email";
-
-interface LoginErrors {
-  email?: string;
-  password?: string;
-}
 
 /**
  * Tenant login — email/password auth with optional 2FA and apex handoff support.
@@ -60,7 +59,7 @@ export default function Login(): React.ReactElement {
   });
   const [loading, setLoading] = useState<boolean>(false);
   const [handoffProcessing, setHandoffProcessing] = useState<boolean>(false);
-  const [fieldErrors, setFieldErrors] = useState<LoginErrors>({});
+  const [fieldErrors, setFieldErrors] = useState<SignInFieldErrors>({});
   const [formError, setFormError] = useState<string>("");
 
   useEffect(() => {
@@ -100,26 +99,14 @@ export default function Login(): React.ReactElement {
     }
   }, []);
 
-  const validate = (): LoginErrors => {
-    const validationErrors: LoginErrors = {};
-    const trimmed = email.trim();
-    if (!trimmed) {
-      validationErrors.email = t("auth.emailRequired");
-    } else if (!isValidEmail(trimmed)) {
-      validationErrors.email = t("auth.emailInvalid");
-    }
-    if (!password) {
-      validationErrors.password = t("auth.passwordRequired");
-    }
-    return validationErrors;
-  };
-
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
     setFormError("");
-    const errs = validate();
+    const errs = validateSignInCredentials(email, password, t);
     if (Object.keys(errs).length) {
       setFieldErrors(errs);
+      const focusId = firstSignInErrorFieldId(errs, emailFieldId, passwordFieldId);
+      if (focusId) focusAuthField(focusId);
       return;
     }
     setFieldErrors({});
@@ -163,9 +150,9 @@ export default function Login(): React.ReactElement {
           </p>
         }
       >
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate aria-busy={isBusy}>
+        <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4" noValidate aria-busy={isBusy}>
           {handoffProcessing ? (
-            <AuthStatusBanner variant="info" message={t("auth.handoffProcessing")} />
+            <AuthStatusBanner variant="loading" message={t("auth.handoffProcessing")} />
           ) : formError ? (
             <AuthStatusBanner message={formError} />
           ) : null}
@@ -186,40 +173,20 @@ export default function Login(): React.ReactElement {
               }}
             />
 
-            <div className="space-y-1.5">
-              <PasswordInput
-                id={passwordFieldId}
-                name="password"
-                label={t("auth.password")}
-                autoComplete="current-password"
-                value={password}
-                onChange={(event) => {
-                  setPassword(event.target.value);
-                  setFieldErrors((prev) => ({ ...prev, password: undefined }));
-                  setFormError("");
-                }}
-                placeholder={t("auth.passwordPlaceholder")}
-                aria-invalid={Boolean(fieldErrors.password)}
-                aria-describedby={fieldErrors.password ? `${passwordFieldId}-error` : undefined}
-                className={cn(
-                  "h-11",
-                  fieldErrors.password && "border-destructive focus-visible:ring-destructive/25",
-                )}
-              />
-              {fieldErrors.password ? (
-                <p id={`${passwordFieldId}-error`} className={FORM_ERROR} role="alert">
-                  {fieldErrors.password}
-                </p>
-              ) : null}
-              <div className="flex justify-end pt-0.5">
-                <Link
-                  to={ROUTES.forgotPassword}
-                  className="rounded-md px-1 py-1 text-xs font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
-                >
-                  {t("auth.forgotPassword")}
-                </Link>
-              </div>
-            </div>
+            <AuthPasswordField
+              id={passwordFieldId}
+              label={t("auth.password")}
+              value={password}
+              placeholder={t("auth.passwordPlaceholder")}
+              error={fieldErrors.password}
+              forgotPasswordTo={ROUTES.forgotPassword}
+              forgotPasswordLabel={t("auth.forgotPassword")}
+              onChange={(value) => {
+                setPassword(value);
+                setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                setFormError("");
+              }}
+            />
 
             <label
               htmlFor={rememberFieldId}

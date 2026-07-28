@@ -165,7 +165,7 @@ export default function OnboardingWizard(): React.JSX.Element {
 
     const policyCheck = validatePasswordPolicy(data.password, DEFAULT_GLOBAL_SETTINGS.passwordPolicy);
     if (!policyCheck.valid) {
-      setSubmitError(policyCheck.message);
+      setSubmitError(policyCheck.errorKey ? t(policyCheck.errorKey) : policyCheck.message);
       return;
     }
 
@@ -231,30 +231,35 @@ export default function OnboardingWizard(): React.JSX.Element {
         />
       ) : null}
 
-      <div className="flex items-center justify-between mt-7 pt-5 border-t border-border">
+      <div className="mt-7 flex items-center justify-between gap-3 border-t border-border/50 pt-5">
         <Button
           type="button"
           variant="ghost"
+          size="lg"
           onClick={() => setStep((value) => value - 1)}
-          disabled={step === 1}
-          className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:pointer-events-none"
+          disabled={step === 1 || loading}
+          className="h-11 gap-1.5 rounded-xl text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
         >
-          <ArrowLeft className="w-4 h-4 rtl:rotate-180" aria-hidden />
+          <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden />
           {t("onboarding.back")}
         </Button>
 
         <Button
           type="button"
+          size="lg"
           onClick={handleNext}
           disabled={loading}
-          className="flex items-center gap-1.5 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-70"
+          className="h-11 gap-1.5 rounded-xl px-5 font-semibold shadow-md shadow-primary/10"
         >
           {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              {t("common.loading")}
+            </>
           ) : (
             <>
               {isLastStep ? t("onboarding.createWorkspace") : t("onboarding.continue")}
-              <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden />
+              <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden />
             </>
           )}
         </Button>

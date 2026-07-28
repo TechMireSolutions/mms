@@ -1,13 +1,19 @@
 import React, { useId, useState } from "react";
-import { CheckCircle2, Mail } from "lucide-react";
-import { isValidEmail } from "@mms/shared";
+import { Mail } from "lucide-react";
 import AuthLayout from "@/tenant/components/AuthLayout";
-import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
-import { AuthEmailField } from "@/components/entry/AuthEmailField";
-import { AuthBackLink, AuthSubmitButton } from "@/components/entry/AuthFormControls";
+import {
+  AuthBackLink,
+  AuthCheckEmailSuccess,
+  AuthEmailField,
+  AuthMutedPanel,
+  AuthSubmitButton,
+  EntryPageHead,
+  focusAuthField,
+  formatEntryTitle,
+  validateAuthEmail,
+} from "@/components/entry";
 import { ROUTES } from '@/lib/config/routes';
 import { useTranslation } from "@/hooks/useTranslation";
-import { Button } from "@/components/ui/button";
 
 /**
  * Forgot password reset request form for tenant sign-in entry.
@@ -23,17 +29,15 @@ export default function ForgotPassword(): React.JSX.Element {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-    const trimmed = email.trim();
-    if (!trimmed) {
-      setError(t("auth.emailRequired"));
-      return;
-    }
-    if (!isValidEmail(trimmed)) {
-      setError(t("auth.emailInvalid"));
+    const emailError = validateAuthEmail(email, t);
+    if (emailError) {
+      setError(emailError);
+      focusAuthField(emailFieldId);
       return;
     }
     setLoading(true);
-    await new Promise((resolveDelay) => setTimeout(resolveDelay, 1500));
+    // Tenant password-reset API is not shipped yet — acknowledge without leaking account existence.
+    await new Promise((resolveDelay) => setTimeout(resolveDelay, 800));
     setLoading(false);
     setSent(true);
   };
@@ -55,14 +59,16 @@ export default function ForgotPassword(): React.JSX.Element {
         }
       >
         {sent ? (
-          <div className="space-y-5">
-            <div className="flex justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10" aria-hidden>
-                <CheckCircle2 className="h-8 w-8 text-primary" />
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-border/60 bg-muted/40 p-4 text-start">
+          <AuthCheckEmailSuccess
+            secondaryLabel={t("auth.tryDifferentEmail")}
+            onSecondary={() => {
+              setSent(false);
+              setEmail("");
+              setError("");
+            }}
+            footer={<AuthBackLink to={ROUTES.login} label={t("auth.backToSignIn")} />}
+          >
+            <AuthMutedPanel>
               <div className="flex items-start gap-3">
                 <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
                 <div>
@@ -72,23 +78,8 @@ export default function ForgotPassword(): React.JSX.Element {
                   </p>
                 </div>
               </div>
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setSent(false);
-                setEmail("");
-                setError("");
-              }}
-              className="h-11 w-full rounded-xl"
-            >
-              {t("auth.tryDifferentEmail")}
-            </Button>
-
-            <AuthBackLink to={ROUTES.login} label={t("auth.backToSignIn")} />
-          </div>
+            </AuthMutedPanel>
+          </AuthCheckEmailSuccess>
         ) : (
           <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4" noValidate aria-busy={loading}>
             <fieldset disabled={loading} className="m-0 min-w-0 space-y-4 border-0 p-0">

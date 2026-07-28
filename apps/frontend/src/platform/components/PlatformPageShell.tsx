@@ -203,13 +203,24 @@ export function PlatformPageShell({
   );
 }
 
-export function PlatformLogoMark(): React.JSX.Element {
+export function PlatformLogoMark({
+  size = "lg",
+}: {
+  size?: "sm" | "lg";
+} = {}): React.JSX.Element {
+  const isSm = size === "sm";
   return (
     <div
-      className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-secondary shadow-md shadow-primary/20 hover:scale-105 transition-all duration-300"
+      className={
+        isSm
+          ? "flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-primary to-secondary shadow-sm shadow-primary/20"
+          : "mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-secondary shadow-md shadow-primary/20"
+      }
       aria-hidden
     >
-      <span className="font-display text-2xl font-black text-white">م</span>
+      <span className={isSm ? "font-display text-sm font-black text-white" : "font-display text-2xl font-black text-white"}>
+        م
+      </span>
     </div>
   );
 }

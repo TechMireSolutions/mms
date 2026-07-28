@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, RefreshCw, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function AuthBackLink({
@@ -28,11 +28,15 @@ export function AuthSubmitButton({
   busyLabel,
   label,
   disabled,
+  icon: Icon,
+  showArrow = true,
 }: {
   busy: boolean;
   busyLabel: string;
   label: string;
   disabled?: boolean;
+  icon?: LucideIcon;
+  showArrow?: boolean;
 }): React.JSX.Element {
   return (
     <Button
@@ -48,10 +52,50 @@ export function AuthSubmitButton({
         </>
       ) : (
         <>
+          {Icon ? <Icon className="h-4 w-4" aria-hidden /> : null}
           {label}
-          <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden />
+          {showArrow ? <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden /> : null}
         </>
       )}
     </Button>
+  );
+}
+
+/** Shared OTP resend control — countdown text or resend button. */
+export function AuthResendCodeControl({
+  countdown,
+  onResend,
+  disabled,
+  countdownLabel,
+  resendLabel,
+}: {
+  countdown: number;
+  onResend: () => void;
+  disabled?: boolean;
+  countdownLabel: string;
+  resendLabel: string;
+}): React.JSX.Element {
+  if (countdown > 0) {
+    return (
+      <p className="text-center text-xs text-muted-foreground" role="status">
+        {countdownLabel}
+      </p>
+    );
+  }
+
+  return (
+    <div className="text-center">
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onResend}
+        disabled={disabled}
+        className="h-10 gap-1.5 text-xs font-medium text-primary"
+      >
+        <RefreshCw className="h-3.5 w-3.5" aria-hidden />
+        {resendLabel}
+      </Button>
+    </div>
   );
 }

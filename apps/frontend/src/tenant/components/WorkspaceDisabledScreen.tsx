@@ -3,7 +3,9 @@ import { ShieldAlert } from "lucide-react";
 import { ROUTES } from "@/lib/config/routes";
 import { apexUrl, getAppDomain } from "@/lib/config/tenantConfig";
 import { useTranslation } from "@/hooks/useTranslation";
+import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { AuthCardShell, AuthPageFrame } from "@/components/entry/AuthPageShell";
+import { AuthStatusHeader } from "@/components/entry/AuthStatusBanner";
 import { Button } from "@/components/ui/button";
 
 interface WorkspaceDisabledScreenProps {
@@ -20,35 +22,34 @@ export default function WorkspaceDisabledScreen({
   const appDomain = getAppDomain();
 
   return (
-    <AuthPageFrame>
-      <AuthCardShell
-        className="max-w-md"
-        header={
-          <div className="space-y-4">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10">
-              <ShieldAlert className="h-7 w-7 text-destructive" aria-hidden />
-            </div>
-            <div className="space-y-1.5">
-              <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                {t("platform.workspaceDisabledTitle")}
-              </h1>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {t("platform.workspaceDisabledMessage", {
-                  name: madrasaName,
-                  subdomain,
-                  domain: appDomain,
-                })}
-              </p>
-            </div>
-          </div>
-        }
-      >
-        <Button asChild size="lg" className="h-11 w-full rounded-xl font-semibold">
-          <a href={apexUrl(ROUTES.home)}>
-            {t("platform.contactSuperAdmin")}
-          </a>
-        </Button>
-      </AuthCardShell>
-    </AuthPageFrame>
+    <>
+      <EntryPageHead
+        title={formatEntryTitle(t("platform.workspaceDisabledTitle"), t("entry.productName"))}
+        description={t("entry.meta.workspaceDisabled")}
+      />
+      <AuthPageFrame>
+        <AuthCardShell
+          className="max-w-md"
+          header={
+            <AuthStatusHeader
+              icon={ShieldAlert}
+              tone="destructive"
+              title={t("platform.workspaceDisabledTitle")}
+              description={t("platform.workspaceDisabledMessage", {
+                name: madrasaName,
+                subdomain,
+                domain: appDomain,
+              })}
+            />
+          }
+        >
+          <Button asChild size="lg" className="h-11 w-full rounded-xl font-semibold">
+            <a href={apexUrl(ROUTES.home)}>
+              {t("platform.contactSuperAdmin")}
+            </a>
+          </Button>
+        </AuthCardShell>
+      </AuthPageFrame>
+    </>
   );
 }

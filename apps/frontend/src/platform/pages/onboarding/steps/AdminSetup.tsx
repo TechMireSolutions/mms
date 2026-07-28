@@ -1,12 +1,13 @@
 import React from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { DEFAULT_GLOBAL_SETTINGS, getPasswordPolicyHint } from "@mms/shared";
+import { DEFAULT_GLOBAL_SETTINGS, getPasswordPolicyHintKey } from "@mms/shared";
 import { OnboardingData } from "@/platform/pages/onboarding/OnboardingWizard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FORM_LABEL } from "@/components/ui/formStyles";
-import PasswordInput from "@/components/ui/PasswordInput";
+import { AuthEmailField, AuthPasswordField } from "@/components/entry";
+import { cn } from "@/lib/utils";
 
 /** The subset of onboarding data used by this step. */
 export interface AdminSetupData {
@@ -20,19 +21,21 @@ export interface AdminSetupData {
 }
 
 interface FieldRowProps {
+  id: string;
   label: string;
   required?: boolean;
   children: React.ReactNode;
   hint?: string;
 }
 
-const FieldRow = ({ label, required = false, children, hint }: FieldRowProps) => (
-  <div>
-    <label className={FORM_LABEL}>
-      {label} {required ? <span className="text-destructive">*</span> : null}
+const FieldRow = ({ id, label, required = false, children, hint }: FieldRowProps) => (
+  <div className="space-y-1.5 text-start">
+    <label htmlFor={id} className={FORM_LABEL}>
+      {label}
+      {required ? <span className="ms-1 text-destructive" aria-hidden>*</span> : null}
     </label>
     {children}
-    {hint ? <p className="text-xs text-muted-foreground mt-1">{hint}</p> : null}
+    {hint ? <p className="text-xs leading-relaxed text-muted-foreground">{hint}</p> : null}
   </div>
 );
 
@@ -62,6 +65,8 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
     onChange((prev) => ({ ...prev, [field]: fieldValue } as OnboardingData));
   };
   const strength = getStrength(data.password || "");
+  const passwordMismatch =
+    Boolean(data.confirmPassword) && data.password !== data.confirmPassword;
 
   const getStrengthLabel = (score: number): string => {
     switch (score) {
@@ -80,118 +85,130 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
 
   return (
     <div className="space-y-4">
-      {/* Name row */}
-      <div className="grid grid-cols-2 gap-3">
-        <FieldRow label={t("onboarding.admin.firstName")} required>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <FieldRow id="firstName" label={t("onboarding.admin.firstName")} required>
           <Input
             id="firstName"
             name="firstName"
             type="text"
+            autoComplete="given-name"
+            autoFocus
+            required
             value={data.firstName || ""}
             onChange={(event) => update("firstName", event.target.value)}
             placeholder={t("onboarding.admin.firstNamePlaceholder")}
+            className="h-11"
           />
         </FieldRow>
-        <FieldRow label={t("onboarding.admin.lastName")} required>
+        <FieldRow id="lastName" label={t("onboarding.admin.lastName")} required>
           <Input
             id="lastName"
             name="lastName"
             type="text"
+            autoComplete="family-name"
+            required
             value={data.lastName || ""}
             onChange={(event) => update("lastName", event.target.value)}
             placeholder={t("onboarding.admin.lastNamePlaceholder")}
+            className="h-11"
           />
         </FieldRow>
       </div>
 
-      <FieldRow label={t("onboarding.admin.email")} required>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          value={data.email || ""}
-          onChange={(event) => update("email", event.target.value)}
-          placeholder={t("onboarding.admin.emailPlaceholder")}
-        />
-      </FieldRow>
+      <AuthEmailField
+        id="email"
+        label={t("onboarding.admin.email")}
+        value={data.email || ""}
+        placeholder={t("onboarding.admin.emailPlaceholder")}
+        onChange={(value) => update("email", value)}
+      />
 
-      <FieldRow label={t("onboarding.admin.phone")}>
+      <FieldRow id="phone" label={t("onboarding.admin.phone")}>
         <Input
           id="phone"
           name="phone"
           type="tel"
+          autoComplete="tel"
           value={data.phone || ""}
           onChange={(event) => update("phone", event.target.value)}
           placeholder={t("onboarding.admin.phonePlaceholder")}
+          className="h-11"
         />
       </FieldRow>
 
-      {/* Password */}
-      <div>
-        <PasswordInput
+      <div className="space-y-1.5">
+        <AuthPasswordField
           id="password"
-          name="password"
-          label={`${t("onboarding.admin.password")} *`}
+          label={t("onboarding.admin.password")}
           autoComplete="new-password"
-          required
           value={data.password || ""}
-          onChange={(event) => update("password", event.target.value)}
-          placeholder="••••••••"
+          placeholder={t("auth.passwordPlaceholder")}
+          onChange={(value) => update("password", value)}
+          describedBy="onboarding-password-hint"
         />
-        <p className="text-xs text-muted-foreground mt-1">
-          {getPasswordPolicyHint(DEFAULT_GLOBAL_SETTINGS.passwordPolicy)}
+        <p id="onboarding-password-hint" className="text-xs leading-relaxed text-muted-foreground">
+          {t(getPasswordPolicyHintKey(DEFAULT_GLOBAL_SETTINGS.passwordPolicy))}
         </p>
         {data.password ? (
-          <div className="mt-2 space-y-1">
-            <div className="flex gap-1">
+          <div className="mt-2 space-y-1" aria-live="polite">
+            <div
+              className="flex gap-1"
+              role="meter"
+              aria-valuenow={strength}
+              aria-valuemin={0}
+              aria-valuemax={4}
+              aria-label={getStrengthLabel(strength)}
+            >
               {[1, 2, 3, 4].map((level) => (
                 <div
                   key={level}
-                  className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                    strength >= level ? strengthColors[strength] : "bg-muted"
-                  }`}
+                  className={cn(
+                    "h-1 flex-1 rounded-full transition-all duration-300",
+                    strength >= level ? strengthColors[strength] : "bg-muted",
+                  )}
                 />
               ))}
             </div>
-            <p className={`text-xs font-medium ${
-              strength <= 1 ? "text-destructive" : strength === 2 ? "text-warning" : strength === 3 ? "text-warning" : "text-primary"
-            }`}>
+            <p
+              className={cn(
+                "text-xs font-medium",
+                strength <= 1
+                  ? "text-destructive"
+                  : strength <= 3
+                    ? "text-warning"
+                    : "text-primary",
+              )}
+            >
               {getStrengthLabel(strength)}
             </p>
           </div>
         ) : null}
       </div>
 
-      {/* Confirm password */}
-      <div>
-        <PasswordInput
-          id="confirmPassword"
-          name="confirmPassword"
-          label={`${t("onboarding.admin.confirmPassword")} *`}
-          autoComplete="new-password"
-          required
-          value={data.confirmPassword || ""}
-          onChange={(event) => update("confirmPassword", event.target.value)}
-          placeholder="••••••••"
-        />
-        {data.confirmPassword && data.password !== data.confirmPassword ? (
-          <p className="text-xs text-destructive mt-1">{t("onboarding.admin.passwordMismatch")}</p>
-        ) : null}
-      </div>
+      <AuthPasswordField
+        id="confirmPassword"
+        label={t("onboarding.admin.confirmPassword")}
+        autoComplete="new-password"
+        value={data.confirmPassword || ""}
+        placeholder={t("auth.passwordPlaceholder")}
+        onChange={(value) => update("confirmPassword", value)}
+        error={passwordMismatch ? t("onboarding.admin.passwordMismatch") : undefined}
+      />
 
-      {/* Terms */}
-      <div className="flex items-start gap-2.5 pt-1">
+      <label
+        htmlFor="terms"
+        className="flex min-h-10 cursor-pointer items-start gap-2.5 rounded-lg pt-1 select-none"
+      >
         <Checkbox
           id="terms"
           checked={data.agreedTerms || false}
           onCheckedChange={(checked) => update("agreedTerms", checked === true)}
           className="mt-0.5"
         />
-        <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none">
+        <span className="text-xs leading-relaxed text-muted-foreground">
           {t("onboarding.agreeTerms")}
-        </label>
-      </div>
+        </span>
+      </label>
     </div>
   );
 }
-

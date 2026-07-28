@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 import {
   DEFAULT_GLOBAL_SETTINGS,
   maskEmail,
@@ -11,9 +10,15 @@ import {
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import AuthLayout from "@/tenant/components/AuthLayout";
-import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
-import { AuthBackLink } from "@/components/entry/AuthFormControls";
-import { AuthStatusBanner } from "@/components/entry/AuthStatusBanner";
+import {
+  AuthBackLink,
+  AuthMutedPanel,
+  AuthResendCodeControl,
+  AuthStatusBanner,
+  AuthSubmitButton,
+  EntryPageHead,
+  formatEntryTitle,
+} from "@/components/entry";
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import {
@@ -24,7 +29,6 @@ import {
 } from "@/lib/twoFactor";
 import { useResendCountdown } from "@/hooks/useResendCountdown";
 import { OtpInput, createEmptyOtp, isOtpComplete } from "@/components/ui/OtpInput";
-import { Button } from "@/components/ui/button";
 
 /**
  * Two-factor verification after login when global settings require it.
@@ -124,69 +128,45 @@ export default function TwoFactorAuth(): React.JSX.Element {
         subtitle={t(twoFactorSubtitleKey)}
       >
         <form onSubmit={(event) => void handleSubmit(event)} className="space-y-5" noValidate aria-busy={loading}>
-          <div className="flex justify-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10" aria-hidden>
-              <ShieldCheck className="h-7 w-7 text-primary" />
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-border/60 bg-muted/40 px-4 py-3 text-center">
-            <p className="text-xs text-muted-foreground">
-              {t("auth.codeSentTo")}{" "}
-              <span className="font-medium text-foreground">{maskedEmail}</span>
-            </p>
-          </div>
-
-          <OtpInput
-            value={code}
-            onChange={(next) => {
-              setCode(next);
-              if (error) setError("");
-            }}
-            ariaLabel={t("auth.twoFactorTitle")}
-            disabled={loading}
-            hasError={Boolean(error)}
-          />
-
-          {error ? <AuthStatusBanner message={error} /> : null}
-
-          <Button
-            type="submit"
-            size="lg"
-            disabled={loading || !isComplete}
-            className="h-11 w-full rounded-xl font-semibold shadow-md shadow-primary/10"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                {t("auth.verifying")}
-              </>
-            ) : (
-              t("auth.verifySignIn")
-            )}
-          </Button>
-
-          <div className="text-center">
-            {resendCountdown > 0 ? (
-              <p className="text-xs text-muted-foreground" role="status">
-                {t("auth.resendCountdown", { seconds: resendCountdown })}
+          <fieldset disabled={loading} className="m-0 min-w-0 space-y-5 border-0 p-0">
+            <AuthMutedPanel align="center">
+              <p className="text-xs text-muted-foreground">
+                {t("auth.codeSentTo")}{" "}
+                <span className="font-medium text-foreground">{maskedEmail}</span>
               </p>
-            ) : (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => void handleResend()}
-                disabled={loading}
-                className="h-10 gap-1.5 text-xs font-medium text-primary"
-              >
-                <RefreshCw className="h-3.5 w-3.5" aria-hidden />
-                {t("auth.resendCode")}
-              </Button>
-            )}
-          </div>
+            </AuthMutedPanel>
 
-          <AuthBackLink to={ROUTES.login} label={t("auth.backToSignIn")} />
+            <OtpInput
+              value={code}
+              onChange={(next) => {
+                setCode(next);
+                if (error) setError("");
+              }}
+              ariaLabel={t("auth.twoFactorTitle")}
+              disabled={loading}
+              hasError={Boolean(error)}
+            />
+
+            {error ? <AuthStatusBanner message={error} /> : null}
+
+            <AuthSubmitButton
+              busy={loading}
+              busyLabel={t("auth.verifying")}
+              label={t("auth.verifySignIn")}
+              disabled={!isComplete}
+              showArrow={false}
+            />
+
+            <AuthResendCodeControl
+              countdown={resendCountdown}
+              onResend={() => void handleResend()}
+              disabled={loading}
+              countdownLabel={t("auth.resendCountdown", { seconds: resendCountdown })}
+              resendLabel={t("auth.resendCode")}
+            />
+
+            <AuthBackLink to={ROUTES.login} label={t("auth.backToSignIn")} />
+          </fieldset>
         </form>
       </AuthLayout>
     </>

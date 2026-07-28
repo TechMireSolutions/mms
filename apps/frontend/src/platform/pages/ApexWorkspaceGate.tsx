@@ -3,10 +3,14 @@ import { Link } from "react-router-dom";
 import { Globe, Shield } from "lucide-react";
 import type { AppTranslationKey } from "@mms/shared";
 import WorkspaceRegistryList from "@/platform/components/WorkspaceRegistryList";
-import ApexEntryNav from "@/platform/components/ApexEntryNav";
-import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
-import { AuthBackLink } from "@/components/entry/AuthFormControls";
-import { AuthPageFrame } from "@/components/entry/AuthPageShell";
+import {
+  AuthBackLink,
+  AuthCardShell,
+  AuthPageFrame,
+  AuthStatusHeader,
+  EntryPageHead,
+  formatEntryTitle,
+} from "@/components/entry";
 import { ROUTES } from "@/lib/config/routes";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
@@ -19,8 +23,9 @@ const TITLE_KEYS: Record<ApexGateVariant, AppTranslationKey> = {
   tenantOnly: "apex.gateTenantOnlyTitle",
 };
 
-const MESSAGE_KEYS: Partial<Record<ApexGateVariant, AppTranslationKey>> = {
+const MESSAGE_KEYS: Record<ApexGateVariant, AppTranslationKey> = {
   forgotPassword: "apex.gateForgotMessage",
+  twoFactor: "apex.gateTwoFactorMessage",
   tenantOnly: "apex.gateTenantOnlyMessage",
 };
 
@@ -43,7 +48,6 @@ export default function ApexWorkspaceGate({
   showWorkspaceList = true,
 }: ApexWorkspaceGateProps): React.JSX.Element {
   const { t } = useTranslation();
-  const messageKey = MESSAGE_KEYS[variant];
   const isForgotPicker = variant === "forgotPassword";
   const gateTitle = t(TITLE_KEYS[variant]);
 
@@ -54,36 +58,39 @@ export default function ApexWorkspaceGate({
         description={t(META_DESC_KEYS[variant])}
       />
       <AuthPageFrame>
-        <div className="relative z-10 mx-auto w-full max-w-lg space-y-5 px-1 text-center">
-          <Globe className="mx-auto h-10 w-10 text-primary" aria-hidden />
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">{gateTitle}</h1>
-          {messageKey ? (
-            <p className="text-sm leading-relaxed text-muted-foreground">{t(messageKey)}</p>
-          ) : null}
-
-          {showWorkspaceList ? (
-            <WorkspaceRegistryList
-              destinationPath={isForgotPicker ? ROUTES.forgotPassword : ROUTES.login}
-              actionLabelKey={isForgotPicker ? "apex.resetPasswordAt" : "auth.signInTo"}
+        <AuthCardShell
+          className="max-w-lg"
+          header={
+            <AuthStatusHeader
+              icon={Globe}
+              title={gateTitle}
+              description={t(MESSAGE_KEYS[variant])}
             />
-          ) : null}
+          }
+        >
+          <div className="space-y-5">
+            {showWorkspaceList ? (
+              <WorkspaceRegistryList
+                destinationPath={isForgotPicker ? ROUTES.forgotPassword : ROUTES.login}
+                actionLabelKey={isForgotPicker ? "apex.resetPasswordAt" : "auth.signInTo"}
+              />
+            ) : null}
 
-          <ApexEntryNav showHomeLink={variant === "forgotPassword"} />
+            {variant === "forgotPassword" ? (
+              <div className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-start">
+                <p className="text-sm text-muted-foreground">{t("apex.platformAdminHint")}</p>
+                <Button asChild variant="default" className="h-11 w-full rounded-xl">
+                  <Link to={ROUTES.platformForgotPassword}>
+                    <Shield className="h-4 w-4" aria-hidden />
+                    {t("apex.platformAdminForgot")}
+                  </Link>
+                </Button>
+              </div>
+            ) : null}
 
-          {variant === "forgotPassword" ? (
-            <div className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-start">
-              <p className="text-sm text-muted-foreground">{t("apex.platformAdminHint")}</p>
-              <Button asChild variant="default" className="h-11 w-full rounded-xl">
-                <Link to={ROUTES.platformForgotPassword}>
-                  <Shield className="h-4 w-4" aria-hidden />
-                  {t("apex.platformAdminForgot")}
-                </Link>
-              </Button>
-            </div>
-          ) : null}
-
-          <AuthBackLink to={ROUTES.home} label={t("apex.backToMain")} />
-        </div>
+            <AuthBackLink to={ROUTES.home} label={t("apex.backToMain")} />
+          </div>
+        </AuthCardShell>
       </AuthPageFrame>
     </>
   );

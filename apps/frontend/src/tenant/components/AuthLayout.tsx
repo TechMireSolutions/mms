@@ -10,8 +10,12 @@ import { applyTenantDocumentFavicon } from "@/lib/documentFavicon";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTenantBranding } from "@/tenant/hooks/useTenantBranding";
-import AuthLoadingShell from "@/components/entry/AuthLoadingShell";
-import { AuthCardShell, AuthPageFrame } from "@/components/entry/AuthPageShell";
+import {
+  AuthCardShell,
+  AuthFormHeading,
+  AuthLoadingShell,
+  AuthPageFrame,
+} from "@/components/entry";
 
 export interface AuthLayoutProps {
   children?: React.ReactNode;
@@ -23,6 +27,7 @@ export interface AuthLayoutProps {
 /**
  * Centered layout for pre-authenticated auth screens (login, 2FA, forgot password).
  * Uses server public branding — no localStorage db reads on the entry path.
+ * Document title is owned by EntryPageHead on each page (SSOT).
  */
 export default function AuthLayout({
   children,
@@ -63,9 +68,6 @@ export default function AuthLayout({
       return;
     }
     applyTenantEntryTheme(entryBranding);
-    if (displayName) {
-      document.title = `${displayName} - Madrasa MS`;
-    }
     applyTenantDocumentFavicon({
       faviconUrl: entryBranding.faviconUrl,
       logoUrl: entryBranding.logoUrl,
@@ -116,13 +118,8 @@ export default function AuthLayout({
             </div>
 
             {title ? (
-              <div className="space-y-1 border-t border-border/40 pt-4">
-                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                  {title}
-                </h1>
-                {subtitle ? (
-                  <p className="text-sm leading-relaxed text-muted-foreground">{subtitle}</p>
-                ) : null}
+              <div className="border-t border-border/40 pt-4">
+                <AuthFormHeading title={title} subtitle={subtitle} />
               </div>
             ) : null}
           </div>
