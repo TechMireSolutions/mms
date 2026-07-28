@@ -11,23 +11,16 @@
 import React, {
   createContext,
   useContext,
-  useState,
   useCallback,
-  useEffect,
   useMemo,
   useRef,
   ReactNode,
 } from "react";
-import { loadFieldConfig, saveFieldConfig, saveFieldConfigAsync } from "@/lib/contactFieldsStore";
 import {
   FieldConfig,
   ContactPreferences,
-  ContactColumnPreference,
   FieldDefinition,
   ColumnRegistryEntry,
-  DEFAULT_ENABLED_TABS,
-  INITIAL_FIELD_SEED,
-  canViewContactTab,
   buildDynamicContactSchema,
   formatZodIssues,
   type ValidationError,
@@ -35,22 +28,11 @@ import {
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
-import {
-  loadModuleColumnPreferences,
-  saveModuleColumnPreferenceList,
-  saveModuleColumnRegistry,
-} from "@/lib/columnPreferences/moduleColumnPreferencesStorage";
-import { useContactColumnPrefs, useContactColumnPrefsMutation } from "@/tenant/hooks/collections/contacts";
-import {
-  DEFAULT_PREFERENCES,
-  loadPreferences,
-  savePreferences,
-  savePreferencesAsync,
-} from "@/lib/contacts/preferencesStorage";
 import { getFallbackCountryCode } from "@/lib/contacts/contactI18n";
 import { getContactConfigCollectionDefaults } from "@/lib/contacts/contactConfigSeeds";
 import { useContactConfigCollections } from "@/lib/contacts/useContactConfigCollections";
 import { useContactColumnRegistry } from "@/lib/contacts/useContactColumnRegistry";
+import { useContactConfigCore } from "@/lib/contacts/useContactConfigCore";
 
 // ── Context Interface ─────────────────────────────────────────────────────────
 export interface ContactConfigContextType {
@@ -112,39 +94,33 @@ export const ContactConfigContext = createContext<ContactConfigContextType | nul
  */
 export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const [queryEnabled, setQueryEnabled] = useState(false);
-  useEffect(() => {
-    setQueryEnabled(Boolean(user?.id));
-  }, [user?.id]);
-
-  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useContactColumnPrefs({
-    enabled: queryEnabled,
-  });
-  const { mutate: saveColumnPrefs } = useContactColumnPrefsMutation();
-  const migratedLocalColumnPrefs = useRef(false);
-  const lastUserIdRef = useRef<string | number | undefined>(user?.id);
-  const [fieldConfig, setFieldConfigState] = useState<FieldConfig>(() => loadFieldConfig());
-  const [localUserColumnOverlay, setLocalUserColumnOverlay] = useState<ContactColumnPreference[] | null>(null);
-
-  const rawUserColumnOverlay = useMemo(() => {
-    if (localUserColumnOverlay) {
-      return localUserColumnOverlay;
-    }
-    if (columnPrefsLoaded && serverColumnPrefs && serverColumnPrefs.length > 0) {
-      return serverColumnPrefs;
-    }
-    const userId = user?.id ? String(user.id) : "";
-    if (userId) {
-      return loadModuleColumnPreferences("contacts", userId);
-    }
-    return null;
-  }, [localUserColumnOverlay, columnPrefsLoaded, serverColumnPrefs, user?.id]);
-
-  const [prefs, setPrefsState] = useState<ContactPreferences>(() => ({
-    ...DEFAULT_PREFERENCES,
-    ...loadPreferences(),
-  }));
   const contactConfigDefaults = useMemo(() => getContactConfigCollectionDefaults(), []);
+  const viewerRole = user?.role ?? "";
+  const reloadCollectionsRef = useRef<() => void>(() => undefined);
+
+  const {
+    fieldConfig,
+    setFieldConfigState,
+    prefs,
+    rawUserColumnOverlay,
+    updateConfig,
+    updateConfigAsync,
+    updatePrefs,
+    updatePrefsAsync,
+    updateColumnRegistry,
+    updateUserColumnLayout,
+    enabledTabIds,
+    requiredTabIds,
+    fields,
+    isTabFieldEnabled,
+    isTabFieldRequired,
+  } = useContactConfigCore({
+    userId: user?.id,
+    userRole: viewerRole,
+    reloadCollections: () => {
+      reloadCollectionsRef.current();
+    },
+  });
 
   const {
     genders,
@@ -168,153 +144,11 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     setFieldConfigState,
   });
 
-  const reloadContactConfigFromDatabaseCache = useCallback(() => {
-    setFieldConfigState(loadFieldConfig());
-    setPrefsState({
-      ...DEFAULT_PREFERENCES,
-      ...loadPreferences(),
-    });
-    reloadCollections();
-  }, [reloadCollections]);
-
-  useEffect(() => {
-    if (lastUserIdRef.current !== user?.id) {
-      lastUserIdRef.current = user?.id;
-      setTimeout(reloadContactConfigFromDatabaseCache, 0);
-    }
-  }, [reloadContactConfigFromDatabaseCache, user?.id]);
-
-  useEffect(() => {
-    const handleLocalDatabaseUpdate = () => {
-      setTimeout(reloadContactConfigFromDatabaseCache, 0);
-    };
-    window.addEventListener("local-database-update", handleLocalDatabaseUpdate);
-    return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
-  }, [reloadContactConfigFromDatabaseCache]);
-
-  useEffect(() => {
-    if (!user?.id) {
-      setTimeout(() => {
-        setLocalUserColumnOverlay(null);
-      }, 0);
-      migratedLocalColumnPrefs.current = false;
-      return;
-    }
-    if (!columnPrefsLoaded) return;
-
-    const userId = String(user.id);
-    if (serverColumnPrefs && serverColumnPrefs.length > 0) {
-      saveModuleColumnPreferenceList("contacts", userId, serverColumnPrefs);
-      return;
-    }
-
-    const local = loadModuleColumnPreferences("contacts", userId);
-    if (local?.length && !migratedLocalColumnPrefs.current) {
-      migratedLocalColumnPrefs.current = true;
-      saveColumnPrefs(local);
-    }
-  }, [user?.id, columnPrefsLoaded, serverColumnPrefs, saveColumnPrefs]);
-
-  // ── Mutators ──────────────────────────────────────────────────────────────
-  const updateConfig = useCallback((nextConfig: FieldConfig) => {
-    saveFieldConfig(nextConfig);
-    setFieldConfigState(nextConfig);
-  }, []);
-
-  const updateConfigAsync = useCallback(async (nextConfig: FieldConfig): Promise<void> => {
-    await saveFieldConfigAsync(nextConfig);
-    setFieldConfigState(nextConfig);
-  }, []);
-
-  const updatePrefs = useCallback((newPrefs: Partial<ContactPreferences>) => {
-    setPrefsState((currentPreferences) => {
-      const merged = { ...currentPreferences, ...newPrefs };
-      savePreferences(merged);
-      return merged;
-    });
-  }, []);
-
-  const updatePrefsAsync = useCallback(async (newPrefs: Partial<ContactPreferences>): Promise<void> => {
-    const merged = { ...prefs, ...newPrefs };
-    await savePreferencesAsync(merged);
-    setPrefsState(merged);
-  }, [prefs]);
-
-  const updateColumnRegistry = useCallback((columnRegistry: ColumnRegistryEntry[]) => {
-    updateConfig({ ...fieldConfig, columnRegistry });
-  }, [fieldConfig, updateConfig]);
-
-  const updateUserColumnLayout = useCallback((columnRegistry: ColumnRegistryEntry[]) => {
-    const userId = user?.id ? String(user.id) : "";
-    if (!userId) return;
-    saveModuleColumnRegistry("contacts", userId, columnRegistry);
-    const preferences: ContactColumnPreference[] = columnRegistry.map(({ key, enabled, order, width }) => {
-      const preference: ContactColumnPreference = { key, enabled, order };
-      if (typeof width === "number") preference.width = width;
-      return preference;
-    });
-    setLocalUserColumnOverlay(preferences);
-    saveColumnPrefs(preferences);
-  }, [user?.id, saveColumnPrefs]);
-
-  const viewerRole = user?.role ?? '';
-
-  const enabledTabIds = useMemo(() => {
-    if (fieldConfig.formTabs) {
-      const activeFromTabs = fieldConfig.formTabs
-        .filter((tab) => canViewContactTab(viewerRole, tab) && tab.enabled !== false)
-        .map((tab) => tab.key);
-      return new Set([...DEFAULT_ENABLED_TABS, ...activeFromTabs]);
-    }
-    return new Set([...DEFAULT_ENABLED_TABS, ...(fieldConfig.enabledTabs || [])]);
-  }, [fieldConfig, viewerRole]);
-
-  const requiredTabIds = useMemo(() => {
-    return new Set(fieldConfig.requiredTabs || []);
-  }, [fieldConfig]);
-
-  const fields = useMemo(() => {
-    return fieldConfig.fields || {};
-  }, [fieldConfig]);
+  reloadCollectionsRef.current = reloadCollections;
 
   const defaultPhoneCountryCode = useMemo(
     () => getFallbackCountryCode(prefs, countryCodesMap, countryCodes),
     [countryCodes, countryCodesMap, prefs],
-  );
-
-  /**
-   * Returns true if a specific field inside a tab is enabled.
-   *
-   * @param {string} tabId - Tab identifier.
-   * @param {string} fieldId - Field identifier.
-   * @returns {boolean}
-   */
-  const isTabFieldEnabled = useCallback(
-    (tabId: string, fieldId: string) => {
-      const tabFieldsList = fields[tabId];
-      if (!tabFieldsList || tabFieldsList.length === 0) {
-        const seedField = (INITIAL_FIELD_SEED[tabId] || []).find((f: FieldDefinition) => f.key === fieldId);
-        return seedField?.enabled ?? false;
-      }
-      const field = tabFieldsList.find((fieldDefinition) => fieldDefinition.key === fieldId);
-      return field?.enabled ?? false;
-    },
-    [fields]
-  );
-
-  /**
-   * Returns true if a specific field inside a tab is required.
-   *
-   * @param {string} tabId - Tab identifier.
-   * @param {string} fieldId - Field identifier.
-   * @returns {boolean}
-   */
-  const isTabFieldRequired = useCallback(
-    (tabId: string, fieldId: string) => {
-      const field = (fields[tabId] || []).find((fieldDefinition) => fieldDefinition.key === fieldId);
-      return field?.required ?? false;
-    },
-    [fields]
   );
 
   const {
@@ -413,7 +247,7 @@ export function useContactValidation() {
   const { fieldConfig, enabledTabIds, requiredTabIds, fields } = useContactConfig();
   const settings = useGlobalSettings();
   const { role } = usePermissions();
-  const viewerRole = role ?? '';
+  const viewerRole = role ?? "";
 
   return useCallback(
     (contactDraft: unknown): ValidationError[] => {

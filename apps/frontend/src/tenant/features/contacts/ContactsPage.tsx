@@ -1,30 +1,19 @@
-import React, { useMemo, lazy, Suspense, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { UserPlus, AlertTriangle, Download, Users, Loader2 } from "lucide-react";
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import React, { useCallback } from "react";
+import { Users } from "lucide-react";
 import { CONTACTS_MODULE_MANIFEST } from "@mms/shared";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useContactsPageState } from "@/tenant/features/contacts/hooks/useContactsPageState";
+import { useContactsPageDirectoryProps } from "@/tenant/features/contacts/hooks/useContactsPageDirectoryProps";
 import { useContactConfig, useContactColumns } from "@/lib/contexts/ContactConfigContext";
-import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
-import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
-import { ActionButton } from "@/components/ui/ActionButton";
 import { ContactsCommandMetrics } from "@/tenant/features/contacts/components/ContactsCommandMetrics";
 import ContactsDataBanner from "@/tenant/features/contacts/components/ContactsDataBanner";
 import ContactsSyncConflictPanel from "@/tenant/features/contacts/components/ContactsSyncConflictPanel";
-import { ContactsWorkDirectory } from "@/tenant/features/contacts/components/ContactsWorkDirectory";
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { ContactsPageOverlays } from "@/tenant/features/contacts/components/ContactsPageOverlays";
+import { ContactsPageTabPanel } from "@/tenant/features/contacts/components/ContactsPageTabPanel";
+import { ContactsPageHeaderActions } from "@/tenant/features/contacts/components/ContactsPageHeaderActions";
 import { useGoogleContactsOAuthListener } from "@/lib/contacts/googleContactsOAuthListener";
-
-import ContactsSettingsPanel from "@/tenant/features/contacts/components/ContactsSettingsPanel";
-
-const ContactForm = lazy(() => import("@/tenant/features/contacts/components/ContactForm"));
-const DuplicateDetection = lazy(() => import("@/tenant/features/contacts/components/DuplicateDetection"));
-const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
-const ContactDetailDrawer = lazy(() => import("@/tenant/features/contacts/components/ContactDetailDrawer"));
-
 
 function ContactsInner() {
   const {
@@ -141,31 +130,7 @@ function ContactsInner() {
     setActiveTab("setup");
   }, [setActiveTab]));
 
-  const messagingHandlers = useMemo(() => {
-    if (!canWriteMessaging || viewingDeleted) {
-      return { onWhatsApp: undefined, onSms: undefined, onEmail: undefined };
-    }
-    return { onWhatsApp: handleWhatsApp, onSms: handleSms, onEmail: handleEmail };
-  }, [canWriteMessaging, viewingDeleted, handleWhatsApp, handleSms, handleEmail]);
-
-  const commonDirectoryProps = useMemo(() => ({
-    contacts: workContacts,
-    selected,
-    onSelect: handleSelect,
-    onSelectAll: handleSelectAll,
-    onView: setViewContact,
-    onEdit: handleEdit,
-    onDelete: handleDelete,
-    onRestore: handleRestore,
-    showArchived: viewingDeleted,
-    ...messagingHandlers,
-    allContacts: allContactsForLinks,
-    onUpdateContact: handleUpdateContact,
-    canWrite,
-    canDelete,
-    columns: tableColumns,
-    allSelected: workContacts.length > 0 && selected.length === workContacts.length,
-  }), [
+  const { messagingHandlers, commonDirectoryProps, tableProps } = useContactsPageDirectoryProps({
     workContacts,
     selected,
     handleSelect,
@@ -175,20 +140,19 @@ function ContactsInner() {
     handleDelete,
     handleRestore,
     viewingDeleted,
-    messagingHandlers,
+    canWriteMessaging,
+    handleWhatsApp,
+    handleSms,
+    handleEmail,
     allContactsForLinks,
     handleUpdateContact,
     canWrite,
     canDelete,
     tableColumns,
-  ]);
-
-  const tableProps = useMemo(() => ({
-    ...commonDirectoryProps,
     sortField,
     sortDir,
-    onSort: handleSort,
-  }), [commonDirectoryProps, sortField, sortDir, handleSort]);
+    handleSort,
+  });
 
   return (
     <ModulePageShell
@@ -198,24 +162,15 @@ function ContactsInner() {
       headerTitle={t("nav.contacts")}
       headerSubtitle={t("page.contacts.subtitle")}
       headerActions={
-        <>
-          <ActionButton
-            variant="ghost"
-            icon={openingDuplicates ? Loader2 : AlertTriangle}
-            onClick={() => void handleOpenDuplicates()}
-            disabled={openingDuplicates}
-          >
-            {t("contacts.duplicates")}
-          </ActionButton>
-          {canExport && (
-            <ActionButton variant="ghost" icon={Download} onClick={handleExportCSV}>
-              {t("common.export")}
-            </ActionButton>
-          )}
-          {canWrite && !viewingDeleted && (
-            <ActionButton variant="primary" icon={UserPlus} onClick={handleNew}>{t("contacts.addContact")}</ActionButton>
-          )}
-        </>
+        <ContactsPageHeaderActions
+          canExport={canExport}
+          canWrite={canWrite}
+          viewingDeleted={viewingDeleted}
+          openingDuplicates={openingDuplicates}
+          onOpenDuplicates={() => void handleOpenDuplicates()}
+          onExport={handleExportCSV}
+          onAddContact={handleNew}
+        />
       }
       metricsStrip={
         <ContactsCommandMetrics
@@ -243,166 +198,97 @@ function ContactsInner() {
         onTabChange={setActiveTab}
         panelIdPrefix="contacts-tab"
       >
-      <AnimatePresence mode="wait">
-        {effectiveTab === "work" ? (
-          <motion.div key="work" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <ContactsWorkDirectory
-              search={search}
-              onSearchChange={setSearch}
-              filterGender={filterGender}
-              onGenderChange={setFilterGender}
-              quickFilter={quickFilter}
-              onQuickFilterChange={setQuickFilter}
-              sortField={sortField}
-              sortDir={sortDir}
-              onSort={handleSort}
-              hasActiveFilters={hasActiveFilters}
-              activeFilterCount={activeFilterCount}
-              onClearFilters={clearFilters}
-              viewingDeleted={viewingDeleted}
-              onShowDeletedChange={(next) => {
-                setShowDeletedArchives(next);
-                setSelected([]);
-              }}
-              canViewDeleted={canDelete}
-              viewModeOverride={viewModeOverride}
-              onViewModeChange={setViewModeOverride}
-              shownCount={shownCount}
-              workTruncated={workTruncated}
-              selected={selected}
-              onClearSelection={() => setSelected([])}
-              selectedTargets={selectedTargets}
-              bulkActions={bulkActions}
-              canWriteMessaging={canWriteMessaging}
-              canExport={canExport}
-              canDelete={canDelete}
-              onWhatsApp={handleWhatsApp}
-              onSms={handleSms}
-              onBulkExport={handleBulkExport}
-              onRequestBulkDelete={requestBulkDelete}
-              onRequestBulkRestore={requestBulkRestore}
-              isWorkError={isWorkError}
-              isWorkLoading={isWorkLoading}
-              isWorkFetching={isWorkFetching}
-              onRetryWork={() => void refetchWork()}
-              workContacts={workContacts}
-              tableColumns={tableColumns}
-              commonDirectoryProps={commonDirectoryProps}
-              tableProps={tableProps}
-              useServerWork={useServerWork}
-              workPageData={workPageData}
-              onPageChange={setListPage}
-            />
-          </motion.div>
-
-        ) : effectiveTab === "reports" ? (
-          <motion.div key="reports" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-            <ErrorBoundary>
-              <div className="space-y-4">
-                <KPISummary category="contacts" />
-                <ModuleReports category="contacts" />
-              </div>
-            </ErrorBoundary>
-          </motion.div>
-        ) : effectiveTab === "setup" ? (
-          <motion.div key="setup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-            <ErrorBoundary>
-              <ContactsSettingsPanel
-                contacts={contacts}
-                canWrite={canWrite}
-                canEditSetup={canEditSetup}
-                onImport={handleImport}
-              />
-            </ErrorBoundary>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+        <ContactsPageTabPanel
+          effectiveTab={effectiveTab}
+          search={search}
+          onSearchChange={setSearch}
+          filterGender={filterGender}
+          onGenderChange={setFilterGender}
+          quickFilter={quickFilter}
+          onQuickFilterChange={setQuickFilter}
+          sortField={sortField}
+          sortDir={sortDir}
+          onSort={handleSort}
+          hasActiveFilters={hasActiveFilters}
+          activeFilterCount={activeFilterCount}
+          onClearFilters={clearFilters}
+          viewingDeleted={viewingDeleted}
+          onShowDeletedChange={(next) => {
+            setShowDeletedArchives(next);
+            setSelected([]);
+          }}
+          canViewDeleted={canDelete}
+          viewModeOverride={viewModeOverride}
+          onViewModeChange={setViewModeOverride}
+          shownCount={shownCount}
+          workTruncated={workTruncated}
+          selected={selected}
+          onClearSelection={() => setSelected([])}
+          selectedTargets={selectedTargets}
+          bulkActions={bulkActions}
+          canWriteMessaging={canWriteMessaging}
+          canExport={canExport}
+          canDelete={canDelete}
+          onWhatsApp={handleWhatsApp}
+          onSms={handleSms}
+          onBulkExport={handleBulkExport}
+          onRequestBulkDelete={requestBulkDelete}
+          onRequestBulkRestore={requestBulkRestore}
+          isWorkError={isWorkError}
+          isWorkLoading={isWorkLoading}
+          isWorkFetching={isWorkFetching}
+          onRetryWork={() => void refetchWork()}
+          workContacts={workContacts}
+          tableColumns={tableColumns}
+          commonDirectoryProps={commonDirectoryProps}
+          tableProps={tableProps}
+          useServerWork={useServerWork}
+          workPageData={workPageData}
+          onPageChange={setListPage}
+          contacts={contacts}
+          canWrite={canWrite}
+          canEditSetup={canEditSetup}
+          onImport={handleImport}
+        />
       </ResponsiveAccordionTabs>
 
-      <Suspense fallback={null}>
-        <AnimatePresence>
-          <ContactForm
-              open={showForm}
-              key={editContact?.id || "new"}
-              contact={editContact ?? undefined}
-              defaultCountry={defaultCountry}
-              defaultCity={defaultCity}
-              defaultProvince={defaultProvince}
-              onClose={() => { setShowForm(false); setEditContact(null); }}
-              onSave={handleSave}
-            />
-          {showDuplicates && (
-            <DuplicateDetection
-              onClose={() => setShowDuplicates(false)}
-              onMerge={handleMerge}
-              canWrite={canWrite}
-            />
-          )}
-          {messagingTarget && (
-            <MessageComposer
-              channel={messagingTarget.channel}
-              recipients={messagingTarget.recipients}
-              onClose={closeComposer}
-            />
-          )}
-          {viewContact && (
-            <ContactDetailDrawer
-              contact={viewContact}
-              onClose={() => setViewContact(null)}
-              onEdit={(contactToEdit) => {
-                setViewContact(null);
-                handleEdit(contactToEdit);
-              }}
-              onWhatsApp={messagingHandlers.onWhatsApp}
-              onSms={messagingHandlers.onSms}
-              onEmail={messagingHandlers.onEmail}
-              allContacts={allContactsForLinks}
-              onUpdateContact={canWrite ? handleUpdateContact : undefined}
-              canWrite={canWrite}
-            />
-          )}
-        </AnimatePresence>
-      </Suspense>
-
-      <ConfirmAlertDialog
-        open={bulkDeleteOpen}
-        onOpenChange={setBulkDeleteOpen}
-        title={t("contacts.bulkDelete")}
-        description={t("contacts.bulkDeleteConfirm", { count: selected.length })}
-        confirmLabel={t("common.delete")}
-        onConfirm={confirmBulkDelete}
-        destructive
-        optionalReason={{
-          label: t("contacts.deletionReasonLabel"),
-          placeholder: t("contacts.deletionReasonPlaceholder"),
+      <ContactsPageOverlays
+        canWrite={canWrite}
+        showForm={showForm}
+        editContact={editContact}
+        defaultCountry={defaultCountry}
+        defaultCity={defaultCity}
+        defaultProvince={defaultProvince}
+        onCloseForm={() => { setShowForm(false); setEditContact(null); }}
+        onSave={handleSave}
+        showDuplicates={showDuplicates}
+        onCloseDuplicates={() => setShowDuplicates(false)}
+        onMerge={handleMerge}
+        messagingTarget={messagingTarget}
+        onCloseComposer={closeComposer}
+        viewContact={viewContact}
+        onCloseView={() => setViewContact(null)}
+        onEditFromDrawer={(contactToEdit) => {
+          setViewContact(null);
+          handleEdit(contactToEdit);
         }}
-      />
-      <ConfirmAlertDialog
-        open={deleteTarget !== null}
-        onOpenChange={(open) => {
+        onWhatsApp={messagingHandlers.onWhatsApp}
+        onSms={messagingHandlers.onSms}
+        onEmail={messagingHandlers.onEmail}
+        allContactsForLinks={allContactsForLinks}
+        onUpdateContact={canWrite ? handleUpdateContact : undefined}
+        bulkDeleteOpen={bulkDeleteOpen}
+        onBulkDeleteOpenChange={setBulkDeleteOpen}
+        selectedCount={selected.length}
+        onConfirmBulkDelete={confirmBulkDelete}
+        deleteTarget={deleteTarget}
+        onDeleteTargetOpenChange={(open) => {
           if (!open) setDeleteTarget(null);
         }}
-        title={t("contacts.deleteConfirmTitle")}
-        description={
-          deleteTarget?.name
-            ? t("contacts.deleteConfirmDescription", { name: deleteTarget.name })
-            : t("contacts.deleteConfirmDescriptionDefault")
-        }
-        confirmLabel={t("common.delete")}
-        onConfirm={confirmSingleDelete}
-        destructive
-        optionalReason={{
-          label: t("contacts.deletionReasonLabel"),
-          placeholder: t("contacts.deletionReasonPlaceholder"),
-        }}
-      />
-      <ConfirmAlertDialog
-        open={bulkRestoreOpen}
-        onOpenChange={setBulkRestoreOpen}
-        title={t("contacts.bulkRestore")}
-        description={t("contacts.bulkRestoreConfirm", { count: selected.length })}
-        confirmLabel={t("contacts.restoreContact")}
-        onConfirm={confirmBulkRestore}
+        onConfirmSingleDelete={confirmSingleDelete}
+        bulkRestoreOpen={bulkRestoreOpen}
+        onBulkRestoreOpenChange={setBulkRestoreOpen}
+        onConfirmBulkRestore={confirmBulkRestore}
       />
     </ModulePageShell>
   );

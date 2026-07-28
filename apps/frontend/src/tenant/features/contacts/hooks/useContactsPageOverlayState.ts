@@ -1,0 +1,39 @@
+import { useState } from "react";
+import type { Contact } from "@mms/shared";
+
+/** Overlay / dialog UI state for Contacts Work (form, drawer, duplicates, bulk confirms). */
+export function useContactsPageOverlayState() {
+  const [showForm, setShowForm] = useState(false);
+  const [editContact, setEditContact] = useState<Contact | null>(null);
+  const [viewContact, setViewContact] = useState<Contact | null>(null);
+  const [showDuplicates, setShowDuplicates] = useState(false);
+  const [openingDuplicates, setOpeningDuplicates] = useState(false);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string | number; name?: string } | null>(null);
+  const [viewModeOverride, setViewModeOverride] = useState<"table" | "cards" | null>(null);
+  const [conflictPanelOpen, setConflictPanelOpen] = useState(false);
+
+  return {
+    showForm,
+    setShowForm,
+    editContact,
+    setEditContact,
+    viewContact,
+    setViewContact,
+    showDuplicates,
+    setShowDuplicates,
+    openingDuplicates,
+    setOpeningDuplicates,
+    bulkDeleteOpen,
+    setBulkDeleteOpen,
+    bulkRestoreOpen,
+    setBulkRestoreOpen,
+    deleteTarget,
+    setDeleteTarget,
+    viewModeOverride,
+    setViewModeOverride,
+    conflictPanelOpen,
+    setConflictPanelOpen,
+  };
+}

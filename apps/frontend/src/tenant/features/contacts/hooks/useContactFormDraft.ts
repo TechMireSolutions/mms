@@ -1,24 +1,9 @@
 import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from "react";
-import { notify } from "@/lib/notify";
-import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactPhoneDisplay } from "@/lib/contacts/contactI18n";
-import { useContactConfig, useContactValidation } from "@/lib/contexts/ContactConfigContext";
-import {
-  toTitleCase,
-  applyTitleCaseToContact,
-  Contact,
-  todayISO,
-  cleanContactDraft,
-  normalizeContactForEdit,
-  syncContactScalarFields,
-  type ValidationError,
-} from "@mms/shared";
-import type {
-  AddSubListItem,
-  ContactSubListKey,
-  RemoveSubListItem,
-  UpdateSubListItem,
-} from "@/tenant/features/contacts/components/formTabs/types";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
+import { Contact, normalizeContactForEdit } from "@mms/shared";
+import { useContactFormSubLists } from "@/tenant/features/contacts/hooks/useContactFormSubLists";
+import { useContactFormSave } from "@/tenant/features/contacts/hooks/useContactFormSave";
 
 export function useContactFormDraft({
   open,
@@ -41,7 +26,6 @@ export function useContactFormDraft({
   onClose: () => void;
   onValidationTab: (tabId: string) => void;
 }) {
-  const { t } = useTranslation();
   const {
     isTabFieldEnabled,
     fields,
@@ -54,7 +38,6 @@ export function useContactFormDraft({
     countryCodes,
     defaultPhoneCountryCode,
   } = useContactConfig();
-  const validate = useContactValidation();
   const formInstanceId = contact?.id || "new";
   const defaultCountryCode = defaultPhoneCountryCode;
 
@@ -63,12 +46,22 @@ export function useContactFormDraft({
     return Array.from(new Set([defaultCountryCode, ...list].filter(Boolean)));
   }, [countryCodes, defaultCountryCode]);
 
-  const [saving, setSaving] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [contactDraft, setContactDraft] = useState<Partial<Contact>>(() =>
     normalizeContactForEdit(contact, initialDraft, defaultCity, defaultProvince, defaultCountry),
   );
+
+  const { saving, validationErrors, setValidationErrors, handleSave } = useContactFormSave({
+    contact,
+    contactDraft,
+    defaultCountryCode,
+    onSave,
+    onClose,
+    onValidationTab,
+  });
+
+  const { addSubListItem, updateSubListItem, removeSubListItem } =
+    useContactFormSubLists(setContactDraft);
 
   const getLocalId = useCallback(
     (tabName: string, idx: number): string => `${formInstanceId}-${tabName}-${idx}`,
@@ -81,7 +74,7 @@ export function useContactFormDraft({
       normalizeContactForEdit(contact, initialDraft, defaultCity, defaultProvince, defaultCountry),
     );
     setValidationErrors([]);
-  }, [open, contact, initialDraft, defaultCity, defaultProvince, defaultCountry]);
+  }, [open, contact, initialDraft, defaultCity, defaultProvince, defaultCountry, setValidationErrors]);
 
   const collectionCounts = useMemo(() => {
     const filledPhones = (contactDraft.phones || []).filter((p) => (p.number || "").trim()).length;
@@ -168,109 +161,6 @@ export function useContactFormDraft({
       updatedPhones[index] = { ...phone, countryCode, number };
       return { ...prev, phones: updatedPhones };
     });
-  };
-
-  const addSubListItem = useCallback<AddSubListItem>(
-    (fieldKey, newItem) => {
-      setContactDraft((prev) => {
-        const currentList = (prev[fieldKey] as NonNullable<Contact[typeof fieldKey]>) || [];
-        return {
-          ...prev,
-          [fieldKey]: [...currentList, newItem],
-        };
-      });
-    },
-    [],
-  );
-
-  const updateSubListItem = useCallback<UpdateSubListItem>(
-    (fieldKey, idx, patch) => {
-      setContactDraft((prev) => {
-        const currentList = (prev[fieldKey] as NonNullable<Contact[typeof fieldKey]>) || [];
-        const nextList = currentList.map((item, i) =>
-          i === idx ? { ...item, ...patch } : item,
-        );
-        return { ...prev, [fieldKey]: nextList };
-      });
-    },
-    [],
-  );
-
-  const removeSubListItem = useCallback<RemoveSubListItem>((fieldKey: ContactSubListKey, idx: number) => {
-    setContactDraft((prev) => {
-      const currentList = (prev[fieldKey] as unknown[]) || [];
-      return {
-        ...prev,
-        [fieldKey]: currentList.filter((_, i) => i !== idx),
-      };
-    });
-  }, []);
-
-  const handleSave = async (): Promise<void> => {
-    setValidationErrors([]);
-    const cleanedDraft = cleanContactDraft(contactDraft);
-    const formErrors = validate(cleanedDraft);
-
-    if (cleanedDraft.cnic) {
-      const cleanCnic = cleanedDraft.cnic.replace(/\D/g, "");
-      if (cleanCnic.length > 0 && cleanCnic.length !== 13) {
-        formErrors.push({
-          fieldId: "cnic",
-          tabId: "basic",
-          message: t("contacts.form.cnicInvalid"),
-        });
-      }
-    }
-
-    if (formErrors.length > 0) {
-      setValidationErrors(formErrors);
-      const firstError = formErrors[0];
-      if (firstError.tabId) {
-        onValidationTab(firstError.tabId);
-      }
-      notify.error(t("contacts.form.pleaseFixErrors"));
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const firstName = toTitleCase((cleanedDraft.firstName || "").trim());
-      const lastName = toTitleCase((cleanedDraft.lastName || "").trim());
-
-      const normalizedPhones = (cleanedDraft.phones || []).map((phone) => {
-        const { countryCode, formattedNumber: number } = formatContactPhoneDisplay(
-          phone.number,
-          phone.countryCode || defaultCountryCode,
-        );
-        return { ...phone, countryCode, number };
-      });
-
-      const contactRaw: Contact = {
-        ...cleanedDraft,
-        id: cleanedDraft.id || contact?.id || crypto.randomUUID(),
-        firstName,
-        lastName,
-        name: [firstName, lastName].filter(Boolean).join(" "),
-        phones: normalizedPhones,
-        updatedAt: todayISO(),
-        createdAt: cleanedDraft.createdAt || todayISO(),
-      } as Contact;
-
-      const titleCased = applyTitleCaseToContact(contactRaw) as Contact;
-      const finalized = syncContactScalarFields(titleCased);
-
-      await onSave(finalized);
-      notify.success(
-        contact ? t("contacts.form.contactUpdated") : t("contacts.form.contactCreated"),
-      );
-      onClose();
-    } catch (err: unknown) {
-      notify.error(t("settings.serverSaveFailed"), {
-        description: err instanceof Error ? err.message : String(err),
-      });
-    } finally {
-      setSaving(false);
-    }
   };
 
   return {

@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback } from "react";
-import { SlidersHorizontal, RefreshCw, Archive, Table, LayoutGrid, MessageCircle, CheckCircle2, AlertCircle, Users } from "lucide-react";
+import { SlidersHorizontal, RefreshCw, Archive, Table, LayoutGrid } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import {
   DropdownMenu, DropdownMenuContent,
@@ -8,10 +8,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
-import { DEFAULT_COLUMN_REGISTRY, type AppTranslationKey, type ContactsQuickFilter } from "@mms/shared";
+import { DEFAULT_COLUMN_REGISTRY, type ContactsQuickFilter } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
+import { ContactsQuickFilterBar } from "@/tenant/features/contacts/components/ContactsQuickFilterBar";
 
 export type QuickFilterPreset = ContactsQuickFilter;
 
@@ -93,23 +94,8 @@ export default function ContactsToolbar({
     [t],
   );
 
-  const quickFilterPresets: Array<{
-    id: QuickFilterPreset;
-    labelKey: AppTranslationKey;
-    icon: React.ComponentType<{ className?: string }>;
-  }> = useMemo(
-    () => [
-      { id: "all", labelKey: "contacts.filtersAll", icon: Users },
-      { id: "whatsapp", labelKey: "contacts.filtersWhatsApp", icon: MessageCircle },
-      { id: "syed", labelKey: "contacts.filtersSyed", icon: CheckCircle2 },
-      { id: "missingInfo", labelKey: "contacts.filtersMissingInfo", icon: AlertCircle },
-    ],
-    [],
-  );
-
   return (
     <div className="space-y-2.5">
-      {/* Live Region for Screen Readers */}
       <div className="sr-only" role="status" aria-live="polite">
         {shownCount != null ? t("contacts.selectedCount", { count: shownCount }) : ""}
       </div>
@@ -249,33 +235,12 @@ export default function ContactsToolbar({
         </div>
       </div>
 
-      {/* Quick Filter Presets Pill Bar */}
       {onQuickFilterChange && !showDeletedArchives && (
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-          {quickFilterPresets.map((preset) => {
-            const Icon = preset.icon;
-            const isSelected = quickFilter === preset.id;
-            return (
-              <Button
-                key={preset.id}
-                type="button"
-                variant="outline"
-                onClick={() => onQuickFilterChange(preset.id)}
-                aria-pressed={isSelected}
-                className={`inline-flex items-center gap-1.5 h-auto px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shadow-none ${
-                  isSelected
-                    ? "bg-primary/10 text-primary border-primary/30 font-semibold shadow-2xs hover:bg-primary/15 hover:text-primary"
-                    : "bg-card/40 text-muted-foreground hover:text-foreground border-border/40 hover:bg-card/80"
-                }`}
-              >
-                <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-primary" : "text-muted-foreground"}`} aria-hidden="true" />
-                <span>{t(preset.labelKey)}</span>
-              </Button>
-            );
-          })}
-        </div>
+        <ContactsQuickFilterBar
+          quickFilter={quickFilter}
+          onQuickFilterChange={onQuickFilterChange}
+        />
       )}
     </div>
   );
 }
-

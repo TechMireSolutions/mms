@@ -5,19 +5,15 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import {
-  getDisplayName,
   Contact,
   DEFAULT_FORM_TABS,
   type AppTranslationKey,
 } from "@mms/shared";
 import { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
-
-import { ContactBasicTab } from "./formTabs/ContactBasicTab";
-import { ContactPhonesTab } from "./formTabs/ContactPhonesTab";
-import { ContactEmailsTab } from "./formTabs/ContactEmailsTab";
-import { ContactAddressesTab } from "./formTabs/ContactAddressesTab";
-import { ContactSocialsTab } from "./formTabs/ContactSocialsTab";
-import { ContactEmergencyTab } from "./formTabs/ContactEmergencyTab";
+import {
+  ContactFormTabContent,
+  ContactFormFooterStart,
+} from "@/tenant/features/contacts/components/ContactFormTabContent";
 
 interface ContactFormProps {
   open?: boolean;
@@ -111,123 +107,6 @@ export default function ContactForm({
     });
   }, [draft.collectionCounts, t]);
 
-  const renderActiveTabContent = () => {
-    switch (tab) {
-      case "basic":
-        return (
-          <ContactBasicTab
-            contactDraft={draft.contactDraft}
-            formInstanceId={String(draft.formInstanceId)}
-            isFieldEnabled={draft.isFieldEnabled}
-            getFieldError={draft.getFieldError}
-            updateDraft={draft.updateDraft}
-            cropSrc={draft.cropSrc}
-            setCropSrc={draft.setCropSrc}
-            genders={draft.genders}
-            lockGender={lockGender}
-            handleAvatarChange={draft.handleAvatarChange}
-          />
-        );
-      case "phones":
-        return (
-          <ContactPhonesTab
-            contactDraft={draft.contactDraft}
-            getLocalId={draft.getLocalId}
-            phoneLabels={draft.phoneLabels}
-            defaultCountryCode={draft.defaultCountryCode}
-            countryCodeOptions={draft.countryCodeOptions}
-            getListItemError={draft.getListItemError}
-            addSubListItem={draft.addSubListItem}
-            updateSubListItem={draft.updateSubListItem}
-            removeSubListItem={draft.removeSubListItem}
-            handlePhoneBlur={draft.handlePhoneBlur}
-          />
-        );
-      case "emails":
-        return (
-          <ContactEmailsTab
-            contactDraft={draft.contactDraft}
-            getLocalId={draft.getLocalId}
-            emailLabels={draft.emailLabels}
-            getListItemError={draft.getListItemError}
-            addSubListItem={draft.addSubListItem}
-            updateSubListItem={draft.updateSubListItem}
-            removeSubListItem={draft.removeSubListItem}
-          />
-        );
-      case "addresses":
-        return (
-          <ContactAddressesTab
-            contactDraft={draft.contactDraft}
-            getLocalId={draft.getLocalId}
-            addressLabels={draft.addressLabels}
-            defaultCity={defaultCity}
-            defaultProvince={defaultProvince}
-            defaultCountry={defaultCountry}
-            getListItemError={draft.getListItemError}
-            addSubListItem={draft.addSubListItem}
-            updateSubListItem={draft.updateSubListItem}
-            removeSubListItem={draft.removeSubListItem}
-          />
-        );
-      case "socials":
-        return (
-          <ContactSocialsTab
-            contactDraft={draft.contactDraft}
-            getLocalId={draft.getLocalId}
-            socialPlatforms={draft.socialPlatforms}
-            getListItemError={draft.getListItemError}
-            addSubListItem={draft.addSubListItem}
-            updateSubListItem={draft.updateSubListItem}
-            removeSubListItem={draft.removeSubListItem}
-          />
-        );
-      case "emergency":
-        return (
-          <ContactEmergencyTab
-            contactDraft={draft.contactDraft}
-            getLocalId={draft.getLocalId}
-            relationshipOptions={draft.relationshipOptions}
-            getListItemError={draft.getListItemError}
-            addSubListItem={draft.addSubListItem}
-            updateSubListItem={draft.updateSubListItem}
-            removeSubListItem={draft.removeSubListItem}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  const footerStart = draft.contactDraft.firstName ? (
-    <div className="flex flex-wrap items-center gap-2.5 text-xs">
-      <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60">
-        {getDisplayName(draft.contactDraft)}
-      </span>
-      <div className="flex items-center gap-1.5">
-        {draft.collectionCounts.filledPhones > 0 && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px]">
-            {draft.collectionCounts.filledPhones} {t("contacts.form.phonesLabel")}
-          </span>
-        )}
-        {draft.collectionCounts.filledEmails > 0 && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-warning/10 text-warning font-semibold border border-warning/20 text-[10px]">
-            {draft.collectionCounts.filledEmails} {t("contacts.form.emailsLabel")}
-          </span>
-        )}
-        {draft.collectionCounts.filledEmergency > 0 && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-destructive/10 text-destructive font-semibold border border-destructive/20 text-[10px]">
-            {draft.collectionCounts.filledEmergency} {t("contacts.detail.emergency")}
-          </span>
-        )}
-      </div>
-    </div>
-  ) : (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-[11px] font-bold border border-destructive/20">
-      {t("contacts.form.firstNameRequired")}
-    </span>
-  );
-
   return (
     <FormModal
       open={open}
@@ -253,9 +132,22 @@ export default function ContactForm({
       }}
       saving={draft.saving}
       saveDisabled={!draft.contactDraft.firstName?.trim()}
-      footerStart={footerStart}
+      footerStart={
+        <ContactFormFooterStart
+          contactDraft={draft.contactDraft}
+          collectionCounts={draft.collectionCounts}
+          t={t}
+        />
+      }
     >
-      {renderActiveTabContent()}
+      <ContactFormTabContent
+        tab={tab}
+        draft={draft}
+        lockGender={lockGender}
+        defaultCountry={defaultCountry}
+        defaultCity={defaultCity}
+        defaultProvince={defaultProvince}
+      />
     </FormModal>
   );
 }

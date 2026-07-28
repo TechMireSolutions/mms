@@ -1,28 +1,15 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  AlertTriangle,
-  Download,
-  Users,
-  UserX,
-  Trash2,
-  X,
-  MessageCircle,
-  MessageSquare,
-  RotateCcw,
-  RefreshCw,
-} from "lucide-react";
+import { AlertTriangle, X } from "lucide-react";
 import type { Contact, ContactsQuickFilter } from "@mms/shared";
 import { CONTACTS_MODULE_MANIFEST } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { ErrorState } from "@/components/ui/ErrorState";
-import { TableSkeleton } from "@/components/ui/LoadingState";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { ListPagination } from "@/components/ui/ListPagination";
-import ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
-import ContactCards from "@/tenant/features/contacts/components/ContactCards";
 import ContactsToolbar from "@/tenant/features/contacts/components/ContactsToolbar";
+import { ContactsBulkActionBar } from "@/tenant/features/contacts/components/ContactsBulkActionBar";
+import { ContactsWorkListBody } from "@/tenant/features/contacts/components/ContactsWorkListBody";
+import ContactCards from "@/tenant/features/contacts/components/ContactCards";
+import ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -184,179 +171,39 @@ export function ContactsWorkDirectory({
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {selected.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-card/90 border border-primary/20 shadow-md backdrop-blur-md"
-          >
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold text-foreground">
-                {t("contacts.selectedCount", { count: selected.length })}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              {bulkActions.includes("whatsapp") && !viewingDeleted && canWriteMessaging && (
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={selectedTargets.waTargets.length === 0}
-                  onClick={() => onWhatsApp(selectedTargets.waTargets)}
-                  aria-label={t("contacts.whatsappBulk", { count: selectedTargets.waTargets.length })}
-                  className="gap-1.5 bg-success hover:bg-success/90 text-success-foreground font-semibold shadow-sm"
-                >
-                  <MessageCircle className="w-3.5 h-3.5" />{" "}
-                  {t("contacts.whatsappBulk", { count: selectedTargets.waTargets.length })}
-                </Button>
-              )}
-              {bulkActions.includes("sms") && !viewingDeleted && canWriteMessaging && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={selectedTargets.smsReady.length === 0}
-                  onClick={() => onSms(selectedTargets.smsReady)}
-                  aria-label={t("contacts.smsBulk", { count: selectedTargets.smsReady.length })}
-                  className="gap-1.5 border-primary/40 bg-primary/10 text-primary font-semibold hover:bg-primary/20"
-                >
-                  <MessageSquare className="w-3.5 h-3.5" />{" "}
-                  {t("contacts.smsBulk", { count: selectedTargets.smsReady.length })}
-                </Button>
-              )}
-              {bulkActions.includes("export") && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={onBulkExport}
-                  disabled={!canExport}
-                  className="gap-1.5 font-semibold"
-                >
-                  <Download className="w-3.5 h-3.5" /> {t("contacts.bulkExport")}
-                </Button>
-              )}
-              {bulkActions.includes("delete") && canDelete && !viewingDeleted && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="destructive"
-                  onClick={onRequestBulkDelete}
-                  className="gap-1.5 font-semibold"
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> {t("contacts.bulkDelete")}
-                </Button>
-              )}
-              {viewingDeleted && canDelete && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={onRequestBulkRestore}
-                  className="gap-1.5 border-primary/40 text-primary font-semibold hover:bg-primary/10"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" /> {t("contacts.bulkRestore")}
-                </Button>
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={onClearSelection}
-                className="text-muted-foreground hover:text-foreground font-medium"
-              >
-                {t("contacts.deselect")}
-              </Button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ContactsBulkActionBar
+        selectedCount={selected.length}
+        viewingDeleted={viewingDeleted}
+        bulkActions={bulkActions}
+        canWriteMessaging={canWriteMessaging}
+        canExport={canExport}
+        canDelete={canDelete}
+        selectedTargets={selectedTargets}
+        onWhatsApp={onWhatsApp}
+        onSms={onSms}
+        onBulkExport={onBulkExport}
+        onRequestBulkDelete={onRequestBulkDelete}
+        onRequestBulkRestore={onRequestBulkRestore}
+        onClearSelection={onClearSelection}
+      />
 
-      <AnimatePresence mode="wait">
-        {isWorkError ? (
-          <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <ErrorState
-              title={t("contacts.sync.failed")}
-              description={t("common.retry")}
-              onRetry={onRetryWork}
-            />
-          </motion.div>
-        ) : isWorkLoading ? (
-          <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <TableSkeleton rows={6} cols={tableColumns.length} />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="list-view"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            {workContacts.length === 0 ? (
-              <div className="rounded-2xl border border-border/40 bg-card/40 backdrop-blur-xl p-6">
-                <EmptyState
-                  icon={UserX}
-                  title={
-                    hasActiveFilters
-                      ? t("contacts.noContactsMatchFilters")
-                      : viewingDeleted
-                        ? t("contacts.noDeletedContacts")
-                        : t("contacts.noContactsYet")
-                  }
-                  description={
-                    hasActiveFilters
-                      ? t("contacts.tryAdjustingFilters")
-                      : viewingDeleted
-                        ? t("contacts.showActive")
-                        : t("contacts.clickAddContact")
-                  }
-                  action={
-                    hasActiveFilters ? (
-                      <Button type="button" variant="outline" size="sm" onClick={onClearFilters} className="gap-1.5">
-                        <RefreshCw className="w-3 h-3" /> {t("contacts.clearFilters")}
-                      </Button>
-                    ) : null
-                  }
-                />
-              </div>
-            ) : (
-              <ErrorBoundary>
-                {viewModeOverride === "cards" ? (
-                  <ContactCards {...commonDirectoryProps} />
-                ) : viewModeOverride === "table" ? (
-                  <ContactsTable {...tableProps} />
-                ) : (
-                  <>
-                    <div className="lg:hidden">
-                      <ContactCards {...commonDirectoryProps} />
-                    </div>
-                    <div className="hidden lg:block space-y-2">
-                      <ContactsTable {...tableProps} />
-                    </div>
-                  </>
-                )}
-                {useServerWork && workPageData && (
-                  <ListPagination
-                    page={workPageData.page}
-                    total={workPageData.total}
-                    limit={workPageData.limit}
-                    hasMore={workPageData.hasMore}
-                    onPageChange={onPageChange}
-                    i18nNamespace="contacts"
-                    variant="range"
-                  />
-                )}
-                {useServerWork && isWorkFetching && (
-                  <p className="text-xs text-muted-foreground px-1">{t("common.loading")}</p>
-                )}
-              </ErrorBoundary>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ContactsWorkListBody
+        isWorkError={isWorkError}
+        isWorkLoading={isWorkLoading}
+        isWorkFetching={isWorkFetching}
+        onRetryWork={onRetryWork}
+        workContacts={workContacts}
+        tableColumns={tableColumns}
+        hasActiveFilters={hasActiveFilters}
+        viewingDeleted={viewingDeleted}
+        onClearFilters={onClearFilters}
+        viewModeOverride={viewModeOverride}
+        commonDirectoryProps={commonDirectoryProps}
+        tableProps={tableProps}
+        useServerWork={useServerWork}
+        workPageData={workPageData}
+        onPageChange={onPageChange}
+      />
     </div>
   );
 }
