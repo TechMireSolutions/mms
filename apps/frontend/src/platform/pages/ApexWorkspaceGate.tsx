@@ -1,10 +1,12 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Globe, Shield } from "lucide-react";
+import { Globe, Shield } from "lucide-react";
 import type { AppTranslationKey } from "@mms/shared";
 import WorkspaceRegistryList from "@/platform/components/WorkspaceRegistryList";
 import ApexEntryNav from "@/platform/components/ApexEntryNav";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
+import { AuthBackLink } from "@/components/entry/AuthFormControls";
+import { AuthPageFrame } from "@/components/entry/AuthPageShell";
 import { ROUTES } from "@/lib/config/routes";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
@@ -40,7 +42,7 @@ export default function ApexWorkspaceGate({
   variant = "tenantOnly",
   showWorkspaceList = true,
 }: ApexWorkspaceGateProps): React.JSX.Element {
-  const { t, dir } = useTranslation();
+  const { t } = useTranslation();
   const messageKey = MESSAGE_KEYS[variant];
   const isForgotPicker = variant === "forgotPassword";
   const gateTitle = t(TITLE_KEYS[variant]);
@@ -51,16 +53,12 @@ export default function ApexWorkspaceGate({
         title={formatEntryTitle(gateTitle, t("entry.productName"))}
         description={t(META_DESC_KEYS[variant])}
       />
-      <main
-        id="main-content"
-        dir={dir}
-        className="min-h-screen w-full overflow-x-hidden bg-background flex flex-col items-center justify-center p-4 sm:p-6"
-      >
-        <div className="w-full max-w-lg mx-auto text-center space-y-5 px-1">
-          <Globe className="w-10 h-10 text-primary mx-auto" aria-hidden />
-          <h1 className="text-2xl font-bold text-foreground">{gateTitle}</h1>
+      <AuthPageFrame>
+        <div className="relative z-10 mx-auto w-full max-w-lg space-y-5 px-1 text-center">
+          <Globe className="mx-auto h-10 w-10 text-primary" aria-hidden />
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{gateTitle}</h1>
           {messageKey ? (
-            <p className="text-sm text-muted-foreground leading-relaxed">{t(messageKey)}</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">{t(messageKey)}</p>
           ) : null}
 
           {showWorkspaceList ? (
@@ -73,28 +71,20 @@ export default function ApexWorkspaceGate({
           <ApexEntryNav showHomeLink={variant === "forgotPassword"} />
 
           {variant === "forgotPassword" ? (
-            <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-start space-y-3">
-               <p className="text-sm text-muted-foreground">{t("apex.platformAdminHint")}</p>
-              <Button asChild variant="default" className="w-full">
-                <Link to={variant === "forgotPassword" ? ROUTES.platformForgotPassword : ROUTES.home}>
-                  <Shield className="w-4 h-4" aria-hidden />
-                  {variant === "forgotPassword"
-                    ? t("apex.platformAdminForgot")
-                    : t("apex.platformAdminSignIn")}
+            <div className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-start">
+              <p className="text-sm text-muted-foreground">{t("apex.platformAdminHint")}</p>
+              <Button asChild variant="default" className="h-11 w-full rounded-xl">
+                <Link to={ROUTES.platformForgotPassword}>
+                  <Shield className="h-4 w-4" aria-hidden />
+                  {t("apex.platformAdminForgot")}
                 </Link>
               </Button>
             </div>
           ) : null}
 
-          <Link
-            to={ROUTES.home}
-            className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden />
-            {t("apex.backToMain")}
-          </Link>
+          <AuthBackLink to={ROUTES.home} label={t("apex.backToMain")} />
         </div>
-      </main>
+      </AuthPageFrame>
     </>
   );
 }

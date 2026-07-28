@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import React, { useEffect, useId, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Loader2,
-  Mail,
   RefreshCw,
   ShieldCheck,
 } from "lucide-react";
@@ -18,11 +16,12 @@ import {
 import PlatformAuthLayout from "@/platform/components/PlatformAuthLayout";
 import PasswordInput from "@/components/ui/PasswordInput";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
+import { AuthEmailField } from "@/components/entry/AuthEmailField";
+import { AuthBackLink, AuthSubmitButton } from "@/components/entry/AuthFormControls";
+import { AuthStatusBanner } from "@/components/entry/AuthStatusBanner";
 import { Alert } from "@/components/ui/Alert";
 import { OtpInput, createEmptyOtp, isOtpComplete } from "@/components/ui/OtpInput";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { FORM_LABEL } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useResendCountdown } from "@/hooks/useResendCountdown";
 import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
@@ -42,6 +41,8 @@ export default function PlatformForgotPassword(): React.JSX.Element {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { checkPlatformAuth } = usePlatformAuth();
+  const formId = useId();
+  const emailFieldId = `${formId}-email`;
 
   const forgotMutation = usePlatformPasswordForgot();
   const resetMutation = usePlatformPasswordReset();
@@ -109,7 +110,10 @@ export default function PlatformForgotPassword(): React.JSX.Element {
       return;
     }
 
-    if (!isOtpComplete(code)) return;
+    if (!isOtpComplete(code)) {
+      setError(t("auth.otpIncomplete"));
+      return;
+    }
 
     setError(null);
     try {
@@ -157,70 +161,76 @@ export default function PlatformForgotPassword(): React.JSX.Element {
       <>
         {pageHead}
         <PlatformAuthLayout title={t("platform.forgotResetTitle")} subtitle={t("platform.forgotResetSubtitle")}>
-        <form onSubmit={(event) => void handleReset(event)} className="space-y-4">
-          {error ? <Alert message={error} /> : null}
-          {devHint ? <Alert variant="warning" message={devHint} /> : null}
+          <form onSubmit={(event) => void handleReset(event)} className="space-y-4" noValidate aria-busy={loading}>
+            {error ? <AuthStatusBanner message={error} /> : null}
+            {devHint ? <Alert variant="warning" message={devHint} /> : null}
 
-          <OtpInput
-            value={code}
-            onChange={setCode}
-            ariaLabel={t("platform.forgotEnterCode")}
-            disabled={loading}
-          />
+            <OtpInput
+              value={code}
+              onChange={(next) => {
+                setCode(next);
+                if (error) setError(null);
+              }}
+              ariaLabel={t("platform.forgotEnterCode")}
+              disabled={loading}
+              hasError={Boolean(error)}
+            />
 
-          <PasswordInput
-            id="platform-new-password"
-            label={t("platform.forgotNewPassword")}
-            autoComplete="new-password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
+            <PasswordInput
+              id="platform-new-password"
+              label={t("platform.forgotNewPassword")}
+              autoComplete="new-password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="h-11"
+            />
 
-          <PasswordInput
-            id="platform-confirm-password"
-            label={t("platform.forgotConfirmPassword")}
-            autoComplete="new-password"
-            required
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-          />
+            <PasswordInput
+              id="platform-confirm-password"
+              label={t("platform.forgotConfirmPassword")}
+              autoComplete="new-password"
+              required
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              className="h-11"
+            />
 
-          <Button type="submit" className="w-full h-11" disabled={loading || !isOtpComplete(code)}>
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
-                {t("common.save")}
-              </>
-            ) : (
-              <>
-                <ShieldCheck className="w-4 h-4" aria-hidden />
-                {t("platform.forgotResetPassword")}
-              </>
-            )}
-          </Button>
+            <Button
+              type="submit"
+              size="lg"
+              className="h-11 w-full rounded-xl font-semibold shadow-md shadow-primary/10"
+              disabled={loading || !isOtpComplete(code)}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                  {t("common.save")}
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="h-4 w-4" aria-hidden />
+                  {t("platform.forgotResetPassword")}
+                </>
+              )}
+            </Button>
 
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full"
-            disabled={loading || resendCountdown > 0}
-            onClick={() => void handleResend()}
-          >
-            <RefreshCw className="w-4 h-4" aria-hidden />
-            {resendCountdown > 0
-              ? t("platform.setupResendIn", { seconds: String(resendCountdown) })
-              : t("platform.setupResendCode")}
-          </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              disabled={loading || resendCountdown > 0}
+              onClick={() => void handleResend()}
+            >
+              <RefreshCw className="h-4 w-4" aria-hidden />
+              {resendCountdown > 0
+                ? t("platform.setupResendIn", { seconds: String(resendCountdown) })
+                : t("platform.setupResendCode")}
+            </Button>
 
-          <p className="text-center text-sm text-muted-foreground">
-            <Link to={ROUTES.home} className="text-primary font-medium hover:underline inline-flex items-center gap-1">
-              <ArrowLeft className="w-3 h-3 rtl:rotate-180" aria-hidden />
-              {t("auth.backToSignIn")}
-            </Link>
-          </p>
-        </form>
-      </PlatformAuthLayout>
+            <AuthBackLink to={ROUTES.home} label={t("auth.backToSignIn")} />
+          </form>
+        </PlatformAuthLayout>
       </>
     );
   }
@@ -230,46 +240,46 @@ export default function PlatformForgotPassword(): React.JSX.Element {
       <>
         {pageHead}
         <PlatformAuthLayout
-        title={t("auth.forgotCheckEmail")}
-        subtitle={t("platform.forgotSentGeneric", { email: email.trim() })}
-      >
-        <div className="space-y-5">
-          <div className="flex justify-center">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <CheckCircle2 className="w-8 h-8 text-primary" aria-hidden />
+          title={t("auth.forgotCheckEmail")}
+          subtitle={t("platform.forgotSentGeneric", { email: email.trim() })}
+        >
+          <div className="space-y-5">
+            <div className="flex justify-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10" aria-hidden>
+                <CheckCircle2 className="h-8 w-8 text-primary" />
+              </div>
             </div>
-          </div>
 
-          {devHint ? <Alert variant="warning" message={devHint} /> : null}
+            {devHint ? <Alert variant="warning" message={devHint} /> : null}
 
-          {resetId ? (
-            <Button type="button" className="w-full h-11" onClick={() => navigate(resetPath(resetId))}>
-              {t("platform.forgotEnterCode")}
-              <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden />
+            {resetId ? (
+              <Button
+                type="button"
+                size="lg"
+                className="h-11 w-full rounded-xl font-semibold"
+                onClick={() => navigate(resetPath(resetId))}
+              >
+                {t("platform.forgotEnterCode")}
+                <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden />
+              </Button>
+            ) : null}
+
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 w-full rounded-xl"
+              onClick={() => {
+                setSent(false);
+                setEmail("");
+                setDevHint(null);
+              }}
+            >
+              {t("auth.tryDifferentEmail")}
             </Button>
-          ) : null}
 
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={() => {
-              setSent(false);
-              setEmail("");
-              setDevHint(null);
-            }}
-          >
-            {t("auth.tryDifferentEmail")}
-          </Button>
-
-          <p className="text-center text-sm text-muted-foreground">
-            <Link to={ROUTES.home} className="text-primary font-medium hover:underline inline-flex items-center gap-1">
-              <ArrowLeft className="w-3 h-3 rtl:rotate-180" aria-hidden />
-              {t("auth.backToSignIn")}
-            </Link>
-          </p>
-        </div>
-      </PlatformAuthLayout>
+            <AuthBackLink to={ROUTES.home} label={t("auth.backToSignIn")} />
+          </div>
+        </PlatformAuthLayout>
       </>
     );
   }
@@ -278,49 +288,33 @@ export default function PlatformForgotPassword(): React.JSX.Element {
     <>
       {pageHead}
       <PlatformAuthLayout title={t("platform.forgotTitle")} subtitle={t("platform.forgotSubtitle")}>
-      <form onSubmit={(event) => void handleRequest(event)} className="space-y-4">
-        {error ? <Alert message={error} /> : null}
+        <form onSubmit={(event) => void handleRequest(event)} className="space-y-4" noValidate aria-busy={loading}>
+          {error ? <AuthStatusBanner message={error} /> : null}
 
-        <div className="space-y-1.5">
-          <label htmlFor="platform-forgot-email" className={FORM_LABEL}>{t("auth.email")}</label>
-          <div className="relative">
-            <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-            <Input
-              id="platform-forgot-email"
-              type="email"
-              autoComplete="username"
-              required
+          <fieldset disabled={loading} className="m-0 min-w-0 space-y-4 border-0 p-0">
+            <AuthEmailField
+              id={emailFieldId}
+              label={t("auth.email")}
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className="ps-9"
+              autoFocus
+              autoComplete="username"
+              placeholder={t("auth.emailPlaceholder")}
+              onChange={(value) => {
+                setEmail(value);
+                setError(null);
+              }}
             />
-          </div>
-        </div>
 
-        <Button type="submit" className="w-full h-11" disabled={loading}>
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
-              {t("common.loading")}
-            </>
-          ) : (
-            <>
-              {t("platform.forgotSendLink")}
-              <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden />
-            </>
-          )}
-        </Button>
+            <AuthSubmitButton
+              busy={loading}
+              busyLabel={t("auth.sendingResetLink")}
+              label={t("platform.forgotSendLink")}
+            />
 
-        <p className="text-center text-sm text-muted-foreground">
-          <Link to={ROUTES.home} className="text-primary font-medium hover:underline inline-flex items-center gap-1">
-            <ArrowLeft className="w-3 h-3 rtl:rotate-180" aria-hidden />
-            {t("auth.backToSignIn")}
-          </Link>
-        </p>
-      </form>
-    </PlatformAuthLayout>
+            <AuthBackLink to={ROUTES.home} label={t("auth.backToSignIn")} />
+          </fieldset>
+        </form>
+      </PlatformAuthLayout>
     </>
   );
 }
-
-

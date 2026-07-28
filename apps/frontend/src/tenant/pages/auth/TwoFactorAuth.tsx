@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, ShieldCheck, RefreshCw } from "lucide-react";
+import React, { useMemo, useState, useEffect } from "react";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 import {
   DEFAULT_GLOBAL_SETTINGS,
   maskEmail,
@@ -12,10 +12,10 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import AuthLayout from "@/tenant/components/AuthLayout";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
+import { AuthBackLink } from "@/components/entry/AuthFormControls";
+import { AuthStatusBanner } from "@/components/entry/AuthStatusBanner";
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { FORM_ERROR } from "@/components/ui/formStyles";
-import { cn } from "@/lib/utils";
 import {
   getPendingChallengeId,
   is2FAVerified,
@@ -24,6 +24,7 @@ import {
 } from "@/lib/twoFactor";
 import { useResendCountdown } from "@/hooks/useResendCountdown";
 import { OtpInput, createEmptyOtp, isOtpComplete } from "@/components/ui/OtpInput";
+import { Button } from "@/components/ui/button";
 
 /**
  * Two-factor verification after login when global settings require it.
@@ -48,8 +49,8 @@ export default function TwoFactorAuth(): React.JSX.Element {
 
   const maskedEmail = useMemo(() => {
     const email = user?.email ?? "";
-    return email ? maskEmail(email) : "your email";
-  }, [user?.email]);
+    return email ? maskEmail(email) : t("auth.maskedEmailFallback");
+  }, [user?.email, t]);
 
   const twoFactorSubtitleKey = useMemo(() => {
     switch (resolveNotificationChannel(settings)) {
@@ -82,7 +83,7 @@ export default function TwoFactorAuth(): React.JSX.Element {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
     if (!isComplete || !challengeId) {
-      setError("Please enter all 6 digits");
+      setError(t("auth.otpIncomplete"));
       return;
     }
     setLoading(true);
@@ -94,7 +95,7 @@ export default function TwoFactorAuth(): React.JSX.Element {
       await checkUserAuth();
       navigate(redirectTo, { replace: true });
     } else {
-      setError("Invalid or expired code. Please try again.");
+      setError(t("auth.otpInvalid"));
       setCode(createEmptyOtp());
     }
     setLoading(false);
@@ -104,7 +105,7 @@ export default function TwoFactorAuth(): React.JSX.Element {
     if (!challengeId) return;
     const ok = await resend2FACode(challengeId);
     if (!ok) {
-      setError("Could not resend code. Return to sign in and try again.");
+      setError(t("auth.otpResendFailed"));
       return;
     }
     setResendCycle((c) => c + 1);
@@ -122,14 +123,14 @@ export default function TwoFactorAuth(): React.JSX.Element {
         title={t("auth.twoFactorTitle")}
         subtitle={t(twoFactorSubtitleKey)}
       >
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={(event) => void handleSubmit(event)} className="space-y-5" noValidate aria-busy={loading}>
           <div className="flex justify-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10" aria-hidden>
               <ShieldCheck className="h-7 w-7 text-primary" />
             </div>
           </div>
 
-          <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-center">
+          <div className="rounded-xl border border-border/60 bg-muted/40 px-4 py-3 text-center">
             <p className="text-xs text-muted-foreground">
               {t("auth.codeSentTo")}{" "}
               <span className="font-medium text-foreground">{maskedEmail}</span>
@@ -138,49 +139,54 @@ export default function TwoFactorAuth(): React.JSX.Element {
 
           <OtpInput
             value={code}
-            onChange={setCode}
+            onChange={(next) => {
+              setCode(next);
+              if (error) setError("");
+            }}
             ariaLabel={t("auth.twoFactorTitle")}
             disabled={loading}
             hasError={Boolean(error)}
           />
 
-          {error ? (
-            <p className={cn(FORM_ERROR, "text-center text-sm font-medium")}>
-              {error}
-            </p>
-          ) : null}
+          {error ? <AuthStatusBanner message={error} /> : null}
 
-          <button
+          <Button
             type="submit"
+            size="lg"
             disabled={loading || !isComplete}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            className="h-11 w-full rounded-xl font-semibold shadow-md shadow-primary/10"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t("auth.verifySignIn")}
-          </button>
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                {t("auth.verifying")}
+              </>
+            ) : (
+              t("auth.verifySignIn")
+            )}
+          </Button>
 
           <div className="text-center">
             {resendCountdown > 0 ? (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground" role="status">
                 {t("auth.resendCountdown", { seconds: resendCountdown })}
               </p>
             ) : (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => void handleResend()}
-                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                disabled={loading}
+                className="h-10 gap-1.5 text-xs font-medium text-primary"
               >
-                <RefreshCw className="h-3 w-3" />
+                <RefreshCw className="h-3.5 w-3.5" aria-hidden />
                 {t("auth.resendCode")}
-              </button>
+              </Button>
             )}
           </div>
 
-          <p className="text-center text-xs text-muted-foreground">
-            <Link to={ROUTES.login} className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
-              <ArrowLeft className="h-3 w-3" />
-              {t("auth.backToSignIn")}
-            </Link>
-          </p>
+          <AuthBackLink to={ROUTES.login} label={t("auth.backToSignIn")} />
         </form>
       </AuthLayout>
     </>

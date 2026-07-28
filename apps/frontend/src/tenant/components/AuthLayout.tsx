@@ -9,15 +9,15 @@ import { applyTenantEntryTheme } from "@/lib/brandingThemeCore";
 import { applyTenantDocumentFavicon } from "@/lib/documentFavicon";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTenantBranding } from "@/tenant/hooks/useTenantBranding";
 import AuthLoadingShell from "@/components/entry/AuthLoadingShell";
-import { cn } from "@/lib/utils";
+import { AuthCardShell, AuthPageFrame } from "@/components/entry/AuthPageShell";
 
 export interface AuthLayoutProps {
   children?: React.ReactNode;
   title?: string;
   subtitle?: string;
+  footer?: React.ReactNode;
 }
 
 /**
@@ -28,11 +28,11 @@ export default function AuthLayout({
   children,
   title,
   subtitle,
+  footer,
 }: AuthLayoutProps): React.JSX.Element {
   const { t } = useTranslation();
   const { ready: brandingReady } = useTenantBranding();
   const { workspace, publicBranding } = useTenant();
-  const reducedMotion = useReducedMotion();
 
   const displayName =
     publicBranding?.madrasaName.trim() ||
@@ -79,29 +79,12 @@ export default function AuthLayout({
   }
 
   return (
-    <main
-      id="main-content"
-      className="relative flex min-h-screen flex-col items-center justify-center px-4 py-8 sm:px-6"
-    >
-      <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/[0.04] via-background to-background"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute top-1/4 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
-        aria-hidden
-      />
-
-      <div
-        className={cn(
-          "relative z-10 w-full max-w-[420px]",
-          !reducedMotion && "animate-fade-in",
-        )}
-      >
-        <div className="relative overflow-hidden group/auth rounded-2xl border border-border/60 bg-card/80 shadow-xl shadow-black/[0.04] backdrop-blur-xl dark:shadow-black/20">
-          <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/auth:bg-primary" />
-          <div className="border-b border-border/50 bg-muted/15 px-6 py-6 text-center sm:px-8 ps-7.5">
-            <div className="mb-4 flex flex-col items-center gap-2">
+    <AuthPageFrame>
+      <AuthCardShell
+        footer={footer}
+        header={
+          <div className="space-y-4">
+            <div className="flex flex-col items-center gap-2">
               {logoUrl ? (
                 <img
                   src={logoUrl}
@@ -143,10 +126,10 @@ export default function AuthLayout({
               </div>
             ) : null}
           </div>
-
-          <div className="px-6 py-6 sm:px-8 sm:py-7 ps-7 sm:ps-9">{children}</div>
-        </div>
-      </div>
-    </main>
+        }
+      >
+        {children}
+      </AuthCardShell>
+    </AuthPageFrame>
   );
 }

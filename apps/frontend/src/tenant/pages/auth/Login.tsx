@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback, useId } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ArrowRight, Loader2, Mail, AlertCircle } from "lucide-react";
 import PasswordInput from "@/components/ui/PasswordInput";
 import AuthLayout from "@/tenant/components/AuthLayout";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
+import { AuthEmailField } from "@/components/entry/AuthEmailField";
+import { AuthSubmitButton } from "@/components/entry/AuthFormControls";
+import { AuthStatusBanner } from "@/components/entry/AuthStatusBanner";
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
 import {
@@ -13,10 +15,8 @@ import {
 } from "@/lib/twoFactor";
 import { requiresTwoFactor, isValidEmail } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FORM_ERROR, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_ERROR } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
 const REMEMBER_EMAIL_KEY = "mms_login_remember_email";
@@ -147,139 +147,92 @@ export default function Login(): React.ReactElement {
   return (
     <>
       <EntryPageHead title={pageTitle} description={t("entry.meta.tenantSignIn")} />
-      <AuthLayout title={t("auth.signInTitle")}>
-      <form onSubmit={handleSubmit} className="space-y-4" noValidate aria-busy={isBusy}>
-        {(formError || handoffProcessing) ? (
-          <div
-            role="alert"
-            className={cn(
-              "flex items-start gap-2.5 rounded-xl border px-3.5 py-3 text-sm",
-              handoffProcessing
-                ? "border-primary/25 bg-primary/5 text-foreground"
-                : "border-destructive/40 bg-destructive/5 text-destructive",
-            )}
-          >
-            {handoffProcessing ? (
-              <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
-            ) : (
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-            )}
-            <p className="leading-snug">
-              {handoffProcessing ? t("auth.handoffProcessing") : formError}
-            </p>
-          </div>
-        ) : null}
-
-        <fieldset disabled={isBusy} className="m-0 min-w-0 space-y-4 border-0 p-0">
-          <div className="space-y-1.5">
-            <label htmlFor={emailFieldId} className={FORM_LABEL}>
-              {t("auth.emailAddress")}
-            </label>
-            <div className="relative">
-              <Mail
-                className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80"
-                aria-hidden
-              />
-              <Input
-                id={emailFieldId}
-                type="email"
-                name="email"
-                autoComplete="email"
-                inputMode="email"
-                autoFocus
-                value={email}
-                onChange={(event) => {
-                  setEmail(event.target.value);
-                  setFieldErrors((prev) => ({ ...prev, email: undefined }));
-                  setFormError("");
-                }}
-                placeholder="you@madrasa.app"
-                aria-invalid={Boolean(fieldErrors.email)}
-                aria-describedby={fieldErrors.email ? `${emailFieldId}-error` : undefined}
-                className={cn(
-                  "ps-9",
-                  fieldErrors.email && "border-destructive focus-visible:ring-destructive/25",
-                )}
-              />
-            </div>
-            {fieldErrors.email ? (
-              <p id={`${emailFieldId}-error`} className={FORM_ERROR} role="alert">
-                {fieldErrors.email}
-              </p>
-            ) : null}
-          </div>
-
-          <PasswordInput
-            id={passwordFieldId}
-            name="password"
-            label={t("auth.password")}
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => {
-              setPassword(event.target.value);
-              setFieldErrors((prev) => ({ ...prev, password: undefined }));
-              setFormError("");
-            }}
-            placeholder="••••••••"
-            aria-invalid={Boolean(fieldErrors.password)}
-            aria-describedby={fieldErrors.password ? `${passwordFieldId}-error` : undefined}
-            className={cn(
-              fieldErrors.password && "border-destructive focus-visible:ring-destructive/25",
-            )}
-          />
-          {fieldErrors.password ? (
-            <p id={`${passwordFieldId}-error`} className={FORM_ERROR} role="alert">
-              {fieldErrors.password}
-            </p>
+      <AuthLayout title={t("auth.signInTitle")} subtitle={t("auth.signInSubtitle")}>
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate aria-busy={isBusy}>
+          {handoffProcessing ? (
+            <AuthStatusBanner variant="info" message={t("auth.handoffProcessing")} />
+          ) : formError ? (
+            <AuthStatusBanner message={formError} />
           ) : null}
-          <div className="flex justify-end pt-0.5">
-            <Link
-              to={ROUTES.forgotPassword}
-              className="rounded-md px-1 py-1 text-xs font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
-            >
-              {t("auth.forgotPassword")}
-            </Link>
-          </div>
 
-          <label
-            htmlFor={rememberFieldId}
-            className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg px-0.5 py-1"
-          >
-            <Checkbox
-              id={rememberFieldId}
-              checked={rememberMe}
-              onCheckedChange={(checked) => {
-                const shouldRememberEmail = checked === true;
-                setRememberMe(shouldRememberEmail);
-                if (!shouldRememberEmail) {
-                  persistRememberedEmail("", false);
-                }
+          <fieldset disabled={isBusy} className="m-0 min-w-0 space-y-4 border-0 p-0">
+            <AuthEmailField
+              id={emailFieldId}
+              label={t("auth.emailAddress")}
+              value={email}
+              autoFocus
+              disabled={isBusy}
+              placeholder={t("auth.emailPlaceholder")}
+              error={fieldErrors.email}
+              onChange={(value) => {
+                setEmail(value);
+                setFieldErrors((prev) => ({ ...prev, email: undefined }));
+                setFormError("");
               }}
             />
-            <span className="text-sm text-muted-foreground">{t("auth.rememberMe")}</span>
-          </label>
 
-          <Button
-            type="submit"
-            disabled={isBusy}
-            size="lg"
-            className="h-11 w-full rounded-xl font-semibold shadow-md shadow-primary/15 transition-shadow hover:shadow-lg hover:shadow-primary/20"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {t("auth.signingIn")}
-              </>
-            ) : (
-              <>
-                {t("auth.signIn")}
-                <ArrowRight className="h-4 w-4" />
-              </>
-            )}
-          </Button>
-        </fieldset>
-      </form>
-    </AuthLayout>
+            <div className="space-y-1.5">
+              <PasswordInput
+                id={passwordFieldId}
+                name="password"
+                label={t("auth.password")}
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                  setFormError("");
+                }}
+                placeholder={t("auth.passwordPlaceholder")}
+                aria-invalid={Boolean(fieldErrors.password)}
+                aria-describedby={fieldErrors.password ? `${passwordFieldId}-error` : undefined}
+                className={cn(
+                  "h-11",
+                  fieldErrors.password && "border-destructive focus-visible:ring-destructive/25",
+                )}
+              />
+              {fieldErrors.password ? (
+                <p id={`${passwordFieldId}-error`} className={FORM_ERROR} role="alert">
+                  {fieldErrors.password}
+                </p>
+              ) : null}
+              <div className="flex justify-end pt-0.5">
+                <Link
+                  to={ROUTES.forgotPassword}
+                  className="rounded-md px-1 py-1 text-xs font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+                >
+                  {t("auth.forgotPassword")}
+                </Link>
+              </div>
+            </div>
+
+            <label
+              htmlFor={rememberFieldId}
+              className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg px-0.5 py-1"
+            >
+              <Checkbox
+                id={rememberFieldId}
+                checked={rememberMe}
+                onCheckedChange={(checked) => {
+                  const shouldRememberEmail = checked === true;
+                  setRememberMe(shouldRememberEmail);
+                  if (!shouldRememberEmail) {
+                    persistRememberedEmail("", false);
+                  }
+                }}
+              />
+              <span className="text-sm text-muted-foreground">{t("auth.rememberMe")}</span>
+            </label>
+
+            <AuthSubmitButton
+              busy={loading}
+              busyLabel={t("auth.signingIn")}
+              label={t("auth.signIn")}
+              disabled={handoffProcessing}
+            />
+          </fieldset>
+        </form>
+      </AuthLayout>
     </>
   );
 }

@@ -1,8 +1,6 @@
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import {
-  ArrowRight,
   Loader2,
-  Mail,
   RefreshCw,
   ShieldCheck,
   User,
@@ -14,6 +12,9 @@ import {
 import PlatformAuthLayout from "@/platform/components/PlatformAuthLayout";
 import PasswordInput from "@/components/ui/PasswordInput";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
+import { AuthEmailField } from "@/components/entry/AuthEmailField";
+import { AuthSubmitButton } from "@/components/entry/AuthFormControls";
+import { AuthStatusBanner } from "@/components/entry/AuthStatusBanner";
 import { Alert } from "@/components/ui/Alert";
 import { OtpInput, createEmptyOtp, isOtpComplete } from "@/components/ui/OtpInput";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,9 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
   const { t } = useTranslation();
   const checkPlatformAuth = usePlatformAuth().checkPlatformAuth;
   const invalidateSetupStatus = useInvalidatePlatformSetupStatus();
+  const formId = useId();
+  const nameFieldId = `${formId}-name`;
+  const emailFieldId = `${formId}-email`;
 
   const registerMutation = usePlatformSetupRegister();
   const verifyMutation = usePlatformSetupVerify();
@@ -72,7 +76,6 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
       return;
     }
 
-
     if (!smtpConfigured && import.meta.env.PROD) {
       setError(t("platform.setupSmtpRequired"));
       return;
@@ -96,6 +99,11 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
   const handleVerify = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();
     if (!setupSession) return;
+
+    if (!isOtpComplete(code)) {
+      setError(t("auth.otpIncomplete"));
+      return;
+    }
 
     setError(null);
     try {
@@ -138,52 +146,61 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
       <>
         {pageHead}
         <PlatformAuthLayout
-        title={t("platform.setupVerifyTitle")}
-        subtitle={t("platform.setupVerifySubtitle", { email: maskEmail(setupSession.email) })}
-      >
-        <form onSubmit={(event) => void handleVerify(event)} className="space-y-4">
-          {error ? <Alert message={error} /> : null}
-          {setupNotice ? <Alert variant="info" message={setupNotice} /> : null}
-          {setupSession.devCode ? (
-            <Alert variant="warning" message={t("platform.setupDevCodeHint", { code: setupSession.devCode })} />
-          ) : null}
+          title={t("platform.setupVerifyTitle")}
+          subtitle={t("platform.setupVerifySubtitle", { email: maskEmail(setupSession.email) })}
+        >
+          <form onSubmit={(event) => void handleVerify(event)} className="space-y-4" noValidate aria-busy={loading}>
+            {error ? <AuthStatusBanner message={error} /> : null}
+            {setupNotice ? <Alert variant="info" message={setupNotice} /> : null}
+            {setupSession.devCode ? (
+              <Alert variant="warning" message={t("platform.setupDevCodeHint", { code: setupSession.devCode })} />
+            ) : null}
 
-          <OtpInput
-            value={code}
-            onChange={setCode}
-            ariaLabel={t("platform.setupVerifyEmail")}
-            disabled={loading}
-            idPrefix="platform-otp"
-          />
+            <OtpInput
+              value={code}
+              onChange={(next) => {
+                setCode(next);
+                if (error) setError(null);
+              }}
+              ariaLabel={t("platform.setupVerifyEmail")}
+              disabled={loading}
+              idPrefix="platform-otp"
+              hasError={Boolean(error)}
+            />
 
-          <Button type="submit" className="w-full h-11" disabled={loading || !isOtpComplete(code)}>
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
-                {t("auth.verifySignIn")}
-              </>
-            ) : (
-              <>
-                <ShieldCheck className="w-4 h-4" aria-hidden />
-                {t("platform.setupVerifyEmail")}
-              </>
-            )}
-          </Button>
+            <Button
+              type="submit"
+              size="lg"
+              className="h-11 w-full rounded-xl font-semibold shadow-md shadow-primary/10"
+              disabled={loading || !isOtpComplete(code)}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                  {t("auth.verifying")}
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="h-4 w-4" aria-hidden />
+                  {t("platform.setupVerifyEmail")}
+                </>
+              )}
+            </Button>
 
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full"
-            disabled={loading || resendCountdown > 0}
-            onClick={() => void handleResend()}
-          >
-            <RefreshCw className="w-4 h-4" aria-hidden />
-            {resendCountdown > 0
-              ? t("platform.setupResendIn", { seconds: String(resendCountdown) })
-              : t("platform.setupResendCode")}
-          </Button>
-        </form>
-      </PlatformAuthLayout>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              disabled={loading || resendCountdown > 0}
+              onClick={() => void handleResend()}
+            >
+              <RefreshCw className="h-4 w-4" aria-hidden />
+              {resendCountdown > 0
+                ? t("platform.setupResendIn", { seconds: String(resendCountdown) })
+                : t("platform.setupResendCode")}
+            </Button>
+          </form>
+        </PlatformAuthLayout>
       </>
     );
   }
@@ -192,69 +209,68 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
     <>
       {pageHead}
       <PlatformAuthLayout title={t("platform.setupTitle")} subtitle={t("platform.setupSubtitle")}>
-      <form onSubmit={(event) => void handleRegister(event)} className="space-y-4">
-        {!smtpConfigured && import.meta.env.PROD ? (
-          <Alert variant="warning" message={t("platform.setupSmtpRequired")} />
-        ) : null}
-        {error ? <Alert message={error} /> : null}
+        <form onSubmit={(event) => void handleRegister(event)} className="space-y-4" noValidate aria-busy={loading}>
+          {!smtpConfigured && import.meta.env.PROD ? (
+            <Alert variant="warning" message={t("platform.setupSmtpRequired")} />
+          ) : null}
+          {error ? <AuthStatusBanner message={error} /> : null}
 
-        <div className="space-y-1.5">
-          <label htmlFor="platform-setup-name" className={FORM_LABEL}>{t("platform.setupFullName")}</label>
-          <div className="relative">
-            <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-            <Input
-              id="platform-setup-name"
-              autoComplete="name"
-              required
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              className="ps-9"
-            />
-          </div>
-        </div>
+          <fieldset disabled={loading} className="m-0 min-w-0 space-y-4 border-0 p-0">
+            <div className="space-y-1.5 text-start">
+              <label htmlFor={nameFieldId} className={FORM_LABEL}>{t("platform.setupFullName")}</label>
+              <div className="relative">
+                <User
+                  className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80"
+                  aria-hidden
+                />
+                <Input
+                  id={nameFieldId}
+                  autoComplete="name"
+                  autoFocus
+                  required
+                  value={name}
+                  onChange={(event) => {
+                    setName(event.target.value);
+                    setError(null);
+                  }}
+                  className="h-11 ps-9"
+                />
+              </div>
+            </div>
 
-        <div className="space-y-1.5">
-          <label htmlFor="platform-setup-email" className={FORM_LABEL}>{t("auth.email")}</label>
-          <div className="relative">
-            <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-            <Input
-              id="platform-setup-email"
-              type="email"
-              autoComplete="email"
-              required
+            <AuthEmailField
+              id={emailFieldId}
+              label={t("auth.email")}
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className="ps-9"
+              autoComplete="email"
+              placeholder={t("auth.emailPlaceholder")}
+              onChange={(value) => {
+                setEmail(value);
+                setError(null);
+              }}
             />
-          </div>
-        </div>
 
-        <PasswordInput
-          id="platform-setup-password"
-          label={t("auth.password")}
-          autoComplete="new-password"
-          required
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-        />
+            <PasswordInput
+              id="platform-setup-password"
+              label={t("auth.password")}
+              autoComplete="new-password"
+              required
+              value={password}
+              onChange={(event) => {
+                setPassword(event.target.value);
+                setError(null);
+              }}
+              className="h-11"
+            />
 
-        <Button type="submit" className="w-full h-11" disabled={loading}>
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
-              {t("common.save")}
-            </>
-          ) : (
-            <>
-              {t("platform.setupCreateAccount")}
-              <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden />
-            </>
-          )}
-        </Button>
-      </form>
-    </PlatformAuthLayout>
+            <AuthSubmitButton
+              busy={loading}
+              busyLabel={t("common.save")}
+              label={t("platform.setupCreateAccount")}
+            />
+          </fieldset>
+        </form>
+      </PlatformAuthLayout>
     </>
   );
 }
-
-

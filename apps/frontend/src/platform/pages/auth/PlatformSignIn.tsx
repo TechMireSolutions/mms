@@ -1,31 +1,62 @@
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Loader2, Mail } from "lucide-react";
+import { isValidEmail } from "@mms/shared";
 import PlatformAuthLayout from "@/platform/components/PlatformAuthLayout";
 import PasswordInput from "@/components/ui/PasswordInput";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
+import { AuthEmailField } from "@/components/entry/AuthEmailField";
+import { AuthSubmitButton } from "@/components/entry/AuthFormControls";
+import { AuthStatusBanner } from "@/components/entry/AuthStatusBanner";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Alert } from "@/components/ui/Alert";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_ERROR } from "@/components/ui/formStyles";
 import { ROUTES } from "@/lib/config/routes";
+import { cn } from "@/lib/utils";
+
+interface PlatformSignInErrors {
+  email?: string;
+  password?: string;
+}
 
 /** Apex-only sign-in for platform super-users who can provision new madrasas. */
 export default function PlatformSignIn(): React.JSX.Element {
   const { t } = useTranslation();
   const { platformLogin, isPlatformLoginSubmitting } = usePlatformAuth();
+  const formId = useId();
+  const emailFieldId = `${formId}-email`;
+  const passwordFieldId = `${formId}-password`;
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<PlatformSignInErrors>({});
   const [error, setError] = useState<string | null>(null);
 
   const pageTitle = formatEntryTitle(t("platform.signInTitle"), t("entry.productName"));
 
+  const validate = (): PlatformSignInErrors => {
+    const validationErrors: PlatformSignInErrors = {};
+    const trimmed = email.trim();
+    if (!trimmed) {
+      validationErrors.email = t("auth.emailRequired");
+    } else if (!isValidEmail(trimmed)) {
+      validationErrors.email = t("auth.emailInvalid");
+    }
+    if (!password) {
+      validationErrors.password = t("auth.passwordRequired");
+    }
+    return validationErrors;
+  };
+
   const handleSubmit = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();
     setError(null);
+    const errs = validate();
+    if (Object.keys(errs).length) {
+      setFieldErrors(errs);
+      return;
+    }
+    setFieldErrors({});
     try {
       await platformLogin(email.trim(), password);
     } catch (err) {
@@ -46,60 +77,65 @@ export default function PlatformSignIn(): React.JSX.Element {
           noValidate
           aria-busy={isPlatformLoginSubmitting}
         >
-          {error ? <Alert message={error} /> : null}
+          {error ? <AuthStatusBanner message={error} /> : null}
 
-          <div className="space-y-1.5 text-start">
-            <label htmlFor="platform-email" className={FORM_LABEL}>{t("auth.email")}</label>
-            <div className="relative">
-              <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" aria-hidden />
-              <Input
-                id="platform-email"
-                type="email"
-                name="email"
-                autoComplete="username"
-                inputMode="email"
-                autoFocus
-                spellCheck={false}
-                required
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className="ps-9"
+          <fieldset disabled={isPlatformLoginSubmitting} className="m-0 min-w-0 space-y-4 border-0 p-0">
+            <AuthEmailField
+              id={emailFieldId}
+              label={t("auth.email")}
+              value={email}
+              autoFocus
+              autoComplete="username"
+              placeholder={t("auth.emailPlaceholder")}
+              error={fieldErrors.email}
+              onChange={(value) => {
+                setEmail(value);
+                setFieldErrors((prev) => ({ ...prev, email: undefined }));
+                setError(null);
+              }}
+            />
+
+            <div className="space-y-1.5">
+              <PasswordInput
+                id={passwordFieldId}
+                name="password"
+                label={t("auth.password")}
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                  setError(null);
+                }}
+                placeholder={t("auth.passwordPlaceholder")}
+                aria-invalid={Boolean(fieldErrors.password)}
+                aria-describedby={fieldErrors.password ? `${passwordFieldId}-error` : undefined}
+                className={cn(
+                  "h-11",
+                  fieldErrors.password && "border-destructive focus-visible:ring-destructive/25",
+                )}
               />
+              {fieldErrors.password ? (
+                <p id={`${passwordFieldId}-error`} className={FORM_ERROR} role="alert">
+                  {fieldErrors.password}
+                </p>
+              ) : null}
+              <div className="flex justify-end pt-0.5">
+                <Link
+                  to={ROUTES.platformForgotPassword}
+                  className="rounded-md px-1 py-1 text-xs font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+                >
+                  {t("auth.forgotPassword")}
+                </Link>
+              </div>
             </div>
-          </div>
 
-          <PasswordInput
-            id="platform-password"
-            name="password"
-            label={t("auth.password")}
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-
-          <div className="flex justify-end">
-            <Link
-              to={ROUTES.platformForgotPassword}
-              className="text-sm text-primary font-medium hover:underline"
-            >
-              {t("auth.forgotPassword")}
-            </Link>
-          </div>
-
-          <Button type="submit" className="w-full h-11" disabled={isPlatformLoginSubmitting}>
-            {isPlatformLoginSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
-                {t("auth.signingIn")}
-              </>
-            ) : (
-              <>
-                {t("platform.signIn")}
-                <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden />
-              </>
-            )}
-          </Button>
+            <AuthSubmitButton
+              busy={isPlatformLoginSubmitting}
+              busyLabel={t("auth.signingIn")}
+              label={t("platform.signIn")}
+            />
+          </fieldset>
         </form>
       </PlatformAuthLayout>
     </>
