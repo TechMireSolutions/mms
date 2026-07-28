@@ -1,4 +1,3 @@
-import { motion, AnimatePresence } from "framer-motion";
 import { Edit2, Clock } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Contact, formatDate } from "@mms/shared";
@@ -8,15 +7,8 @@ import { useContactDetailViewModel } from "@/tenant/features/contacts/hooks/useC
 import { Button } from "@/components/ui/button";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import {
-  DETAIL_SYSTEM_TAB_KEYS,
-  DETAIL_STYLES,
-} from "./detail/contactDetailStyles";
-import { FieldGroupCard } from "./detail/ContactDetailShared";
-import { ContactDetailOverview } from "./detail/ContactDetailOverview";
-import { ContactDetailTimeline } from "./detail/ContactDetailTimeline";
-import { ContactDetailNetwork } from "./detail/ContactDetailNetwork";
-import { ContactDetailFiles } from "./detail/ContactDetailFiles";
+import { DETAIL_STYLES } from "./detail/contactDetailStyles";
+import { ContactDetailDrawerContent } from "./detail/ContactDetailDrawerContent";
 
 interface ContactDetailDrawerProps {
   contact: Contact;
@@ -134,80 +126,33 @@ export default function ContactDetailDrawer({
         </>
       }
     >
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.15 }}
-          className="space-y-6"
-        >
-          {activeTab === "overview" && (
-            <ContactDetailOverview
-              contact={contactState}
-              allContacts={allContacts}
-              grouped={grouped}
-              formatFieldValue={formatFieldValue}
-              visibleCollectionFields={visibleCollectionFields}
-              primaryPhone={primaryPhone}
-              primaryEmail={primaryEmail}
-              onWhatsApp={onWhatsApp}
-              onSms={onSms}
-              onEmail={onEmail}
-              onNavigateToContact={handleNavigateToContact}
-            />
-          )}
-
-          {activeTab === "timeline" && (
-            <ContactDetailTimeline
-              activities={combinedActivities}
-              noteText={noteText}
-              noteInputId={noteInputId}
-              canPersistContact={canPersistContact}
-              onNoteTextChange={setNoteText}
-              onAddNote={handleAddNote}
-            />
-          )}
-
-          {activeTab === "network" && (
-            <ContactDetailNetwork
-              contact={contactState}
-              allContacts={allContacts}
-              onNavigateToContact={handleNavigateToContact}
-            />
-          )}
-
-          {activeTab === "files" && (
-            <ContactDetailFiles
-              contact={contactState}
-              canPersistContact={canPersistContact}
-              isDragging={isDragging}
-              isUploading={isUploading}
-              fileInputRef={fileInputRef}
-              onDraggingChange={setIsDragging}
-              onFiles={handleFiles}
-              onFileChange={handleFileChange}
-              onRequestDelete={setPendingAttachmentDelete}
-            />
-          )}
-
-          {!DETAIL_SYSTEM_TAB_KEYS.has(activeTab) && (
-            <div className="space-y-4">
-              {Object.entries(grouped)
-                .filter(([, fieldsList]) => fieldsList.some((field) => field.tab === activeTab))
-                .map(([groupName, fieldsList]) => (
-                  <FieldGroupCard
-                    key={groupName}
-                    group={groupName}
-                    fields={fieldsList.filter((field) => field.tab === activeTab)}
-                    formatValue={formatFieldValue}
-                  />
-                ))}
-            </div>
-          )}
-        </motion.div>
-      </AnimatePresence>
+      <ContactDetailDrawerContent
+        activeTab={activeTab}
+        contactState={contactState}
+        allContacts={allContacts}
+        grouped={grouped}
+        formatFieldValue={formatFieldValue}
+        visibleCollectionFields={visibleCollectionFields}
+        primaryPhone={primaryPhone}
+        primaryEmail={primaryEmail}
+        onWhatsApp={onWhatsApp}
+        onSms={onSms}
+        onEmail={onEmail}
+        onNavigateToContact={handleNavigateToContact}
+        activities={combinedActivities}
+        noteText={noteText}
+        noteInputId={noteInputId}
+        canPersistContact={canPersistContact}
+        onNoteTextChange={setNoteText}
+        onAddNote={handleAddNote}
+        isDragging={isDragging}
+        isUploading={isUploading}
+        fileInputRef={fileInputRef}
+        onDraggingChange={setIsDragging}
+        onFiles={handleFiles}
+        onFileChange={handleFileChange}
+        onRequestDelete={setPendingAttachmentDelete}
+      />
       <ConfirmAlertDialog
         open={pendingAttachmentDelete !== null}
         onOpenChange={(open) => {

@@ -12,7 +12,7 @@ import ContactsSettingsPanel from "@/tenant/features/contacts/components/Contact
 type ViewMode = "table" | "cards" | null;
 type DirectoryColumn = { id: string; label: string; sortField?: string; width?: number };
 
-interface ContactsPageTabPanelProps {
+export interface ContactsPageTabPanelProps {
   effectiveTab: string;
   search: string;
   onSearchChange: (value: string) => void;

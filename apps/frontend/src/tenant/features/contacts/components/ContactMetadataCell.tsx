@@ -1,19 +1,23 @@
 import React, { useMemo } from "react";
-import { User, CheckCircle2, MapPin, Globe, ExternalLink, Sun, Moon } from "lucide-react";
+import { User, CheckCircle2, MapPin } from "lucide-react";
 import {
   Contact,
   hasWhatsApp,
   ContactPreferences,
   COLOR_PALETTES,
-  formatDate,
-  calculateDetailedSolarAge,
-  getLunarDateString,
-  calculateDetailedLunarAge,
   getPrimaryAddress,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { buildContactsMap, formatContactCellValue, formatContactGenderLabel, formatContactOptionLabel } from "@/lib/contacts/contactI18n";
+import { buildContactsMap, formatContactCellValue, formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import {
+  renderSocialMetadata,
+  renderEmergencyMetadata,
+} from "@/tenant/features/contacts/components/contactMetadataCollections";
+import {
+  renderLunarDobMetadata,
+  renderSolarDobMetadata,
+} from "@/tenant/features/contacts/components/contactMetadataDates";
 
 export interface ContactMetadataCellProps {
   colId: string;
@@ -103,36 +107,21 @@ export function ContactMetadataCell({
       }
       case "solarDob":
       case "dob": {
-        if (!contact.dob) return renderDash();
-        return (
-          <div className="flex flex-col gap-0.5 text-[11px] leading-normal font-mono">
-            <span className="font-semibold text-foreground flex items-center gap-1">
-              <Sun className="w-3 h-3 text-warning shrink-0" aria-hidden="true" />
-              <span>{formatDate(contact.dob)}</span>
-            </span>
-            {showDetailedSolarAge ? (
-              <span className="text-[10px] text-muted-foreground">
-                {calculateDetailedSolarAge(contact.dob, language)}
-              </span>
-            ) : null}
-          </div>
-        );
+        return renderSolarDobMetadata({
+          dob: contact.dob,
+          showDetailedSolarAge,
+          language,
+          emptyNode: renderDash(),
+        });
       }
       case "lunarDob": {
-        if (!contact.dob || !showLunarDob) return renderDash();
-        return (
-          <div className="flex flex-col gap-0.5 text-[11px] leading-normal font-mono">
-            <span className="font-semibold text-foreground flex items-center gap-1">
-              <Moon className="w-3 h-3 text-muted-foreground shrink-0" aria-hidden="true" />
-              <span>{getLunarDateString(contact.dob, language)}</span>
-            </span>
-            {showDetailedLunarAge ? (
-              <span className="text-[10px] text-muted-foreground">
-                {calculateDetailedLunarAge(contact.dob, language)}
-              </span>
-            ) : null}
-          </div>
-        );
+        return renderLunarDobMetadata({
+          dob: contact.dob,
+          showLunarDob,
+          showDetailedLunarAge,
+          language,
+          emptyNode: renderDash(),
+        });
       }
       case "whatsapp":
         return (
@@ -149,65 +138,21 @@ export function ContactMetadataCell({
       case "socials":
       case "socials_platform":
       case "socials_url": {
-        const socials = (contact.socials || []).filter((s) => (s.platform || "").trim().length > 0 || (s.url || "").trim().length > 0);
-        if (socials.length === 0) return renderDash();
-        return (
-          <div className="flex flex-wrap items-center gap-1.5 text-xs">
-            {socials.map((s, idx) => {
-              const platformStr = (s.platform || "").trim();
-              const urlStr = (s.url || "").trim();
-              const href = urlStr ? (urlStr.startsWith("http") ? urlStr : `https://${urlStr}`) : undefined;
-              const displayUrl = urlStr ? urlStr.replace(/^https?:\/\//i, "").replace(/\/$/, "") : "";
-              const label = platformStr && displayUrl ? `${platformStr}: ${displayUrl}` : (platformStr || displayUrl);
-
-              if (href) {
-                return (
-                  <a
-                    key={idx}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-[11px] font-semibold transition-colors truncate max-w-[200px]"
-                    title={`${platformStr || t("contacts.form.link")}: ${urlStr}`}
-                  >
-                    <Globe className="w-3 h-3 shrink-0 text-primary" />
-                    <span className="truncate">{label}</span>
-                    <ExternalLink className="w-2.5 h-2.5 shrink-0 opacity-70" />
-                  </a>
-                );
-              }
-
-              return (
-                <span
-                  key={idx}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-muted text-muted-foreground border border-border/40 text-[11px] font-medium"
-                >
-                  <Globe className="w-3 h-3 shrink-0" />
-                  <span>{platformStr || displayUrl}</span>
-                </span>
-              );
-            })}
-          </div>
-        );
+        return renderSocialMetadata({
+          contact,
+          emptyNode: renderDash(),
+          t,
+        });
       }
       case "emergency_contact":
       case "emergency_relationship": {
-        const list = (contact.emergencyContacts || []).filter((ec) => (ec.name || "").trim() || ec.contactId || (ec.relationship || "").trim());
-        if (list.length === 0) return renderDash();
-        const items = list.map((ec) => {
-          let nameStr = ec.name ? ec.name.trim() : "";
-          if (!nameStr && ec.contactId) {
-            const linked = contactsMap?.get(String(ec.contactId));
-            nameStr = linked ? linked.name : `${t("contacts.table.contactIdPrefix")}${ec.contactId}`;
-          }
-          const relStr = ec.relationship
-            ? formatContactOptionLabel(ec.relationship.trim(), t)
-            : "";
-          if (nameStr && relStr) return `${nameStr} (${relStr})`;
-          return nameStr || relStr;
+        return renderEmergencyMetadata({
+          contact,
+          contactsMap,
+          emptyNode: renderDash(),
+          renderJoinedList,
+          t,
         });
-        return renderJoinedList(items.filter(Boolean));
       }
       default: {
         const raw = contact[colId as keyof Contact];

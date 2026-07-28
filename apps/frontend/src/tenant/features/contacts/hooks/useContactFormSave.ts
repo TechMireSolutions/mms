@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactPhoneDisplay } from "@/lib/contacts/contactI18n";
-import { useContactValidation } from "@/lib/contexts/ContactConfigContext";
+import { useContactValidation } from "@/lib/contacts/useContactValidation";
 import {
   toTitleCase,
   applyTitleCaseToContact,

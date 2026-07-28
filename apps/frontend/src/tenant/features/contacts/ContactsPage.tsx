@@ -4,6 +4,8 @@ import { CONTACTS_MODULE_MANIFEST } from "@mms/shared";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useContactsPageState } from "@/tenant/features/contacts/hooks/useContactsPageState";
 import { useContactsPageDirectoryProps } from "@/tenant/features/contacts/hooks/useContactsPageDirectoryProps";
+import { useContactsPageTabPanelProps } from "@/tenant/features/contacts/hooks/useContactsPageTabPanelProps";
+import { useContactsPageOverlayProps } from "@/tenant/features/contacts/hooks/useContactsPageOverlayProps";
 import { useContactConfig, useContactColumns } from "@/lib/contexts/ContactConfigContext";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
@@ -154,6 +156,88 @@ function ContactsInner() {
     handleSort,
   });
 
+  const tabPanelProps = useContactsPageTabPanelProps({
+    effectiveTab,
+    search,
+    setSearch,
+    filterGender,
+    setFilterGender,
+    quickFilter,
+    setQuickFilter,
+    sortField,
+    sortDir,
+    handleSort,
+    hasActiveFilters,
+    activeFilterCount,
+    clearFilters,
+    viewingDeleted,
+    setShowDeletedArchives,
+    setSelected,
+    canDelete,
+    viewModeOverride,
+    setViewModeOverride,
+    shownCount,
+    workTruncated,
+    selected,
+    selectedTargets,
+    bulkActions,
+    canWriteMessaging,
+    canExport,
+    handleWhatsApp,
+    handleSms,
+    handleBulkExport,
+    requestBulkDelete,
+    requestBulkRestore,
+    isWorkError,
+    isWorkLoading,
+    isWorkFetching,
+    refetchWork,
+    workContacts,
+    tableColumns,
+    commonDirectoryProps,
+    tableProps,
+    useServerWork,
+    workPageData,
+    setListPage,
+    contacts,
+    canWrite,
+    canEditSetup,
+    handleImport,
+  });
+
+  const overlayProps = useContactsPageOverlayProps({
+    canWrite,
+    showForm,
+    editContact,
+    defaultCountry,
+    defaultCity,
+    defaultProvince,
+    setShowForm,
+    setEditContact,
+    handleSave,
+    showDuplicates,
+    setShowDuplicates,
+    handleMerge,
+    messagingTarget,
+    closeComposer,
+    viewContact,
+    setViewContact,
+    handleEdit,
+    messagingHandlers,
+    allContactsForLinks,
+    handleUpdateContact,
+    bulkDeleteOpen,
+    setBulkDeleteOpen,
+    selectedCount: selected.length,
+    confirmBulkDelete,
+    deleteTarget,
+    setDeleteTarget,
+    confirmSingleDelete,
+    bulkRestoreOpen,
+    setBulkRestoreOpen,
+    confirmBulkRestore,
+  });
+
   return (
     <ModulePageShell
       seoTitle={`MMS - ${t("nav.contacts")}`}
@@ -198,98 +282,10 @@ function ContactsInner() {
         onTabChange={setActiveTab}
         panelIdPrefix="contacts-tab"
       >
-        <ContactsPageTabPanel
-          effectiveTab={effectiveTab}
-          search={search}
-          onSearchChange={setSearch}
-          filterGender={filterGender}
-          onGenderChange={setFilterGender}
-          quickFilter={quickFilter}
-          onQuickFilterChange={setQuickFilter}
-          sortField={sortField}
-          sortDir={sortDir}
-          onSort={handleSort}
-          hasActiveFilters={hasActiveFilters}
-          activeFilterCount={activeFilterCount}
-          onClearFilters={clearFilters}
-          viewingDeleted={viewingDeleted}
-          onShowDeletedChange={(next) => {
-            setShowDeletedArchives(next);
-            setSelected([]);
-          }}
-          canViewDeleted={canDelete}
-          viewModeOverride={viewModeOverride}
-          onViewModeChange={setViewModeOverride}
-          shownCount={shownCount}
-          workTruncated={workTruncated}
-          selected={selected}
-          onClearSelection={() => setSelected([])}
-          selectedTargets={selectedTargets}
-          bulkActions={bulkActions}
-          canWriteMessaging={canWriteMessaging}
-          canExport={canExport}
-          canDelete={canDelete}
-          onWhatsApp={handleWhatsApp}
-          onSms={handleSms}
-          onBulkExport={handleBulkExport}
-          onRequestBulkDelete={requestBulkDelete}
-          onRequestBulkRestore={requestBulkRestore}
-          isWorkError={isWorkError}
-          isWorkLoading={isWorkLoading}
-          isWorkFetching={isWorkFetching}
-          onRetryWork={() => void refetchWork()}
-          workContacts={workContacts}
-          tableColumns={tableColumns}
-          commonDirectoryProps={commonDirectoryProps}
-          tableProps={tableProps}
-          useServerWork={useServerWork}
-          workPageData={workPageData}
-          onPageChange={setListPage}
-          contacts={contacts}
-          canWrite={canWrite}
-          canEditSetup={canEditSetup}
-          onImport={handleImport}
-        />
+        <ContactsPageTabPanel {...tabPanelProps} />
       </ResponsiveAccordionTabs>
 
-      <ContactsPageOverlays
-        canWrite={canWrite}
-        showForm={showForm}
-        editContact={editContact}
-        defaultCountry={defaultCountry}
-        defaultCity={defaultCity}
-        defaultProvince={defaultProvince}
-        onCloseForm={() => { setShowForm(false); setEditContact(null); }}
-        onSave={handleSave}
-        showDuplicates={showDuplicates}
-        onCloseDuplicates={() => setShowDuplicates(false)}
-        onMerge={handleMerge}
-        messagingTarget={messagingTarget}
-        onCloseComposer={closeComposer}
-        viewContact={viewContact}
-        onCloseView={() => setViewContact(null)}
-        onEditFromDrawer={(contactToEdit) => {
-          setViewContact(null);
-          handleEdit(contactToEdit);
-        }}
-        onWhatsApp={messagingHandlers.onWhatsApp}
-        onSms={messagingHandlers.onSms}
-        onEmail={messagingHandlers.onEmail}
-        allContactsForLinks={allContactsForLinks}
-        onUpdateContact={canWrite ? handleUpdateContact : undefined}
-        bulkDeleteOpen={bulkDeleteOpen}
-        onBulkDeleteOpenChange={setBulkDeleteOpen}
-        selectedCount={selected.length}
-        onConfirmBulkDelete={confirmBulkDelete}
-        deleteTarget={deleteTarget}
-        onDeleteTargetOpenChange={(open) => {
-          if (!open) setDeleteTarget(null);
-        }}
-        onConfirmSingleDelete={confirmSingleDelete}
-        bulkRestoreOpen={bulkRestoreOpen}
-        onBulkRestoreOpenChange={setBulkRestoreOpen}
-        onConfirmBulkRestore={confirmBulkRestore}
-      />
+      <ContactsPageOverlays {...overlayProps} />
     </ModulePageShell>
   );
 }

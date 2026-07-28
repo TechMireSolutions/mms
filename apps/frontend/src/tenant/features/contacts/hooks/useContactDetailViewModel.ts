@@ -1,25 +1,14 @@
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useState,
-  type FormEvent,
-} from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { LayoutDashboard } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   Contact,
-  ContactActivity,
   canViewContactField,
   CONTACTS_MODULE_MANIFEST,
   getPrimaryPhone,
   getPrimaryEmail,
-  todayISO,
   type FieldDefinition,
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
-import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
@@ -28,14 +17,13 @@ import {
   resolveRegistryLabel,
   resolveRegistryDescription,
 } from "@/lib/contacts/contactI18n";
-import { contactDetailQueryKey, fetchContactById } from "@/tenant/features/contacts/hooks/useContacts";
-import { notify } from "@/lib/notify";
 import {
   ICON_MAP,
   DETAIL_SYSTEM_TAB_KEYS,
   DEFAULT_DETAIL_TAB_BY_KEY,
   isEmptyValue,
 } from "@/tenant/features/contacts/components/detail/contactDetailStyles";
+import { useContactDetailActions } from "@/tenant/features/contacts/hooks/useContactDetailActions";
 
 export type DetailFieldView = {
   key: string;
@@ -58,11 +46,9 @@ export function useContactDetailViewModel({
   canWrite: boolean;
 }) {
   const { enabledTabIds, isTabFieldEnabled, fieldConfig, fields } = useContactConfig();
-  const { user } = useAuth();
   const { role } = usePermissions();
   const viewerRole = role ?? "";
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const noteInputId = useId();
   const [contactState, setContactState] = useState<Contact>(initialContact);
   const [noteText, setNoteText] = useState("");
@@ -163,59 +149,15 @@ export function useContactDetailViewModel({
   const primaryPhone = enabledTabIds.has("phones") ? getPrimaryPhone(contactState) : null;
   const primaryEmail = enabledTabIds.has("emails") ? getPrimaryEmail(contactState) : null;
 
-  const handleAddNote = async (event: FormEvent): Promise<void> => {
-    event.preventDefault();
-    const trimmed = noteText.trim();
-    if (!trimmed || !canPersistContact || !onUpdateContact) return;
-
-    const newActivity: ContactActivity = {
-      id: `act-${crypto.randomUUID()}`,
-      type: "note",
-      content: trimmed,
-      date: todayISO(),
-      by: user?.name || t("contacts.detail.systemUser"),
-    };
-
-    const prev = contactState;
-    const updatedContact = {
-      ...contactState,
-      activities: [newActivity, ...(contactState.activities || [])],
-    };
-
-    setContactState(updatedContact);
-    setNoteText("");
-
-    try {
-      await onUpdateContact(updatedContact);
-    } catch {
-      setContactState(prev);
-      setNoteText(trimmed);
-      notify.error(t("contacts.detail.noteSaveFailed"));
-    }
-  };
-
-  const handleNavigateToContact = useCallback(
-    (targetId: string | number): void => {
-      const target = allContacts.find((contact) => String(contact.id) === String(targetId));
-      if (target) {
-        setContactState(target);
-        return;
-      }
-      const contactId = String(targetId);
-      void queryClient
-        .fetchQuery({
-          queryKey: contactDetailQueryKey(contactId),
-          queryFn: () => fetchContactById(contactId),
-        })
-        .then((contact) => {
-          setContactState(contact);
-        })
-        .catch(() => {
-          notify.error(t("contacts.detail.loadFailed"));
-        });
-    },
-    [allContacts, queryClient, t],
-  );
+  const { handleAddNote, handleNavigateToContact } = useContactDetailActions({
+    allContacts,
+    contactState,
+    setContactState,
+    noteText,
+    setNoteText,
+    canPersistContact,
+    onUpdateContact,
+  });
 
   return {
     contactState,

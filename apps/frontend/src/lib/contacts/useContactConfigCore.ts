@@ -11,7 +11,6 @@ import { loadFieldConfig, saveFieldConfig, saveFieldConfigAsync } from "@/lib/co
 import {
   FieldConfig,
   ContactPreferences,
-  ContactColumnPreference,
   FieldDefinition,
   ColumnRegistryEntry,
   DEFAULT_ENABLED_TABS,
@@ -19,17 +18,12 @@ import {
   canViewContactTab,
 } from "@mms/shared";
 import {
-  loadModuleColumnPreferences,
-  saveModuleColumnPreferenceList,
-  saveModuleColumnRegistry,
-} from "@/lib/columnPreferences/moduleColumnPreferencesStorage";
-import { useContactColumnPrefs, useContactColumnPrefsMutation } from "@/tenant/hooks/collections/contacts";
-import {
   DEFAULT_PREFERENCES,
   loadPreferences,
   savePreferences,
   savePreferencesAsync,
 } from "@/lib/contacts/preferencesStorage";
+import { useContactConfigColumnPrefs } from "@/lib/contacts/useContactConfigColumnPrefs";
 
 /**
  * Field config, prefs, column overlay, and tab/field enablement for ContactConfigProvider.
@@ -43,38 +37,13 @@ export function useContactConfigCore({
   userRole: string;
   reloadCollections: () => void;
 }) {
-  const [queryEnabled, setQueryEnabled] = useState(false);
-  useEffect(() => {
-    setQueryEnabled(Boolean(userId));
-  }, [userId]);
-
-  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useContactColumnPrefs({
-    enabled: queryEnabled,
-  });
-  const { mutate: saveColumnPrefs } = useContactColumnPrefsMutation();
-  const migratedLocalColumnPrefs = useRef(false);
   const lastUserIdRef = useRef<string | number | undefined>(userId);
   const [fieldConfig, setFieldConfigState] = useState<FieldConfig>(() => loadFieldConfig());
-  const [localUserColumnOverlay, setLocalUserColumnOverlay] = useState<ContactColumnPreference[] | null>(null);
-
-  const rawUserColumnOverlay = useMemo(() => {
-    if (localUserColumnOverlay) {
-      return localUserColumnOverlay;
-    }
-    if (columnPrefsLoaded && serverColumnPrefs && serverColumnPrefs.length > 0) {
-      return serverColumnPrefs;
-    }
-    const scopedUserId = userId ? String(userId) : "";
-    if (scopedUserId) {
-      return loadModuleColumnPreferences("contacts", scopedUserId);
-    }
-    return null;
-  }, [localUserColumnOverlay, columnPrefsLoaded, serverColumnPrefs, userId]);
-
   const [prefs, setPrefsState] = useState<ContactPreferences>(() => ({
     ...DEFAULT_PREFERENCES,
     ...loadPreferences(),
   }));
+  const { rawUserColumnOverlay, updateUserColumnLayout } = useContactConfigColumnPrefs(userId);
 
   const reloadContactConfigFromDatabaseCache = useCallback(() => {
     setFieldConfigState(loadFieldConfig());
@@ -99,29 +68,6 @@ export function useContactConfigCore({
     window.addEventListener("local-database-update", handleLocalDatabaseUpdate);
     return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
   }, [reloadContactConfigFromDatabaseCache]);
-
-  useEffect(() => {
-    if (!userId) {
-      setTimeout(() => {
-        setLocalUserColumnOverlay(null);
-      }, 0);
-      migratedLocalColumnPrefs.current = false;
-      return;
-    }
-    if (!columnPrefsLoaded) return;
-
-    const scopedUserId = String(userId);
-    if (serverColumnPrefs && serverColumnPrefs.length > 0) {
-      saveModuleColumnPreferenceList("contacts", scopedUserId, serverColumnPrefs);
-      return;
-    }
-
-    const local = loadModuleColumnPreferences("contacts", scopedUserId);
-    if (local?.length && !migratedLocalColumnPrefs.current) {
-      migratedLocalColumnPrefs.current = true;
-      saveColumnPrefs(local);
-    }
-  }, [userId, columnPrefsLoaded, serverColumnPrefs, saveColumnPrefs]);
 
   const updateConfig = useCallback((nextConfig: FieldConfig) => {
     saveFieldConfig(nextConfig);
@@ -150,19 +96,6 @@ export function useContactConfigCore({
   const updateColumnRegistry = useCallback((columnRegistry: ColumnRegistryEntry[]) => {
     updateConfig({ ...fieldConfig, columnRegistry });
   }, [fieldConfig, updateConfig]);
-
-  const updateUserColumnLayout = useCallback((columnRegistry: ColumnRegistryEntry[]) => {
-    const scopedUserId = userId ? String(userId) : "";
-    if (!scopedUserId) return;
-    saveModuleColumnRegistry("contacts", scopedUserId, columnRegistry);
-    const preferences: ContactColumnPreference[] = columnRegistry.map(({ key, enabled, order, width }) => {
-      const preference: ContactColumnPreference = { key, enabled, order };
-      if (typeof width === "number") preference.width = width;
-      return preference;
-    });
-    setLocalUserColumnOverlay(preferences);
-    saveColumnPrefs(preferences);
-  }, [userId, saveColumnPrefs]);
 
   const enabledTabIds = useMemo(() => {
     if (fieldConfig.formTabs) {

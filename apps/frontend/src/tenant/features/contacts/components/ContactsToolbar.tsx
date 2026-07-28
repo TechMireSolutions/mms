@@ -1,18 +1,16 @@
 import React, { useMemo, useCallback } from "react";
-import { SlidersHorizontal, RefreshCw, Archive, Table, LayoutGrid } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
-import {
-  DropdownMenu, DropdownMenuContent,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
-  DropdownMenuRadioGroup, DropdownMenuRadioItem,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { DEFAULT_COLUMN_REGISTRY, type ContactsQuickFilter } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { ContactsQuickFilterBar } from "@/tenant/features/contacts/components/ContactsQuickFilterBar";
+import {
+  ContactsClearFiltersButton,
+  ContactsDeletedToggleButton,
+  ContactsFilterMenuButton,
+  ContactsViewModeToggle,
+} from "@/tenant/features/contacts/components/ContactsToolbarControls";
 
 export type QuickFilterPreset = ContactsQuickFilter;
 
@@ -116,114 +114,35 @@ export default function ContactsToolbar({
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                className={`flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
-                  activeFilterCount > 0
-                    ? "border-primary/30 bg-primary/5 text-primary hover:text-primary hover:bg-primary/5"
-                    : "border-border bg-card text-foreground"
-                }`}
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-                <span>{t("contacts.filters")}</span>
-                {activeFilterCount > 0 && (
-                  <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 bg-card border border-border">
-              <DropdownMenuLabel className="text-xs text-foreground">{t("contacts.genderFilter")}</DropdownMenuLabel>
-              <DropdownMenuRadioGroup value={filterGender} onValueChange={onGenderChange}>
-                {["", ...genders].map((genderOption) => (
-                  <DropdownMenuRadioItem
-                    key={genderOption || "all"}
-                    value={genderOption}
-                    className="text-sm"
-                  >
-                    {genderOption ? formatContactGenderLabel(genderOption, t) : t("contacts.allGenders")}
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-
-              <DropdownMenuSeparator className="bg-border" />
-              <DropdownMenuLabel className="text-xs text-foreground">{t("contacts.sortBy")}</DropdownMenuLabel>
-              <DropdownMenuRadioGroup value={sortField} onValueChange={onSort}>
-                {sortOptions.map((sortOption) => (
-                  <DropdownMenuRadioItem
-                    key={sortOption.field}
-                    value={sortOption.field}
-                    className="text-sm"
-                  >
-                    {sortOption.label}
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ContactsFilterMenuButton
+            activeFilterCount={activeFilterCount}
+            filterGender={filterGender}
+            genders={genders}
+            onGenderChange={onGenderChange}
+            sortField={sortField}
+            sortOptions={sortOptions}
+            onSort={onSort}
+            t={t}
+          />
 
           {hasActiveFilters && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={onClearFilters}
-              className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>{t("contacts.clearFilters")}</span>
-            </Button>
+            <ContactsClearFiltersButton onClearFilters={onClearFilters} t={t} />
           )}
 
           {canViewDeleted && onShowDeletedChange && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => onShowDeletedChange(!showDeletedArchives)}
-              aria-pressed={showDeletedArchives}
-              className={`flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
-                showDeletedArchives
-                  ? "border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10"
-                  : "border-border bg-card text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Archive className="w-3.5 h-3.5" />
-              <span>{showDeletedArchives ? t("contacts.showActive") : t("contacts.showDeleted")}</span>
-            </Button>
+            <ContactsDeletedToggleButton
+              showDeletedArchives={showDeletedArchives}
+              onShowDeletedChange={onShowDeletedChange}
+              t={t}
+            />
           )}
 
           {onViewModeChange && (
-            <div className="flex items-center p-0.5 rounded-xl border border-border/50 bg-card/60 backdrop-blur-md shadow-xs" role="group" aria-label={t("contacts.viewMode.group")}>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => onViewModeChange("table")}
-                className={`h-9 px-2.5 rounded-lg text-xs font-semibold transition-all ${
-                  viewMode === "table"
-                    ? "bg-primary text-primary-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-                aria-label={t("contacts.viewMode.table")}
-              >
-                <Table className="w-3.5 h-3.5" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => onViewModeChange("cards")}
-                className={`h-9 px-2.5 rounded-lg text-xs font-semibold transition-all ${
-                  viewMode === "cards"
-                    ? "bg-primary text-primary-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-                aria-label={t("contacts.viewMode.cards")}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-              </Button>
-            </div>
+            <ContactsViewModeToggle
+              viewMode={viewMode}
+              onViewModeChange={onViewModeChange}
+              t={t}
+            />
           )}
 
           <ModuleColumnCustomizer
