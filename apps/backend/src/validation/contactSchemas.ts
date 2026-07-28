@@ -107,6 +107,19 @@ export const contactsListQuerySchema = baseListQuerySchema.extend({
             .filter(Boolean)
         : undefined,
     ),
+  /** Comma-separated module keys: students, teachers — server expands linked contact ids. */
+  excludeLinkedModules: z
+    .string()
+    .optional()
+    .transform((value) => {
+      if (!value?.trim()) return undefined;
+      const allowed = new Set(['students', 'teachers']);
+      const modules = value
+        .split(',')
+        .map((part) => part.trim())
+        .filter((part): part is 'students' | 'teachers' => allowed.has(part));
+      return modules.length > 0 ? modules : undefined;
+    }),
 });
 
 export const contactSetupAuditSchema = z.object({

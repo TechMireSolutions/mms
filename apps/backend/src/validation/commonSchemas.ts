@@ -24,8 +24,10 @@ export const handoffBodySchema = z.object({
 });
 
 /** Batch resolve entity rows by id (globle2 §10). */
+export const ENTITY_RESOLVE_MAX_IDS = 100;
+
 export const entityResolveBodySchema = z.object({
-  ids: z.array(z.string().min(1).max(64)).max(100),
+  ids: z.array(z.string().min(1).max(64)).max(ENTITY_RESOLVE_MAX_IDS),
 });
 
 export const softDeleteBodySchema = z.object({

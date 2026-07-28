@@ -60,6 +60,14 @@ export interface MessageLogsFilterQuery {
   includeDeleted?: boolean;
 }
 
+export interface MessageLogsPageResult {
+  logs: Message[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
+
 function getQueryRows<T>(result: unknown): T[] {
   if (Array.isArray(result)) return result as T[];
   if (result && typeof result === 'object' && 'rows' in result && Array.isArray((result as { rows: unknown }).rows)) {
@@ -75,12 +83,21 @@ function rowToMessage(row: { id: string; custom_data?: unknown; customData?: unk
   };
 }
 
-/** SQL-filtered message log list (JSONB fields) with optional pagination. */
-export async function queryFilteredMessageLogs(
-  workspaceSubdomain: string,
-  query: MessageLogsFilterQuery = {},
-): Promise<Message[]> {
-  const subdomain = workspaceSubdomain.trim().toLowerCase();
+function buildMessageLogsFilterSql(
+  subdomain: string,
+  query: MessageLogsFilterQuery,
+): {
+  includeDeleted: boolean;
+  channel: string | null;
+  category: string | null;
+  status: string | null;
+  search: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  page: number;
+  pageSize: number | null;
+  offset: number | null;
+} {
   const includeDeleted = query.includeDeleted === true;
   const channel = query.channel && query.channel !== 'all' ? query.channel : null;
   const category = query.category && query.category !== 'all' ? query.category : null;
@@ -88,14 +105,33 @@ export async function queryFilteredMessageLogs(
   const search = query.search?.trim() ? `%${query.search.trim().toLowerCase()}%` : null;
   const startDate = query.startDate?.trim() || null;
   const endDate = query.endDate?.trim() || null;
-  const page = query.page && query.page > 0 ? query.page : null;
+  const page = query.page && query.page > 0 ? query.page : 1;
   const pageSize = query.pageSize && query.pageSize > 0 ? query.pageSize : null;
-  const offset = page != null && pageSize != null ? (page - 1) * pageSize : null;
+  const offset = pageSize != null ? (page - 1) * pageSize : null;
+  return { includeDeleted, channel, category, status, search, startDate, endDate, page, pageSize, offset };
+}
+
+/** SQL-filtered message log list (JSONB fields) with optional pagination + total. */
+export async function queryFilteredMessageLogs(
+  workspaceSubdomain: string,
+  query: MessageLogsFilterQuery = {},
+): Promise<MessageLogsPageResult> {
+  const subdomain = workspaceSubdomain.trim().toLowerCase();
+  const {
+    includeDeleted,
+    channel,
+    category,
+    status,
+    search,
+    startDate,
+    endDate,
+    page,
+    pageSize,
+    offset,
+  } = buildMessageLogsFilterSql(subdomain, query);
 
   return withTenantTransaction(subdomain, async (tx) => {
-    const result = await tx.execute(sql`
-      SELECT id, custom_data
-      FROM message_logs
+    const whereSql = sql`
       WHERE workspace_subdomain = ${subdomain}
         AND (
           ${includeDeleted}
@@ -127,12 +163,34 @@ export async function queryFilteredMessageLogs(
           OR lower(COALESCE(custom_data->>'subject', '')) LIKE ${search}
           OR lower(COALESCE(custom_data->>'contactId', '')) LIKE ${search}
         )
+    `;
+
+    const countResult = await tx.execute(sql`
+      SELECT COUNT(*)::int AS total
+      FROM message_logs
+      ${whereSql}
+    `);
+    const countRows = getQueryRows<{ total?: number }>(countResult);
+    const total = Number(countRows[0]?.total ?? 0) || 0;
+
+    const result = await tx.execute(sql`
+      SELECT id, custom_data
+      FROM message_logs
+      ${whereSql}
       ORDER BY custom_data->>'sentAt' DESC NULLS LAST
       ${offset != null && pageSize != null ? sql`LIMIT ${pageSize} OFFSET ${offset}` : sql``}
     `);
 
     const rows = getQueryRows<{ id: string; custom_data?: unknown; customData?: unknown }>(result);
-    return rows.map((row) => rowToMessage(row));
+    const logs = rows.map((row) => rowToMessage(row));
+    const effectivePageSize = pageSize ?? Math.max(total, 1);
+    return {
+      logs,
+      total,
+      page,
+      pageSize: effectivePageSize,
+      hasMore: pageSize != null ? page * pageSize < total : false,
+    };
   });
 }
 

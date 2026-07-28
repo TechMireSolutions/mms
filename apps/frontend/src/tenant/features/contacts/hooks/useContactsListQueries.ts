@@ -85,11 +85,17 @@ export function useContactsByIds(ids: (string | number | null | undefined)[]) {
   return useQuery({
     queryKey: [...CONTACTS_QUERY_KEY, "resolve", signature] as const,
     queryFn: async () => {
-      const contactsResponse = await apiJson<{ contacts: Contact[] }>(`${CONTACTS_API}/resolve`, {
-        method: "POST",
-        body: JSON.stringify({ ids: normalized }),
-      });
-      return contactsResponse.contacts;
+      const batchSize = 100;
+      const contacts: Contact[] = [];
+      for (let index = 0; index < normalized.length; index += batchSize) {
+        const chunk = normalized.slice(index, index + batchSize);
+        const contactsResponse = await apiJson<{ contacts: Contact[] }>(`${CONTACTS_API}/resolve`, {
+          method: "POST",
+          body: JSON.stringify({ ids: chunk }),
+        });
+        contacts.push(...(contactsResponse.contacts ?? []));
+      }
+      return contacts;
     },
     enabled: isAuthenticated && normalized.length > 0,
     staleTime: 30_000,

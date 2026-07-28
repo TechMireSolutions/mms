@@ -22,6 +22,7 @@ export interface ContactsPaginatedParams {
   hasReachable?: boolean;
   quickFilter?: ContactsQuickFilter;
   excludeIds?: Array<string | number>;
+  excludeLinkedModules?: Array<"students" | "teachers">;
   enabled?: boolean;
 }
 
@@ -40,6 +41,9 @@ export function buildContactsPageUrl(params: ContactsPaginatedParams): string {
   if (params.excludeIds && params.excludeIds.length > 0) {
     queryParams.set("excludeIds", params.excludeIds.map(String).join(","));
   }
+  if (params.excludeLinkedModules && params.excludeLinkedModules.length > 0) {
+    queryParams.set("excludeLinkedModules", params.excludeLinkedModules.join(","));
+  }
   if (params.sortField) queryParams.set("sortField", params.sortField);
   if (params.sortDir) queryParams.set("sortDir", params.sortDir);
   return `${CONTACTS_API}?${queryParams.toString()}`;
@@ -56,6 +60,7 @@ export function contactsListQueryKeyParams(params: ContactsPaginatedParams) {
     hasReachable: Boolean(params.hasReachable),
     quickFilter: params.quickFilter ?? "all",
     excludeIds: (params.excludeIds ?? []).map(String).join(","),
+    excludeLinkedModules: (params.excludeLinkedModules ?? []).join(","),
     sortField: params.sortField || "",
     sortDir: params.sortDir || "asc",
   };
@@ -78,6 +83,7 @@ export function sameContactsListFilters(
     previous.hasReachable === next.hasReachable &&
     previous.quickFilter === next.quickFilter &&
     previous.excludeIds === next.excludeIds &&
+    previous.excludeLinkedModules === next.excludeLinkedModules &&
     previous.sortField === next.sortField &&
     previous.sortDir === next.sortDir &&
     previous.limit === next.limit

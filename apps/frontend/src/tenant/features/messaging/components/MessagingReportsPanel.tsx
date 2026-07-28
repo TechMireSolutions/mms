@@ -1,13 +1,15 @@
 import { useCallback, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart2, Clock, RotateCcw, Trash2 } from 'lucide-react';
+import { BarChart2, Clock, Download, RotateCcw, Trash2 } from 'lucide-react';
 import { Cell, Legend, Pie, PieChart, Tooltip } from 'recharts';
 import {
+  buildCsvContent,
   formatDateTime,
   getDisplayName,
   getInitials,
   getPrimaryEmail,
   getPrimaryPhone,
+  MESSAGE_LOGS_DEFAULT_PAGE_SIZE,
   toMessagingRecipient,
   type Message,
   type StandardMessagingRecipient as MessagingRecipient,
@@ -15,20 +17,26 @@ import {
 import { Button } from '@/components/ui/button';
 import { ChannelBadge } from '@/components/ui/ChannelBadge';
 import { ErrorState } from '@/components/ui/ErrorState';
-import { ExportToolbar } from '@/components/ui/ExportToolbar';
 import { FormSelect } from '@/components/ui/FormSelect';
+import { ListPagination } from '@/components/ui/ListPagination';
 import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
 import { SafeResponsiveContainer } from '@/components/ui/SafeResponsiveContainer';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { SegmentedPillFilter } from '@/components/ui/SegmentedPillFilter';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useContactsByIds } from '@/tenant/hooks/collections/contacts';
-import { useMessageLogs, useMessagingMetrics } from '../hooks/useMessaging';
+import { apiJson } from '@/lib/apiClient';
+import { triggerFileDownload } from '@/lib/download';
+import { notify } from '@/lib/notify';
+import { type MessageLogsPageResult, useMessageLogs, useMessagingMetrics } from '@/hooks/useMessaging';
+import { useMessagingContactsByIds } from '../hooks/useMessagingContactsByIds';
 import { useMessagingHistoryColumnLayout } from '../hooks/useMessagingColumnLayouts';
 import { useMessagingPageOptions } from '../hooks/useMessagingPageOptions';
 
 const CHART_COLORS = ['var(--color-info)', 'var(--color-success)', 'var(--color-warning)'];
+const EXPORT_PAGE_SIZE = 500;
+const EXPORT_MAX_PAGES = 40;
 
 interface MessagingReportsPanelProps {
   canWrite: boolean;
@@ -46,14 +54,36 @@ export function MessagingReportsPanel({
   const { t } = useTranslation();
   const { categorySelectOptions, channelSelectOptions, statusOptions, logStatusConfig } = useMessagingPageOptions();
   const [search, setSearch] = useState('');
+  const [logsPage, setLogsPage] = useState(1);
   const [channel, setChannel] = useState<'all' | 'sms' | 'whatsapp' | 'email'>('all');
   const [category, setCategory] = useState('all');
   const [status, setStatus] = useState<'all' | 'sent' | 'delivered' | 'failed' | 'skipped'>('all');
-  const logsQuery = useMessageLogs({ channel, category, search, status });
+  const [exporting, setExporting] = useState(false);
+  const debouncedSearch = useDebounce(search, 250);
+
+  const filterKey = `${debouncedSearch}|${channel}|${category}|${status}`;
+  const [activeFilterKey, setActiveFilterKey] = useState(filterKey);
+  if (filterKey !== activeFilterKey) {
+    setActiveFilterKey(filterKey);
+    if (logsPage !== 1) setLogsPage(1);
+  }
+  const pageForQuery = filterKey !== activeFilterKey ? 1 : logsPage;
+
+  const logsQuery = useMessageLogs({
+    channel,
+    category,
+    search: debouncedSearch,
+    status,
+    page: pageForQuery,
+    pageSize: MESSAGE_LOGS_DEFAULT_PAGE_SIZE,
+  });
   const metricsQuery = useMessagingMetrics();
   const contactIds = useMemo(() => logsQuery.logs.map((log) => log.contactId), [logsQuery.logs]);
-  const { data: contacts = [] } = useContactsByIds(contactIds);
-  const contactMap = useMemo(() => new Map(contacts.flatMap((contact) => [[contact.id, contact], [String(contact.id), contact]])), [contacts]);
+  const { data: contacts = [] } = useMessagingContactsByIds(contactIds);
+  const contactMap = useMemo(
+    () => new Map(contacts.flatMap((contact) => [[contact.id, contact], [String(contact.id), contact]])),
+    [contacts],
+  );
   const { getColumnWidth, setColumnWidth } = useMessagingHistoryColumnLayout();
 
   const getRecipientName = useCallback((contactId: string | number): string => {
@@ -61,18 +91,11 @@ export function MessagingReportsPanel({
     return contact ? getDisplayName(contact) : t('messaging.contactFallback', { id: contactId });
   }, [contactMap, t]);
 
-  const filteredLogs = useMemo(() => logsQuery.logs.filter((log) => {
-    const query = search.toLowerCase();
-    return (channel === 'all' || log.channel === channel)
-      && (category === 'all' || (log.category || 'general') === category)
-      && (log.body.toLowerCase().includes(query) || getRecipientName(log.contactId).toLowerCase().includes(query));
-  }), [category, channel, getRecipientName, logsQuery.logs, search]);
-
   const stats = metricsQuery.data ?? {
-    total: logsQuery.logs.length,
-    smsCount: logsQuery.logs.filter((log) => log.channel === 'sms').length,
-    whatsappCount: logsQuery.logs.filter((log) => log.channel === 'whatsapp').length,
-    emailCount: logsQuery.logs.filter((log) => log.channel === 'email').length,
+    total: logsQuery.total,
+    smsCount: 0,
+    whatsappCount: 0,
+    emailCount: 0,
   };
   const chartData = [
     { name: t('messaging.channel.sms'), value: stats.smsCount },
@@ -80,8 +103,72 @@ export function MessagingReportsPanel({
     { name: t('messaging.channel.email'), value: stats.emailCount },
   ].filter((item) => item.value > 0);
 
+  const exportAllFilteredLogs = async (): Promise<void> => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const allLogs: Message[] = [];
+      let page = 1;
+      let hasMore = true;
+      while (hasMore && page <= EXPORT_MAX_PAGES) {
+        const queryParams = new URLSearchParams();
+        queryParams.set('page', String(page));
+        queryParams.set('pageSize', String(EXPORT_PAGE_SIZE));
+        if (channel !== 'all') queryParams.set('channel', channel);
+        if (category !== 'all') queryParams.set('category', category);
+        if (debouncedSearch.trim()) queryParams.set('search', debouncedSearch.trim());
+        if (status !== 'all') queryParams.set('status', status);
+        const response = await apiJson<MessageLogsPageResult>(`/api/messaging/logs?${queryParams.toString()}`);
+        allLogs.push(...(response.logs ?? []));
+        hasMore = Boolean(response.hasMore);
+        page += 1;
+      }
+      const exportTruncated = hasMore;
+
+      const uniqueIds = [...new Set(allLogs.map((log) => String(log.contactId)))];
+      const resolvedContacts: Array<{ id: string | number; name?: string }> = [];
+      for (let index = 0; index < uniqueIds.length; index += 100) {
+        const chunk = uniqueIds.slice(index, index + 100);
+        const resolved = await apiJson<{ contacts: Array<{ id: string | number; name?: string }> }>(
+          '/api/messaging/contacts/resolve',
+          { method: 'POST', body: JSON.stringify({ ids: chunk }) },
+        );
+        resolvedContacts.push(...(resolved.contacts ?? []));
+      }
+      const exportContactMap = new Map(
+        resolvedContacts.flatMap((contact) => [[contact.id, contact], [String(contact.id), contact]]),
+      );
+
+      const headers = [
+        t('messaging.recipient'),
+        t('messaging.channel'),
+        t('messaging.category'),
+        t('messaging.messageBody'),
+        t('messaging.dateSent'),
+      ];
+      const rows = allLogs.map((log) => {
+        const contact = exportContactMap.get(log.contactId) ?? exportContactMap.get(String(log.contactId));
+        const name = contact ? getDisplayName(contact as Parameters<typeof getDisplayName>[0]) : t('messaging.contactFallback', { id: log.contactId });
+        return [name, log.channel, log.category || 'general', log.body, formatDateTime(log.sentAt)];
+      });
+      const csv = buildCsvContent([headers, ...rows]);
+      const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+      triggerFileDownload(blob, `${t('messaging.exportFilename')}.csv`);
+      if (exportTruncated) notify.warning(t('messaging.exportTruncated'));
+    } catch {
+      notify.error(t('settings.serverSaveFailed'));
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (logsQuery.isError || metricsQuery.isError) {
-    return <ErrorState title={t('messaging.loadFailed')} onRetry={() => void Promise.all([logsQuery.refetch(), metricsQuery.refetch()])} />;
+    return (
+      <ErrorState
+        title={t('messaging.loadFailed')}
+        onRetry={() => void Promise.all([logsQuery.refetch(), metricsQuery.refetch()])}
+      />
+    );
   }
 
   return (
@@ -95,22 +182,19 @@ export function MessagingReportsPanel({
             <FormSelect id="logCategory" value={category} onChange={setCategory} options={categorySelectOptions} />
           </div>
           <div className="flex items-center gap-2">
-            {filteredLogs.length > 0 && (
-              <ExportToolbar
-                variant="compact"
-                title={t('messaging.tabs.logs')}
-                columns={[
-                  { header: t('messaging.recipient'), key: 'recipient' },
-                  { header: t('messaging.channel'), key: 'channel' },
-                  { header: t('messaging.category'), key: 'category' },
-                  { header: t('messaging.messageBody'), key: 'body' },
-                  { header: t('messaging.dateSent'), key: 'sentAt' },
-                ]}
-                rows={filteredLogs.map((log) => ({ recipient: getRecipientName(log.contactId), channel: log.channel, category: log.category || 'general', body: log.body, sentAt: formatDateTime(log.sentAt) }))}
-                filename={t('messaging.exportFilename')}
-              />
+            {logsQuery.total > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={exporting}
+                onClick={() => void exportAllFilteredLogs()}
+                className="font-semibold"
+              >
+                <Download className="me-1.5 h-4 w-4" />
+                {exporting ? t('common.loading') : t('messaging.exportLogs')}
+              </Button>
             )}
-            {logsQuery.logs.length > 0 && canClearLogs && (
+            {logsQuery.total > 0 && canClearLogs && (
               <Button variant="outline" size="sm" onClick={onClearLogsRequest} className="font-semibold text-destructive hover:bg-destructive/10">
                 <Trash2 className="me-1.5 h-4 w-4" /> {t('messaging.clearLogs')}
               </Button>
@@ -118,51 +202,108 @@ export function MessagingReportsPanel({
           </div>
         </div>
 
-        {filteredLogs.length > 0 ? (
-          <div className="overflow-x-auto rounded-lg border border-border/50">
-            <table className="w-full table-fixed text-start text-sm">
-              <thead className="bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                <tr>
-                  {(['recipient', 'channel', 'body', 'dateSent'] as const).map((column) => (
-                    <ResizableTableHead key={column} columnKey={column} width={getColumnWidth(column)} onResize={setColumnWidth} className="px-4 py-3">
-                      {column === 'recipient' ? t('messaging.recipient') : column === 'channel' ? t('messaging.channel') : column === 'body' ? t('messaging.messageBody') : t('messaging.dateSent')}
-                    </ResizableTableHead>
-                  ))}
-                  <th className="px-4 py-3 text-center">{t('common.actions')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
-                {filteredLogs.map((log) => {
-                  const name = getRecipientName(log.contactId);
-                  return (
-                    <tr key={log.id} className="transition-colors hover:bg-muted/10">
-                      <td className="flex items-center gap-2 px-4 py-3 font-semibold text-foreground"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] font-black text-primary">{getInitials(name)}</span>{name}</td>
-                      <td className="px-4 py-3"><div className="flex items-center gap-1.5"><ChannelBadge channel={log.channel} /><StatusBadge status={log.status || 'sent'} size="sm" config={logStatusConfig} /></div></td>
-                      <td className="max-w-xs truncate px-4 py-3 text-muted-foreground" title={log.body}>{log.body}</td>
-                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{formatDateTime(log.sentAt)}</td>
-                      <td className="px-4 py-3 text-center">{canWrite && <Button variant="ghost" size="sm" onClick={() => {
-                        const contact = contactMap.get(log.contactId) ?? contactMap.get(String(log.contactId));
-                        onResend(log, contact
-                          ? toMessagingRecipient(contact, { getDisplayName, getPrimaryPhone, getPrimaryEmail })
-                          : { id: log.contactId, name, phone: '', email: '' });
-                      }} className="h-7 text-xs font-semibold text-primary hover:bg-primary/10"><RotateCcw className="me-1 h-3.5 w-3.5" />{t('messaging.resend')}</Button>}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+        {logsQuery.logs.length > 0 ? (
+          <>
+            <div className="overflow-x-auto rounded-lg border border-border/50">
+              <table className="w-full table-fixed text-start text-sm">
+                <thead className="bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    {(['recipient', 'channel', 'body', 'dateSent'] as const).map((column) => (
+                      <ResizableTableHead key={column} columnKey={column} width={getColumnWidth(column)} onResize={setColumnWidth} className="px-4 py-3">
+                        {column === 'recipient' ? t('messaging.recipient') : column === 'channel' ? t('messaging.channel') : column === 'body' ? t('messaging.messageBody') : t('messaging.dateSent')}
+                      </ResizableTableHead>
+                    ))}
+                    <th className="px-4 py-3 text-center">{t('common.actions')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {logsQuery.logs.map((log) => {
+                    const name = getRecipientName(log.contactId);
+                    return (
+                      <tr key={log.id} className="transition-colors hover:bg-muted/10">
+                        <td className="flex items-center gap-2 px-4 py-3 font-semibold text-foreground">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] font-black text-primary">
+                            {getInitials(name)}
+                          </span>
+                          {name}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <ChannelBadge channel={log.channel} />
+                            <StatusBadge status={log.status || 'sent'} size="sm" config={logStatusConfig} />
+                          </div>
+                        </td>
+                        <td className="max-w-xs truncate px-4 py-3 text-muted-foreground" title={log.body}>{log.body}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{formatDateTime(log.sentAt)}</td>
+                        <td className="px-4 py-3 text-center">
+                          {canWrite && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                const contact = contactMap.get(log.contactId) ?? contactMap.get(String(log.contactId));
+                                onResend(log, contact
+                                  ? toMessagingRecipient(contact, { getDisplayName, getPrimaryPhone, getPrimaryEmail })
+                                  : { id: log.contactId, name, phone: '', email: '' });
+                              }}
+                              className="h-7 text-xs font-semibold text-primary hover:bg-primary/10"
+                            >
+                              <RotateCcw className="me-1 h-3.5 w-3.5" />
+                              {t('messaging.resend')}
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <ListPagination
+              page={logsQuery.page}
+              total={logsQuery.total}
+              limit={logsQuery.pageSize}
+              hasMore={logsQuery.hasMore}
+              onPageChange={setLogsPage}
+              i18nNamespace="contacts"
+              variant="range"
+            />
+          </>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground"><Clock className="mb-2 h-8 w-8 opacity-40" /><p className="text-sm font-medium">{t('messaging.noLogs')}</p></div>
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <Clock className="mb-2 h-8 w-8 opacity-40" />
+            <p className="text-sm font-medium">{t('messaging.noLogs')}</p>
+          </div>
         )}
       </div>
 
       <div className="flex flex-col justify-between rounded-xl border border-border bg-card p-4 shadow-xs">
-        <div className="space-y-1"><h4 className="flex items-center gap-1.5 text-sm font-bold text-foreground"><BarChart2 className="h-4 w-4 text-primary" />{t('messaging.volumeBreakdown')}</h4><p className="text-xs text-muted-foreground">{t('messaging.volumeBreakdownDesc')}</p></div>
+        <div className="space-y-1">
+          <h4 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+            <BarChart2 className="h-4 w-4 text-primary" />
+            {t('messaging.volumeBreakdown')}
+          </h4>
+          <p className="text-xs text-muted-foreground">{t('messaging.volumeBreakdownDesc')}</p>
+        </div>
         {chartData.length > 0 ? (
-          <div className="flex h-[240px] w-full items-center justify-center"><SafeResponsiveContainer height={240}><PieChart><Pie data={chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">{chartData.map((entry, index) => <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />)}</Pie><Tooltip /><Legend /></PieChart></SafeResponsiveContainer></div>
+          <div className="flex h-[240px] w-full items-center justify-center">
+            <SafeResponsiveContainer height={240}>
+              <PieChart>
+                <Pie data={chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                  {chartData.map((entry, index) => (
+                    <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </SafeResponsiveContainer>
+          </div>
         ) : (
-          <div className="flex h-[240px] flex-col items-center justify-center text-muted-foreground"><BarChart2 className="mb-2 h-8 w-8 opacity-45" /><p className="text-xs font-semibold">{t('messaging.noDispatches')}</p></div>
+          <div className="flex h-[240px] flex-col items-center justify-center text-muted-foreground">
+            <BarChart2 className="mb-2 h-8 w-8 opacity-45" />
+            <p className="text-xs font-semibold">{t('messaging.noDispatches')}</p>
+          </div>
         )}
       </div>
     </motion.div>

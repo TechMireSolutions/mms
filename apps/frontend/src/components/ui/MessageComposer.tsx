@@ -99,13 +99,15 @@ export default function MessageComposer({
         : `${dispatch.eligibleRecipients.length} ${t('contacts.of')} ${recipients.length} ${t('contacts.whatsapp.contactsHaveWhatsapp')}`
     : undefined;
   const note = isEmail ? t('messaging.bulkEmailDesc') : isSms ? t('contacts.smsManualSendNote') : t('contacts.whatsapp.bulkManualNote');
-  const saveLabel = dispatch.opening
-    ? isEmail ? t('messaging.openingMail') : t('contacts.whatsapp.openingTabs')
-    : isEmail
-      ? isBulk ? t('messaging.openAllMail', { count: String(dispatch.eligibleRecipients.length) }) : t('messaging.openMailDraft')
-      : isSms
-        ? t('contacts.openSmsApp')
-        : isBulk ? `${t('contacts.whatsapp.openAll')} (${dispatch.eligibleRecipients.length})` : t('contacts.whatsapp.open');
+  const saveLabel = dispatch.pendingAudit
+    ? t('messaging.retrySaveHistory')
+    : dispatch.opening
+      ? isEmail ? t('messaging.openingMail') : t('contacts.whatsapp.openingTabs')
+      : isEmail
+        ? isBulk ? t('messaging.openAllMail', { count: String(dispatch.eligibleRecipients.length) }) : t('messaging.openMailDraft')
+        : isSms
+          ? t('contacts.openSmsApp')
+          : isBulk ? `${t('contacts.whatsapp.openAll')} (${dispatch.eligibleRecipients.length})` : t('contacts.whatsapp.open');
 
   const changeTemplate = (nextTemplateId: string): void => {
     setTemplateId(nextTemplateId);
@@ -117,7 +119,7 @@ export default function MessageComposer({
     <FormModal
       open
       priority
-      onClose={onClose}
+      onClose={dispatch.requestClose}
       title={title}
       subtitle={subtitle}
       icon={Icon}
@@ -127,10 +129,23 @@ export default function MessageComposer({
       onSave={() => {
         void dispatch.sendAll();
       }}
-      saveDisabled={dispatch.opening || dispatch.saving || !dispatch.eligibleRecipients.length || !message.trim() || (isEmail && !subject.trim())}
+      saveDisabled={
+        dispatch.pendingAudit
+          ? dispatch.saving
+          : dispatch.opening
+            || dispatch.saving
+            || !dispatch.eligibleRecipients.length
+            || !message.trim()
+            || (isEmail && !subject.trim())
+      }
     >
       <div className="space-y-4">
         <p className="text-xs leading-relaxed text-muted-foreground">{note}</p>
+        {dispatch.pendingAudit ? (
+          <p className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning" role="status">
+            {t('messaging.pendingAuditHint')}
+          </p>
+        ) : null}
         <MessageComposerDispatchControls
           skippedCount={dispatch.skippedRecipients.length}
           isEmail={isEmail}

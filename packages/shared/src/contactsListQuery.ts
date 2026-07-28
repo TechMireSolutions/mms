@@ -15,12 +15,19 @@ export interface ContactsListQuery {
   sortField?: string;
   sortDir?: 'asc' | 'desc';
   hasPhone?: boolean;
+  /** Primary email present — messaging “select all with email”. */
+  hasEmail?: boolean;
   /** Phone or email present — messaging Work recipient lists. */
   hasReachable?: boolean;
   /** Toolbar quick filter; omit or `all` means no preset. */
   quickFilter?: ContactsQuickFilter;
   /** Contact ids to omit from results (picker already-linked exclusions). */
   excludeIds?: Array<string | number>;
+  /**
+   * Server expands to linked contact ids from those modules before paging.
+   * Prefer this over a large `excludeIds` query string (messaging Contacts role).
+   */
+  excludeLinkedModules?: Array<'students' | 'teachers'>;
 }
 
 export interface ContactsListPageResult {
@@ -52,10 +59,10 @@ export function filterContactsForQuery(contacts: Contact[], query: ContactsListQ
     });
   }
   if (query.hasPhone) {
-    rows = rows.filter((contact) => {
-      const contactPhone = contact.phones?.[0]?.number;
-      return contactPhone != null && String(contactPhone).trim().length > 0;
-    });
+    rows = rows.filter((contact) => Boolean(getPrimaryPhone(contact)));
+  }
+  if (query.hasEmail) {
+    rows = rows.filter((contact) => Boolean(getPrimaryEmail(contact)));
   }
   if (query.hasReachable) {
     rows = rows.filter(

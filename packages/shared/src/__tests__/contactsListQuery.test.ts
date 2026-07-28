@@ -56,6 +56,11 @@ describe('filterContactsForQuery hasReachable', () => {
       '2',
     ]);
   });
+
+  it('filters hasPhone and hasEmail separately', () => {
+    expect(filterContactsForQuery(rows, { hasPhone: true }).map((row) => row.id)).toEqual(['1']);
+    expect(filterContactsForQuery(rows, { hasEmail: true }).map((row) => row.id)).toEqual(['2']);
+  });
 });
 
 describe('filterContactsForQuery quickFilter', () => {

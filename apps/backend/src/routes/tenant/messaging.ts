@@ -13,9 +13,20 @@ import {
   recordMessageLogs,
   clearAllMessageLogs,
   computeMessagingMetrics,
+  loadMessagingRecipients,
+  resolveMessagingContacts,
 } from '../../services/messagingService.js';
-import { type MessageTemplate, type Message, messageTemplateInputSchema, recordMessageLogsSchema, messagingLogsQuerySchema, type User } from '@mms/shared';
+import {
+  type MessageTemplate,
+  type Message,
+  messageTemplateInputSchema,
+  recordMessageLogsSchema,
+  messagingLogsQuerySchema,
+  messagingRecipientsQuerySchema,
+  type User,
+} from '@mms/shared';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { entityResolveBodySchema } from '../../validation/commonSchemas.js';
 
 function normalizeDispatchLogs(user: User, logs: Array<{
   contactId: string | number;
@@ -46,6 +57,38 @@ export default async function messagingRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
+
+  // GET /api/messaging/recipients
+  fastify.get('/recipients', async (req: FastifyRequest, reply: FastifyReply) => {
+    const user = req.user as User;
+    if (!canReadMessaging(user)) return sendForbidden(reply);
+    const parsedQuery = parseRequest(messagingRecipientsQuerySchema, req.query);
+    if (!parsedQuery.ok) return replyValidationError(reply, parsedQuery.message);
+    const tenantSubdomain = getRequestTenant();
+    if (!tenantSubdomain) return reply.status(400).send({ message: 'Tenant context required' });
+    try {
+      const page = await loadMessagingRecipients(tenantSubdomain, parsedQuery.data);
+      return reply.send(page);
+    } catch (err) {
+      return sendDatabaseError(reply, 'Failed to load messaging recipients', err);
+    }
+  });
+
+  // POST /api/messaging/contacts/resolve
+  fastify.post('/contacts/resolve', async (req: FastifyRequest, reply: FastifyReply) => {
+    const user = req.user as User;
+    if (!canReadMessaging(user)) return sendForbidden(reply);
+    const parsed = parseRequest(entityResolveBodySchema, req.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    const tenantSubdomain = getRequestTenant();
+    if (!tenantSubdomain) return reply.status(400).send({ message: 'Tenant context required' });
+    try {
+      const contacts = await resolveMessagingContacts(tenantSubdomain, parsed.data.ids);
+      return reply.send({ contacts });
+    } catch (err) {
+      return sendDatabaseError(reply, 'Failed to resolve messaging contacts', err);
+    }
+  });
 
   // GET /api/messaging/templates
   fastify.get('/templates', async (req: FastifyRequest, reply: FastifyReply) => {
@@ -108,10 +151,18 @@ export default async function messagingRoutes(
     if (!parsedQuery.ok) return replyValidationError(reply, parsedQuery.message);
     const tenantSubdomain = getRequestTenant();
     try {
-      const logs = tenantSubdomain
-        ? await loadFilteredMessageLogs(tenantSubdomain, parsedQuery.data)
-        : await loadMessageLogs();
-      return reply.send({ logs });
+      if (tenantSubdomain) {
+        const page = await loadFilteredMessageLogs(tenantSubdomain, parsedQuery.data);
+        return reply.send(page);
+      }
+      const logs = await loadMessageLogs();
+      return reply.send({
+        logs,
+        total: logs.length,
+        page: 1,
+        pageSize: Math.max(logs.length, 1),
+        hasMore: false,
+      });
     } catch (err) {
       return sendDatabaseError(reply, 'Failed to load message logs', err);
     }

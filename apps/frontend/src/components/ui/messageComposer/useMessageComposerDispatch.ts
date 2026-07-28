@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import {
+  MESSAGE_LOG_RECORD_BATCH_MAX,
   personalizeMessage,
   PuppeteerWhatsAppProvider,
   validateRecipientAddress,
@@ -19,6 +20,8 @@ export type ValidatedMessagingRecipient = MessagingRecipient & {
   address?: string;
   reason?: string;
 };
+
+type SentDispatchRecord = { recipientId: string | number; body: string; status: 'sent' | 'failed' };
 
 const SPEED_DELAYS: Record<DispatchSpeed, number> = {
   safe: 1200,
@@ -56,8 +59,10 @@ export function useMessageComposerDispatch({
   const [dispatchSpeed, setDispatchSpeed] = useState<DispatchSpeed>('normal');
   const [dispatchProgress, setDispatchProgress] = useState<{ current: number; total: number } | null>(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [pendingAudit, setPendingAudit] = useState<SentDispatchRecord[] | null>(null);
   const cancelRef = useRef(false);
   const pausedRef = useRef(false);
+  const auditSavedCountRef = useRef(0);
   pausedRef.current = isPaused;
   const personalizeOptions = useMemo(
     () => ({ madrasaName: branding.madrasaName || undefined }),
@@ -83,30 +88,53 @@ export function useMessageComposerDispatch({
     return Boolean(numberId && window.open(`https://wa.me/${numberId}?text=${encodeURIComponent(personalizedBody)}`, '_blank'));
   };
 
-  const saveHistory = async (
-    sentRecords: { recipientId: string | number; body: string; status: 'sent' | 'failed' }[],
-  ): Promise<boolean> => {
+  const saveHistory = async (sentRecords: SentDispatchRecord[]): Promise<boolean> => {
     if (!sentRecords.length || !user) return true;
     const activeTemplate = activeTemplates.find((template) => template.id === templateId);
-    const messages: MessageLogCreateDto[] = sentRecords.map((record) => ({
-      contactId: record.recipientId,
-      channel,
-      body: record.body,
-      status: record.status,
-      subject: channel === 'email' ? subject || undefined : undefined,
-      category: activeTemplate?.category || 'general',
-    }));
-    try {
-      await recordDispatches.mutateAsync(messages);
-      return true;
-    } catch {
-      return false;
+    const pending = sentRecords.slice(auditSavedCountRef.current);
+    if (!pending.length) return true;
+
+    for (let index = 0; index < pending.length; index += MESSAGE_LOG_RECORD_BATCH_MAX) {
+      const chunk = pending.slice(index, index + MESSAGE_LOG_RECORD_BATCH_MAX);
+      const messages: MessageLogCreateDto[] = chunk.map((record) => ({
+        contactId: record.recipientId,
+        channel,
+        body: record.body,
+        status: record.status,
+        subject: channel === 'email' ? subject || undefined : undefined,
+        category: activeTemplate?.category || 'general',
+      }));
+      try {
+        await recordDispatches.mutateAsync(messages);
+        auditSavedCountRef.current += chunk.length;
+      } catch {
+        return false;
+      }
     }
+    return true;
   };
 
   const sendAll = async (): Promise<void> => {
-    if (!eligibleRecipients.length || !message.trim() || opening || saving) return;
-    const sentRecords: { recipientId: string | number; body: string; status: 'sent' | 'failed' }[] = [];
+    if (opening || saving) return;
+
+    // Retry only the remaining audit after a partial save failure — do not re-open device windows.
+    if (pendingAudit) {
+      setSaving(true);
+      try {
+        if (!(await saveHistory(pendingAudit))) return;
+        const completed = pendingAudit;
+        setPendingAudit(null);
+        auditSavedCountRef.current = 0;
+        onSent?.(completed);
+        onClose();
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    if (!eligibleRecipients.length || !message.trim()) return;
+    const sentRecords: SentDispatchRecord[] = [];
     const record = (recipient: MessagingRecipient, success: boolean): void => {
       sentRecords.push({
         recipientId: recipient.id,
@@ -116,6 +144,7 @@ export function useMessageComposerDispatch({
     };
 
     setSaving(true);
+    auditSavedCountRef.current = 0;
     try {
       if (eligibleRecipients.length === 1) {
         record(eligibleRecipients[0], executeSend(eligibleRecipients[0], message));
@@ -135,7 +164,12 @@ export function useMessageComposerDispatch({
         setOpening(false);
         setDispatchProgress(null);
       }
-      if (!(await saveHistory(sentRecords))) return;
+
+      if (sentRecords.length === 0) return;
+      if (!(await saveHistory(sentRecords))) {
+        setPendingAudit(sentRecords);
+        return;
+      }
       onSent?.(sentRecords);
       onClose();
     } finally {
@@ -147,8 +181,15 @@ export function useMessageComposerDispatch({
 
   const cancelDispatch = (): void => {
     cancelRef.current = true;
-    setOpening(false);
-    setDispatchProgress(null);
+  };
+
+  const requestClose = (): void => {
+    if (opening) {
+      cancelRef.current = true;
+      return;
+    }
+    if (saving || pendingAudit) return;
+    onClose();
   };
 
   return {
@@ -158,6 +199,7 @@ export function useMessageComposerDispatch({
     skippedRecipients,
     opening,
     saving,
+    pendingAudit: Boolean(pendingAudit),
     dispatchSpeed,
     setDispatchSpeed,
     dispatchProgress,
@@ -166,5 +208,6 @@ export function useMessageComposerDispatch({
     executeSend,
     sendAll,
     cancelDispatch,
+    requestClose,
   };
 }

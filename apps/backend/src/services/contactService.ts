@@ -1,5 +1,7 @@
 import {
   applyTitleCaseToContact,
+  collectStudentLinkedContactIds,
+  collectTeacherLinkedContactIds,
   computeContactsCommandMetrics,
   computeContactsMonthlyCreatedCounts,
   computeContactsReportAnalytics,
@@ -39,6 +41,8 @@ import {
   findContactsByIds,
   bulkSaveContacts,
 } from '../db/repositories/contactRepository.js';
+import { listStudentsByWorkspace } from '../db/repositories/studentRepository.js';
+import { listTeachersByWorkspace } from '../db/repositories/teacherRepository.js';
 
 export interface ContactRuntimeDefaults {
   defaultPhoneCountryCode: string;
@@ -54,9 +58,23 @@ export async function loadContacts(options?: { includeDeleted?: boolean }): Prom
 }
 
 export async function loadContactsPage(query: ContactsListQuery): Promise<ContactsListPageResult> {
+  const tenant = getRequestTenant();
   const all = await loadContacts({ includeDeleted: query.includeDeleted });
   const scoped = query.includeDeleted ? all.filter(isContactDeleted) : all;
-  return paginateContacts(scoped, query);
+  const excludeIds = [...(query.excludeIds ?? [])];
+  if (tenant && query.excludeLinkedModules?.includes('students')) {
+    const students = (await listStudentsByWorkspace(tenant)).filter((row) => !row.deletedAt);
+    excludeIds.push(...collectStudentLinkedContactIds(students));
+  }
+  if (tenant && query.excludeLinkedModules?.includes('teachers')) {
+    const teachers = (await listTeachersByWorkspace(tenant)).filter((row) => !row.deletedAt);
+    excludeIds.push(...collectTeacherLinkedContactIds(teachers));
+  }
+  const { excludeLinkedModules: _excludeLinkedModules, ...pageQuery } = query;
+  return paginateContacts(scoped, {
+    ...pageQuery,
+    excludeIds: excludeIds.length > 0 ? excludeIds : undefined,
+  });
 }
 
 function metricsFieldConfig(fieldConfig: FieldConfig | null): FieldConfig {

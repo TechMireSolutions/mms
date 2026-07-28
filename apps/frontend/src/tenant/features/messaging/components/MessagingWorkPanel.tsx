@@ -7,6 +7,8 @@ import {
   getInitials,
   getPrimaryEmail,
   getPrimaryPhone,
+  toMessagingRecipient,
+  type Contact,
   type MessagingGenderFilter,
   type MessagingRoleFilter,
   type StandardMessagingRecipient as MessagingRecipient,
@@ -20,23 +22,38 @@ import { SearchBar } from '@/components/ui/SearchBar';
 import { SegmentedPillFilter } from '@/components/ui/SegmentedPillFilter';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslation } from '@/hooks/useTranslation';
+import { notify } from '@/lib/notify';
 import { useMessagingRecipientsColumnLayout } from '../hooks/useMessagingColumnLayouts';
 import { useMessagingPageOptions } from '../hooks/useMessagingPageOptions';
-import { useMessagingWorkRecipients } from '../hooks/useMessagingWorkRecipients';
+import {
+  loadMatchingRecipients,
+  useMessagingWorkRecipients,
+} from '../hooks/useMessagingWorkRecipients';
+
+function contactToRecipient(contact: Contact): MessagingRecipient {
+  return toMessagingRecipient(contact, {
+    getDisplayName,
+    getPrimaryPhone,
+    getPrimaryEmail,
+  });
+}
+
+/** Selected Work recipients keyed by contact id (snapshots — no async resolve race). */
+export type MessagingSelectedMap = Record<string, MessagingRecipient>;
 
 interface MessagingWorkPanelProps {
   canWrite: boolean;
-  selectedRecipients: Record<string | number, boolean>;
+  selectedById: MessagingSelectedMap;
   selectedList: MessagingRecipient[];
-  onSelectedRecipientsChange: (recipients: Record<string | number, boolean>) => void;
+  onSelectedByIdChange: (recipients: MessagingSelectedMap) => void;
   onCompose: (channel: 'sms' | 'whatsapp' | 'email') => void;
 }
 
 export function MessagingWorkPanel({
   canWrite,
-  selectedRecipients,
+  selectedById,
   selectedList,
-  onSelectedRecipientsChange,
+  onSelectedByIdChange,
   onCompose,
 }: MessagingWorkPanelProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -45,6 +62,7 @@ export function MessagingWorkPanel({
   const [recipientsPage, setRecipientsPage] = useState(1);
   const [genderFilter, setGenderFilter] = useState<MessagingGenderFilter>('all');
   const [roleFilter, setRoleFilter] = useState<MessagingRoleFilter>('all');
+  const [selectingReachable, setSelectingReachable] = useState(false);
   const debouncedSearch = useDebounce(searchContact, 250);
 
   useEffect(() => setRecipientsPage(1), [debouncedSearch, genderFilter, roleFilter]);
@@ -58,29 +76,47 @@ export function MessagingWorkPanel({
   });
   const contacts = recipientsQuery.contacts;
   const { getColumnWidth, setColumnWidth } = useMessagingRecipientsColumnLayout();
-  const allVisibleSelected = contacts.length > 0 && contacts.every((contact) => selectedRecipients[contact.id]);
+  const allVisibleSelected = contacts.length > 0 && contacts.every((contact) => Boolean(selectedById[String(contact.id)]));
 
-  const toggleRecipient = (id: string | number): void => {
-    onSelectedRecipientsChange({ ...selectedRecipients, [id]: !selectedRecipients[id] });
+  const toggleRecipient = (contact: Contact): void => {
+    const key = String(contact.id);
+    const next = { ...selectedById };
+    if (next[key]) delete next[key];
+    else next[key] = contactToRecipient(contact);
+    onSelectedByIdChange(next);
   };
 
   const toggleAllVisible = (checked: boolean): void => {
-    const next = { ...selectedRecipients };
+    const next = { ...selectedById };
     contacts.forEach((contact) => {
-      if (checked) next[contact.id] = true;
-      else delete next[contact.id];
+      const key = String(contact.id);
+      if (checked) next[key] = contactToRecipient(contact);
+      else delete next[key];
     });
-    onSelectedRecipientsChange(next);
+    onSelectedByIdChange(next);
   };
 
-  const selectReachable = (kind: 'phone' | 'email'): void => {
-    const next: Record<string | number, boolean> = {};
-    contacts.forEach((contact) => {
-      if (kind === 'phone' ? getPrimaryPhone(contact) : getPrimaryEmail(contact)) {
-        next[contact.id] = true;
+  const selectReachable = async (kind: 'phone' | 'email'): Promise<void> => {
+    if (selectingReachable) return;
+    setSelectingReachable(true);
+    try {
+      const { contacts: matched, truncated } = await loadMatchingRecipients({
+        roleFilter,
+        genderFilter,
+        search: debouncedSearch,
+        kind,
+      });
+      const next: MessagingSelectedMap = {};
+      for (const contact of matched) {
+        next[String(contact.id)] = contactToRecipient(contact);
       }
-    });
-    onSelectedRecipientsChange(next);
+      onSelectedByIdChange(next);
+      if (truncated) notify.warning(t('messaging.selectAllTruncated'));
+    } catch {
+      notify.error(t('messaging.loadFailed'));
+    } finally {
+      setSelectingReachable(false);
+    }
   };
 
   if (recipientsQuery.isError) {
@@ -124,14 +160,26 @@ export function MessagingWorkPanel({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <SearchBar placeholder={t('messaging.search.placeholder')} value={searchContact} onChange={setSearchContact} className="max-w-sm flex-grow" />
           <div className="flex items-center gap-1.5 text-xs">
-            <Button variant="outline" size="sm" onClick={() => selectReachable('phone')} className="h-8 text-[11px] font-semibold">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={selectingReachable}
+              onClick={() => void selectReachable('phone')}
+              className="h-8 text-[11px] font-semibold"
+            >
               <CheckSquare className="me-1 h-3.5 w-3.5 text-info" /> {t('messaging.selectAllValidPhone')}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => selectReachable('email')} className="h-8 text-[11px] font-semibold">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={selectingReachable}
+              onClick={() => void selectReachable('email')}
+              className="h-8 text-[11px] font-semibold"
+            >
               <CheckSquare className="me-1 h-3.5 w-3.5 text-warning" /> {t('messaging.selectAllValidEmail')}
             </Button>
             {selectedList.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => onSelectedRecipientsChange({})} className="h-8 text-[11px] text-destructive">
+              <Button variant="ghost" size="sm" onClick={() => onSelectedByIdChange({})} className="h-8 text-[11px] text-destructive">
                 <XSquare className="me-1 h-3.5 w-3.5" /> {t('messaging.clearSelection')}
               </Button>
             )}
@@ -159,7 +207,11 @@ export function MessagingWorkPanel({
                 return (
                   <tr key={contact.id} className="hover:bg-muted/10">
                     <td className="px-4 py-2">
-                      <Checkbox checked={Boolean(selectedRecipients[contact.id])} onCheckedChange={() => toggleRecipient(contact.id)} aria-label={t('messaging.selectRecipient', { name: getDisplayName(contact) })} />
+                      <Checkbox
+                        checked={Boolean(selectedById[String(contact.id)])}
+                        onCheckedChange={() => toggleRecipient(contact)}
+                        aria-label={t('messaging.selectRecipient', { name: getDisplayName(contact) })}
+                      />
                     </td>
                     <td className="flex items-center gap-2 px-4 py-2 font-medium text-foreground">
                       <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-black text-primary">

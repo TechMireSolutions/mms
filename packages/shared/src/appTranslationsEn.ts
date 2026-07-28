@@ -4981,6 +4981,8 @@ export const APP_TRANSLATIONS_EN = {
   "messaging.stepSelectRecipients": "1. Select Recipients",
   "messaging.stepConfirmDispatch": "2. Confirm & Dispatch",
   "messaging.exportFilename": "message_history",
+  "messaging.exportTruncated": "Export stopped at the maximum number of rows. Narrow your filters and export again for the rest.",
+  "messaging.selectAllTruncated": "Selection stopped at the maximum number of matching recipients. Narrow filters to select the rest.",
   "messaging.confirmRecipients": "Confirm Recipients",
 
   "messaging.confirmRecipientsDesc": "Verify targets and dispatch message channel campaign.",
@@ -5024,6 +5026,8 @@ export const APP_TRANSLATIONS_EN = {
   "messaging.openMailDraft": "Open Mail Draft",
   "messaging.openAllMail": "Open all in Mail ({count})",
   "messaging.openingMail": "Opening mail apps...",
+  "messaging.retrySaveHistory": "Retry saving message history",
+  "messaging.pendingAuditHint": "Messages were opened, but history did not save. Retry before closing this window.",
   "messaging.livePreview": "Live Preview for {name}",
   "messaging.subject": "Email Subject",
   "messaging.duplicateTemplate": "Duplicate Template",

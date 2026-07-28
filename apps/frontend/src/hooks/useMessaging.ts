@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   MESSAGE_LOG_RECORD_BATCH_MAX,
+  MESSAGE_LOGS_DEFAULT_PAGE_SIZE,
   type MessageTemplate,
   type Message,
   type MessageLogCreateDto,
@@ -14,6 +15,14 @@ import { useTranslation } from '@/hooks/useTranslation';
 export const MESSAGING_TEMPLATES_QUERY_KEY = ['messaging', 'templates'] as const;
 export const MESSAGING_LOGS_QUERY_KEY = ['messaging', 'logs'] as const;
 export const MESSAGING_METRICS_QUERY_KEY = ['messaging', 'metrics'] as const;
+
+export interface MessageLogsPageResult {
+  logs: Message[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
 
 export function useMessageTemplates(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
@@ -37,28 +46,57 @@ export function useMessageLogs(options?: {
   category?: string;
   search?: string;
   status?: string;
+  page?: number;
+  pageSize?: number;
 }) {
   const { isAuthenticated } = useAuth();
+  const page = options?.page && options.page > 0 ? options.page : 1;
+  const pageSize = options?.pageSize && options.pageSize > 0
+    ? options.pageSize
+    : MESSAGE_LOGS_DEFAULT_PAGE_SIZE;
 
   const queryParams = new URLSearchParams();
+  queryParams.set('page', String(page));
+  queryParams.set('pageSize', String(pageSize));
   if (options?.channel && options.channel !== 'all') queryParams.set('channel', options.channel);
   if (options?.category && options.category !== 'all') queryParams.set('category', options.category);
-  if (options?.search) queryParams.set('search', options.search);
+  if (options?.search?.trim()) queryParams.set('search', options.search.trim());
   if (options?.status && options.status !== 'all') queryParams.set('status', options.status);
-  const queryString = queryParams.toString();
-  const endpoint = `/api/messaging/logs${queryString ? `?${queryString}` : ''}`;
+  const endpoint = `/api/messaging/logs?${queryParams.toString()}`;
 
   const query = useQuery({
-    queryKey: [...MESSAGING_LOGS_QUERY_KEY, options?.channel, options?.category, options?.search, options?.status],
+    queryKey: [
+      ...MESSAGING_LOGS_QUERY_KEY,
+      options?.channel,
+      options?.category,
+      options?.search,
+      options?.status,
+      page,
+      pageSize,
+    ],
     queryFn: async () => {
-      const res = await apiJson<{ logs: Message[] }>(endpoint);
-      return res.logs || [];
+      const res = await apiJson<MessageLogsPageResult>(endpoint);
+      return {
+        logs: res.logs || [],
+        total: res.total ?? res.logs?.length ?? 0,
+        page: res.page ?? page,
+        pageSize: res.pageSize ?? pageSize,
+        hasMore: Boolean(res.hasMore),
+      } satisfies MessageLogsPageResult;
     },
     staleTime: 15_000,
     enabled: options?.enabled !== false && isAuthenticated,
+    placeholderData: (previous) => previous,
   });
 
-  return { ...query, logs: query.data ?? [] };
+  return {
+    ...query,
+    logs: query.data?.logs ?? [],
+    total: query.data?.total ?? 0,
+    page: query.data?.page ?? page,
+    pageSize: query.data?.pageSize ?? pageSize,
+    hasMore: query.data?.hasMore ?? false,
+  };
 }
 
 export function useMessagingMetrics(options?: { enabled?: boolean }) {

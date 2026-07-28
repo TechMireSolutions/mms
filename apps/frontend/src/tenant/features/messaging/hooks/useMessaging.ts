@@ -8,3 +8,4 @@ export {
   useMessagingMetrics,
   useMessagingMutations,
 } from '@/hooks/useMessaging';
+export type { MessageLogsPageResult } from '@/hooks/useMessaging';

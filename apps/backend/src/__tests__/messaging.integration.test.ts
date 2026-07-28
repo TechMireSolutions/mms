@@ -28,6 +28,8 @@ const mockClearAllMessageLogs = vi.fn();
 const mockComputeMessagingMetrics = vi.fn();
 const mockSaveMessageTemplate = vi.fn();
 const mockRecordMessageLogs = vi.fn();
+const mockLoadMessagingRecipients = vi.fn();
+const mockResolveMessagingContacts = vi.fn();
 
 vi.mock('../services/messagingService.js', () => ({
   loadMessageTemplates: (...args: unknown[]) => mockLoadMessageTemplates(...args),
@@ -38,6 +40,8 @@ vi.mock('../services/messagingService.js', () => ({
   recordMessageLogs: (...args: unknown[]) => mockRecordMessageLogs(...args),
   clearAllMessageLogs: (...args: unknown[]) => mockClearAllMessageLogs(...args),
   computeMessagingMetrics: (...args: unknown[]) => mockComputeMessagingMetrics(...args),
+  loadMessagingRecipients: (...args: unknown[]) => mockLoadMessagingRecipients(...args),
+  resolveMessagingContacts: (...args: unknown[]) => mockResolveMessagingContacts(...args),
 }));
 
 function tokenFor(
@@ -59,7 +63,13 @@ describe('messaging REST routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
     mockLoadMessageTemplates.mockReset().mockResolvedValue([]);
-    mockLoadFilteredMessageLogs.mockReset().mockResolvedValue([]);
+    mockLoadFilteredMessageLogs.mockReset().mockResolvedValue({
+      logs: [],
+      total: 0,
+      page: 1,
+      pageSize: 50,
+      hasMore: false,
+    });
     mockClearAllMessageLogs.mockReset().mockResolvedValue(undefined);
     mockSaveMessageTemplate.mockReset().mockImplementation(async (_tenant: string, template: unknown) => template);
     mockRecordMessageLogs.mockReset().mockImplementation(async (_tenant: string, logs: unknown[]) => logs);
@@ -75,6 +85,14 @@ describe('messaging REST routes', () => {
       queuedCount: 0,
       successRate: 100,
     });
+    mockLoadMessagingRecipients.mockReset().mockResolvedValue({
+      contacts: [],
+      total: 0,
+      page: 1,
+      limit: 50,
+      hasMore: false,
+    });
+    mockResolveMessagingContacts.mockReset().mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -89,6 +107,70 @@ describe('messaging REST routes', () => {
       headers: { host: 'demo.localhost' },
     });
     expect(res.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it('GET /api/messaging/recipients requires auth', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/messaging/recipients?role=students',
+      headers: { host: 'demo.localhost' },
+    });
+    expect(res.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it('GET /api/messaging/recipients allows teacher with messaging.read', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/messaging/recipients?role=students&page=1&pageSize=25&hasPhone=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${tokenFor(app, 'teacher')}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadMessagingRecipients).toHaveBeenCalledWith('demo', expect.objectContaining({
+      role: 'students',
+      page: 1,
+      pageSize: 25,
+      hasPhone: true,
+    }));
+    await app.close();
+  });
+
+  it('POST /api/messaging/contacts/resolve allows teacher with messaging.read', async () => {
+    mockResolveMessagingContacts.mockResolvedValueOnce([{ id: 'c1', name: 'Ali' }]);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/messaging/contacts/resolve',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${tokenFor(app, 'teacher')}`,
+      },
+      payload: { ids: ['c1'] },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockResolveMessagingContacts).toHaveBeenCalledWith('demo', ['c1']);
+    expect(res.json()).toEqual({ contacts: [{ id: 'c1', name: 'Ali' }] });
+    await app.close();
+  });
+
+  it('POST /api/messaging/contacts/resolve allows accountant with messaging.read', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/messaging/contacts/resolve',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${tokenFor(app, 'accountant')}`,
+      },
+      payload: { ids: ['c1'] },
+    });
+    expect(res.statusCode).toBe(200);
     await app.close();
   });
 

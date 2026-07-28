@@ -40,6 +40,9 @@ export const messageStatusSchema = z.enum(['queued', 'sent', 'delivered', 'faile
 /** Max logs accepted in a single POST /api/messaging/logs body. */
 export const MESSAGE_LOG_RECORD_BATCH_MAX = 500;
 
+/** Default page size for messaging reports / log history. */
+export const MESSAGE_LOGS_DEFAULT_PAGE_SIZE = 50;
+
 /** Client-submitted dispatch attempt — server assigns id, userId, and sentAt. */
 export const messageLogCreateSchema = z.object({
   contactId: z.union([z.string(), z.number()]),
@@ -76,12 +79,32 @@ export const messagingLogsQuerySchema = z.object({
   status: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
-  page: z.coerce.number().int().positive().optional(),
-  pageSize: z.coerce.number().int().positive().max(500).optional(),
+  page: z.coerce.number().int().positive().optional().default(1),
+  pageSize: z.coerce.number().int().positive().max(500).optional().default(MESSAGE_LOGS_DEFAULT_PAGE_SIZE),
   includeDeleted: z
     .union([z.boolean(), z.enum(['true', 'false'])])
     .optional()
     .transform((value) => value === true || value === 'true'),
+});
+
+export const MESSAGING_RECIPIENT_ROLES = ['all', 'students', 'teachers', 'staff', 'contacts'] as const;
+export const MESSAGING_RECIPIENT_GENDERS = ['all', 'male', 'female', 'unspecified'] as const;
+
+/** Work-tab recipient directory query (server-paginated under messaging RBAC). */
+export const messagingRecipientsQuerySchema = z.object({
+  role: z.enum(MESSAGING_RECIPIENT_ROLES).optional().default('all'),
+  gender: z.enum(MESSAGING_RECIPIENT_GENDERS).optional().default('all'),
+  search: z.string().optional(),
+  page: z.coerce.number().int().positive().optional().default(1),
+  pageSize: z.coerce.number().int().positive().max(200).optional().default(50),
+  hasPhone: z
+    .union([z.boolean(), z.enum(['true', 'false'])])
+    .optional()
+    .transform((value) => (value === undefined ? undefined : value === true || value === 'true')),
+  hasEmail: z
+    .union([z.boolean(), z.enum(['true', 'false'])])
+    .optional()
+    .transform((value) => (value === undefined ? undefined : value === true || value === 'true')),
 });
 
 export const messagingMetricsSchema = z.object({
@@ -108,6 +131,8 @@ export type MessageLogCreateDto = z.infer<typeof messageLogCreateSchema>;
 export type MessageRecordDto = z.infer<typeof messageRecordSchema>;
 /** Filter and pagination query parameters for message logs. */
 export type MessagingLogsQueryDto = z.infer<typeof messagingLogsQuerySchema>;
+/** Work recipient directory query parameters. */
+export type MessagingRecipientsQueryDto = z.infer<typeof messagingRecipientsQuerySchema>;
 /** Messaging volume and delivery metrics summary DTO. */
 export type MessagingMetricsDto = z.infer<typeof messagingMetricsSchema>;
 

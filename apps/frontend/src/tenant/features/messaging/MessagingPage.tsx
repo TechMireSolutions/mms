@@ -1,12 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Mail, MessageCircle, MessageSquare, Send } from 'lucide-react';
 import {
-  getDisplayName,
-  getPrimaryEmail,
-  getPrimaryPhone,
   mergeMessageTemplates,
   MESSAGING_MODULE_MANIFEST,
-  toMessagingRecipient,
   type Message,
   type StandardMessagingRecipient as MessagingRecipient,
 } from '@mms/shared';
@@ -20,12 +16,11 @@ import { useMessageComposerState } from '@/hooks/useMessageComposerState';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
-import { useContactsByIds } from '@/tenant/hooks/collections/contacts';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { MessagingReportsPanel } from './components/MessagingReportsPanel';
 import { MessagingSetupPanel } from './components/MessagingSetupPanel';
-import { MessagingWorkPanel } from './components/MessagingWorkPanel';
+import { MessagingWorkPanel, type MessagingSelectedMap } from './components/MessagingWorkPanel';
 import {
   useMessageTemplates,
   useMessagingMetrics,
@@ -36,7 +31,7 @@ export default function MessagingPage(): React.JSX.Element {
   const { t } = useTranslation();
   const { canWrite, canViewSetup, canEditSetup, canClearLogs } = useModulePermissions(MESSAGING_MODULE_MANIFEST);
   const [activeTab, setActiveTab] = usePersistedTabState<'work' | 'reports' | 'setup'>('messaging_active_tab', 'work');
-  const [selectedRecipients, setSelectedRecipients] = useState<Record<string | number, boolean>>({});
+  const [selectedById, setSelectedById] = useState<MessagingSelectedMap>({});
   const [deleteTemplateId, setDeleteTemplateId] = useState<string | null>(null);
   const [confirmClearLogsOpen, setConfirmClearLogsOpen] = useState(false);
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
@@ -45,19 +40,7 @@ export default function MessagingPage(): React.JSX.Element {
   const { deleteTemplate, clearLogs } = useMessagingMutations();
   const visibleTabs = useFilteredModuleTierTabs({ canViewSetup: canViewSetup || canEditSetup });
 
-  const selectedIds = useMemo(
-    () => Object.keys(selectedRecipients).filter((id) => selectedRecipients[id]),
-    [selectedRecipients],
-  );
-  const { data: selectedContacts = [] } = useContactsByIds(selectedIds);
-  const selectedList = useMemo(
-    () => selectedContacts.map((contact) => toMessagingRecipient(contact, {
-      getDisplayName,
-      getPrimaryPhone,
-      getPrimaryEmail,
-    })),
-    [selectedContacts],
-  );
+  const selectedList = useMemo(() => Object.values(selectedById), [selectedById]);
   const templates = useMemo(
     () => mergeMessageTemplates(templatesQuery.templates),
     [templatesQuery.templates],
@@ -154,9 +137,9 @@ export default function MessagingPage(): React.JSX.Element {
         {activeTab === 'work' && (
           <MessagingWorkPanel
             canWrite={canWrite}
-            selectedRecipients={selectedRecipients}
+            selectedById={selectedById}
             selectedList={selectedList}
-            onSelectedRecipientsChange={setSelectedRecipients}
+            onSelectedByIdChange={setSelectedById}
             onCompose={triggerCompose}
           />
         )}
@@ -186,7 +169,7 @@ export default function MessagingPage(): React.JSX.Element {
           initialSubject={messagingTarget.initialSubject}
           onClose={() => {
             closeComposer();
-            setSelectedRecipients({});
+            setSelectedById({});
           }}
         />
       )}
