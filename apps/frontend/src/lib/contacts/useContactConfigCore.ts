@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type Dispatch,
@@ -11,11 +10,7 @@ import { loadFieldConfig, saveFieldConfig, saveFieldConfigAsync } from "@/lib/co
 import {
   FieldConfig,
   ContactPreferences,
-  FieldDefinition,
   ColumnRegistryEntry,
-  DEFAULT_ENABLED_TABS,
-  INITIAL_FIELD_SEED,
-  canViewContactTab,
 } from "@mms/shared";
 import {
   DEFAULT_PREFERENCES,
@@ -24,6 +19,7 @@ import {
   savePreferencesAsync,
 } from "@/lib/contacts/preferencesStorage";
 import { useContactConfigColumnPrefs } from "@/lib/contacts/useContactConfigColumnPrefs";
+import { useContactConfigTabFields } from "@/lib/contacts/useContactConfigTabFields";
 
 /**
  * Field config, prefs, column overlay, and tab/field enablement for ContactConfigProvider.
@@ -97,44 +93,7 @@ export function useContactConfigCore({
     updateConfig({ ...fieldConfig, columnRegistry });
   }, [fieldConfig, updateConfig]);
 
-  const enabledTabIds = useMemo(() => {
-    if (fieldConfig.formTabs) {
-      const activeFromTabs = fieldConfig.formTabs
-        .filter((tab) => canViewContactTab(userRole, tab) && tab.enabled !== false)
-        .map((tab) => tab.key);
-      return new Set([...DEFAULT_ENABLED_TABS, ...activeFromTabs]);
-    }
-    return new Set([...DEFAULT_ENABLED_TABS, ...(fieldConfig.enabledTabs || [])]);
-  }, [fieldConfig, userRole]);
-
-  const requiredTabIds = useMemo(() => {
-    return new Set(fieldConfig.requiredTabs || []);
-  }, [fieldConfig]);
-
-  const fields = useMemo(() => {
-    return fieldConfig.fields || {};
-  }, [fieldConfig]);
-
-  const isTabFieldEnabled = useCallback(
-    (tabId: string, fieldId: string) => {
-      const tabFieldsList = fields[tabId];
-      if (!tabFieldsList || tabFieldsList.length === 0) {
-        const seedField = (INITIAL_FIELD_SEED[tabId] || []).find((f: FieldDefinition) => f.key === fieldId);
-        return seedField?.enabled ?? false;
-      }
-      const field = tabFieldsList.find((fieldDefinition) => fieldDefinition.key === fieldId);
-      return field?.enabled ?? false;
-    },
-    [fields],
-  );
-
-  const isTabFieldRequired = useCallback(
-    (tabId: string, fieldId: string) => {
-      const field = (fields[tabId] || []).find((fieldDefinition) => fieldDefinition.key === fieldId);
-      return field?.required ?? false;
-    },
-    [fields],
-  );
+  const tabFields = useContactConfigTabFields({ fieldConfig, userRole });
 
   return {
     fieldConfig,
@@ -147,10 +106,6 @@ export function useContactConfigCore({
     updatePrefsAsync,
     updateColumnRegistry,
     updateUserColumnLayout,
-    enabledTabIds,
-    requiredTabIds,
-    fields,
-    isTabFieldEnabled,
-    isTabFieldRequired,
+    ...tabFields,
   };
 }

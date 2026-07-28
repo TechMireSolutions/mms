@@ -1,18 +1,12 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
-import { useDebounce } from "@/hooks/useDebounce";
-import type { Contact, ContactsQuickFilter } from "@mms/shared";
+import { useCallback, useMemo } from "react";
+import type { Contact } from "@mms/shared";
 import { CONTACTS_MODULE_MANIFEST } from "@mms/shared";
-import {
-  CONTACTS_WORK_DRILLDOWN_EVENT,
-  consumeContactsWorkDrillDown,
-  type ContactsWorkDrillDown,
-} from "@/lib/contacts/contactsWorkDrillDown";
-import { collectLinkedContactIds, mergeContactLinkDirectory } from "@/lib/contacts/contactLinkIds";
 import {
   useContactsCollectionState,
   useContactsPaginated,
-  useContactsByIds,
 } from "@/tenant/features/contacts/hooks/useContacts";
+import { useContactsDirectoryFilters } from "@/tenant/features/contacts/hooks/useContactsDirectoryFilters";
+import { useContactsDirectoryLinks } from "@/tenant/features/contacts/hooks/useContactsDirectoryLinks";
 
 export interface UseContactsDirectoryOptions {
   effectiveTab: string;
@@ -29,19 +23,10 @@ export function useContactsDirectory({
   viewContact,
   initialShowDeletedArchives = false,
 }: UseContactsDirectoryOptions) {
-  const [showDeletedArchives, setShowDeletedArchives] = useState(initialShowDeletedArchives);
-  const [listPage, setListPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 250);
-  const [filterGender, setFilterGender] = useState("");
-  const [quickFilter, setQuickFilter] = useState<ContactsQuickFilter>("all");
-  const [sortField, setSortField] = useState("name");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-  const [selected, setSelected] = useState<(string | number)[]>([]);
-
-  useEffect(() => {
-    setListPage(1);
-  }, [debouncedSearch, filterGender, quickFilter, sortField, sortDir, showDeletedArchives]);
+  const filters = useContactsDirectoryFilters({
+    setActiveTab,
+    initialShowDeletedArchives,
+  });
 
   const needsFullContactsList = effectiveTab === "setup";
   const useServerWork = effectiveTab === "work";
@@ -58,14 +43,14 @@ export function useContactsDirectory({
     refetch: refetchWork,
     isFetching: isWorkFetching,
   } = useContactsPaginated({
-    page: listPage,
+    page: filters.listPage,
     limit: workLimit,
-    search: debouncedSearch,
-    gender: filterGender,
-    includeDeleted: showDeletedArchives,
-    sortField,
-    sortDir,
-    quickFilter,
+    search: filters.debouncedSearch,
+    gender: filters.filterGender,
+    includeDeleted: filters.showDeletedArchives,
+    sortField: filters.sortField,
+    sortDir: filters.sortDir,
+    quickFilter: filters.quickFilter,
     enabled: useServerWork,
   });
 
@@ -74,99 +59,35 @@ export function useContactsDirectory({
   const shownCount = workPageData?.total ?? 0;
   const workTruncated = useServerWork && Boolean(workPageData?.hasMore);
 
-  const applyDrillDown = useCallback(
-    (filter: ContactsWorkDrillDown) => {
-      if (filter.gender) setFilterGender(filter.gender);
-      if (filter.search) setSearch(filter.search);
-      setActiveTab("work");
-    },
-    [setActiveTab],
-  );
+  const allContactsForLinks = useContactsDirectoryLinks({
+    needsFullContactsList,
+    contacts,
+    workContacts,
+    editContact,
+    viewContact,
+  });
 
-  useEffect(() => {
-    const pending = consumeContactsWorkDrillDown();
-    if (pending) applyDrillDown(pending);
-
-    const handler = (event: Event) => {
-      const detail = (event as CustomEvent<ContactsWorkDrillDown>).detail;
-      if (detail) applyDrillDown(detail);
-    };
-    window.addEventListener(CONTACTS_WORK_DRILLDOWN_EVENT, handler);
-    return () => window.removeEventListener(CONTACTS_WORK_DRILLDOWN_EVENT, handler);
-  }, [applyDrillDown]);
-
-  const linkSourceContacts = useMemo(() => {
-    const rows = [...workContacts];
-    if (editContact) rows.push(editContact);
-    if (viewContact) rows.push(viewContact);
-    return rows;
-  }, [workContacts, editContact, viewContact]);
-
-  const linkedContactIds = useMemo(
-    () => collectLinkedContactIds(linkSourceContacts),
-    [linkSourceContacts],
-  );
-
-  const { data: resolvedLinkContacts = [] } = useContactsByIds(
-    needsFullContactsList ? [] : linkedContactIds,
-  );
-
-  const allContactsForLinks = useMemo(() => {
-    if (needsFullContactsList) return contacts;
-    return mergeContactLinkDirectory(linkSourceContacts, resolvedLinkContacts);
-  }, [needsFullContactsList, contacts, linkSourceContacts, resolvedLinkContacts]);
-
-  const hasActiveFilters = !!(filterGender || search || quickFilter !== "all");
-  const activeFilterCount = (filterGender ? 1 : 0) + (quickFilter !== "all" ? 1 : 0);
-
-  const handleSort = useCallback((field: string) => {
-    if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else {
-      setSortField(field);
-      setSortDir("asc");
-    }
-  }, [sortField]);
-
-  const handleSelect = useCallback(
-    (id: string | number) =>
-      setSelected((selectedIds) =>
-        selectedIds.includes(id)
-          ? selectedIds.filter((selectedId) => selectedId !== id)
-          : [...selectedIds, id],
-      ),
-    [],
-  );
-
-  const handleSelectAll = useCallback(
-    () =>
-      setSelected((selectedIds) =>
-        selectedIds.length === workContacts.length ? [] : workContacts.map((contact) => contact.id),
-      ),
-    [workContacts],
-  );
-
-  const clearFilters = useCallback(() => {
-    setFilterGender("");
-    setSearch("");
-    setQuickFilter("all");
-  }, []);
+  const { handleSelectAll: selectAllIds } = filters;
+  const handleSelectAll = useCallback(() => {
+    selectAllIds(workContacts.map((contact) => contact.id));
+  }, [selectAllIds, workContacts]);
 
   return {
-    showDeletedArchives,
-    setShowDeletedArchives,
-    listPage,
-    setListPage,
-    search,
-    setSearch,
-    debouncedSearch,
-    filterGender,
-    setFilterGender,
-    quickFilter,
-    setQuickFilter,
-    sortField,
-    sortDir,
-    selected,
-    setSelected,
+    showDeletedArchives: filters.showDeletedArchives,
+    setShowDeletedArchives: filters.setShowDeletedArchives,
+    listPage: filters.listPage,
+    setListPage: filters.setListPage,
+    search: filters.search,
+    setSearch: filters.setSearch,
+    debouncedSearch: filters.debouncedSearch,
+    filterGender: filters.filterGender,
+    setFilterGender: filters.setFilterGender,
+    quickFilter: filters.quickFilter,
+    setQuickFilter: filters.setQuickFilter,
+    sortField: filters.sortField,
+    sortDir: filters.sortDir,
+    selected: filters.selected,
+    setSelected: filters.setSelected,
     needsFullContactsList,
     useServerWork,
     contacts,
@@ -179,11 +100,11 @@ export function useContactsDirectory({
     shownCount,
     workTruncated,
     allContactsForLinks,
-    hasActiveFilters,
-    activeFilterCount,
-    handleSort,
-    handleSelect,
+    hasActiveFilters: filters.hasActiveFilters,
+    activeFilterCount: filters.activeFilterCount,
+    handleSort: filters.handleSort,
+    handleSelect: filters.handleSelect,
     handleSelectAll,
-    clearFilters,
+    clearFilters: filters.clearFilters,
   };
 }

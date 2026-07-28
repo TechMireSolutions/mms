@@ -1,14 +1,15 @@
-import { Edit2, Clock } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
-import { Contact, formatDate } from "@mms/shared";
+import type { Contact } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactDetailAttachments } from "@/tenant/features/contacts/hooks/useContactDetailAttachments";
 import { useContactDetailViewModel } from "@/tenant/features/contacts/hooks/useContactDetailViewModel";
-import { Button } from "@/components/ui/button";
-import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { DETAIL_STYLES } from "./detail/contactDetailStyles";
 import { ContactDetailDrawerContent } from "./detail/ContactDetailDrawerContent";
+import {
+  ContactDetailDrawerFooter,
+  ContactDetailDrawerHeaderActions,
+  ContactDetailDrawerTabBar,
+} from "./detail/ContactDetailDrawerChrome";
 
 interface ContactDetailDrawerProps {
   contact: Contact;
@@ -83,48 +84,20 @@ export default function ContactDetailDrawer({
       title={t("contacts.detail.title")}
       ariaLabel={t("contacts.detail.title")}
       headerActions={
-        canWrite ? (
-          <Button
-            variant="outline"
-            onClick={() => onEdit(contactState)}
-            aria-label={t("contacts.detail.editProfile")}
-            className="h-8 w-8 p-1.5 rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shadow-none"
-            title={t("contacts.detail.editProfile")}
-          >
-            <Edit2 className="w-4 h-4" />
-          </Button>
-        ) : undefined
+        <ContactDetailDrawerHeaderActions
+          canWrite={canWrite}
+          contact={contactState}
+          onEdit={onEdit}
+        />
       }
       headerExtra={
-        <div className="flex border-b border-border py-1 overflow-x-auto w-full">
-          <SubTabBar
-            tabs={detailTabs}
-            value={activeTab}
-            onChange={setActiveTab}
-            panelIdPrefix="contact-detail-drawer"
-            className="w-full"
-          />
-        </div>
+        <ContactDetailDrawerTabBar
+          detailTabs={detailTabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
       }
-      footer={
-        <>
-          <div className="flex items-center gap-2 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-            <Clock className="w-3 h-3" />
-            {(contactState.updatedAt || contactState.createdAt) && (
-              <span>
-                {t("contacts.detail.updatedLabel")}{" "}
-                {formatDate((contactState.updatedAt || contactState.createdAt) as string)}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${DETAIL_STYLES.liveIntelIndicator}`} />
-            <span className={`text-[9px] font-bold uppercase ${DETAIL_STYLES.liveIntelText}`}>
-              {t("contacts.detail.liveIntel")}
-            </span>
-          </div>
-        </>
-      }
+      footer={<ContactDetailDrawerFooter contact={contactState} />}
     >
       <ContactDetailDrawerContent
         activeTab={activeTab}

@@ -1,9 +1,7 @@
-import React, { useMemo, useCallback } from "react";
+import React from "react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
-import { DEFAULT_COLUMN_REGISTRY, type ContactsQuickFilter } from "@mms/shared";
-import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
-import { useTranslation } from "@/hooks/useTranslation";
+import type { ContactsQuickFilter } from "@mms/shared";
 import { ContactsQuickFilterBar } from "@/tenant/features/contacts/components/ContactsQuickFilterBar";
 import {
   ContactsClearFiltersButton,
@@ -11,6 +9,7 @@ import {
   ContactsFilterMenuButton,
   ContactsViewModeToggle,
 } from "@/tenant/features/contacts/components/ContactsToolbarControls";
+import { useContactsToolbarModel } from "@/tenant/features/contacts/hooks/useContactsToolbarModel";
 
 export type QuickFilterPreset = ContactsQuickFilter;
 
@@ -53,44 +52,15 @@ export default function ContactsToolbar({
   onViewModeChange,
   shownCount,
 }: ContactsToolbarProps): React.JSX.Element {
-  const { availableColumns, genders, systemSortOptions, columnRegistry, updateUserColumnLayout } = useContactConfig();
-  const { t } = useTranslation();
-
-  const sortOptions = useMemo(() => {
-    const dynamicSorts = availableColumns
-      .filter((column) => column.sortField)
-      .map((column) => ({
-        field: column.sortField!,
-        label: column.label,
-      }));
-
-    const combined = [...dynamicSorts];
-    systemSortOptions.forEach((systemSortOption) => {
-      if (!combined.some((existingSortOption) => existingSortOption.field === systemSortOption.field)) {
-        combined.push(systemSortOption);
-      }
-    });
-
-    return combined;
-  }, [availableColumns, systemSortOptions]);
-
-  const handleResetColumnLayout = useCallback(() => {
-    updateUserColumnLayout(DEFAULT_COLUMN_REGISTRY);
-  }, [updateUserColumnLayout]);
-
-  const columnCustomizerLabels = useMemo(
-    () => ({
-      trigger: t("contacts.columns"),
-      title: t("contacts.columns"),
-      visibleAndOrder: t("contacts.visibleAndOrder"),
-      hidden: t("contacts.hidden"),
-      fixed: t("contacts.fixed"),
-      hideColumn: (label: string) => t("contacts.hideColumn", { label }),
-      reset: t("contacts.resetLayout"),
-      searchPlaceholder: t("contacts.searchColumnsPlaceholder"),
-    }),
-    [t],
-  );
+  const {
+    t,
+    genders,
+    sortOptions,
+    columnRegistry,
+    updateUserColumnLayout,
+    handleResetColumnLayout,
+    columnCustomizerLabels,
+  } = useContactsToolbarModel();
 
   return (
     <div className="space-y-2.5">

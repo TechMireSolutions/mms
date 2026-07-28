@@ -1,19 +1,19 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { User, Phone, Mail, MapPin, Share2, Heart } from "lucide-react";
+import { User } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
-import {
-  Contact,
-  DEFAULT_FORM_TABS,
-  type AppTranslationKey,
-} from "@mms/shared";
+import type { Contact } from "@mms/shared";
 import { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
 import {
   ContactFormTabContent,
   ContactFormFooterStart,
 } from "@/tenant/features/contacts/components/ContactFormTabContent";
+import {
+  CONTACT_FORM_TABS,
+  type ContactFormTabKey,
+} from "@/tenant/features/contacts/components/contactFormTabs";
 
 interface ContactFormProps {
   open?: boolean;
@@ -29,31 +29,6 @@ interface ContactFormProps {
   priority?: boolean;
 }
 
-const CONTACT_TAB_ICONS: Record<string, typeof User> = {
-  basic: User,
-  phones: Phone,
-  emails: Mail,
-  addresses: MapPin,
-  socials: Share2,
-  emergency: Heart,
-};
-
-const CONTACT_TABS = DEFAULT_FORM_TABS
-  .slice()
-  .sort((left, right) => left.order - right.order)
-  .flatMap((tab) => {
-    const icon = CONTACT_TAB_ICONS[tab.key];
-    if (!icon) return [];
-    return [{
-      key: tab.key,
-      labelKey: tab.labelKey ?? ("contacts.form.tabBasic" as AppTranslationKey),
-      icon,
-      label: tab.label,
-    }];
-  });
-
-type TabKey = (typeof CONTACT_TABS)[number]["key"];
-
 export default function ContactForm({
   open = true,
   contact,
@@ -68,7 +43,7 @@ export default function ContactForm({
 }: ContactFormProps): JSX.Element {
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
-  const [tab, setTab] = useState<TabKey>("basic");
+  const [tab, setTab] = useState<ContactFormTabKey>("basic");
 
   const draft = useContactFormDraft({
     open,
@@ -79,7 +54,7 @@ export default function ContactForm({
     defaultProvince,
     onSave,
     onClose,
-    onValidationTab: (tabId) => setTab(tabId as TabKey),
+    onValidationTab: (tabId) => setTab(tabId as ContactFormTabKey),
   });
 
   useEffect(() => {
@@ -96,7 +71,7 @@ export default function ContactForm({
       emergency: draft.collectionCounts.filledEmergency,
     };
 
-    return CONTACT_TABS.map((tabItem) => {
+    return CONTACT_FORM_TABS.map((tabItem) => {
       const count = countMap[tabItem.key];
       return {
         key: tabItem.key,

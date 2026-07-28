@@ -1,11 +1,9 @@
 import React, { memo } from "react";
 import { motion } from "framer-motion";
-import { ChevronUp, ChevronDown } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getDisplayName, Contact, type ContactPreferences } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
-import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 import { renderContactTableCell } from "@/tenant/features/contacts/components/ContactTableCells";
 import {
   columnWidthStyle,
@@ -14,57 +12,7 @@ import {
 
 export type { ContactsColumnConfig };
 export { columnWidthStyle };
-
-interface TableHeaderCellProps {
-  columnKey: string;
-  field: string;
-  sortField: string;
-  sortDir: "asc" | "desc";
-  onSort: (field: string) => void;
-  width?: number;
-  onResize?: (columnKey: string, width: number) => void;
-  children: React.ReactNode;
-  className?: string;
-}
-
-export const TableHeaderCell = memo(function TableHeaderCell({
-  columnKey,
-  field,
-  sortField,
-  sortDir,
-  onSort,
-  width,
-  onResize,
-  children,
-  className,
-}: TableHeaderCellProps): React.JSX.Element {
-  const isSorted = sortField === field;
-  const ariaSort = isSorted ? (sortDir === "asc" ? "ascending" : "descending") : "none";
-
-  return (
-    <ResizableTableHead
-      columnKey={columnKey}
-      width={width}
-      onResize={onResize}
-      aria-sort={ariaSort}
-      className={`px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer select-none hover:text-foreground transition-colors ${className || ""}`}
-      onClick={() => onSort(field)}
-    >
-      <div className="flex items-center gap-1">
-        {children}
-        {isSorted ? (
-          sortDir === "asc" ? (
-            <ChevronUp className="w-3 h-3 text-primary" />
-          ) : (
-            <ChevronDown className="w-3 h-3 text-primary" />
-          )
-        ) : (
-          <ChevronUp className="w-3 h-3 opacity-20" />
-        )}
-      </div>
-    </ResizableTableHead>
-  );
-});
+export { TableHeaderCell } from "@/tenant/features/contacts/components/ContactTableHeaderCell";
 
 export interface ContactTableRowProps {
   contact: Contact;

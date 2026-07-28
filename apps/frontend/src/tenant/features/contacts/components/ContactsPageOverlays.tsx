@@ -1,8 +1,9 @@
 import { lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { Contact, StandardMessagingRecipient } from "@mms/shared";
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { useTranslation } from "@/hooks/useTranslation";
+import {
+  ContactsPageConfirmDialogs,
+} from "@/tenant/features/contacts/components/ContactsPageConfirmDialogs";
 
 const ContactForm = lazy(() => import("@/tenant/features/contacts/components/ContactForm"));
 const DuplicateDetection = lazy(() => import("@/tenant/features/contacts/components/DuplicateDetection"));
@@ -77,8 +78,6 @@ export function ContactsPageOverlays({
   onBulkRestoreOpenChange,
   onConfirmBulkRestore,
 }: ContactsPageOverlaysProps): React.JSX.Element {
-  const { t } = useTranslation();
-
   return (
     <>
       <Suspense fallback={null}>
@@ -123,43 +122,17 @@ export function ContactsPageOverlays({
         </AnimatePresence>
       </Suspense>
 
-      <ConfirmAlertDialog
-        open={bulkDeleteOpen}
-        onOpenChange={onBulkDeleteOpenChange}
-        title={t("contacts.bulkDelete")}
-        description={t("contacts.bulkDeleteConfirm", { count: selectedCount })}
-        confirmLabel={t("common.delete")}
-        onConfirm={onConfirmBulkDelete}
-        destructive
-        optionalReason={{
-          label: t("contacts.deletionReasonLabel"),
-          placeholder: t("contacts.deletionReasonPlaceholder"),
-        }}
-      />
-      <ConfirmAlertDialog
-        open={deleteTarget !== null}
-        onOpenChange={onDeleteTargetOpenChange}
-        title={t("contacts.deleteConfirmTitle")}
-        description={
-          deleteTarget?.name
-            ? t("contacts.deleteConfirmDescription", { name: deleteTarget.name })
-            : t("contacts.deleteConfirmDescriptionDefault")
-        }
-        confirmLabel={t("common.delete")}
-        onConfirm={onConfirmSingleDelete}
-        destructive
-        optionalReason={{
-          label: t("contacts.deletionReasonLabel"),
-          placeholder: t("contacts.deletionReasonPlaceholder"),
-        }}
-      />
-      <ConfirmAlertDialog
-        open={bulkRestoreOpen}
-        onOpenChange={onBulkRestoreOpenChange}
-        title={t("contacts.bulkRestore")}
-        description={t("contacts.bulkRestoreConfirm", { count: selectedCount })}
-        confirmLabel={t("contacts.restoreContact")}
-        onConfirm={onConfirmBulkRestore}
+      <ContactsPageConfirmDialogs
+        bulkDeleteOpen={bulkDeleteOpen}
+        onBulkDeleteOpenChange={onBulkDeleteOpenChange}
+        selectedCount={selectedCount}
+        onConfirmBulkDelete={onConfirmBulkDelete}
+        deleteTarget={deleteTarget}
+        onDeleteTargetOpenChange={onDeleteTargetOpenChange}
+        onConfirmSingleDelete={onConfirmSingleDelete}
+        bulkRestoreOpen={bulkRestoreOpen}
+        onBulkRestoreOpenChange={onBulkRestoreOpenChange}
+        onConfirmBulkRestore={onConfirmBulkRestore}
       />
     </>
   );

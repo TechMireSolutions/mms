@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import type { FieldConfig } from "@mms/shared";
-import { getCollection, getWorkspaceLocalStoragePrefix, saveCollection } from "@/lib/db";
+import { getCollection, saveCollection } from "@/lib/db";
 import { saveFieldConfig } from "@/lib/contactFieldsStore";
 import { syncOptionsInConfig } from "@/lib/contacts/preferencesStorage";
 import {
   CONTACT_CONFIG_COLLECTION_KEYS,
   getContactConfigCollectionDefaults,
 } from "@/lib/contacts/contactConfigSeeds";
+import { usePersistedStringCollectionUpdater } from "@/lib/contacts/usePersistedStringCollectionUpdater";
+import { useContactConfigCollectionStorageSync } from "@/lib/contacts/useContactConfigCollectionStorageSync";
 
 type CountryCodeEntry = { country: string; code: string };
 type ContactConfigDefaults = ReturnType<typeof getContactConfigCollectionDefaults>;
@@ -58,38 +60,15 @@ export function useContactConfigCollections({
     );
   }, [contactConfigDefaults]);
 
-  useEffect(() => {
-    const safeParseEvent = (storageEvent: StorageEvent, label: string): unknown | null => {
-      if (storageEvent.newValue === null) return null;
-      try {
-        return JSON.parse(storageEvent.newValue);
-      } catch (error) {
-        console.warn(`[ContactConfigContext] Failed to parse storage event for "${label}":`, error);
-        return null;
-      }
-    };
-
-    const handler = (storageEvent: StorageEvent) => {
-      if (!storageEvent.key?.startsWith(getWorkspaceLocalStoragePrefix())) return;
-      const subKey = storageEvent.key.slice(getWorkspaceLocalStoragePrefix().length);
-      const parsed = safeParseEvent(storageEvent, subKey);
-      if (!parsed) return;
-
-      const collectionSetters: Record<string, (value: unknown) => void> = {
-        [CONTACT_CONFIG_COLLECTION_KEYS.genders]: setGendersState as (value: unknown) => void,
-        [CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms]: setSocialPlatformsState as (value: unknown) => void,
-        [CONTACT_CONFIG_COLLECTION_KEYS.relationships]: setRelationshipsState as (value: unknown) => void,
-        [CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels]: setPhoneLabelsState as (value: unknown) => void,
-        [CONTACT_CONFIG_COLLECTION_KEYS.emailLabels]: setEmailLabelsState as (value: unknown) => void,
-        [CONTACT_CONFIG_COLLECTION_KEYS.addressLabels]: setAddressLabelsState as (value: unknown) => void,
-        [CONTACT_CONFIG_COLLECTION_KEYS.countryCodes]: setCountryCodesState as (value: unknown) => void,
-      };
-      collectionSetters[subKey]?.(parsed);
-    };
-
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  }, []);
+  useContactConfigCollectionStorageSync({
+    setGendersState,
+    setSocialPlatformsState,
+    setRelationshipsState,
+    setPhoneLabelsState,
+    setEmailLabelsState,
+    setAddressLabelsState,
+    setCountryCodesState,
+  });
 
   const syncFieldOptions = useCallback(
     (tabId: string, fieldId: string, options: string[]) => {
@@ -102,53 +81,47 @@ export function useContactConfigCollections({
     [setFieldConfigState],
   );
 
-  const updateGenders = useCallback(
-    (genderOptions: string[]) => {
-      saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.genders, genderOptions);
-      setGendersState(genderOptions);
-      syncFieldOptions("basic", "gender", genderOptions);
-    },
-    [syncFieldOptions],
+  const updateGenders = usePersistedStringCollectionUpdater(
+    CONTACT_CONFIG_COLLECTION_KEYS.genders,
+    setGendersState,
+    syncFieldOptions,
+    "basic",
+    "gender",
   );
-  const updateSocialPlatforms = useCallback(
-    (socialPlatformOptions: string[]) => {
-      saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms, socialPlatformOptions);
-      setSocialPlatformsState(socialPlatformOptions);
-      syncFieldOptions("socials", "platform", socialPlatformOptions);
-    },
-    [syncFieldOptions],
+  const updateSocialPlatforms = usePersistedStringCollectionUpdater(
+    CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms,
+    setSocialPlatformsState,
+    syncFieldOptions,
+    "socials",
+    "platform",
   );
-  const updateRelationships = useCallback(
-    (relationshipOptions: string[]) => {
-      saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.relationships, relationshipOptions);
-      setRelationshipsState(relationshipOptions);
-      syncFieldOptions("emergency", "relationship", relationshipOptions);
-    },
-    [syncFieldOptions],
+  const updateRelationships = usePersistedStringCollectionUpdater(
+    CONTACT_CONFIG_COLLECTION_KEYS.relationships,
+    setRelationshipsState,
+    syncFieldOptions,
+    "emergency",
+    "relationship",
   );
-  const updatePhoneLabels = useCallback(
-    (phoneLabelOptions: string[]) => {
-      saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels, phoneLabelOptions);
-      setPhoneLabelsState(phoneLabelOptions);
-      syncFieldOptions("phones", "label", phoneLabelOptions);
-    },
-    [syncFieldOptions],
+  const updatePhoneLabels = usePersistedStringCollectionUpdater(
+    CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels,
+    setPhoneLabelsState,
+    syncFieldOptions,
+    "phones",
+    "label",
   );
-  const updateEmailLabels = useCallback(
-    (emailLabelOptions: string[]) => {
-      saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.emailLabels, emailLabelOptions);
-      setEmailLabelsState(emailLabelOptions);
-      syncFieldOptions("emails", "label", emailLabelOptions);
-    },
-    [syncFieldOptions],
+  const updateEmailLabels = usePersistedStringCollectionUpdater(
+    CONTACT_CONFIG_COLLECTION_KEYS.emailLabels,
+    setEmailLabelsState,
+    syncFieldOptions,
+    "emails",
+    "label",
   );
-  const updateAddressLabels = useCallback(
-    (addressLabelOptions: string[]) => {
-      saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.addressLabels, addressLabelOptions);
-      setAddressLabelsState(addressLabelOptions);
-      syncFieldOptions("addresses", "label", addressLabelOptions);
-    },
-    [syncFieldOptions],
+  const updateAddressLabels = usePersistedStringCollectionUpdater(
+    CONTACT_CONFIG_COLLECTION_KEYS.addressLabels,
+    setAddressLabelsState,
+    syncFieldOptions,
+    "addresses",
+    "label",
   );
   const updateCountryCodes = useCallback((countryCodeOptions: CountryCodeEntry[]) => {
     saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.countryCodes, countryCodeOptions);

@@ -1,15 +1,14 @@
 import React, { useCallback } from "react";
-import { Eye, Edit2, MessageCircle, Mail, MessageSquare, Trash2, RotateCcw, MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { Contact, getPrimaryEmail, getPrimaryPhone, hasWhatsApp } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { ContactActionMenuItems } from "@/tenant/features/contacts/components/ContactActionMenuItems";
 
 export interface ContactActionMenuProps {
   contact: Contact;
@@ -99,48 +98,24 @@ export function ContactActionMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
-        {onView && (
-          <DropdownMenuItem onClick={handleView}>
-            <Eye className="w-3.5 h-3.5 me-2" /> {t("contacts.table.viewProfile")}
-          </DropdownMenuItem>
-        )}
-        {canWrite && !showArchived && (
-          <DropdownMenuItem onClick={handleEdit}>
-            <Edit2 className="w-3.5 h-3.5 me-2" /> {t("contacts.table.edit")}
-          </DropdownMenuItem>
-        )}
-        {showMessaging ? (
-          <>
-            {showWhatsApp ? (
-              <DropdownMenuItem onClick={handleWhatsAppAction}>
-                <MessageCircle className="w-3.5 h-3.5 me-2 text-success" /> {t("contacts.whatsapp")}
-              </DropdownMenuItem>
-            ) : null}
-            {showEmail ? (
-              <DropdownMenuItem onClick={handleEmailAction}>
-                <Mail className="w-3.5 h-3.5 me-2 text-warning" /> {t("contacts.detail.emailAction")}
-              </DropdownMenuItem>
-            ) : null}
-            {showSms ? (
-              <DropdownMenuItem onClick={handleSmsAction}>
-                <MessageSquare className="w-3.5 h-3.5 me-2 text-primary" /> {t("contacts.sms")}
-              </DropdownMenuItem>
-            ) : null}
-          </>
-        ) : null}
-        {!showArchived && canDelete ? (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">
-              <Trash2 className="w-3.5 h-3.5 me-2" /> {t("contacts.table.deleteContact")}
-            </DropdownMenuItem>
-          </>
-        ) : null}
-        {showArchived && canDelete ? (
-          <DropdownMenuItem onClick={handleRestore}>
-            <RotateCcw className="w-3.5 h-3.5 me-2" /> {t("contacts.restoreContact")}
-          </DropdownMenuItem>
-        ) : null}
+        <ContactActionMenuItems
+          onView={onView}
+          canWrite={canWrite}
+          showArchived={showArchived}
+          canDelete={canDelete}
+          showWhatsApp={showWhatsApp}
+          showEmail={showEmail}
+          showSms={showSms}
+          showMessaging={showMessaging}
+          onViewClick={handleView}
+          onEditClick={handleEdit}
+          onWhatsAppClick={handleWhatsAppAction}
+          onEmailClick={handleEmailAction}
+          onSmsClick={handleSmsAction}
+          onDeleteClick={handleDelete}
+          onRestoreClick={handleRestore}
+          t={t}
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );

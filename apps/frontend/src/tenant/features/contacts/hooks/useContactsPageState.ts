@@ -1,12 +1,9 @@
-import { useCallback, useEffect, useRef } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
-import {
-  resolveModuleTierTab,
-} from "@mms/shared";
+import { resolveModuleTierTab } from "@mms/shared";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsCrudActions } from "@/tenant/features/contacts/hooks/useContactsCrudActions";
-import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
+import { useContactsConflictPanel } from "@/tenant/features/contacts/hooks/useContactsConflictPanel";
 import { useContactsDirectory } from "@/tenant/features/contacts/hooks/useContactsDirectory";
 import { useContactsExportActions } from "@/tenant/features/contacts/hooks/useContactsExportActions";
 import { useContactsMessagingActions } from "@/tenant/features/contacts/hooks/useContactsMessagingActions";
@@ -14,6 +11,7 @@ import { useContactsKeyboardShortcuts } from "@/tenant/features/contacts/hooks/u
 import { useContactsPageActions } from "@/tenant/features/contacts/hooks/useContactsPageActions";
 import { useContactsPageOverlayState } from "@/tenant/features/contacts/hooks/useContactsPageOverlayState";
 import { useContactsSelectionTargets } from "@/tenant/features/contacts/hooks/useContactsSelectionTargets";
+import { buildContactsPageStateReturn } from "@/tenant/features/contacts/hooks/buildContactsPageStateReturn";
 
 export interface UseContactsPageStateOptions {
   prefs: {
@@ -49,247 +47,92 @@ export function useContactsPageState({
     canViewReports,
   });
 
-  const {
-    showForm,
-    setShowForm,
-    editContact,
-    setEditContact,
-    viewContact,
-    setViewContact,
-    showDuplicates,
-    setShowDuplicates,
-    openingDuplicates,
-    setOpeningDuplicates,
-    bulkDeleteOpen,
-    setBulkDeleteOpen,
-    bulkRestoreOpen,
-    setBulkRestoreOpen,
-    deleteTarget,
-    setDeleteTarget,
-    viewModeOverride,
-    setViewModeOverride,
-    conflictPanelOpen,
-    setConflictPanelOpen,
-  } = useContactsPageOverlayState();
+  const overlay = useContactsPageOverlayState();
+  const { pendingCount, conflictCount, flushing, flush, openConflictReview } =
+    useContactsConflictPanel(overlay.setConflictPanelOpen);
 
-  const { pendingCount, conflictCount, flushing, flush } = useContactsSyncOutbox();
-  const prevConflictCount = useRef(conflictCount);
-  const openConflictReview = useCallback(() => setConflictPanelOpen(true), [setConflictPanelOpen]);
-
-  useEffect(() => {
-    if (prevConflictCount.current === 0 && conflictCount > 0) {
-      setConflictPanelOpen(true);
-    }
-    prevConflictCount.current = conflictCount;
-  }, [conflictCount, setConflictPanelOpen]);
-
-  const {
-    messagingTarget,
-    closeComposer,
-    canWriteMessaging,
-    handleWhatsApp,
-    handleSms,
-    handleEmail,
-  } = useContactsMessagingActions();
+  const messaging = useContactsMessagingActions();
   const [activeTab, setActiveTab] = usePersistedTabState<string>("contacts_active_tab", "work");
   const effectiveTab = resolveModuleTierTab(activeTab, visibleTopTabs.map((tab) => tab.id));
 
-  const {
-    showDeletedArchives,
-    setShowDeletedArchives,
-    listPage,
-    setListPage,
-    search,
-    setSearch,
-    filterGender,
-    setFilterGender,
-    quickFilter,
-    setQuickFilter,
-    sortField,
-    sortDir,
-    selected,
-    setSelected,
-    needsFullContactsList,
-    useServerWork,
-    contacts,
-    workPageData,
-    isWorkLoading,
-    isWorkError,
-    refetchWork,
-    isWorkFetching,
-    workContacts,
-    shownCount,
-    workTruncated,
-    allContactsForLinks,
-    hasActiveFilters,
-    activeFilterCount,
-    handleSort,
-    handleSelect,
-    handleSelectAll,
-    clearFilters,
-  } = useContactsDirectory({
+  const directory = useContactsDirectory({
     effectiveTab,
     setActiveTab,
-    editContact,
-    viewContact,
+    editContact: overlay.editContact,
+    viewContact: overlay.viewContact,
     initialShowDeletedArchives,
   });
 
-  const {
-    handleOpenDuplicates,
-    handleEdit,
-    handleCreateContact,
-    handleSave,
-    handleDelete,
-    confirmSingleDelete,
-    handleUpdateContact,
-    requestBulkDelete,
-    confirmBulkDelete,
-    requestBulkRestore,
-    confirmBulkRestore,
-    handleImport,
-    handleMerge,
-    handleRestore,
-  } = useContactsPageActions({
+  const actions = useContactsPageActions({
     canWrite,
     canDelete,
-    workContacts,
-    contacts,
-    selected,
-    setSelected,
-    shownCount,
-    editContact,
-    setEditContact,
-    setShowForm,
-    setShowDuplicates,
-    openingDuplicates,
-    setOpeningDuplicates,
-    deleteTarget,
-    setDeleteTarget,
-    setBulkDeleteOpen,
-    setBulkRestoreOpen,
+    workContacts: directory.workContacts,
+    contacts: directory.contacts,
+    selected: directory.selected,
+    setSelected: directory.setSelected,
+    shownCount: directory.shownCount,
+    editContact: overlay.editContact,
+    setEditContact: overlay.setEditContact,
+    setShowForm: overlay.setShowForm,
+    setShowDuplicates: overlay.setShowDuplicates,
+    openingDuplicates: overlay.openingDuplicates,
+    setOpeningDuplicates: overlay.setOpeningDuplicates,
+    deleteTarget: overlay.deleteTarget,
+    setDeleteTarget: overlay.setDeleteTarget,
+    setBulkDeleteOpen: overlay.setBulkDeleteOpen,
+    setBulkRestoreOpen: overlay.setBulkRestoreOpen,
     crud,
   });
 
   const { handleExportCSV, handleBulkExport } = useContactsExportActions({
     tableColumns,
     canExport,
-    search,
-    filterGender,
-    sortField,
-    sortDir,
-    quickFilter,
-    showDeletedArchives,
-    workContacts,
-    selected,
+    search: directory.search,
+    filterGender: directory.filterGender,
+    sortField: directory.sortField,
+    sortDir: directory.sortDir,
+    quickFilter: directory.quickFilter,
+    showDeletedArchives: directory.showDeletedArchives,
+    workContacts: directory.workContacts,
+    selected: directory.selected,
     logExportAudit,
     handleError,
     t,
   });
 
-  const defaultCountry = prefs.defaultCountry || "";
-  const defaultCity = prefs.defaultCity || "";
-  const defaultProvince = prefs.defaultProvince || "";
-
-  const selectedTargets = useContactsSelectionTargets({ selected, workContacts });
-
-  useContactsKeyboardShortcuts({
-    selectedCount: selected.length,
-    hasActiveFilters,
-    clearFilters,
-    clearSelection: () => setSelected([]),
-    canWrite,
-    showDeletedArchives,
-    onCreate: handleCreateContact,
+  const selectedTargets = useContactsSelectionTargets({
+    selected: directory.selected,
+    workContacts: directory.workContacts,
   });
 
-  return {
+  useContactsKeyboardShortcuts({
+    selectedCount: directory.selected.length,
+    hasActiveFilters: directory.hasActiveFilters,
+    clearFilters: directory.clearFilters,
+    clearSelection: () => directory.setSelected([]),
+    canWrite,
+    showDeletedArchives: directory.showDeletedArchives,
+    onCreate: actions.handleCreateContact,
+  });
+
+  return buildContactsPageStateReturn({
     t,
     visibleTopTabs,
     effectiveTab,
     activeTab,
     setActiveTab,
-    contacts,
-    search,
-    setSearch,
-    filterGender,
-    setFilterGender,
-    quickFilter,
-    setQuickFilter,
-    sortField,
-    sortDir,
-    selected,
-    setSelected,
-    showForm,
-    setShowForm,
-    editContact,
-    setEditContact,
-    viewContact,
-    setViewContact,
-    showDuplicates,
-    setShowDuplicates,
-    messagingTarget,
-    closeComposer,
-    handleWhatsApp,
-    handleSms,
-    handleEmail,
-    canWriteMessaging,
-    hasActiveFilters,
-    activeFilterCount,
-    defaultCountry,
-    defaultCity,
-    defaultProvince,
-    handleSort,
-    handleSelect,
-    handleSelectAll,
-    handleEdit,
-    handleNew: handleCreateContact,
-    handleSave,
-    handleDelete,
-    confirmSingleDelete,
-    deleteTarget,
-    setDeleteTarget,
-    handleUpdateContact,
+    directory,
+    overlay,
+    messaging,
+    actions,
     handleExportCSV,
     handleBulkExport,
-    requestBulkDelete,
-    confirmBulkDelete,
-    bulkDeleteOpen,
-    setBulkDeleteOpen,
-    requestBulkRestore,
-    confirmBulkRestore,
-    bulkRestoreOpen,
-    setBulkRestoreOpen,
-    clearFilters,
-    handleImport,
-    handleMerge,
-    handleRestore,
-    viewModeOverride,
-    setViewModeOverride,
-    conflictPanelOpen,
-    setConflictPanelOpen,
-    openConflictReview,
-    openingDuplicates,
-    handleOpenDuplicates,
-    showDeletedArchives,
-    setShowDeletedArchives,
-    needsFullContactsList,
-    useServerWork,
-    workPageData,
-    isWorkLoading,
-    isWorkError,
-    refetchWork,
-    isWorkFetching,
-    listPage,
-    setListPage,
-    workContacts,
-    allContactsForLinks,
     selectedTargets,
-    shownCount,
-    workTruncated,
+    prefs,
+    openConflictReview,
     pendingCount,
     conflictCount,
     flushing,
     flush,
-  };
+  });
 }

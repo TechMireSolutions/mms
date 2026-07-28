@@ -9,18 +9,15 @@ import {
   resolveContactPhoneDisplay,
   getContactAccentBarClass,
 } from "@/lib/contacts/contactI18n";
-import { ContactIdentityMeta } from "@/tenant/features/contacts/components/ContactIdentityMeta";
 import { ContactCardActions } from "@/tenant/features/contacts/components/ContactCardActions";
+import { ContactCardHeader } from "@/tenant/features/contacts/components/ContactCardHeader";
 import {
   ContactCardDeletedBanner,
   ContactCardInfoPills,
   ContactCardMetadataGrid,
 } from "@/tenant/features/contacts/components/ContactCardSections";
-import { useTranslation } from "@/hooks/useTranslation";
-import { UserAvatar } from "@/components/ui/UserAvatar";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export { hasContactCardColumnData } from "@/tenant/features/contacts/components/contactCardColumnData";
 
@@ -105,35 +102,13 @@ export function ContactCardItem({
         className={`absolute start-0 top-0 bottom-0 w-1.5 ${getContactAccentBarClass(isSelected, contact.gender)} transition-colors duration-300`}
       />
 
-      <div className="flex gap-3 pe-16 items-start ms-1">
-        <div className="flex items-center justify-center flex-shrink-0 pt-1">
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={() => onSelect(contact.id)}
-            aria-label={t("contacts.table.selectContact", { name: displayName })}
-          />
-        </div>
-        <Button
-          type="button"
-          variant="ghost"
-          className="h-auto p-0 hover:bg-transparent flex flex-1 items-start gap-2.5 min-w-0 text-start cursor-pointer hover:text-foreground shadow-none justify-start"
-          onClick={() => onView?.(contact)}
-          aria-label={`${t("contacts.table.viewProfile")} - ${displayName}`}
-        >
-          <UserAvatar
-            id={contact.id}
-            name={displayName}
-            avatar={contact.avatar}
-            className="w-11 h-11 rounded-2xl text-sm shadow-inner group-hover:scale-105 transition-transform duration-200"
-          />
-          <div className="min-w-0 flex-1">
-            <h4 className="text-sm font-black text-foreground tracking-tight truncate group-hover:text-primary transition-colors">
-              {displayName}
-            </h4>
-            <ContactIdentityMeta gender={contact.gender} isSyed={contact.isSyed} className="mt-0.5 font-semibold truncate" />
-          </div>
-        </Button>
-      </div>
+      <ContactCardHeader
+        contact={contact}
+        isSelected={isSelected}
+        displayName={displayName}
+        onSelect={onSelect}
+        onView={onView}
+      />
 
       <ContactCardInfoPills
         phone={phone}
