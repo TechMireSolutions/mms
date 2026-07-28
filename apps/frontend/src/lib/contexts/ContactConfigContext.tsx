@@ -24,20 +24,14 @@ import {
   ContactPreferences,
   ContactColumnPreference,
   FieldDefinition,
-  translateApp,
   ColumnRegistryEntry,
-  DEFAULT_COLUMN_REGISTRY,
-  COLUMN_FIELD_MAPPING,
   DEFAULT_ENABLED_TABS,
   INITIAL_FIELD_SEED,
-  canViewContactColumn,
   canViewContactTab,
   buildDynamicContactSchema,
   formatZodIssues,
-  applyModuleColumnOverlay,
   type ValidationError,
 } from "@mms/shared";
-import { getCollection, getWorkspaceLocalStoragePrefix, saveCollection, getObject, saveObject } from "@/lib/db";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
@@ -52,15 +46,11 @@ import {
   loadPreferences,
   savePreferences,
   savePreferencesAsync,
-  syncOptionsInConfig,
 } from "@/lib/contacts/preferencesStorage";
-import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
-import {
-  CONTACT_CONFIG_COLLECTION_KEYS,
-  CONTACT_CONFIG_OBJECT_KEYS,
-  getContactConfigCollectionDefaults,
-  getDefaultSocialPlaceholders,
-} from "@/lib/contacts/contactConfigSeeds";
+import { getFallbackCountryCode } from "@/lib/contacts/contactI18n";
+import { getContactConfigCollectionDefaults } from "@/lib/contacts/contactConfigSeeds";
+import { useContactConfigCollections } from "@/lib/contacts/useContactConfigCollections";
+import { useContactColumnRegistry } from "@/lib/contacts/useContactColumnRegistry";
 
 // ── Context Interface ─────────────────────────────────────────────────────────
 export interface ContactConfigContextType {
@@ -81,7 +71,6 @@ export interface ContactConfigContextType {
   genders: string[];
   socialPlatforms: string[];
   relationships: string[];
-  socialPlaceholders: Record<string, string>;
   phoneLabels: string[];
   emailLabels: string[];
   addressLabels: string[];
@@ -100,7 +89,6 @@ export interface ContactConfigContextType {
   updateGenders: (genderOptions: string[]) => void;
   updateSocialPlatforms: (socialPlatformOptions: string[]) => void;
   updateRelationships: (relationshipOptions: string[]) => void;
-  updateSocialPlaceholders: (socialPlaceholders: Record<string, string>) => void;
   updatePhoneLabels: (phoneLabelOptions: string[]) => void;
   updateEmailLabels: (emailLabelOptions: string[]) => void;
   updateAddressLabels: (addressLabelOptions: string[]) => void;
@@ -123,7 +111,6 @@ export const ContactConfigContext = createContext<ContactConfigContextType | nul
  * @returns {React.JSX.Element}
  */
 export function ContactConfigProvider({ children }: { children: ReactNode }) {
-  const settings = useGlobalSettings();
   const { user } = useAuth();
   const [queryEnabled, setQueryEnabled] = useState(false);
   useEffect(() => {
@@ -159,32 +146,27 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   }));
   const contactConfigDefaults = useMemo(() => getContactConfigCollectionDefaults(), []);
 
-  // ── Dynamic Option Lists ────────────────────────────────────────────────────
-  const [genders, setGendersState] = useState<string[]>(() =>
-    getCollection(CONTACT_CONFIG_COLLECTION_KEYS.genders, contactConfigDefaults.genders)
-  );
-  const [socialPlatforms, setSocialPlatformsState] = useState<string[]>(() =>
-    getCollection(CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms, contactConfigDefaults.socialPlatforms)
-  );
-  const [relationships, setRelationshipsState] = useState<string[]>(() =>
-    getCollection(CONTACT_CONFIG_COLLECTION_KEYS.relationships, contactConfigDefaults.relationships)
-  );
-
-  const [socialPlaceholders, setSocialPlaceholdersState] = useState<Record<string, string>>(() =>
-    getObject(CONTACT_CONFIG_OBJECT_KEYS.socialPlaceholders, getDefaultSocialPlaceholders())
-  );
-  const [phoneLabels, setPhoneLabelsState] = useState<string[]>(() =>
-    getCollection(CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels, contactConfigDefaults.phoneLabels)
-  );
-  const [emailLabels, setEmailLabelsState] = useState<string[]>(() =>
-    getCollection(CONTACT_CONFIG_COLLECTION_KEYS.emailLabels, contactConfigDefaults.emailLabels)
-  );
-  const [addressLabels, setAddressLabelsState] = useState<string[]>(() =>
-    getCollection(CONTACT_CONFIG_COLLECTION_KEYS.addressLabels, contactConfigDefaults.addressLabels)
-  );
-  const [countryCodes, setCountryCodesState] = useState<Array<{ country: string; code: string }>>(() =>
-    getCollection(CONTACT_CONFIG_COLLECTION_KEYS.countryCodes, contactConfigDefaults.countryCodes)
-  );
+  const {
+    genders,
+    socialPlatforms,
+    relationships,
+    phoneLabels,
+    emailLabels,
+    addressLabels,
+    countryCodes,
+    countryCodesMap,
+    reloadCollections,
+    updateGenders,
+    updateSocialPlatforms,
+    updateRelationships,
+    updatePhoneLabels,
+    updateEmailLabels,
+    updateAddressLabels,
+    updateCountryCodes,
+  } = useContactConfigCollections({
+    contactConfigDefaults,
+    setFieldConfigState,
+  });
 
   const reloadContactConfigFromDatabaseCache = useCallback(() => {
     setFieldConfigState(loadFieldConfig());
@@ -192,27 +174,8 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
       ...DEFAULT_PREFERENCES,
       ...loadPreferences(),
     });
-    setGendersState(getCollection(CONTACT_CONFIG_COLLECTION_KEYS.genders, contactConfigDefaults.genders));
-    setSocialPlatformsState(
-      getCollection(CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms, contactConfigDefaults.socialPlatforms),
-    );
-    setRelationshipsState(
-      getCollection(CONTACT_CONFIG_COLLECTION_KEYS.relationships, contactConfigDefaults.relationships),
-    );
-
-    setSocialPlaceholdersState(
-      getObject(CONTACT_CONFIG_OBJECT_KEYS.socialPlaceholders, getDefaultSocialPlaceholders()),
-    );
-    setPhoneLabelsState(getCollection(CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels, contactConfigDefaults.phoneLabels));
-    setEmailLabelsState(getCollection(CONTACT_CONFIG_COLLECTION_KEYS.emailLabels, contactConfigDefaults.emailLabels));
-    setAddressLabelsState(
-      getCollection(CONTACT_CONFIG_COLLECTION_KEYS.addressLabels, contactConfigDefaults.addressLabels),
-    );
-    setCountryCodesState(
-      getCollection(CONTACT_CONFIG_COLLECTION_KEYS.countryCodes, contactConfigDefaults.countryCodes),
-    );
-  }, [contactConfigDefaults, user?.id]);
-
+    reloadCollections();
+  }, [reloadCollections]);
 
   useEffect(() => {
     if (lastUserIdRef.current !== user?.id) {
@@ -252,49 +215,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.id, columnPrefsLoaded, serverColumnPrefs, saveColumnPrefs]);
 
-  // ── Cross-tab sync via storage events ────────────────────────────────────
-  useEffect(() => {
-    /**
-     * Safely parse a storage event's newValue, logging on failure.
-     *
-     * @param {StorageEvent} storageEvent - The storage event.
-     * @param {string} label - Human-readable label for error messages.
-     * @returns {unknown|null}
-     */
-    const safeParseEvent = (storageEvent: StorageEvent, label: string): unknown | null => {
-      if (storageEvent.newValue === null) return null;
-      try {
-        return JSON.parse(storageEvent.newValue);
-      } catch (error) {
-        console.warn(`[ContactConfigContext] Failed to parse storage event for "${label}":`, error);
-        return null;
-      }
-    };
-
-    const handler = (storageEvent: StorageEvent) => {
-      if (storageEvent.key && storageEvent.key.startsWith(getWorkspaceLocalStoragePrefix())) {
-        const subKey = storageEvent.key.slice(getWorkspaceLocalStoragePrefix().length);
-        const parsed = safeParseEvent(storageEvent, subKey);
-        if (parsed) {
-          const COLLECTION_SETTERS: Record<string, (storedConfigValue: unknown) => void> = {
-            [CONTACT_CONFIG_COLLECTION_KEYS.genders]: setGendersState as (storedConfigValue: unknown) => void,
-            [CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms]: setSocialPlatformsState as (storedConfigValue: unknown) => void,
-            [CONTACT_CONFIG_COLLECTION_KEYS.relationships]: setRelationshipsState as (storedConfigValue: unknown) => void,
-
-            [CONTACT_CONFIG_OBJECT_KEYS.socialPlaceholders]: setSocialPlaceholdersState as (storedConfigValue: unknown) => void,
-            [CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels]: setPhoneLabelsState as (storedConfigValue: unknown) => void,
-            [CONTACT_CONFIG_COLLECTION_KEYS.emailLabels]: setEmailLabelsState as (storedConfigValue: unknown) => void,
-            [CONTACT_CONFIG_COLLECTION_KEYS.addressLabels]: setAddressLabelsState as (storedConfigValue: unknown) => void,
-            [CONTACT_CONFIG_COLLECTION_KEYS.countryCodes]: setCountryCodesState as (storedConfigValue: unknown) => void,
-          };
-          COLLECTION_SETTERS[subKey]?.(parsed);
-        }
-      }
-    };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  }, []);
-
   // ── Mutators ──────────────────────────────────────────────────────────────
   const updateConfig = useCallback((nextConfig: FieldConfig) => {
     saveFieldConfig(nextConfig);
@@ -319,70 +239,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     await savePreferencesAsync(merged);
     setPrefsState(merged);
   }, [prefs]);
-
-  const updateGenders = useCallback((genderOptions: string[]) => {
-    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.genders, genderOptions);
-    setGendersState(genderOptions);
-    setFieldConfigState((currentConfig) => {
-      const updatedConfig = syncOptionsInConfig(currentConfig, "basic", "gender", genderOptions);
-      saveFieldConfig(updatedConfig);
-      return updatedConfig;
-    });
-  }, []);
-  const updateSocialPlatforms = useCallback((socialPlatformOptions: string[]) => {
-    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms, socialPlatformOptions);
-    setSocialPlatformsState(socialPlatformOptions);
-    setFieldConfigState((currentConfig) => {
-      const updatedConfig = syncOptionsInConfig(currentConfig, "socials", "platform", socialPlatformOptions);
-      saveFieldConfig(updatedConfig);
-      return updatedConfig;
-    });
-  }, []);
-  const updateRelationships = useCallback((relationshipOptions: string[]) => {
-    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.relationships, relationshipOptions);
-    setRelationshipsState(relationshipOptions);
-    setFieldConfigState((currentConfig) => {
-      const updatedConfig = syncOptionsInConfig(currentConfig, "emergency", "relationship", relationshipOptions);
-      saveFieldConfig(updatedConfig);
-      return updatedConfig;
-    });
-  }, []);
-
-  const updateSocialPlaceholders = useCallback((socialPlaceholders: Record<string, string>) => {
-    saveObject(CONTACT_CONFIG_OBJECT_KEYS.socialPlaceholders, socialPlaceholders);
-    setSocialPlaceholdersState(socialPlaceholders);
-  }, []);
-  const updatePhoneLabels = useCallback((phoneLabelOptions: string[]) => {
-    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels, phoneLabelOptions);
-    setPhoneLabelsState(phoneLabelOptions);
-    setFieldConfigState((currentConfig) => {
-      const updatedConfig = syncOptionsInConfig(currentConfig, "phones", "label", phoneLabelOptions);
-      saveFieldConfig(updatedConfig);
-      return updatedConfig;
-    });
-  }, []);
-  const updateEmailLabels = useCallback((emailLabelOptions: string[]) => {
-    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.emailLabels, emailLabelOptions);
-    setEmailLabelsState(emailLabelOptions);
-    setFieldConfigState((currentConfig) => {
-      const updatedConfig = syncOptionsInConfig(currentConfig, "emails", "label", emailLabelOptions);
-      saveFieldConfig(updatedConfig);
-      return updatedConfig;
-    });
-  }, []);
-  const updateAddressLabels = useCallback((addressLabelOptions: string[]) => {
-    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.addressLabels, addressLabelOptions);
-    setAddressLabelsState(addressLabelOptions);
-    setFieldConfigState((currentConfig) => {
-      const updatedConfig = syncOptionsInConfig(currentConfig, "addresses", "label", addressLabelOptions);
-      saveFieldConfig(updatedConfig);
-      return updatedConfig;
-    });
-  }, []);
-  const updateCountryCodes = useCallback((countryCodeOptions: Array<{ country: string; code: string }>) => {
-    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.countryCodes, countryCodeOptions);
-    setCountryCodesState(countryCodeOptions);
-  }, []);
 
   const updateColumnRegistry = useCallback((columnRegistry: ColumnRegistryEntry[]) => {
     updateConfig({ ...fieldConfig, columnRegistry });
@@ -421,18 +277,10 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     return fieldConfig.fields || {};
   }, [fieldConfig]);
 
-  const countryCodesMap = useMemo(() => {
-    const countryCodeByCountry: Record<string, string> = {};
-    countryCodes.forEach(({ country, code }) => {
-      countryCodeByCountry[country] = code;
-    });
-    return countryCodeByCountry;
-  }, [countryCodes]);
-
-  const defaultPhoneCountryCode = useMemo(() => {
-    const configuredDefault = prefs.defaultCountry ? countryCodesMap[prefs.defaultCountry] : "";
-    return configuredDefault || countryCodes[0]?.code || "";
-  }, [countryCodes, countryCodesMap, prefs.defaultCountry]);
+  const defaultPhoneCountryCode = useMemo(
+    () => getFallbackCountryCode(prefs, countryCodesMap, countryCodes),
+    [countryCodes, countryCodesMap, prefs],
+  );
 
   /**
    * Returns true if a specific field inside a tab is enabled.
@@ -469,110 +317,22 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     [fields]
   );
 
-  const tenantColumnRegistry = useMemo(() => {
-    const baseRegistryMap = new Map<string, ColumnRegistryEntry>();
-    DEFAULT_COLUMN_REGISTRY.forEach((defaultCol) => {
-      const stored = (fieldConfig.columnRegistry || []).find((c) => c.key === defaultCol.key);
-      baseRegistryMap.set(defaultCol.key, {
-        ...defaultCol,
-        order: stored?.order ?? defaultCol.order,
-        sortField: stored?.sortField || defaultCol.sortField,
-        enabled: defaultCol.enabled,
-      });
-    });
-
-    (fieldConfig.columnRegistry || []).forEach((storedCol) => {
-      if (!baseRegistryMap.has(storedCol.key)) {
-        baseRegistryMap.set(storedCol.key, { ...storedCol });
-      }
-    });
-
-    const registry = Array.from(baseRegistryMap.values()).sort((a, b) => a.order - b.order);
-
-    // Find all active fields across all enabled tabs in the registry
-    const activeFields: Array<{ tabId: string; field: FieldDefinition }> = [];
-    Object.entries(fields).forEach(([tabId, tabFields]) => {
-      const tabEnabled = tabId === "basic" || enabledTabIds.has(tabId);
-      if (tabEnabled) {
-        (tabFields || []).forEach((fieldDefinition) => {
-          if (fieldDefinition.enabled) {
-            activeFields.push({ tabId, field: fieldDefinition });
-          }
-        });
-      }
-    });
-
-    // Filter out columns from registry that don't match active tabs/fields using single source of truth mapping
-    const filteredRegistry = registry.filter((column) => {
-      const mapping = COLUMN_FIELD_MAPPING[column.key];
-      if (mapping) {
-        const tabActive = mapping.tabId === "basic" || enabledTabIds.has(mapping.tabId);
-        return tabActive && isTabFieldEnabled(mapping.tabId, mapping.fieldId);
-      }
-      return activeFields.some((activeField) => activeField.field.key === column.key);
-    });
-
-    const viewerRole = user?.role ?? '';
-    const columnCtx = { fields, enabledTabIds, isTabFieldEnabled };
-    return filteredRegistry.filter((column) => canViewContactColumn(viewerRole, column.key, columnCtx));
-  }, [fieldConfig.columnRegistry, fields, enabledTabIds, isTabFieldEnabled, user?.role]);
-
-  const columnRegistry = useMemo(
-    () => applyModuleColumnOverlay(tenantColumnRegistry, rawUserColumnOverlay) as ColumnRegistryEntry[],
-    [tenantColumnRegistry, rawUserColumnOverlay],
-  );
-
-  const getColumnWidth = useCallback(
-    (key: string) => {
-      const column = columnRegistry.find((entry) => entry.key === key);
-      return typeof column?.width === "number" ? column.width : undefined;
-    },
-    [columnRegistry],
-  );
-
-  const setColumnWidth = useCallback(
-    (key: string, width: number) => {
-      const nextRegistry = columnRegistry.map((column) =>
-        column.key === key ? { ...column, width } : column,
-      );
-      updateUserColumnLayout(nextRegistry);
-    },
-    [columnRegistry, updateUserColumnLayout],
-  );
-
-  const availableColumns = useMemo(() => {
-    const translate = (key: Parameters<typeof translateApp>[0]) =>
-      translateApp(key, settings.language);
-    return columnRegistry.map((column) => ({
-      id: column.key,
-      label: resolveRegistryLabel(column, translate),
-      sortField: column.sortable !== false ? (column.sortField || column.key) : undefined,
-      width: column.width,
-    }));
-  }, [columnRegistry, settings.language]);
-
-  const visibleColumns = useMemo(() => {
-    const translate = (key: Parameters<typeof translateApp>[0]) =>
-      translateApp(key, settings.language);
-    return columnRegistry
-      .filter((column) => column.enabled)
-      .sort((a, b) => a.order - b.order)
-      .map((column) => ({
-        id: column.key,
-        label: resolveRegistryLabel(column, translate),
-        sortField: column.sortable !== false ? (column.sortField || column.key) : undefined,
-        width: column.width,
-      }));
-  }, [columnRegistry, settings.language]);
-
-  const systemSortOptions = useMemo<Array<{ field: string; label: string }>>(() => [
-    { field: "createdAt", label: translateApp("contacts.table.dateAdded", settings.language) },
-    { field: "updatedAt", label: translateApp("contacts.table.lastUpdated", settings.language) },
-  ], [settings.language]);
-
-
-
-
+  const {
+    columnRegistry,
+    availableColumns,
+    visibleColumns,
+    getColumnWidth,
+    setColumnWidth,
+    systemSortOptions,
+  } = useContactColumnRegistry({
+    fieldConfig,
+    fields,
+    enabledTabIds,
+    isTabFieldEnabled,
+    rawUserColumnOverlay,
+    viewerRole,
+    updateUserColumnLayout,
+  });
 
   return (
     <ContactConfigContext.Provider
@@ -590,30 +350,24 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
         isTabFieldEnabled,
         isTabFieldRequired,
 
-        // Dynamic Collections
         genders,
         socialPlatforms,
         relationships,
-        socialPlaceholders,
         phoneLabels,
         emailLabels,
         addressLabels,
         countryCodes,
 
-        // Derived Lookups
         countryCodesMap,
         defaultPhoneCountryCode,
 
-        // Dynamic Columns
         columnRegistry,
         availableColumns,
         visibleColumns,
 
-        // Mutators
         updateGenders,
         updateSocialPlatforms,
         updateRelationships,
-        updateSocialPlaceholders,
         updatePhoneLabels,
         updateEmailLabels,
         updateAddressLabels,

@@ -2,8 +2,6 @@ import {
   formatDate,
   calcAge,
   calculateDetailedSolarAge,
-  parsePhoneNumber,
-  formatPhoneWithCountryCode,
   getPrimaryPhone,
   getPrimaryEmail,
   toTitleCase,
@@ -13,6 +11,13 @@ import {
   type Contact,
   type ContactPreferences,
 } from '@mms/shared';
+
+export {
+  formatContactPhoneDisplay,
+  formatTelHref,
+  getFallbackCountryCode,
+  resolveContactPhoneDisplay,
+} from '@/lib/contacts/contactPhoneDisplay';
 
 export const DUPLICATE_REASON_I18N: Record<ContactDuplicateReasonKey, AppTranslationKey> = {
   phoneEmail: 'contacts.duplicates.reason.phoneEmail',
@@ -128,27 +133,6 @@ export function formatContactDobWithAge(
   return `${t('contacts.table.dobLabel')} ${dateStr}${ageStr}`;
 }
 
-/** Standardized phone display formatter for contacts tables and cards. */
-export function formatContactPhoneDisplay(
-  rawNumber: string | undefined | null,
-  countryCodeFallback = '+92',
-): { countryCode: string; formattedNumber: string } {
-  if (!rawNumber) return { countryCode: countryCodeFallback, formattedNumber: '' };
-  const fullPhone = formatPhoneWithCountryCode(rawNumber, countryCodeFallback);
-  if (!fullPhone) return { countryCode: countryCodeFallback, formattedNumber: '' };
-  const parsed = parsePhoneNumber(fullPhone, countryCodeFallback);
-  return { countryCode: parsed.countryCode || countryCodeFallback, formattedNumber: parsed.number || rawNumber };
-}
-
-/** Formats tel: link href for telephone actions. */
-export function formatTelHref(phoneStr: string | undefined | null): string {
-  if (!phoneStr) return '#';
-  const formatted = formatPhoneWithCountryCode(phoneStr);
-  const p = parsePhoneNumber(formatted || phoneStr);
-  const num = `${p.countryCode}${p.number.replace(/\s+/g, '')}`;
-  return `tel:${num || phoneStr}`;
-}
-
 /** Formats registry-driven custom column values for the contacts table. */
 export function formatContactCellValue(
   value: unknown,
@@ -165,39 +149,6 @@ export function formatContactCellValue(
     }
   }
   return String(value);
-}
-
-/** Resolves fallback country code based on contact preferences and code mapping. */
-export function getFallbackCountryCode(
-  prefs?: Partial<ContactPreferences>,
-  countryCodesMap?: Record<string, string>,
-): string {
-  if (!prefs || !countryCodesMap) return '+92';
-  const defaultCountry = prefs.defaultCountry;
-  if (defaultCountry && countryCodesMap[defaultCountry]) {
-    return countryCodesMap[defaultCountry];
-  }
-  return countryCodesMap['Pakistan'] || countryCodesMap['PK'] || '+92';
-}
-
-/** Resolves primary phone, country code, and formatted display for a contact. */
-export function resolveContactPhoneDisplay(
-  contact: Contact,
-  prefs?: Partial<ContactPreferences>,
-  countryCodesMap?: Record<string, string>,
-): { phone: string | null; countryCode: string; phoneDisplay: string } {
-  const defaultCountryCode = getFallbackCountryCode(prefs, countryCodesMap);
-  const primaryPhone = getPrimaryPhone(contact, defaultCountryCode);
-  const firstPhoneObj = (contact.phones || []).find((p) => (p.number || '').trim().length > 0) || contact.phones?.[0];
-  const { countryCode, formattedNumber: phoneDisplay } = formatContactPhoneDisplay(
-    primaryPhone || firstPhoneObj?.number,
-    firstPhoneObj?.countryCode || defaultCountryCode,
-  );
-  return {
-    phone: primaryPhone,
-    countryCode,
-    phoneDisplay,
-  };
 }
 
 /** Formats gender with i18n lookup and fallback to TitleCase. */

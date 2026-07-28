@@ -8,7 +8,7 @@ import {
   CONTACTS_REPORT_ANALYTICS_QUERY_KEY,
   CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
   contactsListQueryKey,
-} from '@/tenant/features/contacts/hooks/useContactsQueries';
+} from '@/tenant/features/contacts/hooks/contactsQueryKeys';
 
 const CONTACTS_API = CONTACTS_MODULE_MANIFEST.restBasePath;
 

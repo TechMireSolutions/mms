@@ -11,7 +11,6 @@ import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   formatTelHref,
-  getFallbackCountryCode,
   resolvePhoneLabel,
   resolveEmailLabel,
   resolveAddressLabel,
@@ -66,7 +65,7 @@ export function ContactDetailOverview({
   onEmail,
   onNavigateToContact,
 }: ContactDetailOverviewProps): JSX.Element {
-  const { enabledTabIds, phoneLabels, emailLabels, addressLabels, socialPlatforms, prefs, countryCodesMap } = useContactConfig();
+  const { enabledTabIds, phoneLabels, emailLabels, addressLabels, socialPlatforms, defaultPhoneCountryCode } = useContactConfig();
   const { t } = useTranslation();
 
   return (
@@ -153,7 +152,7 @@ export function ContactDetailOverview({
             {contact.phones.map((phone, phoneIndex) => {
               const formattedPhone = formatPhoneWithCountryCode(
                 phone.number,
-                phone.countryCode || getFallbackCountryCode(prefs, countryCodesMap),
+                phone.countryCode || defaultPhoneCountryCode,
               ) || String(phone.number || "");
               return (
                 <CollectionRowItem

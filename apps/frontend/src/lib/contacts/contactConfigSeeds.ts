@@ -18,10 +18,6 @@ export const CONTACT_CONFIG_COLLECTION_KEYS = {
   countryCodes: "countryCodes",
 } as const;
 
-export const CONTACT_CONFIG_OBJECT_KEYS = {
-  socialPlaceholders: "socialPlaceholders",
-} as const;
-
 /** Legacy messaging template collection key (cleaned on logout; Messaging owns templates now). */
 export function contactWhatsappTemplatesKey(userId?: string | number | null): string {
   return userId ? `whatsappTemplates_u:${userId}` : "whatsappTemplates";
@@ -46,8 +42,4 @@ export function getContactConfigCollectionDefaults(): {
     addressLabels: [...DEFAULT_ADDRESS_LABELS],
     countryCodes: COUNTRY_CODES.map((entry) => ({ ...entry })),
   };
-}
-
-export function getDefaultSocialPlaceholders() {
-  return {};
 }

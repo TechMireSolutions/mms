@@ -1,57 +1,55 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import type { Contact } from "@mms/shared";
 import {
   getDisplayName,
-  getPrimaryPhone,
-  hasWhatsApp,
-  resolveModuleTierTab,
   CONTACTS_MODULE_MANIFEST,
   syncContactScalarFields,
 } from "@mms/shared";
-import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 import { startContactsDuplicateScan } from "@/lib/backgroundJobs/startServerContactsCsvExport";
 import { CONTACTS_DUPLICATES_QUERY_KEY } from "@/tenant/features/contacts/hooks/useContacts";
-import { useContactsCrudActions } from "@/tenant/features/contacts/hooks/useContactsCrudActions";
-import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
-import { useContactsDirectory } from "@/tenant/features/contacts/hooks/useContactsDirectory";
-import { useContactsExportActions } from "@/tenant/features/contacts/hooks/useContactsExportActions";
-import { useContactsMessagingActions } from "@/tenant/features/contacts/hooks/useContactsMessagingActions";
-import { useContactsKeyboardShortcuts } from "@/tenant/features/contacts/hooks/useContactsKeyboardShortcuts";
+import type { useContactsCrudActions } from "@/tenant/features/contacts/hooks/useContactsCrudActions";
 
-export interface UseContactsPageStateOptions {
-  prefs: {
-    defaultCountry?: string;
-    defaultCity?: string;
-    defaultProvince?: string;
-  };
-  tableColumns: Array<{ id: string; label: string }>;
-  canWrite: boolean;
-  canDelete: boolean;
-  canExport: boolean;
-  canViewReports: boolean;
-  canViewSetup: boolean;
-  initialShowDeletedArchives?: boolean;
-}
+type CrudActions = ReturnType<typeof useContactsCrudActions>;
 
-export function useContactsPageState({
-  prefs,
-  tableColumns,
+/** Form/drawer/confirm + write handlers for Contacts Work overlays. */
+export function useContactsPageActions({
   canWrite,
   canDelete,
-  canExport,
-  canViewReports,
-  canViewSetup,
-  initialShowDeletedArchives = false,
-}: UseContactsPageStateOptions) {
+  workContacts,
+  contacts,
+  selected,
+  setSelected,
+  shownCount,
+  crud,
+}: {
+  canWrite: boolean;
+  canDelete: boolean;
+  workContacts: Contact[];
+  contacts: Contact[];
+  selected: Array<string | number>;
+  setSelected: (ids: Array<string | number>) => void;
+  shownCount: number;
+  crud: Pick<
+    CrudActions,
+    | "updateContact"
+    | "handleError"
+    | "notifyBulkResult"
+    | "saveContact"
+    | "removeContact"
+    | "mergeContacts"
+    | "importContacts"
+    | "bulkDeleteContactsAction"
+    | "restoreContactAction"
+    | "bulkRestoreContactsAction"
+  >;
+}) {
   const { t } = useTranslation();
-
+  const queryClient = useQueryClient();
   const {
     updateContact,
-    logExportAudit,
     handleError,
     notifyBulkResult,
     saveContact,
@@ -61,121 +59,22 @@ export function useContactsPageState({
     bulkDeleteContactsAction,
     restoreContactAction,
     bulkRestoreContactsAction,
-  } = useContactsCrudActions();
-
-  const visibleTopTabs = useFilteredModuleTierTabs({
-    canViewSetup,
-    canViewReports,
-  });
-
-  const queryClient = useQueryClient();
-  const [viewModeOverride, setViewModeOverride] = useState<"table" | "cards" | null>(null);
-  const [conflictPanelOpen, setConflictPanelOpen] = useState(false);
-  const [openingDuplicates, setOpeningDuplicates] = useState(false);
-  const { pendingCount, conflictCount, flushing, flush } = useContactsSyncOutbox();
-  const prevConflictCount = useRef(conflictCount);
-  const openConflictReview = useCallback(() => setConflictPanelOpen(true), []);
-
-  useEffect(() => {
-    if (prevConflictCount.current === 0 && conflictCount > 0) {
-      setConflictPanelOpen(true);
-    }
-    prevConflictCount.current = conflictCount;
-  }, [conflictCount]);
+  } = crud;
 
   const [showForm, setShowForm] = useState(false);
   const [editContact, setEditContact] = useState<Contact | null>(null);
   const [viewContact, setViewContact] = useState<Contact | null>(null);
   const [showDuplicates, setShowDuplicates] = useState(false);
-  const {
-    messagingTarget,
-    closeComposer,
-    canWriteMessaging,
-    handleWhatsApp,
-    handleSms,
-    handleEmail,
-  } = useContactsMessagingActions();
-  const [activeTab, setActiveTab] = usePersistedTabState<string>("contacts_active_tab", "work");
+  const [openingDuplicates, setOpeningDuplicates] = useState(false);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string | number; name?: string } | null>(null);
 
-  const effectiveTab = resolveModuleTierTab(activeTab, visibleTopTabs.map((tab) => tab.id));
-
-  const {
-    showDeletedArchives,
-    setShowDeletedArchives,
-    listPage,
-    setListPage,
-    search,
-    setSearch,
-    filterGender,
-    setFilterGender,
-    quickFilter,
-    setQuickFilter,
-    sortField,
-    sortDir,
-    selected,
-    setSelected,
-    needsFullContactsList,
-    useServerWork,
-    contacts,
-    workPageData,
-    isWorkLoading,
-    isWorkError,
-    refetchWork,
-    isWorkFetching,
-    workContacts,
-    shownCount,
-    workTruncated,
-    allContactsForLinks,
-    hasActiveFilters,
-    activeFilterCount,
-    handleSort,
-    handleSelect,
-    handleSelectAll,
-    clearFilters,
-  } = useContactsDirectory({
-    effectiveTab,
-    setActiveTab,
-    editContact,
-    viewContact,
-    initialShowDeletedArchives,
-  });
-
-  const { handleExportCSV, handleBulkExport } = useContactsExportActions({
-    tableColumns,
-    canExport,
-    search,
-    filterGender,
-    sortField,
-    sortDir,
-    quickFilter,
-    showDeletedArchives,
-    workContacts,
-    selected,
-    logExportAudit,
-    handleError,
-    t,
-  });
-
-  const defaultCountry = prefs.defaultCountry || "";
-  const defaultCity = prefs.defaultCity || "";
-  const defaultProvince = prefs.defaultProvince || "";
-
-  const selectedTargets = useMemo(() => {
-    if (selected.length === 0) return { waTargets: [], smsReady: [] };
-    const selectedSet = new Set(selected);
-    const waTargets: Contact[] = [];
-    const smsReady: Contact[] = [];
-    for (const contact of workContacts) {
-      if (selectedSet.has(contact.id)) {
-        if (hasWhatsApp(contact)) waTargets.push(contact);
-        if (getPrimaryPhone(contact)) smsReady.push(contact);
-      }
-    }
-    return { waTargets, smsReady };
-  }, [selected, workContacts]);
+  const findContactById = useCallback(
+    (id: string | number): Contact | undefined =>
+      workContacts.find((contact) => contact.id === id) ?? contacts.find((contact) => contact.id === id),
+    [workContacts, contacts],
+  );
 
   const handleOpenDuplicates = useCallback(async () => {
     if (openingDuplicates) return;
@@ -195,7 +94,7 @@ export function useContactsPageState({
       }
     }
     setShowDuplicates(true);
-  }, [openingDuplicates, shownCount, queryClient, t, setShowDuplicates]);
+  }, [openingDuplicates, shownCount, queryClient, t]);
 
   const openForm = useCallback(
     (contact: Contact | null = null) => {
@@ -208,12 +107,6 @@ export function useContactsPageState({
 
   const handleEdit = openForm;
   const handleCreateContact = useCallback(() => openForm(null), [openForm]);
-
-  const findContactById = useCallback(
-    (id: string | number): Contact | undefined =>
-      workContacts.find((contact) => contact.id === id) ?? contacts.find((contact) => contact.id === id),
-    [workContacts, contacts],
-  );
 
   const handleSave = useCallback(
     async (contactDraft: Contact): Promise<void> => {
@@ -317,16 +210,6 @@ export function useContactsPageState({
     setSelected,
   ]);
 
-  useContactsKeyboardShortcuts({
-    selectedCount: selected.length,
-    hasActiveFilters,
-    clearFilters,
-    clearSelection: () => setSelected([]),
-    canWrite,
-    showDeletedArchives,
-    onCreate: handleCreateContact,
-  });
-
   const handleImport = useCallback(
     async (list: Contact[]): Promise<void> => {
       if (!canWrite) return;
@@ -364,22 +247,6 @@ export function useContactsPageState({
   );
 
   return {
-    t,
-    visibleTopTabs,
-    effectiveTab,
-    activeTab,
-    setActiveTab,
-    contacts,
-    search,
-    setSearch,
-    filterGender,
-    setFilterGender,
-    quickFilter,
-    setQuickFilter,
-    sortField,
-    sortDir,
-    selected,
-    setSelected,
     showForm,
     setShowForm,
     editContact,
@@ -388,68 +255,26 @@ export function useContactsPageState({
     setViewContact,
     showDuplicates,
     setShowDuplicates,
-    messagingTarget,
-    closeComposer,
-    handleWhatsApp,
-    handleSms,
-    handleEmail,
-    canWriteMessaging,
-    hasActiveFilters,
-    activeFilterCount,
-    defaultCountry,
-    defaultCity,
-    defaultProvince,
-    handleSort,
-    handleSelect,
-    handleSelectAll,
+    openingDuplicates,
+    bulkDeleteOpen,
+    setBulkDeleteOpen,
+    bulkRestoreOpen,
+    setBulkRestoreOpen,
+    deleteTarget,
+    setDeleteTarget,
+    handleOpenDuplicates,
     handleEdit,
-    handleNew: handleCreateContact,
+    handleCreateContact,
     handleSave,
     handleDelete,
     confirmSingleDelete,
-    deleteTarget,
-    setDeleteTarget,
     handleUpdateContact,
-    handleExportCSV,
-    handleBulkExport,
     requestBulkDelete,
     confirmBulkDelete,
-    bulkDeleteOpen,
-    setBulkDeleteOpen,
     requestBulkRestore,
     confirmBulkRestore,
-    bulkRestoreOpen,
-    setBulkRestoreOpen,
-    clearFilters,
     handleImport,
     handleMerge,
     handleRestore,
-    viewModeOverride,
-    setViewModeOverride,
-    conflictPanelOpen,
-    setConflictPanelOpen,
-    openConflictReview,
-    openingDuplicates,
-    handleOpenDuplicates,
-    showDeletedArchives,
-    setShowDeletedArchives,
-    needsFullContactsList,
-    useServerWork,
-    workPageData,
-    isWorkLoading,
-    isWorkError,
-    refetchWork,
-    isWorkFetching,
-    listPage,
-    setListPage,
-    workContacts,
-    allContactsForLinks,
-    selectedTargets,
-    shownCount,
-    workTruncated,
-    pendingCount,
-    conflictCount,
-    flushing,
-    flush,
   };
 }

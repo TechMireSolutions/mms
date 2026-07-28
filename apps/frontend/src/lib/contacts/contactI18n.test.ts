@@ -11,6 +11,7 @@ import {
   formatContactGenderLabel,
   getSyncConflictKindLabel,
   getDuplicateFieldLabel,
+  getFallbackCountryCode,
 } from '@/lib/contacts/contactI18n';
 
 const DICT: Partial<Record<AppTranslationKey, string>> = {
@@ -87,5 +88,17 @@ describe('contactI18n resolvers', () => {
     expect(getDuplicateFieldLabel('name', t)).toBe('Name');
     expect(getDuplicateFieldLabel('phone', t)).toBe('Phone');
     expect(getDuplicateFieldLabel('unknown', t)).toBe('unknown');
+  });
+
+  it('getFallbackCountryCode uses prefs then first configured code (no hardcoded dial)', () => {
+    const map = { Pakistan: '+92', 'United States': '+1' };
+    const list = [
+      { country: 'Pakistan', code: '+92' },
+      { country: 'United States', code: '+1' },
+    ];
+    expect(getFallbackCountryCode({ defaultCountry: 'United States' }, map, list)).toBe('+1');
+    expect(getFallbackCountryCode({}, map, list)).toBe('+92');
+    expect(getFallbackCountryCode(undefined, undefined, undefined)).toBe('');
+    expect(getFallbackCountryCode({}, { Pakistan: '+92' })).toBe('+92');
   });
 });

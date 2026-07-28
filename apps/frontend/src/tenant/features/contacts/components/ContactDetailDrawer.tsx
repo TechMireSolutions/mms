@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useId, useCallback, ChangeEvent, FormEvent } from "react";
+import { useState, useEffect, useMemo, useId, useCallback, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Edit2, Clock, LayoutDashboard,
@@ -13,7 +13,6 @@ import {
   getPrimaryEmail,
   formatDate,
   todayISO,
-  AppTranslationKey,
 } from "@mms/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
@@ -27,9 +26,9 @@ import {
   resolveRegistryDescription,
 } from "@/lib/contacts/contactI18n";
 import { contactDetailQueryKey, fetchContactById } from "@/tenant/features/contacts/hooks/useContacts";
+import { useContactDetailAttachments } from "@/tenant/features/contacts/hooks/useContactDetailAttachments";
 import { Button } from "@/components/ui/button";
 import { SubTabBar } from "@/components/ui/SubTabBar";
-import { uploadAttachmentFile } from "@/lib/attachmentUpload";
 import { notify } from "@/lib/notify";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import {
@@ -77,62 +76,24 @@ export default function ContactDetailDrawer({
   const noteInputId = useId();
   const [contactState, setContactState] = useState<Contact>(initialContact);
   const [noteText, setNoteText] = useState<string>("");
-  const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [pendingAttachmentDelete, setPendingAttachmentDelete] = useState<{ id: string; name: string } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const canPersistContact = canWrite && Boolean(onUpdateContact);
 
-  const updateContactAttachments = async (
-    newAttachments: NonNullable<Contact["attachments"]>,
-    successMessageKey: AppTranslationKey,
-    failureMessageKey: AppTranslationKey,
-    optimistic = true,
-  ): Promise<boolean> => {
-    if (!canPersistContact || !onUpdateContact) return false;
-    const updatedContact: Contact = { ...contactState, attachments: newAttachments };
-    const previousState = contactState;
-    if (optimistic) setContactState(updatedContact);
-    try {
-      await onUpdateContact(updatedContact);
-      if (!optimistic) setContactState(updatedContact);
-      notify.success(t(successMessageKey));
-      return true;
-    } catch {
-      if (optimistic) setContactState(previousState);
-      notify.error(t(failureMessageKey));
-      return false;
-    }
-  };
-
-  const handleFiles = async (filesList: FileList | null) => {
-    if (!canPersistContact || !filesList || filesList.length === 0) return;
-    setIsUploading(true);
-    try {
-      const newAttachments = [...(contactState.attachments || [])];
-      for (let i = 0; i < filesList.length; i++) {
-        const file = filesList[i];
-        const res = await uploadAttachmentFile(file);
-        newAttachments.push({
-          id: crypto.randomUUID(),
-          name: res.name,
-          type: res.type,
-          size: res.size,
-          url: res.url,
-          date: todayISO(),
-        });
-      }
-      await updateContactAttachments(newAttachments, "contacts.detail.uploadSuccess", "contacts.detail.uploadFailed");
-    } catch {
-      notify.error(t("contacts.detail.uploadFailed"));
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    handleFiles(e.target.files);
-  };
+  const {
+    isDragging,
+    setIsDragging,
+    isUploading,
+    pendingAttachmentDelete,
+    setPendingAttachmentDelete,
+    fileInputRef,
+    handleFiles,
+    handleFileChange,
+    confirmAttachmentDelete,
+  } = useContactDetailAttachments({
+    contactState,
+    setContactState,
+    canPersistContact,
+    onUpdateContact,
+  });
 
   const detailTabs = useMemo(() => {
     const tabsFromConfig = fieldConfig.detailTabs || [];
@@ -242,7 +203,6 @@ export default function ContactDetailDrawer({
     const prev = contactState;
     const updatedContact = { ...contactState, activities: [newActivity, ...(contactState.activities || [])] };
 
-    // Optimistic update
     setContactState(updatedContact);
     setNoteText("");
 
@@ -253,20 +213,6 @@ export default function ContactDetailDrawer({
       setNoteText(trimmed);
       notify.error(t('contacts.detail.noteSaveFailed'));
     }
-  };
-
-  const confirmAttachmentDelete = async (): Promise<void> => {
-    if (!pendingAttachmentDelete || !canPersistContact) return;
-    const remainingAttachments = (contactState.attachments || []).filter(
-      (attachment) => attachment.id !== pendingAttachmentDelete.id,
-    );
-    const removed = await updateContactAttachments(
-      remainingAttachments,
-      "contacts.detail.deleteSuccess",
-      "contacts.saveFailed",
-      false,
-    );
-    if (removed) setPendingAttachmentDelete(null);
   };
 
   const handleNavigateToContact = useCallback((targetId: string | number): void => {
@@ -391,7 +337,6 @@ export default function ContactDetailDrawer({
             />
           )}
 
-          {/* Dynamic Custom Tabs (DRY FieldGroupCard component) */}
           {!DETAIL_SYSTEM_TAB_KEYS.has(activeTab) && (
             <div className="space-y-4">
               {Object.entries(grouped)
