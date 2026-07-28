@@ -10,6 +10,7 @@ export {
   useStudentMutations,
   useStudentById,
   useStudentsByIds,
+  useStudentLinkedContactIds,
   useStudentsMetrics,
   useStudentsWidgetAggregates,
   type StudentRecord,

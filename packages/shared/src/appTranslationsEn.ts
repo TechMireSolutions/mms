@@ -5016,6 +5016,7 @@ export const APP_TRANSLATIONS_EN = {
   "messaging.deleteTemplateDesc": "Are you sure you want to delete this template? This action cannot be undone.",
   "messaging.exportLogs": "Export Sent Logs",
   "messaging.insertVariable": "Insert Variable",
+  "messaging.variableExample": "Example: {example}",
   "messaging.tagSystem": "System",
   "messaging.tagCustom": "Custom",
   "messaging.bulkEmailTitle": "Bulk Email Campaign",

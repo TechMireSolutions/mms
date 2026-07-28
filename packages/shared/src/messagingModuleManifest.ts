@@ -47,8 +47,8 @@ export const MESSAGING_MODULE_MANIFEST = {
     setupView: 'configuration.view',
     setupWrite: 'messaging.write',
   } satisfies Record<string, Permission>,
-  /** Message log wipe is intentional hard-delete after soft-archive; requires clearLogs. */
-  logRetention: 'soft-delete-then-clear' as const,
+  /** Admin clear soft-archives active logs (`deletedAt`); not a Contacts-style trash browser. */
+  logRetention: 'soft-archive-clear' as const,
   categories: MESSAGE_CATEGORIES,
   channels: MESSAGE_CHANNELS,
   categoryOptions: MESSAGE_CATEGORY_OPTIONS,

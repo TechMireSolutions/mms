@@ -12,8 +12,11 @@ import {
   deleteMessageTemplateById,
   listMessageLogsByWorkspace,
   replaceMessageLogsForWorkspace,
-  bulkSaveMessageLogs,
+  insertMessageLogs,
+  queryFilteredMessageLogs,
+  queryMessagingMetrics,
   softDeleteActiveMessageLogs,
+  type MessageLogsFilterQuery,
 } from '../db/repositories/messagingRepository.js';
 import { defineTenantBulkCollectionService } from './tenantBulkService.js';
 import { z } from 'zod';
@@ -48,59 +51,20 @@ export async function removeMessageTemplate(workspaceSubdomain: string, template
 export const loadMessageLogs = logBulkService.load;
 export const replaceMessageLogs = logBulkService.replace;
 
-function isActiveLog(log: Message): boolean {
-  return !log.deletedAt;
-}
-
 export async function loadFilteredMessageLogs(
   workspaceSubdomain?: string,
-  query?: {
-    channel?: string;
-    category?: string;
-    search?: string;
-    status?: string;
-    startDate?: string;
-    endDate?: string;
-    page?: number;
-    pageSize?: number;
-    includeDeleted?: boolean;
-  },
+  query?: MessageLogsFilterQuery,
 ): Promise<Message[]> {
-  const allLogs = workspaceSubdomain ? await listMessageLogsByWorkspace(workspaceSubdomain) : await loadMessageLogs();
-  const includeDeleted = query?.includeDeleted === true;
-  let filtered = includeDeleted ? allLogs : allLogs.filter(isActiveLog);
-
-  if (query) {
-    const { channel, category, search, status, startDate, endDate } = query;
-    filtered = filtered.filter((log) => {
-      if (channel && channel !== 'all' && log.channel !== channel) return false;
-      if (category && category !== 'all' && (log.category || 'general') !== category) return false;
-      if (status && status !== 'all' && (log.status || 'sent') !== status) return false;
-      if (startDate && log.sentAt < startDate) return false;
-      if (endDate && log.sentAt > endDate) return false;
-      if (search && search.trim()) {
-        const queryStr = search.toLowerCase();
-        const matchBody = log.body.toLowerCase().includes(queryStr);
-        const matchSubject = log.subject ? log.subject.toLowerCase().includes(queryStr) : false;
-        const matchContact = String(log.contactId).toLowerCase().includes(queryStr);
-        if (!matchBody && !matchSubject && !matchContact) return false;
-      }
-      return true;
-    });
+  if (!workspaceSubdomain) {
+    return loadMessageLogs();
   }
-
-  const page = query?.page && query.page > 0 ? query.page : undefined;
-  const pageSize = query?.pageSize && query.pageSize > 0 ? query.pageSize : undefined;
-  if (page != null && pageSize != null) {
-    const start = (page - 1) * pageSize;
-    return filtered.slice(start, start + pageSize);
-  }
-  return filtered;
+  return queryFilteredMessageLogs(workspaceSubdomain, query ?? {});
 }
 
+/** Insert-only dispatch audit — never upsert/overwrite existing log rows. */
 export async function recordMessageLogs(workspaceSubdomain: string, logs: Message[]): Promise<Message[]> {
   if (!logs || logs.length === 0) return [];
-  await bulkSaveMessageLogs(workspaceSubdomain, logs);
+  await insertMessageLogs(workspaceSubdomain, logs);
   return logs;
 }
 
@@ -110,40 +74,26 @@ export async function clearAllMessageLogs(workspaceSubdomain: string): Promise<v
 }
 
 export async function computeMessagingMetrics(workspaceSubdomain?: string): Promise<MessagingMetricsDto> {
-  const logsRaw = workspaceSubdomain ? await listMessageLogsByWorkspace(workspaceSubdomain) : await loadMessageLogs();
-  const logs = logsRaw.filter(isActiveLog);
-  const total = logs.length;
-  const smsCount = logs.filter((l) => l.channel === 'sms').length;
-  const whatsappCount = logs.filter((l) => l.channel === 'whatsapp').length;
-  const emailCount = logs.filter((l) => l.channel === 'email').length;
-  const sentCount = logs.filter((l) => (l.status || 'sent') === 'sent').length;
-  const deliveredCount = logs.filter((l) => l.status === 'delivered').length;
-  const failedCount = logs.filter((l) => l.status === 'failed').length;
-  const skippedCount = logs.filter((l) => l.status === 'skipped').length;
-  const queuedCount = logs.filter((l) => l.status === 'queued').length;
-
-  const categoryBreakdown = {
-    general: logs.filter((l) => (l.category || 'general') === 'general').length,
-    academic: logs.filter((l) => l.category === 'academic').length,
-    financial: logs.filter((l) => l.category === 'financial').length,
-    attendance: logs.filter((l) => l.category === 'attendance').length,
-    emergency: logs.filter((l) => l.category === 'emergency').length,
-  };
-
-  const successfulTotal = sentCount + deliveredCount;
-  const successRate = total > 0 ? Math.round((successfulTotal / total) * 100) : 100;
-
-  return {
-    total,
-    smsCount,
-    whatsappCount,
-    emailCount,
-    sentCount,
-    deliveredCount,
-    failedCount,
-    skippedCount,
-    queuedCount,
-    successRate,
-    categoryBreakdown,
-  };
+  if (!workspaceSubdomain) {
+    return {
+      total: 0,
+      smsCount: 0,
+      whatsappCount: 0,
+      emailCount: 0,
+      sentCount: 0,
+      deliveredCount: 0,
+      failedCount: 0,
+      skippedCount: 0,
+      queuedCount: 0,
+      successRate: 100,
+      categoryBreakdown: {
+        general: 0,
+        academic: 0,
+        financial: 0,
+        attendance: 0,
+        emergency: 0,
+      },
+    };
+  }
+  return queryMessagingMetrics(workspaceSubdomain);
 }

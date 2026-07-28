@@ -19,6 +19,7 @@ export interface ContactsPaginatedParams {
   sortField?: string;
   sortDir?: "asc" | "desc";
   hasPhone?: boolean;
+  hasReachable?: boolean;
   quickFilter?: ContactsQuickFilter;
   excludeIds?: Array<string | number>;
   enabled?: boolean;
@@ -32,6 +33,7 @@ export function buildContactsPageUrl(params: ContactsPaginatedParams): string {
   if (params.gender) queryParams.set("gender", params.gender);
   if (params.includeDeleted) queryParams.set("includeDeleted", "true");
   if (params.hasPhone) queryParams.set("hasPhone", "true");
+  if (params.hasReachable) queryParams.set("hasReachable", "true");
   if (params.quickFilter && params.quickFilter !== "all") {
     queryParams.set("quickFilter", params.quickFilter);
   }
@@ -51,6 +53,7 @@ export function contactsListQueryKeyParams(params: ContactsPaginatedParams) {
     gender: params.gender || "",
     includeDeleted: Boolean(params.includeDeleted),
     hasPhone: Boolean(params.hasPhone),
+    hasReachable: Boolean(params.hasReachable),
     quickFilter: params.quickFilter ?? "all",
     excludeIds: (params.excludeIds ?? []).map(String).join(","),
     sortField: params.sortField || "",
@@ -72,6 +75,7 @@ export function sameContactsListFilters(
     previous.gender === next.gender &&
     previous.includeDeleted === next.includeDeleted &&
     previous.hasPhone === next.hasPhone &&
+    previous.hasReachable === next.hasReachable &&
     previous.quickFilter === next.quickFilter &&
     previous.excludeIds === next.excludeIds &&
     previous.sortField === next.sortField &&

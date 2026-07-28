@@ -15,6 +15,8 @@ export interface ContactsListQuery {
   sortField?: string;
   sortDir?: 'asc' | 'desc';
   hasPhone?: boolean;
+  /** Phone or email present — messaging Work recipient lists. */
+  hasReachable?: boolean;
   /** Toolbar quick filter; omit or `all` means no preset. */
   quickFilter?: ContactsQuickFilter;
   /** Contact ids to omit from results (picker already-linked exclusions). */
@@ -43,15 +45,22 @@ export function filterContactsForQuery(contacts: Contact[], query: ContactsListQ
     : filterActiveContacts(contacts);
   if (query.gender) {
     const genderFilter = query.gender.trim().toLowerCase();
-    rows = rows.filter(
-      (contact) => (contact.gender ?? '').trim().toLowerCase() === genderFilter,
-    );
+    rows = rows.filter((contact) => {
+      const gender = (contact.gender ?? '').trim().toLowerCase();
+      if (genderFilter === 'unspecified') return !gender || gender === 'unspecified';
+      return gender === genderFilter;
+    });
   }
   if (query.hasPhone) {
     rows = rows.filter((contact) => {
       const contactPhone = contact.phones?.[0]?.number;
       return contactPhone != null && String(contactPhone).trim().length > 0;
     });
+  }
+  if (query.hasReachable) {
+    rows = rows.filter(
+      (contact) => Boolean(getPrimaryPhone(contact)) || Boolean(getPrimaryEmail(contact)),
+    );
   }
   if (query.quickFilter && query.quickFilter !== 'all') {
     rows = rows.filter((contact) => matchesContactsQuickFilter(contact, query.quickFilter));

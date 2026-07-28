@@ -1,6 +1,11 @@
 import React from 'react';
-import { MESSAGING_VARIABLE_TOKENS, type VariableToken } from '@mms/shared';
+import {
+  MESSAGING_VARIABLE_TOKENS,
+  type AppTranslationKey,
+  type VariableToken,
+} from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
+import { Button } from '@/components/ui/button';
 
 export interface MessagingVariableTokensBarProps {
   onSelectToken: (token: string) => void;
@@ -25,16 +30,19 @@ export function MessagingVariableTokensBar({
           {t('messaging.insertVariable')}:
         </span>
       )}
-      {MESSAGING_VARIABLE_TOKENS.map(({ token, fallbackExample }: VariableToken) => (
-        <button
+      {MESSAGING_VARIABLE_TOKENS.map(({ token, labelKey, fallbackExample }: VariableToken) => (
+        <Button
           key={token}
           type="button"
+          variant="outline"
+          size="sm"
           onClick={() => onSelectToken(token)}
-          title={`Example: ${fallbackExample}`}
-          className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted hover:bg-primary/10 hover:text-primary border border-border/40 transition-colors cursor-pointer"
+          title={t('messaging.variableExample', { example: fallbackExample })}
+          aria-label={t(labelKey as AppTranslationKey)}
+          className="h-auto px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted hover:bg-primary/10 hover:text-primary border-border/40"
         >
           {token}
-        </button>
+        </Button>
       ))}
     </div>
   );

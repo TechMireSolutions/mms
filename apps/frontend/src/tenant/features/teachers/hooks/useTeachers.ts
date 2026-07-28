@@ -156,7 +156,10 @@ export function useTeacherById(teacherId: string | undefined, enabled = true) {
   });
 }
 
-export function useTeacherLinkedContactIds(excludeTeacherId?: string) {
+export function useTeacherLinkedContactIds(
+  excludeTeacherId?: string,
+  enabled = true,
+) {
   const { isAuthenticated } = useAuth();
   const queryString = excludeTeacherId ? `?excludeId=${encodeURIComponent(excludeTeacherId)}` : '';
   return useQuery({
@@ -165,7 +168,7 @@ export function useTeacherLinkedContactIds(excludeTeacherId?: string) {
       const linkedContactsResponse = await apiJson<{ contactIds: Array<string | number> }>(`${TEACHERS_API}/linked-contact-ids${queryString}`);
       return linkedContactsResponse.contactIds;
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && enabled,
     staleTime: 30_000,
   });
 }

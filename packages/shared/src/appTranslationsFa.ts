@@ -2877,6 +2877,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "messaging.deleteTemplateDesc": "آیا از حذف این قالب اطمینان دارید؟ این عملیات قابل بازگشت نیست.",
   "messaging.exportLogs": "خروجی گزارش‌های ارسال",
   "messaging.insertVariable": "درج متغیر",
+  "messaging.variableExample": "مثال: {example}",
   "messaging.tagSystem": "سیستمی",
   "messaging.tagCustom": "سفارشی",
   "messaging.bulkEmailTitle": "کمپین ایمیل گروهی",

@@ -160,6 +160,7 @@ export const TENANT_APP_PATHS: readonly string[] = [
   ROUTES.questionBank,
   ROUTES.accounting,
   ROUTES.obligations,
+  ROUTES.messaging,
   ROUTES.users,
   ROUTES.profile,
 ];

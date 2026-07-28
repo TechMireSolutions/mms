@@ -207,7 +207,7 @@ describe('messaging REST routes', () => {
     await app.close();
   });
 
-  it('POST /api/messaging/logs forces authenticated userId and strips deletedAt', async () => {
+  it('POST /api/messaging/logs forces server id, userId, sentAt and strips client audit fields', async () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
@@ -236,12 +236,16 @@ describe('messaging REST routes', () => {
     expect(mockRecordMessageLogs).toHaveBeenCalledTimes(1);
     const [tenant, logs] = mockRecordMessageLogs.mock.calls[0] as [
       string,
-      Array<{ userId: string; deletedAt?: string; id: string }>,
+      Array<{ userId: string; deletedAt?: string; id: string; sentAt: string }>,
     ];
     expect(tenant).toBe('demo');
     expect(logs[0].userId).toBe('u-admin');
     expect(logs[0].deletedAt).toBeUndefined();
-    expect(logs[0].id).toBe('msg-1');
+    expect(logs[0].id).not.toBe('msg-1');
+    expect(logs[0].id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
+    expect(logs[0].sentAt).not.toBe('2026-01-01T00:00:00.000Z');
     await app.close();
   });
 });

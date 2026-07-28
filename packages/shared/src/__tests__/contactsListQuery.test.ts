@@ -15,6 +15,8 @@ describe('filterContactsForQuery gender', () => {
     contact({ id: '1', name: 'John Doe', gender: 'Male' }),
     contact({ id: '2', name: 'Jane Doe', gender: 'female' }),
     contact({ id: '3', name: 'Alex', gender: 'male' }),
+    contact({ id: '4', name: 'Sam', gender: '' }),
+    contact({ id: '5', name: 'Pat', gender: 'unspecified' }),
   ];
 
   it('matches gender case-insensitively', () => {
@@ -23,6 +25,36 @@ describe('filterContactsForQuery gender', () => {
 
     const female = filterContactsForQuery(rows, { gender: 'Female' });
     expect(female.map((row) => row.id)).toEqual(['2']);
+  });
+
+  it('treats empty gender as unspecified', () => {
+    expect(filterContactsForQuery(rows, { gender: 'unspecified' }).map((row) => row.id).sort()).toEqual([
+      '4',
+      '5',
+    ]);
+  });
+});
+
+describe('filterContactsForQuery hasReachable', () => {
+  const rows = [
+    contact({
+      id: '1',
+      name: 'Phone',
+      phones: [{ label: 'Mobile', number: '+15551234567' }],
+    }),
+    contact({
+      id: '2',
+      name: 'Email',
+      emails: [{ label: 'Personal', address: 'a@example.com' }],
+    }),
+    contact({ id: '3', name: 'Neither', phones: [], emails: [] }),
+  ];
+
+  it('keeps contacts with phone or email', () => {
+    expect(filterContactsForQuery(rows, { hasReachable: true }).map((row) => row.id).sort()).toEqual([
+      '1',
+      '2',
+    ]);
   });
 });
 

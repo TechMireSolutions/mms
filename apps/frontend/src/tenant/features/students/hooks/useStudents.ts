@@ -190,7 +190,10 @@ export function useStudentById(studentId: string | undefined, enabled = true) {
   });
 }
 
-export function useStudentLinkedContactIds(excludeStudentId?: string) {
+export function useStudentLinkedContactIds(
+  excludeStudentId?: string,
+  enabled = true,
+) {
   const { isAuthenticated } = useAuth();
   const queryString = excludeStudentId ? `?excludeId=${encodeURIComponent(excludeStudentId)}` : '';
   return useQuery({
@@ -199,7 +202,7 @@ export function useStudentLinkedContactIds(excludeStudentId?: string) {
       const linkedContactsResponse = await apiJson<{ contactIds: Array<string | number> }>(`${STUDENTS_API}/linked-contact-ids${queryString}`);
       return linkedContactsResponse.contactIds;
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && enabled,
     staleTime: 30_000,
   });
 }

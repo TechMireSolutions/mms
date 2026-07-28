@@ -4869,6 +4869,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "messaging.deleteTemplateDesc": "کیا آپ واقعی یہ ٹیمپلیٹ حذف کرنا چاہتے ہیں؟ اس عمل کو منسوخ نہیں کیا جا سکتا۔",
   "messaging.exportLogs": "ارسال شدہ لاگز برآمد کریں",
   "messaging.insertVariable": "متغیر داخل کریں",
+  "messaging.variableExample": "مثال: {example}",
   "messaging.tagSystem": "سسٹم",
   "messaging.tagCustom": "حسب ضرورت",
   "messaging.bulkEmailTitle": "بلک ای میل مہم",

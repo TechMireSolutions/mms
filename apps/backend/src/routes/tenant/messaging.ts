@@ -17,18 +17,28 @@ import {
 import { type MessageTemplate, type Message, messageTemplateInputSchema, recordMessageLogsSchema, messagingLogsQuerySchema, type User } from '@mms/shared';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
-function normalizeDispatchLogs(user: User, logs: Message[]): Message[] {
-  const sentAtFallback = new Date().toISOString();
-  return logs.map((log) => {
-    const { deletedAt: _deletedAt, ...rest } = log;
-    return {
-      ...rest,
-      id: rest.id?.trim() ? rest.id : randomUUID(),
-      userId: user.id,
-      sentAt: rest.sentAt?.trim() ? rest.sentAt : sentAtFallback,
-      status: rest.status || 'sent',
-    };
-  });
+function normalizeDispatchLogs(user: User, logs: Array<{
+  contactId: string | number;
+  channel: 'sms' | 'whatsapp' | 'email';
+  body: string;
+  status?: 'sent' | 'failed' | 'skipped';
+  subject?: string;
+  category?: Message['category'];
+  errorMessage?: string;
+}>): Message[] {
+  const sentAt = new Date().toISOString();
+  return logs.map((log) => ({
+    id: randomUUID(),
+    userId: user.id,
+    contactId: log.contactId,
+    channel: log.channel,
+    body: log.body,
+    sentAt,
+    status: log.status || 'sent',
+    subject: log.subject,
+    category: log.category || 'general',
+    errorMessage: log.errorMessage,
+  }));
 }
 
 export default async function messagingRoutes(
@@ -117,7 +127,7 @@ export default async function messagingRoutes(
     if (!tenantSubdomain) return reply.status(400).send({ message: 'Tenant context required' });
 
     try {
-      const normalized = normalizeDispatchLogs(user, parsed.data.logs as Message[]);
+      const normalized = normalizeDispatchLogs(user, parsed.data.logs);
       const recorded = await recordMessageLogs(tenantSubdomain, normalized);
       return reply.send({ recorded: recorded.length });
     } catch (err) {

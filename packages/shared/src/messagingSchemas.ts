@@ -29,13 +29,27 @@ export const messageTemplateSchema = z.object({
 
 export const messageTemplateInputSchema = z.object({
   id: z.string().optional(),
-  label: z.string().min(1),
-  body: z.string().min(1),
+  label: z.string().min(1).max(200),
+  body: z.string().min(1).max(10_000),
   category: messageCategorySchema.default('general'),
   channel: messageChannelSchema.default('all'),
 });
 
 export const messageStatusSchema = z.enum(['queued', 'sent', 'delivered', 'failed', 'skipped']);
+
+/** Max logs accepted in a single POST /api/messaging/logs body. */
+export const MESSAGE_LOG_RECORD_BATCH_MAX = 500;
+
+/** Client-submitted dispatch attempt — server assigns id, userId, and sentAt. */
+export const messageLogCreateSchema = z.object({
+  contactId: z.union([z.string(), z.number()]),
+  channel: z.enum(['sms', 'whatsapp', 'email']),
+  body: z.string().min(1).max(10_000),
+  status: z.enum(['sent', 'failed', 'skipped']).optional().default('sent'),
+  subject: z.string().max(500).optional(),
+  category: messageCategorySchema.optional().default('general'),
+  errorMessage: z.string().max(1_000).optional(),
+});
 
 export const messageRecordSchema = z.object({
   id: z.string(),
@@ -52,7 +66,7 @@ export const messageRecordSchema = z.object({
 });
 
 export const recordMessageLogsSchema = z.object({
-  logs: z.array(messageRecordSchema),
+  logs: z.array(messageLogCreateSchema).min(1).max(MESSAGE_LOG_RECORD_BATCH_MAX),
 });
 
 export const messagingLogsQuerySchema = z.object({
@@ -88,6 +102,8 @@ export const messagingMetricsSchema = z.object({
 export type MessageTemplateDto = z.infer<typeof messageTemplateSchema>;
 /** Message template creation/update input payload structure. */
 export type MessageTemplateInputDto = z.infer<typeof messageTemplateInputSchema>;
+/** Client dispatch-log create payload (server assigns id/userId/sentAt). */
+export type MessageLogCreateDto = z.infer<typeof messageLogCreateSchema>;
 /** Recorded message dispatch history DTO payload structure. */
 export type MessageRecordDto = z.infer<typeof messageRecordSchema>;
 /** Filter and pagination query parameters for message logs. */

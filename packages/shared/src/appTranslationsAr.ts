@@ -4869,6 +4869,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "messaging.deleteTemplateDesc": "هل أنت تأكد من أنك تريد حذف هذا القالب؟ لا يمكن التراجع عن هذا الإجراء.",
   "messaging.exportLogs": "تصدير سجل الرسائل",
   "messaging.insertVariable": "إدراج متغير",
+  "messaging.variableExample": "مثال: {example}",
   "messaging.tagSystem": "نظامي",
   "messaging.tagCustom": "مخصص",
   "messaging.bulkEmailTitle": "حملة البريد الإلكتروني الجماعية",

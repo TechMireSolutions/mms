@@ -82,14 +82,17 @@ export const contactsDuplicatesQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).optional(),
 });
 
+const booleanQueryFlag = z
+  .preprocess((val) => {
+    if (val === undefined) return undefined;
+    return val === 'true' || val === true;
+  }, z.boolean())
+  .optional();
+
 export const contactsListQuerySchema = baseListQuerySchema.extend({
   gender: z.string().optional(),
-  hasPhone: z
-    .preprocess((val) => {
-      if (val === undefined) return undefined;
-      return val === 'true' || val === true;
-    }, z.boolean())
-    .optional(),
+  hasPhone: booleanQueryFlag,
+  hasReachable: booleanQueryFlag,
   quickFilter: z.enum(['all', 'whatsapp', 'syed', 'missingInfo']).optional(),
   /** Comma-separated contact ids to omit from the page. */
   excludeIds: z

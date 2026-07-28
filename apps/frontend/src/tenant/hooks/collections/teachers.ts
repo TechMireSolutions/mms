@@ -10,6 +10,7 @@ export {
   useTeacherMutations,
   useTeacherById,
   useTeachersByIds,
+  useTeacherLinkedContactIds,
   useTeachersMetrics,
   useTeachersWidgetAggregates,
 } from '@/tenant/features/teachers/hooks/useTeachers';

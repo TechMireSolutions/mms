@@ -1,5 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { type MessageTemplate, type Message, type MessagingMetricsDto } from '@mms/shared';
+import {
+  MESSAGE_LOG_RECORD_BATCH_MAX,
+  type MessageTemplate,
+  type Message,
+  type MessageLogCreateDto,
+  type MessagingMetricsDto,
+} from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { notify } from '@/lib/notify';
@@ -105,11 +111,17 @@ export function useMessagingMutations() {
   });
 
   const recordDispatches = useMutation({
-    mutationFn: async (logs: Message[]) => {
-      return apiJson<{ recorded: number }>('/api/messaging/logs', {
-        method: 'POST',
-        body: JSON.stringify({ logs }),
-      });
+    mutationFn: async (logs: MessageLogCreateDto[]) => {
+      let recorded = 0;
+      for (let index = 0; index < logs.length; index += MESSAGE_LOG_RECORD_BATCH_MAX) {
+        const chunk = logs.slice(index, index + MESSAGE_LOG_RECORD_BATCH_MAX);
+        const response = await apiJson<{ recorded: number }>('/api/messaging/logs', {
+          method: 'POST',
+          body: JSON.stringify({ logs: chunk }),
+        });
+        recorded += response.recorded;
+      }
+      return { recorded };
     },
     onSuccess: () => invalidate(),
     onError,
