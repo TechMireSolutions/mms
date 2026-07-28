@@ -30,7 +30,8 @@ import { ExportToolbar } from '@/components/ui/ExportToolbar';
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { ChannelBadge } from '@/components/ui/ChannelBadge';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
-import { useContactsCollection } from '@/tenant/hooks/collections/contacts';
+import { useContactsPaginated, useContactsByIds } from '@/tenant/hooks/collections/contacts';
+import { useDebounce } from '@/hooks/useDebounce';
 import { 
   getDisplayName, 
   getPrimaryPhone, 
@@ -39,10 +40,10 @@ import {
   getInitials,
   mergeMessageTemplates,
   MESSAGING_MODULE_MANIFEST,
+  CONTACTS_MODULE_MANIFEST,
   getMessageCategoryLabelKey,
   toMessagingRecipient,
   appendVariableToken,
-  contactMatchesSearch,
   type StandardMessagingRecipient as MessagingRecipient,
   type Message, 
   type MessageCategory,
@@ -51,6 +52,7 @@ import {
 import MessageComposer from '@/components/ui/MessageComposer';
 import { MessagingVariableTokensBar } from '@/components/ui/MessagingVariableTokensBar';
 import { SegmentedPillFilter } from '@/components/ui/SegmentedPillFilter';
+import { ListPagination } from '@/components/ui/ListPagination';
 import { notify } from '@/lib/notify';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
@@ -68,15 +70,6 @@ export default function MessagingPage(): React.JSX.Element {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { canWrite, canViewSetup, canEditSetup, canClearLogs } = useModulePermissions(MESSAGING_MODULE_MANIFEST);
-
-  const contactsCollectionRaw = useContactsCollection();
-  const allContacts = useMemo(() => contactsCollectionRaw || [], [contactsCollectionRaw]);
-
-  const contactMap = useMemo(() => {
-    const map = new Map<string | number, (typeof allContacts)[number]>();
-    allContacts.forEach((c) => map.set(c.id, c));
-    return map;
-  }, [allContacts]);
 
   const categorySelectOptions = useMemo(() => [
     { value: 'all', label: t('messaging.category.all') },
@@ -140,6 +133,7 @@ export default function MessagingPage(): React.JSX.Element {
   const [searchContact, setSearchContact] = useState('');
   const [searchLog, setSearchLog] = useState('');
   const [searchTemplate, setSearchTemplate] = useState('');
+  const [recipientsPage, setRecipientsPage] = useState(1);
   
   const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female' | 'unspecified'>('all');
   const [roleFilter, setRoleFilter] = useState<'all' | 'students' | 'teachers' | 'staff' | 'contacts'>('all');
@@ -163,6 +157,25 @@ export default function MessagingPage(): React.JSX.Element {
     canViewSetup: canViewSetup || canEditSetup,
   });
 
+  const debouncedSearchContact = useDebounce(searchContact, 250);
+  const recipientsPageSize = CONTACTS_MODULE_MANIFEST.defaultPageSize;
+
+  useEffect(() => {
+    setRecipientsPage(1);
+  }, [debouncedSearchContact, genderFilter]);
+
+  const contactsPageQuery = useContactsPaginated({
+    page: recipientsPage,
+    limit: recipientsPageSize,
+    search: debouncedSearchContact,
+    gender: genderFilter === 'all' ? undefined : genderFilter,
+    enabled: activeTab === 'work',
+  });
+  const pageContacts = useMemo(
+    () => contactsPageQuery.data?.contacts ?? [],
+    [contactsPageQuery.data?.contacts],
+  );
+
   const templatesQuery = useMessageTemplates();
   const logsQuery = useMessageLogs({
     channel: channelFilter,
@@ -173,6 +186,27 @@ export default function MessagingPage(): React.JSX.Element {
   const metricsQuery = useMessagingMetrics();
   const { templates: customTemplates } = templatesQuery;
   const { logs: messageLogs } = logsQuery;
+
+  const selectedRecipientIds = useMemo(
+    () => Object.keys(selectedRecipients).filter((id) => selectedRecipients[id]),
+    [selectedRecipients],
+  );
+  const { data: resolvedSelectedContacts = [] } = useContactsByIds(selectedRecipientIds);
+
+  const logContactIds = useMemo(
+    () => messageLogs.map((log) => log.contactId),
+    [messageLogs],
+  );
+  const { data: resolvedLogContacts = [] } = useContactsByIds(logContactIds);
+
+  const contactMap = useMemo(() => {
+    const map = new Map<string | number, (typeof resolvedLogContacts)[number]>();
+    resolvedLogContacts.forEach((c) => {
+      map.set(c.id, c);
+      map.set(String(c.id), c);
+    });
+    return map;
+  }, [resolvedLogContacts]);
 
   const { saveTemplate, deleteTemplate, clearLogs } = useMessagingMutations();
 
@@ -292,11 +326,9 @@ export default function MessagingPage(): React.JSX.Element {
   };
 
   const filteredContacts = useMemo(() => {
-    return allContacts.filter((c) => {
-      const nameMatch = contactMatchesSearch(c, searchContact);
+    return pageContacts.filter((c) => {
       const hasContactInfo = Boolean(getPrimaryPhone(c)) || Boolean(getPrimaryEmail(c));
-      const genderMatch = genderFilter === 'all' || (c.gender || 'unspecified').toLowerCase() === genderFilter;
-      
+
       const cObj = c as Record<string, unknown>;
       const cCategory = String(cObj.category || cObj.role || '').toLowerCase();
       let roleMatch = true;
@@ -305,12 +337,12 @@ export default function MessagingPage(): React.JSX.Element {
       else if (roleFilter === 'staff') roleMatch = cCategory.includes('staff');
       else if (roleFilter === 'contacts') roleMatch = !cCategory.includes('student') && !cCategory.includes('teacher');
 
-      return nameMatch && hasContactInfo && genderMatch && roleMatch;
+      return hasContactInfo && roleMatch;
     });
-  }, [allContacts, searchContact, genderFilter, roleFilter]);
+  }, [pageContacts, roleFilter]);
 
   const getLogRecipientName = useCallback((contactId: string | number): string => {
-    const recipient = contactMap.get(contactId);
+    const recipient = contactMap.get(contactId) ?? contactMap.get(String(contactId));
     return recipient ? getDisplayName(recipient) : t('messaging.contactFallback', { id: contactId });
   }, [contactMap, t]);
 
@@ -368,10 +400,10 @@ export default function MessagingPage(): React.JSX.Element {
   };
 
   const currentSelectedList = useMemo(() => {
-    return allContacts
-      .filter((c) => selectedRecipients[c.id])
-      .map((c) => toMessagingRecipient(c, { getDisplayName, getPrimaryPhone, getPrimaryEmail }));
-  }, [allContacts, selectedRecipients]);
+    return resolvedSelectedContacts.map((c) =>
+      toMessagingRecipient(c, { getDisplayName, getPrimaryPhone, getPrimaryEmail }),
+    );
+  }, [resolvedSelectedContacts]);
 
   const allVisibleSelected = filteredContacts.length > 0 && filteredContacts.every((c) => selectedRecipients[c.id]);
 
@@ -385,7 +417,7 @@ export default function MessagingPage(): React.JSX.Element {
   }, [currentSelectedList, openComposer, t]);
 
   const handleResendLog = (log: Message): void => {
-    const recipient = contactMap.get(log.contactId);
+    const recipient = contactMap.get(log.contactId) ?? contactMap.get(String(log.contactId));
     const targetRecipient: MessagingRecipient = recipient
       ? toMessagingRecipient(recipient, { getDisplayName, getPrimaryPhone, getPrimaryEmail })
       : {
@@ -644,6 +676,16 @@ export default function MessagingPage(): React.JSX.Element {
                   </tbody>
                 </table>
               </div>
+
+              <ListPagination
+                page={contactsPageQuery.data?.page ?? recipientsPage}
+                total={contactsPageQuery.data?.total ?? 0}
+                limit={contactsPageQuery.data?.limit ?? recipientsPageSize}
+                hasMore={contactsPageQuery.data?.hasMore}
+                onPageChange={setRecipientsPage}
+                i18nNamespace="contacts"
+                variant="range"
+              />
             </div>
 
             <div className="border border-border rounded-xl bg-card p-4 space-y-4 flex flex-col justify-between shadow-xs">

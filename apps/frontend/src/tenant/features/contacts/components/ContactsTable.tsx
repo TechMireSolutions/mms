@@ -23,7 +23,7 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 import { CopyBtn } from "@/components/ui/CopyBtn";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 
-export interface ColumnConfig {
+export interface ContactsColumnConfig {
   id: string;
   label: string;
   sortField?: string;
@@ -46,7 +46,7 @@ export interface ContactsTableProps {
   sortField: string;
   sortDir: "asc" | "desc";
   onSort: (field: string) => void;
-  columns?: ColumnConfig[];
+  columns?: ContactsColumnConfig[];
   allContacts?: Contact[];
   canWrite?: boolean;
   canDelete?: boolean;
@@ -114,7 +114,7 @@ const TableHeaderCell = memo(function TableHeaderCell({
 interface ContactTableRowProps {
   contact: Contact;
   isSelected: boolean;
-  columns: ColumnConfig[];
+  columns: ContactsColumnConfig[];
   getColumnWidth: (key: string) => number | undefined;
   prefs: ReturnType<typeof useContactConfig>["prefs"];
   countryCodesMap: ReturnType<typeof useContactConfig>["countryCodesMap"];
@@ -161,14 +161,14 @@ const ContactTableRow = memo(function ContactTableRow({
 }: ContactTableRowProps): React.JSX.Element {
   const displayName = getDisplayName(contact);
 
-  const renderCell = (col: ColumnConfig): React.JSX.Element => {
+  const renderCell = (col: ContactsColumnConfig): React.JSX.Element => {
     const width = getColumnWidth(col.id) ?? col.width;
     const widthStyle = columnWidthStyle(width);
 
     switch (col.id) {
       case "name":
         return (
-          <td key="name" className="px-4 py-3 sticky left-12 z-10 bg-card group-hover:bg-muted/40 transition-colors border-r border-border/30" style={widthStyle}>
+          <td key="name" className="px-4 py-3 sticky start-12 z-10 bg-card group-hover:bg-muted/40 transition-colors border-e border-border/30" style={widthStyle}>
             <div className="flex items-center gap-3">
               <UserAvatar
                 id={contact.id}
@@ -268,7 +268,7 @@ const ContactTableRow = memo(function ContactTableRow({
       transition={{ duration: 0.1 }}
       className={`hover:bg-muted/20 transition-colors group ${isSelected ? "bg-primary/[0.02]" : ""}`}
     >
-      <td className="w-12 min-w-12 px-4 py-3 sticky left-0 z-20 bg-card group-hover:bg-muted/40 transition-colors border-r border-border/30">
+      <td className="w-12 min-w-12 px-4 py-3 sticky start-0 z-20 bg-card group-hover:bg-muted/40 transition-colors border-e border-border/30">
         <Checkbox
           checked={isSelected}
           onCheckedChange={() => onSelect(contact.id)}
@@ -331,7 +331,7 @@ export default function ContactsTable({
       <table className="w-full text-sm table-fixed">
         <thead>
           <tr className="border-b border-border bg-muted/30">
-            <th className="w-12 min-w-12 px-4 py-3 sticky left-0 z-20 bg-muted/95 backdrop-blur-md border-r border-border/30">
+            <th className="w-12 min-w-12 px-4 py-3 sticky start-0 z-20 bg-muted/95 backdrop-blur-md border-e border-border/30">
               <Checkbox
                 checked={someSelected ? "indeterminate" : allSelected}
                 onCheckedChange={() => onSelectAll()}
@@ -342,7 +342,7 @@ export default function ContactsTable({
             {columns.map((col) => {
               const sortFieldKey = col.sortField || col.id;
               const isNameCol = col.id === "name";
-              const stickyClass = isNameCol ? "sticky left-12 z-20 bg-muted/95 backdrop-blur-md border-r border-border/30" : "";
+              const stickyClass = isNameCol ? "sticky start-12 z-20 bg-muted/95 backdrop-blur-md border-e border-border/30" : "";
               const width = getColumnWidth(col.id) ?? col.width;
 
               return sortFieldKey ? (

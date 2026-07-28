@@ -1,30 +1,34 @@
 import React from "react";
 import { Users, Filter, MessageCircle, AlertCircle, GitMerge, Clock, CalendarPlus, AlertTriangle } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
 import { useContactsMetrics } from "@/tenant/features/contacts/hooks/useContacts";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 
 interface ContactsCommandMetricsProps {
-  total: number;
   shown: number;
+  pendingCount: number;
+  conflictCount: number;
+  flushing: boolean;
+  onFlushPending?: () => void;
   onOpenDuplicates?: () => void;
   onReviewConflicts?: () => void;
 }
 
 /** Permission-scoped quick metrics for the Contacts module command centre (globle1 §2.1). */
 export function ContactsCommandMetrics({
-  total,
   shown,
+  pendingCount,
+  conflictCount,
+  flushing,
+  onFlushPending,
   onOpenDuplicates,
   onReviewConflicts,
 }: ContactsCommandMetricsProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { pendingCount, conflictCount, flushing, flush } = useContactsSyncOutbox();
   const { data: serverMetrics } = useContactsMetrics();
 
   const metrics = {
-    total: serverMetrics?.total ?? total,
+    total: serverMetrics?.total ?? 0,
     newThisPeriod: serverMetrics?.newThisPeriod ?? 0,
     whatsappCount: serverMetrics?.whatsappCount ?? 0,
     incompleteCount: serverMetrics?.incompleteCount ?? 0,
@@ -40,7 +44,7 @@ export function ContactsCommandMetrics({
       label: t("contacts.metrics.pendingSync"),
       value: pendingCount,
       accent: "warning" as const,
-      onClick: pendingCount > 0 && !flushing ? () => void flush() : undefined,
+      onClick: pendingCount > 0 && !flushing && onFlushPending ? onFlushPending : undefined,
     },
     {
       icon: AlertTriangle,

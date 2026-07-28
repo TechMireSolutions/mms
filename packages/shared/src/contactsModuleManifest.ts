@@ -152,8 +152,6 @@ export const CONTACTS_MODULE_MANIFEST = {
   maxPageSize: 500,
   /** Contact count above which duplicate scan runs as a background job (globle1 §8). */
   duplicateScanAsyncMinContacts: 500,
-  /** Default note separator when merging duplicate contacts (FE passes translated copy). */
-  mergedNotePrefix: '--- Merged from Duplicate ---',
 } as const;
 
 export type ContactsModuleTier = (typeof CONTACTS_MODULE_MANIFEST.tiers)[number];

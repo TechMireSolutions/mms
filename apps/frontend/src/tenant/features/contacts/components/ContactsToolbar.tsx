@@ -122,7 +122,7 @@ export default function ContactsToolbar({
             placeholder={t("contacts.searchPlaceholder")}
             className="w-full"
           />
-          <div className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 items-center gap-1 pointer-events-none">
+          <div className="hidden md:flex absolute end-3 top-1/2 -translate-y-1/2 items-center gap-1 pointer-events-none">
             <kbd className="px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground bg-muted/60 border border-border/60 rounded">
               /
             </kbd>
@@ -269,7 +269,7 @@ export default function ContactsToolbar({
                 }`}
               >
                 <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-primary" : "text-muted-foreground"}`} aria-hidden="true" />
-                <span>{t(preset.labelKey) || preset.id}</span>
+                <span>{t(preset.labelKey)}</span>
               </Button>
             );
           })}

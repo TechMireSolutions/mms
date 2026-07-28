@@ -1,25 +1,16 @@
 import { useState, useEffect, useMemo, useRef, useId, useCallback, ChangeEvent, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Edit2, MessageCircle, MessageSquare, Phone, Mail,
-  Calendar, User, Tag, Clock, BrainCircuit,
-  Send, LucideIcon, MapPin, Search, ExternalLink,
-  LayoutDashboard, History, Users as UsersIcon, FileText, Zap,
-  Loader2, Trash2,
+  Edit2, Clock, LayoutDashboard,
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
-import { Card } from "@/components/ui/card";
 import {
   Contact,
   ContactActivity,
   canViewContactField,
   CONTACTS_MODULE_MANIFEST,
-  DEFAULT_DETAIL_TABS,
-  getDisplayName,
   getPrimaryPhone,
-  formatPhoneWithCountryCode,
   getPrimaryEmail,
-  hasWhatsApp,
   formatDate,
   todayISO,
   AppTranslationKey,
@@ -30,158 +21,29 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
-  ACTIVITY_TYPE_I18N,
   formatContactDobWithAge,
   formatContactGenderLabel,
-  formatTelHref,
-  getFallbackCountryCode,
-  resolvePhoneLabel,
-  resolveEmailLabel,
-  resolveAddressLabel,
-  resolveSocialPlatformLabel,
+  resolveRegistryLabel,
+  resolveRegistryDescription,
 } from "@/lib/contacts/contactI18n";
-import { ContactIdentityMeta } from "./ContactIdentityMeta";
 import { contactDetailQueryKey, fetchContactById } from "@/tenant/features/contacts/hooks/useContacts";
 import { Button } from "@/components/ui/button";
 import { SubTabBar } from "@/components/ui/SubTabBar";
-import { Input } from "@/components/ui/input";
 import { uploadAttachmentFile } from "@/lib/attachmentUpload";
 import { notify } from "@/lib/notify";
-import { UserAvatar } from "@/components/ui/UserAvatar";
-import { CopyBtn } from "@/components/ui/CopyBtn";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  // tab keys
-  overview: LayoutDashboard,
-  timeline: History,
-  network: UsersIcon,
-  files: FileText,
-  // field keys
-  gender: User,
-  dob: Calendar,
-  // activity types
-  note: FileText,
-  stage_change: Zap,
-  system: User,
-  sms: MessageSquare,
-  whatsapp: MessageCircle,
-  call: Phone,
-};
-
-const DETAIL_SYSTEM_TAB_KEYS = new Set(DEFAULT_DETAIL_TABS.map((tab) => tab.key));
-const DEFAULT_DETAIL_TAB_BY_KEY = new Map(DEFAULT_DETAIL_TABS.map((tab) => [tab.key, tab]));
-
-const DETAIL_STYLES = {
-  whatsappActive: "bg-success/10 text-success border-success/30 hover:bg-success/20",
-  smsAction: "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20",
-  callAction: "bg-info/10 text-info border border-info/20 hover:bg-info/20",
-  emailAction: "bg-secondary/10 text-secondary border border-secondary/20 hover:bg-secondary/20",
-  emergencyBadge: "bg-destructive/10 text-destructive border-destructive/30",
-  networkHeader: "bg-success/10 border-success/30",
-  networkIcon: "bg-success/10 text-success",
-  networkTitle: "text-success",
-  networkSubtitle: "text-success/80",
-  networkItemCard: "border-border hover:border-success/30 hover:bg-success/5",
-  networkItemIcon: "bg-success/10 text-success border border-success/20",
-  networkItemAction: "hover:bg-muted text-muted-foreground hover:text-foreground",
-  networkRelType: "text-success",
-  liveIntelIndicator: "bg-success",
-  liveIntelText: "text-success",
-} as const;
-
-const COLLECTION_CONTAINER_CLASS = "divide-y divide-border/50";
-
-
-function isEmptyValue(val: unknown): boolean {
-  if (val === undefined || val === null || val === "" || val === false) return true;
-  if (Array.isArray(val) && val.length === 0) return true;
-  return false;
-}
-
-interface CollectionRowItemProps {
-  label: string;
-  value: string;
-  copyable?: boolean;
-  actionHref?: string;
-  onAction?: () => void;
-  actionIcon?: LucideIcon;
-  actionTitle?: string;
-  actionColorClass?: string;
-  external?: boolean;
-}
-
-function CollectionRowItem({
-  label,
-  value,
-  copyable = true,
-  actionHref,
-  onAction,
-  actionIcon: ActionIcon,
-  actionTitle,
-  actionColorClass = "text-primary hover:bg-primary/10",
-  external = false,
-}: CollectionRowItemProps): JSX.Element {
-  return (
-    <div className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
-      <div className="min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 uppercase">
-            {label}
-          </span>
-        </div>
-        <span className="font-semibold text-xs text-foreground block leading-relaxed truncate">{value}</span>
-      </div>
-      {value && (
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {copyable && (
-            <CopyBtn
-              text={value}
-              showToast
-              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground p-0 flex items-center justify-center opacity-100"
-            />
-          )}
-          {onAction && ActionIcon ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={onAction}
-              aria-label={actionTitle || value}
-              className={`h-8 w-8 rounded-lg flex items-center justify-center shadow-none ${actionColorClass}`}
-            >
-              <ActionIcon className="w-3.5 h-3.5" />
-            </Button>
-          ) : actionHref && ActionIcon ? (
-            <a
-              href={actionHref}
-              target={external ? "_blank" : undefined}
-              rel={external ? "noopener noreferrer" : undefined}
-              aria-label={actionTitle || value}
-              className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors ${actionColorClass}`}
-            >
-              <ActionIcon className="w-3.5 h-3.5" />
-            </a>
-          ) : null}
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface DetailSectionProps {
-  title: string;
-  children: React.ReactNode;
-}
-
-function DetailSection({ title, children }: DetailSectionProps): JSX.Element {
-  return (
-    <div className="space-y-2">
-      <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">{title}</h4>
-      <Card className={COLLECTION_CONTAINER_CLASS}>{children}</Card>
-    </div>
-  );
-}
+import {
+  ICON_MAP,
+  DETAIL_SYSTEM_TAB_KEYS,
+  DEFAULT_DETAIL_TAB_BY_KEY,
+  DETAIL_STYLES,
+  isEmptyValue,
+} from "./detail/contactDetailStyles";
+import { FieldGroupCard } from "./detail/ContactDetailShared";
+import { ContactDetailOverview } from "./detail/ContactDetailOverview";
+import { ContactDetailTimeline } from "./detail/ContactDetailTimeline";
+import { ContactDetailNetwork } from "./detail/ContactDetailNetwork";
+import { ContactDetailFiles } from "./detail/ContactDetailFiles";
 
 interface ContactDetailDrawerProps {
   contact: Contact;
@@ -195,86 +57,6 @@ interface ContactDetailDrawerProps {
   canWrite?: boolean;
 }
 
-interface FieldGroupCardProps {
-  group: string;
-  fields: { key: string; label: string; type: string }[];
-  formatValue: (field: { key: string; type: string }) => string | null;
-}
-
-function FieldGroupCard({ group, fields, formatValue }: FieldGroupCardProps): JSX.Element | null {
-  const validFields = fields.map((f) => ({ field: f, val: formatValue(f) })).filter((item) => Boolean(item.val));
-  if (validFields.length === 0) return null;
-
-  return (
-    <DetailSection title={group}>
-      {validFields.map(({ field, val }) => {
-        const Icon = ICON_MAP[field.key] || Tag;
-        return (
-          <div key={field.key} className="flex items-center gap-3 p-3 group/row">
-            <div className="p-2 rounded-lg bg-muted/80 group-hover/row:bg-primary/10 transition-colors">
-              <Icon className="w-3.5 h-3.5 text-muted-foreground group-hover/row:text-primary transition-colors" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight leading-none mb-1">
-                {field.label}
-              </span>
-              <span className="text-sm font-semibold text-foreground truncate block">{val}</span>
-            </div>
-          </div>
-        );
-      })}
-    </DetailSection>
-  );
-}
-
-interface QuickActionButtonProps {
-  label: string;
-  icon: LucideIcon;
-  onClick?: () => void;
-  href?: string;
-  disabled?: boolean;
-  className?: string;
-  ariaLabel?: string;
-}
-
-function QuickActionButton({
-  label,
-  icon: Icon,
-  onClick,
-  href,
-  disabled = false,
-  className = "",
-  ariaLabel,
-}: QuickActionButtonProps): JSX.Element {
-  const baseClasses = `flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-all ${className}`;
-  if (href && !disabled) {
-    return (
-      <a
-        href={href}
-        aria-label={ariaLabel || label}
-        className={baseClasses}
-      >
-        <Icon className="w-5 h-5" />
-        <span className="text-[10px] font-bold">{label}</span>
-      </a>
-    );
-  }
-
-  return (
-    <Button
-      variant="ghost"
-      disabled={disabled}
-      onClick={onClick}
-      aria-label={ariaLabel || label}
-      className={`h-auto font-normal shadow-none ${baseClasses}`}
-      type="button"
-    >
-      <Icon className="w-5 h-5" />
-      <span className="text-[10px] font-bold">{label}</span>
-    </Button>
-  );
-}
-
 export default function ContactDetailDrawer({
   contact: initialContact,
   onClose,
@@ -286,7 +68,7 @@ export default function ContactDetailDrawer({
   onUpdateContact,
   canWrite = false,
 }: ContactDetailDrawerProps): JSX.Element {
-  const { enabledTabIds, isTabFieldEnabled, fieldConfig, fields, phoneLabels, emailLabels, addressLabels, socialPlatforms, prefs, countryCodesMap } = useContactConfig();
+  const { enabledTabIds, isTabFieldEnabled, fieldConfig, fields } = useContactConfig();
   const { user } = useAuth();
   const { role } = usePermissions();
   const viewerRole = role ?? '';
@@ -389,11 +171,11 @@ export default function ContactDetailDrawer({
         .filter((field) => canViewContactField(viewerRole, field))
         .map((field) => ({
           key: field.key,
-          label: field.label,
+          label: resolveRegistryLabel(field, t),
           type: field.type,
           tab: tabId,
           group: field.group || t('contacts.detail.extendedProfiles'),
-          description: field.description || "",
+          description: resolveRegistryDescription(field, t),
         }))
     );
   }, [fields, t, viewerRole]);
@@ -561,425 +343,52 @@ export default function ContactDetailDrawer({
           className="space-y-6"
         >
           {activeTab === "overview" && (
-            <>
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-card via-card to-muted/40 border border-border/80 shadow-xs">
-                <UserAvatar
-                  id={contactState.id}
-                  name={getDisplayName(contactState)}
-                  avatar={contactState.avatar}
-                  className="w-16 h-16 rounded-2xl text-2xl shadow-xs"
-                />
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-bold text-foreground truncate leading-tight">{getDisplayName(contactState)}</h3>
-                  <ContactIdentityMeta gender={contactState.gender} isSyed={contactState.isSyed} size="md" className="mt-1.5" />
-                </div>
-              </div>
-
-              {/* AI Intelligence Brief */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-1.5 text-primary">
-                  <BrainCircuit className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">{t('contacts.detail.aiIntelligence')}</span>
-                </div>
-                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 text-[12px] text-foreground leading-relaxed italic relative">
-                  {contactState.aiSummary || t('contacts.detail.defaultAiSummary')}
-                </div>
-              </div>
-
-              {/* Quick Communication Actions Bar */}
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {onWhatsApp && hasWhatsApp(contactState) && (
-                  <QuickActionButton
-                    label={t('contacts.whatsapp')}
-                    icon={MessageCircle}
-                    onClick={() => onWhatsApp([contactState])}
-                    className={DETAIL_STYLES.whatsappActive}
-                  />
-                )}
-                {onSms && primaryPhone && (
-                  <QuickActionButton
-                    label={t('contacts.sms')}
-                    icon={MessageSquare}
-                    onClick={() => onSms([contactState])}
-                    className={DETAIL_STYLES.smsAction}
-                  />
-                )}
-                {primaryPhone && (
-                  <QuickActionButton
-                    label={t('contacts.detail.call')}
-                    icon={Phone}
-                    href={formatTelHref(primaryPhone)}
-                    ariaLabel={`${t('contacts.detail.call')} ${primaryPhone}`}
-                    className={DETAIL_STYLES.callAction}
-                  />
-                )}
-                {onEmail && primaryEmail && (
-                  <QuickActionButton
-                    label={t('contacts.detail.emailAction')}
-                    icon={Mail}
-                    onClick={() => onEmail([contactState])}
-                    className={DETAIL_STYLES.emailAction}
-                  />
-                )}
-              </div>
-
-              {/* Grouped Basic Fields (DRY component) */}
-              <div className="space-y-4">
-                {Object.entries(grouped)
-                  .filter(([, fieldsList]) =>
-                    fieldsList.some((field) => field.tab === "basic" || !["timeline", "network", "files"].includes(field.tab))
-                  )
-                  .map(([groupName, fieldsList]) => (
-                    <FieldGroupCard
-                      key={groupName}
-                      group={groupName}
-                      fields={fieldsList}
-                      formatValue={formatFieldValue}
-                    />
-                  ))}
-
-                {/* Collection: Phone Numbers */}
-                {enabledTabIds.has("phones") && visibleCollectionFields.phones.length > 0 && contactState.phones && contactState.phones.length > 0 && (
-                  <DetailSection title={t('contacts.form.phonesLabel')}>
-                    {contactState.phones.map((phone, phoneIndex) => {
-                      const formattedPhone = formatPhoneWithCountryCode(
-                        phone.number,
-                        phone.countryCode || getFallbackCountryCode(prefs, countryCodesMap),
-                      ) || String(phone.number || "");
-                      return (
-                        <CollectionRowItem
-                          key={`phone-${phone.number}-${phoneIndex}`}
-                          label={resolvePhoneLabel(phone.label, phoneLabels, t)}
-                          value={formattedPhone}
-                          actionHref={formatTelHref(formattedPhone)}
-                          actionIcon={Phone}
-                          actionTitle={t('contacts.detail.callPhone', { phone: formattedPhone })}
-                          actionColorClass="text-info hover:bg-info/10"
-                        />
-                      );
-                    })}
-                  </DetailSection>
-                )}
-
-                {/* Collection: Emails */}
-                {enabledTabIds.has("emails") && visibleCollectionFields.emails.length > 0 && contactState.emails && contactState.emails.length > 0 && (
-                  <DetailSection title={t('contacts.form.emailsLabel')}>
-                    {contactState.emails.map((email, emailIndex) => {
-                      const rawEmail = String(email.address || "");
-                      return (
-                        <CollectionRowItem
-                          key={`email-${email.address}-${emailIndex}`}
-                          label={resolveEmailLabel(email.label, emailLabels, t)}
-                          value={rawEmail}
-                          onAction={onEmail ? () => onEmail([{ ...contactState, email: rawEmail }]) : undefined}
-                          actionIcon={Mail}
-                          actionTitle={t('contacts.detail.emailContact', { email: rawEmail })}
-                          actionColorClass="text-secondary hover:bg-secondary/10"
-                        />
-                      );
-                    })}
-                  </DetailSection>
-                )}
-
-                {/* Collection: Addresses */}
-                {enabledTabIds.has("addresses") && visibleCollectionFields.addresses.length > 0 && contactState.addresses && contactState.addresses.length > 0 && (
-                  <DetailSection title={t('contacts.detail.addresses')}>
-                    {contactState.addresses.map((address, addressIndex) => {
-                      const fullAddr = [address.line1, address.city, address.state, address.country]
-                        .filter(Boolean)
-                        .join(", ");
-                      return (
-                        <CollectionRowItem
-                          key={`address-${addressIndex}`}
-                          label={resolveAddressLabel(address.label, addressLabels, t)}
-                          value={fullAddr || "—"}
-                          copyable={Boolean(fullAddr)}
-                          actionHref={fullAddr ? `https://maps.google.com/?q=${encodeURIComponent(fullAddr)}` : undefined}
-                          actionIcon={MapPin}
-                          actionTitle={t('contacts.detail.openInMaps')}
-                          actionColorClass="text-primary hover:bg-primary/10"
-                          external
-                        />
-                      );
-                    })}
-                  </DetailSection>
-                )}
-
-                {/* Collection: Socials */}
-                {enabledTabIds.has("socials") && visibleCollectionFields.socials.length > 0 && contactState.socials && contactState.socials.length > 0 && (
-                  <DetailSection title={t('contacts.detail.socials')}>
-                    {contactState.socials.map((social, socialIndex) => {
-                      const handle = String(social.url || "");
-                      const url = handle.startsWith("http") ? handle : `https://${handle}`;
-                      return (
-                        <CollectionRowItem
-                          key={`social-${socialIndex}`}
-                          label={resolveSocialPlatformLabel(social.platform, socialPlatforms, t)}
-                          value={handle || "—"}
-                          copyable={Boolean(handle)}
-                          actionHref={handle ? url : undefined}
-                          actionIcon={ExternalLink}
-                          actionTitle={t('contacts.detail.visitSocialProfile')}
-                          actionColorClass="text-primary hover:bg-primary/10"
-                          external
-                        />
-                      );
-                    })}
-                  </DetailSection>
-                )}
-
-                {/* Collection: Emergency Contacts */}
-                {enabledTabIds.has("emergency") && visibleCollectionFields.emergency.length > 0 && contactState.emergencyContacts && contactState.emergencyContacts.length > 0 && (
-                  <DetailSection title={t('contacts.detail.emergency')}>
-                    {contactState.emergencyContacts.map((emergencyContact, emergencyContactIndex) => {
-                      const target = allContacts.find((contact) => String(contact.id) === String(emergencyContact.contactId));
-                      return (
-                        <div key={emergencyContactIndex} className="p-3 border-b border-border/50 last:border-b-0">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${DETAIL_STYLES.emergencyBadge}`}>
-                              {t('contacts.detail.emergencyContact')}
-                            </span>
-                          </div>
-                          <div className="text-xs space-y-1">
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase block">{t('contacts.detail.relationships')}</span>
-                            {target ? (
-                              <Button
-                                type="button"
-                                variant="link"
-                                onClick={() => handleNavigateToContact(target.id)}
-                                className="font-semibold text-primary hover:underline text-start h-auto p-0 shadow-none justify-start text-xs"
-                              >
-                                {getDisplayName(target)}
-                              </Button>
-                            ) : (
-                              <span className="font-semibold text-foreground">{String(emergencyContact.contactId || "")}</span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </DetailSection>
-                )}
-              </div>
-            </>
+            <ContactDetailOverview
+              contact={contactState}
+              allContacts={allContacts}
+              grouped={grouped}
+              formatFieldValue={formatFieldValue}
+              visibleCollectionFields={visibleCollectionFields}
+              primaryPhone={primaryPhone}
+              primaryEmail={primaryEmail}
+              onWhatsApp={onWhatsApp}
+              onSms={onSms}
+              onEmail={onEmail}
+              onNavigateToContact={handleNavigateToContact}
+            />
           )}
 
           {activeTab === "timeline" && (
-            <div className="space-y-5">
-              {canPersistContact && <div className="relative">
-                <form onSubmit={handleAddNote} className="flex gap-2">
-                  <Input
-                    id={noteInputId}
-                    name="contact-note"
-                    type="text"
-                    placeholder={t('contacts.detail.logEventOrNote')}
-                    value={noteText}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => setNoteText(e.target.value)}
-                    className="flex-1 px-4 py-3 rounded-2xl"
-                  />
-                  <Button
-                    type="submit"
-                    aria-label={t('contacts.detail.logEventOrNoteSubmit')}
-                    className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-none"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </form>
-              </div>}
-
-              <div className="space-y-6 relative ps-3">
-                <div className="absolute start-[3px] top-0 bottom-0 w-0.5 bg-border/50" />
-                {(!combinedActivities || combinedActivities.length === 0) ? (
-                  <div className="flex flex-col items-center justify-center py-20 text-muted-foreground opacity-30">
-                    <History className="w-12 h-12 mb-2" />
-                    <p className="text-xs font-bold uppercase tracking-widest">{t('contacts.detail.quietTimeline')}</p>
-                  </div>
-                ) : (
-                  combinedActivities.map((act, idx) => {
-                    const Icon = ICON_MAP[act.type] || History;
-                    return (
-                      <motion.div
-                        key={act.id}
-                        initial={{ opacity: 0, x: -6 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.15, delay: Math.min(idx * 0.03, 0.3) }}
-                        className="relative ps-6 group"
-                      >
-                        <div
-                          className="absolute start-0 top-1.5 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center z-10 group-hover:border-primary transition-colors"
-                          style={{ insetInlineStart: '-15.5px' }}
-                        >
-                          <Icon className="w-2.5 h-2.5 text-muted-foreground group-hover:text-primary" />
-                        </div>
-                        <Card className="p-4 shadow-xs hover:border-primary/20 group-hover:border-primary/20">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                              {ACTIVITY_TYPE_I18N[act.type] ? t(ACTIVITY_TYPE_I18N[act.type]) : act.type}
-                            </span>
-                            <span className="text-[10px] font-bold text-muted-foreground/60">{formatDate(act.date)}</span>
-                          </div>
-                          <p className="text-xs text-foreground font-medium leading-relaxed">{act.content}</p>
-                          {act.by && <span className="block mt-2 text-[9px] font-bold text-primary italic">— {act.by}</span>}
-                        </Card>
-                      </motion.div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
+            <ContactDetailTimeline
+              activities={combinedActivities}
+              noteText={noteText}
+              noteInputId={noteInputId}
+              canPersistContact={canPersistContact}
+              onNoteTextChange={setNoteText}
+              onAddNote={handleAddNote}
+            />
           )}
 
           {activeTab === "network" && (
-            <div className="space-y-6">
-              <div className={`p-4 rounded-2xl border flex items-center gap-3 ${DETAIL_STYLES.networkHeader}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-xs ${DETAIL_STYLES.networkIcon}`}>
-                  <UsersIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className={`text-sm font-bold leading-none ${DETAIL_STYLES.networkTitle}`}>{contactState.relationships?.length || 0} {t('contacts.detail.relationships')}</h4>
-                  <p className={`text-[10px] font-medium mt-1 uppercase tracking-tight ${DETAIL_STYLES.networkSubtitle}`}>{t('contacts.detail.activeSocialGraph')}</p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {(!contactState.relationships || contactState.relationships.length === 0) ? (
-                  <div className="text-center py-20">
-                    <UsersIcon className="w-12 h-12 mx-auto text-muted-foreground/20" />
-                    <p className="text-xs font-bold text-muted-foreground mt-2 uppercase tracking-widest">{t('contacts.detail.noConnectionsMapped')}</p>
-                  </div>
-                ) : (
-                  contactState.relationships.map((relationship, relationshipIndex) => {
-                    const target = allContacts.find((contact) => String(contact.id) === String(relationship.contactId));
-                    return (
-                      <Card key={relationshipIndex} className={`flex items-center justify-between gap-3 p-4 ${DETAIL_STYLES.networkItemCard}`}>
-                        <div className="flex items-center gap-3 min-w-0">
-                          <UserAvatar
-                            id={target?.id ?? relationship.contactId}
-                            name={target ? getDisplayName(target) : "?"}
-                            avatar={target?.avatar}
-                            className="w-10 h-10 rounded-xl text-xs flex-shrink-0"
-                          />
-                          <div className="min-w-0">
-                            <span className={`text-[9px] font-black uppercase tracking-widest mb-0.5 block ${DETAIL_STYLES.networkRelType}`}>{relationship.relationship}</span>
-                            <h5 className="text-sm font-bold text-foreground truncate">{target ? getDisplayName(target) : `${t('contacts.table.contactIdPrefix')}${relationship.contactId}`}</h5>
-                          </div>
-                        </div>
-                        {target && (
-                          <Button
-                            variant="ghost"
-                            aria-label={t('contacts.detail.viewContact', { name: getDisplayName(target) })}
-                            onClick={() => handleNavigateToContact(relationship.contactId)}
-                            className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all shadow-none ${DETAIL_STYLES.networkItemAction}`}
-                            type="button"
-                          >
-                            <Search className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </Card>
-                    );
-                  })
-                )}
-              </div>
-            </div>
+            <ContactDetailNetwork
+              contact={contactState}
+              allContacts={allContacts}
+              onNavigateToContact={handleNavigateToContact}
+            />
           )}
 
           {activeTab === "files" && (
-            <div className="space-y-6">
-              {canPersistContact && <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setIsDragging(true);
-                }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setIsDragging(false);
-                  handleFiles(e.dataTransfer.files);
-                }}
-                className={`p-8 rounded-3xl border-2 border-dashed flex flex-col items-center justify-center text-center gap-3 transition-all ${
-                  isDragging
-                    ? "border-primary bg-primary/5 scale-[1.02]"
-                    : "border-border bg-muted/20"
-                }`}
-              >
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                  {isUploading ? (
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                  ) : (
-                    <FileText className="w-6 h-6" />
-                  )}
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-foreground">
-                    {isUploading ? t('contacts.detail.uploading') : t('contacts.detail.cloudStorageRepository')}
-                  </h4>
-                  <p className="text-xs text-muted-foreground mt-1 max-w-[180px]">
-                    {t('contacts.detail.dragDropDocuments')}
-                  </p>
-                </div>
-                <input
-                  id="contact-drawer-document-upload-input"
-                  name="contactDocumentUpload"
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  multiple
-                  className="hidden"
-                  aria-label={t('contacts.detail.cloudStorageRepository')}
-                />
-                <Button
-                  disabled={isUploading}
-                  onClick={() => fileInputRef.current?.click()}
-                  className="mt-2 px-6 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:scale-105 active:scale-95 transition-all shadow-none"
-                  type="button"
-                >
-                  {t('contacts.detail.browseFiles')}
-                </Button>
-              </div>}
-
-              <div className="space-y-3">
-                {(!contactState.attachments || contactState.attachments.length === 0) ? (
-                  <div className="py-10 text-center">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{t('contacts.detail.repositoryEmpty')}</p>
-                  </div>
-                ) : (
-                  contactState.attachments.map((file) => (
-                    <Card key={file.id} className="flex items-center justify-between p-4 hover:border-primary/20 transition-all">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="p-2 rounded-lg bg-muted text-muted-foreground">
-                          <FileText className="w-5 h-5" />
-                        </div>
-                        <div className="min-w-0">
-                          <h5 className="text-xs font-bold text-foreground truncate">{file.name}</h5>
-                          <p className="text-[9px] text-muted-foreground mt-1">{(file.size / 1024).toFixed(1)} {t('contacts.detail.kbLabel')} · {formatDate(file.date)}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <a
-                          href={file.url}
-                          download={file.name}
-                          aria-label={t('contacts.detail.downloadFile', { name: file.name })}
-                          className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-all"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                        {canPersistContact && (
-                          <Button
-                            variant="ghost"
-                            aria-label={t('contacts.detail.deleteFile', { name: file.name })}
-                            onClick={() => setPendingAttachmentDelete({ id: file.id, name: file.name })}
-                            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all shadow-none"
-                            type="button"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </Card>
-                  ))
-                )}
-              </div>
-            </div>
+            <ContactDetailFiles
+              contact={contactState}
+              canPersistContact={canPersistContact}
+              isDragging={isDragging}
+              isUploading={isUploading}
+              fileInputRef={fileInputRef}
+              onDraggingChange={setIsDragging}
+              onFiles={handleFiles}
+              onFileChange={handleFileChange}
+              onRequestDelete={setPendingAttachmentDelete}
+            />
           )}
 
           {/* Dynamic Custom Tabs (DRY FieldGroupCard component) */}

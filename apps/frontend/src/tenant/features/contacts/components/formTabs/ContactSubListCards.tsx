@@ -71,6 +71,11 @@ export function EmptyListCard({ icon: Icon, message }: EmptyListCardProps): JSX.
   );
 }
 
+export function FieldInlineError({ message }: { message?: string }): JSX.Element | null {
+  if (!message) return null;
+  return <p className="text-[10px] text-destructive mt-1 font-medium">{message}</p>;
+}
+
 export interface ContactSubListShellProps {
   isEmpty: boolean;
   emptyIcon: ElementType;

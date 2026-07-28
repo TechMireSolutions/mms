@@ -3,27 +3,15 @@ import { Share2 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { EditableSelect, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
-import { ListFieldCard, ContactSubListShell } from "./FormCardUtils";
+import { ListFieldCard, ContactSubListShell, FieldInlineError } from "./ContactSubListCards";
+import type { ContactSubListTabBaseProps } from "./types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveSocialPlatformLabel } from "@/lib/contacts/contactI18n";
-import { Contact, SocialLink, DEFAULT_SOCIAL_PLATFORMS } from "@mms/shared";
+import { SocialLink, DEFAULT_SOCIAL_PLATFORMS } from "@mms/shared";
 
-export interface ContactSocialsTabProps {
-  contactDraft: Partial<Contact>;
-  getLocalId: (tabName: string, idx: number) => string;
+export interface ContactSocialsTabProps extends ContactSubListTabBaseProps {
   socialPlatforms: string[];
-  getListItemError: (tabId: string, fieldId: string, index: number) => string | undefined;
-  addSubListItem: <K extends "phones" | "emails" | "addresses" | "socials" | "emergencyContacts">(
-    fieldKey: K,
-    newItem: NonNullable<Contact[K]>[number]
-  ) => void;
-  updateSubListItem: <K extends "phones" | "emails" | "addresses" | "socials" | "emergencyContacts">(
-    fieldKey: K,
-    idx: number,
-    patch: Partial<NonNullable<Contact[K]>[number]>
-  ) => void;
-  removeSubListItem: (fieldKey: "phones" | "emails" | "addresses" | "socials" | "emergencyContacts", idx: number) => void;
 }
 
 export function ContactSocialsTab({
@@ -97,11 +85,7 @@ export function ContactSocialsTab({
                   )}
                 />
               </div>
-              {urlError && (
-                <p className="text-[10px] text-destructive mt-1 font-medium">
-                  {urlError}
-                </p>
-              )}
+              <FieldInlineError message={urlError} />
             </ListFieldCard>
           );
         })}

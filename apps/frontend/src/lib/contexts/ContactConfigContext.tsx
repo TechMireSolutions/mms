@@ -24,7 +24,6 @@ import {
   ContactPreferences,
   ContactColumnPreference,
   FieldDefinition,
-  WhatsAppTemplate,
   translateApp,
   ColumnRegistryEntry,
   DEFAULT_COLUMN_REGISTRY,
@@ -49,29 +48,19 @@ import {
 } from "@/lib/columnPreferences/moduleColumnPreferencesStorage";
 import { useContactColumnPrefs, useContactColumnPrefsMutation } from "@/tenant/hooks/collections/contacts";
 import {
-  CONFIG_KEY,
   DEFAULT_PREFERENCES,
   loadPreferences,
-  PREFERENCES_KEY,
   savePreferences,
   savePreferencesAsync,
   syncOptionsInConfig,
 } from "@/lib/contacts/preferencesStorage";
+import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import {
   CONTACT_CONFIG_COLLECTION_KEYS,
   CONTACT_CONFIG_OBJECT_KEYS,
-  contactWhatsappTemplatesKey,
   getContactConfigCollectionDefaults,
   getDefaultSocialPlaceholders,
 } from "@/lib/contacts/contactConfigSeeds";
-
-export {
-  calculateProfileCompleteness,
-  buildCustomFieldSchema,
-  buildDynamicContactSchema,
-  formatZodIssues,
-  type ValidationError,
-} from "@mms/shared";
 
 // ── Context Interface ─────────────────────────────────────────────────────────
 export interface ContactConfigContextType {
@@ -93,7 +82,6 @@ export interface ContactConfigContextType {
   socialPlatforms: string[];
   relationships: string[];
   socialPlaceholders: Record<string, string>;
-  whatsappTemplates: WhatsAppTemplate[];
   phoneLabels: string[];
   emailLabels: string[];
   addressLabels: string[];
@@ -113,7 +101,6 @@ export interface ContactConfigContextType {
   updateSocialPlatforms: (socialPlatformOptions: string[]) => void;
   updateRelationships: (relationshipOptions: string[]) => void;
   updateSocialPlaceholders: (socialPlaceholders: Record<string, string>) => void;
-  updateWhatsappTemplates: (whatsappTemplates: WhatsAppTemplate[]) => void;
   updatePhoneLabels: (phoneLabelOptions: string[]) => void;
   updateEmailLabels: (emailLabelOptions: string[]) => void;
   updateAddressLabels: (addressLabelOptions: string[]) => void;
@@ -186,9 +173,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const [socialPlaceholders, setSocialPlaceholdersState] = useState<Record<string, string>>(() =>
     getObject(CONTACT_CONFIG_OBJECT_KEYS.socialPlaceholders, getDefaultSocialPlaceholders())
   );
-  const [whatsappTemplates, setWhatsappTemplatesState] = useState<WhatsAppTemplate[]>(() => {
-    return getCollection(contactWhatsappTemplatesKey(user?.id), contactConfigDefaults.whatsappTemplates);
-  });
   const [phoneLabels, setPhoneLabelsState] = useState<string[]>(() =>
     getCollection(CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels, contactConfigDefaults.phoneLabels)
   );
@@ -218,9 +202,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
 
     setSocialPlaceholdersState(
       getObject(CONTACT_CONFIG_OBJECT_KEYS.socialPlaceholders, getDefaultSocialPlaceholders()),
-    );
-    setWhatsappTemplatesState(
-      getCollection(contactWhatsappTemplatesKey(user?.id), contactConfigDefaults.whatsappTemplates),
     );
     setPhoneLabelsState(getCollection(CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels, contactConfigDefaults.phoneLabels));
     setEmailLabelsState(getCollection(CONTACT_CONFIG_COLLECTION_KEYS.emailLabels, contactConfigDefaults.emailLabels));
@@ -291,17 +272,10 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     };
 
     const handler = (storageEvent: StorageEvent) => {
-      if (storageEvent.key === CONFIG_KEY) {
-        const parsed = safeParseEvent(storageEvent, "fieldConfig");
-        if (parsed) setFieldConfigState(parsed as FieldConfig);
-      } else if (storageEvent.key === PREFERENCES_KEY) {
-        const parsed = safeParseEvent(storageEvent, "preferences");
-        if (parsed) setPrefsState((currentPreferences) => ({ ...DEFAULT_PREFERENCES, ...currentPreferences, ...(parsed as Partial<ContactPreferences>) }));
-      } else if (storageEvent.key && storageEvent.key.startsWith(getWorkspaceLocalStoragePrefix())) {
+      if (storageEvent.key && storageEvent.key.startsWith(getWorkspaceLocalStoragePrefix())) {
         const subKey = storageEvent.key.slice(getWorkspaceLocalStoragePrefix().length);
         const parsed = safeParseEvent(storageEvent, subKey);
         if (parsed) {
-          const currentTemplatesKey = contactWhatsappTemplatesKey(user?.id);
           const COLLECTION_SETTERS: Record<string, (storedConfigValue: unknown) => void> = {
             [CONTACT_CONFIG_COLLECTION_KEYS.genders]: setGendersState as (storedConfigValue: unknown) => void,
             [CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms]: setSocialPlatformsState as (storedConfigValue: unknown) => void,
@@ -312,7 +286,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
             [CONTACT_CONFIG_COLLECTION_KEYS.emailLabels]: setEmailLabelsState as (storedConfigValue: unknown) => void,
             [CONTACT_CONFIG_COLLECTION_KEYS.addressLabels]: setAddressLabelsState as (storedConfigValue: unknown) => void,
             [CONTACT_CONFIG_COLLECTION_KEYS.countryCodes]: setCountryCodesState as (storedConfigValue: unknown) => void,
-            [currentTemplatesKey]: setWhatsappTemplatesState as (storedConfigValue: unknown) => void,
           };
           COLLECTION_SETTERS[subKey]?.(parsed);
         }
@@ -320,7 +293,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     };
     window.addEventListener("storage", handler);
     return () => window.removeEventListener("storage", handler);
-  }, [user?.id]);
+  }, []);
 
   // ── Mutators ──────────────────────────────────────────────────────────────
   const updateConfig = useCallback((nextConfig: FieldConfig) => {
@@ -379,10 +352,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     saveObject(CONTACT_CONFIG_OBJECT_KEYS.socialPlaceholders, socialPlaceholders);
     setSocialPlaceholdersState(socialPlaceholders);
   }, []);
-  const updateWhatsappTemplates = useCallback((whatsappTemplates: WhatsAppTemplate[]) => {
-    saveCollection(contactWhatsappTemplatesKey(user?.id), whatsappTemplates);
-    setWhatsappTemplatesState(whatsappTemplates);
-  }, [user?.id]);
   const updatePhoneLabels = useCallback((phoneLabelOptions: string[]) => {
     saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels, phoneLabelOptions);
     setPhoneLabelsState(phoneLabelOptions);
@@ -572,25 +541,29 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   );
 
   const availableColumns = useMemo(() => {
+    const translate = (key: Parameters<typeof translateApp>[0]) =>
+      translateApp(key, settings.language);
     return columnRegistry.map((column) => ({
       id: column.key,
-      label: column.label,
+      label: resolveRegistryLabel(column, translate),
       sortField: column.sortable !== false ? (column.sortField || column.key) : undefined,
       width: column.width,
     }));
-  }, [columnRegistry]);
+  }, [columnRegistry, settings.language]);
 
   const visibleColumns = useMemo(() => {
+    const translate = (key: Parameters<typeof translateApp>[0]) =>
+      translateApp(key, settings.language);
     return columnRegistry
       .filter((column) => column.enabled)
       .sort((a, b) => a.order - b.order)
       .map((column) => ({
         id: column.key,
-        label: column.label,
+        label: resolveRegistryLabel(column, translate),
         sortField: column.sortable !== false ? (column.sortField || column.key) : undefined,
         width: column.width,
       }));
-  }, [columnRegistry]);
+  }, [columnRegistry, settings.language]);
 
   const systemSortOptions = useMemo<Array<{ field: string; label: string }>>(() => [
     { field: "createdAt", label: translateApp("contacts.table.dateAdded", settings.language) },
@@ -622,7 +595,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
         socialPlatforms,
         relationships,
         socialPlaceholders,
-        whatsappTemplates,
         phoneLabels,
         emailLabels,
         addressLabels,
@@ -642,7 +614,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
         updateSocialPlatforms,
         updateRelationships,
         updateSocialPlaceholders,
-        updateWhatsappTemplates,
         updatePhoneLabels,
         updateEmailLabels,
         updateAddressLabels,

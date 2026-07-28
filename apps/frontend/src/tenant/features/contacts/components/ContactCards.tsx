@@ -22,6 +22,7 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CopyBtn } from "@/components/ui/CopyBtn";
+import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactsTable";
 
 const MotionButton = motion.create(Button);
 
@@ -99,13 +100,6 @@ function hasColumnData(contact: Contact, colId: string): boolean {
   }
 }
 
-interface ColumnConfig {
-  id: string;
-  label: string;
-}
-// Unchanged lines...
-
-
 interface ContactCardsProps {
   contacts: Contact[];
   selected: (string | number)[];
@@ -121,7 +115,7 @@ interface ContactCardsProps {
   allContacts?: Contact[];
   canWrite?: boolean;
   canDelete?: boolean;
-  columns?: ColumnConfig[];
+  columns?: ContactsColumnConfig[];
   onSelectAll?: () => void;
   allSelected?: boolean;
 }

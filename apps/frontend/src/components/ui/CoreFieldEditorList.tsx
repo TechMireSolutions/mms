@@ -84,16 +84,22 @@ const FieldItem = memo(function FieldItem({
         className="w-4 h-4"
       />
 
-      <div className="flex-1 min-w-0 text-left">
+      <div className="flex-1 min-w-0 text-start">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-bold text-foreground leading-snug">{field.label}</p>
+          <p className="text-sm font-bold text-foreground leading-snug">
+            {field.labelKey ? t(field.labelKey) : field.label}
+          </p>
           {isUnique && !onToggleUnique && (
             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30 dark:bg-warning/20 dark:text-warning dark:border-warning/30">
               {lblUnique}
             </span>
           )}
         </div>
-        {field.description && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{field.description}</p>}
+        {(field.descriptionKey || field.description) ? (
+          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+            {field.descriptionKey ? t(field.descriptionKey) : field.description}
+          </p>
+        ) : null}
       </div>
 
       {isEnabled && (

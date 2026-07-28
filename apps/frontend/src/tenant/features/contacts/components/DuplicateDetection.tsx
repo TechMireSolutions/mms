@@ -95,7 +95,7 @@ function ContactCard({ contact, selected, onSelect, label }: ContactCardProps): 
           onSelect();
         }
       }}
-      className={`flex-1 rounded-xl border-2 p-4 cursor-pointer transition-all text-left ${
+      className={`flex-1 rounded-xl border-2 p-4 cursor-pointer transition-all text-start ${
         selected ? "border-primary bg-primary/[0.03]" : "border-border hover:border-primary/30"
       }`}
     >
@@ -294,7 +294,7 @@ export default function DuplicateDetection({
         open={true}
         onClose={onClose}
         title={t('contacts.duplicates.title')}
-        subtitle={`${activePairs.length} ${t('contacts.duplicates.potentialFound')}`}
+        subtitle={t('contacts.duplicates.potentialFound', { count: activePairs.length })}
         icon={AlertTriangle}
         size="lg"
         footer={
@@ -313,7 +313,7 @@ export default function DuplicateDetection({
             <div className={`flex items-center gap-2 rounded-xl px-4 py-2.5 ${colors.successBg}`}>
               <Check className={`w-4 h-4 ${colors.successText}`} />
               <p className={`text-xs font-medium ${colors.successText}`}>
-                {totalMerged} {t('contacts.duplicates.countMerged')}
+                {t('contacts.duplicates.countMerged', { count: totalMerged })}
               </p>
             </div>
           )}

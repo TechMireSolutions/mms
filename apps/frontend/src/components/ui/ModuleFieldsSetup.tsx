@@ -133,7 +133,7 @@ export function ModuleFieldsSetup({
       <div className="space-y-3">
         {editor.formTabs.map((tab) => {
           const tabId = tab.key;
-          const tabLabel = toTitleCase(tab.label);
+          const tabLabel = toTitleCase(tab.labelKey ? t(tab.labelKey) : tab.label);
           const tabDesc = tab.description || (tab.isSystem === false ? t("contacts.setup.customTabDescription") : "");
           const tabDefs = editor.tabFields[tabId] || [];
           const enabledSet = editor.tabFieldEnabled[tabId] || new Set();
@@ -142,8 +142,8 @@ export function ModuleFieldsSetup({
           const isReq = editor.requiredTabs.has(tabId);
 
           return (
-            <Card key={tabId} accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md text-left">
-              <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/20 border-b border-border/40 pl-6.5">
+            <Card key={tabId} accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md text-start">
+              <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/20 border-b border-border/40 ps-6.5">
                 <div className="flex items-center justify-center">
                   <Checkbox
                     checked={isOn}

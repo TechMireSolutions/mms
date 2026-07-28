@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { User, CheckCircle2, MapPin, Globe, ExternalLink } from "lucide-react";
+import { User, CheckCircle2, MapPin, Globe, ExternalLink, Sun, Moon } from "lucide-react";
 import {
   Contact,
   hasWhatsApp,
@@ -12,7 +12,7 @@ import {
   getPrimaryAddress,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { buildContactsMap, formatContactCellValue, formatContactGenderLabel } from "@/lib/contacts/contactI18n";
+import { buildContactsMap, formatContactCellValue, formatContactGenderLabel, formatContactOptionLabel } from "@/lib/contacts/contactI18n";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 export interface ContactMetadataCellProps {
@@ -32,13 +32,16 @@ export interface ContactMetadataCellProps {
 export function ContactMetadataCell({
   colId,
   contact,
-  prefs: _prefs,
+  prefs,
   allContacts = [],
   contactsMap: externalContactsMap,
   variant = "table",
   style,
 }: ContactMetadataCellProps): React.JSX.Element {
   const { t, language } = useTranslation();
+  const showDetailedSolarAge = prefs.showDetailedSolarAge !== false;
+  const showLunarDob = Boolean(prefs.showLunarDob);
+  const showDetailedLunarAge = Boolean(prefs.showDetailedLunarAge);
 
   const contactsMap = useMemo(() => {
     if (externalContactsMap !== undefined) return externalContactsMap;
@@ -104,26 +107,30 @@ export function ContactMetadataCell({
         return (
           <div className="flex flex-col gap-0.5 text-[11px] leading-normal font-mono">
             <span className="font-semibold text-foreground flex items-center gap-1">
-              <span aria-hidden="true" className="text-warning text-xs">☀️</span>
+              <Sun className="w-3 h-3 text-warning shrink-0" aria-hidden="true" />
               <span>{formatDate(contact.dob)}</span>
             </span>
-            <span className="text-[10px] text-muted-foreground">
-              {calculateDetailedSolarAge(contact.dob, language)}
-            </span>
+            {showDetailedSolarAge ? (
+              <span className="text-[10px] text-muted-foreground">
+                {calculateDetailedSolarAge(contact.dob, language)}
+              </span>
+            ) : null}
           </div>
         );
       }
       case "lunarDob": {
-        if (!contact.dob) return renderDash();
+        if (!contact.dob || !showLunarDob) return renderDash();
         return (
           <div className="flex flex-col gap-0.5 text-[11px] leading-normal font-mono">
             <span className="font-semibold text-foreground flex items-center gap-1">
-              <span aria-hidden="true" className="text-muted-foreground text-xs">🌙</span>
+              <Moon className="w-3 h-3 text-muted-foreground shrink-0" aria-hidden="true" />
               <span>{getLunarDateString(contact.dob, language)}</span>
             </span>
-            <span className="text-[10px] text-muted-foreground">
-              {calculateDetailedLunarAge(contact.dob, language)}
-            </span>
+            {showDetailedLunarAge ? (
+              <span className="text-[10px] text-muted-foreground">
+                {calculateDetailedLunarAge(contact.dob, language)}
+              </span>
+            ) : null}
           </div>
         );
       }
@@ -194,7 +201,9 @@ export function ContactMetadataCell({
             const linked = contactsMap?.get(String(ec.contactId));
             nameStr = linked ? linked.name : `${t("contacts.table.contactIdPrefix")}${ec.contactId}`;
           }
-          const relStr = ec.relationship ? ec.relationship.trim() : "";
+          const relStr = ec.relationship
+            ? formatContactOptionLabel(ec.relationship.trim(), t)
+            : "";
           if (nameStr && relStr) return `${nameStr} (${relStr})`;
           return nameStr || relStr;
         });

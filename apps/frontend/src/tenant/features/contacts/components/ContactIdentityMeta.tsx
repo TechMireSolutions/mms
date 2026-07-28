@@ -9,7 +9,7 @@ export interface ContactIdentityMetaProps {
   gender?: string | null;
   isSyed?: boolean | null;
   className?: string;
-  /** Compact chip used in table/card name columns. */
+  /** Compact chip used in table/card name columns; md slightly larger for drawer hero. */
   size?: "sm" | "md";
 }
 
@@ -27,26 +27,20 @@ export function ContactIdentityMeta({
   const showSyed = Boolean(isSyed);
   if (!hasGender && !showSyed) return null;
 
-  const textSize = size === "md" ? "text-[11px]" : "text-[11px]";
-  const syedSize = size === "md" ? "text-[9px] px-2 py-0.5" : "text-[10px] px-1.5 py-0.2";
+  const textSize = size === "md" ? "text-xs" : "text-[11px]";
+  const syedSize = size === "md" ? "text-[10px] px-2 py-0.5" : "text-[9px] px-1.5 py-0.5";
+  const iconSize = size === "md" ? "w-4 h-4" : "w-3.5 h-3.5";
 
   return (
     <p className={cn(textSize, "text-muted-foreground flex items-center gap-1.5 flex-wrap leading-normal", className)}>
       {hasGender ? (
         <span className="flex items-center gap-1 capitalize">
-          <User className="w-3.5 h-3.5 text-muted-foreground inline" aria-hidden />
+          <User className={cn(iconSize, "text-muted-foreground inline")} aria-hidden />
           <span>{formatContactGenderLabel(gender!, t)}</span>
         </span>
       ) : null}
-      {hasGender && showSyed ? <span className="text-muted-foreground/40">•</span> : null}
       {showSyed ? (
-        <span
-          className={cn(
-            "inline-flex items-center gap-0.5 font-bold uppercase rounded border",
-            syedSize,
-            SEMANTIC_BADGE.success,
-          )}
-        >
+        <span className={cn("inline-flex items-center gap-1 font-black uppercase rounded border", SEMANTIC_BADGE.success, syedSize)}>
           <CheckCircle2 className="w-3 h-3 text-success" aria-hidden />
           {t("contacts.table.yesSyed")}
         </span>

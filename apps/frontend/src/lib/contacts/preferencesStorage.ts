@@ -19,25 +19,24 @@ function syncOptionsInConfig(config: FieldConfig, tabId: string, fieldKey: strin
   return nextConfig;
 }
 
-const PREFERENCES_KEY = "mms_contact_preferences";
-const CONFIG_KEY = "mms_contact_field_config";
 const PREFERENCES_OBJECT_KEY = CONTACTS_MODULE_MANIFEST.preferencesObjectKey;
+const LEGACY_LOCAL_PREFERENCES_KEY = "mms_contact_preferences";
 const LEGACY_PREFERENCES_OBJECT_KEY = "contact_prefs";
 
-function parseLocalPreferences(): Partial<ContactPreferences> {
+function parseLegacyLocalPreferences(): Partial<ContactPreferences> {
   try {
-    const raw = localStorage.getItem(PREFERENCES_KEY);
+    const raw = localStorage.getItem(LEGACY_LOCAL_PREFERENCES_KEY);
     return raw ? (JSON.parse(raw) as Partial<ContactPreferences>) : {};
   } catch {
     return {};
   }
 }
 
-/** Loads contact preferences — tenant object authoritative, localStorage offline cache. */
+/** Loads contact preferences — manifest object key authoritative; legacy keys one-shot merge. */
 function loadPreferences(): Partial<ContactPreferences> {
   const fromObject = readObjectLocal<Partial<ContactPreferences>>(PREFERENCES_OBJECT_KEY)
     ?? readObjectLocal<Partial<ContactPreferences>>(LEGACY_PREFERENCES_OBJECT_KEY);
-  const fromLocal = parseLocalPreferences();
+  const fromLocal = parseLegacyLocalPreferences();
   return {
     ...DEFAULT_CONTACT_PREFERENCES,
     ...fromLocal,
@@ -45,15 +44,15 @@ function loadPreferences(): Partial<ContactPreferences> {
   };
 }
 
-/** Persists contact preferences to tenant object + localStorage cache. */
+/** Persists contact preferences to the manifest object key only. */
 function savePreferences(preferences: ContactPreferences): void {
-  localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
+  localStorage.removeItem(LEGACY_LOCAL_PREFERENCES_KEY);
   saveObject(PREFERENCES_OBJECT_KEY, preferences);
 }
 
 /** Persists contact preferences and waits for server synchronization. */
 async function savePreferencesAsync(preferences: ContactPreferences): Promise<void> {
-  localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
+  localStorage.removeItem(LEGACY_LOCAL_PREFERENCES_KEY);
   const result = await saveObjectAsync(PREFERENCES_OBJECT_KEY, preferences);
   if (!result.ok) throw new Error("Failed to sync contact preferences");
 }
@@ -64,6 +63,4 @@ export {
   savePreferences,
   savePreferencesAsync,
   DEFAULT_CONTACT_PREFERENCES as DEFAULT_PREFERENCES,
-  PREFERENCES_KEY,
-  CONFIG_KEY,
 };

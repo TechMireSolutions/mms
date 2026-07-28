@@ -46,7 +46,7 @@ export function ContactBasicTab({
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-4 text-left">
+    <div className="space-y-4 text-start">
       <SectionCard
         title={t("contacts.form.createNewContact")}
         icon={User}
@@ -92,7 +92,7 @@ export function ContactBasicTab({
               </div>
             </div>
 
-            <div className="text-center sm:text-left flex-1 min-w-0">
+            <div className="text-center sm:text-start flex-1 min-w-0">
               <h3 className="text-base font-bold text-foreground truncate">
                 {contactDraft.name || t("contacts.form.createNewContact")}
               </h3>
@@ -105,7 +105,7 @@ export function ContactBasicTab({
                   )}
                 {contactDraft.isSyed && (
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/15 text-primary border border-primary/20">
-                    {t("contacts.reportFields.isSyed")}
+                    {t("contacts.fields.isSyed")}
                   </span>
                 )}
               </div>
@@ -116,20 +116,20 @@ export function ContactBasicTab({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {isFieldEnabled("basic", "firstName") && (
             <Field
-              label={t("contacts.reportFields.firstName")}
+              label={t("contacts.fields.firstName")}
               required
               error={getFieldError("firstName")}
               id={`cf-${formInstanceId}-firstName`}
             >
               <div className="relative flex items-center group/input">
-                <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <User className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
                   id={`cf-${formInstanceId}-firstName`}
                   name="firstName"
                   value={contactDraft.firstName || ""}
                   onChange={(e) => updateDraft({ firstName: e.target.value })}
-                  placeholder={t("contacts.reportFields.firstName")}
-                  className="pl-10"
+                  placeholder={t("contacts.fields.firstName")}
+                  className="ps-10"
                 />
               </div>
             </Field>
@@ -137,19 +137,19 @@ export function ContactBasicTab({
 
           {isFieldEnabled("basic", "lastName") && (
             <Field
-              label={t("contacts.reportFields.lastName")}
+              label={t("contacts.fields.lastName")}
               error={getFieldError("lastName")}
               id={`cf-${formInstanceId}-lastName`}
             >
               <div className="relative flex items-center group/input">
-                <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <User className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
                   id={`cf-${formInstanceId}-lastName`}
                   name="lastName"
                   value={contactDraft.lastName || ""}
                   onChange={(e) => updateDraft({ lastName: e.target.value })}
-                  placeholder={t("contacts.reportFields.lastName")}
-                  className="pl-10"
+                  placeholder={t("contacts.fields.lastName")}
+                  className="ps-10"
                 />
               </div>
             </Field>
@@ -157,7 +157,7 @@ export function ContactBasicTab({
 
           {isFieldEnabled("basic", "gender") && (
             <Field
-              label={t("contacts.reportFields.gender")}
+              label={t("contacts.fields.gender")}
               error={getFieldError("gender")}
               id={`cf-${formInstanceId}-gender`}
             >
@@ -186,7 +186,7 @@ export function ContactBasicTab({
 
           {isFieldEnabled("basic", "dob") && (
             <Field
-              label={t("contacts.reportFields.dob")}
+              label={t("contacts.fields.dob")}
               error={getFieldError("dob")}
               id={`cf-${formInstanceId}-dob`}
             >
@@ -206,7 +206,7 @@ export function ContactBasicTab({
               error={getFieldError("cnic")}
             >
               <div className="relative flex items-center group/input">
-                <FileText className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <FileText className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
                   id={`cf-${formInstanceId}-cnic`}
                   name="cnic"
@@ -216,7 +216,7 @@ export function ContactBasicTab({
                     updateDraft({ cnic: formatted });
                   }}
                   placeholder={t("contacts.form.cnicPlaceholder")}
-                  className="pl-10"
+                  className="ps-10"
                 />
               </div>
             </Field>
@@ -251,7 +251,7 @@ export function ContactBasicTab({
                   )}
                 />
                 <span className="text-xs font-semibold">
-                  {t("contacts.reportFields.isSyed")}
+                  {t("contacts.fields.isSyed")}
                 </span>
               </label>
             </div>

@@ -127,6 +127,27 @@ export default function ContactsSetupPanel({
   const wrappedFieldsEditor = useMemo(() => ({
     ...fieldsEditor,
     handleDeleteField: handleDeleteFieldWithGuard,
+    formTabs: fieldsEditor.formTabs.map((tab) => {
+      const seed = DEFAULT_FORM_TABS.find((entry) => entry.key === tab.key);
+      return {
+        ...tab,
+        labelKey: tab.labelKey ?? seed?.labelKey,
+      };
+    }),
+    tabFields: Object.fromEntries(
+      Object.entries(fieldsEditor.tabFields).map(([tabId, list]) => {
+        const seedFields = INITIAL_FIELD_SEED[tabId] || [];
+        const seedByKey = new Map(seedFields.map((field) => [field.key, field]));
+        return [
+          tabId,
+          list.map((field) => ({
+            ...field,
+            labelKey: field.labelKey ?? seedByKey.get(field.key)?.labelKey,
+            descriptionKey: field.descriptionKey ?? seedByKey.get(field.key)?.descriptionKey,
+          })),
+        ];
+      }),
+    ),
   }), [fieldsEditor, handleDeleteFieldWithGuard]);
 
   const handleSave = useCallback(async (): Promise<void> => {
@@ -179,7 +200,7 @@ export default function ContactsSetupPanel({
   const showPrefs = mode === "preferences";
 
   return (
-    <div className="space-y-6 max-w-3xl text-left">
+    <div className="space-y-6 max-w-3xl text-start">
       {showFields && (
         <ModuleFieldsSetup
           editor={wrappedFieldsEditor}

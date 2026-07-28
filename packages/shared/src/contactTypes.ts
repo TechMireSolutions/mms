@@ -45,7 +45,7 @@ export interface PhoneNumber {
   number: string;
   countryCode?: string;
   isPrimary?: boolean;
-  whatsappStatus?: 'REGISTERED' | 'NOT_REGISTERED' | 'UNCHECKED' | 'FAILED';
+  whatsappStatus?: WhatsAppStatus;
 }
 
 /** Email address model for contacts with verification state and primary flag. */
@@ -150,6 +150,8 @@ export interface Contact {
 export interface FieldDefinition {
   key: string;
   label: string;
+  /** i18n key for system fields; custom fields use `label` directly. */
+  labelKey?: AppTranslationKey;
   type: "text" | "textarea" | "number" | "date" | "datetime" | "select" | "multiselect" | "single_select" | "multi_select" | "tags" | "boolean" | "url" | "email" | "file" | "location" | "ai_summary" | "currency";
   enabled: boolean;
   order: number;
@@ -160,6 +162,8 @@ export interface FieldDefinition {
   unique?: boolean;
   placeholder?: string;
   description?: string;
+  /** i18n key for system field descriptions; custom fields use `description` directly. */
+  descriptionKey?: AppTranslationKey;
   group?: string;
   minLength?: number;
   maxLength?: number;
@@ -195,6 +199,8 @@ export interface TabDefinition {
 export interface ColumnRegistryEntry {
   key: string;
   label: string;
+  /** i18n key for system columns; custom columns use `label` directly. */
+  labelKey?: AppTranslationKey;
   enabled: boolean;
   order: number;
   sortable?: boolean;
@@ -306,6 +312,7 @@ export const DEFAULT_CONTACT_PREFERENCES: ContactPreferences = {
   showDetailedSolarAge: true,
   showLunarDob: false,
   showDetailedLunarAge: false,
+  namePrefixesToIgnore: ["syed", "syeda"],
 };
 
 
@@ -360,15 +367,6 @@ export const RELATIONSHIPS = [
   "Guardian", "Dependent", "Spouse", "Other",
 ];
 
-export const TAB_REGISTRY: TabDefinition[] = [
-  { key: "basic",     label: "Identity",          description: "Core identity fields + custom fields", enabled: true, order: 0, isSystem: true },
-  { key: "phones",    label: "Phone Numbers",     description: "Phone numbers tab", enabled: true, order: 1, isSystem: true },
-  { key: "emails",    label: "Email Addresses",   description: "Email addresses tab", enabled: true, order: 2, isSystem: true },
-  { key: "addresses", label: "Addresses",         description: "Manage address records", enabled: true, order: 3, isSystem: true },
-  { key: "socials",   label: "Social Links",      description: "Social media profiles tab", enabled: true, order: 4, isSystem: true },
-  { key: "emergency", label: "Emergency Contacts", description: "Emergency contact links tab", enabled: true, order: 5, isSystem: true },
-];
-
 // ── Default seed constants ────────────────────────────────────────────────────
 // Single source of truth for all default field, tab, and column definitions.
 // Consumed by contactFieldsStore (frontend) and any future DB seed.
@@ -376,35 +374,35 @@ export const TAB_REGISTRY: TabDefinition[] = [
 
 export const INITIAL_FIELD_SEED: Record<string, FieldDefinition[]> = {
   basic: [
-    { key: "avatar",         label: "Profile Photo",          type: "file",    description: "Avatar upload & display. Personalizes contacts & aids quick visual identification.", defaultValue: null, permissions: [], enabled: true, order: 0, required: false },
-    { key: "isSyed",         label: "Is Syed",                type: "boolean", description: "Syed (Hashemite) lineage indicator. Cultural/genealogical indicator.", defaultValue: false, permissions: [], enabled: true, order: 1, required: false },
-    { key: "firstName",      label: "First Name",             type: "text",    description: "First name input — required for all contacts.", defaultValue: "", permissions: [], enabled: true, order: 2, required: true },
-    { key: "lastName",       label: "Last Name",              type: "text",    description: "Last name input. Combined with first name for full identification.", defaultValue: "", permissions: [], enabled: true, order: 3, required: false },
-    { key: "gender",         label: "Gender (Male / Female)", type: "select",  description: "Gender selector. Enables personalization & inclusive communication.", options: GENDERS, defaultValue: "", permissions: [], enabled: true, order: 4, required: false },
-    { key: "dob",            label: "Date of Birth",          type: "date",    description: "Date of birth for age tracking & milestone events.", defaultValue: "", permissions: [], enabled: true, order: 5, required: false },
+    { key: "avatar",         label: "Profile Photo",          labelKey: "contacts.fields.avatar",         type: "file",    description: "Avatar upload & display. Personalizes contacts & aids quick visual identification.", descriptionKey: "contacts.fields.avatarDesc", defaultValue: null, permissions: [], enabled: true, order: 0, required: false },
+    { key: "isSyed",         label: "Is Syed",                labelKey: "contacts.fields.isSyed",         type: "boolean", description: "Syed (Hashemite) lineage indicator. Cultural/genealogical indicator.", descriptionKey: "contacts.fields.isSyedDesc", defaultValue: false, permissions: [], enabled: true, order: 1, required: false },
+    { key: "firstName",      label: "First Name",             labelKey: "contacts.fields.firstName",      type: "text",    description: "First name input — required for all contacts.", descriptionKey: "contacts.fields.firstNameDesc", defaultValue: "", permissions: [], enabled: true, order: 2, required: true },
+    { key: "lastName",       label: "Last Name",              labelKey: "contacts.fields.lastName",       type: "text",    description: "Last name input. Combined with first name for full identification.", descriptionKey: "contacts.fields.lastNameDesc", defaultValue: "", permissions: [], enabled: true, order: 3, required: false },
+    { key: "gender",         label: "Gender (Male / Female)", labelKey: "contacts.fields.gender",         type: "select",  description: "Gender selector. Enables personalization & inclusive communication.", descriptionKey: "contacts.fields.genderDesc", options: GENDERS, defaultValue: "", permissions: [], enabled: true, order: 4, required: false },
+    { key: "dob",            label: "Date of Birth",          labelKey: "contacts.fields.dob",            type: "date",    description: "Date of birth for age tracking & milestone events.", descriptionKey: "contacts.fields.dobDesc", defaultValue: "", permissions: [], enabled: true, order: 5, required: false },
   ],
   phones: [
-    { key: "label",    label: "Phone Type / Label",               type: "select", description: "Select type of phone number (e.g. Mobile, Home, Work).", options: DEFAULT_PHONE_LABELS, defaultValue: "Mobile", permissions: [], enabled: true, order: 0, required: false },
-    { key: "number",   label: "Phone Number",                     type: "text",   description: "Phone number input. Primary channel for direct communication.", defaultValue: "", permissions: [], enabled: true, order: 1, required: true },
+    { key: "label",    label: "Phone Type / Label",               labelKey: "contacts.fields.phoneLabel",    type: "select", description: "Select type of phone number (e.g. Mobile, Home, Work).", descriptionKey: "contacts.fields.phoneLabelDesc", options: DEFAULT_PHONE_LABELS, defaultValue: "Mobile", permissions: [], enabled: true, order: 0, required: false },
+    { key: "number",   label: "Phone Number",                     labelKey: "contacts.fields.phoneNumber",   type: "text",   description: "Phone number input. Primary channel for direct communication.", descriptionKey: "contacts.fields.phoneNumberDesc", defaultValue: "", permissions: [], enabled: true, order: 1, required: true },
   ],
   emails: [
-    { key: "label",   label: "Email Type / Label", type: "select", description: "Select type of email address (e.g. Personal, Work, School).", options: DEFAULT_EMAIL_LABELS, defaultValue: "Personal", permissions: [], enabled: true, order: 0, required: false },
-    { key: "address", label: "Email Address",      type: "email",  description: "Email input field (unique per contact). Essential for formal communication & bulk outreach.", defaultValue: "", permissions: [], enabled: true, order: 1, required: false, unique: true },
+    { key: "label",   label: "Email Type / Label", labelKey: "contacts.fields.emailLabel",   type: "select", description: "Select type of email address (e.g. Personal, Work, School).", descriptionKey: "contacts.fields.emailLabelDesc", options: DEFAULT_EMAIL_LABELS, defaultValue: "Personal", permissions: [], enabled: true, order: 0, required: false },
+    { key: "address", label: "Email Address",      labelKey: "contacts.fields.emailAddress", type: "email",  description: "Email input field (unique per contact). Essential for formal communication & bulk outreach.", descriptionKey: "contacts.fields.emailAddressDesc", defaultValue: "", permissions: [], enabled: true, order: 1, required: false, unique: true },
   ],
   addresses: [
-    { key: "label",   label: "Address Type / Label", type: "select", description: "Select type of address (e.g. Home, Work, Billing).", options: DEFAULT_ADDRESS_LABELS, defaultValue: "Home", permissions: [], enabled: true, order: 0, required: false },
-    { key: "line1",   label: "Street Address",       type: "text",   description: "Street/building address.", defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
-    { key: "city",    label: "City",                 type: "text",   description: "City of residence.",       defaultValue: "", permissions: [], enabled: true, order: 2, required: false },
-    { key: "state",   label: "State / Province",     type: "text",   description: "State or province.",       defaultValue: "", permissions: [], enabled: true, order: 3, required: false },
-    { key: "country", label: "Country",              type: "text",   description: "Country of residence.",    defaultValue: "", permissions: [], enabled: true, order: 4, required: false },
+    { key: "label",   label: "Address Type / Label", labelKey: "contacts.fields.addressLabel",  type: "select", description: "Select type of address (e.g. Home, Work, Billing).", descriptionKey: "contacts.fields.addressLabelDesc", options: DEFAULT_ADDRESS_LABELS, defaultValue: "Home", permissions: [], enabled: true, order: 0, required: false },
+    { key: "line1",   label: "Street Address",       labelKey: "contacts.fields.streetAddress", type: "text",   description: "Street/building address.", descriptionKey: "contacts.fields.streetAddressDesc", defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
+    { key: "city",    label: "City",                 labelKey: "contacts.fields.city",          type: "text",   description: "City of residence.",       descriptionKey: "contacts.fields.cityDesc", defaultValue: "", permissions: [], enabled: true, order: 2, required: false },
+    { key: "state",   label: "State / Province",     labelKey: "contacts.fields.state",         type: "text",   description: "State or province.",       descriptionKey: "contacts.fields.stateDesc", defaultValue: "", permissions: [], enabled: true, order: 3, required: false },
+    { key: "country", label: "Country",              labelKey: "contacts.fields.country",       type: "text",   description: "Country of residence.",    descriptionKey: "contacts.fields.countryDesc", defaultValue: "", permissions: [], enabled: true, order: 4, required: false },
   ],
   socials: [
-    { key: "platform", label: "Platform Selection",  type: "select", description: "Platform selection (Facebook, X, etc.)", options: SOCIAL_PLATFORMS, defaultValue: "Facebook", permissions: [], enabled: true, order: 0, required: false },
-    { key: "url",      label: "Social URL / Handle", type: "url",    description: "URL or handle input. Enables social media engagement & verification.", defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
+    { key: "platform", label: "Platform Selection",  labelKey: "contacts.fields.platform",  type: "select", description: "Platform selection (Facebook, X, etc.)", descriptionKey: "contacts.fields.platformDesc", options: SOCIAL_PLATFORMS, defaultValue: "Facebook", permissions: [], enabled: true, order: 0, required: false },
+    { key: "url",      label: "Social URL / Handle", labelKey: "contacts.fields.socialUrl", type: "url",    description: "URL or handle input. Enables social media engagement & verification.", descriptionKey: "contacts.fields.socialUrlDesc", defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
   ],
   emergency: [
-    { key: "contactId",    label: "Contact",      type: "text",   description: "Contact picker — links existing contacts as emergency contacts.", defaultValue: "", permissions: [], enabled: true, order: 0, required: true },
-    { key: "relationship", label: "Relationship", type: "select", description: "Relationship with the emergency contact (e.g. Father, Mother, Spouse).", options: RELATIONSHIPS, defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
+    { key: "contactId",    label: "Contact",      labelKey: "contacts.fields.emergencyContact", type: "text",   description: "Contact picker — links existing contacts as emergency contacts.", descriptionKey: "contacts.fields.emergencyContactDesc", defaultValue: "", permissions: [], enabled: true, order: 0, required: true },
+    { key: "relationship", label: "Relationship", labelKey: "contacts.fields.relationship",     type: "select", description: "Relationship with the emergency contact (e.g. Father, Mother, Spouse).", descriptionKey: "contacts.fields.relationshipDesc", options: RELATIONSHIPS, defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
   ],
 };
 
@@ -518,12 +516,12 @@ export const DEFAULT_PAGE_TABS: TabDefinition[] = [
 ];
 
 export const DEFAULT_FORM_TABS: TabDefinition[] = [
-  { key: "basic",     label: "Identity",   enabled: true, order: 0, isSystem: true },
-  { key: "phones",    label: "Phones",     enabled: true, order: 1, isSystem: true },
-  { key: "emails",    label: "Emails",     enabled: true, order: 2, isSystem: true },
-  { key: "addresses", label: "Addresses",  enabled: true, order: 3, isSystem: true },
-  { key: "socials",   label: "Socials",    enabled: true, order: 4, isSystem: true },
-  { key: "emergency", label: "Emergency",  enabled: true, order: 5, isSystem: true },
+  { key: "basic",     label: "Identity",   labelKey: "contacts.form.tabBasic",     enabled: true, order: 0, isSystem: true },
+  { key: "phones",    label: "Phones",     labelKey: "contacts.form.tabPhones",    enabled: true, order: 1, isSystem: true },
+  { key: "emails",    label: "Emails",     labelKey: "contacts.form.tabEmails",    enabled: true, order: 2, isSystem: true },
+  { key: "addresses", label: "Addresses",  labelKey: "contacts.form.tabAddresses", enabled: true, order: 3, isSystem: true },
+  { key: "socials",   label: "Socials",    labelKey: "contacts.form.tabSocials",   enabled: true, order: 4, isSystem: true },
+  { key: "emergency", label: "Emergency",  labelKey: "contacts.form.tabEmergency", enabled: true, order: 5, isSystem: true },
 ];
 
 export const DEFAULT_DETAIL_TABS: TabDefinition[] = [
@@ -534,28 +532,28 @@ export const DEFAULT_DETAIL_TABS: TabDefinition[] = [
 ];
 
 export const DEFAULT_SETTINGS_SUB_TABS: TabDefinition[] = [
-  { key: "fields",      label: "Fields",             enabled: true, order: 0, isSystem: true },
-  { key: "preferences", label: "Preferences",        enabled: true, order: 1, isSystem: true },
-  { key: "sync",        label: "Sync (Google / Apple)", enabled: true, order: 2, isSystem: true },
+  { key: "fields",      label: "Fields",               labelKey: "contacts.setup.fields",      enabled: true, order: 0, isSystem: true },
+  { key: "preferences", label: "Preferences",          labelKey: "contacts.setup.preferences", enabled: true, order: 1, isSystem: true },
+  { key: "sync",        label: "Sync (Google / Apple)", labelKey: "contacts.setup.sync",        enabled: true, order: 2, isSystem: true },
 ];
 
 export const DEFAULT_COLUMN_REGISTRY: ColumnRegistryEntry[] = [
-  { key: "name",                   label: "Name",                   enabled: true,  order: 0,  sortable: true,  width: 0,   fixed: true },
-  { key: "gender",                 label: "Gender",                 enabled: true,  order: 1,  sortable: true,  width: 100 },
-  { key: "phone",                  label: "Phone",                  enabled: true,  order: 2,  sortable: false, width: 140 },
-  { key: "whatsapp",               label: "WhatsApp",               enabled: true,  order: 3,  sortable: false, width: 90  },
-  { key: "email",                  label: "Email",                  enabled: true,  order: 4,  sortable: false, width: 180 },
-  { key: "isSyed",                 label: "Is Syed",                enabled: true,  order: 5,  sortable: true,  width: 90  },
-  { key: "dob",                    label: "Date of Birth",          enabled: true,  order: 6,  sortable: true,  width: 130 },
-  { key: "lunarDob",               label: "Lunar DOB",              enabled: true,  order: 7,  sortable: true,  sortField: "dob", width: 150 },
-  { key: "line1",                  label: "Street Address",         enabled: false, order: 8,  sortable: true,  width: 150 },
-  { key: "city",                   label: "City",                   enabled: true,  order: 10, sortable: true,  width: 110 },
-  { key: "state",                  label: "State / Province",       enabled: false, order: 11, sortable: true,  width: 120 },
-  { key: "country",                label: "Country",                enabled: false, order: 12, sortable: true,  width: 110 },
-  { key: "socials_platform",       label: "Social Platforms",       enabled: false, order: 13, sortable: false, width: 130 },
-  { key: "socials_url",            label: "Social Links",           enabled: false, order: 14, sortable: false, width: 150 },
-  { key: "emergency_contact",      label: "Emergency Contact",      enabled: false, order: 15, sortable: false, width: 150 },
-  { key: "emergency_relationship", label: "Emergency Relationship", enabled: false, order: 16, sortable: false, width: 140 },
+  { key: "name",                   label: "Name",                   labelKey: "contacts.columns.name",                   enabled: true,  order: 0,  sortable: true,  width: 0,   fixed: true },
+  { key: "gender",                 label: "Gender",                 labelKey: "contacts.columns.gender",                 enabled: true,  order: 1,  sortable: true,  width: 100 },
+  { key: "phone",                  label: "Phone",                  labelKey: "contacts.columns.phone",                  enabled: true,  order: 2,  sortable: false, width: 140 },
+  { key: "whatsapp",               label: "WhatsApp",               labelKey: "contacts.columns.whatsapp",               enabled: true,  order: 3,  sortable: false, width: 90  },
+  { key: "email",                  label: "Email",                  labelKey: "contacts.columns.email",                  enabled: true,  order: 4,  sortable: false, width: 180 },
+  { key: "isSyed",                 label: "Is Syed",                labelKey: "contacts.columns.isSyed",                 enabled: true,  order: 5,  sortable: true,  width: 90  },
+  { key: "dob",                    label: "Date of Birth",          labelKey: "contacts.columns.dob",                    enabled: true,  order: 6,  sortable: true,  width: 130 },
+  { key: "lunarDob",               label: "Lunar DOB",              labelKey: "contacts.columns.lunarDob",               enabled: true,  order: 7,  sortable: true,  sortField: "dob", width: 150 },
+  { key: "line1",                  label: "Street Address",         labelKey: "contacts.columns.streetAddress",          enabled: false, order: 8,  sortable: true,  width: 150 },
+  { key: "city",                   label: "City",                   labelKey: "contacts.columns.city",                   enabled: true,  order: 10, sortable: true,  width: 110 },
+  { key: "state",                  label: "State / Province",       labelKey: "contacts.columns.state",                  enabled: false, order: 11, sortable: true,  width: 120 },
+  { key: "country",                label: "Country",                labelKey: "contacts.columns.country",                enabled: false, order: 12, sortable: true,  width: 110 },
+  { key: "socials_platform",       label: "Social Platforms",       labelKey: "contacts.columns.socialPlatforms",        enabled: false, order: 13, sortable: false, width: 130 },
+  { key: "socials_url",            label: "Social Links",           labelKey: "contacts.columns.socialLinks",            enabled: false, order: 14, sortable: false, width: 150 },
+  { key: "emergency_contact",      label: "Emergency Contact",      labelKey: "contacts.columns.emergencyContact",       enabled: false, order: 15, sortable: false, width: 150 },
+  { key: "emergency_relationship", label: "Emergency Relationship", labelKey: "contacts.columns.emergencyRelationship",  enabled: false, order: 16, sortable: false, width: 140 },
 ];
 
 export const COLUMN_FIELD_MAPPING: Record<string, { tabId: string; fieldId: string }> = {

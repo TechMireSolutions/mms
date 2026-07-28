@@ -139,6 +139,10 @@ function ContactsInner() {
     selectedTargets,
     shownCount,
     workTruncated,
+    pendingCount,
+    conflictCount,
+    flushing,
+    flush,
   } = state;
 
   useGoogleContactsOAuthListener(useCallback(() => {
@@ -223,8 +227,11 @@ function ContactsInner() {
       }
       metricsStrip={
         <ContactsCommandMetrics
-          total={contacts.length}
           shown={shownCount}
+          pendingCount={pendingCount}
+          conflictCount={conflictCount}
+          flushing={flushing}
+          onFlushPending={() => void flush()}
           onOpenDuplicates={() => void handleOpenDuplicates()}
           onReviewConflicts={openConflictReview}
         />

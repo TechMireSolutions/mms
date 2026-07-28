@@ -3,30 +3,18 @@ import { MapPin } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { EditableSelect, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
-import { ListFieldCard, ContactSubListShell } from "./FormCardUtils";
+import { ListFieldCard, ContactSubListShell, FieldInlineError } from "./ContactSubListCards";
+import type { ContactSubListTabBaseProps } from "./types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveAddressLabel } from "@/lib/contacts/contactI18n";
-import { Contact, Address, DEFAULT_ADDRESS_LABELS } from "@mms/shared";
+import { Address, DEFAULT_ADDRESS_LABELS } from "@mms/shared";
 
-export interface ContactAddressesTabProps {
-  contactDraft: Partial<Contact>;
-  getLocalId: (tabName: string, idx: number) => string;
+export interface ContactAddressesTabProps extends ContactSubListTabBaseProps {
   addressLabels: string[];
   defaultCity: string;
   defaultProvince: string;
   defaultCountry: string;
-  getListItemError: (tabId: string, fieldId: string, index: number) => string | undefined;
-  addSubListItem: <K extends "phones" | "emails" | "addresses" | "socials" | "emergencyContacts">(
-    fieldKey: K,
-    newItem: NonNullable<Contact[K]>[number]
-  ) => void;
-  updateSubListItem: <K extends "phones" | "emails" | "addresses" | "socials" | "emergencyContacts">(
-    fieldKey: K,
-    idx: number,
-    patch: Partial<NonNullable<Contact[K]>[number]>
-  ) => void;
-  removeSubListItem: (fieldKey: "phones" | "emails" | "addresses" | "socials" | "emergencyContacts", idx: number) => void;
 }
 
 export function ContactAddressesTab({
@@ -102,18 +90,14 @@ export function ContactAddressesTab({
                       name={`address-line1-${idx}`}
                       value={addr.line1 || ""}
                       onChange={(e) => updateAddress(idx, { line1: e.target.value })}
-                      placeholder={t("contacts.reportFields.streetAddress")}
+                      placeholder={t("contacts.fields.streetAddress")}
                       className={cn(
                         "ps-10",
                         line1Error && "border-destructive focus-visible:ring-destructive",
                       )}
                     />
                   </div>
-                  {line1Error && (
-                    <p className="text-[10px] text-destructive mt-1 font-medium">
-                      {line1Error}
-                    </p>
-                  )}
+                  <FieldInlineError message={line1Error} />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <div>
@@ -122,30 +106,26 @@ export function ContactAddressesTab({
                       name={`address-city-${idx}`}
                       value={addr.city || ""}
                       onChange={(e) => updateAddress(idx, { city: e.target.value })}
-                      placeholder={t("contacts.reportFields.city")}
+                      placeholder={t("contacts.fields.city")}
                       className={cn(
                         cityError && "border-destructive focus-visible:ring-destructive",
                       )}
                     />
-                    {cityError && (
-                      <p className="text-[10px] text-destructive mt-1 font-medium">
-                        {cityError}
-                      </p>
-                    )}
+                    <FieldInlineError message={cityError} />
                   </div>
                   <Input
                     id={`address-state-${idx}`}
                     name={`address-state-${idx}`}
                     value={addr.state || ""}
                     onChange={(e) => updateAddress(idx, { state: e.target.value })}
-                    placeholder={t("contacts.reportFields.state")}
+                    placeholder={t("contacts.fields.state")}
                   />
                   <Input
                     id={`address-country-${idx}`}
                     name={`address-country-${idx}`}
                     value={addr.country || ""}
                     onChange={(e) => updateAddress(idx, { country: e.target.value })}
-                    placeholder={t("contacts.reportFields.country")}
+                    placeholder={t("contacts.fields.country")}
                   />
                 </div>
               </div>

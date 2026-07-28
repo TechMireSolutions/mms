@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import { formatContactOptionLabel } from "@/lib/contacts/contactI18n";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { FORM_INPUT, FORM_LABEL, FORM_SELECT, FORM_TEXTAREA } from "@/components/ui/formStyles";
 export const INPUT = FORM_INPUT;
@@ -69,13 +70,8 @@ interface EditableSelectProps {
   name?: string;
 }
 
-const formatOptionLabel = (option: string, t: TranslationFunction): string => {
-  if (option === "male") return t("contacts.gender.male");
-  if (option === "female") return t("contacts.gender.female");
-  if (option === "other") return t("contacts.gender.other");
-  if (option === "unspecified") return t("contacts.gender.unspecified");
-  return option;
-};
+const formatOptionLabel = (option: string, t: TranslationFunction): string =>
+  formatContactOptionLabel(option, t);
 
 export function EditableSelect({
   options,
@@ -146,7 +142,7 @@ export function EditableSelect({
         name={resolvedName}
         aria-label={resolvedPlaceholder}
         className={cn(
-          "min-h-[44px] flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm rounded-lg border border-border bg-background text-foreground hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all text-left",
+          "min-h-[44px] flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm rounded-lg border border-border bg-background text-foreground hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all text-start",
           className
         )}
       >

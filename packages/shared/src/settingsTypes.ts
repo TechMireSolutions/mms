@@ -12,7 +12,7 @@
  *   "enrollments_settings"  → EnrollmentsSettings
  *   "students_settings"     → StudentsSettings
  *   "teachers_settings"     → TeachersSettings
- *   "contact_preferences"   → ContactPreferencesSettings
+ *   "contact_preferences"   → ContactPreferences (see contactTypes; not ContactPreferencesSettings)
  *   "accounting_settings"   → AccountingSettings
  */
 import {
@@ -1179,39 +1179,16 @@ export function getSortedTeacherFields(
   });
 }
 
-// ─── Contact Preferences ─────────────────────────────────────────────────────
+// ─── Contact Preferences (legacy alias) ──────────────────────────────────────
 
 /**
- * Contact module preferences.
- * Stored under the key "contact_preferences".
+ * @deprecated Use `ContactPreferences` / `DEFAULT_CONTACT_PREFERENCES` from `contactTypes`
+ * (object key `contact_preferences` via `CONTACTS_MODULE_MANIFEST.preferencesObjectKey`).
  */
-export interface ContactPreferencesSettings {
-  /** Whether contacts with duplicate names/phones are allowed. */
-  allowDuplicates: boolean;
-  /** Whether a phone number is required when adding a contact. */
-  requirePhone: boolean;
-  /** Whether the UI offers auto-merge suggestions for likely duplicates. */
-  autoMergeSuggestions: boolean;
-  /** Pre-populated country for new contacts. */
-  defaultCountry: string;
-  /** Whether WhatsApp messaging actions are shown in the contacts UI. */
-  showWhatsApp: boolean;
-  /** Name prefixes to ignore during duplicate detection. */
-  namePrefixesToIgnore?: string[];
-  /** Fields to display in duplicate detection cards. */
-  duplicateDetectionFields?: string[];
-}
+export type ContactPreferencesSettings = import('./contactTypes.js').ContactPreferences;
 
-/** Authoritative default values for ContactPreferencesSettings. */
-export const DEFAULT_CONTACT_PREFERENCES_SETTINGS: ContactPreferencesSettings = {
-  allowDuplicates: false,
-  requirePhone: true,
-  autoMergeSuggestions: true,
-  defaultCountry: "Pakistan",
-  showWhatsApp: true,
-  namePrefixesToIgnore: ["syed", "syeda"],
-  duplicateDetectionFields: ["name", "phone", "email", "gender", "dob"],
-};
+/** @deprecated Use `DEFAULT_CONTACT_PREFERENCES` from `contactTypes`. */
+export { DEFAULT_CONTACT_PREFERENCES as DEFAULT_CONTACT_PREFERENCES_SETTINGS } from './contactTypes.js';
 
 // ─── Accounting Settings ─────────────────────────────────────────────────────
 

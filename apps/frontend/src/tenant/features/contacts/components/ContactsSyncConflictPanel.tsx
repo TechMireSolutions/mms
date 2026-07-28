@@ -165,21 +165,21 @@ function ConflictRow({ entry, title, onRequestDismiss, onResolved }: ConflictRow
               <table className="w-full text-xs">
                 <thead>
                   <tr className="text-muted-foreground">
-                    <th className="text-left py-1 pr-2 font-medium">{t('contacts.sync.conflictField')}</th>
-                    <th className="text-left py-1 pr-2 font-medium">{t('contacts.sync.conflictLocal')}</th>
-                    <th className="text-left py-1 font-medium">{t('contacts.sync.conflictServer')}</th>
+                    <th className="text-start py-1 pe-2 font-medium">{t('contacts.sync.conflictField')}</th>
+                    <th className="text-start py-1 pe-2 font-medium">{t('contacts.sync.conflictLocal')}</th>
+                    <th className="text-start py-1 font-medium">{t('contacts.sync.conflictServer')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {diffs.map((diff) => (
                     <tr key={diff.field} className="border-t border-border/50">
-                      <td className="py-1 pr-2 font-medium">{resolveSyncFieldLabel(diff.field, t)}</td>
-                      <td className="py-1 pr-2">
+                      <td className="py-1 pe-2 font-medium">{resolveSyncFieldLabel(diff.field, t)}</td>
+                      <td className="py-1 pe-2">
                         <Button
                           type="button"
                           variant="ghost"
                           onClick={() => togglePick(diff.field, 'local')}
-                          className={`text-left break-all w-full rounded px-1 h-auto justify-start font-normal ${
+                          className={`text-start break-all w-full rounded px-1 h-auto justify-start font-normal ${
                             fieldPicks[diff.field] === 'local' ? 'bg-primary/15 ring-1 ring-primary/40' : 'hover:bg-muted/50'
                           }`}
                         >
@@ -191,7 +191,7 @@ function ConflictRow({ entry, title, onRequestDismiss, onResolved }: ConflictRow
                           type="button"
                           variant="ghost"
                           onClick={() => togglePick(diff.field, 'server')}
-                          className={`text-left break-all w-full rounded px-1 h-auto justify-start font-normal ${
+                          className={`text-start break-all w-full rounded px-1 h-auto justify-start font-normal ${
                             fieldPicks[diff.field] === 'server' ? 'bg-primary/15 ring-1 ring-primary/40' : 'hover:bg-muted/50'
                           }`}
                         >

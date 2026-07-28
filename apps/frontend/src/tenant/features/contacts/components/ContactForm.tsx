@@ -3,12 +3,11 @@ import { User, Phone, Mail, MapPin, Share2, Heart } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
-import { getFallbackCountryCode, formatContactPhoneDisplay } from "@/lib/contacts/contactI18n";
+import { getFallbackCountryCode, formatContactPhoneDisplay, resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import {
   useContactConfig,
   useContactValidation,
-  ValidationError,
 } from "@/lib/contexts/ContactConfigContext";
 import {
   toTitleCase,
@@ -21,6 +20,7 @@ import {
   syncContactScalarFields,
   DEFAULT_FORM_TABS,
   type AppTranslationKey,
+  type ValidationError,
 } from "@mms/shared";
 
 import { ContactBasicTab } from "./formTabs/ContactBasicTab";
@@ -44,22 +44,27 @@ interface ContactFormProps {
   priority?: boolean;
 }
 
-const CONTACT_TAB_META: Record<string, { labelKey: AppTranslationKey; icon: typeof User }> = {
-  basic: { labelKey: "contacts.form.tabBasic", icon: User },
-  phones: { labelKey: "contacts.form.tabPhones", icon: Phone },
-  emails: { labelKey: "contacts.form.tabEmails", icon: Mail },
-  addresses: { labelKey: "contacts.form.tabAddresses", icon: MapPin },
-  socials: { labelKey: "contacts.form.tabSocials", icon: Share2 },
-  emergency: { labelKey: "contacts.form.tabEmergency", icon: Heart },
+const CONTACT_TAB_ICONS: Record<string, typeof User> = {
+  basic: User,
+  phones: Phone,
+  emails: Mail,
+  addresses: MapPin,
+  socials: Share2,
+  emergency: Heart,
 };
 
 const CONTACT_TABS = DEFAULT_FORM_TABS
   .slice()
   .sort((left, right) => left.order - right.order)
   .flatMap((tab) => {
-    const meta = CONTACT_TAB_META[tab.key];
-    if (!meta) return [];
-    return [{ key: tab.key, labelKey: meta.labelKey, icon: meta.icon }];
+    const icon = CONTACT_TAB_ICONS[tab.key];
+    if (!icon) return [];
+    return [{
+      key: tab.key,
+      labelKey: tab.labelKey ?? ("contacts.form.tabBasic" as AppTranslationKey),
+      icon,
+      label: tab.label,
+    }];
   });
 
 type TabKey = (typeof CONTACT_TABS)[number]["key"];
@@ -156,7 +161,7 @@ export default function ContactForm({
       return {
         key: tabItem.key,
         icon: tabItem.icon,
-        label: t(tabItem.labelKey),
+        label: resolveRegistryLabel(tabItem, t),
         badge: count && count > 0 ? count : undefined,
       };
     });

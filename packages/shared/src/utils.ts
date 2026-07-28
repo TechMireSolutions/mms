@@ -1138,7 +1138,9 @@ export function normalizePhoneItem(item: unknown, index = 0, defaultCode = "+92"
     const label = String(obj.label || obj.type || "Mobile").trim() || "Mobile";
     const countryCode = String(obj.countryCode || obj.code || defaultCode).trim() || defaultCode;
     const isPrimary = typeof obj.isPrimary === "boolean" ? obj.isPrimary : index === 0;
-    const whatsappStatus = obj.whatsappStatus as ContactPhone["whatsappStatus"];
+    const rawStatus = obj.whatsappStatus;
+    const whatsappStatus: ContactPhone["whatsappStatus"] =
+      rawStatus === "UNCHECKED" ? "PENDING" : (rawStatus as ContactPhone["whatsappStatus"]);
     const parsed = parsePhoneNumber(rawNum, countryCode);
     return {
       label,
