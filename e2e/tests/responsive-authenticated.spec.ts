@@ -24,6 +24,7 @@ const permanentPassword = 'Madrasa@5678';
 const platformEmail = `platform-resp-${Date.now()}@test.com`;
 const platformPassword = 'Pa$$w0rd123';
 
+/** Primary tenant module work/shell routes — swept once per viewport after a single login. */
 const MODULE_ROUTES = [
   {
     path: '/contacts',
@@ -33,22 +34,49 @@ const MODULE_ROUTES = [
     path: '/students',
     ready: 'button:has-text("Add Student"), [role="tab"], #main-content',
   },
+  {
+    path: '/attendance',
+    ready: '#filter-class, button:has-text("Submit Attendance"), #main-content',
+  },
+  {
+    path: '/sessions',
+    ready: 'button:has-text("New session"), [role="tab"], #main-content',
+  },
+  {
+    path: '/teachers',
+    ready: 'button:has-text("Add Teacher"), [role="tab"], #main-content',
+  },
+  {
+    path: '/settings',
+    ready: 'h1:has-text("Settings"), #main-content',
+  },
+  {
+    path: '/messaging',
+    ready: 'button:has-text("Work"), button:has-text("Setup"), #main-content',
+  },
 ] as const;
 
-async function openAuthenticatedRoute(
+async function loginAndSetViewport(
   page: Page,
-  path: string,
   viewport: { width: number; height: number },
-  ready?: string,
 ): Promise<void> {
   await loginTenant(page, tenantOrigin, adminEmail, permanentPassword);
   await page.setViewportSize(viewport);
+}
+
+async function gotoReadyRoute(page: Page, path: string, ready?: string): Promise<void> {
   await page.goto(`${tenantOrigin}${path}`);
   await page.waitForLoadState('networkidle');
   await expect(page.locator('#main-content')).toBeVisible({ timeout: 20_000 });
   if (ready) {
     await expect(page.locator(ready).first()).toBeVisible({ timeout: 20_000 });
   }
+}
+
+async function assertModuleRouteLayout(page: Page, path: string, ready: string): Promise<void> {
+  await gotoReadyRoute(page, path, ready);
+  await assertNoHorizontalOverflow(page);
+  await assertVisibleTablesScrollWrapped(page, path);
 }
 
 test.describe.serial('Authenticated tenant shell responsive layout', () => {
@@ -72,14 +100,16 @@ test.describe.serial('Authenticated tenant shell responsive layout', () => {
   for (const viewport of RESPONSIVE_VIEWPORTS) {
     test(`${viewport.name} (${viewport.width}px) dashboard has no horizontal overflow`, async ({ page }) => {
       test.setTimeout(60_000);
-      await openAuthenticatedRoute(page, '/', viewport);
+      await loginAndSetViewport(page, viewport);
+      await gotoReadyRoute(page, '/');
       await expect(page.locator('h1')).toContainText('Assalamu Alaikum', { timeout: 20_000 });
       await assertNoHorizontalOverflow(page);
     });
 
     test(`${viewport.name} (${viewport.width}px) RTL dashboard has no horizontal overflow`, async ({ page }) => {
       test.setTimeout(60_000);
-      await openAuthenticatedRoute(page, '/', viewport);
+      await loginAndSetViewport(page, viewport);
+      await gotoReadyRoute(page, '/');
       await expect(page.locator('h1')).toContainText('Assalamu Alaikum', { timeout: 20_000 });
       await forceRtl(page);
       await assertNoHorizontalOverflow(page);
@@ -87,7 +117,8 @@ test.describe.serial('Authenticated tenant shell responsive layout', () => {
 
     test(`${viewport.name} (${viewport.width}px) shell chrome meets 44px and mobile nav rules`, async ({ page }) => {
       test.setTimeout(60_000);
-      await openAuthenticatedRoute(page, '/', viewport);
+      await loginAndSetViewport(page, viewport);
+      await gotoReadyRoute(page, '/');
 
       const openMenu = page.getByRole('button', { name: 'Open navigation menu' });
 
@@ -114,24 +145,26 @@ test.describe.serial('Authenticated tenant shell responsive layout', () => {
       await assertNoHorizontalOverflow(page);
     });
 
-    for (const route of MODULE_ROUTES) {
-      test(`${viewport.name} (${viewport.width}px) ${route.path} work view has no horizontal overflow`, async ({
-        page,
-      }) => {
-        test.setTimeout(60_000);
-        await openAuthenticatedRoute(page, route.path, viewport, route.ready);
-        await assertNoHorizontalOverflow(page);
-        await assertVisibleTablesScrollWrapped(page, route.path);
-      });
+    test(`${viewport.name} (${viewport.width}px) module work views have no horizontal overflow`, async ({
+      page,
+    }) => {
+      test.setTimeout(180_000);
+      await loginAndSetViewport(page, viewport);
+      for (const route of MODULE_ROUTES) {
+        await assertModuleRouteLayout(page, route.path, route.ready);
+      }
+    });
 
-      test(`${viewport.name} (${viewport.width}px) RTL ${route.path} work view has no horizontal overflow`, async ({
-        page,
-      }) => {
-        test.setTimeout(60_000);
-        await openAuthenticatedRoute(page, route.path, viewport, route.ready);
+    test(`${viewport.name} (${viewport.width}px) RTL module work views have no horizontal overflow`, async ({
+      page,
+    }) => {
+      test.setTimeout(180_000);
+      await loginAndSetViewport(page, viewport);
+      for (const route of MODULE_ROUTES) {
+        await gotoReadyRoute(page, route.path, route.ready);
         await forceRtl(page);
         await assertNoHorizontalOverflow(page);
-      });
-    }
+      }
+    });
   }
 });
