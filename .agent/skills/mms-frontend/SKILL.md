@@ -79,6 +79,7 @@ Reference: `tenant/features/students/hooks/useStudents.ts`, `tenant/features/con
 - [ ] Soft-delete: trash UI when REST supports restore (Contacts/Students pattern; see migration-status for gaps)
 - [ ] Gold-standard: upsert bulk PUT, `mutateAsync` awaits, ErrorState, Cmd/Ctrl+N, setupSubTabs (`mms-module-architecture.md` §7)
 - [ ] Status via StatusBadge — not text-green-500 (mms-ui-ux-design.md)
+- [ ] Responsive: mobile-first `sm|md|lg|xl`; no fixed `w-[Npx]` layouts; tables in `overflow-x-auto`; touch `min-h-11 min-w-11`; verify 375 / 768 / 1440 (`mms-ui-ux-design.md` §7)
 ```
 
 Full module pattern: skill `mms-module-page`.
@@ -174,6 +175,7 @@ Full register: `mms-migration-status.md`. Skill: `mms-migration-fixes`.
 | Forms, tables, notify | `mms-ui-ux-design.md` |
 | Entity modals | `mms-ui-ux-design.md` |
 | Colours, StatusBadge | `mms-ui-ux-design.md` |
+| Responsiveness (shells, touch, overflow) | `mms-ui-ux-design.md` §7 |
 | i18n | `mms-settings-i18n.md` |
 | RBAC UI | `mms-auth-security.md` |
 | localStorage sync | `mms-data-layer.md` |
@@ -193,4 +195,4 @@ Full register: `mms-migration-status.md`. Skill: `mms-migration-fixes`.
 
 ## Done
 
-Per `mms-completion-review.md`: re-read diff → `pnpm typecheck` → `cd apps/frontend && pnpm lint` → tests if hooks/shared touched. Prefer `startTransition` / Query `signal`; no new `useMemo`/`useCallback` by default.
+Per `mms-completion-review.md`: re-read diff → `pnpm typecheck` → `cd apps/frontend && pnpm lint` → tests if hooks/shared touched. Layout changes: spot-check 375 / 768 / 1440; run responsive e2e when shells/primitives change. Prefer `startTransition` / Query `signal`; no new `useMemo`/`useCallback` by default.

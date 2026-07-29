@@ -539,11 +539,10 @@ export async function contactRoutes(
         .status(created ? 201 : 200)
         .send({ success: true, contact: await sanitizeOneForUser(contact, user) });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to save contact record';
-      if (errorMessage.includes('Permission denied')) {
-        return sendForbidden(reply, errorMessage);
+      if (error instanceof Error && error.message.includes('Permission denied')) {
+        return sendForbidden(reply, 'Permission denied');
       }
-      return sendDatabaseError(reply, errorMessage);
+      return sendDatabaseError(reply, 'Failed to save contact record', error);
     }
   });
 
@@ -614,8 +613,7 @@ export async function contactRoutes(
       await auditContact(user, 'contact.update', diff, params.data.id);
       return reply.send({ contact: await sanitizeOneForUser(updated, user) });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update contact';
-      return sendDatabaseError(reply, errorMessage);
+      return sendDatabaseError(reply, 'Failed to update contact', error);
     }
   });
 

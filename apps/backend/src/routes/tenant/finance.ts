@@ -87,7 +87,7 @@ export default async function financeRoutes(
     try {
       return reply.status(201).send({ invoice: await createInvoice(parsed.data) });
     } catch (error: unknown) {
-      return sendDatabaseError(reply, error instanceof Error ? error.message : 'Failed to create invoice');
+      return sendDatabaseError(reply, 'Failed to create invoice', error);
     }
   });
 
@@ -119,7 +119,7 @@ export default async function financeRoutes(
     try {
       return reply.status(201).send({ payment: await createPayment(parsed.data) });
     } catch (error: unknown) {
-      return sendDatabaseError(reply, error instanceof Error ? error.message : 'Failed to create payment');
+      return sendDatabaseError(reply, 'Failed to create payment', error);
     }
   });
 

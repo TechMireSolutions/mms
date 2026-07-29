@@ -12,4 +12,3 @@ export function useConfigSubTabs(): ConfigSubTab[] {
     { id: "preferences", label: t("module.preferences") },
   ];
 }
-

@@ -1,24 +1,12 @@
 import {
   type AttendanceModuleSettings as AttendanceSettings,
+  type AttendanceRecord,
   DEFAULT_ATTENDANCE_SETTINGS as DEFAULT_ATT_SETTINGS,
   toTitleCase,
 } from "@mms/shared";
 
-export type { AttendanceSettings };
+export type { AttendanceSettings, AttendanceRecord };
 export { DEFAULT_ATT_SETTINGS };
-
-export interface AttendanceRecord {
-  id: string;
-  classId: string;
-  date: string;
-  studentId: string;
-  studentName: string;
-  rollNo: string;
-  status: string;
-  timeIn: string;
-  timeOut: string;
-  notes: string;
-}
 
 export const ATTENDANCE_STATUSES = [
   { id: "present", label: "Present", short: "P", color: "emerald", bg: "bg-success/10", text: "text-success", border: "border-success/30", dot: "bg-success" },

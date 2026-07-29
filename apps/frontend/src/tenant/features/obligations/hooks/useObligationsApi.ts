@@ -12,6 +12,7 @@ import { OBLIGATIONS_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
+import { NotifiedMutationError } from '@/lib/notifiedMutationError';
 
 export const OBLIGATIONS_TYPES_QUERY_KEY = ['obligations', 'types', 'list'] as const;
 export const OBLIGATIONS_MUJTAHIDS_QUERY_KEY = ['obligations', 'mujtahids', 'list'] as const;
@@ -23,7 +24,8 @@ export const OBLIGATIONS_METRICS_QUERY_KEY = ['obligations', 'metrics'] as const
 
 const OBLIGATIONS_API = OBLIGATIONS_MODULE_MANIFEST.restBasePath;
 
-export class NotifiedObligationsMutationError extends Error {}
+/** @deprecated Prefer NotifiedMutationError — kept for form catch compatibility. */
+export class NotifiedObligationsMutationError extends NotifiedMutationError {}
 
 export function useObligationsTypes(options?: { enabled?: boolean }) {
   return useCollectionSync<ObligationType>({

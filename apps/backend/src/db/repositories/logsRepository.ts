@@ -11,6 +11,7 @@ const auditLogsRepo = createGenericRepository<AuditLogEntry, typeof auditLogEntr
 });
 
 export const listActivityLogsByWorkspace = activityLogsRepo.listByWorkspace;
+export const bulkSaveActivityLogs = activityLogsRepo.bulkSave;
 export const replaceActivityLogsForWorkspace = activityLogsRepo.replaceForWorkspace;
 
 export const listAuditLogEntriesByWorkspace = auditLogsRepo.listByWorkspace;

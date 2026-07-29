@@ -9,6 +9,7 @@ import { ACCOUNTING_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
+import { NotifiedMutationError } from '@/lib/notifiedMutationError';
 
 const ACCOUNTING_API = ACCOUNTING_MODULE_MANIFEST.restBasePath;
 
@@ -18,7 +19,8 @@ export const ACCOUNTING_ACCOUNTS_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleI
 export const ACCOUNTING_ENTRIES_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'entries', 'list'] as const;
 export const ACCOUNTING_FISCAL_YEARS_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'fiscal_years', 'list'] as const;
 
-export class NotifiedAccountingMutationError extends Error {}
+/** @deprecated Prefer NotifiedMutationError — kept for form catch compatibility. */
+export class NotifiedAccountingMutationError extends NotifiedMutationError {}
 
 export function useAccountingAccounts(options?: { enabled?: boolean; includeDeleted?: boolean }) {
   const includeDeleted = options?.includeDeleted ?? false;

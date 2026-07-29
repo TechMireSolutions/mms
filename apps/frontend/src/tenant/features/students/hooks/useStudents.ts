@@ -65,7 +65,7 @@ export function useStudentsPaginated(params: StudentsPaginatedParams) {
   const enabled = params.enabled ?? true;
   return useQuery({
     queryKey: studentsPaginatedQueryKey(params),
-    queryFn: async () => apiJson<StudentsListPageResult>(buildStudentsPageUrl(params)),
+    queryFn: async ({ signal }) => apiJson<StudentsListPageResult>(buildStudentsPageUrl(params), { signal }),
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
     placeholderData: (previousData) => previousData,

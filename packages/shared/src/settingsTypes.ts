@@ -1179,17 +1179,6 @@ export function getSortedTeacherFields(
   });
 }
 
-// ─── Contact Preferences (legacy alias) ──────────────────────────────────────
-
-/**
- * @deprecated Use `ContactPreferences` / `DEFAULT_CONTACT_PREFERENCES` from `contactTypes`
- * (object key `contact_preferences` via `CONTACTS_MODULE_MANIFEST.preferencesObjectKey`).
- */
-export type ContactPreferencesSettings = import('./contactTypes.js').ContactPreferences;
-
-/** @deprecated Use `DEFAULT_CONTACT_PREFERENCES` from `contactTypes`. */
-export { DEFAULT_CONTACT_PREFERENCES as DEFAULT_CONTACT_PREFERENCES_SETTINGS } from './contactTypes.js';
-
 // ─── Accounting Settings ─────────────────────────────────────────────────────
 
 export interface AccountingSettings {

@@ -110,8 +110,8 @@ export default async function dbRoutes(
         delete snapshot.objects[PLATFORM_SUPER_USERS_OBJECT_KEY];
       }
       return reply.send(snapshot);
-    } catch {
-      return sendDatabaseError(reply, 'Failed to retrieve database snapshot');
+    } catch (error: unknown) {
+      return sendDatabaseError(reply, 'Failed to retrieve database snapshot', error);
     }
   });
 
@@ -182,7 +182,7 @@ export default async function dbRoutes(
             message: err.message,
           });
         }
-        return sendDatabaseError(reply, 'Failed to synchronize database snapshot');
+        return sendDatabaseError(reply, 'Failed to synchronize database snapshot', error);
       }
     },
   );
@@ -204,8 +204,8 @@ export default async function dbRoutes(
         summary: 'Reset database to minimal defaults',
       });
       return reply.send({ success: true, message: 'Workspace reset to minimal defaults' });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to reset database');
+    } catch (error: unknown) {
+      return sendDatabaseError(reply, 'Failed to reset database', error);
     }
   });
 
@@ -225,8 +225,8 @@ export default async function dbRoutes(
         return reply.send([]);
       }
       return reply.send(collectionRows);
-    } catch {
-      return sendDatabaseError(reply, `Failed to retrieve collection "${name}"`);
+    } catch (error: unknown) {
+      return sendDatabaseError(reply, `Failed to retrieve collection "${name}"`, error);
     }
   });
 
@@ -270,8 +270,8 @@ export default async function dbRoutes(
         });
       }
       return reply.send({ success: true });
-    } catch {
-      return sendDatabaseError(reply, `Failed to save collection "${name}"`);
+    } catch (error: unknown) {
+      return sendDatabaseError(reply, `Failed to save collection "${name}"`, error);
     }
   });
 
@@ -299,8 +299,8 @@ export default async function dbRoutes(
         });
       }
       return reply.send(objectValue);
-    } catch {
-      return sendDatabaseError(reply, `Failed to retrieve object "${key}"`);
+    } catch (error: unknown) {
+      return sendDatabaseError(reply, `Failed to retrieve object "${key}"`, error);
     }
   });
 
@@ -343,8 +343,8 @@ export default async function dbRoutes(
       }
 
       return reply.send({ success: true });
-    } catch {
-      return sendDatabaseError(reply, `Failed to save object "${key}"`);
+    } catch (error: unknown) {
+      return sendDatabaseError(reply, `Failed to save object "${key}"`, error);
     }
   });
 }

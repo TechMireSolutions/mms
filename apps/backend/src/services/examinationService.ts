@@ -15,10 +15,12 @@ import {
   bulkSaveExamResults,
   replaceExamResultsForWorkspace,
 } from '../db/repositories/examinationRepository.js';
-import { defineTenantBulkCollectionService } from './tenantBulkService.js';
+import {
+  defineTenantBulkCollectionService,
+  scopeDeleted,
+  upsertWithBroadcast,
+} from './tenantBulkService.js';
 import { createGenericRelationalService } from './genericRelationalService.js';
-import { getRequestTenant } from '../lib/tenantContext.js';
-import { broadcastCollection } from './websocketService.js';
 
 const examBulkService = defineTenantBulkCollectionService<Exam>(
   { listByWorkspace: listExamsByWorkspace, replaceForWorkspace: replaceExamsForWorkspace },
@@ -45,14 +47,6 @@ const examCrud = createGenericRelationalService<Exam>({
   idPrefix: 'ex',
 });
 
-function scopeDeleted<T extends { deletedAt?: string | null }>(
-  rows: T[],
-  includeDeleted?: boolean,
-): T[] {
-  if (includeDeleted) return rows.filter((row) => Boolean(row.deletedAt));
-  return rows.filter((row) => !row.deletedAt);
-}
-
 export async function loadExams(options?: { includeDeleted?: boolean }): Promise<Exam[]> {
   const rows = await examCrud.loadAll({ includeDeleted: true });
   return scopeDeleted(rows, options?.includeDeleted);
@@ -60,20 +54,6 @@ export async function loadExams(options?: { includeDeleted?: boolean }): Promise
 
 export async function loadExamResults(): Promise<ExamResult[]> {
   return examResultBulkService.load();
-}
-
-async function upsertWithBroadcast<T>(
-  schema: { parse: (data: unknown) => T[] },
-  records: T[],
-  bulkSave: (tenant: string, list: T[]) => Promise<void>,
-  collection: string,
-): Promise<T[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  const parsed = schema.parse(records);
-  await bulkSave(tenant, parsed);
-  await broadcastCollection(collection);
-  return parsed;
 }
 
 export const upsertExams = (records: Exam[]) =>

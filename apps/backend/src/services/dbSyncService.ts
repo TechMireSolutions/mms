@@ -32,7 +32,8 @@ export async function synchronizeData(payload: TenantDatabaseSnapshot): Promise<
     if (collections) {
       for (const [name, collectionItems] of Object.entries(collections)) {
         if (Array.isArray(collectionItems)) {
-          await dbSaveCollection(name, collectionItems);
+          // Admin bulk restore: intentionally replace mirrored relational tables.
+          await dbSaveCollection(name, collectionItems, { mirrorRelationalReplace: true });
         }
       }
     }
@@ -71,6 +72,7 @@ export async function fetchCollection(name: string): Promise<unknown[] | null> {
  * @returns {Promise<void>}
  */
 export async function persistCollection(name: string, collectionItems: unknown[]): Promise<void> {
+  // JSON document store only — never wipe REST-migrated relational tables.
   await dbSaveCollection(name, collectionItems);
 }
 

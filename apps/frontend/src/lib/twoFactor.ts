@@ -54,16 +54,3 @@ export async function resend2FACode(challengeId: string): Promise<boolean> {
   }
 }
 
-/** @deprecated Server dispatches codes on login; kept for API compatibility. */
-export function start2FAChallenge(): string {
-  const existing = getPendingChallengeId();
-  return existing ?? '';
-}
-
-/** @deprecated */
-export async function dispatch2FACode(): Promise<void> {
-  const challengeId = getPendingChallengeId();
-  if (challengeId) {
-    await resend2FACode(challengeId);
-  }
-}

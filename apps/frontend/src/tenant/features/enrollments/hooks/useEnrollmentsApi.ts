@@ -37,7 +37,7 @@ export function useEnrollmentsPaginated(params: EnrollmentsPaginatedParams) {
   const enabled = params.enabled ?? true;
   return useQuery({
     queryKey: [...ENROLLMENTS_QUERY_KEY, 'page', params] as const,
-    queryFn: async () => apiJson<EnrollmentsListPageResult>(buildEnrollmentsPageUrl(params)),
+    queryFn: async ({ signal }) => apiJson<EnrollmentsListPageResult>(buildEnrollmentsPageUrl(params), { signal }),
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
     placeholderData: (previousData) => previousData,

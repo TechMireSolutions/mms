@@ -138,7 +138,7 @@ vi.mock('../services/usersService.js', () => ({
   loadWorkspaceUsers: vi.fn().mockResolvedValue([]),
   upsertWorkspaceUsers: vi.fn(),
   loadLogs: vi.fn().mockResolvedValue([]),
-  replaceLogs: vi.fn(),
+  upsertLogs: vi.fn(),
   deleteUserById: (...args: unknown[]) => mockDeleteUserById(...args),
   restoreUserById: (...args: unknown[]) => mockRestoreUserById(...args),
   bulkSoftDeleteUsers: vi.fn(),

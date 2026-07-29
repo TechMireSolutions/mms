@@ -104,7 +104,8 @@ export function useMessagingWorkRecipients(
 
   const query = useQuery({
     queryKey: [...MESSAGING_RECIPIENTS_QUERY_KEY, role, gender, search, page, pageSize] as const,
-    queryFn: async () => apiJson<ContactsListPageResult>(`/api/messaging/recipients?${queryString}`),
+    queryFn: async ({ signal }) =>
+      apiJson<ContactsListPageResult>(`/api/messaging/recipients?${queryString}`, { signal }),
     enabled,
     staleTime: 15_000,
     placeholderData: (previousData, previousQuery) => {

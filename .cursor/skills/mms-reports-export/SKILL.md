@@ -49,6 +49,8 @@ Use shared `ExportToolbar` — not a deleted `ReportExportBar`. Escape formula-p
 - [ ] Query/server data for REST modules
 - [ ] No academic category on module reports
 - [ ] lazy charts + SafeResponsiveContainer
+- [ ] Tables / drill-down grids in `overflow-x-auto`; no page-level horizontal scroll at 375px
+- [ ] Print/paper previews hosted in scroll/scale containers (px/`mm` OK for print fidelity)
 - [ ] Export labels via t(); formula injection escaped
 - [ ] Permissions match Work boundary
 ```

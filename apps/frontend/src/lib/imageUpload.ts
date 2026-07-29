@@ -73,6 +73,3 @@ export async function uploadCanvasImage(
 
   return uploadImageFile(file, purpose);
 }
-
-/** @deprecated Use uploadUserImage(file, 'logo') */
-export const uploadOnboardingLogo = (file: File) => uploadUserImage(file, 'logo');

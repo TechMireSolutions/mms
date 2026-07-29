@@ -4,6 +4,7 @@ import { HASANAT_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
+import { NotifiedMutationError } from '@/lib/notifiedMutationError';
 
 export const HASANAT_DENOMS_QUERY_KEY = ['hasanat', 'denoms', 'list'] as const;
 export const HASANAT_BATCHES_QUERY_KEY = ['hasanat', 'batches', 'list'] as const;
@@ -13,7 +14,8 @@ export const HASANAT_METRICS_QUERY_KEY = ['hasanat', 'metrics', 'snapshot'] as c
 
 const HASANAT_API = HASANAT_MODULE_MANIFEST.restBasePath;
 
-export class NotifiedHasanatMutationError extends Error {}
+/** @deprecated Prefer NotifiedMutationError — kept for form catch compatibility. */
+export class NotifiedHasanatMutationError extends NotifiedMutationError {}
 
 export function useHasanatDenoms(options?: { enabled?: boolean }) {
   return useCollectionSync<Denomination>({

@@ -1,15 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
+import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ReceiptText, CreditCard, Plus, DollarSign, Archive } from "lucide-react";
+import { ReceiptText, CreditCard, Plus, DollarSign } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ActionButton } from "@/components/ui/ActionButton";
-import { Button } from "@/components/ui/button";
+import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { InvoiceList } from "@/tenant/features/finance/components/InvoiceList";
 import { InvoiceDetail } from "@/tenant/features/finance/components/InvoiceDetail";
@@ -60,8 +61,8 @@ export default function Finance() {
   const [showDeleted, setShowDeleted] = useState(false);
   const invoicesResult = useFinanceInvoices({ includeDeleted: showDeleted });
   const paymentsResult = useFinancePayments({ includeDeleted: showDeleted });
-  const invoices = invoicesResult.syncedData;
-  const payments = paymentsResult.syncedData;
+  const invoices = invoicesResult.data;
+  const payments = paymentsResult.data;
   const {
     createInvoice,
     createPayment,
@@ -82,20 +83,14 @@ export default function Finance() {
   const invoiceColumnLayout = useFinanceInvoiceColumnLayout();
   const paymentColumnLayout = useFinancePaymentColumnLayout();
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
-      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return;
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n" && canWrite && !showDeleted) {
-        event.preventDefault();
-        setActiveTab("work");
-        setActiveSubTab("invoices");
-        setCreatingInvoice(true);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [canWrite, setActiveTab, showDeleted]);
+  useModuleCreateHotkey({
+    enabled: canWrite && !showDeleted,
+    onCreate: () => {
+      setActiveTab("work");
+      setActiveSubTab("invoices");
+      setCreatingInvoice(true);
+    },
+  });
 
   useEffect(() => {
     if (activeTab !== "work") setShowDeleted(false);
@@ -182,10 +177,12 @@ export default function Finance() {
               onChange={setActiveSubTab}
             />
             {canDelete && (
-              <Button type="button" variant="outline" onClick={() => setShowDeleted((value) => !value)}>
-                <Archive className="w-4 h-4" />
-                {showDeleted ? t("finance.trash.showActive") : t("finance.trash.showDeleted")}
-              </Button>
+              <ModuleTrashToggle
+                showDeleted={showDeleted}
+                onToggle={() => setShowDeleted((value) => !value)}
+                showActiveLabel={t("finance.trash.showActive")}
+                showDeletedLabel={t("finance.trash.showDeleted")}
+              />
             )}
           </div>
         )}

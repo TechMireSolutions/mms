@@ -3,6 +3,7 @@ import type { Invoice, InvoiceCreateInput, Payment, PaymentCreateInput } from '@
 import { FINANCE_MODULE_MANIFEST } from '@mms/shared';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
+import { NotifiedMutationError } from '@/lib/notifiedMutationError';
 
 export const FINANCE_INVOICES_QUERY_KEY = ['finance', 'invoices', 'list'] as const;
 export const FINANCE_PAYMENTS_QUERY_KEY = ['finance', 'payments', 'list'] as const;
@@ -10,7 +11,8 @@ export const FINANCE_METRICS_QUERY_KEY = ['finance', 'metrics'] as const;
 
 const FINANCE_API = FINANCE_MODULE_MANIFEST.restBasePath;
 
-export class NotifiedFinanceMutationError extends Error {}
+/** @deprecated Prefer NotifiedMutationError — kept for form catch compatibility. */
+export class NotifiedFinanceMutationError extends NotifiedMutationError {}
 
 export function useFinanceInvoices(options?: { enabled?: boolean; includeDeleted?: boolean }) {
   const includeDeleted = options?.includeDeleted ?? false;

@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { personalizeMessage, validateRecipientAddress, MESSAGING_VARIABLE_TOKENS, appendVariableToken } from '../utils.js';
 import { calculateSmsSegments } from '../smsUtils.js';
-import { mergeMessageTemplates, DEFAULT_MESSAGE_TEMPLATES, type MessageTemplate } from '../contactTypes.js';
-import { getMessagesDbKey, getMessageTemplatesDbKey } from '../messagingSchemas.js';
+import {
+  mergeMessageTemplates,
+  DEFAULT_MESSAGE_TEMPLATES,
+  getMessagesDbKey,
+  getMessageTemplatesDbKey,
+  type MessageTemplate,
+} from '../messagingSchemas.js';
 
 describe('messagingUtils', () => {
   describe('personalizeMessage', () => {

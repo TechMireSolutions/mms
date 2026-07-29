@@ -47,7 +47,7 @@ export function useTeachersPaginated(params: TeachersPaginatedParams) {
   const enabled = params.enabled ?? true;
   return useQuery({
     queryKey: teachersPaginatedQueryKey(params),
-    queryFn: async () => apiJson<TeachersListPageResult>(buildTeachersPageUrl(params)),
+    queryFn: async ({ signal }) => apiJson<TeachersListPageResult>(buildTeachersPageUrl(params), { signal }),
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
     placeholderData: (previousData) => previousData,

@@ -72,6 +72,12 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 
 **Fix:** Same patterns on other module reports (`mms-reports.md`, skill `mms-reports-export`).
 
+### P5 — Responsive e2e depth
+
+**Problem:** Shells + Work-route smoke are green (`responsive-shell` / `responsive-authenticated`). Platform `md` bottom nav and deep Reports/Setup builders are not asserted.
+
+**Fix:** Extend those specs when touching those surfaces — `mms-ui-ux-design.md` §7, `mms-testing-observability.md`. Do not treat missing depth as license to regress shell overflow/touch floors.
+
 ## After each fix
 
 ```bash

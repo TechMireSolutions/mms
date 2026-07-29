@@ -26,6 +26,7 @@ description: Implements static FormModal forms with shared Zod DTOs, React 19 de
 - [ ] Primitives + DatePicker; no raw <input type="date">
 - [ ] name + id on every control (useId fallback)
 - [ ] Logical CSS for RTL
+- [ ] Mobile-usable: `FORM_INPUT` / controls `min-h-11`; FormModal tab chrome may switch at `md` (intentional vs module `lg` — `mms-ui-ux-design.md` §7)
 - [ ] Inline validation; focus first invalid tab
 - [ ] No dynamic form compiler / blueprint engine
 ```

@@ -8,6 +8,7 @@ import {
 import { getHydratedUsers, saveUsers } from './auth/userService.js';
 import {
   listActivityLogsByWorkspace,
+  bulkSaveActivityLogs,
   replaceActivityLogsForWorkspace,
 } from '../db/repositories/logsRepository.js';
 import {
@@ -17,6 +18,8 @@ import {
 } from '../db/repositories/tenantUserRepository.js';
 import { deleteRefreshTokensForUser } from './auth/authArtifactService.js';
 import { defineTenantBulkCollectionService } from './tenantBulkService.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
+import { broadcastCollection } from './websocketService.js';
 
 // --- Users ---
 export async function loadWorkspaceUsers(options?: {
@@ -115,4 +118,15 @@ const logService = defineTenantBulkCollectionService<ActivityLog>(
   'user_activity_logs',
 );
 export const loadLogs = logService.load;
+/** @deprecated Migration / admin restore only — API bulk PUT must use upsertLogs. */
 export const replaceLogs = logService.replace;
+
+/** Upserts supplied activity logs without removing unrelated rows. */
+export async function upsertLogs(records: ActivityLog[]): Promise<ActivityLog[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
+  const parsed = activityLogListSchema.parse(records);
+  await bulkSaveActivityLogs(tenant, parsed);
+  await broadcastCollection('user_activity_logs');
+  return parsed;
+}

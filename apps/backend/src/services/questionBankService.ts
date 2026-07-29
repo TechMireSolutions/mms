@@ -21,10 +21,12 @@ import {
   bulkSaveResults,
   replaceResultsForWorkspace,
 } from '../db/repositories/questionBankRepository.js';
-import { defineTenantBulkCollectionService } from './tenantBulkService.js';
+import {
+  defineTenantBulkCollectionService,
+  scopeDeleted,
+  upsertWithBroadcast,
+} from './tenantBulkService.js';
 import { createGenericRelationalService } from './genericRelationalService.js';
-import { getRequestTenant } from '../lib/tenantContext.js';
-import { broadcastCollection } from './websocketService.js';
 
 const questionBulkService = defineTenantBulkCollectionService<QuestionBankQuestion>(
   { listByWorkspace: listQuestionsByWorkspace, replaceForWorkspace: replaceQuestionsForWorkspace },
@@ -60,14 +62,6 @@ const questionCrud = createGenericRelationalService<QuestionBankQuestion>({
   normalizeFn: normalizeQuestionBankQuestion,
 });
 
-function scopeDeleted<T extends { deletedAt?: string | null }>(
-  rows: T[],
-  includeDeleted?: boolean,
-): T[] {
-  if (includeDeleted) return rows.filter((row) => Boolean(row.deletedAt));
-  return rows.filter((row) => !row.deletedAt);
-}
-
 export async function loadQuestions(options?: { includeDeleted?: boolean }): Promise<QuestionBankQuestion[]> {
   const rows = await questionCrud.loadAll({ includeDeleted: true });
   return scopeDeleted(rows, options?.includeDeleted);
@@ -79,20 +73,6 @@ export async function loadTests(): Promise<QuestionBankTest[]> {
 
 export async function loadResults(): Promise<QuestionBankResult[]> {
   return resultBulkService.load();
-}
-
-async function upsertWithBroadcast<T>(
-  schema: { parse: (data: unknown) => T[] },
-  records: T[],
-  bulkSave: (tenant: string, list: T[]) => Promise<void>,
-  collection: string,
-): Promise<T[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  const parsed = schema.parse(records);
-  await bulkSave(tenant, parsed);
-  await broadcastCollection(collection);
-  return parsed;
 }
 
 export const upsertQuestions = (records: QuestionBankQuestion[]) =>

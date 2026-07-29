@@ -25,10 +25,12 @@ import {
   bulkSaveRedemptions,
   replaceRedemptionsForWorkspace,
 } from '../db/repositories/hasanatRepository.js';
-import { defineTenantBulkCollectionService } from './tenantBulkService.js';
+import {
+  defineTenantBulkCollectionService,
+  scopeDeleted,
+  upsertWithBroadcast,
+} from './tenantBulkService.js';
 import { createGenericRelationalService } from './genericRelationalService.js';
-import { getRequestTenant } from '../lib/tenantContext.js';
-import { broadcastCollection } from './websocketService.js';
 
 const denomService = defineTenantBulkCollectionService<Denomination>(
   { listByWorkspace: listDenomsByWorkspace, replaceForWorkspace: replaceDenomsForWorkspace },
@@ -72,33 +74,11 @@ const distributionCrud = createGenericRelationalService<Distribution>({
   idPrefix: 'hd',
 });
 
-function scopeDeleted<T extends { deletedAt?: string | null }>(
-  rows: T[],
-  includeDeleted?: boolean,
-): T[] {
-  if (includeDeleted) return rows.filter((row) => Boolean(row.deletedAt));
-  return rows.filter((row) => !row.deletedAt);
-}
-
 export async function loadDistributions(options?: {
   includeDeleted?: boolean;
 }): Promise<Distribution[]> {
   const rows = await distributionCrud.loadAll({ includeDeleted: true });
   return scopeDeleted(rows, options?.includeDeleted);
-}
-
-async function upsertWithBroadcast<T>(
-  schema: { parse: (data: unknown) => T[] },
-  records: T[],
-  bulkSave: (tenant: string, list: T[]) => Promise<void>,
-  collection: string,
-): Promise<T[]> {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  const parsed = schema.parse(records);
-  await bulkSave(tenant, parsed);
-  await broadcastCollection(collection);
-  return parsed;
 }
 
 export const upsertDenoms = (records: Denomination[]) =>

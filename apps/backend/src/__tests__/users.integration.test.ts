@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
 import type { WorkspaceUser, ActivityLog } from '@mms/shared';
+import { adminToken, teacherToken, signTenantToken } from './helpers/tokens.js';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
@@ -33,7 +34,7 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 const mockLoadWorkspaceUsers = vi.fn();
 const mockUpsertWorkspaceUsers = vi.fn();
 const mockLoadLogs = vi.fn();
-const mockReplaceLogs = vi.fn();
+const mockUpsertLogs = vi.fn();
 const mockDeleteUserById = vi.fn();
 const mockRestoreUserById = vi.fn();
 const mockBulkSoftDeleteUsers = vi.fn();
@@ -43,7 +44,7 @@ vi.mock('../services/usersService.js', () => ({
   loadWorkspaceUsers: (...args: unknown[]) => mockLoadWorkspaceUsers(...args),
   upsertWorkspaceUsers: (...args: unknown[]) => mockUpsertWorkspaceUsers(...args),
   loadLogs: (...args: unknown[]) => mockLoadLogs(...args),
-  replaceLogs: (...args: unknown[]) => mockReplaceLogs(...args),
+  upsertLogs: (...args: unknown[]) => mockUpsertLogs(...args),
   deleteUserById: (...args: unknown[]) => mockDeleteUserById(...args),
   restoreUserById: (...args: unknown[]) => mockRestoreUserById(...args),
   bulkSoftDeleteUsers: (...args: unknown[]) => mockBulkSoftDeleteUsers(...args),
@@ -86,37 +87,13 @@ const sampleLog: ActivityLog = {
   ip: '127.0.0.1',
 };
 
-function adminToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-admin',
-    email: 'admin@test.com',
-    name: 'Admin',
-    role: 'admin',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
-
-function teacherToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-teacher',
-    email: 'teacher@test.com',
-    name: 'Teacher',
-    role: 'teacher',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
-
 describe('users REST routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
     mockLoadWorkspaceUsers.mockReset().mockResolvedValue([sampleUser]);
     mockUpsertWorkspaceUsers.mockReset().mockResolvedValue([sampleUser]);
     mockLoadLogs.mockReset().mockResolvedValue([sampleLog]);
-    mockReplaceLogs.mockReset().mockResolvedValue([sampleLog]);
+    mockUpsertLogs.mockReset().mockResolvedValue([sampleLog]);
     mockDeleteUserById.mockReset().mockResolvedValue(true);
     mockRestoreUserById.mockReset().mockResolvedValue(true);
     mockBulkSoftDeleteUsers.mockReset().mockResolvedValue({ succeeded: 1, failed: 0 });
@@ -276,7 +253,7 @@ describe('users REST routes', () => {
     await app.close();
   });
 
-  it('PUT /api/users/activity/bulk updates logs', async () => {
+  it('PUT /api/users/activity/bulk upserts logs without wipe semantics', async () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'PUT',
@@ -290,7 +267,24 @@ describe('users REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ logs: [sampleLog] });
-    expect(mockReplaceLogs).toHaveBeenCalledWith([sampleLog]);
+    expect(mockUpsertLogs).toHaveBeenCalledWith([sampleLog]);
+    await app.close();
+  });
+
+  it('PUT /api/users/activity/bulk returns 403 for unauthorized roles', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'PUT',
+      url: '/api/users/activity/bulk',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${signTenantToken(app, { role: 'viewer' })}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify([sampleLog]),
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockUpsertLogs).not.toHaveBeenCalled();
     await app.close();
   });
 

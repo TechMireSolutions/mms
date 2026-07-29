@@ -1,5 +1,5 @@
 ---
-description: Consolidated UI component primitives, design tokens, forms (FormModal), navigation tabs, notifications, and accessibility (RTL / WCAG).
+description: Consolidated UI component primitives, design tokens, forms (FormModal), navigation tabs, notifications, accessibility (RTL / WCAG), and mobile-first responsiveness (§7).
 paths:
   - "apps/frontend/src/**/*.tsx"
   - "apps/frontend/src/components/ui/**"
@@ -108,8 +108,8 @@ Use `useModuleTierTabs()` to render exactly three tabs: `work` (operational list
 ## 7. Responsiveness & Layout
 
 ### Mobile-First Approach
-- Write default (mobile) styles first; layer up with `min-width` Tailwind breakpoints (`sm:`, `md:`, `lg:`, `xl:`).
-- **Never hardcode fixed widths in pixels** (e.g., `w-[1200px]`). Use relative units (`%`, `rem`, `vw`, `max-w-*`, Grid, Flexbox) so content reflows naturally.
+- Write default (mobile) styles first; layer up with `min-width` Tailwind breakpoints (`sm:`, `md:`, `lg:`, `xl:`). Ban desktop-first `max-sm:` / `max-md:` / `max-lg:` for layout width.
+- **Never hardcode fixed layout widths in pixels** (e.g., `w-[1200px]`). Use relative units (`%`, `rem`, `vw`, `max-w-*`, Grid, Flexbox) so content reflows naturally.
 - Root containers must never exceed `100vw`; apply `max-w-full` and `box-sizing: border-box` (`box-border`) to prevent horizontal overflow.
 
 ### MMS Breakpoints
@@ -126,14 +126,17 @@ Adhere to these thresholds — they map to the Tailwind v4 tokens already define
 ### Navigation & Interactivity
 - **Mobile nav**: Convert horizontal top-nav bars to hamburger menus, slide-out drawers, or bottom navigation on small screens.
   - **Tenant AppLayout** (`Sidebar` / `MobileSidebar` / TopBar): collapse below **`lg`** (< 1024 px) — sidebar needs the wider breakpoint; authenticated e2e asserts `Open navigation menu` when `viewport.width < 1024`.
-  - **Platform console** (`PlatformPageShell`): collapse below **`md`** (< 768 px).
+  - **Platform console** (`PlatformPageShell`): horizontal nav at `md+`; bottom nav below **`md`** (< 768 px).
   - **Module / Setup sub-tabs** (`SubTabBar`, `ResponsiveAccordionTabs`): stacked / accordion below **`lg`**; pill or underline tabs at `lg+`.
-- **Touch targets**: Every interactive element (button, link, icon trigger) must have a minimum tap area of `44 × 44 px` — use `min-h-11 min-w-11` (or padding equivalents that preserve that floor).
-- **Wide tables**: Wrap `<DataTable>` / `<table>` in a horizontally-scrollable container (`overflow-x-auto`) or switch to card-row layouts at `< md`.
+  - **FormModal tabs** (intentional exception): horizontal tab chrome may switch at **`md`** — do not silently align to `lg` without updating FormModal + this rule.
+- **Touch targets**: Every interactive element (button, link, icon trigger) must have a minimum tap area of `44 × 44 px` — use `min-h-11 min-w-11` (or padding equivalents that preserve that floor). Prefer shared `Button` / `ActionButton` over raw `<button>` / `<a>`.
+- **Wide tables**: Use shared `Table` (already wraps `overflow-x-auto`) or wrap bare `<table>` in `overflow-x-auto max-w-full`. Prefer card-row layouts at `< md` for dense Work directories.
 
 ### Typography & Visual Media
-- **Fluid type**: Use `rem`/`em`/`clamp()` for font sizes — never hardcode `px` font sizes in feature components. Prefer rem for layout size utilities too (`max-w-[26.25rem]`, not `max-w-[420px]`).
-- **Images & video**: All `<img>`, `<video>`, and SVG elements must carry `max-w-full h-auto` so they shrink inside smaller viewports.
+- **Fluid type**: Use `rem`/`em`/`clamp()` for font sizes — never hardcode `px` font sizes in feature **screen** UI. Prefer rem for layout size utilities too (`max-w-[26.25rem]`, not `max-w-[420px]`).
+- **Print / paper previews** (exception): certificate, Q-paper, and invoice canvas may keep physical `px`/`mm` for print fidelity. Host them in `overflow-x-auto max-w-full` (or scale like `InvoiceTemplateEditor`) so in-app preview never causes page-level horizontal scroll.
+- **Charts**: Recharts `tick={{ fontSize: N }}` and explicit chart heights for CLS are allowed — wrap charts in `SafeResponsiveContainer`.
+- **Images & video**: Global `index.css` sets `img`/`video`/`svg { max-width: 100%; height: auto }`. Intrinsic `width`/`height` attributes for CLS (logos) remain allowed; do not remove them when adding `max-w-full`.
 
 ### Pre-Commit Verification
 Before declaring any layout implementation complete, verify:
@@ -141,11 +144,11 @@ Before declaring any layout implementation complete, verify:
 2. No text overlaps or clips at edge viewport widths.
 3. Form controls, buttons, and inputs remain touch-friendly at small viewports.
 4. RTL (`dir="rtl"`) does not introduce page-level horizontal overflow — logical CSS (`ps`/`pe`/`ms`/`me`/`start`/`end`/`text-start`).
-5. Automated smoke:
-   - Public / unauthenticated: `e2e/tests/responsive-shell.spec.ts` (overflow + touch targets + RTL at 375 / 768 / 1440).
-   - Authenticated AppLayout: `e2e/tests/responsive-authenticated.spec.ts` (dashboard overflow, RTL, mobile drawer / desktop header chrome, and a module work-view sweep: contacts, students, attendance, sessions, teachers, settings, messaging).
+5. Automated smoke (CI separate steps — `pnpm test:e2e tests/…`; **do not** insert a bare `--` before the path):
+   - Public / unauthenticated: `e2e/tests/responsive-shell.spec.ts` (overflow + touch targets + RTL at 375 / 768 / 1440; apex + tenant login).
+   - Authenticated tenant: `e2e/tests/responsive-authenticated.spec.ts` (dashboard overflow/RTL, AppLayout hamburger `< lg`, Work-route sweep with table scroll wrappers + touch targets).
    - Shared helpers: `e2e/helpers/responsive.ts`, `e2e/helpers/tenantBootstrap.ts`.
-   - CI runs these two files as separate steps (`pnpm test:e2e tests/…` — do not insert a bare `--` before the path; it is forwarded to Playwright and drops the filter).
+   - **Coverage note**: current smoke does not deep-open Reports/Setup builders or assert platform `md` bottom nav — extend those specs when changing those surfaces (see `mms-migration-status.md`).
 
 ### Systemic enforcement (do not fork)
 - Shell overflow / fluid width: `AppLayout`, `ModulePageShell`, `PlatformPageShell`, `index.css` (`box-sizing`, `#root` / `body` `overflow-x: hidden`, `img`/`video`/`svg` `max-width: 100%`).
@@ -153,6 +156,6 @@ Before declaring any layout implementation complete, verify:
 - Toast chrome: toast provider/viewport use `pointer-events-none`; individual toasts keep `pointer-events-auto` so empty toast layers never block shell controls.
 - Tables: shared `Table` wraps with `overflow-x-auto`; bare `<table>` inside cards must sit in `overflow-x-auto max-w-full`.
 - Popovers: shared `PopoverContent` defaults to `w-[min(18rem,calc(100vw-1.5rem))]` so menus never exceed the viewport.
-- Breakpoints: tenant shell + module tabs use mobile-default + `lg:`; platform chrome uses `md:` — avoid `max-lg:` / `max-md:` for layout width.
+- Breakpoints: tenant shell + module tabs use mobile-default + `lg:`; platform chrome uses `md:`; FormModal tab chrome may use `md:` — avoid `max-lg:` / `max-md:` for layout width.
 - Auth e2e selectors: platform setup/sign-in and force-password-change keep **stable** field ids (`#platform-setup-email`, `#platform-email`, `#current-password`, …) — do not replace with `useId()` on those screens.
 - Regression tests: `e2e/tests/responsive-shell.spec.ts`, `e2e/tests/responsive-authenticated.spec.ts`.

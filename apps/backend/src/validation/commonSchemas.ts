@@ -1,4 +1,19 @@
 import { z } from 'zod';
+import {
+  baseListQuerySchema,
+  includeDeletedQuerySchema,
+  softDeleteBodySchema,
+  bulkIdsBodySchema,
+  bulkStringIdsBodySchema,
+} from '@mms/shared';
+
+export {
+  baseListQuerySchema,
+  includeDeletedQuerySchema,
+  softDeleteBodySchema,
+  bulkIdsBodySchema,
+  bulkStringIdsBodySchema,
+};
 
 export const resourceIdParamsSchema = z.object({ id: z.string().min(1) });
 export const resourceNameParamsSchema = z.object({ name: z.string().min(1) });
@@ -30,10 +45,6 @@ export const entityResolveBodySchema = z.object({
   ids: z.array(z.string().min(1).max(64)).max(ENTITY_RESOLVE_MAX_IDS),
 });
 
-export const softDeleteBodySchema = z.object({
-  deletionReason: z.string().max(500).optional(),
-});
-
 export const widgetQuerySchema = z.object({
   id: z.string().min(1).max(128),
   operation: z.enum(['count', 'sum', 'avg', 'percentage']),
@@ -46,13 +57,4 @@ export const widgetQuerySchema = z.object({
 
 export const widgetAggregatesBodySchema = z.object({
   widgets: z.array(widgetQuerySchema).max(32),
-});
-
-export const baseListQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).optional(),
-  limit: z.coerce.number().int().min(1).max(500).optional(),
-  search: z.string().max(500).optional(),
-  sortField: z.string().optional(),
-  sortDir: z.enum(['asc', 'desc']).optional(),
-  includeDeleted: z.enum(['true', 'false']).optional(),
 });

@@ -38,6 +38,7 @@ Source: `mms-module-architecture.md` §2–§3 and §6–§7. Rules: `mms-module
 - [ ] Bulk actions: eligibility + partial failure reporting
 - [ ] Export respects filters, RBAC, soft-delete policy
 - [ ] Copy via t(); no raw fetch('/api/...')
+- [ ] Dense lists: card rows `< md` and/or `overflow-x-auto` tables; touch targets ≥ 44px (`mms-ui-ux-design.md` §7)
 ```
 
 ## Do Not

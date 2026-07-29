@@ -20,7 +20,7 @@ Project rules for the Madrasa Management System. Cursor loads `.md` files from t
 | Rule | Focus / Topic |
 |------|---------------|
 | `mms-ops-infrastructure.md` | Local dev setup, environment variables, Docker backend ports, health endpoints, Linux compatibility, and CI expectations |
-| `mms-ui-ux-design.md` | Consolidated UI components, design tokens, forms (`FormModal`), navigation tabs, notifications, and accessibility (RTL / WCAG) |
+| `mms-ui-ux-design.md` | UI primitives, design tokens, forms (`FormModal`), tabs, notifications, a11y (RTL / WCAG), and **§7 responsiveness** (mobile-first, breakpoints, 44px touch, tables, e2e) |
 | `mms-module-architecture.md` | Universal module manifest schemas, three-tier tab layout, Work/Reports/Setup scopes, soft-delete, **gold-standard parity (§7)**, background jobs |
 | `mms-data-layer.md` | PostgreSQL, Drizzle schema, migrations, database transactions, TanStack Query fetching, and deprecated localStorage caching |
 | `mms-form-architecture.md` | Static FormModal forms, shared Zod DTOs, React 19 defaults, decimal-as-string, S3 uploads |
@@ -64,7 +64,7 @@ bash .agent/scripts/sync-all.sh
 - [ ] No commit unless user requested
 - [ ] Update **all mirrors** when changing standards: `bash .agent/scripts/sync-all.sh`
 - [ ] Auth/write routes: `mms-auth-security.md`
-- [ ] New UI: `mms-ui-ux-design.md` keyboard + labels
+- [ ] New UI: `mms-ui-ux-design.md` keyboard + labels + §7 responsive checklist (375 / 768 / 1440)
 - [ ] New `@mms/shared` pure helpers: unit test per `mms-testing-observability.md`
 
 ## Removed / Merged (History)

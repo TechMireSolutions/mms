@@ -18,7 +18,7 @@ Rules describe **target architecture**. Fix open gaps only when the task covers 
 | WebSockets / SSE | Not implemented | Replace polling for live push — `mms-core.mdc` |
 | Residual deep sub-tab bars | ComparisonMode + JournalEntries on `SubTabBar`; niche leftovers | `SubTabBar` everywhere — `mms-ui-ux-design.mdc` |
 | Status chart palettes | Most StatusBadge on SEMANTIC_BADGE | All semantic tokens |
-| Automated tests | Broad onboard + module E2E | Remaining write flows (obligations, etc.) |
+| Automated tests | Broad onboard + module E2E; responsive Work/public smoke | Remaining write flows; responsive depth (platform `md` nav, Reports/Setup builders) — `mms-ui-ux-design.mdc` §7 |
 | Global a11y | Partial | WCAG baseline on new UI |
 | Report drill-down / saved reports | Partial (Contacts + several modules) | Remaining niche panels + per-module saved logic |
 | Background job queue | Async workers + tray exports | Dedicated Redis/worker for multi-instance |
@@ -39,3 +39,4 @@ Keep these regressions out of new work (details historically resolved — do not
 - `apiClient` only — no raw `fetch('/api/...')`
 - FormModal for entity forms; Modal for confirm/preview; Design-system primitives + semantic tokens
 - Messaging: soft-archive log clear; composite PK + RLS; session-forced `userId`
+- Mobile-first shells: no page-level horizontal overflow; 44×44 touch floors on primitives; tenant nav collapse `< lg`; platform nav collapse `< md`; tables in `overflow-x-auto` — `mms-ui-ux-design.mdc` §7

@@ -163,9 +163,18 @@ Each tier is **module-scoped only** (`mms-module-architecture.md`):
 - `KPISummary` **inside Reports tab only**
 - Use module's own analytics category (not `academic`)
 
-## Responsive tabs
+## Responsive layout
 
-`ResponsiveAccordionTabs` — `mms-ui-ux-design.md`. Inner setup uses `SubTabBar`.
+Owner: `mms-ui-ux-design.md` §7.
+
+| Concern | Standard |
+|---------|----------|
+| Module tiers | `ResponsiveAccordionTabs` — accordion `< lg`; underline tabs `lg+` |
+| Setup / inner tabs | `SubTabBar` — same `lg` breakpoint; no custom pill bars |
+| Page shell | `ModulePageShell` — `max-w-7xl min-w-0` fluid width |
+| Tables | Shared `Table` or `overflow-x-auto max-w-full`; card rows `< md` when dense |
+| Touch | `Button` / `ActionButton` (`min-h-11 min-w-11`); no undersized icon-only controls |
+| Verify | 375 / 768 / 1440; responsive e2e when shell chrome changes |
 
 ## Do not
 

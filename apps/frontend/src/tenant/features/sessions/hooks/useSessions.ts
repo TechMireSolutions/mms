@@ -42,7 +42,7 @@ export function useSessionsPaginated(params: SessionsPaginatedParams) {
   const enabled = params.enabled ?? true;
   return useQuery({
     queryKey: [...SESSIONS_QUERY_KEY, 'page', params] as const,
-    queryFn: async () => apiJson<SessionsListPageResult>(buildSessionsPageUrl(params)),
+    queryFn: async ({ signal }) => apiJson<SessionsListPageResult>(buildSessionsPageUrl(params), { signal }),
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
     placeholderData: (previousData) => previousData,

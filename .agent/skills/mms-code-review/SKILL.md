@@ -58,6 +58,8 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Fields/tabs from registry
 - [ ] Module tier: `work` | `reports` | `setup`
 - [ ] `ResponsiveAccordionTabs` / `SubTabBar` — no inline tab bars
+- [ ] Mobile-first layout: no fixed `w-[Npx]` page widths; no `max-lg:` layout forks; logical CSS for RTL
+- [ ] Tables wrapped (`Table` or `overflow-x-auto`); interactive controls ≥ 44×44 (`min-h-11 min-w-11`)
 - [ ] `FormModal` for add/edit entity dialogs when touching legacy overlays
 - [ ] Settings panels use `useSettingsDraft` / domain draft hooks + live preview — not direct `saveObject` on change
 - [ ] New settings section: registered in `SETTINGS_SECTIONS`, `SETTINGS_NAV`, `SETTINGS_SECTION_COMPONENTS`
@@ -103,6 +105,7 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] New `@mms/shared` pure helpers have unit tests
 - [ ] Auth/RBAC/tenant changes have `inject()` allow+deny tests
 - [ ] Playwright: prefer `getByRole`/`getByLabel` — no `waitForTimeout` sleeps
+- [ ] Shell / touch / RTL / table changes: keep `responsive-shell` + `responsive-authenticated` green; extend when touching platform `md` nav or Reports/Setup builders
 
 ### Accessibility
 - [ ] Icon buttons have `aria-label` from `t()`; forms use associated labels

@@ -4,6 +4,7 @@ import { EXAMINATIONS_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
+import { NotifiedMutationError } from '@/lib/notifiedMutationError';
 
 export const EXAMINATIONS_EXAMS_QUERY_KEY = ['examinations', 'exams', 'list'] as const;
 export const EXAMINATIONS_RESULTS_QUERY_KEY = ['examinations', 'results', 'list'] as const;
@@ -11,7 +12,8 @@ export const EXAMINATIONS_METRICS_QUERY_KEY = ['examinations', 'metrics', 'snaps
 
 const EXAMINATIONS_API = EXAMINATIONS_MODULE_MANIFEST.restBasePath;
 
-export class NotifiedExaminationsMutationError extends Error {}
+/** @deprecated Prefer NotifiedMutationError — kept for form catch compatibility. */
+export class NotifiedExaminationsMutationError extends NotifiedMutationError {}
 
 export function useExaminationsExams(options?: { enabled?: boolean; includeDeleted?: boolean }) {
   const includeDeleted = options?.includeDeleted ?? false;

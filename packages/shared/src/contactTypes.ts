@@ -576,58 +576,6 @@ export const COLUMN_FIELD_MAPPING: Record<string, { tabId: string; fieldId: stri
   emergency_relationship: { tabId: "emergency", fieldId: "relationship" },
 };
 
-export type MessageCategory = 'general' | 'academic' | 'financial' | 'attendance' | 'emergency';
-
-export interface MessageTemplate {
-  id: string;
-  label: string;
-  /** i18n key for system templates; custom templates use `label` directly. */
-  labelKey?: string;
-  body: string;
-  category?: MessageCategory;
-  channel?: 'all' | 'sms' | 'whatsapp' | 'email';
-  updatedAt?: string;
-}
-
-export const DEFAULT_MESSAGE_TEMPLATES: MessageTemplate[] = [
-  { id: 't1', label: 'General Announcement', labelKey: 'messaging.template.generalAnnouncement', category: 'general', channel: 'all', body: 'Dear {name|Valued Parent}, we would like to inform you that...' },
-  { id: 't2', label: 'Payment Reminder', labelKey: 'messaging.template.paymentReminder', category: 'financial', channel: 'all', body: 'Dear {name|Valued Parent}, this is a friendly reminder that your balance payment of {amount|0 PKR} is due.' },
-  { id: 't3', label: 'Holiday Announcement', labelKey: 'messaging.template.holidayAnnouncement', category: 'general', channel: 'all', body: 'Dear {name|Valued Parent}, please note that the madrasa will remain closed on {date}.' },
-  { id: 't4', label: 'Attendance Alert', labelKey: 'messaging.template.attendanceAlert', category: 'attendance', channel: 'whatsapp', body: 'Respected {name|Parent}, student {first_name} was marked absent today.' },
-];
-
-/**
- * Merges default templates with user/custom templates and context templates without duplicate template IDs.
- */
-export function mergeMessageTemplates(
-  customTemplates?: MessageTemplate[],
-  contextTemplates?: MessageTemplate[]
-): MessageTemplate[] {
-  const base: MessageTemplate[] = [
-    ...DEFAULT_MESSAGE_TEMPLATES,
-    ...(contextTemplates || []),
-  ];
-  const existingIds = new Set(base.map((t) => t.id));
-  const uniqueCustom = (customTemplates || []).filter((t) => !existingIds.has(t.id));
-  return [...base, ...uniqueCustom];
-}
-
-/** Sent message record for SMS, WhatsApp, or Email communications. */
-export interface Message {
-  id: string;
-  userId: string;
-  contactId: string | number;
-  channel: 'sms' | 'whatsapp' | 'email';
-  body: string;
-  sentAt: string;
-  status?: 'queued' | 'sent' | 'delivered' | 'failed' | 'skipped';
-  subject?: string;
-  category?: MessageCategory;
-  errorMessage?: string;
-  /** Soft-delete timestamp; cleared logs remain until admin clear wipes them. */
-  deletedAt?: string;
-}
-
 /** Client configuration model for Google Contacts OAuth and synchronization. */
 export interface ContactGoogleSyncConfigClient {
   clientId?: string;

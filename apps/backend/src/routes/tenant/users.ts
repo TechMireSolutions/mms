@@ -7,17 +7,20 @@ import {
   activityLogListSchema,
   type User,
 } from '@mms/shared';
-import { z } from 'zod';
 import { registerBulkRoutes } from '../../lib/crudRouter.js';
 import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sendDatabaseError, sendForbidden, sendNotFound } from '../../lib/httpErrors.js';
+import {
+  includeDeletedQuerySchema,
+  bulkStringIdsBodySchema,
+} from '../../validation/commonSchemas.js';
 
 import {
   loadWorkspaceUsers,
   upsertWorkspaceUsers,
   loadLogs,
-  replaceLogs,
+  upsertLogs,
   deleteUserById,
   restoreUserById,
   bulkSoftDeleteUsers,
@@ -26,15 +29,6 @@ import {
 
 const USERS_COLLECTION = USERS_MODULE_MANIFEST.collectionKey;
 const LOGS_COLLECTION = 'user_activity_logs';
-
-const includeDeletedQuerySchema = z.object({
-  includeDeleted: z.enum(['true', 'false']).optional(),
-});
-
-const bulkIdsSchema = z.object({
-  ids: z.array(z.string().min(1)).min(1),
-  deletionReason: z.string().optional(),
-});
 
 /**
  * Users module routes — workspace users CRUD, soft-delete, activity logs, column preferences.
@@ -57,8 +51,8 @@ export default async function usersRoutes(
     try {
       const users = await loadWorkspaceUsers({ includeDeleted });
       return reply.send({ users });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to load workspace users');
+    } catch (error: unknown) {
+      return sendDatabaseError(reply, 'Failed to load workspace users', error);
     }
   });
 
@@ -70,8 +64,8 @@ export default async function usersRoutes(
     try {
       const users = await upsertWorkspaceUsers(parsed.data);
       return reply.send({ users });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to update workspace users');
+    } catch (error: unknown) {
+      return sendDatabaseError(reply, 'Failed to update workspace users', error);
     }
   });
 
@@ -79,26 +73,26 @@ export default async function usersRoutes(
   fastify.post('/bulk-delete', async (request, reply) => {
     const user = request.user as User;
     if (!canDeleteCollection(user, USERS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(bulkIdsSchema, request.body);
+    const parsed = parseRequest(bulkStringIdsBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
       const result = await bulkSoftDeleteUsers(parsed.data.ids, String(user.id));
       return reply.send({ success: true, ...result });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to bulk delete users');
+    } catch (error: unknown) {
+      return sendDatabaseError(reply, 'Failed to bulk delete users', error);
     }
   });
 
   fastify.post('/bulk-restore', async (request, reply) => {
     const user = request.user as User;
     if (!canDeleteCollection(user, USERS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(bulkIdsSchema, request.body);
+    const parsed = parseRequest(bulkStringIdsBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
       const result = await bulkRestoreUsers(parsed.data.ids);
       return reply.send({ success: true, ...result });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to bulk restore users');
+    } catch (error: unknown) {
+      return sendDatabaseError(reply, 'Failed to bulk restore users', error);
     }
   });
 
@@ -116,7 +110,7 @@ export default async function usersRoutes(
           message: error.message,
         });
       }
-      return sendDatabaseError(reply, 'Failed to delete user');
+      return sendDatabaseError(reply, 'Failed to delete user', error);
     }
   });
 
@@ -127,8 +121,8 @@ export default async function usersRoutes(
       const ok = await restoreUserById(request.params.id);
       if (!ok) return sendNotFound(reply, 'User not found');
       return reply.send({ success: true });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to restore user');
+    } catch (error: unknown) {
+      return sendDatabaseError(reply, 'Failed to restore user', error);
     }
   });
 
@@ -143,7 +137,7 @@ export default async function usersRoutes(
     collection: LOGS_COLLECTION,
     schema: activityLogListSchema,
     loadFn: loadLogs,
-    saveFn: replaceLogs,
+    saveFn: upsertLogs,
     responseKey: 'logs',
     errorMessagePrefix: 'activity logs',
   });

@@ -44,7 +44,7 @@ export function useAttendancePaginated(params: AttendancePaginatedParams) {
   const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: [...ATTENDANCE_QUERY_KEY, 'page', params] as const,
-    queryFn: () => apiJson<AttendanceListPageResult>(buildAttendancePageUrl(params)),
+    queryFn: ({ signal }) => apiJson<AttendanceListPageResult>(buildAttendancePageUrl(params), { signal }),
     enabled: isAuthenticated && (params.enabled ?? true),
     staleTime: 15_000,
     placeholderData: (previousData) => previousData,

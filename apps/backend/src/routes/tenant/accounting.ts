@@ -9,12 +9,14 @@ import {
   computeAccountingCommandMetrics,
   type User,
 } from '@mms/shared';
-import { z } from 'zod';
-
 import { registerBulkRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
 import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sendDatabaseError, sendForbidden, sendNotFound } from '../../lib/httpErrors.js';
+import {
+  includeDeletedQuerySchema,
+  bulkIdsBodySchema,
+} from '../../validation/commonSchemas.js';
 
 import {
   loadAccounts,
@@ -32,15 +34,6 @@ import {
 const ACCOUNTING_ENTRIES_COLLECTION = ACCOUNTING_MODULE_MANIFEST.collectionKey;
 const ACCOUNTING_ACCOUNTS_COLLECTION = ACCOUNTING_MODULE_MANIFEST.accountCollectionKey;
 const ACCOUNTING_FISCAL_YEARS_COLLECTION = ACCOUNTING_MODULE_MANIFEST.fiscalYearCollectionKey;
-
-const includeDeletedQuerySchema = z.object({
-  includeDeleted: z.enum(['true', 'false']).optional(),
-});
-
-const bulkIdsSchema = z.object({
-  ids: z.array(z.string().min(1)).min(1),
-  deletionReason: z.string().optional(),
-});
 
 /**
  * Accounting module routes — bulk upsert collections + journal soft-delete.
@@ -149,27 +142,27 @@ export default async function accountingRoutes(
   fastify.post('/entries/bulk-delete', async (request, reply) => {
     const user = request.user as User;
     if (!canDeleteCollection(user, ACCOUNTING_ENTRIES_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(bulkIdsSchema, request.body);
+    const parsed = parseRequest(bulkIdsBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
       const result = await bulkSoftDeleteJournalEntries(
-        parsed.data.ids,
+        parsed.data.ids.map(String),
         String(user.id),
         parsed.data.deletionReason,
       );
       return reply.send({ success: true, ...result });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to bulk delete journal entries');
+    } catch (error: unknown) {
+      return sendDatabaseError(reply, 'Failed to bulk delete journal entries', error);
     }
   });
 
   fastify.post('/entries/bulk-restore', async (request, reply) => {
     const user = request.user as User;
     if (!canDeleteCollection(user, ACCOUNTING_ENTRIES_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(bulkIdsSchema, request.body);
+    const parsed = parseRequest(bulkIdsBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
-      const result = await bulkRestoreJournalEntries(parsed.data.ids);
+      const result = await bulkRestoreJournalEntries(parsed.data.ids.map(String));
       return reply.send({ success: true, ...result });
     } catch {
       return sendDatabaseError(reply, 'Failed to bulk restore journal entries');

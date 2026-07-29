@@ -36,8 +36,8 @@ export function useCollectionSync<T, R = Record<string, T[]>>({
 
   const queryResult = useQuery<T[]>({
     queryKey,
-    queryFn: async () => {
-      const response = await apiJson<R>(apiPath);
+    queryFn: async ({ signal }) => {
+      const response = await apiJson<R>(apiPath, { signal });
       const rawData = responseKey && response ? response[responseKey] : response;
       const data = (Array.isArray(rawData) ? rawData : []) as unknown as T[];
       // Cache-only: keep hydrated REST payload for offline fallback; do not POST /api/db.
@@ -58,8 +58,12 @@ export function useCollectionSync<T, R = Record<string, T[]>>({
     enabled,
   });
 
+  // Prefer authoritative Query data for Work/list; local mirror is offline/report fallback.
+  const data = queryResult.data ?? syncedData;
+
   return {
     queryResult,
     syncedData,
+    data,
   };
 }

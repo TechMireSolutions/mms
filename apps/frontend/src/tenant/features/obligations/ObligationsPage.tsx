@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
+import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
@@ -7,7 +8,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Scale, Plus,
 } from "lucide-react";
-import { OBLIGATIONS_MODULE_MANIFEST, resolveModuleTierTab, type AppTranslationKey, type ObligationCollection } from "@mms/shared";
+import {
+  OBLIGATIONS_MODULE_MANIFEST,
+  resolveModuleTierTab,
+  toMessagingRecipient,
+  type AppTranslationKey,
+  type ObligationCollection,
+} from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -113,14 +120,22 @@ export default function Obligations() {
     if (!canWriteMessaging) return;
     openComposer(
       channel,
-      collectionList.map((col) => ({
-        id: col.id,
-        name: col.receipt_no
-          ? t("obligations.messaging.receipt", { receipt: col.receipt_no })
-          : t("obligations.messaging.donor"),
-        phone: (col as unknown as { phone?: string }).phone || '',
-        email: (col as unknown as { email?: string }).email || '',
-      }))
+      collectionList.map((collection) =>
+        toMessagingRecipient(
+          {
+            id: collection.id,
+            name: collection.receipt_no
+              ? t("obligations.messaging.receipt", { receipt: collection.receipt_no })
+              : t("obligations.messaging.donor"),
+            phone: typeof (collection as { phone?: string }).phone === 'string'
+              ? (collection as { phone?: string }).phone
+              : '',
+            email: typeof (collection as { email?: string }).email === 'string'
+              ? (collection as { email?: string }).email
+              : '',
+          },
+        ),
+      ),
     );
   };
 
@@ -128,21 +143,13 @@ export default function Obligations() {
     setFilteredCount(collections.length);
   }, [collections.length]);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n" && canWrite && !showDeleted) {
-        const target = event.target as HTMLElement | null;
-        if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
-          return;
-        }
-        event.preventDefault();
-        setActiveTab("work");
-        setShowForm(true);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [canWrite, setActiveTab, showDeleted]);
+  useModuleCreateHotkey({
+    enabled: canWrite && !showDeleted,
+    onCreate: () => {
+      setActiveTab("work");
+      setShowForm(true);
+    },
+  });
 
   const handleSaveCollection = async (collectionPayload: ObligationCollection) => {
     try {

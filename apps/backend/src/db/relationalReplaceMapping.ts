@@ -1,0 +1,35 @@
+/**
+ * Maps REST-migrated collection logical keys to repository replace helpers.
+ * Used only by admin sync/restore (`mirrorRelationalReplace: true`).
+ */
+export const RELATIONAL_REPLACE_MAPPING: Record<string, { importPath: string; fnName: string }> = {
+  users: { importPath: './repositories/tenantUserRepository.js', fnName: 'replaceTenantUsersForWorkspace' },
+  contacts: { importPath: './repositories/contactRepository.js', fnName: 'replaceContactsForWorkspace' },
+  students: { importPath: './repositories/studentRepository.js', fnName: 'replaceStudentsForWorkspace' },
+  teachers: { importPath: './repositories/teacherRepository.js', fnName: 'replaceTeachersForWorkspace' },
+  sessions: { importPath: './repositories/sessionRepository.js', fnName: 'replaceSessionsForWorkspace' },
+  attendance_records: { importPath: './repositories/attendanceRepository.js', fnName: 'replaceAttendanceRecordsForWorkspace' },
+  enrollments: { importPath: './repositories/enrollmentRepository.js', fnName: 'replaceEnrollmentsForWorkspace' },
+  obligation_types: { importPath: './repositories/obligationRepository.js', fnName: 'replaceObligationTypesForWorkspace' },
+  mujtahids: { importPath: './repositories/obligationRepository.js', fnName: 'replaceMujtahidsForWorkspace' },
+  mujtahid_reps: { importPath: './repositories/obligationRepository.js', fnName: 'replaceMujtahidRepsForWorkspace' },
+  wakala_types: { importPath: './repositories/obligationRepository.js', fnName: 'replaceWakalaTypesForWorkspace' },
+  obligation_distributions: { importPath: './repositories/obligationRepository.js', fnName: 'replaceObligationDistributionsForWorkspace' },
+  obligation_collections: { importPath: './repositories/obligationRepository.js', fnName: 'replaceObligationCollectionsForWorkspace' },
+  finance_invoices: { importPath: './repositories/financeRepository.js', fnName: 'replaceInvoicesForWorkspace' },
+  finance_payments: { importPath: './repositories/financeRepository.js', fnName: 'replacePaymentsForWorkspace' },
+  exams: { importPath: './repositories/examinationRepository.js', fnName: 'replaceExamsForWorkspace' },
+  exam_results: { importPath: './repositories/examinationRepository.js', fnName: 'replaceExamResultsForWorkspace' },
+  hasanat_denoms: { importPath: './repositories/hasanatRepository.js', fnName: 'replaceDenomsForWorkspace' },
+  hasanat_batches: { importPath: './repositories/hasanatRepository.js', fnName: 'replaceBatchesForWorkspace' },
+  hasanat_distributions: { importPath: './repositories/hasanatRepository.js', fnName: 'replaceDistributionsForWorkspace' },
+  hasanat_redemptions: { importPath: './repositories/hasanatRepository.js', fnName: 'replaceRedemptionsForWorkspace' },
+  accounting_accounts: { importPath: './repositories/accountingRepository.js', fnName: 'replaceAccountsForWorkspace' },
+  accounting_entries: { importPath: './repositories/accountingRepository.js', fnName: 'replaceEntriesForWorkspace' },
+  accounting_fiscal_years: { importPath: './repositories/accountingRepository.js', fnName: 'replaceFiscalYearsForWorkspace' },
+  questions: { importPath: './repositories/questionBankRepository.js', fnName: 'replaceQuestionsForWorkspace' },
+  tests: { importPath: './repositories/questionBankRepository.js', fnName: 'replaceTestsForWorkspace' },
+  assessment_results: { importPath: './repositories/questionBankRepository.js', fnName: 'replaceResultsForWorkspace' },
+  user_activity_logs: { importPath: './repositories/logsRepository.js', fnName: 'replaceActivityLogsForWorkspace' },
+  audit_log: { importPath: './repositories/logsRepository.js', fnName: 'replaceAuditLogEntriesForWorkspace' },
+};

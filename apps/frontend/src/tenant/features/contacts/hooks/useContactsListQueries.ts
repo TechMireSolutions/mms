@@ -32,7 +32,7 @@ export function useContactsPaginated(params: ContactsPaginatedParams) {
   const keyParams = contactsListQueryKeyParams(params);
   return useQuery({
     queryKey: contactsPaginatedQueryKey(params),
-    queryFn: async () => apiJson<ContactsListPageResult>(buildContactsPageUrl(params)),
+    queryFn: async ({ signal }) => apiJson<ContactsListPageResult>(buildContactsPageUrl(params), { signal }),
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
     placeholderData: (previousData, previousQuery) => {

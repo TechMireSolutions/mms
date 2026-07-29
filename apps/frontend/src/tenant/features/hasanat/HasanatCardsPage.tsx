@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
+import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, Star, Package, Send, Gift, Archive } from "lucide-react";
-import { HASANAT_MODULE_MANIFEST, resolveModuleTierTab, type AppTranslationKey } from "@mms/shared";
+import { LayoutDashboard, Star, Package, Send, Gift } from "lucide-react";
+import { HASANAT_MODULE_MANIFEST, resolveModuleTierTab, toMessagingRecipient, type AppTranslationKey } from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ActionButton } from "@/components/ui/ActionButton";
-import { Button } from "@/components/ui/button";
+import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { HasanatDashboard } from "@/tenant/features/hasanat/components/HasanatDashboard";
 import { DenominationsManager } from "@/tenant/features/hasanat/components/DenominationsManager";
@@ -106,16 +107,18 @@ export default function HasanatCards() {
     });
   }, [t]);
 
-  const handleMessageDistributions = (channel: 'sms' | 'whatsapp' | 'email', distList: Array<{ id: string; recipientName?: string }>) => {
+  const handleMessageDistributions = (channel: 'sms' | 'whatsapp' | 'email', distList: Array<{ id: string; recipientName?: string; phone?: string; email?: string }>) => {
     if (!canWriteMessaging) return;
     openComposer(
       channel,
-      distList.map((d) => ({
-        id: d.id,
-        name: d.recipientName || t("hasanat.messaging.recipient"),
-        phone: (d as unknown as { phone?: string }).phone || '',
-        email: (d as unknown as { email?: string }).email || '',
-      }))
+      distList.map((distribution) =>
+        toMessagingRecipient({
+          id: distribution.id,
+          name: distribution.recipientName || t("hasanat.messaging.recipient"),
+          phone: distribution.phone || '',
+          email: distribution.email || '',
+        }),
+      ),
     );
   };
 
@@ -131,22 +134,14 @@ export default function HasanatCards() {
     setFilteredCount(distributions.length);
   }, [effectiveSubTab, distributions.length]);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n" && canWrite && !showDeleted) {
-        const target = event.target as HTMLElement | null;
-        if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
-          return;
-        }
-        event.preventDefault();
-        setActiveTab("work");
-        setActiveSubTab("distribute");
-        setCreateDistributeKey((key) => key + 1);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [canWrite, setActiveTab, showDeleted]);
+  useModuleCreateHotkey({
+    enabled: canWrite && !showDeleted,
+    onCreate: () => {
+      setActiveTab("work");
+      setActiveSubTab("distribute");
+      setCreateDistributeKey((key) => key + 1);
+    },
+  });
 
   const handleDeleteDistribution = async (id: string) => {
     try {
@@ -255,16 +250,13 @@ export default function HasanatCards() {
             }}
           />
           {effectiveSubTab === "distribute" && canDelete && (
-            <Button
-              type="button"
-              variant={showDeleted ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowDeleted((prev) => !prev)}
-              className="gap-1.5 shrink-0"
-            >
-              <Archive className="w-3.5 h-3.5" aria-hidden="true" />
-              {showDeleted ? t("hasanat.trash.showActive") : t("hasanat.trash.showDeleted")}
-            </Button>
+            <ModuleTrashToggle
+              showDeleted={showDeleted}
+              onToggle={() => setShowDeleted((prev) => !prev)}
+              showActiveLabel={t("hasanat.trash.showActive")}
+              showDeletedLabel={t("hasanat.trash.showDeleted")}
+              className="shrink-0"
+            />
           )}
         </div>
       )}

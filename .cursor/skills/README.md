@@ -38,7 +38,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 
 Always-on rules: `antigravity-global`, `mms-core`, `mms-migration-status`, `mms-dependencies`, `mms-dry`, `mms-completion-review`.
 
-Frontend work: rules `mms-api-interface`, `mms-data-layer`, `mms-hooks`, `mms-ui-ux-design`, `mms-settings-i18n` + skill **`mms-frontend`** (includes `/settings` page patterns).
+Frontend work: rules `mms-api-interface`, `mms-data-layer`, `mms-hooks`, `mms-ui-ux-design` (**§7 responsiveness**), `mms-settings-i18n` + skill **`mms-frontend`** (includes `/settings` page patterns).
 
 ## Verify setup
 

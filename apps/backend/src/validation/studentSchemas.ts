@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { baseListQuerySchema } from './commonSchemas.js';
+import { baseListQuerySchema, bulkIdsBodySchema } from './commonSchemas.js';
 
 export const studentsListQuerySchema = baseListQuerySchema.extend({
   status: z.string().max(200).optional(),
@@ -24,10 +24,7 @@ export const studentsDuplicateCheckBodySchema = z.object({
   dob: z.string().max(32).optional(),
 });
 
-export const studentsBulkIdsSchema = z.object({
-  ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),
-  deletionReason: z.string().max(500).optional(),
-});
+export const studentsBulkIdsSchema = bulkIdsBodySchema;
 
 export const studentsBulkStatusSchema = z.object({
   ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),

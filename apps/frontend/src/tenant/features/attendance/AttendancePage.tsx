@@ -1,17 +1,19 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
+import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   UserCheck, ClipboardEdit, BookOpen, BarChart2,
-  ShieldCheck, ClipboardList, Archive,
+  ShieldCheck, ClipboardList,
 } from "lucide-react";
-import { resolveModuleTierTab, todayISO, ATTENDANCE_MODULE_MANIFEST } from "@mms/shared";
+import { resolveModuleTierTab, todayISO, ATTENDANCE_MODULE_MANIFEST, toMessagingRecipient } from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ActionButton } from "@/components/ui/ActionButton";
+import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { AttendanceFilters } from "@/tenant/features/attendance/components/AttendanceFilters";
 import { MarkAttendance } from "@/tenant/features/attendance/components/MarkAttendance";
 import { AttendanceRecords } from "@/tenant/features/attendance/components/AttendanceRecords";
@@ -23,7 +25,6 @@ import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { Button } from "@/components/ui/button";
 import { notify } from "@/lib/notify";
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import {
@@ -87,12 +88,20 @@ export default function Attendance() {
   const handleMessageAttendance = (channel: 'sms' | 'whatsapp' | 'email', attRecords: AttendanceRecord[]) => {
     openComposer(
       channel,
-      attRecords.map((r) => ({
-        id: r.studentId || r.id,
-        name: r.studentName || t("attendance.messaging.student"),
-        phone: (r as unknown as { phone?: string }).phone || '',
-        email: (r as unknown as { email?: string }).email || '',
-      }))
+      attRecords.map((record) =>
+        toMessagingRecipient(
+          {
+            id: record.studentId || record.id,
+            name: record.studentName || t("attendance.messaging.student"),
+            phone: typeof (record as { phone?: string }).phone === 'string'
+              ? (record as { phone?: string }).phone
+              : '',
+            email: typeof (record as { email?: string }).email === 'string'
+              ? (record as { email?: string }).email
+              : '',
+          },
+        ),
+      ),
     );
   };
 
@@ -167,19 +176,13 @@ export default function Attendance() {
   const effectiveOpsTab = visibleOperationsTabs.find((t) => t.id === activeOpsTab) ? activeOpsTab : (visibleOperationsTabs[0]?.id || "records");
   const effectiveAnalyticsTab = visibleAnalyticsTabs.find((t) => t.id === activeAnalyticsTab) ? activeAnalyticsTab : (visibleAnalyticsTabs[0]?.id || "reports");
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
-      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return;
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n" && canWriteAttendance && !showDeleted) {
-        event.preventDefault();
-        setActiveTab("work");
-        setActiveOpsTab("mark");
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [canWriteAttendance, setActiveTab, showDeleted]);
+  useModuleCreateHotkey({
+    enabled: canWriteAttendance && !showDeleted,
+    onCreate: () => {
+      setActiveTab("work");
+      setActiveOpsTab("mark");
+    },
+  });
 
   const renderContent = () => {
     if (!effectiveTab) return null;
@@ -299,16 +302,13 @@ export default function Attendance() {
       )}
 
       {effectiveTab === "work" && effectiveOpsTab === "records" && canDeleteAttendance && (
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => setShowDeleted((current) => !current)}
-          aria-pressed={showDeleted}
-          className="flex items-center gap-1.5 min-h-11 border border-border"
-        >
-          <Archive className="w-3.5 h-3.5" />
-          {showDeleted ? t("attendance.showActive") : t("attendance.showDeleted")}
-        </Button>
+        <ModuleTrashToggle
+          showDeleted={showDeleted}
+          onToggle={() => setShowDeleted((current) => !current)}
+          showActiveLabel={t("attendance.showActive")}
+          showDeletedLabel={t("attendance.showDeleted")}
+          className="min-h-11 border border-border"
+        />
       )}
 
       {/* Tab Content */}

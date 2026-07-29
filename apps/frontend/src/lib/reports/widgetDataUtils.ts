@@ -11,14 +11,17 @@ import {
 import { queryClientInstance } from "@/lib/queryClient";
 import {
   CONTACTS_METRICS_QUERY_KEY,
+  CONTACTS_QUERY_KEY,
   CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
 } from "@/tenant/hooks/collections/contacts";
 import {
   STUDENTS_METRICS_QUERY_KEY,
+  STUDENTS_QUERY_KEY,
   STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
 } from "@/tenant/hooks/collections/students";
 import {
   TEACHERS_METRICS_QUERY_KEY,
+  TEACHERS_QUERY_KEY,
   TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
 } from "@/tenant/hooks/collections/teachers";
 import { ATTENDANCE_QUERY_KEY } from "@/tenant/hooks/collections/attendance";
@@ -136,11 +139,14 @@ function formatGenericWidgetValue(
   };
 }
 
+/**
+ * Sync snapshot from TanStack Query cache for non-React consumers.
+ * Prefer `useWidgetCollections()` in React trees — this helper never invents empty mirrors.
+ */
 export function getWidgetCollections(): ReportCollectionsSnapshot {
-  const contacts: Contact[] = [];
-  const students: Student[] = [];
-  const teachers: Teacher[] = [];
-
+  const contacts = readQueryCollection<Contact>(CONTACTS_QUERY_KEY) ?? [];
+  const students = readQueryCollection<Student>(STUDENTS_QUERY_KEY) ?? [];
+  const teachers = readQueryCollection<Teacher>(TEACHERS_QUERY_KEY) ?? [];
   const invoices = readQueryCollection<Invoice>(FINANCE_INVOICES_QUERY_KEY) ?? [];
   const attendance = readQueryCollection<AttendanceRecord>(ATTENDANCE_QUERY_KEY) ?? [];
   const distributions = readQueryCollection<Distribution>(HASANAT_DISTRIBUTIONS_QUERY_KEY) ?? [];
