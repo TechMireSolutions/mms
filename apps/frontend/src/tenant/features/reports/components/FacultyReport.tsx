@@ -169,7 +169,54 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
         <EmptyState icon={GraduationCap} title={t("teachers.report.noFacultyData")} compact />
       ) : (
         <Card className="overflow-hidden">
-          <div className="overflow-x-auto max-w-full">
+          <div className="space-y-3 p-3 md:hidden">
+            {filteredFacultyWorkload.map((faculty) => (
+              <article
+                key={faculty.faculty}
+                className={`space-y-3 rounded-xl border border-border bg-card p-3 ${selectedFaculty === faculty.faculty ? "ring-1 ring-primary/20" : ""}`}
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => toggleFacultyFilter(faculty.faculty)}
+                  className={`h-auto min-h-11 px-0 py-0 text-sm font-semibold hover:bg-transparent hover:text-foreground ${
+                    selectedFaculty === faculty.faculty ? "text-primary" : "text-foreground"
+                  }`}
+                >
+                  {faculty.faculty}
+                </Button>
+                <dl className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("teachers.report.colClasses")}</dt>
+                    <dd className="text-foreground">{faculty.classes}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("teachers.report.colSessions")}</dt>
+                    <dd className="text-foreground">{faculty.sessions}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("teachers.report.colStudents")}</dt>
+                    <dd className="font-semibold text-foreground">{faculty.totalStudents}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("teachers.report.colHoursWeek")}</dt>
+                    <dd>
+                      <div className="flex items-center gap-2">
+                        <div className="h-1.5 w-16 rounded-full bg-muted">
+                          <div
+                            className="h-1.5 rounded-full bg-primary"
+                            style={{ width: `${(faculty.hoursPerWeek / 12) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-bold text-foreground">{faculty.hoursPerWeek}h</span>
+                      </div>
+                    </dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>

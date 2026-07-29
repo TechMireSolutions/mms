@@ -110,51 +110,56 @@ export function PrintInvoiceModal({
         ) : null
       }
       footer={
-        <div className="flex w-full items-center justify-between">
-          <p className="text-xs text-muted-foreground m-0">
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="m-0 min-w-0 text-xs text-muted-foreground">
             {t("obligations.print.pageSize", {
               size: template.pageSize,
               width: size.width,
               height: size.height,
             })}
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"
               onClick={onClose}
               variant="outline"
-              className="px-4 py-2 h-auto rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors shadow-none"
+              className="min-h-11 px-4 py-2 h-auto rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors shadow-none"
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               type="button"
               onClick={handleExportPDF}
               variant="outline"
-              className="flex items-center gap-2 px-4 py-2 h-auto rounded-lg border border-border text-sm font-semibold hover:bg-muted transition-colors shadow-none"
+              className="flex min-h-11 items-center gap-2 px-4 py-2 h-auto rounded-lg border border-border text-sm font-semibold hover:bg-muted transition-colors shadow-none"
             >
-              <FileDown className="w-4 h-4" aria-hidden="true" /> Export PDF
+              <FileDown className="w-4 h-4" aria-hidden="true" /> {t("reports.export.pdf")}
             </Button>
             <Button
               type="button"
               onClick={handlePrint}
-              className="flex items-center gap-2 px-5 py-2 h-auto rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
+              className="flex min-h-11 items-center gap-2 px-5 py-2 h-auto rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
             >
-              <Printer className="w-4 h-4" aria-hidden="true" /> Print
+              <Printer className="w-4 h-4" aria-hidden="true" /> {t("reports.export.print")}
             </Button>
           </div>
         </div>
       }
     >
-      <div className="flex justify-center bg-muted/20 border border-dashed border-border rounded-xl p-4 overflow-x-auto min-h-[18.75rem]">
-        <div ref={printRef} style={{ lineHeight: 1.4 }}>
-          <InvoicePrintPreview
-            template={template}
-            collection={collection}
-            lookups={lookups}
-            showBoundary
-            scale={1}
-          />
+      <div className="flex min-h-[18.75rem] justify-center overflow-x-auto rounded-xl border border-dashed border-border bg-muted/20 p-4">
+        <div className="origin-top-left scale-[0.55] sm:scale-[0.7] md:scale-[0.85] lg:scale-100" style={{ direction: "ltr" }}>
+          <div
+            ref={printRef}
+            style={{ lineHeight: 1.4, width: size.width, height: size.height }}
+          >
+            <InvoicePrintPreview
+              template={template}
+              collection={collection}
+              lookups={lookups}
+              showBoundary
+              scale={1}
+            />
+          </div>
         </div>
       </div>
     </Modal>

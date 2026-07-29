@@ -21,7 +21,8 @@ interface SubTabBarProps<K extends string> {
 }
 
 /**
- * Pill-style segmented control on desktop; accordion under active heading on mobile.
+ * Pill-style segmented control on desktop; stacked full-width triggers under lg.
+ * When `children` are provided, mobile uses accordion panels under each heading.
  */
 export function SubTabBar<K extends string>({
   tabs,
@@ -109,7 +110,7 @@ export function SubTabBar<K extends string>({
                 type="button"
                 onClick={() => onChange(t.key)}
                 className={cn(
-                  "flex min-h-11 items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all",
+                  "flex min-h-11 min-w-11 items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all",
                   value === t.key
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
@@ -127,23 +128,49 @@ export function SubTabBar<K extends string>({
   }
 
   return (
-    <div className={cn("flex w-full gap-1 overflow-x-auto rounded-xl bg-muted p-1 lg:w-fit", className)}>
-      {tabs.map((t) => (
-        <button
-          key={t.key}
-          type="button"
-          onClick={() => onChange(t.key)}
-          className={cn(
-            "flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition-all",
-            value === t.key
-              ? "bg-card text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          {t.icon && <t.icon className="h-3.5 w-3.5" />}
-          <span>{t.label}</span>
-        </button>
-      ))}
+    <div className={cn("space-y-2", className)}>
+      <div className="space-y-1 lg:hidden">
+        {tabs.map((tab) => {
+          const active = value === tab.key;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => onChange(tab.key)}
+              aria-pressed={active}
+              className={cn(
+                "flex min-h-11 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-start text-xs font-semibold transition-colors",
+                active
+                  ? "border-primary/20 bg-card text-primary shadow-sm"
+                  : "border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <span className="flex min-w-0 items-center gap-1.5">
+                {tab.icon && <tab.icon className="h-3.5 w-3.5 shrink-0" />}
+                <span className="truncate">{tab.label}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="hidden w-fit gap-1 overflow-x-auto rounded-xl bg-muted p-1 lg:flex">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => onChange(t.key)}
+            className={cn(
+              "flex min-h-11 min-w-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition-all",
+              value === t.key
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {t.icon && <t.icon className="h-3.5 w-3.5" />}
+            <span>{t.label}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

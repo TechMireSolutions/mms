@@ -186,7 +186,7 @@ export function DatePicker({
   }
 
   return (
-    <div className={cn("relative flex w-full items-center rounded-lg border border-border bg-background px-3 py-2.5 min-h-11 text-sm text-foreground focus-within:outline-none focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/40 transition-all", className)}>
+    <div className={cn("relative flex min-h-11 w-full items-center rounded-lg border border-border bg-background px-3 text-sm text-foreground transition-all focus-within:border-primary/40 focus-within:outline-none focus-within:ring-2 focus-within:ring-primary/20", className)}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger
           type="button"
@@ -219,7 +219,7 @@ export function DatePicker({
         onBlur={handleBlur}
         placeholder={resolvedPlaceholder}
         disabled={disabled}
-        className="flex-1 bg-transparent border-0 p-0 text-sm focus:outline-none focus:ring-0 placeholder:text-muted-foreground/60 disabled:cursor-not-allowed disabled:opacity-50"
+        className="min-h-11 min-w-0 flex-1 border-0 bg-transparent p-0 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={t("datePicker.enterFormatAria", { format: dateFormat })}

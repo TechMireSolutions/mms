@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { ACCOUNT_TYPE_META, ACCOUNT_TYPES, computeTrialBalance, Account, JournalEntry, FiscalYear } from '@/lib/data/accountingData';
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
@@ -108,7 +109,55 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
                   </h3>
                   <span className="text-xs font-semibold text-muted-foreground">{t("accounting.tb.accountsCount", { count: accountTypeRows.length })}</span>
                 </header>
-                <div className="overflow-x-auto max-w-full">
+                <div className="space-y-3 p-3 md:hidden">
+                  {accountTypeRows.sort((firstRow, secondRow) => firstRow.code.localeCompare(secondRow.code)).map((trialBalanceRow, index) => (
+                    <motion.article
+                      key={trialBalanceRow.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: index * 0.03 }}
+                      className="space-y-2 rounded-xl border border-border bg-card p-3"
+                    >
+                      <div className="flex min-w-0 items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-mono text-xs font-bold text-muted-foreground">{trialBalanceRow.code}</p>
+                          <h4 className="truncate text-sm font-medium text-foreground">{trialBalanceRow.name}</h4>
+                        </div>
+                        <div className="shrink-0 text-end">
+                          <p className="font-mono text-xs font-semibold text-info">{formatPositiveNumber(trialBalanceRow.totalDebit)}</p>
+                          <p className="font-mono text-xs font-semibold text-success">{formatPositiveNumber(trialBalanceRow.totalCredit)}</p>
+                        </div>
+                      </div>
+                      {trialBalanceRow.subtype ? (
+                        <p className="text-xs text-muted-foreground">{trialBalanceRow.subtype}</p>
+                      ) : null}
+                      <dl className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.debit")}</dt>
+                          <dd className="font-mono text-xs font-semibold text-info">{formatPositiveNumber(trialBalanceRow.totalDebit)}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.credit")}</dt>
+                          <dd className="font-mono text-xs font-semibold text-success">{formatPositiveNumber(trialBalanceRow.totalCredit)}</dd>
+                        </div>
+                      </dl>
+                    </motion.article>
+                  ))}
+                  <article className="rounded-xl border border-border bg-muted/20 p-3">
+                    <p className="text-xs font-bold uppercase text-muted-foreground m-0 mb-2">{t("accounting.tb.subTotal")}</p>
+                    <dl className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.debit")}</dt>
+                        <dd className="font-mono font-bold text-info">{formatPositiveNumber(groupDebit)}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.credit")}</dt>
+                        <dd className="font-mono font-bold text-success">{formatPositiveNumber(groupCredit)}</dd>
+                      </div>
+                    </dl>
+                  </article>
+                </div>
+                <div className="hidden overflow-x-auto md:block">
                 <table className="w-full text-sm">
                   <caption className="sr-only">{t("accounting.tb.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })}</caption>
                   <thead className="bg-muted/40 border-b border-border">
@@ -146,7 +195,22 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
 
           {/* Grand total */}
           <div className="rounded-xl border-2 border-foreground/20 overflow-hidden bg-muted/30">
-            <div className="overflow-x-auto max-w-full">
+            <div className="space-y-3 p-3 md:hidden">
+              <article className="rounded-xl border border-border bg-card p-3">
+                <p className="text-sm font-bold uppercase tracking-wide text-foreground m-0 mb-2">{t("accounting.tb.grandTotal")}</p>
+                <dl className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.debit")}</dt>
+                    <dd className="font-mono font-bold text-info text-base">{formatCurrency(grandDebit)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.credit")}</dt>
+                    <dd className="font-mono font-bold text-success text-base">{formatCurrency(grandCredit)}</dd>
+                  </div>
+                </dl>
+              </article>
+            </div>
+            <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <caption className="sr-only">{t("accounting.tb.grandTotalCaption")}</caption>
               <tfoot>

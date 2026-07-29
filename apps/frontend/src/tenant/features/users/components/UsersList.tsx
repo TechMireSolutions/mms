@@ -256,7 +256,111 @@ export function UsersList({
         </div>
       ) : (
         <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
-          <div className="overflow-x-auto">
+          <div className="space-y-3 p-3 md:hidden">
+            {filtered.map((user) => (
+              <motion.article
+                key={user.id}
+                layout
+                className="space-y-3 rounded-xl border border-border bg-card p-3"
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <Avatar user={user} />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">{user.name}</p>
+                      <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                  </div>
+                  {canDelete ? (
+                    <Checkbox
+                      checked={selected.includes(user.id)}
+                      onCheckedChange={() => toggleSelect(user.id)}
+                      aria-label={t('users.selectRow', { name: user.name })}
+                    />
+                  ) : null}
+                </div>
+                <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                  <div>
+                    <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t('users.colRole')}</dt>
+                    <dd><UserRoleBadge roleId={user.role} /></dd>
+                  </div>
+                  <div>
+                    <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t('users.colStatus')}</dt>
+                    <dd><UserStatusBadge status={user.status} /></dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t('users.colLastLogin')}</dt>
+                    <dd className="text-xs text-muted-foreground">{fmtDate(user.lastLogin)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t('users.colCreated')}</dt>
+                    <dd className="font-mono text-xs text-muted-foreground">{user.createdDate}</dd>
+                  </div>
+                  <div>
+                    <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t('users.col2fa')}</dt>
+                    <dd>
+                      <SettingsMetaBadge variant={user.twoFactorEnabled ? 'success' : 'muted'}>
+                        {user.twoFactorEnabled ? t('users.twoFactorOn') : t('users.twoFactorOff')}
+                      </SettingsMetaBadge>
+                    </dd>
+                  </div>
+                </dl>
+                <div className="flex flex-wrap items-center justify-end gap-1 border-t border-border pt-2">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => onView(user)}
+                    aria-label={t('users.actionView', { name: user.name })}
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                  </Button>
+                  {canWrite && !showDeleted && (
+                    <>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => onEdit(user)}
+                        aria-label={t('users.actionEdit', { name: user.name })}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => onResetPassword(user)}
+                        aria-label={t('users.actionResetPassword', { name: user.name })}
+                      >
+                        <KeyRound className="h-3.5 w-3.5" />
+                      </Button>
+                    </>
+                  )}
+                  {canDelete && (
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => (showDeleted ? onRestore(user.id) : onDelete(user.id))}
+                      aria-label={
+                        showDeleted
+                          ? t('users.trash.restore')
+                          : t('users.trash.delete', { name: user.name })
+                      }
+                    >
+                      {showDeleted ? (
+                        <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </motion.article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm table-fixed">
               <thead className="border-b border-border bg-muted/60">
                 <tr>

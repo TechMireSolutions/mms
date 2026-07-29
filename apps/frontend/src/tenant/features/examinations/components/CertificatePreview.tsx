@@ -96,14 +96,14 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
               {(["top-left", "top-right", "bottom-left", "bottom-right"] as const).map((cornerPosition) => {
                 const cornerStyles: React.CSSProperties = {
                   position: "absolute",
-                  [cornerPosition.includes("top") ? "top" : "bottom"]: "8px",
-                  [cornerPosition.includes("left") ? "left" : "right"]: "8px",
+                  [cornerPosition.includes("top") ? "insetBlockStart" : "insetBlockEnd"]: "8px",
+                  [cornerPosition.includes("left") ? "insetInlineStart" : "insetInlineEnd"]: "8px",
                   width: "32px",
                   height: "32px",
-                  borderTop: cornerPosition.includes("top") ? `4px solid ${secondary}` : "none",
-                  borderBottom: cornerPosition.includes("bottom") ? `4px solid ${secondary}` : "none",
-                  borderLeft: cornerPosition.includes("left") ? `4px solid ${secondary}` : "none",
-                  borderRight: cornerPosition.includes("right") ? `4px solid ${secondary}` : "none",
+                  borderBlockStart: cornerPosition.includes("top") ? `4px solid ${secondary}` : "none",
+                  borderBlockEnd: cornerPosition.includes("bottom") ? `4px solid ${secondary}` : "none",
+                  borderInlineStart: cornerPosition.includes("left") ? `4px solid ${secondary}` : "none",
+                  borderInlineEnd: cornerPosition.includes("right") ? `4px solid ${secondary}` : "none",
                 };
                 return <div key={cornerPosition} style={cornerStyles} />;
               })}
@@ -161,7 +161,7 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
 
               {/* Date & signatures row */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: "24px", borderTop: `1px solid ${PRINT_NEUTRAL.border}`, paddingTop: "16px" }}>
-                <div style={{ textAlign: "left" }}>
+                <div style={{ textAlign: "start" }}>
                   <div style={{ width: "120px", borderBottom: `1px solid ${PRINT_NEUTRAL.subcaption}`, marginBottom: "4px" }} />
                   <p style={{ fontSize: "10px", color: PRINT_NEUTRAL.caption }}>{t("examinations.certificatePreview.classTeacher")}</p>
                 </div>
@@ -169,8 +169,8 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
                   <p style={{ fontSize: "10px", color: PRINT_NEUTRAL.subcaption }}>{t("examinations.certificatePreview.examDate")}</p>
                   <p style={{ fontSize: "12px", fontWeight: "600", color: PRINT_NEUTRAL.emphasis }}>{date}</p>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ width: "120px", borderBottom: `1px solid ${PRINT_NEUTRAL.subcaption}`, marginBottom: "4px", marginLeft: "auto" }} />
+                <div style={{ textAlign: "end" }}>
+                  <div style={{ width: "120px", borderBottom: `1px solid ${PRINT_NEUTRAL.subcaption}`, marginBottom: "4px", marginInlineStart: "auto" }} />
                   <p style={{ fontSize: "10px", color: PRINT_NEUTRAL.caption }}>{t("examinations.certificatePreview.principalDirector")}</p>
                 </div>
               </div>

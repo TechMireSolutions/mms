@@ -70,6 +70,26 @@ const MODULE_ROUTES = [
     path: '/users',
     ready: 'button:has-text("Add User"), [role="tab"], #main-content',
   },
+  {
+    path: '/hasanat-cards',
+    ready: 'h1',
+  },
+  {
+    path: '/examinations',
+    ready: 'h1',
+  },
+  {
+    path: '/question-bank',
+    ready: 'h1',
+  },
+  {
+    path: '/obligations',
+    ready: 'h1',
+  },
+  {
+    path: '/profile',
+    ready: 'h1',
+  },
 ] as const;
 
 async function loginAndSetViewport(
@@ -92,6 +112,7 @@ async function gotoReadyRoute(page: Page, path: string, ready?: string): Promise
 async function assertModuleRouteLayout(page: Page, path: string, ready: string): Promise<void> {
   await gotoReadyRoute(page, path, ready);
   await assertNoHorizontalOverflow(page);
+  await assertPrimaryControlsMeetTouchTarget(page, { within: '#main-content' });
   await assertVisibleTablesScrollWrapped(page, path);
 }
 
@@ -161,7 +182,7 @@ test.describe.serial('Authenticated tenant shell responsive layout', () => {
       await assertNoHorizontalOverflow(page);
     });
 
-    test(`${viewport.name} (${viewport.width}px) module work views have no horizontal overflow`, async ({
+    test(`${viewport.name} (${viewport.width}px) module work views satisfy responsive layout checks`, async ({
       page,
     }) => {
       test.setTimeout(180_000);

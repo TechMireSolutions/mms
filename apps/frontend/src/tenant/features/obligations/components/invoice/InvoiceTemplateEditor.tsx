@@ -88,12 +88,30 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
   const [saved, setSaved] = useState(false);
   const [history, setHistory] = useState<InvoiceTemplate[]>([]);
   const [future, setFuture] = useState<InvoiceTemplate[]>([]);
+  const [canvasScale, setCanvasScale] = useState(1);
+  const canvasViewportRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
-  const dragState = useRef<{ id: string, startX: number, startY: number, origX: number, origY: number, canvasLeft: number, canvasTop: number } | null>(null);
+  const dragState = useRef<{ id: string, startX: number, startY: number, origX: number, origY: number } | null>(null);
   const resizeState = useRef<{ id: string, startX: number, startY: number, origW: number, origH: number } | null>(null);
 
   const size = PAGE_SIZES[template.pageSize] || PAGE_SIZES.A6;
   const selectedElement = template.elements.find((templateElement) => templateElement.id === selectedId);
+
+  useEffect(() => {
+    const viewport = canvasViewportRef.current;
+    if (!viewport) return;
+
+    const updateCanvasScale = () => {
+      const availableWidth = Math.max(0, viewport.clientWidth - 32);
+      if (availableWidth > 0) {
+        setCanvasScale(Math.min(1, availableWidth / size.width));
+      }
+    };
+    const observer = new ResizeObserver(updateCanvasScale);
+    observer.observe(viewport);
+    updateCanvasScale();
+    return () => observer.disconnect();
+  }, [size.width]);
 
   // ── History management ────────────────────────────────────────────────────
   const pushHistory = useCallback((tmpl: InvoiceTemplate) => {
@@ -186,23 +204,20 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
     setSelectedId(elementId);
     const templateElement = template.elements.find((element) => element.id === elementId);
     if (!templateElement) return;
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
+    if (!canvasRef.current) return;
     dragState.current = {
       id: elementId,
       startX: event.clientX,
       startY: event.clientY,
       origX: templateElement.x,
       origY: templateElement.y,
-      canvasLeft: rect.left,
-      canvasTop: rect.top,
     };
   };
 
   const onMouseMove = useCallback((event: MouseEvent) => {
     if (dragState.current) {
-      const deltaX = event.clientX - dragState.current.startX;
-      const deltaY = event.clientY - dragState.current.startY;
+      const deltaX = (event.clientX - dragState.current.startX) / canvasScale;
+      const deltaY = (event.clientY - dragState.current.startY) / canvasScale;
       updateElements((templateElements) =>
         templateElements.map((templateElement) => templateElement.id === dragState.current!.id
           ? { ...templateElement, x: snap(Math.max(0, dragState.current!.origX + deltaX)), y: snap(Math.max(0, dragState.current!.origY + deltaY)) }
@@ -211,8 +226,8 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
       );
     }
     if (resizeState.current) {
-      const deltaX = event.clientX - resizeState.current.startX;
-      const deltaY = event.clientY - resizeState.current.startY;
+      const deltaX = (event.clientX - resizeState.current.startX) / canvasScale;
+      const deltaY = (event.clientY - resizeState.current.startY) / canvasScale;
       updateElements((templateElements) =>
         templateElements.map((templateElement) => templateElement.id === resizeState.current!.id
           ? { ...templateElement, w: snap(Math.max(20, resizeState.current!.origW + deltaX)), h: snap(Math.max(8, resizeState.current!.origH + deltaY)) }
@@ -220,7 +235,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
         )
       );
     }
-  }, [updateElements]);
+  }, [canvasScale, updateElements]);
 
   const onMouseUp = useCallback(() => {
     if (dragState.current || resizeState.current) {
@@ -337,21 +352,49 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
         {isSelected && (
           <div
             onMouseDown={(event) => onMouseDownResize(event, templateElement.id)}
+            className="absolute -bottom-2 -end-2 z-10 cursor-se-resize rounded-md"
             style={{
-              position: "absolute", bottom: -4, right: -4,
-              width: 10, height: 10,
-              background: printTokens.primary, borderRadius: 2,
-              cursor: "se-resize", zIndex: 10,
+              background: printTokens.primary,
+              height: 44 / canvasScale,
+              width: 44 / canvasScale,
             }}
+            aria-hidden
           />
         )}
         {/* Action strip */}
         {isSelected && (
-          <div style={{ position: "absolute", top: -22, left: 0, display: "flex", gap: 2, zIndex: 20 }}>
-            <Button type="button" onClick={(event) => { event.stopPropagation(); duplicateEl(templateElement.id); }}
-              style={{ padding: "1px 4px", background: printTokens.primary, color: printTokens.onPrimary, border: "none", borderRadius: 3, fontSize: 9, cursor: "pointer" }}>⧉</Button>
-            <Button type="button" onClick={(event) => { event.stopPropagation(); deleteEl(templateElement.id); }}
-              style={{ padding: "1px 4px", background: printTokens.destructive, color: printTokens.onPrimary, border: "none", borderRadius: 3, fontSize: 9, cursor: "pointer" }}>✕</Button>
+          <div
+            className="absolute start-0 z-20 flex gap-1"
+            style={{ top: -48 / canvasScale }}
+          >
+            <Button
+              type="button"
+              onClick={(event) => { event.stopPropagation(); duplicateEl(templateElement.id); }}
+              className="rounded-md p-0 text-xs font-bold shadow-none"
+              style={{
+                background: printTokens.primary,
+                color: printTokens.onPrimary,
+                minHeight: 44 / canvasScale,
+                minWidth: 44 / canvasScale,
+              }}
+              aria-label={t("obligations.invoiceTemplate.duplicate")}
+            >
+              ⧉
+            </Button>
+            <Button
+              type="button"
+              onClick={(event) => { event.stopPropagation(); deleteEl(templateElement.id); }}
+              className="rounded-md p-0 text-xs font-bold shadow-none"
+              style={{
+                background: printTokens.destructive,
+                color: printTokens.onPrimary,
+                minHeight: 44 / canvasScale,
+                minWidth: 44 / canvasScale,
+              }}
+              aria-label={t("common.delete")}
+            >
+              ✕
+            </Button>
           </div>
         )}
       </div>
@@ -445,28 +488,41 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
         </aside>
 
         {/* Centre — canvas */}
-        <main className="flex min-h-0 min-w-0 flex-1 items-start justify-center overflow-auto bg-muted/40 p-4 sm:p-8"
+        <main ref={canvasViewportRef} className="flex min-h-0 min-w-0 flex-1 items-start justify-center overflow-auto bg-muted/40 p-4 sm:p-8"
           onClick={() => setSelectedId(null)}>
-          <div style={{ position: "relative", width: size.width, height: size.height }}
-            ref={canvasRef}>
-            {/* Page background */}
-            <div style={{
-              position: "absolute", inset: 0,
-              background: printTokens.paper,
-              boxShadow: "0 4px 30px rgba(0,0,0,0.15)",
-              border: `1px solid ${printTokens.border}`,
-            }} />
-            {/* Page boundary label */}
-            {showGuides && (
+          <div
+            className="relative mx-auto shrink-0"
+            style={{ width: size.width * canvasScale, height: size.height * canvasScale }}
+          >
+            <div
+              className="relative origin-top-left"
+              style={{
+                width: size.width,
+                height: size.height,
+                transform: `scale(${canvasScale})`,
+                direction: "ltr",
+              }}
+              ref={canvasRef}
+            >
+              {/* Page background */}
               <div style={{
-                position: "absolute", top: -20, left: 0,
-                fontSize: 10, color: PRINT_NEUTRAL.muted, fontFamily: "monospace",
-              }}>
-                {PAGE_SIZES[template.pageSize]?.label} — {size.width}×{size.height}px
-              </div>
-            )}
-            {/* Elements */}
-            {template.elements.map(renderElement)}
+                position: "absolute", inset: 0,
+                background: printTokens.paper,
+                boxShadow: "0 4px 30px rgba(0,0,0,0.15)",
+                border: `1px solid ${printTokens.border}`,
+              }} />
+              {/* Page boundary label */}
+              {showGuides && (
+                <div style={{
+                  position: "absolute", top: -20, insetInlineStart: 0,
+                  fontSize: 10, color: PRINT_NEUTRAL.muted, fontFamily: "monospace",
+                }}>
+                  {PAGE_SIZES[template.pageSize]?.label} — {size.width}×{size.height}px
+                </div>
+              )}
+              {/* Elements */}
+              {template.elements.map(renderElement)}
+            </div>
           </div>
         </main>
 

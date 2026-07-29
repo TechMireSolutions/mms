@@ -4,6 +4,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { motion } from "framer-motion";
 import { Star, Package, Gift, RotateCcw, TrendingUp, Layers } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
+import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import type { Denomination, StockBatch, Distribution } from '@/lib/data/hasanatData';
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -99,19 +100,23 @@ export function HasanatDashboard({
         {/* Distribution donut */}
         <Card accentColor="primary" className="p-5 shadow-sm hover:shadow-md border-border/80">
           <h3 className="text-sm font-bold text-foreground mb-4 m-0">{t("hasanat.dashboard.cardDistribution")}</h3>
-          <div className="flex items-center gap-6">
-            <PieChart width={130} height={130}>
-              <Pie data={pieData} cx={60} cy={60} innerRadius={38} outerRadius={58} dataKey="value" paddingAngle={3}>
-                {pieData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
-              </Pie>
-              <Tooltip formatter={(value) => [t("hasanat.dashboard.cardsCount", { count: Number(value) }), ""]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
-            </PieChart>
-            <div className="space-y-2.5">
+          <div className="flex flex-col items-stretch gap-6 sm:flex-row sm:items-center">
+            <div className="mx-auto h-[8.125rem] w-full max-w-[10rem] shrink-0 sm:mx-0">
+              <SafeResponsiveContainer height={130}>
+                <PieChart>
+                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={38} outerRadius={58} dataKey="value" paddingAngle={3}>
+                    {pieData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
+                  </Pie>
+                  <Tooltip formatter={(value) => [t("hasanat.dashboard.cardsCount", { count: Number(value) }), ""]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                </PieChart>
+              </SafeResponsiveContainer>
+            </div>
+            <div className="min-w-0 flex-1 space-y-2.5">
               {pieData.map((entry) => (
-                <div key={entry.name} className="flex items-center gap-2.5">
-                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: entry.color }} aria-hidden="true" />
-                  <span className="text-sm text-muted-foreground flex-1">{entry.name}</span>
-                  <span className="text-sm font-bold text-foreground">{entry.value}</span>
+                <div key={entry.name} className="flex min-w-0 items-center gap-2.5">
+                  <div className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: entry.color }} aria-hidden="true" />
+                  <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{entry.name}</span>
+                  <span className="shrink-0 text-sm font-bold text-foreground">{entry.value}</span>
                 </div>
               ))}
             </div>
@@ -126,15 +131,15 @@ export function HasanatDashboard({
               const pct = denomination.total > 0 ? Math.round((denomination.used / denomination.total) * 100) : 0;
               return (
                 <div key={denomination.id}>
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm" aria-hidden="true">{denomination.icon}</span>
-                      <span className="text-sm font-semibold text-foreground">{denomination.name}</span>
-                      <span className="text-xs font-bold text-muted-foreground">
+                  <div className="mb-1 flex min-w-0 items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="shrink-0 text-sm" aria-hidden="true">{denomination.icon}</span>
+                      <span className="truncate text-sm font-semibold text-foreground">{denomination.name}</span>
+                      <span className="shrink-0 text-xs font-bold text-muted-foreground">
                         {t("hasanat.dashboard.pts", { count: denomination.points })}
                       </span>
                     </div>
-                    <span className="text-xs text-muted-foreground">{denomination.remaining}/{denomination.total}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">{denomination.remaining}/{denomination.total}</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-border overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${denomination.name} stock usage`}>
                     <div

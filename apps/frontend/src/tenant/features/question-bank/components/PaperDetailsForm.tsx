@@ -18,8 +18,8 @@ export function PaperDetailsForm({ config, onChange }: PaperDetailsFormProps): R
 
   return (
     <section className="rounded-xl border border-border bg-card p-3 sm:p-4">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <div className="col-span-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+        <div className="sm:col-span-2">
           <label htmlFor="paper-name" className={FORM_LABEL}>{t("questionBank.paperName")}</label>
           <Input
             id="paper-name"
@@ -29,7 +29,7 @@ export function PaperDetailsForm({ config, onChange }: PaperDetailsFormProps): R
             placeholder={t("questionBank.paperNamePlaceholder")}
           />
         </div>
-        <div className="col-span-2 sm:col-span-1">
+        <div>
           <label htmlFor="paper-class" className={FORM_LABEL}>{t("questionBank.paperClass")}</label>
           <Input
             id="paper-class"
@@ -61,7 +61,7 @@ export function PaperDetailsForm({ config, onChange }: PaperDetailsFormProps): R
             onChange={(event) => onChange("totalMarks", coercePaperNumberInput(event.target.value, config.totalMarks, 1))}
           />
         </div>
-        <div className="col-span-2 md:col-span-3">
+        <div className="sm:col-span-2 md:col-span-3">
           <label htmlFor="paper-instructions" className={FORM_LABEL}>{t("questionBank.paperInstructions")}</label>
           <Textarea
             id="paper-instructions"

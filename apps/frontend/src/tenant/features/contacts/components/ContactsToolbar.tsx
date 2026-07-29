@@ -69,15 +69,15 @@ export default function ContactsToolbar({
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2">
-        <div className="relative flex-1">
+        <div className="relative min-w-0 flex-1">
           <SearchBar
             value={search}
             onChange={onSearchChange}
             placeholder={t("contacts.searchPlaceholder")}
-            className="w-full"
+            className="w-full min-w-0"
           />
-          <div className="hidden md:flex absolute end-3 top-1/2 -translate-y-1/2 items-center gap-1 pointer-events-none">
-            <kbd className="px-1.5 py-0.5 text-xs font-mono font-medium text-muted-foreground bg-muted/60 border border-border/60 rounded">
+          <div className="pointer-events-none absolute end-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 md:flex">
+            <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-xs font-medium text-muted-foreground">
               /
             </kbd>
           </div>

@@ -147,7 +147,67 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
         </div>
       ) : (
         <div className="rounded-xl border border-border overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="space-y-3 p-3 md:hidden">
+            {rows.map((row) => (
+              <article key={row.id} className="space-y-3 rounded-xl border border-border bg-card p-3">
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-muted-foreground m-0">{formatDate(row.date)}</p>
+                    <h4 className="font-medium text-sm text-foreground m-0 mt-0.5">{row.description}</h4>
+                    <p className="text-xs text-muted-foreground font-mono m-0">{row.ref}</p>
+                  </div>
+                  <div className="inline-flex shrink-0 items-center gap-1.5">
+                    {row.flowType === "in" && (
+                      <TrendingUp className="w-3.5 h-3.5 text-success shrink-0" aria-hidden="true" />
+                    )}
+                    {row.flowType === "out" && (
+                      <TrendingDown className="w-3.5 h-3.5 text-destructive shrink-0" aria-hidden="true" />
+                    )}
+                    {row.flowType === "transfer" && (
+                      <ArrowUpDown className="w-3.5 h-3.5 text-info shrink-0" aria-hidden="true" />
+                    )}
+                    <StatusBadge
+                      status={row.flowType}
+                      size="sm"
+                      config={{
+                        in: { label: row.flowLabel, cls: FLOW_TONE.in.badge },
+                        out: { label: row.flowLabel, cls: FLOW_TONE.out.badge },
+                        transfer: { label: row.flowLabel, cls: SEMANTIC_BADGE.infoStrong },
+                      }}
+                    />
+                  </div>
+                </div>
+                <dl className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-xs font-semibold text-success">{t("accounting.cashbook.moneyIn")}</dt>
+                    <dd className="font-mono font-bold text-success">
+                      {row.flowType === "in" ? formatCurrency(row.flowAmount) : <span className="text-muted-foreground/30 font-normal">—</span>}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-destructive">{t("accounting.cashbook.moneyOut")}</dt>
+                    <dd className="font-mono font-bold text-destructive">
+                      {row.flowType === "out" ? formatCurrency(row.flowAmount) : <span className="text-muted-foreground/30 font-normal">—</span>}
+                    </dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+            <article className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
+              <p className="text-xs font-bold text-muted-foreground uppercase m-0">{t("accounting.cashbook.transactionCount", { count: rows.length })}</p>
+              <dl className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <dt className="text-xs font-semibold text-success">{t("accounting.cashbook.moneyIn")}</dt>
+                  <dd className="font-mono font-bold text-success text-xs">{formatCurrency(totalIn)}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold text-destructive">{t("accounting.cashbook.moneyOut")}</dt>
+                  <dd className="font-mono font-bold text-destructive text-xs">{formatCurrency(totalOut)}</dd>
+                </div>
+              </dl>
+            </article>
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <caption className="sr-only">{t("accounting.cashbook.tableCaption")}</caption>
               <thead className="bg-muted/60 border-b border-border">

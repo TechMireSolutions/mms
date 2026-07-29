@@ -142,6 +142,87 @@ export function AttendanceRecords({
 
   const classLabel = (classId: string) => allClasses.find((sessionClass) => sessionClass.id === classId)?.name || classId;
 
+  const renderStatus = (attendanceRecord: AttendanceRecord) => {
+    if (editingRecord?.id === attendanceRecord.id) {
+      return <StatusToggle value={editingRecord.status} onChange={(value) => updateDraft("status", value as AttendanceRecord["status"])} />;
+    }
+    const info = getAttendanceStatusInfo(attendanceRecord.status, statuses);
+    const config: Record<string, StatusBadgeConfigItem> = info
+      ? { [attendanceRecord.status]: { label: info.label, cls: `${info.bg} ${info.text} ${info.border} font-semibold`, dot: info.dot } }
+      : {};
+    return <StatusBadge status={attendanceRecord.status} config={config} size="sm" />;
+  };
+
+  const renderRowActions = (attendanceRecord: AttendanceRecord) => (
+    <div className="flex flex-wrap items-center justify-end gap-1">
+      {onMessage && !showDeleted && (
+        <>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => onMessage('whatsapp', [attendanceRecord])}
+            aria-label={t("attendance.message.whatsapp")}
+            title={t("attendance.message.whatsapp")}
+            className="text-muted-foreground hover:text-success"
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => onMessage('sms', [attendanceRecord])}
+            aria-label={t("attendance.message.sms")}
+            title={t("attendance.message.sms")}
+            className="text-muted-foreground hover:text-info"
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+          </Button>
+        </>
+      )}
+      {canWriteAttendance && !showDeleted && (
+        <>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              if (editingRecord?.id === attendanceRecord.id) {
+                void saveEditingRecord();
+              } else {
+                setEditingRecord(attendanceRecord);
+              }
+            }}
+            aria-label={editingRecord?.id === attendanceRecord.id ? t("common.save") : t("common.edit")}
+            className="text-muted-foreground hover:text-primary"
+          >
+            {editingRecord?.id === attendanceRecord.id ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
+          </Button>
+          {editingRecord?.id === attendanceRecord.id && (
+            <Button type="button" variant="ghost" size="icon" onClick={() => setEditingRecord(null)} aria-label={t("common.cancel")}>
+              <X className="w-3.5 h-3.5" />
+            </Button>
+          )}
+        </>
+      )}
+      {canDeleteAttendance && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => showDeleted
+            ? void onRestoreRecord(attendanceRecord.id)
+            : setPendingDeleteId(attendanceRecord.id)}
+          aria-label={showDeleted ? t("attendance.restoreRecord") : t("attendance.deleteRecord")}
+          className="text-muted-foreground hover:text-destructive"
+        >
+          {showDeleted ? <RotateCcw className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
+        </Button>
+      )}
+    </div>
+  );
+
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap gap-2 items-center">
@@ -198,7 +279,65 @@ export function AttendanceRecords({
       </div>
 
       <article className="rounded-xl border border-border overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="space-y-3 p-3 md:hidden">
+          {paginatedRecords.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">{t("attendance.empty.records")}</p>
+          ) : paginatedRecords.map((attendanceRecord) => (
+            <motion.article
+              key={attendanceRecord.id}
+              layout
+              className="space-y-3 rounded-xl border border-border bg-card p-3"
+            >
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="min-w-0">
+                  {showStudent && <h4 className="truncate text-sm font-semibold text-foreground">{attendanceRecord.studentName}</h4>}
+                  {showClass && <p className="truncate text-xs text-muted-foreground">{classLabel(attendanceRecord.classId)}</p>}
+                </div>
+                {showStatus && renderStatus(attendanceRecord)}
+              </div>
+              <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                {showDate && (
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.columns.date")}</dt>
+                    <dd className="font-mono text-foreground">{formatDate(attendanceRecord.date, true)}</dd>
+                  </div>
+                )}
+                {showTimeIn && (
+                  <div>
+                    <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("attendance.columns.timeIn")}</dt>
+                    <dd>
+                      {editingRecord?.id === attendanceRecord.id
+                        ? <Input type="time" value={editingRecord.timeIn} onChange={(event) => updateDraft("timeIn", event.target.value)}
+                            aria-label={t("attendance.columns.timeIn")}
+                            className="w-full min-w-0 text-xs" />
+                        : <span className="font-mono text-xs text-muted-foreground">{attendanceRecord.timeIn || "—"}</span>}
+                    </dd>
+                  </div>
+                )}
+                {showTimeOut && (
+                  <div>
+                    <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("attendance.columns.timeOut")}</dt>
+                    <dd>
+                      {editingRecord?.id === attendanceRecord.id
+                        ? <Input type="time" value={editingRecord.timeOut} onChange={(event) => updateDraft("timeOut", event.target.value)}
+                            aria-label={t("attendance.columns.timeOut")}
+                            className="w-full min-w-0 text-xs" />
+                        : <span className="font-mono text-xs text-muted-foreground">{attendanceRecord.timeOut || "—"}</span>}
+                    </dd>
+                  </div>
+                )}
+                {showNotes && (
+                  <div className="sm:col-span-2">
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.columns.notes")}</dt>
+                    <dd className="break-words text-xs text-muted-foreground">{attendanceRecord.notes || "—"}</dd>
+                  </div>
+                )}
+              </dl>
+              {renderRowActions(attendanceRecord)}
+            </motion.article>
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm table-fixed">
             <thead className="bg-muted/60 border-b border-border">
               <tr>
@@ -258,16 +397,7 @@ export function AttendanceRecords({
                   )}
                   {showStatus && (
                     <td className="px-3 py-2.5">
-                      {editingRecord?.id === attendanceRecord.id
-                        ? <StatusToggle value={editingRecord.status} onChange={(value) => updateDraft("status", value as AttendanceRecord["status"])} />
-                        : (() => {
-                            const info = getAttendanceStatusInfo(attendanceRecord.status, statuses);
-                            const config: Record<string, StatusBadgeConfigItem> = info
-                              ? { [attendanceRecord.status]: { label: info.label, cls: `${info.bg} ${info.text} ${info.border} font-semibold`, dot: info.dot } }
-                              : {};
-                            return <StatusBadge status={attendanceRecord.status} config={config} size="sm" />;
-                          })()
-                      }
+                      {renderStatus(attendanceRecord)}
                     </td>
                   )}
                   {showTimeIn && (
@@ -294,73 +424,7 @@ export function AttendanceRecords({
                     <td className="px-3 py-2.5 max-w-[10rem] truncate text-xs text-muted-foreground">{attendanceRecord.notes || "—"}</td>
                   )}
                   <td className="px-3 py-2.5 text-end">
-                    <div className="flex items-center justify-end gap-1">
-                      {onMessage && !showDeleted && (
-                        <>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onMessage('whatsapp', [attendanceRecord])}
-                            aria-label={t("attendance.message.whatsapp")}
-                            title={t("attendance.message.whatsapp")}
-                            className="text-muted-foreground hover:text-success"
-                          >
-                            <MessageCircle className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onMessage('sms', [attendanceRecord])}
-                            aria-label={t("attendance.message.sms")}
-                            title={t("attendance.message.sms")}
-                            className="text-muted-foreground hover:text-info"
-                          >
-                            <MessageSquare className="w-3.5 h-3.5" />
-                          </Button>
-                        </>
-                      )}
-                      {canWriteAttendance && !showDeleted && (
-                        <>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            if (editingRecord?.id === attendanceRecord.id) {
-                              void saveEditingRecord();
-                            } else {
-                              setEditingRecord(attendanceRecord);
-                            }
-                          }}
-                          aria-label={editingRecord?.id === attendanceRecord.id ? t("common.save") : t("common.edit")}
-                          className="text-muted-foreground hover:text-primary"
-                        >
-                          {editingRecord?.id === attendanceRecord.id ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
-                        </Button>
-                        {editingRecord?.id === attendanceRecord.id && (
-                          <Button type="button" variant="ghost" size="icon" onClick={() => setEditingRecord(null)} aria-label={t("common.cancel")}>
-                            <X className="w-3.5 h-3.5" />
-                          </Button>
-                        )}
-                        </>
-                      )}
-                      {canDeleteAttendance && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => showDeleted
-                            ? void onRestoreRecord(attendanceRecord.id)
-                            : setPendingDeleteId(attendanceRecord.id)}
-                          aria-label={showDeleted ? t("attendance.restoreRecord") : t("attendance.deleteRecord")}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          {showDeleted ? <RotateCcw className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
-                        </Button>
-                      )}
-                    </div>
+                    {renderRowActions(attendanceRecord)}
                   </td>
                 </motion.tr>
               ))}

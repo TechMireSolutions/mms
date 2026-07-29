@@ -450,20 +450,20 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
       className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl shadow-sm overflow-hidden"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-primary/5 border-b border-border/50 text-start">
-        <div className="flex items-center gap-2">
-          <GitCompare className="w-4 h-4 text-primary" />
-          <span className="text-sm font-bold text-foreground">{t("reports.comparison.title")}</span>
+      <div className="flex flex-col gap-3 px-4 py-3 bg-primary/5 border-b border-border/50 text-start sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-2">
+          <GitCompare className="w-4 h-4 shrink-0 text-primary" />
+          <span className="truncate text-sm font-bold text-foreground">{t("reports.comparison.title")}</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
           {!isContacts && (
-            <SubTabBar tabs={modeTabs} value={mode} onChange={setMode} panelIdPrefix="comparison-mode" />
+            <SubTabBar tabs={modeTabs} value={mode} onChange={setMode} panelIdPrefix="comparison-mode" className="min-w-0 flex-1" />
           )}
           <Button
             onClick={onClose}
             variant="ghost"
             size="icon"
-            className="rounded-lg hover:bg-muted transition-colors"
+            className="shrink-0 rounded-lg hover:bg-muted transition-colors"
             type="button"
             aria-label={t("reports.comparison.closeLabel")}
           >
@@ -539,7 +539,44 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
         {/* Delta table */}
         {mode === "sessions" && (
           <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
-            <div className="overflow-x-auto max-w-full">
+            <div className="space-y-3 p-3 md:hidden">
+              {(translatedData as ComparisonDataItem[]).map((row) => {
+                const diff = parseFloat((row.a - row.b).toFixed(1));
+                const formatVal = (val: number, key?: string) => {
+                  if (key === "feeCollected") return formatCurrency(val);
+                  if (key === "attendancePct" || key === "passRatePct") return `${val}%`;
+                  return formatNumber(val);
+                };
+                const formatDiff = (d: number, key?: string) => {
+                  const sign = d > 0 ? "+" : "";
+                  if (key === "feeCollected") return `${sign}${formatCurrency(d)}`;
+                  if (key === "attendancePct" || key === "passRatePct") return `${sign}${d}%`;
+                  return `${sign}${formatNumber(d)}`;
+                };
+                return (
+                  <article key={row.metric} className="space-y-2 rounded-xl border border-border bg-card p-3">
+                    <h4 className="text-sm font-bold text-foreground m-0">{row.metric}</h4>
+                    <dl className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <dt className="text-xs font-semibold text-primary">{isContacts ? t("reports.comparison.targetA") : t("reports.comparison.sessionA")}</dt>
+                        <dd className="font-bold text-primary">{formatVal(row.a, row.metricKey)}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold text-warning">{isContacts ? t("reports.comparison.targetB") : t("reports.comparison.sessionB")}</dt>
+                        <dd className="font-bold text-warning">{formatVal(row.b, row.metricKey)}</dd>
+                      </div>
+                      <div className="col-span-2">
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("reports.comparison.diff")}</dt>
+                        <dd className={`text-xs font-black ${diff > 0 ? "text-success" : diff < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                          {formatDiff(diff, row.metricKey)}
+                        </dd>
+                      </div>
+                    </dl>
+                  </article>
+                );
+              })}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border/50">
                 <tr>

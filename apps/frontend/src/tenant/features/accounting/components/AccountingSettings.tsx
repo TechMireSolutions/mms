@@ -361,7 +361,48 @@ export function AccountingSettings({
                 )}
               </header>
               <div className="rounded-xl border border-border overflow-hidden">
-                <div className="overflow-x-auto max-w-full">
+                <div className="space-y-3 p-3 md:hidden">
+                  {[...fiscalYears].sort((firstYear, secondYear) => secondYear.startDate.localeCompare(firstYear.startDate)).map((fiscalYear) => (
+                    <article key={fiscalYear.id} className="space-y-2 rounded-xl border border-border bg-card p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-semibold text-foreground m-0">{fiscalYear.label}</h4>
+                          <p className="text-xs text-muted-foreground m-0 mt-0.5">
+                            {formatDate(fiscalYear.startDate)} → {formatDate(fiscalYear.endDate)}
+                          </p>
+                        </div>
+                        <StatusBadge status={fiscalYear.status} config={fyStatusConfig} size="sm" />
+                      </div>
+                      {canEditSetup && (
+                        <div className="flex items-center justify-end gap-1 border-t border-border pt-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={t("fields.editNamedAria", { name: fiscalYear.label })}
+                            onClick={() => setFyModal({ ...fiscalYear })}
+                            className="text-muted-foreground hover:text-foreground shadow-none"
+                          >
+                            <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
+                          </Button>
+                          {fiscalYear.status !== "active" && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              aria-label={t("fields.deleteNamedAria", { name: fiscalYear.label })}
+                              onClick={() => { void handleDeleteFY(fiscalYear.id); }}
+                              className="text-muted-foreground hover:text-destructive shadow-none"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </article>
+                  ))}
+                </div>
+                <div className="hidden overflow-x-auto max-w-full md:block">
                 <table className="w-full text-sm">
                   <caption className="sr-only">{t("accounting.settings.fy.tableCaption")}</caption>
                   <thead className="bg-muted/50 border-b border-border">
@@ -390,7 +431,7 @@ export function AccountingSettings({
                                   type="button"
                                   variant="ghost"
                                   size="icon"
-                                  aria-label={`Edit ${fiscalYear.label}`}
+                                  aria-label={t("fields.editNamedAria", { name: fiscalYear.label })}
                                   onClick={() => setFyModal({ ...fiscalYear })}
                                   className="text-muted-foreground hover:text-foreground shadow-none"
                                 >
@@ -402,7 +443,7 @@ export function AccountingSettings({
                                   type="button"
                                   variant="ghost"
                                   size="icon"
-                                  aria-label={`Delete ${fiscalYear.label}`}
+                                  aria-label={t("fields.deleteNamedAria", { name: fiscalYear.label })}
                                   onClick={() => { void handleDeleteFY(fiscalYear.id); }}
                                   className="text-muted-foreground hover:text-destructive shadow-none"
                                 >

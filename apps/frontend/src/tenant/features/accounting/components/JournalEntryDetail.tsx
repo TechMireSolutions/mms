@@ -109,7 +109,54 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
           )}
 
           <Card accentColor="primary" className="p-0 overflow-hidden">
-            <div className="overflow-x-auto max-w-full">
+            <div className="space-y-3 p-3 md:hidden">
+              {entry.lines.map((line) => {
+                const account = getAccount(line.account_id);
+                return (
+                  <article key={line.id} className="space-y-2 rounded-xl border border-border bg-card p-3">
+                    <div>
+                      <p className="font-semibold text-foreground m-0">{account?.name || t("accounting.journal.detail.unknownAccount")}</p>
+                      <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                        <span className="font-mono text-xs text-muted-foreground">{account?.code}</span>
+                        {account && (
+                          <StatusBadge status={account.type} config={accountTypeConfig} size="sm" />
+                        )}
+                      </div>
+                    </div>
+                    {line.description ? (
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground m-0">{t("accounting.journal.detail.note")}</p>
+                        <p className="text-xs text-muted-foreground m-0">{line.description}</p>
+                      </div>
+                    ) : null}
+                    <dl className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.journal.detail.debit")}</dt>
+                        <dd className="font-mono text-xs font-semibold text-info m-0">{line.debit > 0 ? formatCurrency(line.debit) : "—"}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.journal.detail.credit")}</dt>
+                        <dd className="font-mono text-xs font-semibold text-success m-0">{line.credit > 0 ? formatCurrency(line.credit) : "—"}</dd>
+                      </div>
+                    </dl>
+                  </article>
+                );
+              })}
+              <article className="rounded-xl border border-border bg-muted/30 p-3">
+                <p className="text-xs font-bold uppercase text-muted-foreground m-0 mb-2">{t("accounting.journal.detail.totals")}</p>
+                <dl className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.journal.detail.debit")}</dt>
+                    <dd className="font-mono font-bold text-info m-0">{formatCurrency(totalDebit)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.journal.detail.credit")}</dt>
+                    <dd className="font-mono font-bold text-success m-0">{formatCurrency(totalCredit)}</dd>
+                  </div>
+                </dl>
+              </article>
+            </div>
+            <div className="hidden overflow-x-auto max-w-full md:block">
             <table className="w-full text-sm">
               <caption className="sr-only">{t("accounting.journal.detail.account")}</caption>
               <thead className="bg-muted/60 border-b border-border/40">

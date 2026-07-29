@@ -173,15 +173,15 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
           <Card key={den.id} className="ps-5.5">
             <div className="absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300" style={{ backgroundColor: den.color }} />
             {/* Den header */}
-            <header className="px-4 py-3 flex items-center gap-3 border-b border-border/40 bg-muted/20 ps-4">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg" style={{ background: den.color }} aria-hidden="true">
+            <header className="flex items-center gap-3 border-b border-border/40 bg-muted/20 px-4 py-3 ps-4">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg" style={{ background: den.color }} aria-hidden="true">
                 {den.icon}
               </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-bold text-foreground m-0">{den.name}</h3>
-                <p className="text-xs text-muted-foreground m-0">{t("hasanat.stock.pointsAvailable", { points: den.points, remaining: totalRemaining, total: totalStock })}</p>
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-sm font-bold text-foreground m-0">{den.name}</h3>
+                <p className="truncate text-xs text-muted-foreground m-0">{t("hasanat.stock.pointsAvailable", { points: den.points, remaining: totalRemaining, total: totalStock })}</p>
               </div>
-              <div className="w-20">
+              <div className="w-20 shrink-0">
                 <div className="h-1.5 rounded-full bg-border overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${den.name} availability`}>
                   <div className="h-full rounded-full" style={{ width: `${pct}%`, background: den.color }} />
                 </div>

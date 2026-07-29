@@ -88,16 +88,16 @@ export default function SessionsTable({ title }: { title?: string }) {
 
   return (
     <WidgetCard ariaLabelledby="sessions-table-heading" accentColor="primary">
-      <header className="px-6 py-4 border-b border-border/45 flex items-center justify-between ps-6.5 select-none">
-        <div className="flex items-center gap-2.5">
-          <h3 id="sessions-table-heading" className="text-sm font-bold text-foreground m-0">
+      <header className="flex flex-wrap items-center justify-between gap-2 px-6 py-4 ps-6.5 border-b border-border/45 select-none">
+        <div className="flex min-w-0 flex-wrap items-center gap-2.5">
+          <h3 id="sessions-table-heading" className="min-w-0 truncate text-sm font-bold text-foreground m-0">
             {title || t("dashboard.widgets.todaysSessions")}
           </h3>
           <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
             {t("dashboard.widgets.sessionsScheduled", { count: filteredSessions.length })}
           </span>
         </div>
-        <Link to={ROUTES.sessions} className="inline-flex min-h-11 items-center text-xs font-bold text-primary hover:underline">
+        <Link to={ROUTES.sessions} className="inline-flex min-h-11 shrink-0 items-center text-xs font-bold text-primary hover:underline">
           {t("dashboard.widgets.viewAll")}
         </Link>
       </header>

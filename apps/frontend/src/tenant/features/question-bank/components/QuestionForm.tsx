@@ -254,16 +254,21 @@ export function QuestionForm({
                 <div className="space-y-2 mt-1.5" role="radiogroup">
                   {questionDraft.options.slice(0, 4).map((optionValue, optionIndex) => (
                     <div key={optionIndex} className="relative flex items-center group/input w-full gap-2">
-                      <input
-                        id={`qb-choice-radio-${optionIndex}`}
-                        type="radio"
-                        name="answer"
-                        value={optionValue}
-                        checked={questionDraft.answer === optionValue && !!optionValue}
-                        onChange={() => updateDraft({ answer: optionValue })}
-                        aria-label={t('questionBank.markChoiceCorrect', { n: optionIndex + 1 })}
-                        className="h-4 w-4 flex-shrink-0 accent-primary"
-                      />
+                      <label
+                        htmlFor={`qb-choice-radio-${optionIndex}`}
+                        className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center"
+                      >
+                        <input
+                          id={`qb-choice-radio-${optionIndex}`}
+                          type="radio"
+                          name="answer"
+                          value={optionValue}
+                          checked={questionDraft.answer === optionValue && !!optionValue}
+                          onChange={() => updateDraft({ answer: optionValue })}
+                          aria-label={t('questionBank.markChoiceCorrect', { n: optionIndex + 1 })}
+                          className="h-4 w-4 shrink-0 accent-primary"
+                        />
+                      </label>
                       <div className="relative flex items-center w-full">
                         <HelpCircle className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                         <Input

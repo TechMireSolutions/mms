@@ -239,7 +239,43 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
         <EmptyState icon={UserCheck} title={t("attendance.report.noData")} description={t("attendance.report.adjustFilters")} compact />
       ) : (
         <Card className="overflow-hidden">
-          <div className="overflow-x-auto max-w-full">
+          <div className="space-y-3 p-3 md:hidden">
+            {filteredSummary.map((summaryRow) => (
+              <article key={summaryRow.class} className="space-y-3 rounded-xl border border-border bg-card p-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => toggleClassFilter(summaryRow.class)}
+                  className="h-auto min-h-11 px-0 py-0 text-sm font-semibold text-foreground hover:text-primary"
+                >
+                  {summaryRow.class}
+                </Button>
+                <dl className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colTotalStudents")}</dt>
+                    <dd className="text-foreground">{summaryRow.total}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colAvgRate")}</dt>
+                    <dd>{rateBar(summaryRow.avgRate)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colPerfectAttendance")}</dt>
+                    <dd>
+                      <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-semibold text-success">{summaryRow.perfectAttendance}</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colBelowThreshold")}</dt>
+                    <dd>
+                      <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">{summaryRow.belowThreshold}</span>
+                    </dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
@@ -304,7 +340,39 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
         <EmptyState icon={Users} title={t("attendance.report.noStudentRecords")} compact />
       ) : (
         <Card className="overflow-hidden">
-          <div className="overflow-x-auto max-w-full">
+          <div className="space-y-3 p-3 md:hidden">
+            {filteredStudentAttendanceRows.map((studentAttendance) => (
+              <article key={studentAttendance.studentName} className="space-y-3 rounded-xl border border-border bg-card p-3">
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <h4 className="truncate text-sm font-semibold text-foreground">{studentAttendance.studentName}</h4>
+                  <div className="w-24 shrink-0">{rateBar(studentAttendance.rate)}</div>
+                </div>
+                <dl className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colStudentClass")}</dt>
+                    <dd className="text-foreground">{studentAttendance.class}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colTotal")}</dt>
+                    <dd className="text-muted-foreground">{studentAttendance.total}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colPresent")}</dt>
+                    <dd className="font-medium text-success">{studentAttendance.present}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colAbsent")}</dt>
+                    <dd className="font-medium text-destructive">{studentAttendance.absent}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colLate")}</dt>
+                    <dd className="font-medium text-warning">{studentAttendance.late}</dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>

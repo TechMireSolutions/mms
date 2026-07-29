@@ -167,7 +167,7 @@ export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps) {
       ) : (
         <div className="relative">
           {/* Timeline line */}
-          <div className="absolute start-[18px] top-0 bottom-0 w-0.5 bg-border" aria-hidden="true" />
+          <div className="absolute start-[1.125rem] top-0 bottom-0 w-0.5 bg-border" aria-hidden="true" />
           <div className="space-y-4 ps-10">
             {events.map((sessionEvent, index) => (
               <motion.article

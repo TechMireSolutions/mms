@@ -202,7 +202,85 @@ export function ChartOfAccounts({
                 })}
               </span>
             </header>
-            <div className="overflow-x-auto">
+            <div className="space-y-3 p-3 md:hidden">
+              {accountTypeRows.map((account) => (
+                <article
+                  key={account.id}
+                  className={`space-y-3 rounded-xl border border-border bg-card p-3 ${account.isActive === false ? "opacity-50" : ""}`}
+                >
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      {showCode && <p className="font-mono text-xs font-bold text-muted-foreground m-0">{account.code}</p>}
+                      {showName && (
+                        <h4 className="text-sm font-semibold text-foreground m-0 mt-0.5">
+                          {account.name}
+                          {account.isActive === false && <span className="ms-2 text-xs text-muted-foreground font-semibold bg-muted px-1.5 py-0.5 rounded-full">{t("accounting.coa.inactive")}</span>}
+                        </h4>
+                      )}
+                    </div>
+                    {showNormalBalance && (
+                      <StatusBadge
+                        status={ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? "debit" : "credit"}
+                        config={balanceConfig}
+                        size="sm"
+                      />
+                    )}
+                  </div>
+                  <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                    {showSubtype && (
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.account.subtype")}</dt>
+                        <dd className="text-foreground">{account.subtype || "—"}</dd>
+                      </div>
+                    )}
+                    {showDescription && (
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.account.description")}</dt>
+                        <dd className="break-words text-foreground">{account.description || "—"}</dd>
+                      </div>
+                    )}
+                  </dl>
+                  {canWrite && (
+                    <div className="flex items-center justify-end gap-1 border-t border-border pt-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={t("accounting.coa.editAria", { name: account.name })}
+                        onClick={() => setModal({ ...account })}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
+                      </Button>
+                      {account.isActive === false ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={t("accounting.coa.reactivateAria", { name: account.name })}
+                          onClick={() => handleReactivate(account.id)}
+                          className="text-muted-foreground hover:text-success"
+                        >
+                          <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={t("accounting.coa.deactivateAria", { name: account.name })}
+                          onClick={() => handleDelete(account.id)}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm table-fixed">
                 <caption className="sr-only">{t("accounting.coa.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })}</caption>
                 <thead className="bg-muted/40 border-b border-border">

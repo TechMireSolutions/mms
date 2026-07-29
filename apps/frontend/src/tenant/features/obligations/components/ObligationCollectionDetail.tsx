@@ -124,7 +124,29 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
           <section aria-label={t("obligations.detail.distribution")}>
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 m-0">{t("obligations.detail.distribution")}</h4>
             <Card accentColor="emerald" className="p-0 overflow-hidden">
-              <div className="overflow-x-auto max-w-full">
+              <div className="space-y-3 p-3 md:hidden">
+                {dists.map((distribution) => (
+                  <article key={distribution.id} className="space-y-2 rounded-xl border border-border bg-card p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-sm font-medium text-foreground m-0">{distribution.name}</p>
+                      <StatusBadge status={distribution.type} config={distributionTypeConfig} size="sm" />
+                    </div>
+                    <dl className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.detail.colPct")}</dt>
+                        <dd className="font-mono text-xs font-semibold m-0">{distribution.percentage}%</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.columns.amount")}</dt>
+                        <dd className="font-mono text-xs font-semibold text-foreground m-0">
+                          {formatMoney((selectedCollection.amount * distribution.percentage) / 100, currency?.code)}
+                        </dd>
+                      </div>
+                    </dl>
+                  </article>
+                ))}
+              </div>
+              <div className="hidden overflow-x-auto max-w-full md:block">
               <table className="w-full text-sm">
                 <caption className="sr-only">{t("obligations.detail.distributionCaption", { receipt: selectedCollection.receipt_no })}</caption>
                 <thead className="bg-muted/60 border-b border-border">

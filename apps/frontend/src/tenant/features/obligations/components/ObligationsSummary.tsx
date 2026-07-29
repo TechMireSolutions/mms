@@ -383,7 +383,55 @@ export function ObligationsSummary({
           <div className="rounded-xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground" role="alert">{t("obligations.summary.emptyFiltered")}</div>
         ) : (
           <div className="rounded-xl border border-border overflow-hidden">
-            <div className="overflow-x-auto max-w-full">
+            <div className="space-y-3 p-3 md:hidden">
+              {wakalaSummary.map((w) => (
+                <article key={w.key} className="space-y-3 rounded-xl border border-border bg-card p-3">
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground m-0">{w.repName}</h4>
+                    {!w.hasWakala && (
+                      <span className="inline-flex items-center gap-1 text-xs text-warning font-bold mt-0.5" aria-label={t("obligations.summary.wakala.noConfigAria")}>
+                        <AlertCircle className="w-3 h-3" aria-hidden="true" /> {t("obligations.summary.wakala.noConfig")}
+                      </span>
+                    )}
+                  </div>
+                  <dl className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.summary.wakala.colMujtahid")}</dt>
+                      <dd className="text-xs text-muted-foreground">{w.mujtahidName}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.summary.wakala.colObligation")}</dt>
+                      <dd><span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full">{w.obligationType}</span></dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.summary.wakala.colCollections")}</dt>
+                      <dd className="text-sm font-semibold text-foreground">{w.count}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.summary.wakala.colTotalAmountShort")}</dt>
+                      <dd className="font-mono font-bold text-success text-sm">{formatCurrency(w.total)}</dd>
+                    </div>
+                  </dl>
+                  {w.distributions.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">{t("obligations.summary.wakala.colDistributions")}</p>
+                      <div className="flex flex-wrap gap-1">
+                        {w.distributions.map((d: ObligationDistribution) => (
+                          <span key={d.id} className={`text-xs font-bold px-1.5 py-0.5 rounded border whitespace-nowrap ${d.type === "Liability" ? "bg-destructive/10 border-destructive/30 text-destructive" : "bg-success/10 border-success/30 text-success"}`}>
+                            {d.name} {d.percentage}%
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </article>
+              ))}
+              <article className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
+                <p className="text-xs font-bold text-muted-foreground uppercase m-0">{t("obligations.summary.wakala.configCount", { count: wakalaSummary.length })}</p>
+                <p className="font-mono font-bold text-success text-sm m-0">{formatCurrency(totalAmount)}</p>
+              </article>
+            </div>
+            <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <caption className="sr-only">{t("obligations.summary.wakala.title")}</caption>
               <thead className="bg-muted/60 border-b border-border">
@@ -469,7 +517,59 @@ export function ObligationsSummary({
           <div className="rounded-xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground" role="alert">{t("obligations.summary.emptyFiltered")}</div>
         ) : (
           <div className="rounded-xl border border-border overflow-hidden">
-            <div className="overflow-x-auto max-w-full">
+            <div className="space-y-3 p-3 md:hidden">
+              {repSummary.map((r) => (
+                <article key={r.key} className="space-y-3 rounded-xl border border-border bg-card p-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0" aria-hidden="true">
+                      <span className="text-xs font-bold text-primary">{getInitials(r.repName)}</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground text-sm m-0">{r.repName}</h4>
+                      <p className="text-xs text-muted-foreground m-0">{r.mujtahidName}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground mb-1">{t("obligations.summary.rep.colByType")}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {Object.entries(r.byType).map(([name, amount]) => (
+                        <span key={name} className="text-xs font-medium px-1.5 py-0.5 rounded bg-muted border border-border text-foreground whitespace-nowrap">
+                          {name}: {formatValueOnly(amount as number)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.summary.rep.colCollections")}</dt>
+                      <dd className="text-sm font-semibold text-foreground">{r.count}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.summary.rep.colTotalCollectedShort")}</dt>
+                      <dd className="font-mono font-bold text-foreground text-sm">{formatCurrency(r.total)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold text-destructive">{t("obligations.summary.rep.colDueToRepShort")}</dt>
+                      <dd className="font-mono font-bold text-destructive text-sm">{formatCurrency(r.due)}</dd>
+                    </div>
+                  </dl>
+                </article>
+              ))}
+              <article className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
+                <p className="text-xs font-bold text-muted-foreground uppercase m-0">{t("obligations.summary.rep.repCount", { count: repSummary.length })}</p>
+                <dl className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.summary.rep.colTotalCollectedShort")}</dt>
+                    <dd className="font-mono font-bold text-foreground text-xs">{formatCurrency(totalAmount)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-destructive">{t("obligations.summary.rep.colDueToRepShort")}</dt>
+                    <dd className="font-mono font-bold text-destructive text-xs">{formatCurrency(repSummary.reduce((sum, representativeSummary) => sum + representativeSummary.due, 0))}</dd>
+                  </div>
+                </dl>
+              </article>
+            </div>
+            <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <caption className="sr-only">{t("obligations.summary.rep.title")}</caption>
               <thead className="bg-muted/60 border-b border-border">

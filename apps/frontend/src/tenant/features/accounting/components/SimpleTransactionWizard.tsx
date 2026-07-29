@@ -312,8 +312,8 @@ function StepReview({
       <div className="rounded-2xl border border-border overflow-hidden">
         {rows.map((row, index) => (
           <div key={index} className={`flex items-start gap-4 px-4 py-3 ${index % 2 === 0 ? "bg-muted/20" : "bg-background"}`}>
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide w-32 flex-shrink-0 pt-0.5">{row.label}</span>
-            <span className="text-sm font-semibold text-foreground">{row.value}</span>
+            <span className="w-32 shrink-0 pt-0.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{row.label}</span>
+            <span className="min-w-0 flex-1 break-words text-sm font-semibold text-foreground">{row.value}</span>
           </div>
         ))}
         <div className="px-4 py-3 bg-success/10 border-t border-success/20 flex items-center gap-2">
@@ -332,7 +332,37 @@ function StepReview({
         </Button>
         {showAdvanced && (
           <div className="p-4 space-y-2">
-            <div className="rounded-lg overflow-x-auto border border-border text-xs">
+            <div className="space-y-3 md:hidden">
+              <article className="space-y-2 rounded-xl border border-border bg-info/10 p-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.journal.detail.account")}</p>
+                <p className="text-sm font-semibold text-foreground m-0">{debitAccount?.name || "—"}</p>
+                <dl className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.debit")}</dt>
+                    <dd className="font-mono text-xs font-bold text-info m-0">{formatCurrency(amount)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.credit")}</dt>
+                    <dd className="font-mono text-xs text-muted-foreground m-0">—</dd>
+                  </div>
+                </dl>
+              </article>
+              <article className="space-y-2 rounded-xl border border-border bg-success/10 p-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.journal.detail.account")}</p>
+                <p className="text-sm font-semibold text-foreground m-0">{creditAccount?.name || "—"}</p>
+                <dl className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.debit")}</dt>
+                    <dd className="font-mono text-xs text-muted-foreground m-0">—</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.credit")}</dt>
+                    <dd className="font-mono text-xs font-bold text-success m-0">{formatCurrency(amount)}</dd>
+                  </div>
+                </dl>
+              </article>
+            </div>
+            <div className="hidden overflow-x-auto md:block rounded-lg border border-border text-xs">
               <div className="min-w-[20rem]">
               <div className="grid grid-cols-3 gap-0 bg-muted/60 border-b border-border">
                 <div className="px-3 py-2 font-bold text-muted-foreground uppercase">{t("accounting.journal.detail.account")}</div>

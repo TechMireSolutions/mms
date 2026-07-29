@@ -58,7 +58,7 @@ export function ListPagination({
             aria-label={t(prevKey)}
             className="rounded-lg border border-border hover:bg-muted disabled:opacity-40 transition-colors"
           >
-            <ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />
+            <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
           </Button>
           <Button
             type="button"
@@ -69,7 +69,7 @@ export function ListPagination({
             aria-label={t(nextKey)}
             className="rounded-lg border border-border hover:bg-muted disabled:opacity-40 transition-colors"
           >
-            <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
+            <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
           </Button>
         </div>
       </div>
@@ -98,7 +98,7 @@ export function ListPagination({
           className="inline-flex min-h-11 items-center gap-1 px-2.5 py-2 rounded-lg border border-border disabled:opacity-40 hover:bg-muted/60 text-foreground shadow-none text-xs font-normal"
           aria-label={t(prevKey)}
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
           {t(prevKey)}
         </Button>
         <span className="text-xs text-muted-foreground px-2 tabular-nums">
@@ -113,7 +113,7 @@ export function ListPagination({
           aria-label={t(nextKey)}
         >
           {t(nextKey)}
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className="w-4 h-4 rtl:rotate-180" />
         </Button>
       </div>
     </div>

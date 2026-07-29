@@ -156,8 +156,8 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
                   </div>
                   {!collapsed && (
                     <ChevronRight
-                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                        isMenuOpen ? "rotate-90 text-sidebar-foreground" : "text-sidebar-muted-foreground group-hover:text-sidebar-foreground"
+                      className={`w-3.5 h-3.5 transition-transform duration-200 rtl:rotate-180 ${
+                        isMenuOpen ? "rotate-90 rtl:-rotate-90 text-sidebar-foreground" : "text-sidebar-muted-foreground group-hover:text-sidebar-foreground"
                       }`}
                     />
                   )}
@@ -170,7 +170,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2, ease: "easeInOut" }}
-                      className="overflow-hidden ps-7 space-y-1 border-s border-sidebar-border/40 ms-[21px]"
+                      className="overflow-hidden space-y-1 border-s border-sidebar-border/40 ps-7 ms-5"
                     >
                       {item.subItems.map((sub) => {
                         const isSubActive = isNavPathActive(location.pathname, sub.path);
@@ -191,7 +191,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
                             {isSubActive && (
                               <motion.div
                                 layoutId="sidebar-indicator-sub"
-                                className="absolute start-[-8px] top-1/2 -translate-y-1/2 w-[0.1875rem] h-3 bg-sidebar-primary rounded-e-full"
+                                className="absolute start-0 top-1/2 h-3 w-[0.1875rem] -translate-x-full -translate-y-1/2 rounded-e-full bg-sidebar-primary rtl:translate-x-full"
                                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                               />
                             )}

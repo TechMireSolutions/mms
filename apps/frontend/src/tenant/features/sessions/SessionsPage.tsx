@@ -19,7 +19,6 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
-  DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { SessionForm } from "@/tenant/features/sessions/components/SessionForm";
 import { SessionDetail } from "@/tenant/features/sessions/components/SessionDetail";
@@ -452,6 +451,38 @@ export default function Sessions() {
       : currentIds.filter((selectedId) => selectedId !== id));
   };
 
+  const getSessionEnrollmentTotals = (sessionItem: Session) => {
+    const totalEnrolled = sessionItem.classes?.reduce((sum, sessionClass) => sum + sessionClass.enrolled, 0) ?? 0;
+    const totalCapacity = sessionItem.classes?.reduce((sum, sessionClass) => sum + sessionClass.capacity, 0) ?? 0;
+    return { totalEnrolled, totalCapacity };
+  };
+
+  const renderSessionListActions = (sessionId: string) => (
+    canDelete ? (
+      showDeleted ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={t("sessions.restore")}
+          onClick={() => handleRestore(sessionId)}
+        >
+          <RotateCcw className="w-4 h-4" />
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={t("common.delete")}
+          onClick={() => setPendingDeleteId(sessionId)}
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      )
+    ) : null
+  );
+
   return (
     <ModulePageShell
       seoTitle={`MMS - ${t("nav.sessions")}`}
@@ -606,7 +637,71 @@ export default function Sessions() {
               />
             ) : listLayout ? (
               <div className="rounded-2xl border border-border bg-card/45 backdrop-blur-xl overflow-hidden shadow-sm">
-                <div className="overflow-x-auto">
+                <div className="space-y-3 p-3 md:hidden">
+                  {sessions.map((sessionItem, index) => {
+                    const { totalEnrolled, totalCapacity } = getSessionEnrollmentTotals(sessionItem);
+                    return (
+                      <motion.article
+                        key={sessionItem.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: index * 0.03 }}
+                        className="space-y-3 rounded-xl border border-border bg-card p-3"
+                      >
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => !showDeleted && setDetailSession(sessionItem)}
+                          className="h-auto w-full justify-start p-0 text-start font-normal hover:bg-transparent"
+                        >
+                          <div className="flex min-w-0 items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              {showName && <h4 className="truncate text-sm font-semibold text-foreground">{sessionItem.name}</h4>}
+                              <div className="mt-1 flex flex-wrap gap-1.5">
+                                {showType && <StatusBadge status={sessionItem.type || "other"} config={typeConfig} size="sm" />}
+                                {showStatus && <StatusBadge status={sessionItem.status} config={statusConfig} size="sm" />}
+                              </div>
+                            </div>
+                            {showFee && (
+                              <span className="shrink-0 text-sm font-bold text-foreground">
+                                {formatMoney(sessionItem.baseFee, sessionItem.currency)}
+                              </span>
+                            )}
+                          </div>
+                        </Button>
+                        <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                          {showDuration && (
+                            <div>
+                              <dt className="text-xs font-semibold text-muted-foreground">{t("sessions.columns.duration")}</dt>
+                              <dd className="text-foreground">
+                                {formatDate(sessionItem.startDate, true)} — {formatDate(sessionItem.endDate, true)}
+                              </dd>
+                            </div>
+                          )}
+                          {showEnrolled && (
+                            <div>
+                              <dt className="text-xs font-semibold text-muted-foreground">{t("sessions.columns.enrolled")}</dt>
+                              <dd className="text-foreground">
+                                {totalEnrolled}/{totalCapacity || t("common.notSpecified")}
+                              </dd>
+                            </div>
+                          )}
+                        </dl>
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2">
+                          {canSelectSessions ? (
+                            <Checkbox
+                              checked={selectedIds.includes(sessionItem.id)}
+                              onCheckedChange={(checked) => toggleSelectedSession(sessionItem.id, checked === true)}
+                              aria-label={sessionItem.name}
+                            />
+                          ) : <span />}
+                          {renderSessionListActions(sessionItem.id)}
+                        </div>
+                      </motion.article>
+                    );
+                  })}
+                </div>
+                <div className="hidden overflow-x-auto md:block">
                   <table className="w-full text-sm table-fixed">
                     <thead>
                       <tr className="border-b border-border/50 bg-muted/20">
@@ -666,8 +761,7 @@ export default function Sessions() {
                     </thead>
                     <tbody className="divide-y divide-border/50">
                       {sessions.map((sessionItem) => {
-                        const totalEnrolled = sessionItem.classes?.reduce((sum: number, sessionClass: { enrolled: number }) => sum + sessionClass.enrolled, 0) ?? 0;
-                        const totalCapacity = sessionItem.classes?.reduce((sum: number, sessionClass: { capacity: number }) => sum + sessionClass.capacity, 0) ?? 0;
+                        const { totalEnrolled, totalCapacity } = getSessionEnrollmentTotals(sessionItem);
                         return (
                           <tr key={sessionItem.id} onClick={() => !showDeleted && setDetailSession(sessionItem)} className="hover:bg-muted/20 cursor-pointer transition-colors group">
                             {canSelectSessions && (
@@ -709,24 +803,7 @@ export default function Sessions() {
                             )}
                             {canDelete && (
                               <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button type="button" variant="ghost" size="icon" aria-label={t("common.actions")}>
-                                      <ChevronDown className="w-4 h-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    {showDeleted ? (
-                                      <DropdownMenuItem onClick={() => handleRestore(sessionItem.id)}>
-                                        <RotateCcw className="w-3.5 h-3.5 me-2" /> {t("sessions.restore")}
-                                      </DropdownMenuItem>
-                                    ) : (
-                                      <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setPendingDeleteId(sessionItem.id)}>
-                                        <Trash2 className="w-3.5 h-3.5 me-2" /> {t("common.delete")}
-                                      </DropdownMenuItem>
-                                    )}
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
+                                {renderSessionListActions(sessionItem.id)}
                               </td>
                             )}
                           </tr>

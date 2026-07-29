@@ -19,11 +19,11 @@ export const PAPER_PRINT_STYLES = `
   .qpaper-question { break-inside: avoid; page-break-inside: avoid; margin-bottom: 15px; }
   .qpaper-question-text { display: flex; gap: 8px; font-size: 13px; font-weight: 700; line-height: 1.5; margin-bottom: 8px; }
   .qpaper-question-number { min-width: 24px; font-weight: 800; }
-  .qpaper-options { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 12px; margin-left: 32px; font-size: 12px; }
+  .qpaper-options { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 12px; margin-inline-start: 32px; font-size: 12px; }
   .qpaper-option { display: flex; gap: 6px; align-items: flex-start; }
-  .qpaper-lines { margin-left: 32px; padding-top: 4px; }
+  .qpaper-lines { margin-inline-start: 32px; padding-top: 4px; }
   .qpaper-line { border-bottom: 1px solid #9ca3af; height: 20px; margin-bottom: 8px; }
-  .qpaper-matching { margin-left: 32px; width: calc(100% - 32px); border-collapse: collapse; font-size: 12px; }
+  .qpaper-matching { margin-inline-start: 32px; width: calc(100% - 32px); border-collapse: collapse; font-size: 12px; }
   .qpaper-matching td { border: 1px solid #d1d5db; padding: 7px 8px; vertical-align: top; }
   .qpaper-footer { margin-top: 18px; display: flex; justify-content: space-between; color: #6b7280; font-size: 10px; }
   @page { size: A4; margin: 0; }

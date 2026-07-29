@@ -27,7 +27,7 @@ export function PaperPreviewPanel({
   onPrint,
   onSave,
 }: PaperPreviewPanelProps): React.ReactElement {
-  const { t } = useTranslation();
+  const { dir, t } = useTranslation();
 
   return (
     <section className="rounded-xl border border-border bg-muted/20 p-3 sm:p-4" aria-label={t("questionBank.paperPreview")}>
@@ -50,8 +50,12 @@ export function PaperPreviewPanel({
       <div className="max-h-[32.5rem] overflow-auto rounded-lg border border-border bg-card p-2 sm:max-h-[45rem] sm:p-3">
         <div
           ref={printRef}
-          className="origin-top-left scale-[0.42] sm:scale-[0.58] md:scale-[0.7] lg:scale-[0.78]"
-          style={{ width: "210mm", minHeight: "297mm" }}
+          className="scale-[0.42] sm:scale-[0.58] md:scale-[0.7] lg:scale-[0.78]"
+          style={{
+            width: "210mm",
+            minHeight: "297mm",
+            transformOrigin: dir === "rtl" ? "top right" : "top left",
+          }}
         >
           <PrintablePaper config={config} sections={sections} questionsById={questionsById} />
         </div>

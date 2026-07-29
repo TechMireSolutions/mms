@@ -76,6 +76,61 @@ interface WidgetRecordFields {
   status?: string;
 }
 
+interface WidgetRecordDisplay {
+  recordId: string;
+  name: string;
+  detailText: string;
+  status: string;
+  hasAction: boolean;
+}
+
+function getWidgetRecordDisplay(
+  recordSource: unknown,
+  index: number,
+  widget: CustomWidget,
+  studentNameMap: Map<string, string>,
+  t: ReturnType<typeof useTranslation>["t"],
+): WidgetRecordDisplay {
+  const displayRecord = recordSource as WidgetRecordFields;
+  const recordId = String(displayRecord.id || index);
+
+  let name = String(displayRecord.name || displayRecord.studentName || displayRecord.invoiceNo || displayRecord.id);
+  let detailText = "";
+  let status = String(displayRecord.status || "active");
+  let hasAction = true;
+
+  if (widget.collection === "students") {
+    name = String(displayRecord.name || "");
+    detailText = t("reports.widgets.ageText", {
+      age: String(displayRecord.age || t("common.notAvailable")),
+      gender: displayRecord.gender ? getFieldLabel(displayRecord.gender, displayRecord.gender, t) : t("reports.widgets.any"),
+    });
+  } else if (widget.collection === "finance_invoices") {
+    name = t("reports.widgets.invoiceText", { invoiceNo: displayRecord.invoiceNo || String(displayRecord.id || "") });
+    const studentId = String(displayRecord.studentId || "");
+    const studentName = studentNameMap.get(studentId) || t("reports.widgets.studentHash", { id: studentId });
+    detailText = `${studentName} • ${formatMoney(displayRecord.finalAmt || 0)}`;
+  } else if (widget.collection === "attendance_records") {
+    const studentId = String(displayRecord.studentId || "");
+    name = studentNameMap.get(studentId) || t("reports.widgets.studentHash", { id: studentId });
+    detailText = t("reports.widgets.classText", { date: displayRecord.date || "", className: displayRecord.className || t("reports.widgets.class") });
+  } else if (widget.collection === "hasanat_distributions") {
+    const studentId = String(displayRecord.studentId || "");
+    name = studentNameMap.get(studentId) || t("reports.widgets.studentHash", { id: studentId });
+    detailText = t("reports.widgets.qtyText", { denomination: displayRecord.denominationName || t("reports.widgets.defaultDenomination"), qty: displayRecord.quantity || 1 });
+    status = t("reports.widgets.pointsText", { points: displayRecord.points || 50 });
+    hasAction = false;
+  } else if (widget.collection === "contacts") {
+    detailText = `${displayRecord.email || t("reports.widgets.noEmail")} • ${displayRecord.gender || t("contacts.gender.male")}`;
+    status = displayRecord.isActive !== false ? "active" : "inactive";
+  } else if (widget.collection === "sessions") {
+    name = String(displayRecord.name || "");
+    detailText = t("reports.widgets.roomText", { type: displayRecord.type || t("reports.widgets.defaultSessionType"), room: displayRecord.room || t("common.notAvailable") });
+  }
+
+  return { recordId, name, detailText, status, hasAction };
+}
+
 /**
  * Focused overlay drilldown modal for micro-interactions.
  * Displays details of records matching the single metric.
@@ -190,104 +245,133 @@ export function WidgetDrilldownModal({
               <p className="text-xs font-bold uppercase tracking-wider">{t("reports.widgets.noRecords")}</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table className="w-full text-xs">
-                <TableHeader>
-                  <TableRow className="border-b border-border text-muted-foreground uppercase font-black text-xs tracking-wider text-start hover:bg-transparent">
-                    <TableHead className="pb-3 text-muted-foreground h-auto">{t("reports.widgets.refName")}</TableHead>
-                    <TableHead className="pb-3 text-muted-foreground h-auto">{t("reports.widgets.primaryInfo")}</TableHead>
-                    <TableHead className="pb-3 text-muted-foreground h-auto">{t("reports.widgets.currentStatus")}</TableHead>
-                    <TableHead className="pb-3 text-end text-muted-foreground h-auto">{t("reports.widgets.microAction")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className="divide-y divide-border/60">
-                  {paginatedRecords.map((recordSource, index) => {
-                    const displayRecord = recordSource as unknown as WidgetRecordFields;
-                    const recordId = String(displayRecord.id || index);
-                    
-                    // Format columns based on collection
-                    let name = String(displayRecord.name || displayRecord.studentName || displayRecord.invoiceNo || displayRecord.id);
-                    let detailText = "";
-                    let status = String(displayRecord.status || "active");
-                    let hasAction = true;
-                    
-                    if (widget.collection === "students") {
-                      name = String(displayRecord.name || "");
-                      detailText = t("reports.widgets.ageText", {
-                        age: String(displayRecord.age || t("common.notAvailable")),
-                        gender: displayRecord.gender ? getFieldLabel(displayRecord.gender, displayRecord.gender, t) : t("reports.widgets.any")
-                      });
-                    } else if (widget.collection === "finance_invoices") {
-                      name = t("reports.widgets.invoiceText", { invoiceNo: displayRecord.invoiceNo || String(displayRecord.id || "") });
-                      const studentId = String(displayRecord.studentId || "");
-                      const studentName = studentNameMap.get(studentId) || t("reports.widgets.studentHash", { id: studentId });
-                      detailText = `${studentName} • ${formatMoney(displayRecord.finalAmt || 0)}`;
-                    } else if (widget.collection === "attendance_records") {
-                      const studentId = String(displayRecord.studentId || "");
-                      name = studentNameMap.get(studentId) || t("reports.widgets.studentHash", { id: studentId });
-                      detailText = t("reports.widgets.classText", { date: displayRecord.date || "", className: displayRecord.className || t("reports.widgets.class") });
-                    } else if (widget.collection === "hasanat_distributions") {
-                      const studentId = String(displayRecord.studentId || "");
-                      name = studentNameMap.get(studentId) || t("reports.widgets.studentHash", { id: studentId });
-                      detailText = t("reports.widgets.qtyText", { denomination: displayRecord.denominationName || t("reports.widgets.defaultDenomination"), qty: displayRecord.quantity || 1 });
-                      status = t("reports.widgets.pointsText", { points: displayRecord.points || 50 });
-                      hasAction = false; // deleting is the action instead of toggling status
-                    } else if (widget.collection === "contacts") {
-                      detailText = `${displayRecord.email || t("reports.widgets.noEmail")} • ${displayRecord.gender || t("contacts.gender.male")}`;
-                      status = displayRecord.isActive !== false ? "active" : "inactive";
-                    } else if (widget.collection === "sessions") {
-                      name = String(displayRecord.name || "");
-                      detailText = t("reports.widgets.roomText", { type: displayRecord.type || t("reports.widgets.defaultSessionType"), room: displayRecord.room || t("common.notAvailable") });
-                    }
- 
-                    return (
-                      <TableRow key={recordId} className="hover:bg-muted/10">
-                        <TableCell className="py-3.5 pe-2 font-bold text-foreground max-w-[11.25rem] truncate">{name}</TableCell>
-                        <TableCell className="py-3.5 text-muted-foreground font-semibold">{detailText}</TableCell>
-                        <TableCell className="py-3.5">
-                          <StatusBadge
-                            status={status.toLowerCase()}
-                            size="sm"
-                            config={{
-                              active: { label: t("reports.status.active"), cls: SEMANTIC_BADGE.success },
-                              paid: { label: t("reports.status.paid"), cls: SEMANTIC_BADGE.success },
-                              present: { label: t("reports.status.present"), cls: SEMANTIC_BADGE.success },
-                              customer: { label: t("reports.status.customer"), cls: SEMANTIC_BADGE.success },
-                              inactive: { label: t("reports.status.inactive"), cls: SEMANTIC_BADGE.destructive },
-                              unpaid: { label: t("reports.status.unpaid"), cls: SEMANTIC_BADGE.destructive },
-                              absent: { label: t("reports.status.absent"), cls: SEMANTIC_BADGE.destructive },
-                              lead: { label: t("reports.status.lead"), cls: SEMANTIC_BADGE.destructive },
-                              cancelled: { label: t("reports.status.cancelled"), cls: SEMANTIC_BADGE.destructive },
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell className="py-3.5 text-end">
+            <>
+              <div className="space-y-3 p-3 md:hidden">
+                {paginatedRecords.map((recordSource, index) => {
+                  const { recordId, name, detailText, status, hasAction } = getWidgetRecordDisplay(
+                    recordSource, index, widget, studentNameMap, t,
+                  );
+                  return (
+                    <article
+                      key={recordId}
+                      className="space-y-3 rounded-xl border border-border bg-card p-3"
+                    >
+                      <div className="flex min-w-0 items-start justify-between gap-3">
+                        <p className="min-w-0 truncate text-sm font-bold text-foreground">{name}</p>
+                        <StatusBadge
+                          status={status.toLowerCase()}
+                          size="sm"
+                          config={{
+                            active: { label: t("reports.status.active"), cls: SEMANTIC_BADGE.success },
+                            paid: { label: t("reports.status.paid"), cls: SEMANTIC_BADGE.success },
+                            present: { label: t("reports.status.present"), cls: SEMANTIC_BADGE.success },
+                            customer: { label: t("reports.status.customer"), cls: SEMANTIC_BADGE.success },
+                            inactive: { label: t("reports.status.inactive"), cls: SEMANTIC_BADGE.destructive },
+                            unpaid: { label: t("reports.status.unpaid"), cls: SEMANTIC_BADGE.destructive },
+                            absent: { label: t("reports.status.absent"), cls: SEMANTIC_BADGE.destructive },
+                            lead: { label: t("reports.status.lead"), cls: SEMANTIC_BADGE.destructive },
+                            cancelled: { label: t("reports.status.cancelled"), cls: SEMANTIC_BADGE.destructive },
+                          }}
+                        />
+                      </div>
+                      <dl className="grid grid-cols-1 gap-2 text-sm">
+                        <div>
+                          <dt className="text-xs font-semibold text-muted-foreground">{t("reports.widgets.primaryInfo")}</dt>
+                          <dd className="text-muted-foreground font-semibold">{detailText}</dd>
+                        </div>
+                      </dl>
+                      {(widget.collection === "hasanat_distributions" || hasAction) && (
+                        <div className="pt-1">
                           {widget.collection === "hasanat_distributions" ? (
                             <Button
                               onClick={() => handleDeleteDist(recordId)}
                               variant="destructive"
                               size="sm"
-                              className="px-2.5 rounded text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all cursor-pointer font-bold uppercase tracking-wider text-xs shadow-none"
+                              className="w-full px-2.5 rounded font-bold uppercase tracking-wider text-xs shadow-none"
                             >
                               {t("reports.widgets.delete")}
                             </Button>
-                          ) : hasAction ? (
+                          ) : (
                             <Button
                               onClick={() => handleToggleStatus(recordId)}
                               variant="secondary"
                               size="sm"
-                              className="px-2.5 rounded bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border-transparent hover:border-transparent transition-all cursor-pointer font-bold uppercase tracking-wider text-xs shadow-none"
+                              className="w-full px-2.5 rounded bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border-transparent hover:border-transparent font-bold uppercase tracking-wider text-xs shadow-none"
                             >
                               {t("reports.widgets.toggleStatus")}
                             </Button>
-                          ) : null}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+                          )}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+              <div className="hidden overflow-x-auto md:block">
+                <Table className="w-full text-xs">
+                  <TableHeader>
+                    <TableRow className="border-b border-border text-muted-foreground uppercase font-black text-xs tracking-wider text-start hover:bg-transparent">
+                      <TableHead className="pb-3 text-muted-foreground h-auto">{t("reports.widgets.refName")}</TableHead>
+                      <TableHead className="pb-3 text-muted-foreground h-auto">{t("reports.widgets.primaryInfo")}</TableHead>
+                      <TableHead className="pb-3 text-muted-foreground h-auto">{t("reports.widgets.currentStatus")}</TableHead>
+                      <TableHead className="pb-3 text-end text-muted-foreground h-auto">{t("reports.widgets.microAction")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-border/60">
+                    {paginatedRecords.map((recordSource, index) => {
+                      const { recordId, name, detailText, status, hasAction } = getWidgetRecordDisplay(
+                        recordSource, index, widget, studentNameMap, t,
+                      );
+
+                      return (
+                        <TableRow key={recordId} className="hover:bg-muted/10">
+                          <TableCell className="py-3.5 pe-2 font-bold text-foreground max-w-[11.25rem] truncate">{name}</TableCell>
+                          <TableCell className="py-3.5 text-muted-foreground font-semibold">{detailText}</TableCell>
+                          <TableCell className="py-3.5">
+                            <StatusBadge
+                              status={status.toLowerCase()}
+                              size="sm"
+                              config={{
+                                active: { label: t("reports.status.active"), cls: SEMANTIC_BADGE.success },
+                                paid: { label: t("reports.status.paid"), cls: SEMANTIC_BADGE.success },
+                                present: { label: t("reports.status.present"), cls: SEMANTIC_BADGE.success },
+                                customer: { label: t("reports.status.customer"), cls: SEMANTIC_BADGE.success },
+                                inactive: { label: t("reports.status.inactive"), cls: SEMANTIC_BADGE.destructive },
+                                unpaid: { label: t("reports.status.unpaid"), cls: SEMANTIC_BADGE.destructive },
+                                absent: { label: t("reports.status.absent"), cls: SEMANTIC_BADGE.destructive },
+                                lead: { label: t("reports.status.lead"), cls: SEMANTIC_BADGE.destructive },
+                                cancelled: { label: t("reports.status.cancelled"), cls: SEMANTIC_BADGE.destructive },
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell className="py-3.5 text-end">
+                            {widget.collection === "hasanat_distributions" ? (
+                              <Button
+                                onClick={() => handleDeleteDist(recordId)}
+                                variant="destructive"
+                                size="sm"
+                                className="px-2.5 rounded text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all cursor-pointer font-bold uppercase tracking-wider text-xs shadow-none"
+                              >
+                                {t("reports.widgets.delete")}
+                              </Button>
+                            ) : hasAction ? (
+                              <Button
+                                onClick={() => handleToggleStatus(recordId)}
+                                variant="secondary"
+                                size="sm"
+                                className="px-2.5 rounded bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border-transparent hover:border-transparent transition-all cursor-pointer font-bold uppercase tracking-wider text-xs shadow-none"
+                              >
+                                {t("reports.widgets.toggleStatus")}
+                              </Button>
+                            ) : null}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </div>
 
@@ -784,7 +868,7 @@ export function CustomWidgetRenderer({
             <span className="block">
             <h4 className={`text-3xl font-black tracking-tight font-mono flex items-baseline gap-1.5 ${alertScheme ? alertScheme.text : "text-foreground"}`}>
               {formattedValue}
-              <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/35 group-hover/kpi:text-primary group-hover/kpi:translate-x-0.5 group-hover/kpi:-translate-y-0.5 transition-all" />
+              <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/35 transition-all group-hover/kpi:translate-x-0.5 group-hover/kpi:-translate-y-0.5 group-hover/kpi:text-primary rtl:-scale-x-100 rtl:group-hover/kpi:-translate-x-0.5" />
             </h4>
             <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mt-1">
               {t("reports.widgets.clickToViewRecords")}
@@ -804,7 +888,7 @@ export function CustomWidgetRenderer({
               <span className="block">
               <h4 className="text-sm font-black text-foreground flex items-center gap-1">
                 {t("reports.widgets.progression")}
-                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover/prog:translate-x-0.5 transition-transform" />
+                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 transition-transform group-hover/prog:translate-x-0.5 rtl:rotate-180 rtl:group-hover/prog:-translate-x-0.5" />
               </h4>
               <p className="text-xs text-muted-foreground font-semibold mt-1">
                 {t("reports.widgets.progressionDesc")}

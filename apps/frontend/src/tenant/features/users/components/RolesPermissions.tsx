@@ -27,10 +27,11 @@ import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 interface PermCellProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
+  ariaLabel: string;
   disabled?: boolean;
 }
 
-function PermCell({ checked, onChange, disabled = false }: PermCellProps): React.JSX.Element {
+function PermCell({ checked, onChange, ariaLabel, disabled = false }: PermCellProps): React.JSX.Element {
   return (
     <Button
       type="button"
@@ -38,6 +39,7 @@ function PermCell({ checked, onChange, disabled = false }: PermCellProps): React
       size="icon"
       onClick={() => !disabled && onChange(!checked)}
       disabled={disabled}
+      aria-label={ariaLabel}
       className={`mx-auto flex min-h-11 min-w-11 items-center justify-center rounded-lg border-2 transition-all p-0 shadow-none hover:bg-transparent ${
         checked
           ? 'border-primary bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground'
@@ -214,7 +216,11 @@ function PermissionMatrixRow({
               <Check className="h-3.5 w-3.5" />
             </div>
           ) : (
-            <PermCell checked={currentActions.includes(permissionAction)} onChange={() => onToggle(mod.id, permissionAction)} />
+            <PermCell
+              checked={currentActions.includes(permissionAction)}
+              onChange={() => onToggle(mod.id, permissionAction)}
+              ariaLabel={`${t(mod.labelKey)}: ${t(`users.permission.${permissionAction}`)}`}
+            />
           )}
         </td>
       ))}
@@ -225,6 +231,7 @@ function PermissionMatrixRow({
             variant="ghost"
             size="icon"
             onClick={() => (allChecked ? onClearAll(mod.id) : onSelectAll(mod.id))}
+            aria-label={`${t('users.permissions.colAll')}: ${t(mod.labelKey)}`}
             className={`mx-auto flex min-h-11 min-w-11 items-center justify-center rounded-lg border-2 text-xs font-bold transition-all p-0 shadow-none ${
               allChecked
                 ? 'border-primary bg-primary/15 text-primary hover:bg-primary/25'
@@ -236,6 +243,68 @@ function PermissionMatrixRow({
         </td>
       ) : null}
     </tr>
+  );
+}
+
+function PermissionMatrixMobileRow({
+  mod,
+  perms,
+  readOnly,
+  onToggle,
+  onSelectAll,
+  onClearAll,
+}: Omit<Parameters<typeof PermissionMatrixRow>[0], 'inGroup'>): React.JSX.Element {
+  const { t } = useTranslation();
+  const currentActions = perms[mod.id] || [];
+  const allChecked = PERMISSION_ACTIONS.every((permissionAction) => currentActions.includes(permissionAction));
+  const hasAny = currentActions.length > 0;
+
+  return (
+    <article className={`space-y-3 rounded-xl border border-border bg-card p-3 ${hasAny || !readOnly ? '' : 'opacity-40'}`}>
+      <div className="flex items-center justify-between gap-3">
+        <h4 className="min-w-0 text-sm font-semibold text-foreground">{t(mod.labelKey)}</h4>
+        {!readOnly ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => (allChecked ? onClearAll(mod.id) : onSelectAll(mod.id))}
+            aria-label={`${t('users.permissions.colAll')}: ${t(mod.labelKey)}`}
+            className="shrink-0"
+          >
+            {allChecked ? <X className="h-3.5 w-3.5" aria-hidden /> : <Check className="h-3.5 w-3.5" aria-hidden />}
+            {t('users.permissions.colAll')}
+          </Button>
+        ) : null}
+      </div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {PERMISSION_ACTIONS.map((permissionAction) => (
+          <div key={permissionAction} className="flex min-w-0 items-center justify-between gap-2 rounded-lg bg-muted/40 p-2">
+            <span className="truncate text-xs font-medium text-muted-foreground">
+              {t(`users.permission.${permissionAction}`)}
+            </span>
+            {readOnly ? (
+              <div
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-2 ${
+                  currentActions.includes(permissionAction)
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-card text-transparent'
+                }`}
+                aria-label={`${t(mod.labelKey)}: ${t(`users.permission.${permissionAction}`)}`}
+              >
+                <Check className="h-3.5 w-3.5" aria-hidden />
+              </div>
+            ) : (
+              <PermCell
+                checked={currentActions.includes(permissionAction)}
+                onChange={() => onToggle(mod.id, permissionAction)}
+                ariaLabel={`${t(mod.labelKey)}: ${t(`users.permission.${permissionAction}`)}`}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    </article>
   );
 }
 
@@ -253,7 +322,32 @@ function PermissionMatrix({
 
   return (
     <div className="overflow-hidden rounded-xl border border-border">
-      <div className="overflow-x-auto">
+      <div className="space-y-4 p-3 md:hidden">
+        {groups.map((group, groupIndex) => (
+          <section key={group.labelKey ?? `standalone-${group.modules[0]?.id ?? groupIndex}`} className="space-y-2">
+            {group.labelKey ? (
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10">
+                  <BookOpen className="h-3.5 w-3.5 text-primary" aria-hidden />
+                </div>
+                <h3 className="text-xs font-bold text-foreground">{t(group.labelKey)}</h3>
+              </div>
+            ) : null}
+            {group.modules.map((moduleItem) => (
+              <PermissionMatrixMobileRow
+                key={moduleItem.id}
+                mod={moduleItem}
+                perms={perms}
+                readOnly={readOnly}
+                onToggle={onToggle}
+                onSelectAll={onSelectAll}
+                onClearAll={onClearAll}
+              />
+            ))}
+          </section>
+        ))}
+      </div>
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-muted/60">
             <tr>

@@ -75,6 +75,21 @@ export async function assertPrimaryControlsMeetTouchTarget(
     const root = within ? document.querySelector(within) : document;
     if (!root) return [{ tag: 'missing-root', text: within || 'document', aria: null, width: 0, height: 0 }];
 
+    const getTouchDimensions = (element: Element) => {
+      const rect = element.getBoundingClientRect();
+      const pseudoDimensions = ['::before', '::after'].map((pseudoElement) => {
+        const style = window.getComputedStyle(element, pseudoElement);
+        return {
+          width: style.content === 'none' ? 0 : Number.parseFloat(style.width) || 0,
+          height: style.content === 'none' ? 0 : Number.parseFloat(style.height) || 0,
+        };
+      });
+      return {
+        width: Math.max(rect.width, ...pseudoDimensions.map(({ width }) => width)),
+        height: Math.max(rect.height, ...pseudoDimensions.map(({ height }) => height)),
+      };
+    };
+
     const selectors = [
       'button:not([aria-hidden="true"])',
       'a[href]:not([aria-hidden="true"])',
@@ -112,19 +127,20 @@ export async function assertPrimaryControlsMeetTouchTarget(
 
         const label = (element.textContent || '').trim();
         const hasVisibleLabel = label.length > 0 || Boolean(element.getAttribute('aria-label'));
+        const touchDimensions = getTouchDimensions(element);
         if (!hasVisibleLabel) {
-          return rect.width < 44 || rect.height < 44;
+          return touchDimensions.width < 44 || touchDimensions.height < 44;
         }
-        return rect.height < 44 || rect.width < 44;
+        return touchDimensions.height < 44 || touchDimensions.width < 44;
       })
       .map((element) => {
-        const rect = element.getBoundingClientRect();
+        const touchDimensions = getTouchDimensions(element);
         return {
           tag: element.tagName.toLowerCase(),
           text: (element.textContent || '').trim().slice(0, 40),
           aria: element.getAttribute('aria-label'),
-          width: Math.round(rect.width),
-          height: Math.round(rect.height),
+          width: Math.round(touchDimensions.width),
+          height: Math.round(touchDimensions.height),
         };
       });
   }, options.within ?? null);

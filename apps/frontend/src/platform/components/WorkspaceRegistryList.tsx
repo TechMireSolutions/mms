@@ -134,7 +134,7 @@ const RegistryWorkspaceRow = memo(function RegistryWorkspaceRow({
             ) : null}
           </div>
         </div>
-        <div className="mt-3.5 flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-primary text-xs font-bold text-primary-foreground shadow-sm shadow-primary/10 transition-colors group-hover:bg-primary/95">
+        <div className="mt-3.5 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-primary text-xs font-bold text-primary-foreground shadow-sm shadow-primary/10 transition-colors group-hover:bg-primary/95">
           {actionLabel}
           <ArrowRight
             className="h-3.5 w-3.5 transition-transform duration-250 group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"

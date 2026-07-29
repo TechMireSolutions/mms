@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Scale, DollarSign } from "lucide-react";
 import { computeFinancials, Account, JournalEntry, FiscalYear, AccountingSettings } from '@/lib/data/accountingData';
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
@@ -42,7 +43,37 @@ function ReportSection({ title, rows, totalLabel, total, debitNormal, color }: R
       <header className={`px-4 py-2.5 border-b border-border ${color || "bg-muted/60"}`}>
         <h3 className="text-xs font-bold uppercase tracking-wide text-foreground m-0">{title}</h3>
       </header>
-      <div className="overflow-x-auto max-w-full">
+      <div className="space-y-3 p-3 md:hidden">
+        {rows.map((reportRow, index) => {
+          const rowAmount = debitNormal ? (reportRow.totalDebit - reportRow.totalCredit) : (reportRow.totalCredit - reportRow.totalDebit);
+          const percentage = (Math.abs(rowAmount) / maxAmount) * 100;
+          return (
+            <motion.article
+              key={reportRow.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: index * 0.03 }}
+              className="space-y-2 rounded-xl border border-border bg-card p-3"
+            >
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h4 className="truncate text-sm font-medium text-foreground">{reportRow.name}</h4>
+                  <p className="text-xs text-muted-foreground font-mono m-0">{reportRow.code} · {reportRow.subtype || reportRow.type}</p>
+                </div>
+                <span className="shrink-0 font-mono font-semibold text-foreground">{formatNumber(Math.abs(rowAmount))}</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-muted overflow-hidden" aria-hidden="true">
+                <div className="h-full rounded-full bg-primary/40 transition-all" style={{ width: `${percentage}%` }} />
+              </div>
+            </motion.article>
+          );
+        })}
+        <article className="flex items-center justify-between rounded-xl border border-border bg-muted/30 p-3">
+          <span className="font-bold text-foreground">{totalLabel}</span>
+          <span className="font-mono font-bold text-foreground text-base">{formatNumber(total)}</span>
+        </article>
+      </div>
+      <div className="hidden overflow-x-auto md:block">
       <table className="w-full text-sm">
         <caption className="sr-only">{t("accounting.reports.sectionDataCaption", { title })}</caption>
         <tbody className="divide-y divide-border">
@@ -258,7 +289,38 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
             <header className="px-4 py-2.5 bg-info/10/60 border-b border-border">
               <h3 className="text-xs font-bold uppercase tracking-wide m-0">{t("accounting.reports.cashflow.title")}</h3>
             </header>
-            <div className="overflow-x-auto max-w-full">
+            <div className="space-y-3 p-3 md:hidden">
+              <article className="rounded-xl border border-border bg-muted/10 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-semibold text-foreground">{t("accounting.reports.cashflow.netSurplusOrDeficit")}</span>
+                  <span className="font-mono font-semibold">{formatCurrency(netSurplus)}</span>
+                </div>
+              </article>
+              {[
+                { label: t("accounting.reports.cashflow.depreciation"), amount: depreciationAdjustment },
+                { label: t("accounting.reports.cashflow.receivables"), amount: receivablesChange },
+                { label: t("accounting.reports.cashflow.payables"), amount: payablesChange },
+              ].map((item) => (
+                <article key={item.label} className="rounded-xl border border-border bg-card p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm text-muted-foreground">{item.label}</span>
+                    <span className="font-mono text-muted-foreground">{formatCurrency(item.amount)}</span>
+                  </div>
+                </article>
+              ))}
+              <article className="rounded-xl border border-border bg-muted/30 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-bold text-foreground">{t("accounting.reports.cashflow.netCashOperations")}</span>
+                  <span className="font-mono font-bold text-foreground text-base">
+                    {formatCurrency(Math.abs(netCashFlow))}
+                    <span className={`text-xs ms-1 ${netCashFlow >= 0 ? "text-success" : "text-destructive"}`}>
+                      {netCashFlow >= 0 ? t("accounting.reports.cashflow.inflow") : t("accounting.reports.cashflow.outflow")}
+                    </span>
+                  </span>
+                </div>
+              </article>
+            </div>
+            <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <caption className="sr-only">{t("accounting.reports.cashflow.breakdownCaption")}</caption>
               <tbody className="divide-y divide-border">

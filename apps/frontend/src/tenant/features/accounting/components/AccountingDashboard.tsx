@@ -148,10 +148,10 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
               </div>
               <div className="space-y-1 mt-2">
                 {expenseBreakdown.map((expenseItem, index) => (
-                  <div key={index} className="flex items-center gap-2 text-xs" aria-label={`${expenseItem.name}: ${formatCurrency(expenseItem.value)}`}>
-                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: pieColors[index % pieColors.length] }} aria-hidden="true" />
-                    <span className="truncate text-muted-foreground flex-1">{expenseItem.name}</span>
-                    <span className="font-mono font-semibold text-foreground">{formatCurrency(expenseItem.value)}</span>
+                  <div key={index} className="flex min-w-0 items-center gap-2 text-xs" aria-label={`${expenseItem.name}: ${formatCurrency(expenseItem.value)}`}>
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: pieColors[index % pieColors.length] }} aria-hidden="true" />
+                    <span className="min-w-0 flex-1 truncate text-muted-foreground">{expenseItem.name}</span>
+                    <span className="shrink-0 font-mono font-semibold text-foreground">{formatCurrency(expenseItem.value)}</span>
                   </div>
                 ))}
               </div>

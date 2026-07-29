@@ -11,7 +11,7 @@ export function AuthPageBackdrop(): React.JSX.Element {
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute top-[18%] left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/[0.08] blur-3xl"
+        className="pointer-events-none absolute top-[18%] start-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/[0.08] blur-3xl rtl:translate-x-1/2"
         aria-hidden
       />
       <div

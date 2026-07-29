@@ -30,7 +30,7 @@ export function SimplePagination({
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
         aria-label={t("pagination.previousAria")}
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
       </Button>
       <span className="text-xs font-bold text-muted-foreground select-none">
         {currentPage} / {totalPages}
@@ -43,7 +43,7 @@ export function SimplePagination({
         onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
         aria-label={t("pagination.nextAria")}
       >
-        <ChevronRight className="h-4 w-4" />
+        <ChevronRight className="h-4 w-4 rtl:rotate-180" />
       </Button>
     </div>
   );

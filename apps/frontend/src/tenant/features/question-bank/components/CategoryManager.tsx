@@ -50,7 +50,7 @@ export function CategoryManager({
         {categories.map((cat) => (
           <div
             key={cat.id}
-            className="grid grid-cols-[auto_1fr_5rem_5rem_auto] items-center gap-2 rounded-lg border border-border/70 bg-muted/20 p-2"
+            className="grid grid-cols-1 items-center gap-2 rounded-lg border border-border/70 bg-muted/20 p-2 sm:grid-cols-[auto_minmax(0,1fr)_5rem_5rem_auto]"
           >
             <Input
               type="text"

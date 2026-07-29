@@ -10,6 +10,7 @@ import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
+import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import MessageComposer from "@/components/ui/MessageComposer";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
@@ -29,6 +30,93 @@ import {
 } from "@/components/ui/table";
 
 const MotionTableRow = motion.create(TableRow);
+
+interface OutstandingFeeRow {
+  id: string;
+  studentId: string;
+  student: string;
+  class: string;
+  amount: number;
+  months: number;
+  contact: string;
+  email: string;
+  dueDate: string;
+}
+
+type OpenComposer = ReturnType<typeof useMessageComposerState>["openComposer"];
+
+function OutstandingFeeMessagingActions({
+  row,
+  openComposer,
+  t,
+  className,
+}: {
+  row: Pick<OutstandingFeeRow, "studentId" | "student" | "contact" | "email" | "amount" | "dueDate">;
+  openComposer: OpenComposer;
+  t: TranslationFunction;
+  className?: string;
+}) {
+  const recipient = [{
+    id: row.studentId,
+    name: row.student,
+    phone: row.contact,
+    email: row.email,
+    amount: row.amount,
+    dueDate: row.dueDate,
+  }];
+
+  return (
+    <div className={className ?? "flex items-center justify-end gap-1.5"}>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={`${t("contacts.whatsapp.open")} ${row.student}`}
+        title={t("contacts.whatsapp.open")}
+        className="rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shadow-none cursor-pointer"
+        disabled={!row.contact}
+        onClick={() => openComposer("whatsapp", recipient)}
+      >
+        <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={`${t("dashboard.widgets.sendReminder")} ${row.student}`}
+        title={t("dashboard.widgets.sendReminder")}
+        className="rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer"
+        disabled={!row.contact}
+        onClick={() => openComposer("sms", recipient)}
+      >
+        <Send className="w-3.5 h-3.5" aria-hidden="true" />
+      </Button>
+    </div>
+  );
+}
+
+function OutstandingFeeOverdueBadge({
+  months,
+  t,
+}: {
+  months: number;
+  t: TranslationFunction;
+}) {
+  return (
+    <StatusBadge
+      status={months >= 3 ? "overdue" : "warning"}
+      config={{
+        overdue: {
+          label: t("dashboard.widgets.overdueStatus", { count: months }),
+          cls: SEMANTIC_BADGE.destructive,
+        },
+        warning: {
+          label: t("dashboard.widgets.overdueStatus", { count: months }),
+          cls: SEMANTIC_BADGE.warning,
+        },
+      }}
+      size="sm"
+    />
+  );
+}
 
 /**
  * Outstanding fees table widget with optional messaging CTAs.
@@ -91,10 +179,10 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
 
   return (
     <WidgetCard ariaLabelledby="outstanding-fees-heading" accentColor="destructive">
-      <header className="px-6 py-4 border-b border-border/45 flex items-center justify-between ps-6.5 select-none">
-        <div className="flex items-center gap-2.5">
-          <AlertCircle className="w-4 h-4 text-destructive" aria-hidden="true" />
-          <h3 id="outstanding-fees-heading" className="text-sm font-bold text-foreground m-0">
+      <header className="flex flex-wrap items-center justify-between gap-2 px-6 py-4 ps-6.5 border-b border-border/45 select-none">
+        <div className="flex min-w-0 flex-wrap items-center gap-2.5">
+          <AlertCircle className="w-4 h-4 shrink-0 text-destructive" aria-hidden="true" />
+          <h3 id="outstanding-fees-heading" className="min-w-0 truncate text-sm font-bold text-foreground m-0">
             {title || t("dashboard.widgets.outstandingPayments")}
           </h3>
           <span
@@ -107,7 +195,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
         {canWriteMessaging && (
           <Button
             variant="link"
-            className="text-sm font-bold min-h-11 h-auto p-0"
+            className="min-h-11 h-auto shrink-0 p-0 text-sm font-bold"
             onClick={() => {
               if (filteredRows.length === 0) return;
               const recipients = filteredRows
@@ -139,7 +227,44 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
         />
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="space-y-3 p-3 md:hidden">
+        {paginatedRows.length === 0 ? (
+          <p className="py-8 text-center text-xs text-muted-foreground select-none">
+            {t("finance.report.noInvoicesMatch")}
+          </p>
+        ) : (
+          paginatedRows.map((outstandingFee, index) => (
+            <motion.article
+              key={outstandingFee.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: index * 0.04, duration: 0.25 }}
+              className="space-y-3 rounded-xl border border-border bg-card p-3"
+            >
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <UserAvatar id={outstandingFee.studentId} name={outstandingFee.student} className="w-7 h-7 rounded-full text-xs font-bold shrink-0" />
+                  <div className="min-w-0">
+                    <h4 className="truncate text-sm font-semibold text-foreground m-0">{outstandingFee.student}</h4>
+                    {outstandingFee.class ? (
+                      <p className="truncate text-xs text-muted-foreground m-0">{outstandingFee.class}</p>
+                    ) : null}
+                  </div>
+                </div>
+                <span className="shrink-0 text-sm font-bold text-destructive tabular-nums">{formatCurrency(outstandingFee.amount)}</span>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2">
+                <OutstandingFeeOverdueBadge months={outstandingFee.months} t={t} />
+                {canWriteMessaging && (
+                  <OutstandingFeeMessagingActions row={outstandingFee} openComposer={openComposer} t={t} />
+                )}
+              </div>
+            </motion.article>
+          ))
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
         <Table className="w-full text-sm">
           <TableHeader>
             <TableRow className="border-b border-border/45 bg-muted/30 hover:bg-transparent">
@@ -189,65 +314,11 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                     <span className="text-sm font-bold text-destructive tabular-nums">{formatCurrency(outstandingFee.amount)}</span>
                   </TableCell>
                   <TableCell className="px-3 py-3 hidden md:table-cell">
-                    <StatusBadge
-                      status={outstandingFee.months >= 3 ? "overdue" : "warning"}
-                      config={{
-                        overdue: {
-                          label: t("dashboard.widgets.overdueStatus", { count: outstandingFee.months }),
-                          cls: SEMANTIC_BADGE.destructive,
-                        },
-                        warning: {
-                          label: t("dashboard.widgets.overdueStatus", { count: outstandingFee.months }),
-                          cls: SEMANTIC_BADGE.warning,
-                        },
-                      }}
-                      size="sm"
-                    />
+                    <OutstandingFeeOverdueBadge months={outstandingFee.months} t={t} />
                   </TableCell>
                   {canWriteMessaging && (
                     <TableCell className="px-3 py-3 text-end">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label={`${t("contacts.whatsapp.open")} ${outstandingFee.student}`}
-                          title={t("contacts.whatsapp.open")}
-                          className="rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shadow-none cursor-pointer"
-                          disabled={!outstandingFee.contact}
-                          onClick={() => {
-                            openComposer("whatsapp", [{
-                              id: outstandingFee.studentId,
-                              name: outstandingFee.student,
-                              phone: outstandingFee.contact,
-                              email: outstandingFee.email,
-                              amount: outstandingFee.amount,
-                              dueDate: outstandingFee.dueDate,
-                            }]);
-                          }}
-                        >
-                          <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label={`${t("dashboard.widgets.sendReminder")} ${outstandingFee.student}`}
-                          title={t("dashboard.widgets.sendReminder")}
-                          className="rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer"
-                          disabled={!outstandingFee.contact}
-                          onClick={() => {
-                            openComposer("sms", [{
-                              id: outstandingFee.studentId,
-                              name: outstandingFee.student,
-                              phone: outstandingFee.contact,
-                              email: outstandingFee.email,
-                              amount: outstandingFee.amount,
-                              dueDate: outstandingFee.dueDate,
-                            }]);
-                          }}
-                        >
-                          <Send className="w-3.5 h-3.5" aria-hidden="true" />
-                        </Button>
-                      </div>
+                      <OutstandingFeeMessagingActions row={outstandingFee} openComposer={openComposer} t={t} />
                     </TableCell>
                   )}
                 </MotionTableRow>

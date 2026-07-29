@@ -259,7 +259,51 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
         <EmptyState icon={DollarSign} title={t("finance.report.noInvoicesMatch")} compact />
       ) : (
         <Card className="overflow-hidden">
-          <div className="overflow-x-auto max-w-full">
+          <div className="space-y-3 p-3 md:hidden">
+            {invoices.map((inv) => (
+              <article key={inv.id} className="space-y-3 rounded-xl border border-border bg-card p-3">
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h4 className="truncate text-sm font-semibold text-foreground">{inv.studentName}</h4>
+                    <p className="font-mono text-xs text-muted-foreground">{inv.id}</p>
+                  </div>
+                  <StatusBadge
+                    status={inv.status}
+                    config={{
+                      paid: { label: t("finance.invoiceStatus.paid"), cls: SEMANTIC_BADGE.success },
+                      pending: { label: t("finance.invoiceStatus.pending"), cls: SEMANTIC_BADGE.warning },
+                      overdue: { label: t("finance.invoiceStatus.overdue"), cls: SEMANTIC_BADGE.destructive },
+                      partial: { label: t("finance.invoiceStatus.partial"), cls: SEMANTIC_BADGE.info },
+                      cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: SEMANTIC_BADGE.muted },
+                    }}
+                  />
+                </div>
+                <dl className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("finance.report.classColumn")}</dt>
+                    <dd className="text-foreground">{inv.class}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.dueDate")}</dt>
+                    <dd className="text-muted-foreground">{formatDate(inv.dueDate)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.baseFee")}</dt>
+                    <dd className="text-muted-foreground">{formatCurrency(inv.baseFee)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.discount")}</dt>
+                    <dd className="text-warning">{inv.discountAmt > 0 ? `-${formatCurrency(inv.discountAmt)}` : "—"}</dd>
+                  </div>
+                  <div className="col-span-2">
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.final")}</dt>
+                    <dd className="text-base font-semibold text-foreground">{formatCurrency(inv.finalAmt)}</dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>

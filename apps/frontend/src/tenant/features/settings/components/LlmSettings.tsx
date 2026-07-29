@@ -810,7 +810,7 @@ export default function LlmSettings(): React.JSX.Element {
             role="dialog"
             aria-modal="true"
             aria-label={editingConfig ? t('settings.llmModalEditTitle') : t('settings.llmModalAddTitle')}
-            className="fixed inset-x-4 top-4 z-50 w-auto max-w-full sm:inset-x-auto sm:left-1/2 sm:w-[min(32rem,calc(100%-2rem))] sm:-translate-x-1/2 bg-card border border-border shadow-2xl rounded-2xl flex flex-col overflow-hidden max-h-[85vh]"
+            className="fixed inset-x-4 top-4 z-50 flex max-h-[85vh] w-auto max-w-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:inset-x-0 sm:mx-auto sm:w-[min(32rem,calc(100%-2rem))]"
           >
             {/* Grab Handle Header */}
             <div

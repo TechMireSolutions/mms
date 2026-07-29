@@ -77,7 +77,51 @@ export function ObligationTypeManager({ types, onChange }: ObligationTypeManager
       </header>
 
       <section aria-label={t("obligations.types")} className="rounded-xl border border-border overflow-hidden">
-        <div className="overflow-x-auto max-w-full">
+        {types.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-muted-foreground md:hidden">{t("obligations.types.empty")}</p>
+        ) : (
+          <div className="space-y-3 p-3 md:hidden">
+            {types.map((obligationType) => (
+              <article
+                key={obligationType.id}
+                className="space-y-3 rounded-xl border border-border bg-card p-3"
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <p className="text-sm font-semibold text-foreground">{obligationType.name}</p>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Button type="button" aria-label={t("obligations.types.editAria", { name: obligationType.name })} onClick={() => setModal({ mode: "edit", data: { ...obligationType } })}
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
+                      <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
+                    </Button>
+                    <Button type="button" aria-label={t("obligations.types.deleteAria", { name: obligationType.name })} onClick={() => void handleDelete(obligationType.id)}
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
+                      <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                    </Button>
+                  </div>
+                </div>
+                <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.types.colQuantity")}</dt>
+                    <dd>
+                      <StatusBadge status={obligationType.quantity_based ? "yes" : "no"} config={quantityConfig} size="sm" />
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.types.colDesignated")}</dt>
+                    <dd>
+                      <StatusBadge status={obligationType.designated_for} config={designatedConfig} size="sm" />
+                    </dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+        )}
+        <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-sm">
           <caption className="sr-only">{t("obligations.types")}</caption>
           <thead className="bg-muted/60 border-b border-border">

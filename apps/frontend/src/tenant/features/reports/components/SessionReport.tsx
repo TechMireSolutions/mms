@@ -301,7 +301,61 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
         <EmptyState icon={CalendarCheck} title={t("sessions.report.noData")} compact />
       ) : (
         <Card className="overflow-hidden">
-          <div className="overflow-x-auto max-w-full">
+          <div className="space-y-3 p-3 md:hidden">
+            {sessionCapacityData.map((sessionCapacity) => (
+              <article
+                key={`${sessionCapacity.sessionId}-${sessionCapacity.classId}`}
+                className="space-y-3 rounded-xl border border-border bg-card p-3"
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => toggleSessionFilter(sessionCapacity.session)}
+                      className="h-auto min-h-11 max-w-full truncate px-0 py-0 text-sm font-semibold text-foreground hover:text-primary"
+                    >
+                      {sessionCapacity.session}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => toggleClassFilter(sessionCapacity.class)}
+                      className="h-auto min-h-11 px-0 py-0 text-xs font-normal text-muted-foreground hover:text-primary"
+                    >
+                      {sessionCapacity.class}
+                    </Button>
+                  </div>
+                  <StatusBadge status={sessionCapacity.status} config={sessionStatusConfig} size="sm" />
+                </div>
+                <dl className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("sessions.report.colEnrolled")}</dt>
+                    <dd className="font-semibold text-foreground">{sessionCapacity.enrolled}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("sessions.report.colCapacity")}</dt>
+                    <dd className="text-muted-foreground">{sessionCapacity.capacity}</dd>
+                  </div>
+                  <div className="col-span-2">
+                    <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("sessions.report.colUtilisation")}</dt>
+                    <dd>
+                      <div className="flex items-center gap-2">
+                        <div className="h-1.5 flex-1 rounded-full bg-muted">
+                          <div
+                            className={`h-1.5 rounded-full ${utilisationColour(sessionCapacity.rate)}`}
+                            style={{ width: `${sessionCapacity.rate}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-bold text-foreground">{sessionCapacity.rate}%</span>
+                      </div>
+                    </dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>

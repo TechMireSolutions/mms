@@ -47,25 +47,21 @@ export function ContactsSyncConflictDiffBody({
       {local && diffs.length > 0 ? (
         <>
           <p className="text-xs font-semibold text-foreground">{t("contacts.sync.conflictDiffTitle")}</p>
-          <div className="overflow-x-auto max-w-full">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-muted-foreground">
-                <th className="text-start py-1 pe-2 font-medium">{t("contacts.sync.conflictField")}</th>
-                <th className="text-start py-1 pe-2 font-medium">{t("contacts.sync.conflictLocal")}</th>
-                <th className="text-start py-1 font-medium">{t("contacts.sync.conflictServer")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {diffs.map((diff) => (
-                <tr key={diff.field} className="border-t border-border/50">
-                  <td className="py-1 pe-2 font-medium">{resolveSyncFieldLabel(diff.field, t)}</td>
-                  <td className="py-1 pe-2">
+          <div className="space-y-3 md:hidden">
+            {diffs.map((diff) => (
+              <article
+                key={diff.field}
+                className="space-y-2 rounded-xl border border-border bg-card p-3"
+              >
+                <p className="text-xs font-semibold text-foreground">{resolveSyncFieldLabel(diff.field, t)}</p>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-1">{t("contacts.sync.conflictLocal")}</p>
                     <Button
                       type="button"
                       variant="ghost"
                       onClick={() => onTogglePick(diff.field, "local")}
-                      className={`text-start break-all w-full rounded px-1 h-auto justify-start font-normal ${
+                      className={`text-start break-all w-full rounded px-2 py-1.5 h-auto justify-start font-normal min-h-11 ${
                         fieldPicks[diff.field] === "local"
                           ? "bg-primary/15 ring-1 ring-primary/40"
                           : "hover:bg-muted/50"
@@ -73,13 +69,14 @@ export function ContactsSyncConflictDiffBody({
                     >
                       {diff.local}
                     </Button>
-                  </td>
-                  <td className="py-1">
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-1">{t("contacts.sync.conflictServer")}</p>
                     <Button
                       type="button"
                       variant="ghost"
                       onClick={() => onTogglePick(diff.field, "server")}
-                      className={`text-start break-all w-full rounded px-1 h-auto justify-start font-normal ${
+                      className={`text-start break-all w-full rounded px-2 py-1.5 h-auto justify-start font-normal min-h-11 ${
                         fieldPicks[diff.field] === "server"
                           ? "bg-primary/15 ring-1 ring-primary/40"
                           : "hover:bg-muted/50"
@@ -87,11 +84,56 @@ export function ContactsSyncConflictDiffBody({
                     >
                       {diff.server}
                     </Button>
-                  </td>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block max-w-full">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-muted-foreground">
+                  <th className="text-start py-1 pe-2 font-medium">{t("contacts.sync.conflictField")}</th>
+                  <th className="text-start py-1 pe-2 font-medium">{t("contacts.sync.conflictLocal")}</th>
+                  <th className="text-start py-1 font-medium">{t("contacts.sync.conflictServer")}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {diffs.map((diff) => (
+                  <tr key={diff.field} className="border-t border-border/50">
+                    <td className="py-1 pe-2 font-medium">{resolveSyncFieldLabel(diff.field, t)}</td>
+                    <td className="py-1 pe-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => onTogglePick(diff.field, "local")}
+                        className={`text-start break-all w-full rounded px-1 h-auto justify-start font-normal ${
+                          fieldPicks[diff.field] === "local"
+                            ? "bg-primary/15 ring-1 ring-primary/40"
+                            : "hover:bg-muted/50"
+                        }`}
+                      >
+                        {diff.local}
+                      </Button>
+                    </td>
+                    <td className="py-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => onTogglePick(diff.field, "server")}
+                        className={`text-start break-all w-full rounded px-1 h-auto justify-start font-normal ${
+                          fieldPicks[diff.field] === "server"
+                            ? "bg-primary/15 ring-1 ring-primary/40"
+                            : "hover:bg-muted/50"
+                        }`}
+                      >
+                        {diff.server}
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </>
       ) : local ? (

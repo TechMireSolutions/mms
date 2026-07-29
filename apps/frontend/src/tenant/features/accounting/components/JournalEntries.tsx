@@ -297,6 +297,73 @@ export function JournalEntries({
   const grandDebit  = filtered.reduce((sum, journalEntry) => sum + journalEntry.lines.reduce((lineTotal, journalLine) => lineTotal + journalLine.debit, 0), 0);
   const grandCredit = filtered.reduce((sum, journalEntry) => sum + journalEntry.lines.reduce((lineTotal, journalLine) => lineTotal + journalLine.credit, 0), 0);
 
+  const renderEntryActions = (entry: JournalEntry) => (
+    <div className="flex flex-wrap items-center justify-end gap-1">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        aria-label={t("accounting.journal.actions.viewEntry", { ref: entry.ref })}
+        onClick={() => { setSelected(entry); setModal("view"); }}
+        className="text-muted-foreground hover:text-primary"
+      >
+        <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+      </Button>
+      {entry.status === "draft" && !showDeleted && (
+        <>
+          {canWrite && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={t("accounting.journal.actions.editEntry", { ref: entry.ref })}
+              onClick={() => { setSelected(entry); setModal("edit"); }}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
+            </Button>
+          )}
+          {canWrite && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={t("accounting.journal.actions.postEntry", { ref: entry.ref })}
+              onClick={() => void handlePost(entry)}
+              className="text-muted-foreground hover:text-success"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
+            </Button>
+          )}
+        </>
+      )}
+      {canDelete && (entry.status === "draft" || showDeleted) && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={showDeleted ? t("accounting.trash.restore") : t("common.delete")}
+          onClick={() => void handleDelete(entry.id)}
+          className={`text-muted-foreground ${showDeleted ? "hover:text-primary" : "hover:text-destructive"}`}
+        >
+          {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
+        </Button>
+      )}
+      {canWrite && entry.status === "posted" && !showDeleted && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={t("accounting.journal.actions.reverseEntry", { ref: entry.ref })}
+          onClick={() => void handleReverse(entry)}
+          className="text-muted-foreground hover:text-warning"
+        >
+          <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+        </Button>
+      )}
+    </div>
+  );
+
   // ── SIMPLE MODE ────────────────────────────────────────────────────────────
   if (mode === "simple") {
     return (
@@ -562,7 +629,99 @@ export function JournalEntries({
         </div>
       ) : (
         <div className="rounded-xl border border-border overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="space-y-3 p-3 md:hidden">
+            {filtered.map((entry) => {
+              const totalDebit = entry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
+              const totalCredit = entry.lines.reduce((sum, journalLine) => sum + journalLine.credit, 0);
+              return (
+                <article key={entry.id} className="space-y-3 rounded-xl border border-border bg-card p-3">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      {showRef && (
+                        <>
+                          <p className="font-mono text-xs font-bold text-primary m-0">{entry.ref}</p>
+                          {entry.reversed_ref && <p className="text-xs text-warning font-semibold m-0">{t("accounting.journal.dashboard.reversalOf", { ref: entry.reversed_ref })}</p>}
+                          {entry.simple_mode && <span className="text-xs text-primary/60 font-semibold">{t("accounting.journal.dashboard.simpleMode")}</span>}
+                        </>
+                      )}
+                      {showDescription && <h4 className="truncate text-sm font-semibold text-foreground m-0 mt-1">{entry.description}</h4>}
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-2">
+                      {showStatus && <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />}
+                      {canDelete && (
+                        <Checkbox
+                          checked={selectedIds.includes(entry.id)}
+                          onCheckedChange={() => toggleSelected(entry.id)}
+                          aria-label={t("accounting.trash.selectEntry", { ref: entry.ref })}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                    {showDate && (
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.date")}</dt>
+                        <dd className="text-foreground">{formatDate(entry.date)}</dd>
+                      </div>
+                    )}
+                    {showTags && (entry.tags || []).length > 0 && (
+                      <div>
+                        <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.tags")}</dt>
+                        <dd className="flex flex-wrap gap-1">
+                          {(entry.tags || []).map((tag) => (
+                            <span key={tag} className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                              {t(`accounting.journal.tag.${tag.toLowerCase()}` as AppTranslationKey)}
+                            </span>
+                          ))}
+                        </dd>
+                      </div>
+                    )}
+                    {showDebit && (
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.debit")}</dt>
+                        <dd className="font-mono text-xs font-semibold text-info">{formatCurrency ? formatCurrency(totalDebit) : formatMoney(totalDebit)}</dd>
+                      </div>
+                    )}
+                    {showCredit && (
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.credit")}</dt>
+                        <dd className="font-mono text-xs font-semibold text-success">{formatCurrency ? formatCurrency(totalCredit) : formatMoney(totalCredit)}</dd>
+                      </div>
+                    )}
+                  </dl>
+                  <div className="border-t border-border pt-2">
+                    {renderEntryActions(entry)}
+                  </div>
+                </article>
+              );
+            })}
+            <article className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
+              <p className="text-xs font-bold text-muted-foreground uppercase m-0">
+                {filtered.length !== 1 ? t("accounting.journal.dashboard.entriesCount", { count: filtered.length }) : t("accounting.journal.dashboard.entryCount", { count: filtered.length })}
+              </p>
+              <dl className="grid grid-cols-2 gap-2 text-sm">
+                {showDebit && (
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.debit")}</dt>
+                    <dd className="font-mono font-bold text-info text-xs">{formatCurrency ? formatCurrency(grandDebit) : formatMoney(grandDebit)}</dd>
+                  </div>
+                )}
+                {showCredit && (
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.credit")}</dt>
+                    <dd className="font-mono font-bold text-success text-xs">{formatCurrency ? formatCurrency(grandCredit) : formatMoney(grandCredit)}</dd>
+                  </div>
+                )}
+              </dl>
+              <p className="text-xs font-semibold text-muted-foreground m-0">
+                {Math.abs(grandDebit - grandCredit) < 0.01
+                  ? <span className="text-success">{t("accounting.journal.dashboard.balanced")}</span>
+                  : <span className="text-destructive">{t("accounting.journal.dashboard.difference", { diff: formatCurrency(Math.abs(grandDebit - grandCredit)) })}</span>
+                }
+              </p>
+            </article>
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm table-fixed">
               <caption className="sr-only">{t("accounting.journal.dashboard.tableCaption")}</caption>
               <thead className="bg-muted/60 border-b border-border">
@@ -675,70 +834,7 @@ export function JournalEntries({
                         <td className="px-3 py-2.5"><StatusBadge status={entry.status} config={journalStatusConfig} size="sm" /></td>
                       )}
                       <td className="px-3 py-2.5 text-end">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            aria-label={`View entry ${entry.ref}`}
-                            onClick={() => { setSelected(entry); setModal("view"); }}
-                            className="text-muted-foreground hover:text-primary"
-                          >
-                            <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-                          </Button>
-                          {entry.status === "draft" && !showDeleted && (
-                            <>
-                              {canWrite && (
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  aria-label={`Edit entry ${entry.ref}`}
-                                  onClick={() => { setSelected(entry); setModal("edit"); }}
-                                  className="text-muted-foreground hover:text-foreground"
-                                >
-                                  <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
-                                </Button>
-                              )}
-                              {canWrite && (
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  aria-label={`Post entry ${entry.ref}`}
-                                  onClick={() => void handlePost(entry)}
-                                  className="text-muted-foreground hover:text-success"
-                                >
-                                  <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
-                                </Button>
-                              )}
-                            </>
-                          )}
-                          {canDelete && (entry.status === "draft" || showDeleted) && (
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  aria-label={showDeleted ? t("accounting.trash.restore") : t("common.delete")}
-                                  onClick={() => void handleDelete(entry.id)}
-                                  className={`text-muted-foreground ${showDeleted ? "hover:text-primary" : "hover:text-destructive"}`}
-                                >
-                                  {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
-                                </Button>
-                          )}
-                          {canWrite && entry.status === "posted" && !showDeleted && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              aria-label={`Reverse entry ${entry.ref}`}
-                              onClick={() => void handleReverse(entry)}
-                              className="text-muted-foreground hover:text-warning"
-                            >
-                              <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
-                            </Button>
-                          )}
-                        </div>
+                        {renderEntryActions(entry)}
                       </td>
                     </tr>
                   );

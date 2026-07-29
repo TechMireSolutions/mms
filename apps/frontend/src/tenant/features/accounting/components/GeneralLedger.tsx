@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import { formatDate, type AppTranslationKey } from "@mms/shared";
 import { Download } from "lucide-react";
 import { ACCOUNT_TYPE_META, ACCOUNT_TYPES, computeLedger, Account, JournalEntry, AccountType } from '@/lib/data/accountingData';
@@ -173,7 +174,64 @@ export function GeneralLedger({ accounts, entries }: GeneralLedgerProps) {
             </div>
           ) : (
             <div className="rounded-xl border border-border overflow-hidden">
-              <div className="overflow-x-auto">
+              <div className="space-y-3 p-3 md:hidden">
+                {linesWithRunning.map((line, index) => (
+                  <motion.article
+                    key={index}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: index * 0.03 }}
+                    className="space-y-3 rounded-xl border border-border bg-card p-3"
+                  >
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">{formatDate(line.date)}</p>
+                        <p className="truncate font-mono text-xs font-bold text-primary">{line.ref}</p>
+                      </div>
+                      <div className="shrink-0 text-end font-mono text-xs font-semibold">
+                        <span className={line.running >= 0 ? "text-foreground" : "text-destructive"}>
+                          {formatCurrency(Math.abs(line.running))}
+                        </span>
+                        <span className="text-xs text-muted-foreground ms-1">{line.running >= 0 ? t("accounting.ledger.dr") : t("accounting.ledger.cr")}</span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-foreground">{line.description}</p>
+                    {line.lineDesc ? (
+                      <p className="text-xs text-muted-foreground">{line.lineDesc}</p>
+                    ) : null}
+                    <dl className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.ledger.columns.debit")}</dt>
+                        <dd className="font-mono text-xs font-semibold text-info">{line.debit > 0 ? formatCurrency(line.debit) : "—"}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.ledger.columns.credit")}</dt>
+                        <dd className="font-mono text-xs font-semibold text-success">{line.credit > 0 ? formatCurrency(line.credit) : "—"}</dd>
+                      </div>
+                    </dl>
+                  </motion.article>
+                ))}
+                <article className="rounded-xl border border-border bg-muted/30 p-3">
+                  <p className="text-xs font-bold uppercase text-muted-foreground m-0 mb-2">{t("accounting.ledger.closingBalance")}</p>
+                  <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.ledger.columns.debit")}</dt>
+                      <dd className="font-mono font-bold text-info">{formatCurrency(totalDebit)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.ledger.columns.credit")}</dt>
+                      <dd className="font-mono font-bold text-success">{formatCurrency(totalCredit)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.ledger.columns.balance")}</dt>
+                      <dd className="font-mono font-bold">
+                        {formatCurrency(Math.abs(balance))} {balance >= 0 ? t("accounting.ledger.dr") : t("accounting.ledger.cr")}
+                      </dd>
+                    </div>
+                  </dl>
+                </article>
+              </div>
+              <div className="hidden overflow-x-auto md:block">
                 <table className="w-full text-sm">
                   <caption className="sr-only">{t("accounting.ledger.entriesCaption", { name: activeAccount.name })}</caption>
                   <thead className="bg-muted/60 border-b border-border">

@@ -92,13 +92,6 @@ export default function StudentList({
   const showSessions = isColumnVisible ? isColumnVisible("sessions") : true;
   const showStatus = isColumnVisible ? isColumnVisible("status") : true;
 
-  const colSpanCount = 2 +
-    1 +
-    (showDob ? 1 : 0) +
-    (showParents ? 1 : 0) +
-    (showSessions ? 1 : 0) +
-    (showStatus ? 1 : 0);
-
   // Sorting State
   const [sortField, setSortField] = useState<"name" | "age" | "fatherName" | "status" | "grNumber" | null>("grNumber");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -330,7 +323,162 @@ export default function StudentList({
         )
       ) : (
       <div className="rounded-2xl border border-border/50 bg-card/45 backdrop-blur-xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
+        {paginatedStudents.length === 0 ? (
+          <EmptyState
+            icon={GraduationCap}
+            title={t("students.list.emptyTitle")}
+            description={t("students.list.emptyDesc")}
+          />
+        ) : (
+          <>
+            <div className="space-y-3 p-3 md:hidden">
+              {paginatedStudents.map((studentCard, rowIndex) => {
+                const studentIdStr = String(studentCard.id);
+                const isSelected = selectedIds.includes(studentIdStr);
+                const age = calcAge(studentCard.dob);
+                const sessionNames = sessions
+                  .filter((session) => studentCard.enrolledSessions?.includes(session.id))
+                  .map((session) => session.name);
+
+                return (
+                  <motion.article
+                    key={studentIdStr}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: Math.min(rowIndex * 0.03, 0.2) }}
+                    onClick={(event) => handleRowClick(event, studentCard)}
+                    className={`space-y-3 rounded-xl border border-border bg-card p-3 cursor-pointer ${
+                      isSelected ? "ring-1 ring-primary/20" : ""
+                    }`}
+                  >
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => handleSelectOne(studentIdStr)}
+                          aria-label={t("students.columns.name")}
+                        />
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <UserAvatar id={studentIdStr} name={studentCard.name || ""} className="h-8 w-8 shrink-0 rounded-full text-xs font-bold" />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <p className="truncate text-sm font-semibold text-foreground">{studentCard.name}</p>
+                              <GrBadge grNumber={studentCard.grNumber} />
+                            </div>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {isFieldEnabled("gender") && studentCard.gender ? `${toTitleCase(studentCard.gender)} · ` : ""}{studentCard.phone || t("students.list.noPhone")}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1">
+                        {showStatus && <StatusBadge status={studentCard.status || "active"} config={statusBadgeConfig} size="sm" />}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" aria-label={t("students.list.actionsAria")} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                              <MoreHorizontal className="w-3.5 h-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            {!showDeleted && (
+                              <>
+                                <DropdownMenuItem onClick={() => setViewStudent(studentCard)}>
+                                  <Eye className="w-3.5 h-3.5 me-2" /> {t("students.list.viewProfile")}
+                                </DropdownMenuItem>
+                                {canWrite && (
+                                  <DropdownMenuItem onClick={() => onEdit(studentCard)}>
+                                    <Edit2 className="w-3.5 h-3.5 me-2" /> {t("students.list.editStudent")}
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => openComposer("whatsapp", [toMessagingRecipient(studentCard)])}>
+                                  <MessageCircle className="w-3.5 h-3.5 me-2 text-success" /> {t("students.list.actionWhatsApp")}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => openComposer("sms", [toMessagingRecipient(studentCard)])}>
+                                  <MessageSquare className="w-3.5 h-3.5 me-2 text-info" /> {t("students.list.actionSms")}
+                                </DropdownMenuItem>
+                                {studentCard.email && (
+                                  <DropdownMenuItem onClick={() => openComposer("email", [toMessagingRecipient(studentCard)])}>
+                                    <Mail className="w-3.5 h-3.5 me-2 text-primary" /> {t("students.list.actionEmail")}
+                                  </DropdownMenuItem>
+                                )}
+                                {canDelete && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={() => onDelete(studentIdStr)}
+                                      className="text-destructive focus:text-destructive"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5 me-2" /> {t("students.list.remove")}
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </>
+                            )}
+                            {showDeleted && canDelete && onRestore && (
+                              <DropdownMenuItem onClick={() => onRestore(studentIdStr)}>
+                                <RotateCcw className="w-3.5 h-3.5 me-2" /> {t("students.restore")}
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                    <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                      {showDob && (
+                        <div>
+                          <dt className="text-xs font-semibold text-muted-foreground">{t("students.columns.dob")}</dt>
+                          <dd className="text-foreground">
+                            {age ? t("students.list.ageYears", { age }) : "—"}
+                            {studentCard.dob && (
+                              <span className="block text-xs text-muted-foreground">{formatDate(studentCard.dob, true)}</span>
+                            )}
+                          </dd>
+                        </div>
+                      )}
+                      {showParents && isFieldEnabled("fatherLink") && studentCard.fatherName && (
+                        <div>
+                          <dt className="text-xs font-semibold text-muted-foreground">{t("students.detail.father")}</dt>
+                          <dd className="text-foreground truncate">{studentCard.fatherName}</dd>
+                        </div>
+                      )}
+                      {showParents && isFieldEnabled("motherLink") && studentCard.motherName && (
+                        <div>
+                          <dt className="text-xs font-semibold text-muted-foreground">{t("students.detail.mother")}</dt>
+                          <dd className="text-foreground truncate">{studentCard.motherName}</dd>
+                        </div>
+                      )}
+                      {showParents && isFieldEnabled("guardianLink") && studentCard.guardianName && (
+                        <div>
+                          <dt className="text-xs font-semibold text-muted-foreground">{t("students.detail.guardian")}</dt>
+                          <dd className="text-foreground truncate">{studentCard.guardianName}</dd>
+                        </div>
+                      )}
+                      {showSessions && (
+                        <div className={showDob && showParents ? "sm:col-span-2" : ""}>
+                          <dt className="text-xs font-semibold text-muted-foreground">{t("students.columns.sessions")}</dt>
+                          <dd className="flex flex-wrap gap-1">
+                            {sessionNames.length === 0 ? (
+                              <span className="text-xs text-muted-foreground italic">{t("students.list.notEnrolled")}</span>
+                            ) : (
+                              sessionNames.map((sessionName) => (
+                                <span
+                                  key={sessionName}
+                                  className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/10"
+                                >
+                                  {sessionName}
+                                </span>
+                              ))
+                            )}
+                          </dd>
+                        </div>
+                      )}
+                    </dl>
+                  </motion.article>
+                );
+              })}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm table-fixed">
             <thead>
               <tr className="border-b border-border/50 bg-muted/20">
@@ -400,17 +548,6 @@ export default function StudentList({
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
-              {paginatedStudents.length === 0 ? (
-                <tr>
-                  <td colSpan={colSpanCount} className="py-8">
-                    <EmptyState
-                      icon={GraduationCap}
-                      title={t("students.list.emptyTitle")}
-                      description={t("students.list.emptyDesc")}
-                    />
-                  </td>
-                </tr>
-              ) : (
                 <AnimatePresence>
                   {paginatedStudents.map((studentRow, rowIndex) => {
                     const studentIdStr = String(studentRow.id);
@@ -563,10 +700,11 @@ export default function StudentList({
                     );
                   })}
                 </AnimatePresence>
-              )}
             </tbody>
           </table>
-        </div>
+            </div>
+          </>
+        )}
 
         {/* Footer with pagination */}
         {students.length > 0 && !serverPagination && (

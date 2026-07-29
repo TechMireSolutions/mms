@@ -118,7 +118,33 @@ export function ActivityLogs({
         </div>
       ) : (
         <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
-          <div className="overflow-x-auto max-w-full">
+          <div className="space-y-3 p-3 md:hidden">
+            {paginated.map((log) => (
+              <article
+                key={log.id}
+                className="space-y-3 rounded-xl border border-border bg-card p-3"
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground">{userNameFor(log)}</p>
+                    <p className="text-xs text-muted-foreground">{fmtTs(log.ts)}</p>
+                  </div>
+                  <ActivityActionBadge action={log.action} />
+                </div>
+                <dl className="grid grid-cols-1 gap-2 text-sm">
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t('users.activityColDetail')}</dt>
+                    <dd className="text-xs text-muted-foreground">{log.detail}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t('users.activityColIp')}</dt>
+                    <dd className="font-mono text-xs text-muted-foreground">{log.ip}</dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm table-fixed">
             <thead className="border-b border-border bg-muted/60">
               <tr>

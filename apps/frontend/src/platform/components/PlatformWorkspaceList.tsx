@@ -247,7 +247,7 @@ const WorkspaceRow = memo(function WorkspaceRow({
                 rel="noopener noreferrer"
                 className="min-h-11 inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline hover:text-primary/95 transition-colors group/link"
               >
-                <ExternalLink className="w-3.5 h-3.5 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform duration-250" aria-hidden />
+                <ExternalLink className="h-3.5 w-3.5 transition-transform duration-250 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 rtl:-scale-x-100 rtl:group-hover/link:-translate-x-0.5" aria-hidden />
                 {t("platform.openWorkspace")}
               </a>
             ) : (

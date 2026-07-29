@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  Edit2, BookOpen, Calendar, Clock, Users, CheckCircle, AlertCircle, Circle,
+  Edit2, BookOpen, Calendar, CheckCircle, AlertCircle, Circle,
   Search, Filter, ChevronDown, Trash2, RotateCcw
 } from "lucide-react";
 import {
@@ -191,17 +191,46 @@ export default function ExamsList({
     const StatusIcon = STATUS_ICONS[exam.status] || Circle;
     return { assignedClasses, studentCount, StatusIcon };
   };
+
+  const renderExamActions = (exam: Exam) => (
+    <div className="flex flex-wrap items-center gap-1">
+      {canWrite && !showDeleted && (
+        <Button
+          variant="ghost"
+          size="icon"
+          type="button"
+          onClick={() => onEdit(exam)}
+          aria-label={t("examinations.editExamAria", { name: exam.name })}
+          className="rounded-lg hover:bg-muted text-muted-foreground transition-all"
+        >
+          <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
+        </Button>
+      )}
+      {canDelete && (showDeleted ? onRestore : onDelete) && (
+        <Button
+          variant="ghost"
+          size="icon"
+          type="button"
+          onClick={() => { void handleRowTrashAction(exam.id); }}
+          aria-label={showDeleted ? t("examinations.trash.restore") : t("common.delete")}
+          className="rounded-lg hover:bg-muted text-muted-foreground transition-all"
+        >
+          {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
+        </Button>
+      )}
+    </div>
+  );
   return (
     <section className="space-y-4" aria-label={t("examinations.exams")}>
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+        <div className="relative min-w-0 flex-1">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
           <Input
             id="search-exams"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t("examinations.searchExams")}
-            className="w-full ps-10 pe-4 py-2.5 rounded-xl border border-border text-sm bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+            className="w-full min-w-0 ps-10 pe-4 py-2.5 rounded-xl border border-border text-sm bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </div>
         <DropdownMenu>
@@ -270,116 +299,82 @@ export default function ExamsList({
       )}
 
       {filtered.length > 0 && (
-        <>
-          {/* Card view for mobile/tablet */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:hidden" role="list" aria-label={t("examinations.exams")}>
+        <div className="rounded-xl border border-border overflow-hidden bg-card">
+          <div className="space-y-3 p-3 md:hidden" role="list" aria-label={t("examinations.exams")}>
             {filtered.map((exam, index) => {
               const { assignedClasses, studentCount } = renderExamMeta(exam);
               return (
-                <motion.div
+                <motion.article
                   key={exam.id}
-                  layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ y: -4, scale: 1.01, transition: { duration: 0.2 } }}
-                  transition={{ delay: index * 0.04 }}
-                  className="relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br from-card/95 via-card/80 to-background/60 backdrop-blur-xl p-5 hover:shadow-md hover:border-primary/20 transition-all duration-300 group"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: index * 0.03 }}
+                  className="space-y-3 rounded-xl border border-border bg-card p-3"
                   role="listitem"
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0 pe-2">
-                      {showStatus && (
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <StatusBadge status={exam.status} config={statusConfig} size="sm" />
-                        </div>
-                      )}
-                      {showName && (
-                        <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors truncate">
-                          {exam.name}
-                        </h3>
-                      )}
-                      {showSubject && (
-                        <p className="text-xs text-muted-foreground mt-0.5 truncate">{exam.subject}</p>
-                      )}
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      {showName && <h4 className="truncate text-sm font-semibold text-foreground">{exam.name}</h4>}
+                      {showSubject && <p className="truncate text-xs text-muted-foreground">{exam.subject}</p>}
                     </div>
-                    {canWrite && !showDeleted && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        type="button"
-                        onClick={() => onEdit(exam)}
-                        aria-label={t("examinations.editExamAria", { name: exam.name })}
-                        className="rounded-lg hover:bg-muted text-muted-foreground opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-all"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-                      </Button>
-                    )}
-                    {canDelete && (showDeleted ? onRestore : onDelete) && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        type="button"
-                        onClick={() => { void handleRowTrashAction(exam.id); }}
-                        aria-label={showDeleted ? t("examinations.trash.restore") : t("common.delete")}
-                        className="rounded-lg hover:bg-muted text-muted-foreground opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-all"
-                      >
-                        {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
-                      </Button>
+                    {showStatus && (
+                      <div className="shrink-0">
+                        <StatusBadge status={exam.status} config={statusConfig} size="sm" />
+                      </div>
                     )}
                   </div>
-
-                  {exam.description && (
-                    <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{exam.description}</p>
-                  )}
-
-                  {(() => {
-                    const pills = [
-                      { key: "date", show: showDate, icon: Calendar, label: formatDate(exam.date, true) },
-                      { key: "duration", show: showDuration, icon: Clock, label: t("examinations.durationMinutes", { minutes: exam.duration }) },
-                      { key: "classes", show: showClasses, icon: Users, label: t("examinations.studentCount", { count: studentCount }) },
-                    ].filter((pill) => pill.show);
-
-                    if (pills.length === 0) return null;
-                    return (
-                      <div className="flex flex-wrap gap-2" aria-hidden="true">
-                        {pills.map(({ icon: Icon, label, key }) => (
-                          <div key={key} className="rounded-lg bg-muted/40 px-2 py-1.5 flex items-center gap-1.5 min-w-0 max-w-full">
-                            <Icon className="w-2.5 h-2.5 text-muted-foreground flex-shrink-0" />
-                            <span className="text-xs font-semibold text-foreground truncate">{label}</span>
-                          </div>
-                        ))}
+                  <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                    {showDate && (
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("examinations.columns.exam.date")}</dt>
+                        <dd className="text-foreground">{formatDate(exam.date, true)}</dd>
                       </div>
-                    );
-                  })()}
-
-                  {showClasses && assignedClasses.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1.5" role="list" aria-label={t("examinations.columns.exam.classes")}>
-                      {assignedClasses.map((sessionClass) => (
-                        <span key={sessionClass.id} className="text-xs font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full" role="listitem">
-                          {sessionClass.name}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {(showTotalMarks || showPassingMarks) && (
-                    <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
-                      {showTotalMarks ? (
-                        <span>{t("examinations.totalMarksLabel")}: <strong className="text-foreground">{exam.totalMarks}</strong></span>
-                      ) : <span />}
-                      {showPassingMarks && (
-                        <span>{t("examinations.passLabel")}: <strong className="text-foreground">{exam.passingMarks}</strong></span>
-                      )}
-                    </div>
-                  )}
-                </motion.div>
+                    )}
+                    {showDuration && (
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("examinations.columns.exam.duration")}</dt>
+                        <dd className="text-foreground">{t("examinations.durationMinutes", { minutes: exam.duration })}</dd>
+                      </div>
+                    )}
+                    {showTotalMarks && (
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("examinations.columns.exam.totalMarks")}</dt>
+                        <dd className="font-semibold text-foreground">{exam.totalMarks}</dd>
+                      </div>
+                    )}
+                    {showPassingMarks && (
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("examinations.columns.exam.passingMarks")}</dt>
+                        <dd className="text-foreground">{exam.passingMarks}</dd>
+                      </div>
+                    )}
+                    {showClasses && (
+                      <div className="sm:col-span-2">
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("examinations.columns.exam.classes")}</dt>
+                        <dd className="text-foreground">
+                          {assignedClasses.length > 0
+                            ? assignedClasses.map((sessionClass) => sessionClass.name).join(", ")
+                            : "—"}
+                        </dd>
+                        <dd className="text-xs text-muted-foreground">{t("examinations.studentCount", { count: studentCount })}</dd>
+                      </div>
+                    )}
+                  </dl>
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2">
+                    {canDelete ? (
+                      <Checkbox
+                        checked={selectedIds.includes(exam.id)}
+                        onCheckedChange={() => toggleSelected(exam.id)}
+                        aria-label={t("examinations.trash.selectExam", { name: exam.name })}
+                      />
+                    ) : <span />}
+                    {renderExamActions(exam)}
+                  </div>
+                </motion.article>
               );
             })}
           </div>
-
-          {/* Table view for desktop */}
-          <div className="hidden lg:block rounded-xl border border-border overflow-hidden bg-card">
-            <div className="overflow-x-auto">
+          <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm table-fixed">
                 <caption className="sr-only">{t("examinations.exams")}</caption>
                 <thead>
@@ -487,30 +482,7 @@ export default function ExamsList({
                         )}
                         <td className="px-4 py-3 text-end">
                           <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
-                            {canWrite && !showDeleted && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                type="button"
-                                onClick={() => onEdit(exam)}
-                                aria-label={t("examinations.editExamAria", { name: exam.name })}
-                                className="rounded-lg hover:bg-muted text-muted-foreground transition-all focus:opacity-100"
-                              >
-                                <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-                              </Button>
-                            )}
-                            {canDelete && (showDeleted ? onRestore : onDelete) && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                type="button"
-                                onClick={() => { void handleRowTrashAction(exam.id); }}
-                                aria-label={showDeleted ? t("examinations.trash.restore") : t("common.delete")}
-                                className="rounded-lg hover:bg-muted text-muted-foreground transition-all focus:opacity-100"
-                              >
-                                {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
-                              </Button>
-                            )}
+                            {renderExamActions(exam)}
                           </div>
                         </td>
                       </motion.tr>
@@ -518,9 +490,8 @@ export default function ExamsList({
                   })}
                 </tbody>
               </table>
-            </div>
           </div>
-        </>
+        </div>
       )}
     </section>
   );

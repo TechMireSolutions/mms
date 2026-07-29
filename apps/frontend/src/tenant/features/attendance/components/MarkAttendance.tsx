@@ -27,6 +27,7 @@ import { StatusToggle } from "@/tenant/features/attendance/components/StatusTogg
 import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
 import {
   type ModuleCustomField,
+  type ModuleFieldDef,
 } from "@mms/shared";
 import { notify } from "@/lib/notify";
 
@@ -405,6 +406,96 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
     }
   };
 
+  const renderFieldControl = (row: AttendanceRow, field: ModuleFieldDef, idPrefix: string): React.ReactNode => {
+    const inputId = `${idPrefix}-${field.id}-${row.studentId}`;
+    if (field.id === "status") {
+      return (
+        <StatusToggle
+          value={row.status}
+          onChange={(value) => setRow(row.studentId, "status", value as AttendanceRecord["status"])}
+        />
+      );
+    }
+
+    if (field.id === "timeIn" || field.id === "timeOut") {
+      const value = field.id === "timeIn" ? row.timeIn : row.timeOut;
+      return (
+        <>
+          <label htmlFor={inputId} className="sr-only">{field.label}</label>
+          <Input
+            id={inputId}
+            name={field.id}
+            type="time"
+            value={value}
+            onChange={(event) => setRow(row.studentId, field.id, event.target.value)}
+            disabled={row.status === "absent"}
+            className="w-full min-w-[6.5rem] text-xs disabled:opacity-40 md:max-w-[8rem]"
+          />
+        </>
+      );
+    }
+
+    if (field.id === "notes") {
+      return (
+        <>
+          <label htmlFor={inputId} className="sr-only">{field.label}</label>
+          <Input
+            id={inputId}
+            name={field.id}
+            type="text"
+            value={row.notes}
+            placeholder={t("attendance.mark.notesPlaceholder")}
+            onChange={(event) => setRow(row.studentId, "notes", event.target.value)}
+            className="w-full min-w-0 text-xs"
+          />
+        </>
+      );
+    }
+
+    const rawValue = row[field.id];
+    const stringValue = typeof rawValue === "string" || typeof rawValue === "number" ? String(rawValue) : "";
+    if (field.type === "select") {
+      return (
+        <FormSelect
+          id={inputId}
+          name={field.id}
+          value={stringValue}
+          onChange={(value: string) => setRow(row.studentId, field.id, value)}
+          options={field.options || []}
+          placeholder={t("common.selectPlaceholder")}
+          className="w-full min-w-[7.5rem]"
+        />
+      );
+    }
+    if (field.type === "boolean") {
+      return (
+        <label htmlFor={inputId} className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center">
+          <span className="sr-only">{field.label}</span>
+          <Checkbox
+            id={inputId}
+            name={field.id}
+            checked={Boolean(rawValue)}
+            onCheckedChange={(checked) => setRow(row.studentId, field.id, !!checked)}
+          />
+        </label>
+      );
+    }
+    return (
+      <>
+        <label htmlFor={inputId} className="sr-only">{field.label}</label>
+        <Input
+          id={inputId}
+          name={field.id}
+          type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"}
+          value={stringValue}
+          onChange={(event) => setRow(row.studentId, field.id, event.target.value)}
+          placeholder={field.placeholder || t("common.enterPlaceholder")}
+          className="w-full min-w-0 text-xs"
+        />
+      </>
+    );
+  };
+
   const markAll = (status: AttendanceRecord["status"]) => {
     setRows((previousRows) => previousRows.map((row) => ({ ...row, status })));
     addAuditEntry(filters.classId, filters.date, { action: "bulk_mark", status, count: rows.length, by: role });
@@ -603,7 +694,41 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
 
       {/* Attendance Grid */}
       <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
-        <div className="overflow-x-auto">
+        <div className="space-y-3 p-3 md:hidden">
+          {filteredRows.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">{t("attendance.mark.noStudents")}</p>
+          ) : filteredRows.map((row) => {
+            const statusInfo = getAttendanceStatusInfo(row.status, statuses);
+            return (
+              <motion.article
+                key={row.studentId}
+                layout
+                className={`space-y-3 rounded-xl border border-border p-3 ${statusInfo?.bg || ""}`}
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <h3 className="min-w-0 break-words text-sm font-semibold text-foreground">{row.name}</h3>
+                  <span className="shrink-0 font-mono text-xs text-muted-foreground">{row.rollNo}</span>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {orderedFields.map((field) => {
+                    if (!isFieldEnabled(field.id)) return null;
+                    return (
+                      <div key={field.id} className={field.id === "notes" ? "sm:col-span-2" : ""}>
+                        <p className="mb-1 text-xs font-semibold text-muted-foreground">
+                          {field.label} {field.required ? "*" : ""}
+                        </p>
+                        <div className={field.id === "status" ? "flex justify-start" : ""}>
+                          {renderFieldControl(row, field, "mobile")}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.article>
+            );
+          })}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead className="bg-muted/60 border-b border-border">
               <tr>
@@ -635,103 +760,14 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
                     <td className="px-3 py-2.5 text-xs text-muted-foreground font-mono">{row.rollNo}</td>
                     <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{row.name}</td>
                     {orderedFields.map((field) => {
-                      const isEnabled = isFieldEnabled(field.id);
-                      if (!isEnabled) return null;
-
-                      if (field.id === "status") {
-                        return (
-                          <td key="status" className="px-3 py-2.5">
-                            <div className="flex justify-center">
-                              <StatusToggle value={row.status} onChange={(value) => setRow(row.studentId, "status", value as AttendanceRecord["status"])} />
-                            </div>
-                          </td>
-                        );
-                      }
-
-                      if (field.id === "timeIn") {
-                        return (
-                          <td key="timeIn" className="px-3 py-2.5">
-                            <label htmlFor={`time-in-${row.studentId}`} className="sr-only">{t("attendance.columns.timeIn")}</label>
-                            <Input 
-                              id={`time-in-${row.studentId}`}
-                              type="time" 
-                              value={row.timeIn}
-                              onChange={(event) => setRow(row.studentId, "timeIn", event.target.value)}
-                              disabled={row.status === "absent"}
-                              className="w-full min-w-[6.5rem] max-w-[8rem] text-xs disabled:opacity-40" 
-                            />
-                          </td>
-                        );
-                      }
-
-                      if (field.id === "timeOut") {
-                        return (
-                          <td key="timeOut" className="px-3 py-2.5">
-                            <label htmlFor={`time-out-${row.studentId}`} className="sr-only">{t("attendance.columns.timeOut")}</label>
-                            <Input 
-                              id={`time-out-${row.studentId}`}
-                              type="time" 
-                              value={row.timeOut}
-                              onChange={(event) => setRow(row.studentId, "timeOut", event.target.value)}
-                              disabled={row.status === "absent"}
-                              className="w-full min-w-[6.5rem] max-w-[8rem] text-xs disabled:opacity-40" 
-                            />
-                          </td>
-                        );
-                      }
-
-                      if (field.id === "notes") {
-                        return (
-                          <td key="notes" className="px-3 py-2.5">
-                            <label htmlFor={`notes-${row.studentId}`} className="sr-only">{t("attendance.mark.notes")}</label>
-                            <Input 
-                              id={`notes-${row.studentId}`}
-                              type="text" 
-                              value={row.notes} 
-                              placeholder={t("attendance.mark.notesPlaceholder")}
-                              onChange={(event) => setRow(row.studentId, "notes", event.target.value)}
-                              className="w-full min-w-0 text-xs" 
-                            />
-                          </td>
-                        );
-                      }
-
-                      // Custom column field
-                      if (!["status", "timeIn", "timeOut", "notes"].includes(field.id)) {
-                        const rawValue = row[field.id];
-                        const stringValue = typeof rawValue === "string" || typeof rawValue === "number" ? String(rawValue) : "";
-                        const boolValue = Boolean(rawValue);
-                        return (
-                          <td key={field.id} className="px-3 py-2.5">
-                            {field.type === "select" ? (
-                              <FormSelect
-                                id={`custom-select-${row.studentId}-${field.id}`}
-                                value={stringValue}
-                                onChange={(value: string) => setRow(row.studentId, field.id, value)}
-                                options={field.options || []}
-                                placeholder={t("common.selectPlaceholder")}
-                                className="min-w-[7.5rem]"
-                              />
-                            ) : field.type === "boolean" ? (
-                              <Checkbox
-                                checked={boolValue}
-                                onCheckedChange={(checked) => setRow(row.studentId, field.id, !!checked)}
-                                className="w-4 h-4 rounded border border-border cursor-pointer"
-                              />
-                            ) : (
-                              <Input
-                                type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"}
-                                value={stringValue}
-                                onChange={(event) => setRow(row.studentId, field.id, event.target.value)}
-                                placeholder={field.placeholder || t("common.enterPlaceholder")}
-                                className="w-full min-w-0 text-xs"
-                              />
-                            )}
-                          </td>
-                        );
-                      }
-
-                      return null;
+                      if (!isFieldEnabled(field.id)) return null;
+                      return (
+                        <td key={field.id} className="px-3 py-2.5">
+                          <div className={field.id === "status" ? "flex justify-center" : ""}>
+                            {renderFieldControl(row, field, "table")}
+                          </div>
+                        </td>
+                      );
                     })}
                   </motion.tr>
                 );

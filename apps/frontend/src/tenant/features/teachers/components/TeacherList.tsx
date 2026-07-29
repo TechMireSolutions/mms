@@ -184,6 +184,60 @@ export function TeacherList({
   const showSelectColumn = canWrite || canDelete;
   const showActionsColumn = canWrite || canDelete || !showDeleted;
 
+  const renderTeacherActions = (teacher: Teacher, teacherIdStr: string) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button type="button" variant="ghost" size="icon" className="rounded-lg" aria-label={t('common.actions')}>
+          <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {showDeleted ? (
+          canDelete && onRestore && (
+            <DropdownMenuItem onClick={() => onRestore(teacherIdStr)}>
+              <RotateCcw className="w-3.5 h-3.5 me-2" /> {t('teachers.restore')}
+            </DropdownMenuItem>
+          )
+        ) : (
+          <>
+            <DropdownMenuItem onClick={() => setViewTeacher(teacher)}>
+              <Eye className="w-3.5 h-3.5 me-2" /> {t('teachers.list.viewDetails')}
+            </DropdownMenuItem>
+            {canWrite && (
+              <DropdownMenuItem onClick={() => onEdit(teacher)}>
+                <Edit2 className="w-3.5 h-3.5 me-2" /> {t('common.edit')}
+              </DropdownMenuItem>
+            )}
+            {(onWhatsApp || onSms || onEmail) && <DropdownMenuSeparator />}
+            {onWhatsApp && (
+              <DropdownMenuItem onClick={() => onWhatsApp([teacher])}>
+                <MessageCircle className="w-3.5 h-3.5 me-2 text-success" /> {t('teachers.list.actionWhatsApp')}
+              </DropdownMenuItem>
+            )}
+            {onSms && (
+              <DropdownMenuItem onClick={() => onSms([teacher])}>
+                <MessageSquare className="w-3.5 h-3.5 me-2 text-info" /> {t('teachers.list.actionSms')}
+              </DropdownMenuItem>
+            )}
+            {onEmail && (
+              <DropdownMenuItem onClick={() => onEmail([teacher])}>
+                <Mail className="w-3.5 h-3.5 me-2 text-primary" /> {t('teachers.list.actionEmail')}
+              </DropdownMenuItem>
+            )}
+            {canDelete && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setPendingDeleteId(teacherIdStr)}>
+                  <Trash2 className="w-3.5 h-3.5 me-2" /> {t('common.delete')}
+                </DropdownMenuItem>
+              </>
+            )}
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   if (teachers.length === 0) {
     return (
       <EmptyState
@@ -197,7 +251,90 @@ export function TeacherList({
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
+        <div className="space-y-3 p-3 md:hidden">
+          {sorted.map((teacher, index) => {
+            const teacherIdStr = String(teacher.id);
+            const displayName = teacher.name || t('teachers.contactMissing');
+            const isSelected = selectedIds.includes(teacherIdStr);
+            return (
+              <motion.article
+                key={teacher.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: index * 0.03 }}
+                className={`space-y-3 rounded-xl border border-border bg-card p-3 ${isSelected ? 'ring-1 ring-primary/20' : ''}`}
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                    {showSelectColumn && (
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => handleSelectOne(teacherIdStr)}
+                        aria-label={t('teachers.field.name')}
+                      />
+                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="h-auto min-w-0 flex-1 items-center gap-2.5 p-0 text-start shadow-none hover:bg-transparent"
+                      onClick={() => setViewTeacher(teacher)}
+                    >
+                      <UserAvatar id={teacher.id} name={displayName} className="h-8 w-8 shrink-0 rounded-full text-xs font-semibold" />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-foreground">{displayName}</p>
+                        {teacher.employeeId && (
+                          <p className="truncate text-xs text-muted-foreground">{teacher.employeeId}</p>
+                        )}
+                      </div>
+                    </Button>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
+                    {showStatus && <StatusBadge status={teacher.status} config={statusConfig} size="sm" />}
+                    {showActionsColumn && renderTeacherActions(teacher, teacherIdStr)}
+                  </div>
+                </div>
+                <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                  {showSpecialization && (
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t('teachers.field.specialization')}</dt>
+                      <dd className="text-foreground">{teacher.specialization ?? t('common.notSpecified')}</dd>
+                    </div>
+                  )}
+                  {showQualification && (
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t('teachers.field.qualification')}</dt>
+                      <dd className="text-foreground">{teacher.qualification ?? t('common.notSpecified')}</dd>
+                    </div>
+                  )}
+                  {showJoinDate && (
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t('teachers.field.joinDate')}</dt>
+                      <dd className="text-foreground">
+                        {teacher.joinDate ? formatDate(teacher.joinDate) : t('common.notSpecified')}
+                      </dd>
+                    </div>
+                  )}
+                  {visibleCustomFields.map((field) => {
+                    const fieldValue = (teacher as unknown as Record<string, unknown>)[field.id];
+                    let displayValue = t('common.notSpecified');
+                    if (fieldValue !== undefined && fieldValue !== null && fieldValue !== '') {
+                      displayValue = typeof fieldValue === 'boolean'
+                        ? (fieldValue ? t('common.yes') : t('common.no'))
+                        : String(fieldValue);
+                    }
+                    return (
+                      <div key={field.id}>
+                        <dt className="text-xs font-semibold text-muted-foreground">{field.label ?? field.id}</dt>
+                        <dd className="text-foreground">{displayValue}</dd>
+                      </div>
+                    );
+                  })}
+                </dl>
+              </motion.article>
+            );
+          })}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm table-fixed">
             <thead className="bg-muted/40 border-b border-border/50">
               <tr>
@@ -315,57 +452,7 @@ export function TeacherList({
                   })}
                   {showActionsColumn && (
                     <td className="px-4 py-3">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button type="button" variant="ghost" size="icon" className="rounded-lg" aria-label={t('common.actions')}>
-                            <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {showDeleted ? (
-                            canDelete && onRestore && (
-                              <DropdownMenuItem onClick={() => onRestore(teacherIdStr)}>
-                                <RotateCcw className="w-3.5 h-3.5 me-2" /> {t('teachers.restore')}
-                              </DropdownMenuItem>
-                            )
-                          ) : (
-                            <>
-                              <DropdownMenuItem onClick={() => setViewTeacher(teacher)}>
-                                <Eye className="w-3.5 h-3.5 me-2" /> {t('teachers.list.viewDetails')}
-                              </DropdownMenuItem>
-                              {canWrite && (
-                                <DropdownMenuItem onClick={() => onEdit(teacher)}>
-                                  <Edit2 className="w-3.5 h-3.5 me-2" /> {t('common.edit')}
-                                </DropdownMenuItem>
-                              )}
-                              {(onWhatsApp || onSms || onEmail) && <DropdownMenuSeparator />}
-                              {onWhatsApp && (
-                                <DropdownMenuItem onClick={() => onWhatsApp([teacher])}>
-                                  <MessageCircle className="w-3.5 h-3.5 me-2 text-success" /> {t('teachers.list.actionWhatsApp')}
-                                </DropdownMenuItem>
-                              )}
-                              {onSms && (
-                                <DropdownMenuItem onClick={() => onSms([teacher])}>
-                                  <MessageSquare className="w-3.5 h-3.5 me-2 text-info" /> {t('teachers.list.actionSms')}
-                                </DropdownMenuItem>
-                              )}
-                              {onEmail && (
-                                <DropdownMenuItem onClick={() => onEmail([teacher])}>
-                                  <Mail className="w-3.5 h-3.5 me-2 text-primary" /> {t('teachers.list.actionEmail')}
-                                </DropdownMenuItem>
-                              )}
-                              {canDelete && (
-                                <>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setPendingDeleteId(teacherIdStr)}>
-                                    <Trash2 className="w-3.5 h-3.5 me-2" /> {t('common.delete')}
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {renderTeacherActions(teacher, teacherIdStr)}
                     </td>
                   )}
                 </tr>

@@ -62,7 +62,7 @@ interface StatsSkeletonProps {
  */
 export function StatsSkeleton({ count = 4 }: StatsSkeletonProps): React.ReactElement {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-3">
           <div className="flex items-center justify-between">

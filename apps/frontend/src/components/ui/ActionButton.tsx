@@ -43,7 +43,7 @@ export function ActionButton({
       onClick={onClick}
       disabled={disabled || loading}
       className={`
-        inline-flex items-center justify-center font-semibold rounded-lg border transition-all
+        inline-flex min-w-11 items-center justify-center font-semibold rounded-lg border transition-all
         disabled:opacity-60 disabled:cursor-not-allowed
         ${VARIANTS[variant]} ${SIZES[size]} ${className}
       `}

@@ -121,6 +121,93 @@ export function EnrollmentList({
     none: { label: t("enrollments.payment.none"), cls: SEMANTIC_BADGE.muted },
   }), [t]);
 
+  const renderActions = (enrollment: Enrollment): React.ReactElement => {
+    const student = students.find((candidate) => String(candidate.id) === String(enrollment.studentId));
+    const studentDisplayName = enrollment.studentName?.trim() || student?.name || "";
+
+    return (
+      <div className="flex items-center justify-end gap-1">
+        {showDeleted ? (
+          canDelete && onRestore && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onRestore(enrollment.id)}
+              className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
+              aria-label={t("enrollments.restore")}
+              title={t("enrollments.restore")}
+            >
+              <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+            </Button>
+          )
+        ) : (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                const phone = student?.phone || "";
+                openComposer("whatsapp", [{ id: enrollment.id, name: studentDisplayName, phone, email: student?.email }]);
+              }}
+              className="rounded-lg hover:bg-muted text-success hover:text-success transition-colors"
+              title={t("enrollments.list.actionWhatsApp")}
+              aria-label={t("enrollments.list.actionWhatsApp")}
+            >
+              <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                const phone = student?.phone || "";
+                openComposer("sms", [{ id: enrollment.id, name: studentDisplayName, phone, email: student?.email }]);
+              }}
+              className="rounded-lg hover:bg-muted text-info hover:text-info transition-colors"
+              title={t("enrollments.list.actionSms")}
+              aria-label={t("enrollments.list.actionSms")}
+            >
+              <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onView(enrollment)}
+              className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
+              aria-label={t("enrollments.actions.view", { name: studentDisplayName })}
+              title={t("enrollments.actions.viewShort")}
+            >
+              <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+            </Button>
+            {canWrite && enrollment.status !== "cancelled" && enrollment.status !== "completed" && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onCancel(enrollment.id)}
+                className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                aria-label={t("enrollments.actions.cancel", { name: studentDisplayName })}
+                title={t("enrollments.actions.cancelShort")}
+              >
+                <XCircle className="w-3.5 h-3.5" aria-hidden="true" />
+              </Button>
+            )}
+            {canDelete && onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onDelete(enrollment.id)}
+                className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                aria-label={t("common.delete")}
+                title={t("common.delete")}
+              >
+                <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+              </Button>
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
+
   return (
     <section className="space-y-4" aria-label={t("enrollments.list")}>
       <div className="flex flex-wrap gap-2 items-center">
@@ -204,7 +291,85 @@ export function EnrollmentList({
         </div>
       ) : (
         <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
-          <div className="overflow-x-auto">
+          <div className="space-y-3 p-3 md:hidden">
+            {paginatedEnrollments.map((enrollment) => {
+              const student = students.find((candidate) => String(candidate.id) === String(enrollment.studentId));
+              const studentDisplayName = enrollment.studentName?.trim() || student?.name || "";
+              return (
+                <motion.article
+                  key={enrollment.id}
+                  layout
+                  className="space-y-3 rounded-xl border border-border bg-card p-3"
+                >
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    {showStudent && (
+                      <div className="min-w-0">
+                        <h4 className="truncate text-sm font-semibold text-foreground">{studentDisplayName}</h4>
+                        {student?.grNumber && (
+                          <p className="text-xs font-bold text-primary">
+                            {t("enrollments.detail.grNumber")}: {student.grNumber}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    {showFinalFee && (
+                      <span className="shrink-0 text-sm font-semibold text-foreground">
+                        {formatCurrency(enrollment.finalFee)}
+                        {enrollment.discountPct > 0 && (
+                          <span
+                            className="ms-1 text-xs text-success font-normal"
+                            aria-label={t("enrollments.discountPctAria", { pct: enrollment.discountPct })}
+                          >
+                            –{enrollment.discountPct}%
+                          </span>
+                        )}
+                      </span>
+                    )}
+                  </div>
+                  <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                    {showSession && (
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("enrollments.columns.session")}</dt>
+                        <dd className="truncate text-foreground">{enrollment.sessionName}</dd>
+                      </div>
+                    )}
+                    {showClass && (
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("enrollments.columns.class")}</dt>
+                        <dd className="text-foreground">{enrollment.className || "—"}</dd>
+                      </div>
+                    )}
+                    {showEnrolledDate && (
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("enrollments.columns.enrolledDate")}</dt>
+                        <dd className="font-mono text-muted-foreground">{formatDate(enrollment.enrolledDate)}</dd>
+                      </div>
+                    )}
+                    {showStatus && (
+                      <div>
+                        <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("enrollments.columns.status")}</dt>
+                        <dd><StatusBadge status={enrollment.status} config={statusConfig} size="sm" /></dd>
+                      </div>
+                    )}
+                    {showPayment && (
+                      <div>
+                        <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("enrollments.columns.payment")}</dt>
+                        <dd>
+                          {enrollment.paymentStatus
+                            ? <StatusBadge status={enrollment.paymentStatus} config={paymentConfig} size="sm" />
+                            : "—"}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                  <div className="flex flex-wrap items-center justify-end gap-1 border-t border-border pt-2">
+                    {renderActions(enrollment)}
+                  </div>
+                </motion.article>
+              );
+            })}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm table-fixed">
               <thead className="bg-muted/20 border-b border-border/50">
                 <tr>
@@ -299,85 +464,7 @@ export function EnrollmentList({
                         </td>
                       )}
                       <td className="px-3 py-2.5 text-end">
-                        <div className="flex items-center justify-end gap-1">
-                          {showDeleted ? (
-                            canDelete && onRestore && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => onRestore(enrollment.id)}
-                                className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
-                                aria-label={t("enrollments.restore")}
-                                title={t("enrollments.restore")}
-                              >
-                                <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
-                              </Button>
-                            )
-                          ) : (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  const phone = student?.phone || "";
-                                  openComposer("whatsapp", [{ id: enrollment.id, name: studentDisplayName, phone, email: student?.email }]);
-                                }}
-                                className="rounded-lg hover:bg-muted text-success hover:text-success transition-colors"
-                                title={t("enrollments.list.actionWhatsApp")}
-                                aria-label={t("enrollments.list.actionWhatsApp")}
-                              >
-                                <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  const phone = student?.phone || "";
-                                  openComposer("sms", [{ id: enrollment.id, name: studentDisplayName, phone, email: student?.email }]);
-                                }}
-                                className="rounded-lg hover:bg-muted text-info hover:text-info transition-colors"
-                                title={t("enrollments.list.actionSms")}
-                                aria-label={t("enrollments.list.actionSms")}
-                              >
-                                <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => onView(enrollment)}
-                                className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
-                                aria-label={t("enrollments.actions.view", { name: studentDisplayName })}
-                                title={t("enrollments.actions.viewShort")}
-                              >
-                                <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-                              </Button>
-                              {canWrite && enrollment.status !== "cancelled" && enrollment.status !== "completed" && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => onCancel(enrollment.id)}
-                                  className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                                  aria-label={t("enrollments.actions.cancel", { name: studentDisplayName })}
-                                  title={t("enrollments.actions.cancelShort")}
-                                >
-                                  <XCircle className="w-3.5 h-3.5" aria-hidden="true" />
-                                </Button>
-                              )}
-                              {canDelete && onDelete && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => onDelete(enrollment.id)}
-                                  className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                                  aria-label={t("common.delete")}
-                                  title={t("common.delete")}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                                </Button>
-                              )}
-                            </>
-                          )}
-                        </div>
+                        {renderActions(enrollment)}
                       </td>
                     </motion.tr>
                   );

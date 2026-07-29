@@ -121,12 +121,12 @@ export function PaymentTracker({
       )}
 
       <Card accentColor="primary" className="p-0 overflow-hidden">
-        <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center justify-between gap-3 ps-6.5">
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border/40 bg-muted/20 px-4 py-3 ps-6.5">
           <div className="flex items-center gap-2 min-w-0">
             <CreditCard className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
             <h3 className="text-sm font-bold text-foreground m-0">{t("finance.paymentLog")}</h3>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             <span className="text-xs font-semibold text-success">{t("finance.paymentTotal", { amount: formatCurrency(totalPaid) })}</span>
             {columnCustomizer && (
               <ModuleColumnCustomizer
@@ -137,7 +137,74 @@ export function PaymentTracker({
             )}
           </div>
         </header>
-        <div className="overflow-x-auto">
+        <div className="space-y-3 p-3 md:hidden">
+          {payments.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">{t("finance.empty.payments")}</p>
+          ) : (
+            payments.map((payment, index) => (
+              <motion.article
+                key={payment.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: index * 0.03 }}
+                className="space-y-3 rounded-xl border border-border bg-card p-3"
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    {showStudent && <h4 className="truncate text-sm font-semibold text-foreground">{payment.studentName}</h4>}
+                    {showInvoice && <p className="truncate font-mono text-xs text-muted-foreground">{payment.invoiceId}</p>}
+                  </div>
+                  {showAmount && <span className="shrink-0 text-sm font-bold text-success">{formatCurrency(payment.amount)}</span>}
+                </div>
+                <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                  {showDate && (
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.paymentDate")}</dt>
+                      <dd className="text-foreground">{formatDate(payment.date)}</dd>
+                    </div>
+                  )}
+                  {showMethod && (
+                    <div>
+                      <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("finance.columns.method")}</dt>
+                      <dd><StatusBadge status={payment.method} config={methodConfig} size="sm" /></dd>
+                    </div>
+                  )}
+                  {showReceivedBy && (
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.receivedBy")}</dt>
+                      <dd className="break-words text-foreground">{payment.receivedBy || "—"}</dd>
+                    </div>
+                  )}
+                  {showNote && (
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.note")}</dt>
+                      <dd className="break-words text-foreground">{payment.note || "—"}</dd>
+                    </div>
+                  )}
+                </dl>
+                {canDelete && (
+                  <div className="flex items-center justify-between border-t border-border pt-2">
+                    <Checkbox
+                      checked={selectedIds.includes(payment.id)}
+                      onCheckedChange={(checked) => setSelectedIds((ids) => checked ? [...ids, payment.id] : ids.filter((id) => id !== payment.id))}
+                      aria-label={t("finance.trash.selectPayment", { id: payment.id })}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => showDeleted ? onRestore?.(payment.id) : setPendingDeleteId(payment.id)}
+                      aria-label={showDeleted ? t("finance.trash.restore") : t("common.delete")}
+                    >
+                      {showDeleted ? <RotateCcw className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                )}
+              </motion.article>
+            ))
+          )}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm table-fixed">
             <caption className="sr-only">{t("finance.paymentLog")}</caption>
             <thead>

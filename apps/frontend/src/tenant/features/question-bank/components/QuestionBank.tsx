@@ -360,18 +360,15 @@ export function QuestionBank({
 
       {filtered.length > 0 && (
         <>
-          {/* Card view for mobile/tablet */}
-          <div className="space-y-3 lg:hidden" role="list">
+          <div className="space-y-3 p-3 md:hidden" role="list">
             {filtered.map((question, questionIndex) => (
-              <motion.div
+              <motion.article
                 key={question.id}
                 layout
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                whileHover={{ y: -2, scale: 1.005, transition: { duration: 0.2 } }}
                 transition={{ delay: questionIndex * 0.03 }}
-                className="group relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br from-card/95 via-card/80 to-background/60 backdrop-blur-xl p-4 transition-all duration-300 hover:shadow-sm"
-                role="listitem"
+                className="group space-y-3 rounded-xl border border-border bg-card p-3"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
@@ -458,7 +455,7 @@ export function QuestionBank({
                         );
                       })}
                   </div>
-                  <div className="flex flex-shrink-0 items-center gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
+                  <div className="flex shrink-0 items-center gap-1">
                     {canDelete && (
                       <Checkbox
                         checked={selectedIds.includes(question.id)}
@@ -492,13 +489,11 @@ export function QuestionBank({
                     )}
                   </div>
                 </div>
-              </motion.div>
+              </motion.article>
             ))}
           </div>
 
-          {/* Table view for desktop */}
-          <div className="hidden lg:block rounded-xl border border-border overflow-hidden bg-card">
-            <div className="overflow-x-auto">
+          <div className="hidden overflow-x-auto md:block rounded-xl border border-border bg-card">
               <table className="w-full text-sm table-fixed">
                 <caption className="sr-only">{t('questionBank.questions')}</caption>
                 <thead>
@@ -640,7 +635,6 @@ export function QuestionBank({
                   })}
                 </tbody>
               </table>
-            </div>
           </div>
         </>
       )}

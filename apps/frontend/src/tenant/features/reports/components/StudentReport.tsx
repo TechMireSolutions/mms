@@ -258,7 +258,43 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
         ) : (
           <div className="space-y-3">
             <div className="rounded-xl border border-border overflow-hidden">
-              <div className="overflow-x-auto max-w-full">
+              <div className="space-y-3 p-3 md:hidden">
+                {students.map((student) => (
+                  <article key={student.id} className="space-y-3 rounded-xl border border-border bg-card p-3">
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <h4 className="truncate text-sm font-semibold text-foreground">{student.name}</h4>
+                      <StatusBadge status={student.status} config={statusBadgeConfig} />
+                    </div>
+                    <dl className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colGender")}</dt>
+                        <dd className="text-foreground">{toTitleCase(student.gender)}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colClass")}</dt>
+                        <dd className="text-foreground">{student.class}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colSession")}</dt>
+                        <dd className="truncate text-foreground">{student.session}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colCity")}</dt>
+                        <dd className="text-foreground">{student.city}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colAge")}</dt>
+                        <dd className="text-foreground">{student.age}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colRegistered")}</dt>
+                        <dd className="text-muted-foreground">{student.registered}</dd>
+                      </div>
+                    </dl>
+                  </article>
+                ))}
+              </div>
+              <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50">
                   <tr>
@@ -311,7 +347,31 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
           <EmptyState icon={Users} title={t("students.report.noEnrollmentsFound")} compact />
         ) : (
           <Card className="overflow-hidden mt-4">
-            <div className="overflow-x-auto max-w-full">
+            <div className="space-y-3 p-3 md:hidden">
+              {enrollments.map((enrollment) => (
+                <article key={enrollment.id} className="space-y-3 rounded-xl border border-border bg-card p-3">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <h4 className="truncate text-sm font-semibold text-foreground">{enrollment.studentName}</h4>
+                    <StatusBadge status={enrollment.status} config={enrollmentStatusConfig} />
+                  </div>
+                  <dl className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colSession")}</dt>
+                      <dd className="text-foreground">{enrollment.session}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colClass")}</dt>
+                      <dd className="text-foreground">{enrollment.class}</dd>
+                    </div>
+                    <div className="col-span-2">
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colEnrolled")}</dt>
+                      <dd className="text-muted-foreground">{enrollment.enrolled}</dd>
+                    </div>
+                  </dl>
+                </article>
+              ))}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border/50">
                 <tr>

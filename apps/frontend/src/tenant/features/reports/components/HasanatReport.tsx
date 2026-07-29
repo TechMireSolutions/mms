@@ -202,26 +202,28 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
         </SectionCard>
 
         <SectionCard title={t("hasanat.report.redeemedVsBalance")}>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <SafeResponsiveContainer width="60%" height={160}>
-              <PieChart>
-                <Pie
-                  data={redemptionPieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={35}
-                  outerRadius={65}
-                  paddingAngle={3}
-                  dataKey="value"
-                >
-                  {redemptionPieData.map((_, index) => (
-                    <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </SafeResponsiveContainer>
-            <div className="space-y-3 w-full sm:w-[35%] shrink-0">
+          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <div className="min-w-0 flex-1">
+              <SafeResponsiveContainer width="100%" height={160}>
+                <PieChart>
+                  <Pie
+                    data={redemptionPieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={35}
+                    outerRadius={65}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {redemptionPieData.map((_, index) => (
+                      <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </SafeResponsiveContainer>
+            </div>
+            <div className="w-full shrink-0 space-y-3 sm:w-[35%]">
               {redemptionPieData.map((slice, index) => (
                 <div key={slice.name} className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-sm" style={{ background: PIE_COLORS[index] }} />
@@ -275,7 +277,49 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
         <EmptyState icon={Star} title={t("hasanat.report.noData")} compact />
       ) : (
         <Card className="overflow-hidden">
-          <div className="overflow-x-auto max-w-full">
+          <div className="space-y-3 p-3 md:hidden">
+            {distribution.map((hasanatRow) => (
+              <article
+                key={hasanatRow.studentName}
+                className={`space-y-3 rounded-xl border border-border bg-card p-3 ${selectedFaculty === hasanatRow.faculty ? "ring-1 ring-primary/20" : ""}`}
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <h4 className="truncate text-sm font-semibold text-foreground">{hasanatRow.studentName}</h4>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${hasanatRow.balance > 0 ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"}`}>
+                    {hasanatRow.balance}
+                  </span>
+                </div>
+                <dl className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.report.colClass")}</dt>
+                    <dd className="text-foreground">{hasanatRow.class}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.report.colFaculty")}</dt>
+                    <dd>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => toggleFacultyFilter(hasanatRow.faculty)}
+                        className={`h-auto min-h-11 px-0 py-0 font-normal hover:bg-transparent hover:text-foreground ${selectedFaculty === hasanatRow.faculty ? "text-primary" : "text-muted-foreground"}`}
+                      >
+                        {hasanatRow.faculty}
+                      </Button>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.report.colDistributed")}</dt>
+                    <dd className="font-semibold text-primary">{hasanatRow.distributed}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.report.colRedeemed")}</dt>
+                    <dd className="font-semibold text-success">{hasanatRow.redeemed}</dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>

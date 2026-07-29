@@ -105,14 +105,12 @@ export function ContactsWorkListBody({
             <ErrorBoundary>
               {viewModeOverride === "cards" ? (
                 <ContactCards {...commonDirectoryProps} />
-              ) : viewModeOverride === "table" ? (
-                <ContactsTable {...tableProps} />
               ) : (
                 <>
-                  <div className="lg:hidden">
+                  <div className="md:hidden">
                     <ContactCards {...commonDirectoryProps} />
                   </div>
-                  <div className="hidden lg:block space-y-2">
+                  <div className="hidden space-y-2 md:block">
                     <ContactsTable {...tableProps} />
                   </div>
                 </>

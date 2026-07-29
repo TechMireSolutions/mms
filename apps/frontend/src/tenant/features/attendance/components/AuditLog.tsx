@@ -157,7 +157,21 @@ export function AuditLog({ filters }: AuditLogProps) {
         </div>
       ) : (
         <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
-          <div className="overflow-x-auto max-w-full">
+          <div className="space-y-3 p-3 md:hidden">
+            {log.map((entry, index) => (
+              <article key={index} className="space-y-2 rounded-xl border border-border bg-card p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <time className="text-xs font-mono text-muted-foreground">{formatDateTime(entry.ts)}</time>
+                  <StatusBadge status={entry.action} config={actionConfig} size="sm" />
+                </div>
+                <p className="text-xs text-foreground m-0">{describeEntry(entry, studentNameFor, t)}</p>
+                {entry.by && (
+                  <p className="text-xs font-semibold text-muted-foreground capitalize m-0">{entry.by}</p>
+                )}
+              </article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead className="bg-muted/60 border-b border-border">
               <tr>

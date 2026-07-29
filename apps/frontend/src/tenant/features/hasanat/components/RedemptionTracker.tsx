@@ -212,7 +212,50 @@ export function RedemptionTracker({
         </div>
       ) : (
         <Card accentColor="primary" className="shadow-sm hover:shadow-md border-border/80 p-0 overflow-hidden bg-card/45 backdrop-blur-sm">
-          <div className="overflow-x-auto">
+          <div className="space-y-3 p-3 md:hidden">
+            {redemptions.map((redemption, index) => (
+              <motion.article
+                key={redemption.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: index * 0.04 }}
+                className="space-y-3 rounded-xl border border-border bg-card p-3"
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  {showStudent && (
+                    <h4 className="min-w-0 truncate text-sm font-semibold text-foreground">{redemption.studentName || "—"}</h4>
+                  )}
+                  {showPointsUsed && (
+                    <div className="flex shrink-0 items-center gap-1">
+                      <Star className="w-3 h-3 text-warning" aria-hidden="true" />
+                      <span className="text-sm font-bold text-warning">{redemption.pointsUsed}</span>
+                    </div>
+                  )}
+                </div>
+                <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                  {showReward && (
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.redemption.reward")}</dt>
+                      <dd className="break-words text-foreground">{redemption.reward}</dd>
+                    </div>
+                  )}
+                  {showDate && (
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.redemption.date")}</dt>
+                      <dd className="text-muted-foreground">{formatDate(redemption.date)}</dd>
+                    </div>
+                  )}
+                  {showApprovedBy && (
+                    <div>
+                      <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.redemption.approvedBy")}</dt>
+                      <dd className="break-words text-muted-foreground">{redemption.approvedBy || "—"}</dd>
+                    </div>
+                  )}
+                </dl>
+              </motion.article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm table-fixed">
               <caption className="sr-only">{t("hasanat.tabs.redemptions")}</caption>
               <thead>

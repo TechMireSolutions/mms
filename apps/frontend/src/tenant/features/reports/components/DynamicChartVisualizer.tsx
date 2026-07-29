@@ -862,12 +862,12 @@ export default function DynamicChartVisualizer({
               <p className="text-xs text-muted-foreground italic py-3 text-center bg-card/10 rounded-2xl border border-dashed border-border/40">{t("reports.visualizer.noFilters")}</p>
             ) : (
               filters.map((rule) => (
-                <div key={rule.id} className="flex gap-2 items-center bg-card/30 border border-border p-2.5 rounded-2xl">
+                <div key={rule.id} className="flex flex-col gap-2 rounded-2xl border border-border bg-card/30 p-2.5 sm:flex-row sm:items-center">
                   {/* Field Selector */}
                   <FormSelect
                     value={rule.field}
                     onChange={(val) => handleUpdateFilter(rule.id, { field: val })}
-                    className="flex-1 min-w-0"
+                    className="min-w-0 flex-1"
                     options={activeMeta.fields.map((metadataField) => ({
                       value: metadataField.value,
                       label: getFieldLabel(metadataField.value, metadataField.label, t),
@@ -878,7 +878,7 @@ export default function DynamicChartVisualizer({
                   <FormSelect
                     value={rule.operator}
                     onChange={(val) => handleUpdateFilter(rule.id, { operator: val as FilterRule["operator"] })}
-                    className="w-24 font-medium"
+                    className="w-full font-medium sm:w-24"
                     options={[
                       { value: "equals", label: "=" },
                       { value: "contains", label: "like" },
@@ -897,7 +897,7 @@ export default function DynamicChartVisualizer({
                     value={rule.value}
                     onChange={(event) => handleUpdateFilter(rule.id, { value: event.target.value })}
                     placeholder={t("reports.visualizer.filterValuePlaceholder")}
-                    className="flex-1 min-w-0 min-h-11 px-2 py-2 text-xs rounded-lg border border-border bg-card/60 text-foreground focus:ring-2 focus:ring-primary/20 font-semibold"
+                    className="min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-card/60 px-2 py-2 text-xs font-semibold text-foreground focus:ring-2 focus:ring-primary/20"
                   />
 
                   {/* Remove */}
@@ -906,7 +906,7 @@ export default function DynamicChartVisualizer({
                     variant="ghost"
                     size="icon"
                     onClick={() => handleDeleteFilter(rule.id)}
-                    className="rounded hover:bg-destructive/15 text-muted-foreground hover:text-destructive shadow-none"
+                    className="shrink-0 rounded hover:bg-destructive/15 text-muted-foreground hover:text-destructive shadow-none"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
@@ -1140,25 +1140,49 @@ export default function DynamicChartVisualizer({
                   exit={{ opacity: 0, height: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="border border-border/60 bg-card/25 rounded-2xl overflow-hidden mt-1 max-h-[13.75rem] overflow-x-auto overflow-y-auto">
-                    <table className="w-full text-xs text-start">
-                      <thead className="bg-muted/50 border-b border-border/50 text-xs font-black uppercase text-muted-foreground tracking-wider">
-                        <tr>
-                          <th className="px-4 py-2.5">{t("reports.visualizer.xAxisCategory")}</th>
-                          <th className="px-4 py-2.5">{t("reports.visualizer.aggregatedValue", { op: operation.toUpperCase() })}</th>
-                          <th className="px-4 py-2.5">{t("reports.visualizer.recordCount")}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border/40 font-medium">
-                        {processedData.map((processedRow, index) => (
-                          <tr key={index} className="hover:bg-muted/20">
-                            <td className="px-4 py-2.5 text-foreground font-semibold">{processedRow.name}</td>
-                            <td className="px-4 py-2.5 text-primary font-bold">{formatNumber(processedRow.value)}</td>
-                            <td className="px-4 py-2.5 text-muted-foreground">{processedRow.count}</td>
+                  <div className="border border-border/60 bg-card/25 rounded-2xl overflow-hidden mt-1 max-h-[13.75rem] overflow-y-auto">
+                    <div className="space-y-3 p-3 md:hidden">
+                      {processedData.map((processedRow, index) => (
+                        <article
+                          key={index}
+                          className="space-y-2 rounded-xl border border-border bg-card p-3"
+                        >
+                          <p className="text-sm font-semibold text-foreground">{processedRow.name}</p>
+                          <dl className="grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                              <dt className="text-xs font-semibold text-muted-foreground">
+                                {t("reports.visualizer.aggregatedValue", { op: operation.toUpperCase() })}
+                              </dt>
+                              <dd className="font-bold text-primary">{formatNumber(processedRow.value)}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-xs font-semibold text-muted-foreground">{t("reports.visualizer.recordCount")}</dt>
+                              <dd className="text-muted-foreground">{processedRow.count}</dd>
+                            </div>
+                          </dl>
+                        </article>
+                      ))}
+                    </div>
+                    <div className="hidden overflow-x-auto md:block">
+                      <table className="w-full text-xs text-start">
+                        <thead className="bg-muted/50 border-b border-border/50 text-xs font-black uppercase text-muted-foreground tracking-wider">
+                          <tr>
+                            <th className="px-4 py-2.5">{t("reports.visualizer.xAxisCategory")}</th>
+                            <th className="px-4 py-2.5">{t("reports.visualizer.aggregatedValue", { op: operation.toUpperCase() })}</th>
+                            <th className="px-4 py-2.5">{t("reports.visualizer.recordCount")}</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-border/40 font-medium">
+                          {processedData.map((processedRow, index) => (
+                            <tr key={index} className="hover:bg-muted/20">
+                              <td className="px-4 py-2.5 text-foreground font-semibold">{processedRow.name}</td>
+                              <td className="px-4 py-2.5 text-primary font-bold">{formatNumber(processedRow.value)}</td>
+                              <td className="px-4 py-2.5 text-muted-foreground">{processedRow.count}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </motion.div>
               )}

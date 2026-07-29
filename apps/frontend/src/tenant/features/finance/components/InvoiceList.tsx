@@ -181,7 +181,132 @@ export function InvoiceList({
       )}
 
       <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
-        <div className="overflow-x-auto">
+        <div className="space-y-3 p-3 md:hidden">
+          {filtered.length === 0 ? (
+            <EmptyState icon={ReceiptText} title={t("finance.empty.invoicesTitle")} description={t("finance.empty.invoicesSubtitle")} compact />
+          ) : (
+            filtered.map((invoice, index) => {
+              const invRec = invoice as unknown as Record<string, unknown>;
+              const phone = typeof invRec.phone === "string" ? invRec.phone.trim() : "";
+              const email = typeof invRec.email === "string" ? invRec.email : undefined;
+              const amount = getOutstandingAmountForInvoice(invoice);
+              const recipient = {
+                id: invoice.id,
+                name: invoice.studentName,
+                phone,
+                email,
+                amount,
+                dueDate: invoice.dueDate,
+              };
+              return (
+                <motion.article
+                  key={invoice.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: index * 0.03 }}
+                  className="space-y-3 rounded-xl border border-border bg-card p-3"
+                >
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      {showStudent && <h4 className="truncate text-sm font-semibold text-foreground">{invoice.studentName}</h4>}
+                      {showInvoice && <p className="truncate font-mono text-xs text-muted-foreground">{invoice.id}</p>}
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      {showFinal && <span className="text-sm font-bold text-foreground">{formatCurrency(invoice.finalAmt)}</span>}
+                      {showStatus && <StatusBadge status={invoice.status} config={statusConfig} size="sm" />}
+                    </div>
+                  </div>
+                  <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                    {showSessionClass && (
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.sessionClass")}</dt>
+                        <dd className="text-foreground">{invoice.class}</dd>
+                        <dd className="text-xs text-muted-foreground">{invoice.session}</dd>
+                      </div>
+                    )}
+                    {showBaseFee && (
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.baseFee")}</dt>
+                        <dd className="text-foreground">{formatCurrency(invoice.baseFee)}</dd>
+                      </div>
+                    )}
+                    {showDiscount && (
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.discount")}</dt>
+                        <dd className="text-foreground">
+                          {invoice.discountAmt > 0 ? `-${formatCurrency(invoice.discountAmt)}` : "—"}
+                        </dd>
+                        {invoice.discountAmt > 0 ? <dd className="text-xs text-muted-foreground">{invoice.discountType}</dd> : null}
+                      </div>
+                    )}
+                    {showDueDate && (
+                      <div>
+                        <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.dueDate")}</dt>
+                        <dd className={invoice.status === "overdue" ? "font-semibold text-destructive" : "text-foreground"}>
+                          {formatDate(invoice.dueDate)}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2">
+                    {canDelete ? (
+                      <Checkbox
+                        checked={selectedIds.includes(invoice.id)}
+                        onCheckedChange={(checked) => setSelectedIds((ids) => checked ? [...ids, invoice.id] : ids.filter((id) => id !== invoice.id))}
+                        aria-label={t("finance.trash.selectInvoice", { id: invoice.id })}
+                      />
+                    ) : <span />}
+                    <div className="flex flex-wrap items-center gap-1">
+                      {canWriteMessaging && !showDeleted && phone ? (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openComposer("whatsapp", [recipient])}
+                            title={t("messaging.sendWhatsapp")}
+                            aria-label={t("messaging.sendWhatsapp")}
+                            className="rounded-lg hover:bg-muted text-success hover:text-success transition-colors"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openComposer("sms", [recipient])}
+                            title={t("messaging.sendSms")}
+                            aria-label={t("messaging.sendSms")}
+                            className="rounded-lg hover:bg-muted text-info hover:text-info transition-colors"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+                          </Button>
+                        </>
+                      ) : null}
+                      <Button variant="ghost" size="icon" onClick={() => onView(invoice)} aria-label={t("finance.viewInvoice", { id: invoice.id })} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                        <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+                      </Button>
+                      {canWrite && !showDeleted && invoice.status !== "paid" && (
+                        <Button variant="ghost" size="icon" onClick={() => onRecord(invoice)} aria-label={t("finance.recordPaymentFor", { id: invoice.id })} className="rounded-lg hover:bg-success/10 text-muted-foreground hover:text-success transition-colors">
+                          <ReceiptText className="w-3.5 h-3.5" aria-hidden="true" />
+                        </Button>
+                      )}
+                      {canDelete && (showDeleted ? onRestore : onDelete) && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => showDeleted ? onRestore?.(invoice.id) : setPendingDeleteId(invoice.id)}
+                          aria-label={showDeleted ? t("finance.trash.restore") : t("common.delete")}
+                        >
+                          {showDeleted ? <RotateCcw className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </motion.article>
+              );
+            })
+          )}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm table-fixed">
             <caption className="sr-only">{t("finance.invoices")}</caption>
             <thead>

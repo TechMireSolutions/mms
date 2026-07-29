@@ -348,7 +348,57 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
         <EmptyState icon={BookOpen} title={t("examinations.report.noResultsFound")} compact />
       ) : (
         <Card className="overflow-hidden">
-          <div className="overflow-x-auto max-w-full">
+          <div className="space-y-3 p-3 md:hidden">
+            {filteredAcademicResultsData.map((academicResult) => (
+              <article
+                key={`${academicResult.studentName}-${academicResult.class}`}
+                className="space-y-3 rounded-xl border border-border bg-card p-3"
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2">
+                    {academicResult.rank === 1 ? (
+                      <Trophy className="h-4 w-4 shrink-0 text-warning" />
+                    ) : (
+                      <span className="shrink-0 text-xs font-semibold text-muted-foreground">#{academicResult.rank}</span>
+                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => toggleStudentFilter(academicResult.studentName)}
+                      className="h-auto min-h-11 truncate px-0 py-0 text-sm font-semibold text-foreground hover:text-primary"
+                    >
+                      {academicResult.studentName}
+                    </Button>
+                  </div>
+                  <StatusBadge
+                    status={academicResult.grade}
+                    size="sm"
+                    config={{
+                      [academicResult.grade]: {
+                        label: academicResult.grade,
+                        cls: GRADE_BADGE_CLS[academicResult.grade] ?? SEMANTIC_BADGE.muted,
+                      },
+                    }}
+                  />
+                </div>
+                <dl className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("examinations.report.colClass")}</dt>
+                    <dd className="text-foreground">{academicResult.class}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("examinations.report.colSubject")}</dt>
+                    <dd className="text-foreground">{academicResult.subject}</dd>
+                  </div>
+                  <div className="col-span-2">
+                    <dt className="text-xs font-semibold text-muted-foreground">{t("examinations.report.colMarks")}</dt>
+                    <dd className="font-semibold text-foreground">{academicResult.marks}/{academicResult.total}</dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>

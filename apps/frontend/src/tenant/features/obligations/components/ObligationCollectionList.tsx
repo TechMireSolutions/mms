@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback, lazy, Suspense } from "react";
+import { motion } from "framer-motion";
 import { Plus, Eye, Search, Receipt, Printer, MessageSquare, MessageCircle, Trash2, RotateCcw, Archive } from "lucide-react";
 import {
   ObligationCollection, ObligationType, MujtahidRep, Mujtahid
@@ -133,6 +134,69 @@ export function ObligationCollectionList({
     setSelectedIds([]);
   };
 
+  const renderActions = (collection: ObligationCollection) => (
+    <div className="flex flex-wrap items-center justify-end gap-1">
+      {onMessage && !showDeleted && (
+        <>
+          <Button type="button" onClick={() => onMessage('whatsapp', [collection])}
+            variant="ghost"
+            size="icon"
+            className="rounded-lg hover:bg-muted text-muted-foreground hover:text-success shadow-none transition-colors"
+            title={t("obligations.list.actionWhatsApp")}
+            aria-label={t("obligations.list.actionWhatsApp")}>
+            <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
+          </Button>
+          <Button type="button" onClick={() => onMessage('sms', [collection])}
+            variant="ghost"
+            size="icon"
+            className="rounded-lg hover:bg-muted text-muted-foreground hover:text-info shadow-none transition-colors"
+            title={t("obligations.list.actionSms")}
+            aria-label={t("obligations.list.actionSms")}>
+            <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+          </Button>
+        </>
+      )}
+      <Button type="button" onClick={() => onView(collection)}
+        variant="ghost"
+        size="icon"
+        className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary shadow-none transition-colors"
+        aria-label={t("obligations.actions.view", { receipt: collection.receipt_no })}
+        title={t("obligations.actions.viewShort")}>
+        <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+      </Button>
+      {!showDeleted && (
+        <Button type="button" onClick={() => setPrintCollection(collection)}
+          variant="ghost"
+          size="icon"
+          className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary shadow-none transition-colors"
+          aria-label={t("obligations.actions.print", { receipt: collection.receipt_no })}
+          title={t("obligations.actions.printShort")}>
+          <Printer className="w-3.5 h-3.5" aria-hidden="true" />
+        </Button>
+      )}
+      {canDelete && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className={`rounded-lg hover:bg-muted shadow-none transition-colors ${showDeleted ? "text-muted-foreground hover:text-primary" : "text-muted-foreground hover:text-destructive"}`}
+          aria-label={showDeleted ? t("obligations.trash.restore") : t("common.delete")}
+          onClick={() => {
+            if (showDeleted) {
+              if (!confirm(t("obligations.trash.bulkRestoreConfirm", { count: 1 }))) return;
+              void onRestore?.(collection.id);
+            } else {
+              if (!confirm(t("obligations.trash.deleteConfirm"))) return;
+              void onDelete?.(collection.id);
+            }
+          }}
+        >
+          {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
+        </Button>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-4">
       <section aria-label={t("obligations.filter.label")} className="flex flex-wrap gap-2 items-center">
@@ -215,7 +279,92 @@ export function ObligationCollectionList({
           </div>
         ) : (
           <div className="rounded-xl border border-border overflow-hidden">
-            <div className="overflow-x-auto">
+            <div className="space-y-3 p-3 md:hidden">
+              {filtered.map((collection, index) => {
+                const sender = getContact(collection.sender_id);
+                const obligationType = getObType(collection.obligation_type_id);
+                const rep = getRep(collection.mujtahid_representative_id);
+                const mujtahid = getMujtahid(collection.mujtahid_representative_id);
+                const isSelected = selectedIds.includes(collection.id);
+                return (
+                  <motion.article
+                    key={collection.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: index * 0.03 }}
+                    className={`space-y-3 rounded-xl border border-border bg-card p-3 ${isSelected ? 'ring-1 ring-primary/20' : ''}`}
+                  >
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        {showReceiptNo && (
+                          <p className="font-mono text-xs font-bold text-primary">{collection.receipt_no}</p>
+                        )}
+                        {showSender && (
+                          <p className="truncate text-sm font-semibold text-foreground">{sender?.name || "—"}</p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        {showAmount && (
+                          <span className="text-sm font-bold text-foreground">
+                            {formatMoney(collection.amount, currencies.find((c) => c.id === collection.currency_id)?.code)}
+                          </span>
+                        )}
+                        {canDelete && (
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={(checked) => {
+                              setSelectedIds((prev) =>
+                                checked === true
+                                  ? [...prev, collection.id]
+                                  : prev.filter((id) => id !== collection.id),
+                              );
+                            }}
+                            aria-label={t("obligations.trash.selectCollection", { receipt: collection.receipt_no })}
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                      {showReceivedDate && (
+                        <div>
+                          <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.columns.receivedDate")}</dt>
+                          <dd className="text-foreground">{formatDate(collection.received_date)}</dd>
+                        </div>
+                      )}
+                      {showObligationType && (
+                        <div>
+                          <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("obligations.columns.obligationType")}</dt>
+                          <dd>
+                            <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full">
+                              {obligationType?.name || "—"}
+                            </span>
+                          </dd>
+                        </div>
+                      )}
+                      {showRepMujtahid && (
+                        <div>
+                          <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.columns.repMujtahid")}</dt>
+                          <dd className="text-foreground">
+                            <span>{rep?.name || "—"}</span>
+                            {mujtahid && <span className="block text-xs text-muted-foreground/70">{mujtahid.name}</span>}
+                          </dd>
+                        </div>
+                      )}
+                      {showPaymentMode && (
+                        <div>
+                          <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("obligations.columns.paymentMode")}</dt>
+                          <dd><StatusBadge status={collection.payment_mode} config={paymentModeConfig} size="sm" /></dd>
+                        </div>
+                      )}
+                    </dl>
+                    <div className="border-t border-border pt-2">
+                      {renderActions(collection)}
+                    </div>
+                  </motion.article>
+                );
+              })}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm table-fixed">
                 <caption className="sr-only">{t("obligations.collectionsList")}</caption>
                 <thead className="bg-muted/60 border-b border-border">
@@ -326,66 +475,7 @@ export function ObligationCollectionList({
                           </td>
                         )}
                         <td className="px-3 py-2.5 text-end">
-                          <div className="flex items-center justify-end gap-1">
-                            {onMessage && !showDeleted && (
-                              <>
-                                <Button type="button" onClick={() => onMessage('whatsapp', [collection])}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="rounded-lg hover:bg-muted text-muted-foreground hover:text-success shadow-none transition-colors"
-                                  title={t("obligations.list.actionWhatsApp")}
-                                  aria-label={t("obligations.list.actionWhatsApp")}>
-                                  <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
-                                </Button>
-                                <Button type="button" onClick={() => onMessage('sms', [collection])}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="rounded-lg hover:bg-muted text-muted-foreground hover:text-info shadow-none transition-colors"
-                                  title={t("obligations.list.actionSms")}
-                                  aria-label={t("obligations.list.actionSms")}>
-                                  <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
-                                </Button>
-                              </>
-                            )}
-                            <Button type="button" onClick={() => onView(collection)}
-                              variant="ghost"
-                              size="icon"
-                              className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary shadow-none transition-colors"
-                              aria-label={t("obligations.actions.view", { receipt: collection.receipt_no })}
-                              title={t("obligations.actions.viewShort")}>
-                              <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-                            </Button>
-                            {!showDeleted && (
-                              <Button type="button" onClick={() => setPrintCollection(collection)}
-                                variant="ghost"
-                                size="icon"
-                                className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary shadow-none transition-colors"
-                                aria-label={t("obligations.actions.print", { receipt: collection.receipt_no })}
-                                title={t("obligations.actions.printShort")}>
-                                <Printer className="w-3.5 h-3.5" aria-hidden="true" />
-                              </Button>
-                            )}
-                            {canDelete && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className={`rounded-lg hover:bg-muted shadow-none transition-colors ${showDeleted ? "text-muted-foreground hover:text-primary" : "text-muted-foreground hover:text-destructive"}`}
-                                aria-label={showDeleted ? t("obligations.trash.restore") : t("common.delete")}
-                                onClick={() => {
-                                  if (showDeleted) {
-                                    if (!confirm(t("obligations.trash.bulkRestoreConfirm", { count: 1 }))) return;
-                                    void onRestore?.(collection.id);
-                                  } else {
-                                    if (!confirm(t("obligations.trash.deleteConfirm"))) return;
-                                    void onDelete?.(collection.id);
-                                  }
-                                }}
-                              >
-                                {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
-                              </Button>
-                            )}
-                          </div>
+                          {renderActions(collection)}
                         </td>
                       </tr>
                     );
