@@ -140,7 +140,7 @@ Before declaring any layout implementation complete, verify:
 4. RTL (`dir="rtl"`) does not introduce page-level horizontal overflow — logical CSS (`ps`/`pe`/`ms`/`me`/`start`/`end`/`text-start`).
 5. Automated smoke:
    - Public / unauthenticated: `e2e/tests/responsive-shell.spec.ts` (overflow + touch targets + RTL at 375 / 768 / 1440).
-   - Authenticated AppLayout: `e2e/tests/responsive-authenticated.spec.ts` (dashboard overflow, RTL, mobile drawer / desktop header chrome).
+   - Authenticated AppLayout: `e2e/tests/responsive-authenticated.spec.ts` (dashboard overflow, RTL, mobile drawer / desktop header chrome, and a module work-view sweep: contacts, students, attendance, sessions, teachers, settings, messaging).
    - Shared helpers: `e2e/helpers/responsive.ts`, `e2e/helpers/tenantBootstrap.ts`.
    - CI runs these two files as separate steps (`pnpm test:e2e tests/…` — do not insert a bare `--` before the path; it is forwarded to Playwright and drops the filter).
 
