@@ -403,7 +403,7 @@ export function WidgetBuilder({
                 </div>
 
                 {/* Query filter condition inputs */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div className="space-y-1">
                     <label className={FORM_LABEL}>{t("reports.widgets.builder.operator")}</label>
                     <FormSelect
@@ -462,7 +462,7 @@ export function WidgetBuilder({
                       <label className={`${FORM_LABEL} block`}>
                         {t("reports.widgets.builder.trendSource")}
                       </label>
-                      <div className="grid grid-cols-2 gap-2 bg-card/20 border border-border/60 p-1 rounded-xl max-w-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-card/20 border border-border/60 p-1 rounded-xl max-w-sm">
                         <Button
                           type="button"
                           variant="ghost"
@@ -594,7 +594,7 @@ export function WidgetBuilder({
                   </>
                 )}
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div className="space-y-1">
                     <label className={FORM_LABEL}>{t("reports.widgets.builder.labelOn")}</label>
                     <Input

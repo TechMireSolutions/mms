@@ -27,7 +27,7 @@ export function ContactCardMetadataGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40 dark:border-border/20 ms-1">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-border/40 dark:border-border/20 ms-1">
       {otherColumns.map((col) => {
         if (col.id === "socials_url" && visibleColumnIds.has("socials_platform")) {
           return null;

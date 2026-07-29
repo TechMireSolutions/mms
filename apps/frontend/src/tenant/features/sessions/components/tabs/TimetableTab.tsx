@@ -95,7 +95,7 @@ function AddActivityModal({ open, onClose, onSave, saving }: AddActivityModalPro
           <label className={FORM_LABEL} htmlFor="activity-name">{t("sessions.timetable.form.name")} *</label>
           <Input id="activity-name" value={activityDraft.activity || ""} onChange={(event) => updateActivityDraft("activity", event.target.value)} placeholder={t("sessions.timetable.form.namePlaceholder")} required />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="activity-day">{t("sessions.timetable.form.day")}</label>
             <FormSelect
@@ -118,7 +118,7 @@ function AddActivityModal({ open, onClose, onSave, saving }: AddActivityModalPro
             />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="activity-start">{t("sessions.timetable.form.startTime")}</label>
             <Input id="activity-start" type="time" value={activityDraft.startTime || ""} onChange={(event) => updateActivityDraft("startTime", event.target.value)} required />

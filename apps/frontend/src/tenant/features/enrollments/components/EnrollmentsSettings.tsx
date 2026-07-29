@@ -81,7 +81,7 @@ export function EnrollmentsSettings(): React.JSX.Element {
 
           {showPrefs && (
             <div className="space-y-4 text-start">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className={FORM_LABEL} htmlFor="maxStudentsPerClass">
                     {t("enrollments.settings.maxStudentsPerClass")}

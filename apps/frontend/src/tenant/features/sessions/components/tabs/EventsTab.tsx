@@ -53,7 +53,7 @@ function EventModal({ open, event, onClose, onSave, saving }: EventModalProps) {
           <label className={FORM_LABEL} htmlFor="event-title">{t("sessions.events.form.title")} *</label>
           <Input id="event-title" value={eventDraft.title || ""} onChange={(inputEvent) => updateEventDraft("title", inputEvent.target.value)} placeholder={t("sessions.events.form.titlePlaceholder")} required />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="event-date">{t("sessions.events.form.date")} *</label>
             <DatePicker
@@ -68,7 +68,7 @@ function EventModal({ open, event, onClose, onSave, saving }: EventModalProps) {
             <Input id="event-time" type="time" value={eventDraft.time || ""} onChange={(inputEvent) => updateEventDraft("time", inputEvent.target.value)} />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="event-type">{t("sessions.events.form.type")}</label>
             <FormSelect

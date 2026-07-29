@@ -105,7 +105,7 @@ function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps)
           <label htmlFor="reward-given" className={FORM_LABEL}>{t("hasanat.columns.redemption.reward")} *</label>
           <Input id="reward-given" className={FORM_INPUT} value={data.reward} onChange={(event) => updateField("reward", event.target.value)} placeholder={t("hasanat.rewardPlaceholder")} />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label htmlFor="pts-used" className={FORM_LABEL}>{t("hasanat.columns.redemption.pointsUsed")} *</label>
             <Input id="pts-used" type="number" className={FORM_INPUT} value={data.pointsUsed || ""} onChange={(event) => updateField("pointsUsed", Number(event.target.value))} placeholder="0" min={1} />

@@ -62,7 +62,7 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
 
       {showPrefs && (
         <>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="exams-grading-system" className={FORM_LABEL}>{t("examinations.settings.gradingSystem")}</label>
               <FormSelect

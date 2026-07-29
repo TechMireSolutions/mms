@@ -694,7 +694,7 @@ export default function DynamicChartVisualizer({
             </div>
 
             {/* Collection source selection */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.dataCollection")}</label>
                 <FormSelect
@@ -727,7 +727,7 @@ export default function DynamicChartVisualizer({
             </div>
 
             {/* Formula operation & target */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.operation")}</label>
                 <FormSelect
@@ -768,7 +768,7 @@ export default function DynamicChartVisualizer({
             </div>
 
             {/* Visualizer Type & Color Palette Theme */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.chartType")}</label>
                 <FormSelect

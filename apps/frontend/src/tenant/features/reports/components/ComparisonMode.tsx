@@ -475,7 +475,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
       <div className="p-4 space-y-4">
         {/* Selectors */}
         {mode === "sessions" ? (
-          <div className="grid grid-cols-2 gap-3 text-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-start">
             {[
               { label: "A", value: valA, setValue: setValA, color: "text-primary" },
               { label: "B", value: valB, setValue: setValB, color: "text-warning" }
@@ -492,7 +492,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 text-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-start">
             {[
               { label: t("reports.comparison.rangeA"), range: rangeA, setRange: setRangeA, color: "text-primary" },
               { label: t("reports.comparison.rangeB"), range: rangeB, setRange: setRangeB, color: "text-warning" }

@@ -93,7 +93,7 @@ export function SessionsSettings(): React.JSX.Element {
 
           {showPrefs && (
             <>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className={FORM_LABEL} htmlFor="defaultDuration">{t("sessions.settings.defaultDuration")}</label>
                   <Input

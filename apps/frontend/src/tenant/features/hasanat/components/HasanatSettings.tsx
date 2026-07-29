@@ -61,7 +61,7 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
 
       {showPrefs && (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="points-per-unit" className={FORM_LABEL}>{t("hasanat.settings.pointsPerUnit")}</label>
               <Input

@@ -613,7 +613,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           </div>
 
           {/* Aggregates Parameters */}
-          <div className="grid grid-cols-2 gap-3 text-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-start">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
                 {t("reports.builder.aggregatorFunction")}
@@ -652,7 +652,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           </div>
 
           {/* Document Setup */}
-          <div className="grid grid-cols-2 gap-3 text-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-start">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
                 {t("reports.builder.docAlignment")}

@@ -137,7 +137,7 @@ function FYModal({ open, initial, onSave, onClose }: FYModalProps) {
             required
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="financial-year-start" className={FORM_LABEL}>{t("accounting.settings.fy.startDateField")}</label>
             <DatePicker

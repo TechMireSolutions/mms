@@ -36,7 +36,7 @@ export function PaperPreviewPanel({
           <h3 className="m-0 text-sm font-bold text-foreground">{t("questionBank.paperPreview")}</h3>
           <p className="m-0 text-xs text-muted-foreground">{t("questionBank.paperPreviewDesc")}</p>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           <Button type="button" onClick={onSave} disabled={selectedCount === 0 || saving} variant="outline" size="sm" className="w-full sm:w-auto">
             <Save className="h-3.5 w-3.5" aria-hidden="true" />
             {t("questionBank.saveTest")}

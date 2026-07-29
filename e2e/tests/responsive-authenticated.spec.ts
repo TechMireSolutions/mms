@@ -54,6 +54,22 @@ const MODULE_ROUTES = [
     path: '/messaging',
     ready: 'button:has-text("Work"), button:has-text("Setup"), #main-content',
   },
+  {
+    path: '/finance',
+    ready: 'button:has-text("New Invoice"), [role="tab"], #main-content',
+  },
+  {
+    path: '/accounting',
+    ready: '[role="tab"], button:has-text("Work"), #main-content',
+  },
+  {
+    path: '/enrollments',
+    ready: 'button:has-text("New Enrollment"), button:has-text("Enroll"), [role="tab"], #main-content',
+  },
+  {
+    path: '/users',
+    ready: 'button:has-text("Add User"), [role="tab"], #main-content',
+  },
 ] as const;
 
 async function loginAndSetViewport(

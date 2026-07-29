@@ -64,7 +64,7 @@ function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label htmlFor="denom-name" className={FORM_LABEL}>{t("hasanat.denominations.cardName")} *</label>
             <Input id="denom-name" className={FORM_INPUT} value={data.name} onChange={(event) => updateField("name", event.target.value)} placeholder={t("hasanat.denominations.cardNamePlaceholder")} />

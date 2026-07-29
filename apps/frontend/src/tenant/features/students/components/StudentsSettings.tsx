@@ -96,7 +96,7 @@ export default function StudentsSettings(): React.ReactElement {
                 <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
                   {t("students.settings.grSectionTitle")}
                 </h4>
-                <div className="grid grid-cols-2 gap-3 text-start">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-start">
                   <Field
                     label={t("students.settings.grTemplate")}
                     hint={t("students.settings.grTemplateHint", { seq: "{seq}", year: "{year}" })}

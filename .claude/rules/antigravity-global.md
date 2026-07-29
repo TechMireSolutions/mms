@@ -49,5 +49,5 @@ Do not echo file contents already in context.
 - **Errors:** Handle explicitly; no silent empty `catch`.
 - **A11y default:** New interactive controls ship with accessible name/label, keyboard path, and visible focus — `mms-ui-ux-design.md`.
 - **HTML/CSS:** Semantic HTML; Tailwind utilities unless design tokens override.
-- **Git:** Conventional Commits (`feat`/`fix`/`chore`). No direct commits to `main`. **Never commit unless the user asks.**
+- **Git:** Conventional Commits (`feat`/`fix`/`chore`). No direct commits to `main`. **Never commit unless the user asks. Never push to any remote — the user always handles pushes.**
 - **Rules:** When changing MMS standards, run `bash .agent/scripts/sync-all.sh` to mirror `.cursor/rules`, `.agent/rules`, and `.claude/rules` (see `.cursor/rules/README.md`).

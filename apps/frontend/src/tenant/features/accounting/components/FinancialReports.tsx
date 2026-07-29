@@ -232,7 +232,7 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
           <ReportSection title={t("accounting.reports.liabilities")} rows={getRowsByAccountType("Liability")} totalLabel={t("accounting.reports.totalLiabilities")} total={liabilities} debitNormal={false} color="bg-destructive/10/60" />
           <ReportSection title={t("accounting.reports.equity")} rows={equityRows} totalLabel={t("accounting.reports.totalEquity")}
             total={equityTotal} debitNormal={false} color="bg-primary/10" />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <article className="px-5 py-3 rounded-xl border border-border bg-info/10 text-end">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.reports.totalAssets")}</h4>
               <p className="font-mono font-bold text-info text-lg m-0">{formatCurrency(assets)}</p>

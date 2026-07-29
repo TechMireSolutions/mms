@@ -505,7 +505,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
               {/* Position & size */}
               <div>
                 <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.positionSize")}</p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <StyleInput label="X" type="number" value={selectedElement.x} onChange={(nextValue) => patchEl(selectedElement.id, { x: snap(Number(nextValue)) })} step={SNAP} />
                   <StyleInput label="Y" type="number" value={selectedElement.y} onChange={(nextValue) => patchEl(selectedElement.id, { y: snap(Number(nextValue)) })} step={SNAP} />
                   <StyleInput label="W" type="number" value={selectedElement.w || 0} onChange={(nextValue) => patchEl(selectedElement.id, { w: snap(Number(nextValue)) })} min={20} step={SNAP} />

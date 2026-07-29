@@ -25,8 +25,8 @@ export function PageHeader({
     <div className="flex items-start justify-between gap-4 flex-wrap mb-1">
       <div className="flex min-w-0 items-start gap-3">
         {Icon && (
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <Icon className="w-4.5 h-4.5 text-primary" style={{ width: "18px", height: "18px" }} />
+          <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+            <Icon className="h-[1.125rem] w-[1.125rem] text-primary" aria-hidden />
           </div>
         )}
         <div className="min-w-0">

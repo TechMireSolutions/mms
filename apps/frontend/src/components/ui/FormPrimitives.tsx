@@ -680,7 +680,7 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
     const loc = (value as { lat: number; lng: number; address?: string }) || { lat: 24.8607, lng: 67.0011 };
     return (
       <div className="space-y-2">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <Input
             id={`${field.key}-lat`}
             name={`${field.key}-lat`}

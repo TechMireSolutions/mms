@@ -72,7 +72,7 @@ export default function BackupExportSection({
               <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 block">
                 {t('backup.safetyBackupNote')}
               </span>
-              <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-card/30 px-3 py-2">
                   <Users className="h-3.5 w-3.5 text-primary shrink-0" />
                   <span className="truncate">{t('backup.badgeStudentsAndTeachers')}</span>

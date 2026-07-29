@@ -66,7 +66,7 @@ function TransactionModal({ open, type, currency, onClose, onSave, saving }: Tra
             className="w-full"
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="tx-amount">{t("sessions.budget.form.amount", { currency })} *</label>
             <Input id="tx-amount" type="number" value={transactionDraft.amount} onChange={(event) => updateTransactionDraft("amount", event.target.value)} placeholder="0" min={0} required />

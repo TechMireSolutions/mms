@@ -86,7 +86,7 @@ function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
             <span aria-hidden="true">{selectedDenomination.icon}</span><span>{selectedDenomination.name}</span>
           </div>
         )}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label htmlFor="qty" className={FORM_LABEL}>{t("hasanat.form.quantity")} *</label>
             <Input id="qty" type="number" className={FORM_INPUT} value={data.quantity || ""} onChange={(event) => updateField("quantity", Number(event.target.value))} placeholder="0" min={1} />

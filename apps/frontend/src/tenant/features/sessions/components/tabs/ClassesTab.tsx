@@ -92,7 +92,7 @@ function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage, canWri
         </div>}
       </header>
 
-      <div className="grid grid-cols-2 gap-2 mb-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
         <div className="rounded-lg bg-muted/40 px-3 py-2">
           <p className="text-xs text-muted-foreground font-medium m-0">{t("sessions.classes.ageRange")}</p>
           <p className="text-sm font-semibold text-foreground m-0">{t("sessions.classes.ageYears", { min: sessionClass.ageMin, max: sessionClass.ageMax })}</p>
@@ -204,7 +204,7 @@ function ClassModal({ open, sessionClass, onClose, onSave, saving }: ClassModalP
           <label className={FORM_LABEL} htmlFor="class-name">{t("sessions.classes.form.name")} *</label>
           <Input id="class-name" value={classDraft.name || ""} onChange={(event) => updateClassDraft("name", event.target.value)} placeholder={t("sessions.classes.form.namePlaceholder")} required />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="class-min-age">{t("sessions.classes.form.minAge")}</label>
             <Input id="class-min-age" type="number" value={classDraft.ageMin || 0} onChange={(event) => updateClassDraft("ageMin", +event.target.value)} min={1} max={100} />
@@ -214,7 +214,7 @@ function ClassModal({ open, sessionClass, onClose, onSave, saving }: ClassModalP
             <Input id="class-max-age" type="number" value={classDraft.ageMax || 0} onChange={(event) => updateClassDraft("ageMax", +event.target.value)} min={1} max={100} />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="class-gender">{t("sessions.classes.form.gender")}</label>
             <FormSelect
