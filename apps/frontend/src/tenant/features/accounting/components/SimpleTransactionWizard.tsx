@@ -519,12 +519,12 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
             {step === 3 && selectedType && <StepReview type={selectedType} form={form} accounts={accounts} showAdvanced={showAdvanced} setShowAdvanced={setShowAdvanced} formatCurrency={formatCurrency} />}
           </motion.div>
         </AnimatePresence>
-        <div className="flex w-full items-center justify-between gap-3">
+        <div className="flex w-full flex-wrap items-center justify-between gap-2">
           <Button type="button" variant="outline" onClick={() => step > 1 ? setStep(step - 1) : onClose()}>
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             {step === 1 ? t("accounting.journal.dashboard.wizard.cancel") : t("accounting.journal.dashboard.wizard.back")}
           </Button>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {step < 3 && (
               <Button type="button" onClick={() => setStep(step + 1)} disabled={!canProceed() || !selectedType}>
                 {t("accounting.journal.dashboard.wizard.next")} <ArrowRight className="h-4 w-4" aria-hidden="true" />

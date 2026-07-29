@@ -28,14 +28,14 @@ export function GoogleContactsPanel({ onImport, canWrite = true }: GoogleContact
 
   return (
     <section className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded bg-muted flex items-center justify-center">
-            <Globe className="w-3.5 h-3.5 text-muted-foreground" />
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/30 px-4 py-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-muted">
+            <Globe className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
-          <span className="text-sm font-bold text-foreground">{t('contacts.sync.googleTitle')}</span>
+          <span className="min-w-0 truncate text-sm font-bold text-foreground">{t('contacts.sync.googleTitle')}</span>
           {sync.isConnected && (
-            <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-success/10 text-success border border-success/30">
+            <span className="shrink-0 rounded-full border border-success/30 bg-success/10 px-1.5 py-0.5 text-xs font-bold text-success">
               {t('contacts.sync.connected')}
             </span>
           )}
@@ -45,7 +45,7 @@ export function GoogleContactsPanel({ onImport, canWrite = true }: GoogleContact
             type="button"
             variant="ghost"
             onClick={() => sync.setShowSetup((v) => !v)}
-            className="text-xs font-medium min-h-11 text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors shadow-none"
+            className="flex min-h-11 shrink-0 items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground shadow-none"
           >
             <Key className="w-3 h-3" />
             <span>{sync.isConfigured ? t('contacts.sync.editCredentials') : t('contacts.sync.setup')}</span>

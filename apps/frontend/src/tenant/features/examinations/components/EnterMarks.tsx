@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useTranslation } from "@/hooks/useTranslation";
+import { cn } from "@/lib/utils";
 
 interface EnterMarksProps {
   exams: Exam[];
@@ -153,15 +154,17 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: index * 0.03 }}
-                    className="flex items-center gap-4 px-4 py-3"
+                    className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4"
                     role="listitem"
                   >
-                    <UserAvatar id={student.id} name={student.name} className="w-7 h-7 rounded-full text-xs font-bold" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground">{student.name ?? t("examinations.enterMarks.studentFallback")}</p>
-                      <p className="text-xs text-muted-foreground">{classNamesById.get(student.classId) || student.classId} · {student.rollNo}</p>
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <UserAvatar id={student.id} name={student.name} className="w-7 h-7 shrink-0 rounded-full text-xs font-bold" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-foreground">{student.name ?? t("examinations.enterMarks.studentFallback")}</p>
+                      <p className="truncate text-xs text-muted-foreground">{classNamesById.get(student.classId) || student.classId} · {student.rollNo}</p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    </div>
+                    <div className="flex shrink-0 flex-wrap items-center gap-3 self-end sm:self-auto">
                       {grade && (
                         <span className="text-xs font-bold px-2 py-0.5 rounded-lg" style={{ color: grade.color, background: grade.bg }} role="status">
                           {grade.label} · {percentage}%
@@ -175,10 +178,10 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
                           value={markValue}
                           aria-label={t("examinations.enterMarks.marksInputAria", { name: student.name ?? t("examinations.enterMarks.studentLabel") })}
                           onChange={(event) => { setMarks((previousMarks) => ({ ...previousMarks, [String(student.id)]: event.target.value })); setSaved(false); }}
-                          className={FORM_INPUT_COMPACT}
+                          className={cn(FORM_INPUT_COMPACT, "w-20 shrink-0")}
                           placeholder="—"
                         />
-                        <span className="text-xs text-muted-foreground" aria-hidden="true">/ {exam.totalMarks}</span>
+                        <span className="text-xs text-muted-foreground shrink-0" aria-hidden="true">/ {exam.totalMarks}</span>
                       </div>
                     </div>
                   </motion.div>

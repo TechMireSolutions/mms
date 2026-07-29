@@ -251,21 +251,21 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
                   {summaryRow.class}
                 </Button>
                 <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colTotalStudents")}</dt>
                     <dd className="text-foreground">{summaryRow.total}</dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colAvgRate")}</dt>
                     <dd>{rateBar(summaryRow.avgRate)}</dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colPerfectAttendance")}</dt>
                     <dd>
                       <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-semibold text-success">{summaryRow.perfectAttendance}</span>
                     </dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colBelowThreshold")}</dt>
                     <dd>
                       <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">{summaryRow.belowThreshold}</span>
@@ -348,23 +348,23 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
                   <div className="w-24 shrink-0">{rateBar(studentAttendance.rate)}</div>
                 </div>
                 <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colStudentClass")}</dt>
                     <dd className="text-foreground">{studentAttendance.class}</dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colTotal")}</dt>
                     <dd className="text-muted-foreground">{studentAttendance.total}</dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colPresent")}</dt>
                     <dd className="font-medium text-success">{studentAttendance.present}</dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colAbsent")}</dt>
                     <dd className="font-medium text-destructive">{studentAttendance.absent}</dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colLate")}</dt>
                     <dd className="font-medium text-warning">{studentAttendance.late}</dd>
                   </div>

@@ -305,16 +305,16 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {filteredClassRankings.map((classRanking, index) => (
             <Card key={classRanking.class} className="p-5">
-              <div className="flex items-center justify-between mb-2">
+              <div className="mb-2 flex min-w-0 items-center justify-between gap-2">
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => toggleClassFilter(classRanking.class)}
-                  className="h-auto px-0 py-0 text-sm font-semibold text-foreground hover:text-primary"
+                  className="h-auto min-w-0 flex-1 justify-start truncate px-0 py-0 text-sm font-semibold text-foreground hover:text-primary"
                 >
                   {classRanking.class}
                 </Button>
-                <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
                   #{index + 1}
                 </span>
               </div>
@@ -382,11 +382,11 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
                   />
                 </div>
                 <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("examinations.report.colClass")}</dt>
                     <dd className="text-foreground">{academicResult.class}</dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("examinations.report.colSubject")}</dt>
                     <dd className="text-foreground">{academicResult.subject}</dd>
                   </div>

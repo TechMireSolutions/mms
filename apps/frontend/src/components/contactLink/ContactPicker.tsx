@@ -274,7 +274,7 @@ export default function ContactPicker({
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-1.5 mb-1">
-              <p className="text-sm font-bold text-foreground truncate">{selectedName}</p>
+              <p className="min-w-0 truncate text-sm font-bold text-foreground">{selectedName}</p>
               {selected.gender && (
                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${genderBadgeColor}`}>
                   {formatContactGenderLabel(selected.gender, t)}

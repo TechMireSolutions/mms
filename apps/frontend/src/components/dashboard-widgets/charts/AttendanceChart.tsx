@@ -399,10 +399,10 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
             const percentage = total > 0 ? ((hasanatPoint.value / total) * 100).toFixed(0) : "0";
             return (
               <div key={hasanatPoint.name} aria-label={`${hasanatPoint.name}: ${percentage}%`}>
-                <div className="flex items-center justify-between mb-1 select-none">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full" style={{ background: hasanatPoint.color }} aria-hidden="true" />
-                    <span className="text-xs text-muted-foreground">{hasanatPoint.name}</span>
+                <div className="mb-1 flex min-w-0 items-center justify-between gap-2 select-none">
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <div className="w-2 h-2 shrink-0 rounded-full" style={{ background: hasanatPoint.color }} aria-hidden="true" />
+                    <span className="min-w-0 truncate text-xs text-muted-foreground">{hasanatPoint.name}</span>
                   </div>
                   <span className="text-xs font-semibold text-foreground">{percentage}%</span>
                 </div>

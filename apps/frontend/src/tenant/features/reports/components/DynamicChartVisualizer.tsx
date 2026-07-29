@@ -836,14 +836,14 @@ export default function DynamicChartVisualizer({
 
         {/* 2. Filters builder inside panel */}
         <div className="rounded-2xl border border-border/50 bg-card/45 backdrop-blur-2xl p-5 space-y-4 shadow-xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="w-8 h-8 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                 <Filter className="w-4 h-4" />
               </div>
-              <div>
-                <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">{t("reports.visualizer.queryFilters")}</h4>
-                <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("reports.visualizer.filtersSubtitle")}</p>
+              <div className="min-w-0">
+                <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none truncate">{t("reports.visualizer.queryFilters")}</h4>
+                <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider truncate">{t("reports.visualizer.filtersSubtitle")}</p>
               </div>
             </div>
             <Button

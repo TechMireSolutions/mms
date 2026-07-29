@@ -89,8 +89,8 @@ export function BackgroundJobsTray({
           onSave={() => setOpen(false)}
         >
           <div className="space-y-3">
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-sm text-muted-foreground">{t("backgroundJobs.panelDesc")}</p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <p className="min-w-0 flex-1 text-sm text-muted-foreground">{t("backgroundJobs.panelDesc")}</p>
               <Button
                 type="button"
                 variant="outline"

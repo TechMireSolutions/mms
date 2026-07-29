@@ -328,7 +328,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
         </Table>
       </div>
 
-      <footer className="px-5 py-3.5 border-t border-border/45 flex items-center justify-between bg-muted/10 select-none">
+      <footer className="px-5 py-3.5 border-t border-border/45 flex flex-wrap items-center justify-between gap-2 bg-muted/10 select-none">
         <Link to={ROUTES.finance} className="inline-flex min-h-11 items-center text-xs font-bold text-primary hover:underline">
           {t("dashboard.widgets.viewAllOutstanding")}
         </Link>

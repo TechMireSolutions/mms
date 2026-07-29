@@ -499,16 +499,16 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
             ].map(({ label, range, setRange, color }) => (
               <div key={label} className="space-y-2">
                 <p className={`text-xs font-bold uppercase tracking-wide ${color}`}>{label}</p>
-                <div className="flex gap-2 items-center">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   <DatePicker
                     value={range.from}
                     onChange={(value) => setRange((currentRange) => ({ ...currentRange, from: value }))}
-                    className="flex-1 text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-1.5"
+                    className="w-full flex-1 text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-1.5"
                   />
                   <DatePicker
                     value={range.to}
                     onChange={(value) => setRange((currentRange) => ({ ...currentRange, to: value }))}
-                    className="flex-1 text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-1.5"
+                    className="w-full flex-1 text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-1.5"
                   />
                 </div>
               </div>

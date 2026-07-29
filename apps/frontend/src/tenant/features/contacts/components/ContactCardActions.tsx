@@ -45,7 +45,7 @@ export function ContactCardActions({
   const { t } = useTranslation();
 
   return (
-    <div className="pt-3 border-t border-border/40 dark:border-border/20 flex items-center justify-between gap-1.5">
+    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/40 pt-3 dark:border-border/20">
       <ContactCardMessagingButtons
         contact={contact}
         displayName={displayName}
@@ -56,7 +56,7 @@ export function ContactCardActions({
         onEmail={onEmail}
       />
 
-      <div className="flex items-center gap-1.5">
+      <div className="flex shrink-0 items-center gap-1.5">
         <MotionButton
           type="button"
           variant="outline"

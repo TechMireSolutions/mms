@@ -544,7 +544,7 @@ export function RolesPermissions(): React.JSX.Element {
                   : 'border-border bg-card hover:border-primary/40'
               }`}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex min-w-0 items-center justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
                     {workspaceRole.isSystem ? (
@@ -569,7 +569,7 @@ export function RolesPermissions(): React.JSX.Element {
                       event.stopPropagation();
                       setEdit(workspaceRole);
                     }}
-                    className="rounded text-muted-foreground transition-colors hover:text-primary shadow-none hover:bg-transparent"
+                    className="shrink-0 rounded text-muted-foreground transition-colors hover:text-primary shadow-none hover:bg-transparent"
                     aria-label={t('users.permissions.editRoleDetails', { name: workspaceRoleLabel(workspaceRole, t) })}
                   >
                     <Pencil className="h-3 w-3" />

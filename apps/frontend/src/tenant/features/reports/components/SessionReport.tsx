@@ -329,11 +329,11 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
                   <StatusBadge status={sessionCapacity.status} config={sessionStatusConfig} size="sm" />
                 </div>
                 <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("sessions.report.colEnrolled")}</dt>
                     <dd className="font-semibold text-foreground">{sessionCapacity.enrolled}</dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("sessions.report.colCapacity")}</dt>
                     <dd className="text-muted-foreground">{sessionCapacity.capacity}</dd>
                   </div>

@@ -741,11 +741,11 @@ export default function LlmSettings(): React.JSX.Element {
                             <p className="whitespace-pre-wrap">{msg.content}</p>
                           </div>
                           {!isUser && msg.metrics && (
-                            <div className="flex items-center gap-3 mt-1.5 px-2 text-xs font-semibold text-muted-foreground/80">
+                            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 px-2 text-xs font-semibold text-muted-foreground/80">
                               <span>{t('settings.llmLatency')}: {msg.metrics.latencyMs}ms</span>
-                              <span>•</span>
+                              <span className="hidden sm:inline" aria-hidden="true">•</span>
                               <span>{t('settings.llmWordCount')}: {msg.metrics.wordCount}</span>
-                              <span>•</span>
+                              <span className="hidden sm:inline" aria-hidden="true">•</span>
                               <span>{t('settings.llmSpeed')}: {formatLlmSpeed(msg.metrics.wordCount, msg.metrics.latencyMs)}</span>
                             </div>
                           )}

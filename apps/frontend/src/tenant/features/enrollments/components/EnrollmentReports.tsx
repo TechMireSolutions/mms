@@ -144,14 +144,14 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
             <p className="text-center py-8 text-sm text-muted-foreground" role="status">{t("enrollments.reports.noData")}</p>
           ) : (
             sessionData.map((sessionStats) => (
-              <div key={sessionStats.name} className="flex items-center justify-between px-4 py-3" role="listitem">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{sessionStats.name}</p>
+              <div key={sessionStats.name} className="flex min-w-0 items-center justify-between gap-3 px-4 py-3" role="listitem">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-foreground">{sessionStats.name}</p>
                   <p className="text-xs text-muted-foreground">
                     {t("enrollments.reports.enrollmentCount", { count: sessionStats.count })}
                   </p>
                 </div>
-                <p className="text-sm font-bold text-primary">{formatCurrency(sessionStats.revenue)}</p>
+                <p className="shrink-0 text-sm font-bold text-primary">{formatCurrency(sessionStats.revenue)}</p>
               </div>
             ))
           )}

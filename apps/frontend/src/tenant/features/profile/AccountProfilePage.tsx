@@ -657,12 +657,12 @@ export default function AccountProfile(): React.JSX.Element {
                           />
                           
                           <div className="space-y-2 mt-2">
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="text-muted-foreground text-xs leading-snug">
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                              <span className="min-w-0 text-xs leading-snug text-muted-foreground">
                                 {t("account.passwordRulesHint")}
                               </span>
                               {newPassword && passwordStrength.key && (
-                                <span className="font-semibold text-foreground shrink-0">
+                                <span className="shrink-0 font-semibold text-foreground">
                                   {t(passwordStrength.key)}
                                 </span>
                               )}

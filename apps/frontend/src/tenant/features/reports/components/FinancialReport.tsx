@@ -279,19 +279,19 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
                   />
                 </div>
                 <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("finance.report.classColumn")}</dt>
                     <dd className="text-foreground">{inv.class}</dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.dueDate")}</dt>
                     <dd className="text-muted-foreground">{formatDate(inv.dueDate)}</dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.baseFee")}</dt>
                     <dd className="text-muted-foreground">{formatCurrency(inv.baseFee)}</dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.discount")}</dt>
                     <dd className="text-warning">{inv.discountAmt > 0 ? `-${formatCurrency(inv.discountAmt)}` : "—"}</dd>
                   </div>

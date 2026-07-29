@@ -101,7 +101,7 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
 
   return (
     <WidgetCard ariaLabelledby="fee-collection-heading" accentColor="primary">
-      <header className="flex items-center justify-between px-5 py-3.5 border-b border-border/45 bg-muted/10 ps-6.5 select-none">
+      <header className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 border-b border-border/45 bg-muted/10 ps-6.5 select-none">
 
         <div className="flex-1 min-w-0">
           <h3 id="fee-collection-heading" className="text-sm font-bold text-foreground m-0 truncate">
@@ -131,7 +131,7 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
           <div className="bg-destructive h-full transition-all duration-700 ease-out" style={{ width: `${outstandingPct}%` }} />
         </div>
         <div
-          className="flex items-center gap-4 mb-6 select-none"
+          className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-1 select-none"
           aria-label={t("dashboard.widgets.feeSplitAria", { collected: collectedPct, outstanding: outstandingPct })}
         >
           {breakdown.map((b) => (
@@ -149,9 +149,9 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
             const pct = classSummary.target > 0 ? Math.round((classSummary.collected / classSummary.target) * 100) : 0;
             return (
               <article key={classSummary.name} className="space-y-1.5">
-                <header className="flex items-center justify-between">
-                  <span className="text-sm text-foreground font-semibold">{classSummary.name}</span>
-                  <span className="text-xs text-muted-foreground font-medium tabular-nums">
+                <header className="flex min-w-0 items-center justify-between gap-2">
+                  <span className="min-w-0 truncate text-sm text-foreground font-semibold">{classSummary.name}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground font-medium tabular-nums">
                     {formatCurrency(classSummary.collected)} / {formatCurrency(classSummary.target)}
                   </span>
                 </header>

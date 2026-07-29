@@ -91,9 +91,9 @@ export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" role="list">
             {session.discounts.filter((discount) => discount.active).map((discount) => (
               <div key={discount.id} className={`p-3 rounded-xl border ${discount.name === displayFee.label ? "border-primary bg-primary/5" : "border-border bg-card"}`} role="listitem">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold text-foreground">{discount.name}</p>
-                  <span className="text-xs font-bold text-primary">{t("enrollments.wizard.step5PercentOff", { pct: discount.value })}</span>
+                <div className="flex min-w-0 items-center justify-between gap-2">
+                  <p className="min-w-0 truncate text-xs font-bold text-foreground">{discount.name}</p>
+                  <span className="shrink-0 text-xs font-bold text-primary">{t("enrollments.wizard.step5PercentOff", { pct: discount.value })}</span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">{discount.conditions}</p>
               </div>

@@ -420,8 +420,8 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
             </Table>
           </div>
 
-          <footer className="px-5 py-3.5 border-t border-border/45 flex items-center justify-between bg-muted/10 select-none">
-            <div className="flex items-center gap-4">
+          <footer className="px-5 py-3.5 border-t border-border/45 flex flex-wrap items-center justify-between gap-2 bg-muted/10 select-none">
+            <div className="flex flex-wrap items-center gap-4">
               <p className="text-xs font-bold text-success/90 uppercase tracking-wider m-0">
                 {remindedIds.size > 0 && t("dashboard.widgets.remindersSent", { count: remindedIds.size })}
               </p>

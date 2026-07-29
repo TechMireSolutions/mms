@@ -48,19 +48,19 @@ function GuardianContactCard({ label, badgeCode, badgeBg, badgeText, name, phone
   const { t } = useTranslation();
   return (
     <Card accentColor="info" className="p-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 min-w-0 text-start ms-1">
-          <div className={`w-8 h-8 rounded-lg ${badgeBg} ${badgeText} flex items-center justify-center text-xs font-bold flex-shrink-0`}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3 text-start ms-1">
+          <div className={`w-8 h-8 rounded-lg ${badgeBg} ${badgeText} flex items-center justify-center text-xs font-bold shrink-0`}>
             {badgeCode}
           </div>
           <div className="min-w-0">
             <span className={`text-xs font-black uppercase tracking-widest ${badgeText} mb-0.5 block`}>{label}</span>
             <h5 className="text-xs font-bold text-foreground truncate">{name}</h5>
-            {phone && <p className="text-xs text-muted-foreground mt-0.5">{phone}</p>}
+            {phone && <p className="text-xs text-muted-foreground mt-0.5 truncate">{phone}</p>}
           </div>
         </div>
         {phone && (
-          <div className="flex items-center gap-1 me-1">
+          <div className="flex shrink-0 items-center gap-1 me-1">
             {onWhatsApp && (
               <Button
                 type="button"

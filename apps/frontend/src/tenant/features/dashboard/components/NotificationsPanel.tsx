@@ -25,11 +25,11 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
 
   return (
     <WidgetCard ariaLabelledby="notifications-heading" accentColor="warning">
-      <header className="px-5 py-4 border-b border-border/45 flex items-center justify-between gap-2 select-none ps-6.5">
+      <header className="px-5 py-4 border-b border-border/45 flex flex-wrap items-center justify-between gap-2 select-none ps-6.5">
 
-        <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex min-w-0 items-center gap-2.5">
           <Bell className={`w-4 h-4 text-warning/70 group-hover:text-warning transition-colors shrink-0 ${urgent > 0 ? "animate-pulse" : ""}`} aria-hidden="true" />
-          <h3 id="notifications-heading" className="text-sm font-bold text-foreground m-0 truncate">
+          <h3 id="notifications-heading" className="min-w-0 truncate text-sm font-bold text-foreground m-0">
             {t('notifications.title')}
           </h3>
           {urgent > 0 && (

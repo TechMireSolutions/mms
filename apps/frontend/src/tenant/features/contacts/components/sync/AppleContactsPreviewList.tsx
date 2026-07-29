@@ -21,15 +21,15 @@ export function AppleContactsPreviewList({
 }) {
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="min-w-0 text-sm font-semibold text-foreground">
           {previewList.length} {t("contacts.sync.contactsFound")}
         </p>
         <Button
           type="button"
           variant="ghost"
           onClick={onClear}
-          className="text-xs min-h-11 min-w-11 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors bg-transparent shadow-none"
+          className="text-xs min-h-11 min-w-11 shrink-0 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors bg-transparent shadow-none"
         >
           {t("contacts.sync.clear")}
         </Button>

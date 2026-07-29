@@ -266,27 +266,27 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
                       <StatusBadge status={student.status} config={statusBadgeConfig} />
                     </div>
                     <dl className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
+                      <div className="min-w-0">
                         <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colGender")}</dt>
                         <dd className="text-foreground">{toTitleCase(student.gender)}</dd>
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colClass")}</dt>
-                        <dd className="text-foreground">{student.class}</dd>
+                        <dd className="truncate text-foreground">{student.class}</dd>
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colSession")}</dt>
                         <dd className="truncate text-foreground">{student.session}</dd>
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colCity")}</dt>
-                        <dd className="text-foreground">{student.city}</dd>
+                        <dd className="truncate text-foreground">{student.city}</dd>
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colAge")}</dt>
                         <dd className="text-foreground">{student.age}</dd>
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colRegistered")}</dt>
                         <dd className="text-muted-foreground">{student.registered}</dd>
                       </div>
@@ -355,11 +355,11 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
                     <StatusBadge status={enrollment.status} config={enrollmentStatusConfig} />
                   </div>
                   <dl className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
+                    <div className="min-w-0">
                       <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colSession")}</dt>
                       <dd className="text-foreground">{enrollment.session}</dd>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colClass")}</dt>
                       <dd className="text-foreground">{enrollment.class}</dd>
                     </div>

@@ -65,9 +65,9 @@ export function InvoiceDetail({ invoice, onClose, onRecord, canWrite = true }: I
       }
     >
       <div className="space-y-5">
-        <div className="flex items-center justify-between" aria-label={t("finance.detail.status", { status: statusConfig[invoice.status]?.label ?? invoice.status })}>
+        <div className="flex flex-wrap items-center justify-between gap-2" aria-label={t("finance.detail.status", { status: statusConfig[invoice.status]?.label ?? invoice.status })}>
           <StatusBadge status={invoice.status} config={statusConfig} size="sm" />
-          <span className="text-xs text-muted-foreground">{t("finance.detail.due", { date: formatDate(invoice.dueDate) })}</span>
+          <span className="min-w-0 text-xs text-muted-foreground">{t("finance.detail.due", { date: formatDate(invoice.dueDate) })}</span>
         </div>
 
         {/* Student & session info */}

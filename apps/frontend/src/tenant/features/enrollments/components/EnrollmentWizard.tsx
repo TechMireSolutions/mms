@@ -199,7 +199,7 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
       </AnimatePresence>
 
       {/* Navigation */}
-      <div className="flex items-center justify-between pt-2 border-t border-border">
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border">
         <div>
           {step === 0 ? (
             <Button
@@ -219,7 +219,7 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
             </Button>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs text-muted-foreground" aria-live="polite">
             {t("enrollments.wizard.stepOf", { step: step + 1, total: steps.length })}
           </span>

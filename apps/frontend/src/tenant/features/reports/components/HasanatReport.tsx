@@ -290,11 +290,11 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
                   </span>
                 </div>
                 <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.report.colClass")}</dt>
                     <dd className="text-foreground">{hasanatRow.class}</dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.report.colFaculty")}</dt>
                     <dd>
                       <Button
@@ -307,11 +307,11 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
                       </Button>
                     </dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.report.colDistributed")}</dt>
                     <dd className="font-semibold text-primary">{hasanatRow.distributed}</dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.report.colRedeemed")}</dt>
                     <dd className="font-semibold text-success">{hasanatRow.redeemed}</dd>
                   </div>

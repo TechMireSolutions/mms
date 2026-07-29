@@ -111,14 +111,14 @@ export function ModuleColumnCustomizer({
         <span>{labels.trigger}</span>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-72 p-3 space-y-3">
-        <div className="flex items-center justify-between">
-          <h4 className="text-xs font-bold text-foreground uppercase tracking-wide">{labels.title}</h4>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h4 className="min-w-0 text-xs font-bold text-foreground uppercase tracking-wide">{labels.title}</h4>
           {onResetLayout && (
             <Button
               type="button"
               variant="ghost"
               onClick={onResetLayout}
-              className="min-h-11 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1"
+              className="min-h-11 shrink-0 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1"
               title={labels.reset || 'Reset to defaults'}
             >
               <RotateCcw className="w-3 h-3" />

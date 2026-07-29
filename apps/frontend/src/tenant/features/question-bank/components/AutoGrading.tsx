@@ -252,11 +252,11 @@ export function AutoGrading({ tests, results, questions }: AutoGradingProps): Re
           )}
 
           <section className="overflow-hidden rounded-xl border border-border bg-card" aria-label={t("questionBank.grading.resultsTitle", { name: test.name })}>
-            <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <h3 className="text-sm font-bold text-foreground m-0">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
+              <h3 className="m-0 min-w-0 truncate text-sm font-bold text-foreground">
                 {t("questionBank.grading.resultsTitle", { name: test.name })}
               </h3>
-              <span className="text-xs text-muted-foreground">
+              <span className="shrink-0 text-xs text-muted-foreground">
                 {t("questionBank.grading.submissionsCount", { count: testResults.length })}
               </span>
             </div>

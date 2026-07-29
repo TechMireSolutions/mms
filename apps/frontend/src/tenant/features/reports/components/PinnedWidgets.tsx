@@ -177,13 +177,13 @@ export default function PinnedWidgets({ category }: { category: string }): React
   return (
     <div className="space-y-4 font-sans text-start">
       {/* Pinned widgets controls header banner */}
-      <div className="flex items-center justify-between p-4 rounded-2xl surface-glass shadow-sm select-none">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+      <div className="flex flex-col gap-3 p-4 rounded-2xl surface-glass shadow-sm select-none sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="w-10 h-10 shrink-0 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
             <LayoutDashboard className="w-5 h-5" />
           </div>
-          <div>
-            <h3 className="text-sm font-bold text-foreground leading-none tracking-tight">{t("reports.widgets.title")}</h3>
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-bold text-foreground leading-none tracking-tight">{t("reports.widgets.title")}</h3>
             <p className="text-xs text-muted-foreground mt-1 uppercase font-semibold tracking-wider font-sans">{t("reports.widgets.subtitle")}</p>
           </div>
         </div>
@@ -199,7 +199,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
               handleOpenCreateBuilder();
             }
           }}
-          className={`h-auto flex items-center gap-1.5 px-4 py-2 rounded-xl border text-xs font-bold uppercase tracking-wider shadow-none ${
+          className={`h-auto flex w-full sm:w-auto shrink-0 items-center gap-1.5 px-4 py-2 rounded-xl border text-xs font-bold uppercase tracking-wider shadow-none ${
             isBuilderOpen 
               ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 hover:text-primary-foreground" 
               : "border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground hover:bg-muted/30"

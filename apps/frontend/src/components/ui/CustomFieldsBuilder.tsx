@@ -501,8 +501,8 @@ export function CustomFieldsBuilder({
   return (
     <div className="space-y-3">
       {/* Header */}
-      <div className="flex items-center justify-between text-start">
-        <div>
+      <div className="flex flex-col gap-2 text-start sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h4 className="text-sm font-bold text-foreground">Custom Fields</h4>
           <p className="text-xs text-muted-foreground mt-0.5">
             Add your own fields. They appear below the built-in fields in this tab.
@@ -512,7 +512,7 @@ export function CustomFieldsBuilder({
           <Button
             type="button"
             onClick={startAdd}
-            className="flex items-center gap-1.5 px-3.5 py-2 min-h-11 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shadow-none"
+            className="flex w-full sm:w-auto shrink-0 items-center gap-1.5 px-3.5 py-2 min-h-11 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shadow-none"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Field</span>

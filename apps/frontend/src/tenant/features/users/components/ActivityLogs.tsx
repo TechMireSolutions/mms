@@ -208,9 +208,9 @@ export function ActivityLogs({
         </Card>
       )}
 
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>{t('users.activityPageInfo', { page, total: totalPages, count: filtered.length })}</span>
-        <div className="flex gap-1">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+        <span className="min-w-0">{t('users.activityPageInfo', { page, total: totalPages, count: filtered.length })}</span>
+        <div className="flex shrink-0 gap-1">
           <Button
             type="button"
             variant="outline"

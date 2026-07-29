@@ -186,19 +186,19 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
                   {faculty.faculty}
                 </Button>
                 <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("teachers.report.colClasses")}</dt>
                     <dd className="text-foreground">{faculty.classes}</dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("teachers.report.colSessions")}</dt>
                     <dd className="text-foreground">{faculty.sessions}</dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("teachers.report.colStudents")}</dt>
                     <dd className="font-semibold text-foreground">{faculty.totalStudents}</dd>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <dt className="text-xs font-semibold text-muted-foreground">{t("teachers.report.colHoursWeek")}</dt>
                     <dd>
                       <div className="flex items-center gap-2">
