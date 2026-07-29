@@ -19,6 +19,7 @@ import { ToggleRow } from "@/components/ui/ToggleRow";
 import { Field } from "@/components/ui/FormPrimitives";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { SegmentedPillFilter } from "@/components/ui/SegmentedPillFilter";
 import { Save, GraduationCap } from "lucide-react";
 
 const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
@@ -137,37 +138,20 @@ export default function StudentsSettings(): React.ReactElement {
                 <ToggleRow label={t("students.settings.requirePhoto")} description={t("students.settings.requirePhotoDesc")} value={settingsDraft.requirePhoto} onChange={(v) => upd("requirePhoto", v)} />
               </div>
 
-              <div className="py-3 border-t border-border mt-3 flex items-center justify-between">
-                <div className="text-start">
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border py-3">
+                <div className="min-w-0 text-start">
                   <p className="text-sm font-semibold text-foreground">{t("students.settings.defaultViewLayout")}</p>
                   <p className="text-xs text-muted-foreground">{t("students.settings.defaultViewLayoutDesc")}</p>
                 </div>
-                <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => upd("defaultViewLayout", "list")}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all h-auto ${
-                      (settingsDraft.defaultViewLayout || "list") === "list"
-                        ? "bg-card text-foreground shadow-sm hover:bg-card"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {t("students.settings.listView")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => upd("defaultViewLayout", "cards")}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all h-auto ${
-                      settingsDraft.defaultViewLayout === "cards"
-                        ? "bg-card text-foreground shadow-sm hover:bg-card"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {t("students.settings.cardGrid")}
-                  </Button>
-                </div>
+                <SegmentedPillFilter
+                  size="sm"
+                  value={(settingsDraft.defaultViewLayout || "list") as "list" | "cards"}
+                  onChange={(value) => upd("defaultViewLayout", value)}
+                  options={[
+                    { value: "list", label: t("students.settings.listView") },
+                    { value: "cards", label: t("students.settings.cardGrid") },
+                  ]}
+                />
               </div>
             </div>
           )}

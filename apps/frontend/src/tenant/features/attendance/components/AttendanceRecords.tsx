@@ -275,7 +275,7 @@ export function AttendanceRecords({
                       {editingRecord?.id === attendanceRecord.id
                         ? <Input type="time" value={editingRecord.timeIn} onChange={(event) => updateDraft("timeIn", event.target.value)}
                             aria-label={t("attendance.columns.timeIn")}
-                            className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none" />
+                            className="w-full min-w-[6.5rem] max-w-[8rem] text-xs" />
                         : <span className="text-xs text-muted-foreground font-mono">{attendanceRecord.timeIn || "—"}</span>
                       }
                     </td>
@@ -285,7 +285,7 @@ export function AttendanceRecords({
                       {editingRecord?.id === attendanceRecord.id
                         ? <Input type="time" value={editingRecord.timeOut} onChange={(event) => updateDraft("timeOut", event.target.value)}
                             aria-label={t("attendance.columns.timeOut")}
-                            className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none" />
+                            className="w-full min-w-[6.5rem] max-w-[8rem] text-xs" />
                         : <span className="text-xs text-muted-foreground font-mono">{attendanceRecord.timeOut || "—"}</span>
                       }
                     </td>

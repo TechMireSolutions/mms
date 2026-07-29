@@ -1,4 +1,4 @@
-import React, { useId, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DEFAULT_GLOBAL_SETTINGS, getPasswordPolicyHintKey, validatePasswordPolicy } from "@mms/shared";
 import AuthLayout from "@/tenant/components/AuthLayout";
@@ -11,15 +11,16 @@ import { ROUTES } from "@/lib/config/routes";
 import { apiJson } from "@/lib/apiClient";
 import { useTranslation } from "@/hooks/useTranslation";
 
+/** Stable ids for e2e (onboarding + responsive authenticated bootstrap). */
+const CURRENT_PASSWORD_ID = "current-password";
+const NEW_PASSWORD_ID = "new-password";
+const CONFIRM_PASSWORD_ID = "confirm-password";
+const PASSWORD_HINT_ID = "force-password-policy-hint";
+
 export default function ForcePasswordChange(): React.ReactElement {
   const { t } = useTranslation();
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const formId = useId();
-  const currentId = `${formId}-current`;
-  const newId = `${formId}-new`;
-  const confirmId = `${formId}-confirm`;
-  const hintId = `${formId}-hint`;
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -72,7 +73,7 @@ export default function ForcePasswordChange(): React.ReactElement {
 
           <fieldset disabled={busy} className="m-0 min-w-0 space-y-4 border-0 p-0">
             <AuthPasswordField
-              id={currentId}
+              id={CURRENT_PASSWORD_ID}
               label={t("account.currentPassword")}
               autoComplete="current-password"
               value={currentPassword}
@@ -81,20 +82,20 @@ export default function ForcePasswordChange(): React.ReactElement {
 
             <div className="space-y-1.5">
               <AuthPasswordField
-                id={newId}
+                id={NEW_PASSWORD_ID}
                 label={t("account.newPassword")}
                 autoComplete="new-password"
                 value={newPassword}
                 onChange={setNewPassword}
-                describedBy={hintId}
+                describedBy={PASSWORD_HINT_ID}
               />
-              <p id={hintId} className="text-xs leading-relaxed text-muted-foreground">
+              <p id={PASSWORD_HINT_ID} className="text-xs leading-relaxed text-muted-foreground">
                 {t(getPasswordPolicyHintKey(DEFAULT_GLOBAL_SETTINGS.passwordPolicy))}
               </p>
             </div>
 
             <AuthPasswordField
-              id={confirmId}
+              id={CONFIRM_PASSWORD_ID}
               label={t("account.confirmPassword")}
               autoComplete="new-password"
               value={confirmPassword}

@@ -1,4 +1,4 @@
-import React, { useId, useState } from "react";
+import React, { useState } from "react";
 import PlatformAuthLayout from "@/platform/components/PlatformAuthLayout";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { AuthEmailField } from "@/components/entry/AuthEmailField";
@@ -20,9 +20,8 @@ import { ROUTES } from "@/lib/config/routes";
 export default function PlatformSignIn(): React.JSX.Element {
   const { t } = useTranslation();
   const { platformLogin, isPlatformLoginSubmitting } = usePlatformAuth();
-  const formId = useId();
-  const emailFieldId = `${formId}-email`;
-  const passwordFieldId = `${formId}-password`;
+  const emailFieldId = "platform-email";
+  const passwordFieldId = "platform-password";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

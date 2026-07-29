@@ -45,7 +45,7 @@ export function PlatformPageShell({
         <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md shadow-sm transition-all duration-300">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
             {/* Logo and Title */}
-            <Link to={ROUTES.home} className="flex items-center gap-3.5 group">
+            <Link to={ROUTES.home} className="group flex min-h-11 min-w-11 items-center gap-3.5">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-primary/20 via-primary/10 to-transparent border border-primary/25 shadow-sm group-hover:scale-105 group-hover:shadow group-hover:border-primary/45 transition-all duration-300">
                 <span className="font-display text-lg font-black text-primary transition-transform group-hover:rotate-6">م</span>
               </div>
@@ -149,53 +149,53 @@ export function PlatformPageShell({
           </div>
 
           {/* Mobile Navigation bar */}
-          <div className="md:hidden flex items-center justify-around border-t border-border/40 px-2 py-1 bg-card/60 backdrop-blur-sm">
+          <div className="grid w-full auto-cols-fr grid-flow-col border-t border-border/40 bg-card/60 px-2 py-1 backdrop-blur-sm md:hidden">
             <Link
               to={ROUTES.home}
               className={cn(
-                "flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-lg px-3 py-2 text-xs font-bold transition-all active:scale-95",
+                "flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-2 text-center text-xs font-bold leading-tight transition-all active:scale-95",
                 location.pathname === ROUTES.home
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
               <LayoutDashboard className="w-4 h-4" aria-hidden />
-              {t("platform.manageMadrasas")}
+              <span className="break-words">{t("platform.manageMadrasas")}</span>
             </Link>
 
             {isSuperUser && (
               <Link
                 to={ROUTES.platformAdmins}
                 className={cn(
-                  "flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-lg px-3 py-2 text-xs font-bold transition-all active:scale-95",
+                  "flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-2 text-center text-xs font-bold leading-tight transition-all active:scale-95",
                   location.pathname === ROUTES.platformAdmins
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Users className="w-4 h-4" aria-hidden />
-                {t("platform.manageAdmins")}
+                <span className="break-words">{t("platform.manageAdmins")}</span>
               </Link>
             )}
 
             <Link
               to={ROUTES.platformAccount}
               className={cn(
-                "flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-lg px-3 py-2 text-xs font-bold transition-all active:scale-95",
+                "flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-2 text-center text-xs font-bold leading-tight transition-all active:scale-95",
                 location.pathname === ROUTES.platformAccount
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
               <User className="w-4 h-4" aria-hidden />
-              {t("platform.myAccount")}
+              <span className="break-words">{t("platform.myAccount")}</span>
             </Link>
           </div>
         </header>
       ) : null}
 
-      <main className="flex-1 w-full flex flex-col justify-center py-8">
-        <div className={cn("box-border w-full min-w-0 mx-auto px-4 sm:px-6", maxClass)}>
+      <main id="main-content" className="flex w-full flex-1 flex-col justify-center py-8">
+        <div className={cn("box-border mx-auto w-full min-w-0 px-4 sm:px-6", maxClass)}>
           {children}
         </div>
       </main>

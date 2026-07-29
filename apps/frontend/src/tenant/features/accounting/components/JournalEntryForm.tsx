@@ -330,7 +330,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
                             value={line.description || ""}
                             onChange={(event) => updateLine(lineIndex, "description", event.target.value)}
                             placeholder={t("accounting.journal.form.notePlaceholder")}
-                            className="h-8 py-1 px-2 text-xs"
+                            className="text-xs"
                           />
                         </td>
                         <td className="px-3 py-2">
@@ -342,7 +342,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
                             value={line.debit}
                             placeholder="0.00"
                             onChange={(event) => updateLine(lineIndex, "debit", event.target.value)}
-                            className="h-8 py-1 px-2 text-xs text-end bg-info/5 focus:ring-info/30 font-mono"
+                            className="bg-info/5 text-end font-mono text-xs focus:ring-info/30"
                           />
                         </td>
                         <td className="px-3 py-2">
@@ -354,7 +354,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
                             value={line.credit}
                             placeholder="0.00"
                             onChange={(event) => updateLine(lineIndex, "credit", event.target.value)}
-                            className="h-8 py-1 px-2 text-xs text-end bg-success/5 focus:ring-success/30 font-mono"
+                            className="bg-success/5 text-end font-mono text-xs focus:ring-success/30"
                           />
                         </td>
                         <td className="px-3 py-2">

@@ -82,6 +82,7 @@ export default function AppLayout(): React.JSX.Element {
 
       {/* Main Content */}
       <main
+        id="main-content"
         className={cn(
           "flex min-h-screen min-w-0 max-w-full flex-col pt-14 transition-all duration-300 lg:pt-16",
           sidebarCollapsed ? "lg:ps-[4.5rem]" : "lg:ps-[16.25rem]",

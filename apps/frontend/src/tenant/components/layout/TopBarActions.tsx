@@ -93,7 +93,7 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-80 p-0">
+        <PopoverContent align="end" className="w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] p-0">
           {popoverOpen && (
             <>
               <div className="border-b border-border px-4 py-3">

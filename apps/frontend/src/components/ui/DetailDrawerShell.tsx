@@ -37,9 +37,10 @@ export function DetailDrawerShell({
   ariaLabel,
   className,
 }: DetailDrawerShellProps): React.JSX.Element {
-  const { t } = useTranslation();
+  const { t, isRtl } = useTranslation();
   const containerRef = useOverlayBehavior<HTMLElement>({ open, onClose });
   const titleId = useId();
+  const slideFrom = isRtl ? "-100%" : "100%";
 
   return (
     <AnimatePresence>
@@ -58,15 +59,15 @@ export function DetailDrawerShell({
           {/* Drawer content panel */}
           <motion.aside
             ref={containerRef}
-            initial={{ x: "100%", opacity: 0 }}
+            initial={{ x: slideFrom, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: "100%", opacity: 0 }}
+            exit={{ x: slideFrom, opacity: 0 }}
             transition={{ type: "spring", damping: 28, stiffness: 260 }}
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
             className={cn(
-              "relative w-full max-w-full sm:max-w-sm h-full bg-card/90 border-s border-border/80 shadow-2xl flex flex-col z-10 backdrop-blur-xl text-start min-w-0",
+              "relative z-10 flex h-full w-full min-w-0 max-w-full flex-col border-s border-border/80 bg-card/90 text-start shadow-2xl backdrop-blur-xl sm:max-w-sm",
               className
             )}
             aria-label={ariaLabel}

@@ -9,5 +9,5 @@
     "skipLibCheck": true,
     "types": ["node", "@playwright/test"]
   },
-  "include": ["tests/**/*", "playwright.config.ts"]
+  "include": ["tests/**/*", "helpers/**/*", "playwright.config.ts"]
 }

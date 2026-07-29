@@ -164,7 +164,7 @@ export function EnrollmentList({
                 { value: "all", label: t("enrollments.filter.allSessions") },
                 ...sessions.map((session) => ({ value: session.id, label: session.name }))
               ]}
-              className="w-48 text-sm"
+              className="w-full min-w-0 text-sm sm:w-48"
             />
           </div>
         )}

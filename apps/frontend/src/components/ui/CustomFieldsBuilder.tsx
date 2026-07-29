@@ -137,7 +137,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
   return (
     <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-4 space-y-3">
       {/* Row 1: Label + Type */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label className={FORM_LABEL} htmlFor={`label-${draft.key}`}>{t("fields.fieldName")}</label>
           <Input
@@ -166,7 +166,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
       </div>
 
       {/* Row 2: Description + Placeholder */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label className={FORM_LABEL} htmlFor={`desc-${draft.key}`}>
             {t("fields.descriptionLabel")} <span className="normal-case font-normal text-muted-foreground/70">{t("fields.adminNote")}</span>
@@ -224,7 +224,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
       )}
 
       {hasTextLength && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className={FORM_LABEL} htmlFor={`minlen-${draft.key}`}>{t("fields.minLength")}</label>
             <Input

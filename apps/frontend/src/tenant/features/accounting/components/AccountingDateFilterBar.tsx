@@ -46,7 +46,7 @@ export function AccountingDateFilterBar({
           id={`${idPrefix}-from`}
           value={dateFrom}
           onChange={onDateFromChange}
-          className="px-3 py-1.5 w-40"
+          className="w-full min-w-0 sm:w-40"
         />
       </div>
       <div className="flex items-center gap-2 text-sm">
@@ -57,7 +57,7 @@ export function AccountingDateFilterBar({
           id={`${idPrefix}-to`}
           value={dateTo}
           onChange={onDateToChange}
-          className="px-3 py-1.5 w-40"
+          className="w-full min-w-0 sm:w-40"
         />
       </div>
 

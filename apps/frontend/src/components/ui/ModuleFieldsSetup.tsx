@@ -255,7 +255,7 @@ export function ModuleFieldsSetup({
           <Button
             type="button"
             onClick={() => setIsAddTabModalOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all shadow-none"
+            className="flex min-h-11 items-center gap-1.5 rounded-xl bg-primary/10 px-4 py-2 text-sm font-semibold text-primary shadow-none transition-all hover:bg-primary/20"
           >
             <Plus className="w-4 h-4" />
             <span>{t("contacts.setup.addCustomTab")}</span>

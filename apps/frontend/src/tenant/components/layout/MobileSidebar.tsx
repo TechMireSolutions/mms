@@ -14,6 +14,7 @@ import { NAV_ITEMS } from "@/lib/config/navConfig";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
 import { isNavPathActive, ROUTES } from "@/lib/config/routes";
 import { prefetchRoute } from "@/lib/routing/routePrefetch";
+import { useOverlayBehavior } from "@/hooks/useOverlayBehavior";
 
 export interface MobileSidebarProps {
   /** Boolean indicating if the mobile sidebar drawer is currently visible. */
@@ -27,6 +28,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
   const branding = useBranding();
   const { user, logout } = useAuth();
   const [openedAt, setOpenedAt] = useState<number>(0);
+  const drawerRef = useOverlayBehavior<HTMLDivElement>({ open, onClose });
 
   const settings = useGlobalSettings();
   const { t } = useTranslation();
@@ -60,10 +62,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
     }
   }, [open]);
 
-  if (!open) return null;
-
   const initials = getInitials(user?.name, 2) || "AK";
-
 
   const visibleMenuItems = NAV_ITEMS.map(item => {
     if (item.subItems) {
@@ -82,11 +81,13 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
     return enabledModules[item.moduleId] !== false;
   });
 
+  if (!open) return null;
+
   return (
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 lg:hidden"
+        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm lg:hidden"
         onClick={() => {
           if (Date.now() - openedAt > 150) {
             onClose();
@@ -95,25 +96,31 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
       />
 
       {/* Drawer */}
-      <div className="fixed start-0 top-0 z-50 flex h-full w-[min(17.5rem,85vw)] flex-col bg-sidebar shadow-2xl lg:hidden">
-        <div className="h-16 flex items-center justify-between px-5 border-b border-sidebar-border flex-shrink-0">
-          <div className="flex items-center gap-3">
+      <div
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("nav.openMenu")}
+        className="fixed start-0 top-0 z-50 flex h-full w-[min(17.5rem,85vw)] flex-col bg-sidebar shadow-2xl lg:hidden"
+      >
+        <div className="flex h-16 flex-shrink-0 items-center justify-between gap-2 border-b border-sidebar-border px-5">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             {branding.logoUrl ? (
               <img
                 src={branding.logoUrl}
                 alt="Logo"
-                className={`h-8 w-8 rounded-lg ${LOGO_IMAGE} border-sidebar-border`}
+                className={`h-8 w-8 shrink-0 rounded-lg ${LOGO_IMAGE} border-sidebar-border`}
                 width={32}
                 height={32}
               />
             ) : (
-              <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
-                <span className="text-sidebar-primary-foreground font-display text-lg font-bold">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary">
+                <span className="font-display text-lg font-bold text-sidebar-primary-foreground">
                   {branding.madrasaName ? getInitials(branding.madrasaName, 1) : "م"}
                 </span>
               </div>
             )}
-            <span className="text-sidebar-foreground font-semibold text-sm">
+            <span className="truncate text-sm font-semibold text-sidebar-foreground">
               {branding.madrasaName || t("entry.productName")}
             </span>
           </div>
@@ -142,7 +149,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
                     type="button"
                     variant="ghost"
                     onClick={() => toggleMenu(item.labelKey)}
-                    className={`group flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-all duration-200 h-auto hover:bg-sidebar-accent/50 ${
+                    className={`group flex min-h-11 w-full items-center justify-between rounded-lg px-3 py-2.5 transition-all duration-200 hover:bg-sidebar-accent/50 ${
                       hasActiveSub
                         ? "bg-sidebar-accent/30 text-sidebar-foreground"
                         : "text-sidebar-muted-foreground hover:text-sidebar-foreground"
@@ -179,7 +186,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
                               onClick={onClose}
                               onMouseEnter={() => prefetchRoute(sub.path)}
                               onFocus={() => prefetchRoute(sub.path)}
-                              className={`group flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 relative ${
+                              className={`group flex min-h-11 items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 relative ${
                                 isSubActive
                                   ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
                                   : "text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -208,7 +215,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
                 onClick={onClose}
                 onMouseEnter={() => prefetchRoute(item.path!)}
                 onFocus={() => prefetchRoute(item.path!)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                className={`flex min-h-11 items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
                     : "text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -244,7 +251,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
             }}
           >
             <LogOut className="h-4 w-4" />
-            Sign out
+            {t("auth.signOut")}
           </Button>
         </div>
       </div>

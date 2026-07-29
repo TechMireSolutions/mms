@@ -60,6 +60,12 @@ jobs:
       - name: Run Test Suite
         run: pnpm test
 
+      - name: Run responsive shell E2E
+        run: pnpm test:e2e tests/responsive-shell.spec.ts
+
+      - name: Run authenticated responsive E2E
+        run: pnpm test:e2e tests/responsive-authenticated.spec.ts
+
       - name: Lint Frontend
         run: pnpm lint
         working-directory: apps/frontend

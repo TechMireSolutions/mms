@@ -341,7 +341,7 @@ export function AccountingSettings({
                 value={settingsDraft.fyStartMonth}
                 onChange={(startMonthValue) => upd("fyStartMonth", startMonthValue)}
                 options={localizedMonths}
-                className="w-48"
+                className="w-full min-w-0 sm:w-48"
               />
             </Field>
 

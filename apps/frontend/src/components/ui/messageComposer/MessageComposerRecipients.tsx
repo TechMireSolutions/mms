@@ -59,7 +59,7 @@ export function MessageComposerRecipients({
             size="sm"
           />
         </div>
-        {recipientsCount > 3 && <SearchBar placeholder={t('messaging.search.placeholder')} value={search} onChange={onSearchChange} className="h-8 text-xs" />}
+        {recipientsCount > 3 && <SearchBar placeholder={t('messaging.search.placeholder')} value={search} onChange={onSearchChange} className="text-xs" />}
         <ul className="max-h-36 space-y-1 overflow-y-auto rounded-lg border border-border/50 bg-muted/10 p-2">
           {displayedRecipients.map((recipient) => {
             const eligibleIndex = eligibleRecipients.findIndex((eligible) => eligible.id === recipient.id);

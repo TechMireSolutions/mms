@@ -3,6 +3,7 @@ import { execSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { assertModuleTierSmoke, loginTenant } from '../helpers/moduleTiers.js';
+import { completePlatformSetupOtp } from '../helpers/tenantBootstrap.js';
 
 // Ensure JWT_SECRET and NODE_ENV are set for backend DB CLI scripts in CI/test environments
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
@@ -88,26 +89,8 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     await page.fill('#platform-setup-password', platformPassword);
     await page.click('button[type="submit"]');
 
-    // Wait for verify OTP screen
-    await page.waitForSelector('role=status');
-    
-    // Extract the dev code OTP from the developer hint in the DOM
-    const devHintText = await page.locator('role=status').textContent();
-    const codeMatch = devHintText?.match(/\b\d{6}\b/);
-    if (!codeMatch) {
-      throw new Error(`Failed to extract verification code from hint text: "${devHintText}"`);
-    }
-    const otpCode = codeMatch[0];
-    console.log(`Extracted setup verification OTP: ${otpCode}`);
+    await completePlatformSetupOtp(page);
 
-    // Fill in OTP inputs
-    for (let i = 0; i < otpCode.length; i++) {
-      await page.fill(`#platform-otp-${i}`, otpCode[i]);
-    }
-
-    // Submit verification OTP (which completes setup and redirects to login)
-    await page.click('button[type="submit"]');
-    
     // 2. Wait for redirect to Platform Sign-In screen
     await page.waitForSelector('#platform-email');
     console.log('Redirected to Platform Sign-In screen. Logging in with new platform credentials...');

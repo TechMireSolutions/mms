@@ -410,10 +410,10 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
       </header>
 
       {/* ── Body ────────────────────────────────────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
 
         {/* Left panel — element palette */}
-        <aside className="w-48 flex-shrink-0 border-e border-border bg-card overflow-y-auto p-3 space-y-4">
+        <aside className="max-h-48 w-full shrink-0 space-y-4 overflow-y-auto border-b border-border bg-card p-3 lg:max-h-none lg:w-48 lg:border-b-0 lg:border-e">
           <div>
             <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.addElements")}</p>
             <div className="space-y-1">
@@ -445,7 +445,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
         </aside>
 
         {/* Centre — canvas */}
-        <main className="flex-1 overflow-auto bg-muted/40 flex items-start justify-center p-8"
+        <main className="flex min-h-0 min-w-0 flex-1 items-start justify-center overflow-auto bg-muted/40 p-4 sm:p-8"
           onClick={() => setSelectedId(null)}>
           <div style={{ position: "relative", width: size.width, height: size.height }}
             ref={canvasRef}>
@@ -471,7 +471,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
         </main>
 
         {/* Right panel — properties */}
-        <aside className="w-60 flex-shrink-0 border-s border-border bg-card overflow-y-auto p-3 space-y-4">
+        <aside className="max-h-64 w-full shrink-0 space-y-4 overflow-y-auto border-t border-border bg-card p-3 lg:max-h-none lg:w-60 lg:border-t-0 lg:border-s">
           {!selectedElement ? (
             <div className="text-xs text-muted-foreground text-center pt-10 space-y-1">
               <Move className="w-6 h-6 mx-auto opacity-30" aria-hidden="true" />

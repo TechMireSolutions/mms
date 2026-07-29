@@ -103,7 +103,7 @@ export function ResizableTableHead({
           aria-label={t('table.resizeColumn')}
           onPointerDown={handlePointerDown}
           onClick={(event) => event.stopPropagation()}
-          className="absolute inset-y-0 end-0 z-10 w-2 cursor-col-resize touch-none select-none after:absolute after:inset-y-1 after:end-0 after:w-px after:bg-border/70 hover:after:bg-primary/60"
+          className="absolute inset-y-0 end-0 z-10 flex w-11 min-w-11 cursor-col-resize select-none items-stretch justify-end after:absolute after:inset-y-1 after:end-0 after:w-px after:bg-border/70 hover:after:bg-primary/60"
         />
       ) : null}
     </th>

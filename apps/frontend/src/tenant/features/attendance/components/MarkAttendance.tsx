@@ -658,7 +658,7 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
                               value={row.timeIn}
                               onChange={(event) => setRow(row.studentId, "timeIn", event.target.value)}
                               disabled={row.status === "absent"}
-                              className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-40 h-8" 
+                              className="w-full min-w-[6.5rem] max-w-[8rem] text-xs disabled:opacity-40" 
                             />
                           </td>
                         );
@@ -674,7 +674,7 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
                               value={row.timeOut}
                               onChange={(event) => setRow(row.studentId, "timeOut", event.target.value)}
                               disabled={row.status === "absent"}
-                              className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-24 focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-40 h-8" 
+                              className="w-full min-w-[6.5rem] max-w-[8rem] text-xs disabled:opacity-40" 
                             />
                           </td>
                         );
@@ -690,7 +690,7 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
                               value={row.notes} 
                               placeholder={t("attendance.mark.notesPlaceholder")}
                               onChange={(event) => setRow(row.studentId, "notes", event.target.value)}
-                              className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground h-8" 
+                              className="w-full min-w-0 text-xs" 
                             />
                           </td>
                         );
@@ -724,7 +724,7 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
                                 value={stringValue}
                                 onChange={(event) => setRow(row.studentId, field.id, event.target.value)}
                                 placeholder={field.placeholder || t("common.enterPlaceholder")}
-                                className="text-xs rounded-lg border border-border bg-background px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground h-8"
+                                className="w-full min-w-0 text-xs"
                               />
                             )}
                           </td>

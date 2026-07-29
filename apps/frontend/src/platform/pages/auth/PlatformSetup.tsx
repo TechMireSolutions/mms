@@ -1,4 +1,4 @@
-import React, { useId, useState } from "react";
+import React, { useState } from "react";
 import { ShieldCheck, User } from "lucide-react";
 import { type PlatformSetupRegisterResult, maskEmail } from "@mms/shared";
 import {
@@ -40,9 +40,6 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
   const { t } = useTranslation();
   const checkPlatformAuth = usePlatformAuth().checkPlatformAuth;
   const invalidateSetupStatus = useInvalidatePlatformSetupStatus();
-  const formId = useId();
-  const nameFieldId = `${formId}-name`;
-  const emailFieldId = `${formId}-email`;
 
   const registerMutation = usePlatformSetupRegister();
   const verifyMutation = usePlatformSetupVerify();
@@ -204,7 +201,7 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
 
           <fieldset disabled={loading} className="m-0 min-w-0 space-y-4 border-0 p-0">
             <AuthTextField
-              id={nameFieldId}
+              id="platform-setup-name"
               label={t("platform.setupFullName")}
               value={name}
               autoFocus
@@ -217,7 +214,7 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
             />
 
             <AuthEmailField
-              id={emailFieldId}
+              id="platform-setup-email"
               label={t("auth.emailAddress")}
               value={email}
               autoComplete="email"
@@ -229,7 +226,7 @@ export default function PlatformSetup({ smtpConfigured }: PlatformSetupProps): R
             />
 
             <AuthPasswordField
-              id={`${formId}-password`}
+              id="platform-setup-password"
               label={t("auth.password")}
               autoComplete="new-password"
               value={password}

@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { SegmentedPillFilter } from "@/components/ui/SegmentedPillFilter";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { notify } from "@/lib/notify";
 
@@ -33,12 +34,12 @@ interface SettingRowProps {
 
 function SettingRow({ label, sub, children }: SettingRowProps) {
   return (
-    <div className="flex items-start justify-between gap-4 py-3 border-b border-border last:border-0">
-      <div className="flex-1">
-        <p className="text-sm font-semibold text-foreground m-0">{label}</p>
-        {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
+    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border py-3 last:border-0 sm:gap-4">
+      <div className="min-w-0 flex-1 basis-[12rem]">
+        <p className="m-0 text-sm font-semibold text-foreground">{label}</p>
+        {sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>}
       </div>
-      <div className="flex-shrink-0">{children}</div>
+      <div className="ms-auto shrink-0">{children}</div>
     </div>
   );
 }
@@ -197,28 +198,15 @@ export function AttendanceSettings() {
                 <Switch checked={settingsDraft.geoTagging} onCheckedChange={(value) => upd("geoTagging", value)} />
               </SettingRow>
               <SettingRow label={t("attendance.settings.defaultLayout")} sub={t("attendance.settings.defaultLayoutDesc")}>
-                <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
-                  <Button
-                    type="button"
-                    variant={(settingsDraft.defaultViewLayout || "list") === "list" ? "secondary" : "ghost"}
-                    size="sm"
-                    onClick={() => upd("defaultViewLayout", "list")}
-                    className="text-xs font-semibold rounded-lg px-3 shadow-none bg-transparent data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
-                    data-state={(settingsDraft.defaultViewLayout || "list") === "list" ? "active" : "inactive"}
-                  >
-                    {t("attendance.settings.listView")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={settingsDraft.defaultViewLayout === "cards" ? "secondary" : "ghost"}
-                    size="sm"
-                    onClick={() => upd("defaultViewLayout", "cards")}
-                    className="text-xs font-semibold rounded-lg px-3 shadow-none bg-transparent data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
-                    data-state={settingsDraft.defaultViewLayout === "cards" ? "active" : "inactive"}
-                  >
-                    {t("attendance.settings.cardGrid")}
-                  </Button>
-                </div>
+                <SegmentedPillFilter
+                  size="sm"
+                  value={(settingsDraft.defaultViewLayout || "list") as "list" | "cards"}
+                  onChange={(value) => upd("defaultViewLayout", value)}
+                  options={[
+                    { value: "list", label: t("attendance.settings.listView") },
+                    { value: "cards", label: t("attendance.settings.cardGrid") },
+                  ]}
+                />
               </SettingRow>
               <SettingRow label={t("attendance.settings.facialRecognition")} sub={t("attendance.settings.facialRecognitionDesc")}>
                 <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.warningStrong)}>{t("attendance.settings.comingSoon")}</span>

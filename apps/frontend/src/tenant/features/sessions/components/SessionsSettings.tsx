@@ -17,6 +17,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { SegmentedPillFilter } from "@/components/ui/SegmentedPillFilter";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { notify } from "@/lib/notify";
@@ -170,37 +171,20 @@ export function SessionsSettings(): React.JSX.Element {
                   onChange={(value) => upd("notifyOnSessionStart", value)}
                 />
 
-                <div className="py-3 border-t border-border mt-3 flex items-center justify-between gap-3">
-                  <div>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border py-3">
+                  <div className="min-w-0">
                     <p className="text-sm font-semibold text-foreground">{t("sessions.settings.defaultViewLayout")}</p>
                     <p className="text-xs text-muted-foreground">{t("sessions.settings.defaultViewLayoutHint")}</p>
                   </div>
-                  <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => upd("defaultViewLayout", "list")}
-                      className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all h-auto ${
-                        (settingsDraft.defaultViewLayout || "cards") === "list"
-                          ? "bg-card text-foreground shadow-sm hover:bg-card hover:text-foreground"
-                          : "text-muted-foreground hover:text-foreground hover:bg-transparent"
-                      }`}
-                    >
-                      {t("sessions.settings.listView")}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => upd("defaultViewLayout", "cards")}
-                      className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all h-auto ${
-                        (settingsDraft.defaultViewLayout || "cards") === "cards"
-                          ? "bg-card text-foreground shadow-sm hover:bg-card hover:text-foreground"
-                          : "text-muted-foreground hover:text-foreground hover:bg-transparent"
-                      }`}
-                    >
-                      {t("sessions.settings.cardGrid")}
-                    </Button>
-                  </div>
+                  <SegmentedPillFilter
+                    size="sm"
+                    value={(settingsDraft.defaultViewLayout || "cards") as "list" | "cards"}
+                    onChange={(value) => upd("defaultViewLayout", value)}
+                    options={[
+                      { value: "list", label: t("sessions.settings.listView") },
+                      { value: "cards", label: t("sessions.settings.cardGrid") },
+                    ]}
+                  />
                 </div>
               </div>
             </>

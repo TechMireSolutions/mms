@@ -86,7 +86,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
     >
       {/* Logo */}
       <div className="h-16 flex items-center px-5 border-b border-sidebar-border">
-        <Link to={ROUTES.home} className="flex items-center gap-3 overflow-hidden min-w-0 hover:opacity-90 transition-opacity">
+        <Link to={ROUTES.home} className="flex min-h-11 min-w-11 items-center gap-3 overflow-hidden hover:opacity-90 transition-opacity">
           {branding.logoUrl ? (
             <img
               src={branding.logoUrl}
@@ -133,7 +133,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
                   type="button"
                   variant="ghost"
                   onClick={() => toggleMenu(item.labelKey)}
-                  className={`group flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-all duration-200 relative h-auto hover:bg-sidebar-accent/50 ${
+                  className={`group flex min-h-11 w-full items-center justify-between rounded-lg px-3 py-2.5 transition-all duration-200 hover:bg-sidebar-accent/50 ${
                     hasActiveSub
                       ? "bg-sidebar-accent/35 text-sidebar-foreground"
                       : "text-sidebar-muted-foreground hover:text-sidebar-foreground"
@@ -182,7 +182,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
                             to={sub.path}
                             onMouseEnter={() => prefetchRoute(sub.path)}
                             onFocus={() => prefetchRoute(sub.path)}
-                            className={`group flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 relative ${
+                            className={`group flex min-h-11 items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 relative ${
                               isSubActive
                                 ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
                                 : "text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -218,7 +218,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
               to={item.path!}
               onMouseEnter={() => prefetchRoute(item.path!)}
               onFocus={() => prefetchRoute(item.path!)}
-              className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
+              className={`group flex min-h-11 items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
                 isActive
                   ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
                   : "text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"

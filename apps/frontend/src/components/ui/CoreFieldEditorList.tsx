@@ -60,7 +60,7 @@ const FieldItem = memo(function FieldItem({
 
   return (
     <div
-      className={`flex items-center gap-4 px-5 py-4 rounded-xl border transition-all select-none
+      className={`flex flex-wrap items-center gap-2 rounded-xl border px-3 py-3 transition-all select-none sm:gap-3 sm:px-5 sm:py-4
           ${
             isDragging
               ? "shadow-lg border-primary/40 bg-primary/5"
@@ -72,7 +72,7 @@ const FieldItem = memo(function FieldItem({
       <span
         {...(dragHandleProps || {})}
         aria-label={t("fields.dragReorderAria")}
-        className="flex-shrink-0 cursor-grab text-muted-foreground/60 hover:text-foreground/80 active:cursor-grabbing"
+        className="inline-flex min-h-11 min-w-11 flex-shrink-0 cursor-grab items-center justify-center text-muted-foreground/60 hover:text-foreground/80 active:cursor-grabbing"
       >
         <GripVertical className="w-4 h-4" />
       </span>
@@ -84,35 +84,36 @@ const FieldItem = memo(function FieldItem({
         className="w-4 h-4"
       />
 
-      <div className="flex-1 min-w-0 text-start">
-        <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-bold text-foreground leading-snug">
+      <div className="min-w-0 flex-1 basis-[10rem] text-start">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm font-bold leading-snug text-foreground">
             {field.labelKey ? t(field.labelKey) : field.label}
           </p>
           {isUnique && !onToggleUnique && (
-            <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30 dark:bg-warning/20 dark:text-warning dark:border-warning/30">
+            <span className="rounded border border-warning/30 bg-warning/10 px-1.5 py-0.5 text-xs font-bold text-warning dark:border-warning/30 dark:bg-warning/20 dark:text-warning">
               {lblUnique}
             </span>
           )}
         </div>
         {(field.descriptionKey || field.description) ? (
-          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             {field.descriptionKey ? t(field.descriptionKey) : field.description}
           </p>
         ) : null}
       </div>
 
+      <div className="ms-auto flex min-w-0 flex-wrap items-center justify-end gap-1.5">
       {isEnabled && (
         <Button
           type="button"
           onClick={onToggleRequired}
           variant="outline"
           size="sm"
-          className={`flex-shrink-0 px-3 text-xs font-semibold rounded-md border transition-all shadow-none
+          className={`flex-shrink-0 rounded-md border px-3 text-xs font-semibold shadow-none transition-all
               ${
                 isRequired
-                  ? "bg-destructive/10 border-destructive/20 text-destructive hover:bg-destructive/15"
-                  : "bg-muted border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                  ? "border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/15"
+                  : "border-transparent bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
               }`}
         >
           {isRequired ? lblRequired : lblOptional}
@@ -125,11 +126,11 @@ const FieldItem = memo(function FieldItem({
           onClick={onToggleUnique}
           variant="outline"
           size="sm"
-          className={`flex-shrink-0 px-3 text-xs font-semibold rounded-md border transition-all shadow-none
+          className={`flex-shrink-0 rounded-md border px-3 text-xs font-semibold shadow-none transition-all
               ${
                 isUnique
-                  ? "bg-warning/10 border-warning/20 text-warning hover:bg-warning/15"
-                  : "bg-muted border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                  ? "border-warning/20 bg-warning/10 text-warning hover:bg-warning/15"
+                  : "border-transparent bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
               }`}
         >
           {isUnique ? lblUnique : lblStandard}
@@ -141,7 +142,7 @@ const FieldItem = memo(function FieldItem({
           type="button"
           onClick={onEdit}
           variant="ghost"
-          className="min-h-11 min-w-11 h-11 w-11 p-0 flex items-center justify-center flex-shrink-0 rounded-lg text-muted-foreground/80 hover:text-foreground hover:bg-muted transition-colors shadow-none"
+          className="flex h-11 w-11 min-h-11 min-w-11 flex-shrink-0 items-center justify-center rounded-lg p-0 text-muted-foreground/80 shadow-none transition-colors hover:bg-muted hover:text-foreground"
           title={t("fields.editDefaultsTitle")}
         >
           <SlidersHorizontal className="w-4 h-4" />
@@ -153,7 +154,7 @@ const FieldItem = memo(function FieldItem({
           type="button"
           onClick={onEditField}
           variant="ghost"
-          className="min-h-11 px-2.5 flex items-center justify-center flex-shrink-0 rounded-lg text-xs font-semibold text-muted-foreground/80 hover:text-foreground hover:bg-muted transition-colors shadow-none"
+          className="flex min-h-11 flex-shrink-0 items-center justify-center rounded-lg px-2.5 text-xs font-semibold text-muted-foreground/80 shadow-none transition-colors hover:bg-muted hover:text-foreground"
           title={t("fields.editCustomFieldTitle")}
         >
           <span>{t("common.edit")}</span>
@@ -165,12 +166,13 @@ const FieldItem = memo(function FieldItem({
           type="button"
           onClick={onDeleteField}
           variant="ghost"
-          className="min-h-11 px-2.5 flex items-center justify-center flex-shrink-0 rounded-lg text-xs font-semibold text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors shadow-none"
+          className="flex min-h-11 flex-shrink-0 items-center justify-center rounded-lg px-2.5 text-xs font-semibold text-destructive shadow-none transition-colors hover:bg-destructive/10 hover:text-destructive"
           title={t("fields.deleteCustomFieldTitle")}
         >
           <span>{t("common.delete")}</span>
         </Button>
       )}
+      </div>
     </div>
   );
 });

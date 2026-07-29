@@ -32,9 +32,9 @@ export default function SyncStatusBadge(): React.JSX.Element | null {
     return (
       <div
         aria-label={t("sync.status.syncingAria")}
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium"
+        className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full bg-muted px-2.5 text-xs font-medium text-muted-foreground"
       >
-        <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
+        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
         <span className="hidden sm:inline">{t("sync.status.syncing")}</span>
       </div>
     );
@@ -47,9 +47,9 @@ export default function SyncStatusBadge(): React.JSX.Element | null {
           <div
             role="alert"
             aria-label={t("sync.status.errorAria")}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-destructive/10 text-destructive text-xs font-semibold cursor-default"
+            className="inline-flex min-h-11 min-w-11 cursor-default items-center justify-center gap-1.5 rounded-full bg-destructive/10 px-2.5 text-xs font-semibold text-destructive"
           >
-            <CloudOff className="w-3 h-3" aria-hidden="true" />
+            <CloudOff className="h-3.5 w-3.5" aria-hidden="true" />
             <span className="hidden sm:inline">{t("sync.status.error")}</span>
           </div>
         </TooltipTrigger>
