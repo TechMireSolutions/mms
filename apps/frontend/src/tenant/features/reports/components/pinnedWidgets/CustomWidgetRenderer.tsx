@@ -225,14 +225,14 @@ export function WidgetDrilldownModal({
         </div>
 
         {/* Modal Search Bar */}
-        <div className="p-4 border-b border-border/45 bg-muted/10 flex items-center justify-between gap-4">
+        <div className="p-4 border-b border-border/45 bg-muted/10 flex flex-wrap items-center justify-between gap-2">
           <SearchBar
             value={search}
             onChange={handleSearchChange}
             placeholder={t("reports.widgets.searchRecords")}
-            className="flex-1 max-w-sm"
+            className="min-w-0 flex-1 max-w-sm"
           />
-          <span className="text-xs text-muted-foreground font-bold px-2 py-1.5 bg-muted rounded-full border border-border flex-shrink-0">
+          <span className="text-xs text-muted-foreground font-bold px-2 py-1.5 bg-muted rounded-full border border-border shrink-0">
             {t("reports.widgets.foundCount", { count: filteredRecords.length })}
           </span>
         </div>
@@ -829,12 +829,12 @@ export function CustomWidgetRenderer({
       }`} />
       <div className={`absolute -end-8 -top-8 w-24 h-24 rounded-full ${colorTheme.glow} transition-all duration-500`} />
       {/* Widget Card Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-0.5 text-start">
-          <span className="text-xs font-black text-foreground uppercase tracking-widest leading-none block">
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <div className="min-w-0 space-y-0.5 text-start">
+          <span className="block truncate text-xs font-black text-foreground uppercase tracking-widest leading-none">
             {resolveWidgetTitle(widget, t)}
           </span>
-          <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
+          <p className="truncate text-xs text-muted-foreground font-bold uppercase tracking-wider">
             {(() => {
               const widgetTitle = resolveWidgetTitle(widget, t);
               const collectionLabel = getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t);

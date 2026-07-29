@@ -508,13 +508,13 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
       className="rounded-3xl border border-border/50 bg-card/45 backdrop-blur-2xl shadow-2xl overflow-hidden text-start"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-border/50 bg-card/30">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-inner">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-5 border-b border-border/50 bg-card/30">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="w-10 h-10 shrink-0 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-inner">
             <Sliders className="w-5 h-5" />
           </div>
-          <div>
-            <h3 className="text-sm font-black text-foreground uppercase tracking-wider leading-none">{t("reports.builder.title")}</h3>
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-black text-foreground uppercase tracking-wider leading-none">{t("reports.builder.title")}</h3>
             <p className="text-xs text-muted-foreground mt-1 uppercase font-bold tracking-wider">{t("reports.builder.subtitle")}</p>
           </div>
         </div>
@@ -522,7 +522,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           onClick={onClose}
           variant="ghost"
           size="icon"
-          className="rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+          className="shrink-0 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
           type="button"
         >
           <X className="w-5 h-5" />
@@ -701,15 +701,15 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           
           {/* Selected Columns Sort Row */}
           <div className="space-y-2">
-            <div className="flex justify-between items-center ms-1">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">
+            <div className="flex flex-wrap items-center justify-between gap-2 ms-1">
+              <label className="min-w-0 text-xs font-bold text-muted-foreground uppercase tracking-widest block">
                 {t("reports.builder.selectedColumns", { count: selectedFields.length })}
               </label>
               {selectedFields.length > 0 && (
                 <Button
                   onClick={() => setSelectedFields([])}
                   variant="link"
-                  className="min-h-11 text-xs font-bold uppercase tracking-wider text-destructive hover:text-destructive/80 transition-colors flex items-center gap-1 cursor-pointer px-2 hover:no-underline"
+                  className="min-h-11 shrink-0 text-xs font-bold uppercase tracking-wider text-destructive hover:text-destructive/80 transition-colors flex items-center gap-1 cursor-pointer px-2 hover:no-underline"
                   type="button"
                 >
                   <Trash2 className="w-3.5 h-3.5" /> {t("reports.builder.clearColumns")}

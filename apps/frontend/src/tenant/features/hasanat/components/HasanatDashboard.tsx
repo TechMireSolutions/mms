@@ -161,9 +161,9 @@ export function HasanatDashboard({
         transition={{ delay: 0.4, duration: 0.4 }}
       >
         <Card accentColor="success" className="p-5 shadow-sm hover:shadow-md border-border/80">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-foreground m-0">{t("hasanat.dashboard.overallStockUsage")}</h3>
-            <span className="text-sm font-bold text-foreground">
+          <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
+            <h3 className="m-0 min-w-0 truncate text-sm font-bold text-foreground">{t("hasanat.dashboard.overallStockUsage")}</h3>
+            <span className="shrink-0 text-sm font-bold text-foreground">
               {t("hasanat.dashboard.stockUsagePct", { count: usedPct })}
             </span>
           </div>

@@ -1101,15 +1101,15 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
   return (
     <div className="space-y-3 w-full">
       {/* Configuration Header Bar */}
-      <div className="flex justify-between items-center text-xs">
-        <span className="font-bold text-muted-foreground uppercase tracking-widest leading-none">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+        <span className="min-w-0 truncate font-bold text-muted-foreground uppercase tracking-widest leading-none">
           {t("reports.kpiSectionTitle", { module: moduleLabel })}
         </span>
         <Button
           type="button"
           variant="outline"
           onClick={() => setIsConfigOpen(!isConfigOpen)}
-          className="min-h-11 flex items-center gap-1.5 px-2.5 rounded-lg border border-border bg-card/60 backdrop-blur-md hover:bg-card hover:text-primary text-muted-foreground font-semibold shadow-sm"
+          className="min-h-11 flex shrink-0 items-center gap-1.5 px-2.5 rounded-lg border border-border bg-card/60 backdrop-blur-md hover:bg-card hover:text-primary text-muted-foreground font-semibold shadow-sm"
         >
           <SlidersHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
           {t("reports.kpiCustomize")}

@@ -222,9 +222,9 @@ export function TimetableTab({ session, onUpdate, canWrite }: TimetableTabProps)
             if (entries.length === 0) return null;
             return (
               <section key={day} aria-label={t("sessions.timetable.daySchedule", { day: t(`sessions.timetable.day.${day}` as AppTranslationKey) })} className="rounded-xl border border-border bg-card overflow-hidden">
-                <header className="px-3 py-2.5 bg-muted/40 border-b border-border flex items-center justify-between">
-                  <h4 className="text-sm font-bold text-foreground m-0">{t(`sessions.timetable.day.${day}` as AppTranslationKey)}</h4>
-                  <span className="text-xs text-muted-foreground">{t("sessions.timetable.activityCount", { count: entries.length })}</span>
+                <header className="flex min-w-0 items-center justify-between gap-2 border-b border-border bg-muted/40 px-3 py-2.5">
+                  <h4 className="m-0 min-w-0 truncate text-sm font-bold text-foreground">{t(`sessions.timetable.day.${day}` as AppTranslationKey)}</h4>
+                  <span className="shrink-0 text-xs text-muted-foreground">{t("sessions.timetable.activityCount", { count: entries.length })}</span>
                 </header>
                 <div className="p-2.5 space-y-2">
                   <AnimatePresence>
