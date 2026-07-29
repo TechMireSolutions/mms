@@ -327,35 +327,42 @@ export function FormModal<K extends string = string>({
           className="flex flex-col md:flex-row gap-6 h-full items-stretch"
         >
           <TabsPrimitive.List
-            className="flex flex-row md:flex-col shrink-0 h-auto bg-muted/20 p-1 rounded-xl gap-1 border border-border overflow-x-auto md:overflow-x-visible md:border-e md:border-t-0 md:border-b-0 md:border-s-0 md:pe-4"
-            style={{ minWidth: "180px" }}
+            className="flex flex-row md:flex-col shrink-0 h-auto w-full md:w-auto md:min-w-[180px] bg-muted/20 p-1 rounded-xl gap-0.5 md:gap-1 border border-border overflow-x-auto md:overflow-x-visible md:border-e md:border-t-0 md:border-b-0 md:border-s-0 md:pe-4"
           >
             {tabs.map((tab) => {
               const active = activeTab === tab.key;
               const Icon = tab.icon;
+              const accessibleLabel =
+                tab.badge !== undefined ? `${tab.label} (${tab.badge})` : tab.label;
               return (
                 <button
                   type="button"
                   key={tab.key}
                   onClick={() => onTabChange(tab.key)}
+                  aria-label={accessibleLabel}
+                  title={tab.label}
                   aria-selected={active}
                   role="tab"
                   className={cn(
-                    "flex items-center gap-2 rounded-lg px-3.5 py-2.5 text-xs font-semibold transition-all whitespace-nowrap md:w-full justify-start cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                    "relative flex items-center justify-center md:justify-start gap-1.5 md:gap-2 rounded-lg px-2 py-2.5 md:px-3.5 text-xs font-semibold transition-all flex-1 md:flex-initial md:w-full min-h-11 md:min-h-0 md:whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
                     active
                       ? "bg-card text-foreground shadow-sm border border-border/80 font-bold"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )}
                 >
-                  {Icon && <Icon className="w-3.5 h-3.5 flex-shrink-0" />}
-                  <span>{tab.label}</span>
+                  {Icon && <Icon className="w-4 h-4 md:w-3.5 md:h-3.5 flex-shrink-0" aria-hidden />}
+                  <span className="hidden md:inline">{tab.label}</span>
                   {tab.badge !== undefined && (
-                    <span className={cn(
-                      "ms-auto inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-extrabold transition-colors",
-                      active
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
-                    )}>
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full text-[10px] font-extrabold transition-colors md:ms-auto md:min-w-0 md:h-auto md:px-1.5 md:py-0.5",
+                        "absolute top-1 end-1 md:static",
+                        active
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground",
+                      )}
+                    >
                       {tab.badge}
                     </span>
                   )}
