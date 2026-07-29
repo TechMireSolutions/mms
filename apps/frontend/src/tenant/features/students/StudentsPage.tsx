@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
+import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  UserPlus, GraduationCap, Filter, ChevronDown, Users, RotateCcw, Archive,
+  UserPlus, GraduationCap, Filter, ChevronDown, Users, RotateCcw,
 } from "lucide-react";
 import { notify } from "@/lib/notify";
 import {
@@ -19,6 +20,7 @@ import { SearchBar } from "@/components/ui/SearchBar";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { Button } from "@/components/ui/button";
+import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
 
@@ -90,24 +92,13 @@ export default function Students() {
   const [studentFilterGender, setStudentFilterGender] = useState("");
   const [editStudent, setEditStudent] = useState<Student | null>(null);
 
-  // Global Keyboard Shortcuts (Cmd+N to add student)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
-        return;
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "n") {
-        if (canWrite && !showDeleted) {
-          e.preventDefault();
-          setEditStudent(null);
-          setShowStudentForm(true);
-        }
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [canWrite, showDeleted]);
+  useModuleCreateHotkey({
+    enabled: canWrite && !showDeleted,
+    onCreate: () => {
+      setEditStudent(null);
+      setShowStudentForm(true);
+    },
+  });
 
   const useServerWork = activeTab === "work";
   const isListView = settings.defaultViewLayout === "list";
@@ -301,20 +292,17 @@ export default function Students() {
               </DropdownMenu>
 
               {canDelete && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setShowDeleted((previous) => !previous)}
-                  aria-pressed={showDeleted}
+                <ModuleTrashToggle
+                  showDeleted={showDeleted}
+                  onToggle={() => setShowDeleted((previous) => !previous)}
+                  showActiveLabel={t("students.showActive")}
+                  showDeletedLabel={t("students.showDeleted")}
                   className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
                     showDeleted
                       ? "border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10"
                       : "border-border bg-card text-muted-foreground hover:text-foreground"
                   }`}
-                >
-                  <Archive className="w-3.5 h-3.5" />
-                  <span>{showDeleted ? t("students.showActive") : t("students.showDeleted")}</span>
-                </Button>
+                />
               )}
 
               <ModuleColumnCustomizer

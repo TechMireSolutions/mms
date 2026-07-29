@@ -1,9 +1,8 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { Bookmark, Trash2, Play, Plus, Clock, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { saveCollection } from "@/lib/db";
-import { useLiveCollection } from "@/hooks/useLiveCollection";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
@@ -13,21 +12,16 @@ import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { notify } from "@/lib/notify";
-import { useAuth } from "@/lib/contexts/AuthContext";
-import { formatDate, todayISO, type AppTranslationKey } from "@mms/shared";
+import { formatDate, type AppTranslationKey } from "@mms/shared";
+import type {
+  LocalSavedReport,
+  LocalSavedReportCreateInput,
+  SavedReportsSource,
+} from "@/hooks/useSavedReportsSource";
 
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 
 const MotionCard = motion.create(Card);
-
-export interface SavedReportItem {
-  id: string;
-  name: string;
-  category: string;
-  filters: Record<string, unknown>;
-  lastRun: string;
-  createdBy: string;
-}
 
 const CATEGORY_BADGE_CLS: Record<string, string> = {
   financial:  SEMANTIC_BADGE.success,
@@ -42,6 +36,7 @@ const CATEGORY_BADGE_CLS: Record<string, string> = {
 
 interface SavedReportsProps {
   category: string;
+  source: SavedReportsSource<LocalSavedReport, LocalSavedReportCreateInput>;
   filters?: Record<string, unknown>;
   onApplyFilters?: (filters: Record<string, unknown>) => void;
 }
@@ -52,21 +47,25 @@ interface SavedReportsProps {
  */
 export default function SavedReports({
   category,
+  source,
   filters = {},
   onApplyFilters,
 }: SavedReportsProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const globalSettings = useGlobalSettings();
-  const allSaved = useLiveCollection<SavedReportItem>("reports_saved_reports", [], { serverSync: false });
+  const {
+    reports: saved,
+    isLoading,
+    isError,
+    retry,
+    createReport,
+    deleteReport,
+    runReport,
+  } = source;
 
   const [saveOpen, setSaveOpen] = useState(false);
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
-
-  const saved = useMemo(() => {
-    return allSaved.filter((report) => report.category === category);
-  }, [allSaved, category]);
 
   const handleSave = useCallback(async () => {
     const trimmedName = name.trim();
@@ -74,17 +73,10 @@ export default function SavedReports({
 
     setSaving(true);
     try {
-      const newReport: SavedReportItem = {
-        id: `rep-${Date.now()}`,
+      await createReport({
         name: trimmedName,
-        category,
         filters,
-        lastRun: todayISO(),
-        createdBy: user?.name || "System",
-      };
-
-      const updatedCollection = [...allSaved, newReport];
-      saveCollection("reports_saved_reports", updatedCollection);
+      });
       notify.success(t("contacts.savedReports.saveSuccess"));
       setName("");
       setSaveOpen(false);
@@ -93,42 +85,33 @@ export default function SavedReports({
     } finally {
       setSaving(false);
     }
-  }, [name, category, filters, allSaved, user?.name, t]);
+  }, [name, filters, createReport, t]);
 
   const handleRun = useCallback(
-    (report: SavedReportItem) => {
+    async (report: LocalSavedReport) => {
       if (!onApplyFilters) return;
 
       try {
+        await runReport(report.id);
         onApplyFilters(report.filters);
-
-        // Update last run time
-        const updated = allSaved.map((r) =>
-          r.id === report.id
-            ? { ...r, lastRun: todayISO() }
-            : r
-        );
-
-        saveCollection("reports_saved_reports", updated);
         notify.success(t("contacts.savedReports.runSuccess"));
       } catch {
         notify.error(t("contacts.savedReports.staleWarningTitle"));
       }
     },
-    [onApplyFilters, allSaved, t]
+    [onApplyFilters, runReport, t]
   );
 
   const handleDelete = useCallback(
-    (id: string) => {
+    async (id: string) => {
       try {
-        const filtered = allSaved.filter((report) => report.id !== id);
-        saveCollection("reports_saved_reports", filtered);
+        await deleteReport(id);
         notify.info(t("contacts.savedReports.deleteSuccess"));
       } catch {
         notify.error(t("contacts.savedReports.delete"));
       }
     },
-    [allSaved, t]
+    [deleteReport, t]
   );
 
   const formatLastRunTime = useCallback(
@@ -158,7 +141,16 @@ export default function SavedReports({
         )}
       </div>
 
-      {saved.length === 0 ? (
+      {isError ? (
+        <ErrorState
+          title={t("errors.state.generic")}
+          description={t("common.retry")}
+          onRetry={retry}
+          compact
+        />
+      ) : isLoading ? (
+        <p className="text-xs text-muted-foreground">{t("common.loading")}</p>
+      ) : saved.length === 0 ? (
         <EmptyState
           icon={Bookmark}
           title={t("reports.saved.emptyTitle")}
@@ -196,17 +188,19 @@ export default function SavedReports({
                     <Clock className="w-3 h-3" />
                     {formatLastRunTime(report.lastRun)}
                   </span>
-                  <span className="flex items-center gap-1">
-                    <User className="w-3 h-3" />
-                    {report.createdBy}
-                  </span>
+                  {report.createdBy && (
+                    <span className="flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      {report.createdBy}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 pt-1 border-t border-border">
                   {onApplyFilters && (
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleRun(report)}
+                      onClick={() => void handleRun(report)}
                       className="px-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10 gap-1 cursor-pointer"
                       type="button"
                     >
@@ -216,7 +210,7 @@ export default function SavedReports({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDelete(report.id)}
+                    onClick={() => void handleDelete(report.id)}
                     className="px-2 text-xs font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1 ms-auto cursor-pointer"
                     type="button"
                   >

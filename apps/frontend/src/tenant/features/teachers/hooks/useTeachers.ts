@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import type { Teacher, TeachersCommandMetricsSnapshot, TeachersListPageResult, TeachersWidgetAggregateResult } from '@mms/shared';
+import type { Teacher, TeacherRecord, TeachersCommandMetricsSnapshot, TeachersListPageResult, TeachersWidgetAggregateResult } from '@mms/shared';
 import { normalizeStoredTeacher, TEACHERS_MODULE_MANIFEST, teachersWidgetQueryFromWidget } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -74,11 +74,6 @@ export async function fetchAllTeachersForQuery(
   }
 
   return all;
-}
-
-export interface TeacherRecord {
-  id: string | number;
-  [key: string]: unknown;
 }
 
 export function useTeacherMutations() {

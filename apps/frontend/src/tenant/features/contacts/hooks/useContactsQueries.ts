@@ -46,4 +46,6 @@ export {
   useContactColumnPrefsMutation,
   useContactsSavedReports,
   useContactsSavedReportMutations,
+  useContactsSavedReportsSource,
+  type ContactsSavedReportCreateInput,
 } from '@/tenant/features/contacts/hooks/useContactPrefsQueries';

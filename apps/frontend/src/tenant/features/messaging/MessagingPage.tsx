@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Mail, MessageCircle, MessageSquare, Send } from 'lucide-react';
 import {
   mergeMessageTemplates,
@@ -13,6 +13,7 @@ import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGr
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { useMessageComposerState } from '@/hooks/useMessageComposerState';
+import { useModuleCreateHotkey } from '@/hooks/useModuleCreateHotkey';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
@@ -71,17 +72,10 @@ export default function MessagingPage(): React.JSX.Element {
     else notify.info(t('messaging.selectRecipientsDesc'));
   }, [selectedList.length, setActiveTab, t, triggerCompose]);
 
-  useEffect(() => {
-    if (!canWrite) return;
-    const handleKeyDown = (event: KeyboardEvent): void => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'n') {
-        event.preventDefault();
-        startCampaign();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canWrite, startCampaign]);
+  useModuleCreateHotkey({
+    enabled: canWrite,
+    onCreate: startCampaign,
+  });
 
   const resend = (log: Message, recipient: MessagingRecipient): void => {
     triggerCompose(log.channel, [recipient], log.body, log.subject);

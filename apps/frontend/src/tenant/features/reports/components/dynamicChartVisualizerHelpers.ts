@@ -1,0 +1,112 @@
+import type { AggregatedItem, ChartOperation, FilterRule } from './dynamicChartVisualizerTypes';
+
+export function isDateDimensionField(fieldName: string): boolean {
+  return /date|time|created|updated|issued|registered/i.test(fieldName);
+}
+
+export function matchesFilterRule(
+  row: Record<string, unknown>,
+  rule: FilterRule,
+): boolean {
+  if (!rule.field || !rule.value) return true;
+  const fieldValue = row[rule.field];
+  if (fieldValue === undefined || fieldValue === null) return false;
+
+  const stringValue = String(fieldValue).toLowerCase();
+  const ruleValue = String(rule.value).toLowerCase();
+
+  switch (rule.operator) {
+    case 'equals':
+      return stringValue === ruleValue;
+    case 'contains':
+      return stringValue.includes(ruleValue);
+    case 'startsWith':
+      return stringValue.startsWith(ruleValue);
+    case 'gt':
+      return Number(fieldValue) > Number(rule.value);
+    case 'lt':
+      return Number(fieldValue) < Number(rule.value);
+    default:
+      return true;
+  }
+}
+
+export function sortAndCapAggregatedItems(
+  aggregatedRows: AggregatedItem[],
+  xAxisField: string,
+  operation: ChartOperation,
+): AggregatedItem[] {
+  if (isDateDimensionField(xAxisField)) {
+    const sortedRows = [...aggregatedRows].sort((firstItem, secondItem) => {
+      const timeA = new Date(firstItem.name).getTime();
+      const timeB = new Date(secondItem.name).getTime();
+      if (Number.isNaN(timeA) || Number.isNaN(timeB)) {
+        return firstItem.name.localeCompare(secondItem.name);
+      }
+      return timeA - timeB;
+    });
+    return sortedRows.length > 20 ? sortedRows.slice(-20) : sortedRows;
+  }
+
+  const sortedRows = [...aggregatedRows].sort((firstItem, secondItem) => secondItem.value - firstItem.value);
+  if (sortedRows.length <= 10) return sortedRows;
+
+  const topRows = sortedRows.slice(0, 9);
+  const remainingRows = sortedRows.slice(9);
+  const othersCount = remainingRows.reduce((sum, remainingRow) => sum + remainingRow.count, 0);
+
+  let finalOthersValue = remainingRows.reduce((sum, remainingRow) => sum + remainingRow.value, 0);
+  if (operation === 'avg') {
+    const totalCount = remainingRows.reduce((sum, remainingRow) => sum + remainingRow.count, 0);
+    if (totalCount > 0) {
+      const weightedSum = remainingRows.reduce(
+        (sum, remainingRow) => sum + (remainingRow.value * remainingRow.count),
+        0,
+      );
+      finalOthersValue = Math.round(weightedSum / totalCount);
+    }
+  } else if (operation === 'min') {
+    finalOthersValue = Math.min(...remainingRows.map((remainingRow) => remainingRow.value));
+  } else if (operation === 'max') {
+    finalOthersValue = Math.max(...remainingRows.map((remainingRow) => remainingRow.value));
+  }
+
+  return [
+    ...topRows,
+    {
+      name: `Others (${remainingRows.length} fields)`,
+      value: finalOthersValue,
+      count: othersCount,
+    },
+  ];
+}
+
+export function resolveWidgetPinColor(activePalette: string): string {
+  if (activePalette === 'emeraldForest' || activePalette.startsWith('tol')) return 'emerald';
+  if (activePalette === 'oceanBreeze' || activePalette === 'accessibleColorblind') return 'blue';
+  if (activePalette === 'cosmicViolet') return 'violet';
+  return 'amber';
+}
+
+export function getPdfPageDimensions(
+  pdfFormat: string,
+  pdfOrientation: 'p' | 'l',
+): { formatWidth: number; formatHeight: number } {
+  let formatWidth = 210;
+  let formatHeight = 297;
+  if (pdfFormat === 'a3') {
+    formatWidth = 297;
+    formatHeight = 420;
+  } else if (pdfFormat === 'legal') {
+    formatWidth = 215.9;
+    formatHeight = 355.6;
+  } else if (pdfFormat === 'letter') {
+    formatWidth = 215.9;
+    formatHeight = 279.4;
+  }
+
+  if (pdfOrientation === 'l') {
+    return { formatWidth: formatHeight, formatHeight: formatWidth };
+  }
+  return { formatWidth, formatHeight };
+}

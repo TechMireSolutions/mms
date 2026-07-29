@@ -12,15 +12,25 @@ import {
   CONTACT_COLUMN_PREFERENCES_QUERY_KEY,
   CONTACTS_SAVED_REPORTS_QUERY_KEY,
 } from '@/tenant/features/contacts/hooks/contactsQueryKeys';
+import type { SavedReportsSource } from '@/hooks/useSavedReportsSource';
+
+export interface ContactsSavedReportCreateInput {
+  name: string;
+  drillDown: ContactsWorkDrillDown;
+  shareScope?: ContactsSavedReportShareScope;
+  sharedWithRoles?: string[];
+  sharedWithUserIds?: string[];
+}
 
 export function useContactColumnPrefs(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
   return useQuery({
     queryKey: CONTACT_COLUMN_PREFERENCES_QUERY_KEY,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const preferencesResponse = await apiJson<{ preferences: ContactColumnPreference[] }>(
         `${CONTACTS_API}/column-preferences`,
+        { signal },
       );
       return preferencesResponse.preferences ?? [];
     },
@@ -66,8 +76,11 @@ export function useContactsSavedReports() {
   const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: CONTACTS_SAVED_REPORTS_QUERY_KEY,
-    queryFn: async () => {
-      const reportsResponse = await apiJson<{ reports: ContactsSavedReport[] }>(`${CONTACTS_API}/saved-reports`);
+    queryFn: async ({ signal }) => {
+      const reportsResponse = await apiJson<{ reports: ContactsSavedReport[] }>(
+        `${CONTACTS_API}/saved-reports`,
+        { signal },
+      );
       return reportsResponse.reports;
     },
     enabled: isAuthenticated,
@@ -83,13 +96,7 @@ export function useContactsSavedReportMutations() {
   };
 
   const createSavedReport = useMutation({
-    mutationFn: async (payload: {
-      name: string;
-      drillDown: ContactsWorkDrillDown;
-      shareScope?: ContactsSavedReportShareScope;
-      sharedWithRoles?: string[];
-      sharedWithUserIds?: string[];
-    }) =>
+    mutationFn: async (payload: ContactsSavedReportCreateInput) =>
       apiJson<{ report: ContactsSavedReport }>(`${CONTACTS_API}/saved-reports`, {
         method: 'POST',
         body: JSON.stringify(payload),
@@ -113,4 +120,30 @@ export function useContactsSavedReportMutations() {
   });
 
   return { createSavedReport, deleteSavedReport, runSavedReport };
+}
+
+export function useContactsSavedReportsSource(): SavedReportsSource<
+  ContactsSavedReport,
+  ContactsSavedReportCreateInput
+> {
+  const reportsQuery = useContactsSavedReports();
+  const { createSavedReport, deleteSavedReport, runSavedReport } = useContactsSavedReportMutations();
+
+  return {
+    reports: reportsQuery.data ?? [],
+    isLoading: reportsQuery.isLoading,
+    isError: reportsQuery.isError,
+    retry: () => {
+      void reportsQuery.refetch();
+    },
+    createReport: async (input) => {
+      await createSavedReport.mutateAsync(input);
+    },
+    deleteReport: async (id) => {
+      await deleteSavedReport.mutateAsync(id);
+    },
+    runReport: async (id) => {
+      await runSavedReport.mutateAsync(id);
+    },
+  };
 }

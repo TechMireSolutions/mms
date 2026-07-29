@@ -1,11 +1,12 @@
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import { useModuleCreateHotkey } from '@/hooks/useModuleCreateHotkey';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Library, ClipboardList, FileText, Plus, Archive } from 'lucide-react';
+import { Library, ClipboardList, FileText, Plus } from 'lucide-react';
 import {
   QUESTION_BANK_MODULE_MANIFEST,
   resolveModuleTierTab,
@@ -19,6 +20,7 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { Button } from '@/components/ui/button';
+import { ModuleTrashToggle } from '@/components/ui/ModuleTrashToggle';
 import { FormModal, type FormModalTab } from '@/components/ui/FormModal';
 import { QuestionBank as QuestionsPanel } from "@/tenant/features/question-bank/components/QuestionBank";
 import { QuestionForm } from "@/tenant/features/question-bank/components/QuestionForm";
@@ -224,22 +226,13 @@ export default function QuestionBankPage(): React.JSX.Element {
     setFilteredCount(questions.length);
   }, [effectiveTab, effectiveSubTab, questions.length]);
 
-  useEffect(() => {
-    if (!canWrite || showDeleted) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'n') {
-        const target = event.target as HTMLElement | null;
-        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
-          return;
-        }
-        if (effectiveTab !== 'work' || effectiveSubTab !== 'questions') return;
-        event.preventDefault();
-        openAddQuestion();
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [canWrite, showDeleted, effectiveTab, effectiveSubTab, openAddQuestion]);
+  useModuleCreateHotkey({
+    enabled: canWrite
+      && !showDeleted
+      && effectiveTab === 'work'
+      && effectiveSubTab === 'questions',
+    onCreate: openAddQuestion,
+  });
 
   return (
     <ModulePageShell
@@ -283,16 +276,13 @@ export default function QuestionBankPage(): React.JSX.Element {
               }}
             />
             {effectiveSubTab === 'questions' && canDelete && (
-              <Button
-                type="button"
-                variant={showDeleted ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setShowDeleted((prev) => !prev)}
+              <ModuleTrashToggle
+                showDeleted={showDeleted}
+                onToggle={() => setShowDeleted((prev) => !prev)}
+                showActiveLabel={t('questionBank.trash.showActive')}
+                showDeletedLabel={t('questionBank.trash.showDeleted')}
                 className="gap-1.5 shrink-0"
-              >
-                <Archive className="h-3.5 w-3.5" aria-hidden="true" />
-                {showDeleted ? t('questionBank.trash.showActive') : t('questionBank.trash.showDeleted')}
-              </Button>
+              />
             )}
           </div>
         )}

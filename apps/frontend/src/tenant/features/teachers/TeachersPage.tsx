@@ -1,10 +1,11 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
+import { useModuleCreateHotkey } from '@/hooks/useModuleCreateHotkey';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserPlus, School, Filter, ChevronDown, Archive } from 'lucide-react';
+import { UserPlus, School, Filter, ChevronDown } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -16,17 +17,18 @@ import { SearchBar } from '@/components/ui/SearchBar';
 import { FilterChips } from '@/components/ui/FilterChips';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { Button } from '@/components/ui/button';
+import { ModuleTrashToggle } from '@/components/ui/ModuleTrashToggle';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { TeacherList, type TeacherSortField } from "@/tenant/features/teachers/components/TeacherList";
 import { TeacherForm } from "@/tenant/features/teachers/components/TeacherForm";
 import { TeachersSettings as TeachersSettingsPanel } from "@/tenant/features/teachers/components/TeachersSettings";
 import type { Teacher } from '@/lib/data/teachersData';
-import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES, TEACHERS_MODULE_MANIFEST, type AppTranslationKey, toTitleCase } from '@mms/shared';
+import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES, TEACHERS_MODULE_MANIFEST, type AppTranslationKey, type TeacherRecord, toMessagingRecipient, toTitleCase } from '@mms/shared';
 import ModuleReports from '@/tenant/features/reports/components/ModuleReports';
 import KPISummary from '@/tenant/features/reports/components/KPISummary';
 import { useTeacherCount } from '@/tenant/features/teachers/hooks/useTeacherCount';
-import { useTeachersPaginated, useTeacherMutations, type TeacherRecord } from '@/tenant/features/teachers/hooks/useTeachers';
+import { useTeachersPaginated, useTeacherMutations } from '@/tenant/features/teachers/hooks/useTeachers';
 import { useTeacherColumnLayout } from '@/tenant/features/teachers/hooks/useTeacherColumnLayout';
 import { ModuleColumnCustomizer } from '@/components/ui/ModuleColumnCustomizer';
 import { TeachersCommandMetrics } from "@/tenant/features/teachers/components/TeachersCommandMetrics";
@@ -97,33 +99,18 @@ export default function Teachers(): React.JSX.Element {
   const [filterSpecialization, setFilterSpecialization] = useState('');
   const [editTeacher, setEditTeacher] = useState<Teacher | null>(null);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-        return;
-      }
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'n') {
-        if (canWrite && !showDeleted) {
-          event.preventDefault();
-          setEditTeacher(null);
-          setShowForm(true);
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canWrite, showDeleted]);
+  useModuleCreateHotkey({
+    enabled: canWrite && !showDeleted,
+    onCreate: () => {
+      setEditTeacher(null);
+      setShowForm(true);
+    },
+  });
 
   const { messagingTarget, openComposer, closeComposer, canWriteMessaging } = useMessageComposerState();
 
   const toTeacherRecipients = (teachersList: Teacher[]) =>
-    teachersList.map((tr) => ({
-      id: tr.id,
-      name: tr.name || '',
-      phone: tr.phone || '',
-      email: tr.email || '',
-    }));
+    teachersList.map((teacher) => toMessagingRecipient(teacher));
 
   const handleWhatsApp = (teachersList: Teacher[]) => {
     if (!canWriteMessaging) return;
@@ -403,20 +390,17 @@ export default function Teachers(): React.JSX.Element {
                 />
 
                 {canDelete && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setShowDeleted((previous) => !previous)}
-                    aria-pressed={showDeleted}
+                  <ModuleTrashToggle
+                    showDeleted={showDeleted}
+                    onToggle={() => setShowDeleted((previous) => !previous)}
+                    showActiveLabel={t('teachers.showActive')}
+                    showDeletedLabel={t('teachers.showDeleted')}
                     className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
                       showDeleted
                         ? 'border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10'
                         : 'border-border bg-card text-muted-foreground hover:text-foreground'
                     }`}
-                  >
-                    <Archive className="w-3.5 h-3.5" />
-                    <span>{showDeleted ? t('teachers.showActive') : t('teachers.showDeleted')}</span>
-                  </Button>
+                  />
                 )}
               </div>
 

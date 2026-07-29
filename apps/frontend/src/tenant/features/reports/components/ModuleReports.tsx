@@ -25,10 +25,14 @@ import SessionReport from "@/tenant/features/reports/components/SessionReport";
 import FacultyReport from "@/tenant/features/reports/components/FacultyReport";
 import QuestionBankReport from "@/tenant/features/reports/components/QuestionBankReport";
 import SavedReports from "@/tenant/features/reports/components/SavedReports";
+import ContactsSavedReports from "@/tenant/features/reports/components/ContactsSavedReports";
 import { VisualizerConfig } from "@/tenant/features/reports/components/reportMetadata";
+import { useLocalSavedReportsSource } from "@/hooks/useSavedReportsSource";
+
+type ModuleReportCategory = "students" | "teachers" | "contacts" | "attendance" | "financial" | "academic" | "examinations" | "questionBank" | "hasanat" | "sessions" | "faculty" | "saved";
 
 interface ModuleReportsProps {
-  category: "students" | "teachers" | "contacts" | "attendance" | "financial" | "academic" | "examinations" | "questionBank" | "hasanat" | "sessions" | "faculty" | "saved";
+  category: ModuleReportCategory;
 }
 
 const DEFAULT_FILTERS = {
@@ -39,6 +43,26 @@ const DEFAULT_FILTERS = {
   dateTo:  "",
   student: "",
 };
+
+function LocalSavedReportsPanel({
+  category,
+  filters,
+  onApplyFilters,
+}: {
+  category: Exclude<ModuleReportCategory, "contacts">;
+  filters: Record<string, unknown>;
+  onApplyFilters: (filters: Record<string, unknown>) => void;
+}): React.JSX.Element {
+  const source = useLocalSavedReportsSource(category);
+  return (
+    <SavedReports
+      category={category}
+      source={source}
+      filters={filters}
+      onApplyFilters={onApplyFilters}
+    />
+  );
+}
 
 /**
  * Reusable reporting view for specific modules.
@@ -178,14 +202,18 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
         {activeTab === "saved" && (
           <motion.div key="saved" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
              <div className="pb-4">
-                <SavedReports
-                  category={category}
-                  filters={filters}
-                  onApplyFilters={(appliedFilters) => {
-                    setFilters(appliedFilters as typeof DEFAULT_FILTERS);
-                    setActiveTab("dashboard");
-                  }}
-                />
+                {category === "contacts" ? (
+                  <ContactsSavedReports />
+                ) : (
+                  <LocalSavedReportsPanel
+                    category={category}
+                    filters={filters}
+                    onApplyFilters={(appliedFilters) => {
+                      setFilters(appliedFilters as typeof DEFAULT_FILTERS);
+                      setActiveTab("dashboard");
+                    }}
+                  />
+                )}
              </div>
           </motion.div>
         )}

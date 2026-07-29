@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
+import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, FileText, PenTool, Layers, Archive, Plus } from "lucide-react";
+import { BookOpen, FileText, PenTool, Layers, Plus } from "lucide-react";
 import { EXAMINATIONS_MODULE_MANIFEST, resolveModuleTierTab, type AppTranslationKey } from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
@@ -13,7 +14,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { FormModal } from "@/components/ui/FormModal";
 import { ActionButton } from "@/components/ui/ActionButton";
-import { Button } from "@/components/ui/button";
+import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import ExamsList from "@/tenant/features/examinations/components/ExamsList";
 import ExamForm from "@/tenant/features/examinations/components/ExamForm";
 import { EnterMarks } from "@/tenant/features/examinations/components/EnterMarks";
@@ -201,22 +202,14 @@ export default function Examinations(): React.JSX.Element {
     setFilteredCount(exams.length);
   }, [effectiveSubTab, exams.length]);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n" && canWrite && !showDeleted) {
-        const target = event.target as HTMLElement | null;
-        if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
-          return;
-        }
-        event.preventDefault();
-        setActiveTab("work");
-        setActiveSubTab("exams");
-        setCreateExamKey((key) => key + 1);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [canWrite, setActiveTab, showDeleted]);
+  useModuleCreateHotkey({
+    enabled: canWrite && !showDeleted,
+    onCreate: () => {
+      setActiveTab("work");
+      setActiveSubTab("exams");
+      setCreateExamKey((key) => key + 1);
+    },
+  });
 
   const listLoadFailed = examsResult.queryResult.isError;
 
@@ -276,16 +269,13 @@ export default function Examinations(): React.JSX.Element {
               }}
             />
             {effectiveSubTab === "exams" && canDelete && (
-              <Button
-                type="button"
-                variant={showDeleted ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowDeleted((prev) => !prev)}
+              <ModuleTrashToggle
+                showDeleted={showDeleted}
+                onToggle={() => setShowDeleted((prev) => !prev)}
+                showActiveLabel={t("examinations.trash.showActive")}
+                showDeletedLabel={t("examinations.trash.showDeleted")}
                 className="gap-1.5 shrink-0"
-              >
-                <Archive className="w-3.5 h-3.5" aria-hidden="true" />
-                {showDeleted ? t("examinations.trash.showActive") : t("examinations.trash.showDeleted")}
-              </Button>
+              />
             )}
           </div>
         )}

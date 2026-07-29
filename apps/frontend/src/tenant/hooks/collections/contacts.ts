@@ -20,6 +20,7 @@ export {
   useContactsDuplicatePairs,
   useContactsSavedReports,
   useContactsSavedReportMutations,
+  useContactsSavedReportsSource,
   useContactColumnPrefs,
   useContactColumnPrefsMutation,
   contactDetailQueryKey,
@@ -28,5 +29,6 @@ export {
   type ContactsReportAnalyticsParams,
   type ContactsReportAnalyticsResult,
   type ContactsWidgetAggregateWidgetInput,
+  type ContactsSavedReportCreateInput,
   type UseContactsCollectionResult,
 } from '@/tenant/features/contacts/hooks/useContacts';

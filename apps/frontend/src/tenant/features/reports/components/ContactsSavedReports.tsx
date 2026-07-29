@@ -1,7 +1,11 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Bookmark, Trash2, Play, Plus, Clock, User, AlertTriangle, Users } from "lucide-react";
 import type { ContactsSavedReport, ContactsSavedReportShareScope, ContactsWorkDrillDown } from "@mms/shared";
-import { formatDate, validateContactsSavedReportDrillDown } from "@mms/shared";
+import {
+  canDeleteContactsSavedReport,
+  formatDate,
+  validateContactsSavedReportDrillDown,
+} from "@mms/shared";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
@@ -13,14 +17,12 @@ import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useIsAdminViewer } from "@/tenant/hooks/useViewerRole";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
-import {
-  useContactsSavedReportMutations,
-  useContactsSavedReports,
-} from "@/tenant/hooks/collections/contacts";
+import { useContactsSavedReportsSource } from "@/tenant/hooks/collections/contacts";
 import { applyContactsWorkDrillDown } from "@/lib/contacts/contactsWorkDrillDown";
 import { notify } from "@/lib/notify";
 import { useUsersCollection } from "@/tenant/hooks/collections/users";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 interface ContactsSavedReportsProps {
   suggestedDrillDown?: ContactsWorkDrillDown;
@@ -96,8 +98,15 @@ export default function ContactsSavedReports({
   const { role } = usePermissions();
   const isAdmin = useIsAdminViewer();
   const { genders } = useContactConfig();
-  const { data: reports = [], isLoading } = useContactsSavedReports();
-  const { createSavedReport, deleteSavedReport, runSavedReport } = useContactsSavedReportMutations();
+  const {
+    reports,
+    isLoading,
+    isError,
+    retry,
+    createReport,
+    deleteReport,
+    runReport,
+  } = useContactsSavedReportsSource();
 
   const [saveOpen, setSaveOpen] = useState(false);
   const [name, setName] = useState("");
@@ -134,7 +143,7 @@ export default function ContactsSavedReports({
     };
     setSaving(true);
     try {
-      await createSavedReport.mutateAsync({
+      await createReport({
         name: trimmedName,
         drillDown,
         shareScope,
@@ -148,7 +157,7 @@ export default function ContactsSavedReports({
     } finally {
       setSaving(false);
     }
-  }, [name, search, shareScope, sharedWithUserIds, role, createSavedReport, t]);
+  }, [name, search, shareScope, sharedWithUserIds, role, createReport, t]);
 
   const handleRun = useCallback(
     async (report: ContactsSavedReport) => {
@@ -163,26 +172,26 @@ export default function ContactsSavedReports({
         });
       }
       try {
-        await runSavedReport.mutateAsync(report.id);
+        await runReport(report.id);
         applyContactsWorkDrillDown(report.drillDown);
         notify.info(t("contacts.savedReports.runSuccess"), { description: report.name });
       } catch {
         notify.error(t("settings.serverSaveFailed"));
       }
     },
-    [runSavedReport, t, genders],
+    [runReport, t, genders],
   );
 
   const handleDelete = useCallback(
     async (id: string) => {
       try {
-        await deleteSavedReport.mutateAsync(id);
+        await deleteReport(id);
         notify.info(t("contacts.savedReports.deleteSuccess"));
       } catch {
         notify.error(t("settings.serverSaveFailed"));
       }
     },
-    [deleteSavedReport, t],
+    [deleteReport, t],
   );
 
   const formatLastRun = useMemo(
@@ -219,7 +228,14 @@ export default function ContactsSavedReports({
         )}
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <ErrorState
+          title={t("errors.state.generic")}
+          description={t("common.retry")}
+          onRetry={retry}
+          compact
+        />
+      ) : isLoading ? (
         <p className="text-xs text-muted-foreground">{t("common.loading")}</p>
       ) : reports.length === 0 ? (
         <EmptyState
@@ -233,6 +249,14 @@ export default function ContactsSavedReports({
             const issues = validateContactsSavedReportDrillDown(savedReport.drillDown, {
               genders: genders,
             });
+            const canDelete = Boolean(
+              user &&
+              canDeleteContactsSavedReport(savedReport, {
+                id: String(user.id),
+                role: role ?? "",
+                isAdmin,
+              }),
+            );
             return (
               <div
                 key={savedReport.id}
@@ -281,15 +305,17 @@ export default function ContactsSavedReports({
                     <Play className="w-3 h-3" />
                     {t("contacts.savedReports.run")}
                   </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => void handleDelete(savedReport.id)}
-                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors ms-auto min-h-11 px-2 hover:bg-transparent shadow-none"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    {t("contacts.savedReports.delete")}
-                  </Button>
+                  {canDelete && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => void handleDelete(savedReport.id)}
+                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors ms-auto min-h-11 px-2 hover:bg-transparent shadow-none"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      {t("contacts.savedReports.delete")}
+                    </Button>
+                  )}
                 </div>
               </div>
             );

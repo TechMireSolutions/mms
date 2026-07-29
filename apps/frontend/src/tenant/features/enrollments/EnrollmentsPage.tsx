@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
+import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -96,23 +97,13 @@ export default function EnrollmentsPage() {
     }
   }, [canWriteEnrollments, activeSubTab]);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
-      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
-        return;
-      }
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n") {
-        if (canWriteEnrollments && !showDeleted) {
-          event.preventDefault();
-          setTab("work");
-          setShowWizard(true);
-        }
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [canWriteEnrollments, showDeleted, setTab]);
+  useModuleCreateHotkey({
+    enabled: canWriteEnrollments && !showDeleted,
+    onCreate: () => {
+      setTab("work");
+      setShowWizard(true);
+    },
+  });
 
   const handleComplete = async (enrollment: Enrollment) => {
     try {

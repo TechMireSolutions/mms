@@ -30,50 +30,28 @@ import { getBrandingChartPalette } from "@/lib/brandingChartPalette";
 
 import { getObject, saveObject } from "@/lib/db";
 import { useReportCollectionRows } from "@/lib/reports/useReportCollections";
-import { METADATA_FIELDS, VisualizerConfig, type ReportCollection, getFieldLabel, getCollectionLabel } from "@/tenant/features/reports/components/reportMetadata";
+import { METADATA_FIELDS, VisualizerConfig, getFieldLabel, getCollectionLabel } from "@/tenant/features/reports/components/reportMetadata";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-
-interface CollectionMeta {
-  name: string;
-  dbKey: string;
-  defaultData: readonly unknown[];
-  fields: readonly { readonly value: string; readonly label: string; readonly isNumeric?: boolean }[];
-  numericFields: readonly { readonly value: string; readonly label: string }[];
-}
+import type {
+  AggregatedItem,
+  ChartOperation,
+  ChartType,
+  CollectionMeta,
+  CustomWidget,
+  FilterRule,
+} from "@/tenant/features/reports/components/dynamicChartVisualizerTypes";
+import {
+  getPdfPageDimensions,
+  isDateDimensionField,
+  matchesFilterRule,
+  resolveWidgetPinColor,
+  sortAndCapAggregatedItems,
+} from "@/tenant/features/reports/components/dynamicChartVisualizerHelpers";
 
 const METADATA_CONFIGS: Record<string, CollectionMeta> = METADATA_FIELDS as unknown as Record<string, CollectionMeta>;
-
-interface FilterRule {
-  id: string;
-  field: string;
-  operator: "equals" | "contains" | "gt" | "lt" | "startsWith";
-  value: string;
-}
-
-interface CustomWidget {
-  id: string;
-  title: string;
-  category: string;
-  collection: ReportCollection;
-  chartType: "bar" | "line" | "area" | "pie" | "radar";
-  xAxisField: string;
-  operation: "count" | "sum" | "avg";
-  targetField?: string;
-  filterField?: string;
-  filterOperator: "equals" | "contains" | "gt" | "lt";
-  filterValue?: string;
-  color: string;
-  isPinnedToDashboard: boolean;
-}
-
-interface AggregatedItem {
-  name: string;
-  value: number;
-  count: number;
-}
 
 interface DynamicChartVisualizerProps {
   initialConfig?: VisualizerConfig;
@@ -98,9 +76,9 @@ export default function DynamicChartVisualizer({
   // Builder config states
   const [title, setTitle] = useState(() => initialConfig?.title || t("reports.visualizer.defaultTitle"));
   const [collectionKey, setCollectionKey] = useState<keyof typeof METADATA_CONFIGS>(initialConfig?.collection || "students");
-  const [chartType, setChartType] = useState<"bar" | "line" | "area" | "pie" | "radar">(initialConfig?.chartType || "bar");
+  const [chartType, setChartType] = useState<ChartType>(initialConfig?.chartType || "bar");
   const [xAxisField, setXAxisField] = useState(initialConfig?.xAxisField || "status");
-  const [operation, setOperation] = useState<"count" | "sum" | "avg" | "min" | "max">(initialConfig?.operation || "count");
+  const [operation, setOperation] = useState<ChartOperation>(initialConfig?.operation || "count");
   const [targetField, setTargetField] = useState(initialConfig?.targetField || "");
   const [activePalette, setActivePalette] = useState(initialConfig?.activePalette || DEFAULT_CHART_PALETTE_ID);
   
@@ -163,8 +141,7 @@ export default function DynamicChartVisualizer({
         const defaultField = meta.fields[0].value;
         setXAxisField(defaultField);
         // Auto-mapping check
-        const isDateField = /date|time|created|updated|issued|registered/i.test(defaultField);
-        setChartType(isDateField ? "line" : "bar");
+        setChartType(isDateDimensionField(defaultField) ? "line" : "bar");
       }
       if (meta.numericFields[0]) {
         setTargetField(meta.numericFields[0].value);
@@ -182,8 +159,7 @@ export default function DynamicChartVisualizer({
       isInitialMount.current = false;
       return;
     }
-    const isDateField = /date|time|created|updated|issued|registered/i.test(xAxisField);
-    setChartType(isDateField ? "line" : "bar");
+    setChartType(isDateDimensionField(xAxisField) ? "line" : "bar");
   }, [xAxisField]);
 
   // Adjust operation if numeric fields are missing
@@ -200,29 +176,7 @@ export default function DynamicChartVisualizer({
     // 1. Apply multiple filters
     const filteredRows = collectionRows.filter((collectionRow) => {
       if (!collectionRow) return false;
-      return filters.every((rule) => {
-        if (!rule.field || !rule.value) return true;
-        const fieldValue = collectionRow[rule.field];
-        if (fieldValue === undefined || fieldValue === null) return false;
-        
-        const stringValue = String(fieldValue).toLowerCase();
-        const ruleValue = String(rule.value).toLowerCase();
-
-        switch (rule.operator) {
-          case "equals":
-            return stringValue === ruleValue;
-          case "contains":
-            return stringValue.includes(ruleValue);
-          case "startsWith":
-            return stringValue.startsWith(ruleValue);
-          case "gt":
-            return Number(fieldValue) > Number(rule.value);
-          case "lt":
-            return Number(fieldValue) < Number(rule.value);
-          default:
-            return true;
-        }
-      });
+      return filters.every((rule) => matchesFilterRule(collectionRow, rule));
     });
 
     // 2. Group records by xAxisField dimension
@@ -289,57 +243,7 @@ export default function DynamicChartVisualizer({
       };
     });
 
-    // 4. Clutter Control: Smart sorting & grouping
-    const isDateField = /date|time|created|updated|issued|registered/i.test(xAxisField);
-    if (isDateField) {
-      // Sort chronologically
-      const sortedRows = aggregatedRows.sort((firstItem, secondItem) => {
-        const timeA = new Date(firstItem.name).getTime();
-        const timeB = new Date(secondItem.name).getTime();
-        if (isNaN(timeA) || isNaN(timeB)) {
-          return firstItem.name.localeCompare(secondItem.name);
-        }
-        return timeA - timeB;
-      });
-      // Cap timeline at most recent 20 dates to stay readable
-      if (sortedRows.length > 20) {
-        return sortedRows.slice(-20);
-      }
-      return sortedRows;
-    } else {
-      // Sort categories descending by value
-      const sortedRows = aggregatedRows.sort((firstItem, secondItem) => secondItem.value - firstItem.value);
-      if (sortedRows.length > 10) {
-        const topRows = sortedRows.slice(0, 9);
-        const remainingRows = sortedRows.slice(9);
-        
-        const othersValue = remainingRows.reduce((sum, remainingRow) => sum + remainingRow.value, 0);
-        const othersCount = remainingRows.reduce((sum, remainingRow) => sum + remainingRow.count, 0);
-        
-        let finalOthersValue = othersValue;
-        if (operation === "avg") {
-          const totalCount = remainingRows.reduce((sum, remainingRow) => sum + remainingRow.count, 0);
-          if (totalCount > 0) {
-            const weightedSum = remainingRows.reduce((sum, remainingRow) => sum + (remainingRow.value * remainingRow.count), 0);
-            finalOthersValue = Math.round(weightedSum / totalCount);
-          }
-        } else if (operation === "min") {
-          finalOthersValue = Math.min(...remainingRows.map((remainingRow) => remainingRow.value));
-        } else if (operation === "max") {
-          finalOthersValue = Math.max(...remainingRows.map((remainingRow) => remainingRow.value));
-        }
-
-        return [
-          ...topRows,
-          {
-            name: `Others (${remainingRows.length} fields)`,
-            value: finalOthersValue,
-            count: othersCount
-          }
-        ];
-      }
-      return sortedRows;
-    }
+    return sortAndCapAggregatedItems(aggregatedRows, xAxisField, operation);
   }, [collectionKey, xAxisField, operation, targetField, filters, collectionRows, denominations]);
 
   // Checks if this chart configuration is pinned to dashboard
@@ -377,7 +281,7 @@ export default function DynamicChartVisualizer({
         xAxisField: xAxisField,
         operation: operation === "min" || operation === "max" ? "count" : operation,
         targetField: targetField,
-        color: (activePalette === "emeraldForest" || activePalette.startsWith("tol")) ? "emerald" : (activePalette === "oceanBreeze" || activePalette === "accessibleColorblind" ? "blue" : (activePalette === "cosmicViolet" ? "violet" : "amber")),
+      color: resolveWidgetPinColor(activePalette),
         isPinnedToDashboard: true,
         filterOperator: "equals"
       };
@@ -477,24 +381,7 @@ export default function DynamicChartVisualizer({
       });
       const dataUrl = canvas.toDataURL("image/png");
 
-      let formatWidth = 210;
-      let formatHeight = 297;
-      if (pdfFormat === "a3") {
-        formatWidth = 297;
-        formatHeight = 420;
-      } else if (pdfFormat === "legal") {
-        formatWidth = 215.9;
-        formatHeight = 355.6;
-      } else if (pdfFormat === "letter") {
-        formatWidth = 215.9;
-        formatHeight = 279.4;
-      }
-
-      if (pdfOrientation === "l") {
-        const previousFormatWidth = formatWidth;
-        formatWidth = formatHeight;
-        formatHeight = previousFormatWidth;
-      }
+      const { formatWidth, formatHeight } = getPdfPageDimensions(pdfFormat, pdfOrientation);
 
       const doc = new jsPDF({
         orientation: pdfOrientation,
@@ -732,7 +619,7 @@ export default function DynamicChartVisualizer({
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.operation")}</label>
                 <FormSelect
                   value={operation}
-                  onChange={(value) => setOperation(value as "count" | "sum" | "avg" | "min" | "max")}
+                  onChange={(value) => setOperation(value as ChartOperation)}
                   className="w-full text-xs"
                   options={[
                     { value: "count", label: t("reports.visualizer.opCount") },
@@ -773,7 +660,7 @@ export default function DynamicChartVisualizer({
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.chartType")}</label>
                 <FormSelect
                   value={chartType}
-                  onChange={(value) => setChartType(value as "bar" | "line" | "area" | "pie" | "radar")}
+                  onChange={(value) => setChartType(value as ChartType)}
                   className="w-full text-xs"
                   options={[
                     { value: "bar", label: t("reports.visualizer.chartBar") },

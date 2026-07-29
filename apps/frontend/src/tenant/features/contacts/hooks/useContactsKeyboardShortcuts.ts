@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 
 /** Contacts Work keyboard shortcuts: focus search, clear selection/filters, Cmd/Ctrl+N create. */
 export function useContactsKeyboardShortcuts({
@@ -18,6 +19,11 @@ export function useContactsKeyboardShortcuts({
   showDeletedArchives: boolean;
   onCreate: () => void;
 }) {
+  useModuleCreateHotkey({
+    enabled: canWrite && !showDeletedArchives,
+    onCreate,
+  });
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const activeTag = (document.activeElement?.tagName || "").toLowerCase();
@@ -39,27 +45,10 @@ export function useContactsKeyboardShortcuts({
         } else if (hasActiveFilters) {
           clearFilters();
         }
-      } else if (
-        (event.metaKey || event.ctrlKey) &&
-        event.key.toLowerCase() === "n" &&
-        !isInputActive &&
-        canWrite &&
-        !showDeletedArchives
-      ) {
-        event.preventDefault();
-        onCreate();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [
-    selectedCount,
-    hasActiveFilters,
-    clearFilters,
-    clearSelection,
-    canWrite,
-    showDeletedArchives,
-    onCreate,
-  ]);
+  }, [selectedCount, hasActiveFilters, clearFilters, clearSelection]);
 }

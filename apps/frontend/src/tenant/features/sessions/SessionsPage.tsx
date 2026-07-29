@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
+import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,6 +14,7 @@ import { SearchBar } from "@/components/ui/SearchBar";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { Button } from "@/components/ui/button";
+import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -273,23 +275,13 @@ export default function Sessions() {
     setSelectedIds([]);
   }, [search, filterStatus, filterType, showDeleted, sortField, sortDir, listLayout]);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
-      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
-        return;
-      }
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n") {
-        if (canWrite && !showDeleted) {
-          event.preventDefault();
-          setEditSession(null);
-          setShowForm(true);
-        }
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [canWrite, showDeleted]);
+  useModuleCreateHotkey({
+    enabled: canWrite && !showDeleted,
+    onCreate: () => {
+      setEditSession(null);
+      setShowForm(true);
+    },
+  });
 
   const sessions = useMemo(
     () => (workPageData?.sessions ?? []) as Session[],
@@ -572,20 +564,17 @@ export default function Sessions() {
               )}
 
               {canDelete && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setShowDeleted((previous) => !previous)}
-                  aria-pressed={showDeleted}
+                <ModuleTrashToggle
+                  showDeleted={showDeleted}
+                  onToggle={() => setShowDeleted((previous) => !previous)}
+                  showActiveLabel={t("sessions.showActive")}
+                  showDeletedLabel={t("sessions.showDeleted")}
                   className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
                     showDeleted
                       ? "border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10"
                       : "border-border bg-card text-muted-foreground hover:text-foreground"
                   }`}
-                >
-                  <Archive className="w-3.5 h-3.5" />
-                  <span>{showDeleted ? t("sessions.showActive") : t("sessions.showDeleted")}</span>
-                </Button>
+                />
               )}
             </div>
 

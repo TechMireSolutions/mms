@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import {
-  Search, Eye, XCircle, MessageCircle, MessageSquare, Archive, RotateCcw, Trash2,
+  Search, Eye, XCircle, MessageCircle, MessageSquare, RotateCcw, Trash2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { SearchBar } from "@/components/ui/SearchBar";
@@ -11,6 +11,7 @@ import { ENROLLMENT_STATUSES, Enrollment } from '@/lib/data/enrollmentData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
+import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -257,17 +258,13 @@ export function EnrollmentList({
         )}
 
         {canDelete && onShowDeletedChange && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => onShowDeletedChange(!showDeleted)}
-            aria-pressed={showDeleted}
+          <ModuleTrashToggle
+            showDeleted={showDeleted}
+            onToggle={() => onShowDeletedChange(!showDeleted)}
+            showActiveLabel={t("enrollments.showActive")}
+            showDeletedLabel={t("enrollments.showDeleted")}
             className={showDeleted ? "border-destructive/40 text-destructive" : undefined}
-          >
-            <Archive className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
-            <span>{showDeleted ? t("enrollments.showActive") : t("enrollments.showDeleted")}</span>
-          </Button>
+          />
         )}
 
         {columnCustomizer && !showDeleted && (

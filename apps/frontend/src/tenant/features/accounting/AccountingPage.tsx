@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
+import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp, List, BookMarked, Scale,
-  BookOpen, LayoutDashboard, Archive, Plus,
+  BookOpen, LayoutDashboard, Plus,
 } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ActionButton } from "@/components/ui/ActionButton";
-import { Button } from "@/components/ui/button";
+import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { ChartOfAccounts } from "@/tenant/features/accounting/components/ChartOfAccounts";
 import { JournalEntries } from "@/tenant/features/accounting/components/JournalEntries";
@@ -208,22 +209,14 @@ export default function Accounting() {
     setFilteredCount(journalEntries.length);
   }, [activeSubTab, journalEntries.length]);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n" && canWrite && !showDeleted) {
-        const target = event.target as HTMLElement | null;
-        if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
-          return;
-        }
-        event.preventDefault();
-        setActiveTab("work");
-        setActiveSubTab("journal");
-        setCreateJournalRequestKey((key) => key + 1);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [canWrite, setActiveTab, showDeleted]);
+  useModuleCreateHotkey({
+    enabled: canWrite && !showDeleted,
+    onCreate: () => {
+      setActiveTab("work");
+      setActiveSubTab("journal");
+      setCreateJournalRequestKey((key) => key + 1);
+    },
+  });
 
   const activeFiscalYear = fiscalYears.find((fiscalYear) => fiscalYear.status === "active");
   const listLoadFailed = accountsResult.queryResult.isError || entriesResult.queryResult.isError;
@@ -278,16 +271,13 @@ export default function Accounting() {
             }}
           />
           {activeSubTab === "journal" && canDelete && (
-            <Button
-              type="button"
-              variant={showDeleted ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowDeleted((prev) => !prev)}
+            <ModuleTrashToggle
+              showDeleted={showDeleted}
+              onToggle={() => setShowDeleted((prev) => !prev)}
+              showActiveLabel={t("accounting.trash.showActive")}
+              showDeletedLabel={t("accounting.trash.showDeleted")}
               className="gap-1.5 shrink-0"
-            >
-              <Archive className="w-3.5 h-3.5" aria-hidden="true" />
-              {showDeleted ? t("accounting.trash.showActive") : t("accounting.trash.showDeleted")}
-            </Button>
+            />
           )}
         </div>
       )}
