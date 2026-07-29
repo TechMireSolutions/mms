@@ -17,14 +17,14 @@ MMS uses a strict `pnpm` workspace monorepo layout:
 - `e2e/`: Playwright end-to-end integration tests.
 
 ### Casing & Folder Names
-- Common UI primitives and generic hooks are colocated under `apps/frontend/src/common/` (`components/ui/`, `components/routing/`, generic hooks).
+- Shared UI primitives live under `apps/frontend/src/components/ui/`; generic hooks under `apps/frontend/src/hooks/`; shared FE libs under `apps/frontend/src/lib/`.
 - Platform console elements are located under `apps/frontend/src/platform/`.
 - Tenant workspace features are modularized under `apps/frontend/src/tenant/features/{module}/` (e.g. `contacts/`, `students/`).
   Each feature folder contains its entry page (`{Module}Page.tsx`), `components/` subdirectory, and `hooks/` subdirectory.
 - Backend routes are scoped by namespace under `apps/backend/src/routes/`:
   - `platform/` (e.g. `workspace.ts`)
   - `tenant/` (e.g. `contacts.ts`, `students.ts`)
-  - `common/` (e.g. `public.ts`, `backgroundJobs.ts`)
+  - `common/` (e.g. `auth.ts`, `db.ts`, `public.ts`, `backgroundJobs.ts`)
 
 ---
 
@@ -59,9 +59,11 @@ User-entered text data (such as names, cities, and description strings) must be 
 ## 3. Code Organization & Splitting Thresholds
 To prevent monolithic components and maintain clean boundaries:
 - **Max File Size**: Files exceeding **~300 lines** must be split by concern (e.g., extracting hooks, sub-components, or pure utilities).
-- **Separation of Concerns**: If a component has $> 3$ distinct responsibilities, split it.
-- **Dry-run Refactoring**: Extract duplicated JSX elements appearing $\ge 2$ times into reusable layout helpers.
-- **Named Exports**: Always use named exports for helper utilities, components, and hooks. Default exports are only allowed for lazy-loaded pages (`pages/*.tsx`).
+- **Separation of Concerns**: If a component has > 3 distinct responsibilities, split it.
+- **Dry-run Refactoring**: Extract duplicated JSX elements appearing >= 2 times into reusable layout helpers.
+- **Named Exports**: Always use named exports for helper utilities, components, and hooks. Default exports are only allowed for lazy-loaded feature pages (`tenant/features/**/{Module}Page.tsx`).
+- **Test files**: Colocate `*.test.ts(x)` next to unit under test; E2E only under `e2e/`.
+- **Route files**: Match URL segment (`students.ts` → `/api/students`).
 
 ### Banned Symbols & Names
 - Do not use generic words like `data`, `info`, `helper`, or `util` as a sole variable or class name (use `contactFieldUtils` instead).

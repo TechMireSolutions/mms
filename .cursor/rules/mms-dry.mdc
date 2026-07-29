@@ -19,9 +19,9 @@ alwaysApply: true
 
 ## 2. Extraction Thresholds & Strategy
 Extract logic to a shared layer (e.g., `@mms/shared` or a local hook/component) if **any** of the following conditions are met:
-1. **Logic Repetition**: The same logic appears $\ge 2$ times across different files.
+1. **Logic Repetition**: The same logic appears >= 2 times across different files.
 2. **Multi-Module / Boundary Cross**: The logic crosses feature boundaries or the frontend ↔ backend boundary.
-3. **Complexity & Length**: A block of code is $> 15$ lines of identical or parametrically identical implementation.
+3. **Complexity & Length**: A block of code is > 15 lines of identical or parametrically identical implementation.
 
 *Constraint*: Keep code inlined if it is truly unique and used only once. Premature abstraction is prohibited.
 

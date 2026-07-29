@@ -1,11 +1,13 @@
 ---
 name: mms-dev-setup
-description: Sets up and runs the MMS monorepo (pnpm, Node 26+, PostgreSQL, backend :3000, frontend :5173, typecheck, lint, tests). Use when installing dependencies, starting dev servers, fixing env issues, or onboarding to the project.
+description: Sets up and runs the MMS monorepo (pnpm matching packageManager, Node per engines >=24.14, PostgreSQL, backend :3000, frontend :5173, typecheck, lint, tests). Use when installing dependencies, starting dev servers, fixing env issues, or onboarding to the project.
 ---
 
 # MMS Dev Setup
 
 ## Quick start
+
+Requires Node matching root `engines` (`>=24.14.0`) and pnpm from `packageManager` (`corepack enable`).
 
 ```bash
 # From repo root

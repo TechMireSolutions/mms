@@ -31,7 +31,7 @@ Do not echo file contents already in context.
 ## Output economy
 
 - **Edits:** `search_replace` / small writes — not full-file rewrites.
-- **Tests:** Only when requested, or for pure logic in `packages/shared` with no UI — see `mms-testing-observability.md`.
+- **Tests:** After code edits, follow `mms-completion-review.md` (do not invent extra suites beyond that gate). Pure `@mms/shared` helpers still need unit tests — `mms-testing-observability.md`.
 - **JSDoc:** Required on **public exports** in `packages/shared` only. Optional elsewhere; do not add narrating comments to app code.
 
 ## Security & state

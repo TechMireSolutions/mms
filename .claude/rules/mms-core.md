@@ -24,14 +24,14 @@ packages/shared/   @mms/shared
 | Shared logic | `@mms/shared` only |
 | Cross-module FE imports | Banned between feature modules |
 | FE ↔ BE | DTOs via `@mms/shared` only |
-| Inter-module data | `local-database-update` event or DTOs — no global singletons |
+| Inter-module data | Prefer batch `/resolve` + Query; `local-database-update` for settings/legacy local writes — no global singletons |
 | `turbo.json` cache | Immutable |
 
 ## Stack (current)
 
 Lists the **current** stack agents should target. Freshness / upgrades → `mms-dependencies.md`.
 
-- **BE:** Fastify + tsx · Drizzle + PostgreSQL · no raw SQL
+- **BE:** Fastify + tsx · Drizzle + PostgreSQL · no raw `pg` / ad-hoc query strings in controllers (approved Drizzle `sql` fragments OK for RLS `SET LOCAL` and JSONB merge — `mms-data-layer.md`)
 - **FE:** React 19 · Vite · Tailwind v4 · Radix/shadcn · TanStack Query · Framer Motion · Recharts · Lucide
 - **Icons:** Lucide only · **Animations:** Framer Motion only
 
@@ -48,8 +48,8 @@ Do not invent half-polling hybrids or ad-hoc WS clients until the migration gap 
 
 | Phase | Pattern | Owner |
 |-------|---------|--------|
-| **Current** | REST APIs + TanStack Query cache | `mms-data-layer.md` |
-| **Target** | Per-entity API resources; localStorage as offline cache only | `mms-migration-status.md` |
+| **Current** | Per-entity REST + TanStack Query | `mms-data-layer.md` |
+| **Target** | localStorage as offline cache only; live server push via WS/SSE; drop remaining hybrid/live-collection report panels | `mms-migration-status.md` |
 
 ## Tenant write invariant
 

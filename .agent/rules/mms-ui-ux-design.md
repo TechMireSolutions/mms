@@ -26,8 +26,9 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
 - Extend central primitives safely when custom variations are needed. Do not implement ad-hoc primitives in feature folders.
 
 ### Design Token Strictness
-- **No Hardcoded Tailwind Values**: NEVER use hardcoded hex variables, static values, or arbitrary brackets (e.g. `bg-gray-100`, `text-blue-500`, `rounded-[2rem]`).
+- **No Hardcoded Tailwind Values**: NEVER use hardcoded hex or one-off palette classes (e.g. `bg-gray-100`, `text-blue-500`, `rounded-[2rem]`).
 - **Use Semantic Design Tokens**: Use tokens mapped in `index.css` `@theme` (e.g., `text-foreground`, `text-primary`, `bg-background`, `bg-card`, `border-border`, `rounded-2xl`, `gap-3`).
+- **Touch-target exception**: Design-system primitives may use approved arbitrary sizes from `formStyles` / primitives (e.g. `min-h-[44px]`, `min-w-[44px]`) — do not invent new arbitrary values in feature code.
 - **Semantic Colors**: For success/warning/destructive affordances, use semantic tokens (e.g., `text-destructive`, `bg-destructive/10`, theme `--success`).
 - **Glassmorphism**: Consistent card overlays use `backdrop-blur` and translucent borders.
 

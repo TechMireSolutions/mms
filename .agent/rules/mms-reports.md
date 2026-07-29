@@ -21,7 +21,7 @@ trigger: model_decision
 - Column picker keys must match field registry keys where applicable
 - Module report category must be module-specific — never `category="academic"` on module reports
 
-## Export (`ReportExportBar`)
+## Export (`ExportToolbar`)
 
 | Format | Implementation |
 |--------|----------------|
@@ -29,7 +29,7 @@ trigger: model_decision
 | Excel | `xlsx` via dynamic `import()` |
 | PDF | `jspdf` + `jspdf-autotable` — auto page size/orientation |
 
-Charts: `lazy` + `SafeResponsiveContainer`. Escape formula-prefix cells (`=`, `+`, `-`, `@`) in CSV/Excel.
+Use shared `ExportToolbar` (`@/components/ui/ExportToolbar`) — not a deleted `ReportExportBar`. Charts: `lazy` + `SafeResponsiveContainer`. Escape formula-prefix cells (`=`, `+`, `-`, `@`) in CSV/Excel.
 
 ## Visual
 

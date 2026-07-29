@@ -1,6 +1,6 @@
 ---
 description: Static FormModal architecture — Zod validation, React 19 defaults, decimal-as-string, RLS pointer, S3 uploads
-globs: packages/shared/src/**/*.ts,apps/frontend/src/components/ui/FormPrimitives.tsx,apps/frontend/src/components/ui/FormModal.tsx,apps/backend/src/db/schema.ts,apps/backend/src/routes/**/*.ts
+globs: apps/frontend/src/components/ui/FormPrimitives.tsx,apps/frontend/src/components/ui/FormModal.tsx,apps/frontend/src/components/ui/DatePicker.tsx,apps/frontend/src/tenant/features/**/*Form*.tsx,apps/frontend/src/tenant/features/**/components/**,packages/shared/src/**/*Schema*.ts,apps/backend/src/db/schema.ts,apps/backend/src/routes/**/*.ts
 alwaysApply: false
 ---
 

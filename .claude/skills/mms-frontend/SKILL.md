@@ -88,7 +88,7 @@ Full module pattern: skill `mms-module-page`.
 App-wide settings only — **not** per-module Fields/Preferences (those live in module Setup tabs).
 
 ```
-pages/Settings.tsx          → SETTINGS_NAV + lazy SETTINGS_SECTION_COMPONENTS
+SettingsPage.tsx (`tenant/features/settings/`) → SETTINGS_NAV + lazy SETTINGS_SECTION_COMPONENTS
 components/settings/        → Global, Branding, Theme, SystemModules, BackupRestore
 components/settings/backup/ → export/import/history sections (logic in useBackupRestore)
 components/settings/modules/ModuleSettingsNavGrid.tsx → SYSTEM_MODULE_NAV toggles

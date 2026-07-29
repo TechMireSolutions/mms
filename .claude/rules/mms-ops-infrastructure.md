@@ -19,8 +19,8 @@ paths:
 Canonical operational and deployment standards for the Madrasa Management System (MMS) monorepo.
 
 ## 1. Prerequisites & Environment Setup
-- **Node.js**: Version **26+** is required (as defined in the root `package.json` `engines`).
-- **pnpm**: Version **11.8+** (utilizing Corepack `corepack enable`).
+- **Node.js**: Match root `package.json` `engines.node` (currently **`>=24.14.0`**). Align CI/Docker images with the same major.
+- **pnpm**: Match root `packageManager` (currently **pnpm@11.15.1**) via Corepack (`corepack enable`).
 
 ### Workspace Commands (from repo root)
 ```bash

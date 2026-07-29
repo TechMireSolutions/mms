@@ -4,10 +4,12 @@ paths:
   - "apps/frontend/src/lib/contactFieldsStore.ts"
   - "apps/frontend/src/components/ui/CustomFieldsBuilder.tsx"
   - "apps/frontend/src/components/ui/DraggableFieldList.tsx"
-  - "apps/frontend/src/components/**/form/**"
-  - "apps/frontend/src/components/**/settings/**"
+  - "apps/frontend/src/tenant/features/**/setup/**"
+  - "apps/frontend/src/tenant/features/**/*Fields*"
+  - "apps/frontend/src/tenant/features/**/*Setup*"
   - "packages/shared/src/contactTypes.ts"
   - "packages/shared/src/contactFieldDependencies.ts"
+  - "packages/shared/src/*Field*"
 ---
 
 # MMS Fields & Registry Specification

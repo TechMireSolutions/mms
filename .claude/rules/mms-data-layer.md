@@ -4,13 +4,14 @@ paths:
   - "apps/backend/src/db/**"
   - "apps/backend/drizzle.config.ts"
   - "apps/backend/src/db/migrations/**"
-  - "apps/frontend/src/lib/db.ts"
-  - "apps/frontend/src/hooks/useLiveCollection.ts"
-  - "apps/backend/src/routes/db.ts"
+  - "apps/backend/src/routes/common/db.ts"
+  - "apps/backend/src/routes/tenant/**"
   - "apps/backend/src/services/dbSyncService.ts"
+  - "apps/frontend/src/lib/db.ts"
+  - "apps/frontend/src/lib/queryClient.ts"
   - "apps/frontend/src/hooks/**"
-  - "apps/frontend/src/pages/**"
-  - "apps/frontend/src/lib/query-client.ts"
+  - "apps/frontend/src/tenant/hooks/**"
+  - "apps/frontend/src/tenant/features/**"
 ---
 
 # MMS Data Layer & Caching System

@@ -20,7 +20,7 @@ Every standard module page (e.g., `Contacts.tsx`, `Students.tsx`) must instantia
 
 1. **Work (Operational Directory)**: Focuses on daily record editing and navigation. Features search, filters, views (table/grid), detail drawers, and multi-selection bulk actions. No charts or KPI dashboards belong here.
 2. **Reports (Analytics)**: Focuses on charts and data exports. Features a KPI summary card strip, Recharts modules, and visual query builders.
-3. **Setup (Configuration)**: Restricted to workspace admins (`can('configuration.view')`). Houses module-specific Fields customizers and Preferences configurations.
+3. **Setup (Configuration)**: Restricted via `useModulePermissions(manifest)` → `canViewSetup` / `canEditSetup` (often mapped from `configuration.view`). Houses module-specific Fields customizers and Preferences. Use `useFilteredModuleTierTabs` so forbidden tiers are omitted.
 
 ---
 

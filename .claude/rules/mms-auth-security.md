@@ -1,13 +1,15 @@
 ---
 description: Authentication session cookies, JWT token scopes, tenant isolation context, RBAC matrices, and threat mitigations.
 paths:
-  - "apps/backend/src/routes/auth.ts"
-  - "apps/backend/src/middleware/authenticate.ts"
+  - "apps/backend/src/routes/common/auth.ts"
+  - "apps/backend/src/routes/tenant/**"
+  - "apps/backend/src/middleware/authenticate*.ts"
   - "apps/backend/src/services/auth*.ts"
   - "apps/backend/src/services/rbacService.ts"
-  - "apps/backend/src/utils/tenantContext.ts"
+  - "apps/backend/src/lib/tenantContext.ts"
   - "apps/frontend/src/lib/contexts/AuthContext.tsx"
   - "apps/frontend/src/tenant/hooks/usePermissions.ts"
+  - "apps/frontend/src/tenant/features/**"
   - "apps/frontend/src/lib/apiClient.ts"
   - "apps/frontend/src/components/routing/**"
 ---

@@ -23,7 +23,7 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | `mms-ui-ux-design.mdc` | Consolidated UI components, design tokens, forms (`FormModal`), navigation tabs, notifications, and accessibility (RTL / WCAG) |
 | `mms-module-architecture.mdc` | Universal module manifest schemas, three-tier tab layout, Work/Reports/Setup scopes, soft-delete, **gold-standard parity (§7)**, background jobs |
 | `mms-data-layer.mdc` | PostgreSQL, Drizzle schema, migrations, database transactions, TanStack Query fetching, and deprecated localStorage caching |
-| `mms-form-architecture.mdc` | Dynamic form blueprint schemas, branded IDs, RLS context, client state, file uploads |
+| `mms-form-architecture.mdc` | Static FormModal forms, shared Zod DTOs, React 19 defaults, decimal-as-string, S3 uploads |
 | `mms-structure-naming.mdc` | Monorepo layout, colocation, file-size splits, naming (files, folders, symbols, routes, i18n keys), and UI-to-DB casing alignment |
 | `mms-hooks.mdc` | Custom React hooks (live data, sorting, config contexts) |
 | `mms-auth-security.mdc` | Auth, users, JWT session shapes, RBAC permissions, multi-tenant isolation, cookie policies, rate limits, and threat model |

@@ -1,10 +1,11 @@
 ---
 description: Module-embedded analytics, exports, report builder
 paths:
-  - "apps/frontend/src/components/reports/**"
-  - "apps/frontend/src/pages/**/*.tsx"
-  - "apps/frontend/src/tenant/features/**/*"
-  - "apps/frontend/src/components/dashboard/**"
+  - "apps/frontend/src/lib/reports/**"
+  - "apps/frontend/src/tenant/features/**"
+  - "apps/frontend/src/tenant/features/dashboard*/**"
+  - "apps/frontend/src/components/ui/ExportToolbar.tsx"
+  - "apps/frontend/src/components/ui/SafeResponsiveContainer.tsx"
 ---
 
 # MMS Reports & Analytics
@@ -26,7 +27,7 @@ paths:
 - Column picker keys must match field registry keys where applicable
 - Module report category must be module-specific — never `category="academic"` on module reports
 
-## Export (`ReportExportBar`)
+## Export (`ExportToolbar`)
 
 | Format | Implementation |
 |--------|----------------|
@@ -34,7 +35,7 @@ paths:
 | Excel | `xlsx` via dynamic `import()` |
 | PDF | `jspdf` + `jspdf-autotable` — auto page size/orientation |
 
-Charts: `lazy` + `SafeResponsiveContainer`. Escape formula-prefix cells (`=`, `+`, `-`, `@`) in CSV/Excel.
+Use shared `ExportToolbar` (`@/components/ui/ExportToolbar`) — not a deleted `ReportExportBar`. Charts: `lazy` + `SafeResponsiveContainer`. Escape formula-prefix cells (`=`, `+`, `-`, `@`) in CSV/Excel.
 
 ## Visual
 

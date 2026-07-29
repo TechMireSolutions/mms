@@ -24,6 +24,7 @@ After **creating or editing code**, run a completion review **before** marking t
 
 4. **Lint diagnostics** — check edited files; fix new issues you introduced.
 5. **Cleanup** — remove unused imports, dead code, and debug logging in the change boundary.
+6. **Standards edits** — if you changed `.cursor/rules` or `.agent/skills`, run `bash .agent/scripts/sync-all.sh`.
 
 ## Fix before done
 

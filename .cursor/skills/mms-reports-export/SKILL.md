@@ -1,6 +1,6 @@
 ---
 name: mms-reports-export
-description: Builds MMS module analytics, CustomReportBuilder, Recharts dashboards, and PDF/Excel/print exports. Use when editing Reports tabs, KPIs, ReportExportBar, drill-down, saved reports, or dashboard widgets.
+description: Builds MMS module analytics, CustomReportBuilder, Recharts dashboards, and PDF/Excel/print exports. Use when editing Reports tabs, KPIs, ExportToolbar, drill-down, saved reports, or dashboard widgets.
 ---
 
 # MMS Reports & Export Workflow
@@ -41,7 +41,7 @@ useLiveCollection('finance_invoices', SEED)
 | Excel | `await import('xlsx')` |
 | PDF | `await import('jspdf')` + autotable |
 
-Escape formula-prefix cells (`=`, `+`, `-`, `@`). Respect filters, RBAC, field visibility, soft-delete policy, `can()`.
+Use shared `ExportToolbar` — not a deleted `ReportExportBar`. Escape formula-prefix cells (`=`, `+`, `-`, `@`). Respect filters, RBAC, field visibility, soft-delete policy, `can()`.
 
 ## Checklist
 

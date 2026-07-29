@@ -1,6 +1,6 @@
 ---
 description: App settings configurations, live preview draft states, sidebar/in-page navigation directories, and localized translation keys (en/ar/ur/fa).
-globs: apps/frontend/src/pages/Settings.tsx,apps/frontend/src/components/settings/**,apps/frontend/src/lib/config/settings*,apps/frontend/src/hooks/useTranslation.ts,packages/shared/src/appTranslations*.ts
+globs: apps/frontend/src/tenant/features/settings/**,apps/frontend/src/tenant/features/**,apps/frontend/src/lib/config/settings*,apps/frontend/src/lib/config/routes.ts,apps/frontend/src/hooks/useTranslation.ts,packages/shared/src/appTranslations*.ts
 alwaysApply: false
 ---
 
@@ -12,13 +12,15 @@ Governs application-wide configuration tabs, live settings preview states, sideb
 
 ## 1. App-Wide Settings (`/settings` URL Scope)
 - **Single URL Structure**: All application-wide settings panels must reside on the `/settings` route. Use in-page active tab tracking (`setActiveTab()` from `SettingsTabContext`) for sidebar jumping. Do not configure individual section routes.
-- **Valid Settings Sections**: Only the following five section IDs are registered under `SETTINGS_SECTIONS` on `/settings`:
+- **Valid Settings Sections**: Only the following section IDs are registered under `SETTINGS_SECTIONS` on `/settings`:
   1. `global`: System languages, timezone format, date formats, and notifications.
   2. `modules`: System module toggles (`enabledModules` map).
   3. `branding`: Identity parameters (name, tagline, address, logo).
   4. `theme`: Color configurations, display mode, and footer overrides.
   5. `backup`: Backup triggers and database export lists.
+  6. `llm`: LLM / AI integration settings.
 - **Module Settings Separation**: Do NOT add module-specific settings panels (e.g., student cutoff times or grading systems) to `/settings`. Place them inside each module's respective **Setup → Preferences** tab.
+- Settings page entry: `apps/frontend/src/tenant/features/settings/SettingsPage.tsx`.
 
 ---
 

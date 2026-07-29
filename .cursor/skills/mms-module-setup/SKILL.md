@@ -65,7 +65,7 @@ Gate edits with `canEditSetup`: show SubTabBar even when view-only; use a read-o
 
 ## Workflow: deactivate or remove custom field
 
-1. **Soft-Delete / Deactivation:** Prefer deactivating or hiding fields/tabs in the blueprint configuration instead of erasing schema definitions (to preserve historical analytics data), as detailed in [mms-form-architecture.mdc](../rules/mms-form-architecture.mdc).
+1. **Soft-Delete / Deactivation:** Prefer deactivating or hiding fields/tabs in field config registries instead of erasing schema definitions (to preserve historical analytics data) — see `mms-fields.mdc` / `mms-form-architecture.mdc`.
 2. **Hard-Delete Check (if requested):** Use dependency checking before removing:
 ```typescript
 const issues = getContactFieldRemovalIssues({

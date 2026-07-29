@@ -2,9 +2,11 @@
 description: Client-server REST interface contracts, apiClient fetch wrappers, Fastify router setups, middleware pipelines, and API payload definitions.
 paths:
   - "apps/frontend/src/lib/apiClient.ts"
+  - "apps/frontend/src/App.tsx"
+  - "apps/frontend/src/providers/**"
+  - "apps/frontend/src/tenant/features/**"
   - "apps/backend/src/routes/**/*.ts"
   - "apps/backend/src/middleware/**/*.ts"
-  - "apps/frontend/src/pages/**/*.tsx"
   - "apps/backend/src/app.ts"
 ---
 
