@@ -128,7 +128,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 pt-4 border-t border-border grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="px-4 pb-4 pt-4 border-t border-border grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               {/* Session */}
               <div className="flex flex-col gap-1">
                 <label htmlFor="filter-session" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.session")}</label>

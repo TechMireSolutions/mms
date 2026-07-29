@@ -191,11 +191,11 @@ export function ChartOfAccounts({
         if (accountTypeRows.length === 0) return null;
         return (
           <article key={type} className="rounded-xl border border-border overflow-hidden">
-            <header className={`px-4 py-2.5 border-b border-border ${ACCOUNT_TYPE_META[type]?.color} flex items-center justify-between`}>
-              <h3 className="text-xs font-bold uppercase tracking-wide m-0">
+            <header className={`px-4 py-2.5 border-b border-border ${ACCOUNT_TYPE_META[type]?.color} flex min-w-0 items-center justify-between gap-2`}>
+              <h3 className="min-w-0 truncate text-xs font-bold uppercase tracking-wide m-0">
                 <span aria-hidden="true">{ACCOUNT_TYPE_META[type]?.icon}</span> {t("accounting.coa.groupHeader", { type: t(`accounting.type.${type}` as AppTranslationKey), group: t(`accounting.reports.views.${ACCOUNT_TYPE_META[type]?.group}` as AppTranslationKey) })}
               </h3>
-              <span className="text-xs font-semibold text-muted-foreground">
+              <span className="shrink-0 text-xs font-semibold text-muted-foreground">
                 {t("accounting.coa.groupMeta", {
                   normal: ACCOUNT_TYPE_META[type]?.normalBalance === "debit" ? t("accounting.ledger.dr") : t("accounting.ledger.cr"),
                   count: accountTypeRows.length

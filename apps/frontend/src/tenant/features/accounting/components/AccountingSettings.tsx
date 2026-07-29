@@ -346,15 +346,15 @@ export function AccountingSettings({
             </Field>
 
             <div className="mt-4">
-              <header className="flex items-center justify-between mb-3">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.settings.configuredFiscalYears")}</h4>
+              <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <h4 className="min-w-0 text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.settings.configuredFiscalYears")}</h4>
                 {canEditSetup && (
                   <Button
                     type="button"
                     variant="link"
                     size="sm"
                     onClick={() => setFyModal({ label: "", startDate: "", endDate: "", status: "upcoming" })}
-                    className="flex items-center gap-1 min-h-11 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+                    className="flex shrink-0 items-center gap-1 min-h-11 text-xs font-semibold text-primary hover:text-primary/80 transition-colors self-start sm:self-auto"
                   >
                     <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.settings.addYear")}
                   </Button>

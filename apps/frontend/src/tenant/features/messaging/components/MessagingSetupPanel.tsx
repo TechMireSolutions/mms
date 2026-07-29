@@ -123,15 +123,15 @@ export function MessagingSetupPanel({
       <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-xs">
         {canEditSetup || canWrite ? (
           <>
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <h4 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
-                  {editingId ? <Edit3 className="h-4 w-4 text-primary" /> : <Plus className="h-4 w-4 text-primary" />}
-                  {editingId ? t('messaging.editPreset') : t('messaging.createPreset')}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0 space-y-1">
+                <h4 className="flex min-w-0 items-center gap-1.5 text-sm font-bold text-foreground">
+                  {editingId ? <Edit3 className="h-4 w-4 shrink-0 text-primary" /> : <Plus className="h-4 w-4 shrink-0 text-primary" />}
+                  <span className="min-w-0 truncate">{editingId ? t('messaging.editPreset') : t('messaging.createPreset')}</span>
                 </h4>
                 <p className="text-xs text-muted-foreground">{t('messaging.createPresetDesc')}</p>
               </div>
-              {editingId && <Button variant="ghost" size="sm" onClick={resetForm} className="text-xs">{t('common.cancel')}</Button>}
+              {editingId && <Button variant="ghost" size="sm" onClick={resetForm} className="shrink-0 self-start text-xs">{t('common.cancel')}</Button>}
             </div>
             <form onSubmit={(event) => void save(event)} className="space-y-3">
               <div><label className={FORM_LABEL} htmlFor="tplLabel">{t('messaging.templateLabel')}</label><Input id="tplLabel" value={label} onChange={(event) => setLabel(event.target.value)} placeholder={t('messaging.templateLabelPlaceholder')} required /></div>

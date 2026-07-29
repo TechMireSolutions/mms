@@ -174,7 +174,7 @@ export default function DashboardCustomizePanel({
                       />
                       <label
                         htmlFor={`widget-pin-${widget.id}`}
-                        className="space-y-0.5 cursor-pointer flex-1 select-none text-start truncate"
+                        className="min-w-0 flex-1 cursor-pointer select-none space-y-0.5 truncate text-start"
                         onClick={(event) => event.stopPropagation()}
                       >
                         <p className="text-xs font-bold text-foreground leading-tight truncate">

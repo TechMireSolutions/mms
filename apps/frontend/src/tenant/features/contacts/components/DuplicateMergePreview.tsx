@@ -91,11 +91,11 @@ export function MergePreview({
                 otherValue !== "";
 
               return (
-                <div key={field} className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground w-24 flex-shrink-0">
+                <div key={field} className="flex min-w-0 items-center gap-2">
+                  <span className="w-24 shrink-0 text-xs text-muted-foreground">
                     {getDuplicateFieldLabel(field, t)}:
                   </span>
-                  <span className="text-sm font-medium text-foreground flex-1 truncate">
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
                     {mergedValue || emptyDash}
                   </span>
                   {fromOther && (

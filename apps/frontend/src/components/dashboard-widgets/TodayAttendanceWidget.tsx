@@ -98,11 +98,11 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
   return (
     <WidgetCard ariaLabelledby="todays-attendance-heading" accentColor="primary">
       {/* Header */}
-      <header className="flex items-center justify-between px-5 py-3.5 border-b border-border/45 bg-muted/10 ps-6.5 select-none">
+      <header className="flex min-w-0 flex-wrap items-center justify-between gap-2 px-5 py-3.5 border-b border-border/45 bg-muted/10 ps-6.5 select-none">
 
-        <div className="flex items-center gap-2">
-          <UserCheck className="w-4 h-4 text-primary" />
-          <h2 id="todays-attendance-heading" className="text-sm font-bold text-foreground m-0">
+        <div className="flex min-w-0 items-center gap-2">
+          <UserCheck className="w-4 h-4 shrink-0 text-primary" />
+          <h2 id="todays-attendance-heading" className="min-w-0 truncate text-sm font-bold text-foreground m-0">
             {title || (isToday ? t("dashboard.widgets.todaysAttendanceSummary") : t("dashboard.widgets.latestAttendanceSummary"))}
           </h2>
           {!isToday && (
@@ -167,9 +167,9 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
             <div className="space-y-3">
               <h3 className="text-xs font-black text-muted-foreground uppercase tracking-wider select-none">{t("dashboard.widgets.byClass")}</h3>
               {classBreakdown.map((classStats) => (
-                <div key={classStats.classId} className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-foreground w-28 truncate">{classStats.name}</span>
-                  <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden shadow-inner">
+                <div key={classStats.classId} className="flex min-w-0 items-center gap-3">
+                  <span className="w-28 shrink-0 truncate text-xs font-bold text-foreground">{classStats.name}</span>
+                  <div className="min-w-0 flex-1 h-2 rounded-full bg-muted overflow-hidden shadow-inner">
                     <div className={`h-full rounded-full transition-all duration-700 ease-out ${rateToneClass(classStats.rate).bar}`}
                       style={{ width: `${classStats.rate}%` }} />
                   </div>

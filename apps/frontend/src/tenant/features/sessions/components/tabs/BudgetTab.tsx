@@ -161,14 +161,14 @@ export function BudgetTab({ session, onUpdate, canWrite }: BudgetTabProps) {
       </section>
 
       <section aria-labelledby="income-heading">
-        <header className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
+        <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-2">
             <TrendingUp className="w-4 h-4 text-success" aria-hidden="true" />
-            <h3 id="income-heading" className="text-sm font-bold text-foreground m-0">{t("sessions.budget.income")}</h3>
+            <h3 id="income-heading" className="m-0 text-sm font-bold text-foreground">{t("sessions.budget.income")}</h3>
           </div>
           {canWrite && <Button
             onClick={() => setAddType("income")}
-            className="flex items-center gap-1 min-h-11 px-3 py-1.5 rounded-lg bg-success/10 text-success text-xs font-semibold hover:bg-success/15 border border-success/20 transition-colors hover:text-success"
+            className="flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border border-success/20 bg-success/10 px-3 py-1.5 text-xs font-semibold text-success transition-colors hover:bg-success/15 hover:text-success sm:w-auto"
           >
             <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.budget.addIncome")}
           </Button>}
@@ -178,16 +178,18 @@ export function BudgetTab({ session, onUpdate, canWrite }: BudgetTabProps) {
             <p className="py-6 text-center text-sm text-muted-foreground m-0">{t("sessions.budget.emptyIncome")}</p>
           ) : (
             budget.incomes.map((incomeEntry: BudgetIncome, index: number) => (
-              <article key={incomeEntry.id} className={`flex items-center gap-3 px-4 py-3 ${index > 0 ? "border-t border-border/50" : ""}`}>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground m-0">{incomeEntry.category}</p>
-                  {incomeEntry.note && <p className="text-xs text-muted-foreground truncate m-0">{incomeEntry.note}</p>}
+              <article key={incomeEntry.id} className={`flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-3 ${index > 0 ? "border-t border-border/50" : ""}`}>
+                <div className="min-w-0 flex-1">
+                  <p className="m-0 text-sm font-medium text-foreground">{incomeEntry.category}</p>
+                  {incomeEntry.note && <p className="m-0 truncate text-xs text-muted-foreground">{incomeEntry.note}</p>}
                 </div>
-                 <p className="text-sm text-muted-foreground flex-shrink-0 m-0">{formatDate(incomeEntry.date)}</p>
-                 <p className="text-sm font-bold text-success flex-shrink-0 m-0">{formatMoney(incomeEntry.amount, session.currency)}</p>
-                {canWrite && <Button aria-label={t("sessions.budget.deleteIncomeNamed", { name: incomeEntry.category })} onClick={() => setDeleteTarget({ type: "income", entry: incomeEntry })} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0" variant="ghost" size="icon">
-                  <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                </Button>}
+                 <div className="flex items-center justify-between gap-3 sm:contents">
+                   <p className="m-0 shrink-0 text-sm text-muted-foreground">{formatDate(incomeEntry.date)}</p>
+                   <p className="m-0 shrink-0 text-sm font-bold text-success">{formatMoney(incomeEntry.amount, session.currency)}</p>
+                   {canWrite && <Button aria-label={t("sessions.budget.deleteIncomeNamed", { name: incomeEntry.category })} onClick={() => setDeleteTarget({ type: "income", entry: incomeEntry })} className="shrink-0 text-muted-foreground transition-colors hover:text-destructive" variant="ghost" size="icon">
+                     <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                   </Button>}
+                 </div>
               </article>
             ))
           )}
@@ -195,14 +197,14 @@ export function BudgetTab({ session, onUpdate, canWrite }: BudgetTabProps) {
       </section>
 
       <section aria-labelledby="expense-heading">
-        <header className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
+        <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-2">
             <TrendingDown className="w-4 h-4 text-destructive" aria-hidden="true" />
-            <h3 id="expense-heading" className="text-sm font-bold text-foreground m-0">{t("sessions.budget.expenses")}</h3>
+            <h3 id="expense-heading" className="m-0 text-sm font-bold text-foreground">{t("sessions.budget.expenses")}</h3>
           </div>
           {canWrite && <Button
             onClick={() => setAddType("expense")}
-            className="flex items-center gap-1 min-h-11 px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-semibold hover:bg-destructive/15 border border-destructive/20 transition-colors hover:text-destructive"
+            className="flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/15 hover:text-destructive sm:w-auto"
           >
             <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.budget.addExpense")}
           </Button>}
@@ -212,16 +214,18 @@ export function BudgetTab({ session, onUpdate, canWrite }: BudgetTabProps) {
             <p className="py-6 text-center text-sm text-muted-foreground m-0">{t("sessions.budget.emptyExpenses")}</p>
           ) : (
             budget.expenses.map((expenseEntry: BudgetExpense, index: number) => (
-              <article key={expenseEntry.id} className={`flex items-center gap-3 px-4 py-3 ${index > 0 ? "border-t border-border/50" : ""}`}>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground m-0">{expenseEntry.category}</p>
-                  {expenseEntry.note && <p className="text-xs text-muted-foreground truncate m-0">{expenseEntry.note}</p>}
+              <article key={expenseEntry.id} className={`flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-3 ${index > 0 ? "border-t border-border/50" : ""}`}>
+                <div className="min-w-0 flex-1">
+                  <p className="m-0 text-sm font-medium text-foreground">{expenseEntry.category}</p>
+                  {expenseEntry.note && <p className="m-0 truncate text-xs text-muted-foreground">{expenseEntry.note}</p>}
                 </div>
-                 <p className="text-sm text-muted-foreground flex-shrink-0 m-0">{formatDate(expenseEntry.date)}</p>
-                 <p className="text-sm font-bold text-destructive flex-shrink-0 m-0">{formatMoney(expenseEntry.amount, session.currency)}</p>
-                {canWrite && <Button aria-label={t("sessions.budget.deleteExpenseNamed", { name: expenseEntry.category })} onClick={() => setDeleteTarget({ type: "expense", entry: expenseEntry })} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0" variant="ghost" size="icon">
-                  <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                </Button>}
+                 <div className="flex items-center justify-between gap-3 sm:contents">
+                   <p className="m-0 shrink-0 text-sm text-muted-foreground">{formatDate(expenseEntry.date)}</p>
+                   <p className="m-0 shrink-0 text-sm font-bold text-destructive">{formatMoney(expenseEntry.amount, session.currency)}</p>
+                   {canWrite && <Button aria-label={t("sessions.budget.deleteExpenseNamed", { name: expenseEntry.category })} onClick={() => setDeleteTarget({ type: "expense", entry: expenseEntry })} className="shrink-0 text-muted-foreground transition-colors hover:text-destructive" variant="ghost" size="icon">
+                     <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                   </Button>}
+                 </div>
               </article>
             ))
           )}

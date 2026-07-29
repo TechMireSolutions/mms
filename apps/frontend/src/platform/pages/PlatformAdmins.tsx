@@ -97,8 +97,8 @@ export default function PlatformAdmins(): React.JSX.Element {
                         className="p-6 space-y-3.5 text-start hover:border-primary/20 hover:scale-[1.01] h-full flex flex-col justify-between"
                       >
                         <div className="space-y-3">
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="text-sm font-bold text-foreground truncate">{admin.name}</p>
+                          <div className="flex min-w-0 items-center justify-between gap-3">
+                            <p className="min-w-0 flex-1 truncate text-sm font-bold text-foreground">{admin.name}</p>
                             <StatusBadge
                               status={admin.role}
                               config={{
@@ -114,9 +114,9 @@ export default function PlatformAdmins(): React.JSX.Element {
                               size="sm"
                             />
                           </div>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                          <div className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
                             <Mail className="w-4 h-4 shrink-0 opacity-80" aria-hidden />
-                            <span className="truncate">{admin.email}</span>
+                            <span className="min-w-0 truncate">{admin.email}</span>
                           </div>
                         </div>
                         {admin.createdAt ? (

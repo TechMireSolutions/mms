@@ -151,13 +151,13 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
 
   return (
     <section aria-label={t("hasanat.tabs.stock")} className="space-y-5">
-      <header className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-foreground m-0">{t("hasanat.stock.batchCount", { count: batches.length })}</p>
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="m-0 min-w-0 text-sm font-semibold text-foreground">{t("hasanat.stock.batchCount", { count: batches.length })}</p>
         {canWrite && (
           <Button
             type="button"
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
           >
             <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("hasanat.stock.addBatchAction")}
           </Button>

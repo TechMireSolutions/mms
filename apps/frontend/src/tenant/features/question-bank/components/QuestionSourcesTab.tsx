@@ -185,16 +185,16 @@ export function QuestionSourcesTab({
   return (
     <div className="space-y-6">
       <section className="space-y-3 rounded-xl border border-border/70 bg-muted/10 p-4">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-primary" aria-hidden />
-            <h3 className="text-sm font-bold text-foreground">{t('questionBank.sourceBooksTitle')}</h3>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-2">
+            <BookOpen className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+            <h3 className="min-w-0 truncate text-sm font-bold text-foreground">{t('questionBank.sourceBooksTitle')}</h3>
           </div>
           <Button
             type="button"
             variant="outline"
             onClick={startNewBook}
-            className="min-h-11 rounded-lg border border-border px-3 text-xs font-semibold hover:bg-muted"
+            className="min-h-11 w-full rounded-lg border border-border px-3 text-xs font-semibold hover:bg-muted sm:w-auto"
           >
             {t('questionBank.addSourceBook')}
           </Button>
@@ -208,7 +208,7 @@ export function QuestionSourcesTab({
             {sourceBooks.map((book) => (
               <li
                 key={book.id}
-                className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-3 py-2"
+                className="flex flex-col gap-2 rounded-lg border border-border bg-card px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-foreground">{book.name}</p>
@@ -216,7 +216,7 @@ export function QuestionSourcesTab({
                     {t('questionBank.sourceBookFieldCount', { count: book.fieldIds.length })}
                   </p>
                 </div>
-                <div className="flex flex-shrink-0 gap-1">
+                <div className="flex shrink-0 gap-1 self-end sm:self-auto">
                   <Button
                     type="button"
                     variant="outline"

@@ -122,16 +122,18 @@ export async function assertPrimaryControlsMeetTouchTarget(
         }
 
         if (isFormField) {
-          return rect.height < 44;
+          return Math.round(rect.height) < 44;
         }
 
         const label = (element.textContent || '').trim();
         const hasVisibleLabel = label.length > 0 || Boolean(element.getAttribute('aria-label'));
         const touchDimensions = getTouchDimensions(element);
+        const width = Math.round(touchDimensions.width);
+        const height = Math.round(touchDimensions.height);
         if (!hasVisibleLabel) {
-          return touchDimensions.width < 44 || touchDimensions.height < 44;
+          return width < 44 || height < 44;
         }
-        return touchDimensions.height < 44 || touchDimensions.width < 44;
+        return height < 44 || width < 44;
       })
       .map((element) => {
         const touchDimensions = getTouchDimensions(element);

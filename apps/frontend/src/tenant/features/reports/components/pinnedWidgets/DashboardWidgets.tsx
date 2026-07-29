@@ -155,14 +155,14 @@ export function DashboardWidgets({
 
   return (
     <div className="space-y-4 text-start font-sans mt-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <LayoutDashboard className="w-4 h-4 text-primary" />
-          <h3 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">{t("reports.widgets.pinnedPanels")}</h3>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-2">
+          <LayoutDashboard className="w-4 h-4 shrink-0 text-primary" />
+          <h3 className="min-w-0 truncate text-xs font-black text-foreground uppercase tracking-widest leading-none">{t("reports.widgets.pinnedPanels")}</h3>
         </div>
         
         {/* Layout Density Controls */}
-        <div className="flex items-center gap-1 border border-border/60 bg-muted/20 p-1 rounded-xl shadow-inner backdrop-blur-xs relative select-none">
+        <div className="flex shrink-0 items-center gap-1 border border-border/60 bg-muted/20 p-1 rounded-xl shadow-inner backdrop-blur-xs relative select-none">
           <Button
             type="button"
             variant="ghost"

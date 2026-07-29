@@ -103,11 +103,11 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
             const groupCredit = accountTypeRows.reduce((sum, trialBalanceRow) => sum + trialBalanceRow.totalCredit, 0);
             return (
               <section key={type} aria-label={t("accounting.coa.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })} className="rounded-xl border border-border overflow-hidden">
-                <header className={`px-4 py-2 border-b border-border ${ACCOUNT_TYPE_META[type]?.color} flex items-center justify-between`}>
-                  <h3 className="text-xs font-bold uppercase tracking-wide m-0">
+                <header className={`px-4 py-2 border-b border-border ${ACCOUNT_TYPE_META[type]?.color} flex min-w-0 items-center justify-between gap-2`}>
+                  <h3 className="min-w-0 truncate text-xs font-bold uppercase tracking-wide m-0">
                     {ACCOUNT_TYPE_META[type]?.icon} {t(`accounting.type.${type}` as AppTranslationKey)} — {t(`accounting.reports.views.${ACCOUNT_TYPE_META[type]?.group}` as AppTranslationKey)}
                   </h3>
-                  <span className="text-xs font-semibold text-muted-foreground">{t("accounting.tb.accountsCount", { count: accountTypeRows.length })}</span>
+                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">{t("accounting.tb.accountsCount", { count: accountTypeRows.length })}</span>
                 </header>
                 <div className="space-y-3 p-3 md:hidden">
                   {accountTypeRows.sort((firstRow, secondRow) => firstRow.code.localeCompare(secondRow.code)).map((trialBalanceRow, index) => (

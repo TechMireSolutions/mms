@@ -29,17 +29,17 @@ export function DuplicatePairCard({
 }) {
   return (
     <div className="rounded-xl border border-border bg-muted/10 overflow-hidden">
-      <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
+      <div className="flex flex-col gap-2 border-b border-border bg-muted/30 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-2.5">
           <ConfidenceBadge score={pair.confidence} prefs={prefs} />
-          <span className="text-sm text-muted-foreground">{pair.reason}</span>
+          <span className="min-w-0 truncate text-sm text-muted-foreground">{pair.reason}</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
           {canWrite && (
             <Button
               type="button"
               onClick={onMerge}
-              className="flex items-center gap-1.5 px-3 min-h-11 rounded-lg text-sm font-semibold"
+              className="flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold"
             >
               <GitMerge className="w-3.5 h-3.5" />
               <span>{t("contacts.duplicates.merge")}</span>
@@ -49,8 +49,9 @@ export function DuplicatePairCard({
             type="button"
             variant="ghost"
             onClick={onDismiss}
-            className="min-w-11 min-h-11 p-0 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-transparent hover:border-border"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-transparent p-0 text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground"
             title={t("contacts.duplicates.dismiss")}
+            aria-label={t("contacts.duplicates.dismiss")}
           >
             <X className="w-3.5 h-3.5" />
           </Button>
@@ -58,10 +59,10 @@ export function DuplicatePairCard({
       </div>
 
       <div className="p-4">
-        <p className="text-xs text-muted-foreground mb-3 font-medium">
+        <p className="mb-3 text-xs font-medium text-muted-foreground">
           {t("contacts.duplicates.selectKeep")}
         </p>
-        <div className="flex gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           {pair.contacts.map((contact, contactIndex) => (
             <DuplicateContactCard
               key={contact.id}

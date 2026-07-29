@@ -32,13 +32,13 @@ interface SectionTitleProps {
 
 function SectionTitle({ icon: Icon, title, subtitle, noMargin = false }: SectionTitleProps) {
   return (
-    <header className={`flex items-center gap-2.5 ${noMargin ? "" : "mb-3"}`}>
-      <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center" aria-hidden="true">
+    <header className={`flex min-w-0 items-center gap-2.5 ${noMargin ? "" : "mb-3"}`}>
+      <div className="w-7 h-7 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center" aria-hidden="true">
         <Icon className="w-3.5 h-3.5 text-primary" />
       </div>
-      <div>
-        <h2 className="text-sm font-bold text-foreground m-0">{title}</h2>
-        {subtitle && <p className="text-xs text-muted-foreground m-0">{subtitle}</p>}
+      <div className="min-w-0">
+        <h2 className="text-sm font-bold text-foreground m-0 truncate">{title}</h2>
+        {subtitle && <p className="text-xs text-muted-foreground m-0 truncate">{subtitle}</p>}
       </div>
     </header>
   );
@@ -357,7 +357,7 @@ export function ObligationsSummary({
 
       {/* ── Wakala-wise Summary ── */}
       <section aria-label={t("obligations.summary.wakala.aria")}>
-        <header className="flex items-center justify-between mb-3">
+        <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <SectionTitle icon={Layers} title={t("obligations.summary.wakala.title")} subtitle={t("obligations.summary.wakala.subtitle")} noMargin />
           <ExportToolbar
             title={t("obligations.summary.wakala.title")}
@@ -490,7 +490,7 @@ export function ObligationsSummary({
 
       {/* ── Rep-wise Dues Summary ── */}
       <section aria-label={t("obligations.summary.rep.aria")}>
-        <header className="flex items-center justify-between mb-3">
+        <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <SectionTitle icon={Users} title={t("obligations.summary.rep.title")} subtitle={t("obligations.summary.rep.subtitle")} noMargin />
           <ExportToolbar
             title={t("obligations.summary.rep.title")}
@@ -626,7 +626,7 @@ export function ObligationsSummary({
 
       {/* ── Obligation type detailed table ── */}
       <section aria-label={t("obligations.summary.types.aria")}>
-        <header className="flex items-center justify-between mb-3">
+        <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <SectionTitle icon={BarChart2} title={t("obligations.summary.types.title")} subtitle={t("obligations.summary.types.subtitle")} noMargin />
           <ExportToolbar
             title={t("obligations.summary.types.title")}
@@ -649,9 +649,9 @@ export function ObligationsSummary({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {typeBreakdown.map((typeItem, i) => (
             <Card key={typeItem.name} accentColor="primary" className="p-4 space-y-1.5 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md transition-all">
-              <header className="flex items-center justify-between">
-                <h3 className="text-xs font-bold text-foreground m-0">{typeItem.name}</h3>
-                <span className="text-xs px-1.5 py-0.5 rounded-full font-bold text-white" style={{ background: COLORS[i % COLORS.length] }}>
+              <header className="flex min-w-0 items-center justify-between gap-2">
+                <h3 className="min-w-0 truncate text-xs font-bold text-foreground m-0">{typeItem.name}</h3>
+                <span className="shrink-0 text-xs px-1.5 py-0.5 rounded-full font-bold text-white" style={{ background: COLORS[i % COLORS.length] }}>
                   {typeItem.count}
                 </span>
               </header>

@@ -71,10 +71,10 @@ export function DuplicateContactCard({
       <div className="space-y-1.5">
         {fields.map((field) => (
           <div key={field} className="flex items-start gap-2">
-            <span className="text-xs text-muted-foreground w-14 flex-shrink-0">
+            <span className="text-xs text-muted-foreground w-14 shrink-0">
               {getDuplicateFieldLabel(field, t)}:
             </span>
-            <span className="text-sm font-medium text-foreground truncate">
+            <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
               {getDuplicateFieldValue(field, contact, t)}
             </span>
           </div>

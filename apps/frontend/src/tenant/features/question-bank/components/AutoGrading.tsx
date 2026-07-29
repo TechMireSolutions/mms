@@ -74,7 +74,7 @@ function ResultRow({ result, test, questions }: ResultRowProps): React.ReactElem
           <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-foreground">
             {getInitials(result.studentName)}
           </div>
-          <p className="text-sm font-semibold text-foreground m-0">{result.studentName}</p>
+          <p className="m-0 min-w-0 truncate text-sm font-semibold text-foreground">{result.studentName}</p>
         </div>
         <div className="flex flex-shrink-0 items-center gap-4">
           <div className="text-end">

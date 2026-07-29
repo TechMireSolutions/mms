@@ -393,15 +393,15 @@ export default function PinnedWidgets({ category }: { category: string }): React
                 animate={{ opacity: 1, scale: 1 }}
                 className="rounded-2xl border border-border/60 bg-card/50 backdrop-blur-md p-5 space-y-4 shadow-sm relative group text-start font-sans"
               >
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <span className="text-xs font-black text-foreground uppercase tracking-widest leading-none block">{resolveWidgetTitle(widget, t)}</span>
-                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
+                <div className="flex min-w-0 items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1 space-y-0.5">
+                    <span className="block truncate text-xs font-black uppercase leading-none tracking-widest text-foreground">{resolveWidgetTitle(widget, t)}</span>
+                    <p className="truncate text-xs font-bold uppercase tracking-wider text-muted-foreground">
                       {typeLabelKey ? t(typeLabelKey) : (widget.widgetType || "kpi")} • {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection.replace("_", " "), t)}
                     </p>
                   </div>
                   
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex shrink-0 items-center gap-1.5">
                     {/* Pin toggle button handles */}
                     <Button
                       type="button"

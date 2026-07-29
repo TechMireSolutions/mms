@@ -38,10 +38,10 @@ export function AppleContactsPreviewList({
         {previewList.slice(0, 50).map((contact, contactIndex) => (
           <div
             key={contactIndex}
-            className="flex items-center justify-between px-3 py-1.5 rounded-lg hover:bg-muted/50 text-sm"
+            className="flex min-w-0 items-center justify-between gap-2 px-3 py-1.5 rounded-lg hover:bg-muted/50 text-sm"
           >
-            <span className="font-medium text-foreground truncate">{getDisplayName(contact)}</span>
-            <span className="text-xs text-muted-foreground flex-shrink-0 ms-2">
+            <span className="min-w-0 flex-1 truncate font-medium text-foreground">{getDisplayName(contact)}</span>
+            <span className="text-xs text-muted-foreground shrink-0 ms-2">
               {getPrimaryPhone(contact) || getPrimaryEmail(contact) || ""}
             </span>
           </div>

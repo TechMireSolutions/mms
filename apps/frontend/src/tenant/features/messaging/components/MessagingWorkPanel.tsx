@@ -210,7 +210,7 @@ export function MessagingWorkPanel({
                       <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
                         {getInitials(displayName)}
                       </span>
-                      <span className="truncate text-sm font-medium text-foreground">{displayName}</span>
+                      <span className="min-w-0 truncate text-sm font-medium text-foreground">{displayName}</span>
                     </div>
                   </div>
                   <dl className="grid grid-cols-1 gap-2 ps-8 text-sm">

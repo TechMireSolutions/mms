@@ -42,10 +42,10 @@ export function ListFieldCard({
       className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
     >
       <div className={cn("absolute start-0 top-0 bottom-0 w-1.5 transition-colors", accentClass)} />
-      <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
-        <div className="flex items-center gap-2.5">
-          <Icon className={cn("w-4 h-4 transition-colors", iconClass)} />
-          <span className="text-xs font-semibold text-foreground/80">
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-1.5 border-b border-border/40">
+        <div className="flex min-w-0 flex-wrap items-center gap-2.5">
+          <Icon className={cn("w-4 h-4 shrink-0 transition-colors", iconClass)} />
+          <span className="min-w-0 truncate text-xs font-semibold text-foreground/80">
             {label}
           </span>
           {typeSelect}

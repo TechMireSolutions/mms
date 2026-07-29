@@ -137,11 +137,11 @@ export function DiscountsTab({ session, onUpdate, canWrite }: DiscountsTabProps)
 
   return (
     <section aria-label={t("sessions.discounts.ariaLabel")} className="space-y-4">
-      <header className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-foreground m-0">{t("sessions.discounts.count", { count: discounts.length })}</p>
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="m-0 min-w-0 text-sm font-semibold text-foreground">{t("sessions.discounts.count", { count: discounts.length })}</p>
         {canWrite && <Button
           onClick={() => { setEditDiscount(null); setShowModal(true); }}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors h-auto"
+          className="flex h-auto w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.discounts.add")}
         </Button>}
@@ -160,14 +160,14 @@ export function DiscountsTab({ session, onUpdate, canWrite }: DiscountsTabProps)
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className={`flex items-start gap-4 p-4 rounded-xl border transition-all ${discountItem.active ? "bg-card border-border" : "bg-muted/30 border-border opacity-60"}`}
+              className={`flex flex-col gap-3 rounded-xl border p-4 transition-all sm:flex-row sm:items-start sm:gap-4 ${discountItem.active ? "bg-card border-border" : "bg-muted/30 border-border opacity-60"}`}
             >
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${discountItem.active ? "bg-primary/10" : "bg-muted"}`} aria-hidden="true">
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${discountItem.active ? "bg-primary/10" : "bg-muted"}`} aria-hidden="true">
                 <Tag className={`w-4.5 h-4.5 ${discountItem.active ? "text-primary" : "text-muted-foreground"}`} style={{ width: 18, height: 18 }} />
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <h4 className="text-sm font-bold text-foreground m-0">{discountItem.name}</h4>
+              <div className="min-w-0 flex-1">
+                <div className="mb-0.5 flex flex-wrap items-center gap-2">
+                  <h4 className="m-0 min-w-0 truncate text-sm font-bold text-foreground">{discountItem.name}</h4>
                   <StatusBadge
                     status={discountItem.active ? "active" : "inactive"}
                     config={{
@@ -182,7 +182,7 @@ export function DiscountsTab({ session, onUpdate, canWrite }: DiscountsTabProps)
                 </p>
                 {discountItem.conditions && <p className="text-xs text-muted-foreground mt-0.5 m-0">{discountItem.conditions}</p>}
               </div>
-              {canWrite && <div className="flex items-center gap-1.5 flex-shrink-0">
+              {canWrite && <div className="flex shrink-0 items-center gap-1.5 self-end sm:self-start">
                 <Button aria-label={discountItem.active ? t("sessions.discounts.deactivate") : t("sessions.discounts.activate")} onClick={() => { void toggleActive(discountItem.id); }} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title={discountItem.active ? t("sessions.discounts.deactivate") : t("sessions.discounts.activate")} variant="ghost" size="icon">
                   {discountItem.active ? <ToggleRight className="w-4 h-4 text-primary" aria-hidden="true" /> : <ToggleLeft className="w-4 h-4" aria-hidden="true" />}
                 </Button>

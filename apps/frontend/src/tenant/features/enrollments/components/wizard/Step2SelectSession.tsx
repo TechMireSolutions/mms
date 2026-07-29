@@ -84,10 +84,10 @@ export function Step2SelectSession({ value, onChange, sessions = [] }: Step2Sele
                     {isFull && <StatusBadge status="full" config={sessionStatusConfig} size="sm" />}
                     {!isFull && spotsLeft <= 5 && <StatusBadge status="almost_full" config={sessionStatusConfig} size="sm" />}
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Calendar className="w-3 h-3" aria-hidden="true" />
-                      <span>{formatDate(session.startDate)} – {formatDate(session.endDate)}</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
+                    <div className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground sm:col-span-1">
+                      <Calendar className="w-3 h-3 shrink-0" aria-hidden="true" />
+                      <span className="min-w-0 truncate">{formatDate(session.startDate)} – {formatDate(session.endDate)}</span>
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Users className="w-3.5 h-3.5" aria-hidden="true" />

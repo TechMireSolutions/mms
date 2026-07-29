@@ -276,9 +276,9 @@ export function PerformanceAnalytics({
             <div key={categoryResult.name} className="flex items-center gap-4 px-4 py-3" role="listitem">
               <span className="flex-shrink-0 text-xl" aria-hidden>{categoryResult.icon}</span>
               <div className="min-w-0 flex-1">
-                <div className="mb-1 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-foreground">{categoryResult.name}</p>
-                  <span className={`text-xs font-bold ${questionAccuracyTextClass(categoryResult.accuracy)}`}>{categoryResult.accuracy}%</span>
+                <div className="mb-1 flex min-w-0 items-center justify-between gap-2">
+                  <p className="min-w-0 truncate text-sm font-semibold text-foreground">{categoryResult.name}</p>
+                  <span className={`shrink-0 text-xs font-bold ${questionAccuracyTextClass(categoryResult.accuracy)}`}>{categoryResult.accuracy}%</span>
                 </div>
                 <div className="h-1.5 overflow-hidden rounded-full bg-border" aria-hidden>
                   <div
@@ -313,13 +313,13 @@ export function PerformanceAnalytics({
             {studentStats.map((studentStat, studentIndex) => (
               <div key={studentStat.name} className="flex items-center gap-3" role="listitem">
                 <span className="w-6 flex-shrink-0 text-sm font-bold text-muted-foreground">{studentIndex + 1}</span>
-                <div className="flex-1">
-                  <div className="mb-0.5 flex items-center justify-between">
-                    <p className="text-sm font-semibold text-foreground">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-0.5 flex min-w-0 items-center justify-between gap-2">
+                    <p className="min-w-0 truncate text-sm font-semibold text-foreground">
                       {studentStat.name}{" "}
                       <span className="font-normal text-muted-foreground">· {studentStat.class}</span>
                     </p>
-                    <p className="text-sm font-bold text-foreground">{studentStat.avg}%</p>
+                    <p className="shrink-0 text-sm font-bold text-foreground">{studentStat.avg}%</p>
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-border" aria-hidden>
                     <div className="h-full rounded-full bg-primary" style={{ width: `${studentStat.avg}%` }} />

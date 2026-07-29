@@ -190,11 +190,11 @@ export function TimetableTab({ session, onUpdate, canWrite }: TimetableTabProps)
 
   return (
     <section aria-label={t("sessions.timetable.ariaLabel")} className="space-y-4">
-      <header className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-foreground m-0">{t("sessions.timetable.count", { count: timetable.length })}</p>
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="m-0 min-w-0 text-sm font-semibold text-foreground">{t("sessions.timetable.count", { count: timetable.length })}</p>
         {canWrite && <Button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors h-auto"
+          className="flex h-auto w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.timetable.add")}
         </Button>}

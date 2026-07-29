@@ -72,10 +72,10 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
 
   return (
     <div className="space-y-4">
-      <header className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground m-0">{t("obligations.mujtahids.count", { count: mujtahids.length })}</p>
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="m-0 min-w-0 text-sm text-muted-foreground">{t("obligations.mujtahids.count", { count: mujtahids.length })}</p>
         <Button type="button" onClick={() => setModal({ mode: "add", data: { name: "" } })}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
+          className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto">
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.mujtahids.add")}
         </Button>
       </header>
@@ -89,20 +89,20 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
           const isOpen = expanded[mujtahid.id];
           return (
             <Card key={mujtahid.id} accentColor="primary" className="group/mujtahid">
-              <header className="flex items-center justify-between px-5 py-3 ps-5.5">
+              <header className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 ps-5.5">
                 <Button type="button" onClick={() => setExpanded((expandedById) => ({ ...expandedById, [mujtahid.id]: !expandedById[mujtahid.id] }))}
                   aria-expanded={isOpen}
                   variant="ghost"
-                  className="flex items-center gap-2 min-h-11 h-auto px-1 text-sm font-semibold text-foreground hover:text-primary hover:bg-transparent shadow-none transition-colors">
-                  {isOpen ? <ChevronDown className="w-4 h-4" aria-hidden="true" /> : <ChevronRight className="w-4 h-4" aria-hidden="true" />}
-                  {mujtahid.name}
-                  <span className="text-xs font-bold px-1.5 py-0.5 bg-muted text-muted-foreground rounded-full">{t("obligations.mujtahids.repsCount", { count: mujtahidReps.length })}</span>
+                  className="flex h-auto min-h-11 min-w-0 flex-1 items-center gap-2 px-1 text-sm font-semibold text-foreground shadow-none transition-colors hover:bg-transparent hover:text-primary">
+                  {isOpen ? <ChevronDown className="w-4 h-4 shrink-0" aria-hidden="true" /> : <ChevronRight className="w-4 h-4 shrink-0" aria-hidden="true" />}
+                  <span className="min-w-0 truncate">{mujtahid.name}</span>
+                  <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-xs font-bold text-muted-foreground">{t("obligations.mujtahids.repsCount", { count: mujtahidReps.length })}</span>
                 </Button>
-                <div className="flex items-center gap-1">
+                <div className="flex shrink-0 items-center gap-1">
                   <Button type="button" aria-label={t("obligations.mujtahids.addRepAria", { name: mujtahid.name })} onClick={() => setModal({ mode: "add-rep", data: { name: "", mujtahid_id: mujtahid.id } })}
                     variant="ghost"
-                    className="flex min-h-11 items-center gap-1 px-2 py-2 rounded-lg text-xs font-semibold text-primary hover:bg-primary/10 shadow-none transition-colors">
-                    <Plus className="w-3 h-3" aria-hidden="true" /> {t("obligations.mujtahids.addRep")}
+                    className="flex min-h-11 items-center gap-1 rounded-lg px-2 py-2 text-xs font-semibold text-primary shadow-none transition-colors hover:bg-primary/10">
+                    <Plus className="w-3 h-3" aria-hidden="true" /> <span className="hidden sm:inline">{t("obligations.mujtahids.addRep")}</span>
                   </Button>
                   <Button type="button" aria-label={t("obligations.mujtahids.editAria", { name: mujtahid.name })} onClick={() => setModal({ mode: "edit", data: { ...mujtahid } })}
                     variant="ghost"
@@ -124,9 +124,9 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
                     <p className="px-6 py-3 text-xs text-muted-foreground m-0">{t("obligations.mujtahids.noReps")}</p>
                   ) : (
                     mujtahidReps.map((representative) => (
-                      <div key={representative.id} className="flex items-center justify-between px-6 py-2.5 border-b border-border last:border-0">
-                        <span className="text-sm text-foreground">{representative.name}</span>
-                        <div className="flex items-center gap-1">
+                      <div key={representative.id} className="flex min-w-0 items-center justify-between gap-2 border-b border-border px-6 py-2.5 last:border-0">
+                        <span className="min-w-0 truncate text-sm text-foreground">{representative.name}</span>
+                        <div className="flex shrink-0 items-center gap-1">
                           <Button type="button" aria-label={t("obligations.mujtahids.repEditAria", { name: representative.name })} onClick={() => setModal({ mode: "edit-rep", data: { ...representative } })}
                             variant="ghost"
                             size="icon"

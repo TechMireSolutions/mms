@@ -52,17 +52,17 @@ function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage, canWri
       animate={{ opacity: 1, y: 0 }}
       className="rounded-xl border border-border bg-card p-4 hover:shadow-sm transition-all group"
     >
-      <header className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center" aria-hidden="true">
+      <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10" aria-hidden="true">
             <GraduationCap className="w-4.5 h-4.5 text-primary" style={{ width: 18, height: 18 }} />
           </div>
-          <div>
-            <h4 className="text-sm font-bold text-foreground m-0">{sessionClass.name}</h4>
-            <p className="text-xs text-muted-foreground m-0">{sessionClass.room || t("sessions.classes.noRoom")}</p>
+          <div className="min-w-0">
+            <h4 className="m-0 truncate text-sm font-bold text-foreground">{sessionClass.name}</h4>
+            <p className="m-0 truncate text-xs text-muted-foreground">{sessionClass.room || t("sessions.classes.noRoom")}</p>
           </div>
         </div>
-        {canWrite && <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
+        {canWrite && <div className="flex shrink-0 items-center gap-1 self-end opacity-100 transition-opacity sm:self-start md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
           <Button
             variant="ghost"
             size="icon"
@@ -336,11 +336,11 @@ export function ClassesTab({ session, onUpdate, canWrite }: ClassesTabProps) {
 
   return (
     <section aria-label={t("sessions.classes.ariaLabel")} className="space-y-4">
-      <header className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-foreground m-0">{t("sessions.classes.count", { count: session.classes?.length || 0 })}</p>
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="m-0 min-w-0 text-sm font-semibold text-foreground">{t("sessions.classes.count", { count: session.classes?.length || 0 })}</p>
         {canWrite && <Button
           onClick={() => { setClassBeingEdited(null); setShowModal(true); }}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors h-auto"
+          className="flex h-auto w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.classes.add")}
         </Button>}

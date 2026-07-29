@@ -93,14 +93,14 @@ export function AppleContactsExportBar({
   t: TranslationFunction;
 }) {
   return (
-    <div className="border-t border-border pt-3 flex items-center justify-between">
-      <span className="text-xs text-muted-foreground">{t("contacts.sync.exportAppleHint")}</span>
+    <div className="border-t border-border pt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <span className="min-w-0 text-xs text-muted-foreground">{t("contacts.sync.exportAppleHint")}</span>
       <Button
         type="button"
         variant="outline"
         onClick={onExport}
         disabled={contactCount === 0}
-        className="flex items-center gap-1.5 px-3.5 min-h-11 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50 transition-colors bg-card shadow-none"
+        className="flex w-full sm:w-auto shrink-0 items-center gap-1.5 px-3.5 min-h-11 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50 transition-colors bg-card shadow-none"
       >
         <Download className="w-3.5 h-3.5" />
         <span>{t("contacts.sync.exportVcf", { count: contactCount })}</span>

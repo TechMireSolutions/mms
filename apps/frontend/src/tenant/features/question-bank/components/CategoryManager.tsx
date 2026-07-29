@@ -32,15 +32,15 @@ export function CategoryManager({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground m-0">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h4 className="m-0 min-w-0 text-xs font-bold uppercase tracking-wide text-muted-foreground">
           {t('questionBank.categoriesTitle')}
         </h4>
         <Button
           type="button"
           onClick={addCategory}
           variant="outline"
-          className="flex min-h-11 items-center gap-1 rounded-lg border border-border px-2.5 text-xs font-semibold hover:bg-muted shadow-none"
+          className="flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border border-border px-2.5 text-xs font-semibold shadow-none hover:bg-muted sm:w-auto"
         >
           <Plus className="h-3.5 w-3.5" aria-hidden />
           {t('questionBank.addCategory')}

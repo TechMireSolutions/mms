@@ -160,13 +160,13 @@ export function DenominationsManager({ denoms, onUpdate, canWrite = true }: Deno
 
   return (
     <section aria-label={t("hasanat.denominations.aria")} className="space-y-4">
-      <header className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-foreground m-0">{denoms.length} denomination{denoms.length !== 1 ? "s" : ""}</p>
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="m-0 min-w-0 text-sm font-semibold text-foreground">{t("hasanat.denominations.count", { count: denoms.length })}</p>
         {canWrite && (
           <Button
             type="button"
             onClick={() => { setEditDenom(null); setShowModal(true); }}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
           >
             <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("hasanat.denominations.new")}
           </Button>
@@ -184,11 +184,11 @@ export function DenominationsManager({ denoms, onUpdate, canWrite = true }: Deno
           >
             <div className="absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300" style={{ backgroundColor: denomination.active ? denomination.color : "hsl(var(--muted-foreground))" }} />
             {/* Card visual */}
-            <header className="relative mb-3 h-16 rounded-xl flex items-center gap-3 px-4 text-primary-foreground shadow-md overflow-hidden" style={{ background: `linear-gradient(135deg, ${denomination.color}, color-mix(in srgb, ${denomination.color} 60%, transparent))` }}>
-              <span className="text-3xl" aria-hidden="true">{denomination.icon}</span>
-              <div>
-                <h3 className="text-sm font-bold m-0">{denomination.name}</h3>
-                <p className="text-xs opacity-80 m-0">{t("hasanat.denominations.pointsLabel", { points: denomination.points })}</p>
+            <header className="relative mb-3 flex h-16 items-center gap-3 overflow-hidden rounded-xl px-4 text-primary-foreground shadow-md" style={{ background: `linear-gradient(135deg, ${denomination.color}, color-mix(in srgb, ${denomination.color} 60%, transparent))` }}>
+              <span className="shrink-0 text-3xl" aria-hidden="true">{denomination.icon}</span>
+              <div className="min-w-0">
+                <h3 className="m-0 truncate text-sm font-bold">{denomination.name}</h3>
+                <p className="m-0 truncate text-xs opacity-80">{t("hasanat.denominations.pointsLabel", { points: denomination.points })}</p>
               </div>
               {!denomination.active && (
                 <span className="absolute top-2 end-2 text-xs font-bold bg-background/30 text-primary-foreground px-1.5 py-0.5 rounded" aria-label={t("hasanat.denominations.inactive")}>{t("hasanat.denominations.inactive")}</span>
@@ -197,17 +197,17 @@ export function DenominationsManager({ denoms, onUpdate, canWrite = true }: Deno
 
             <p className="text-sm text-muted-foreground mb-3">{denomination.description || t("hasanat.denominations.noDescription")}</p>
 
-            <footer className="flex items-center justify-between">
-              <span className="text-xs font-bold text-foreground px-2 py-1 rounded-lg bg-muted">{t("hasanat.denominations.ptsShort", { points: denomination.points })}</span>
+            <footer className="flex flex-wrap items-center justify-between gap-2">
+              <span className="rounded-lg bg-muted px-2 py-1 text-xs font-bold text-foreground">{t("hasanat.denominations.ptsShort", { points: denomination.points })}</span>
               {canWrite && (
-                <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
+                <div className="flex shrink-0 items-center gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
                   <Button variant="ghost" type="button" size="icon" onClick={() => toggleActive(denomination.id)} className="rounded-lg hover:bg-muted text-muted-foreground" title={denomination.active ? t("hasanat.denominations.deactivate") : t("hasanat.denominations.activate")} aria-label={denomination.active ? t("hasanat.denominations.deactivate") : t("hasanat.denominations.activate")}>
                     {denomination.active ? <ToggleRight className="w-4 h-4 text-primary" aria-hidden="true" /> : <ToggleLeft className="w-4 h-4" aria-hidden="true" />}
                   </Button>
-                  <Button variant="ghost" type="button" size="icon" aria-label={`Edit ${denomination.name}`} onClick={() => { setEditDenom(denomination); setShowModal(true); }} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
+                  <Button variant="ghost" type="button" size="icon" aria-label={t("hasanat.denominations.editNamed", { name: denomination.name })} onClick={() => { setEditDenom(denomination); setShowModal(true); }} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
                     <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                   </Button>
-                  <Button variant="ghost" type="button" size="icon" aria-label={`Delete ${denomination.name}`} onClick={() => handleDelete(denomination.id)} className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+                  <Button variant="ghost" type="button" size="icon" aria-label={t("hasanat.denominations.deleteNamed", { name: denomination.name })} onClick={() => handleDelete(denomination.id)} className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
                     <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                   </Button>
                 </div>

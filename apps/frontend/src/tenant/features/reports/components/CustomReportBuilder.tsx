@@ -605,7 +605,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                     type="button"
                   >
                     <Plus className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-transform shrink-0" />
-                    <span className="truncate">{resolveFieldLabel(availableField)}</span>
+                    <span className="min-w-0 truncate">{resolveFieldLabel(availableField)}</span>
                   </Button>
                 ))
               )}

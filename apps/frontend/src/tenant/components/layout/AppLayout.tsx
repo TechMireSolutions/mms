@@ -73,7 +73,7 @@ export default function AppLayout(): React.JSX.Element {
               </span>
             </div>
           )}
-          <span className="truncate text-sm font-semibold">
+          <span className="min-w-0 truncate text-sm font-semibold">
             {branding.madrasaName || t("entry.productName")}
           </span>
         </div>

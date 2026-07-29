@@ -65,11 +65,13 @@ export function MessageComposerRecipients({
             const eligibleIndex = eligibleRecipients.findIndex((eligible) => eligible.id === recipient.id);
             const displayAddress = recipient.address || (isEmail ? recipient.email : recipient.phone) || (isEmail ? t('messaging.missingEmail') : t('messaging.missingPhone'));
             return (
-              <li key={recipient.id} className={`flex items-center gap-2 rounded p-1.5 text-xs transition-colors ${!recipient.isValid ? 'border border-warning/20 bg-warning/10 text-warning' : previewIndex === eligibleIndex ? 'bg-primary/10 font-semibold text-foreground' : 'text-muted-foreground hover:bg-muted/30'}`}>
-                <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-extrabold text-primary">{getInitials(recipient.name)}</span>
-                <Button type="button" variant="ghost" className="min-h-11 h-auto flex-1 justify-start truncate px-2 text-xs" onClick={() => { if (eligibleIndex >= 0) onPreviewIndexChange(eligibleIndex); }}>{recipient.name}</Button>
-                <span className="font-mono text-xs text-muted-foreground">({displayAddress})</span>
-                {recipient.isValid ? <Button type="button" variant="link" className="ms-auto inline-flex min-h-11 flex-shrink-0 items-center p-0 text-xs font-semibold text-primary" onClick={() => onSendOne(recipient, message)}>{isEmail ? t('messaging.sendEmail') : isSms ? t('contacts.openSmsApp') : t('contacts.whatsapp.open')}</Button> : <span className="ms-auto text-xs font-semibold text-warning">{t('messaging.skippedStatus')}</span>}
+              <li key={recipient.id} className={`flex min-w-0 items-center gap-2 rounded p-1.5 text-xs transition-colors ${!recipient.isValid ? 'border border-warning/20 bg-warning/10 text-warning' : previewIndex === eligibleIndex ? 'bg-primary/10 font-semibold text-foreground' : 'text-muted-foreground hover:bg-muted/30'}`}>
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-extrabold text-primary">{getInitials(recipient.name)}</span>
+                <div className="min-w-0 flex-1">
+                  <Button type="button" variant="ghost" className="h-auto min-h-11 w-full min-w-0 justify-start truncate px-2 text-xs" onClick={() => { if (eligibleIndex >= 0) onPreviewIndexChange(eligibleIndex); }}>{recipient.name}</Button>
+                  <span className="block truncate px-2 font-mono text-xs text-muted-foreground">({displayAddress})</span>
+                </div>
+                {recipient.isValid ? <Button type="button" variant="link" className="ms-auto inline-flex min-h-11 shrink-0 items-center p-0 text-xs font-semibold text-primary" onClick={() => onSendOne(recipient, message)}>{isEmail ? t('messaging.sendEmail') : isSms ? t('contacts.openSmsApp') : t('contacts.whatsapp.open')}</Button> : <span className="ms-auto shrink-0 text-xs font-semibold text-warning">{t('messaging.skippedStatus')}</span>}
               </li>
             );
           })}

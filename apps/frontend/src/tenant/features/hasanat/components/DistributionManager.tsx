@@ -586,7 +586,7 @@ export function DistributionManager({
                           {distribution.recipientType === "faculty"
                             ? <Users2 className="w-3 h-3 shrink-0 text-muted-foreground" aria-hidden="true" />
                             : <User className="w-3 h-3 shrink-0 text-muted-foreground" aria-hidden="true" />}
-                          <h4 className="truncate text-sm font-semibold text-foreground">{distribution.recipientName}</h4>
+                          <h4 className="min-w-0 truncate text-sm font-semibold text-foreground">{distribution.recipientName}</h4>
                         </div>
                       )}
                       {showCard && (

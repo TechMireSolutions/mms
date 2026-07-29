@@ -134,7 +134,7 @@ export function HasanatDashboard({
                   <div className="mb-1 flex min-w-0 items-center justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-2">
                       <span className="shrink-0 text-sm" aria-hidden="true">{denomination.icon}</span>
-                      <span className="truncate text-sm font-semibold text-foreground">{denomination.name}</span>
+                      <span className="min-w-0 truncate text-sm font-semibold text-foreground">{denomination.name}</span>
                       <span className="shrink-0 text-xs font-bold text-muted-foreground">
                         {t("hasanat.dashboard.pts", { count: denomination.points })}
                       </span>

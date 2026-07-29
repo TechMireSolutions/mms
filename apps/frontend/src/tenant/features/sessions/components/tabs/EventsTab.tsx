@@ -149,11 +149,11 @@ export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps) {
 
   return (
     <section aria-label={t("sessions.events.ariaLabel")} className="space-y-4">
-      <header className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-foreground m-0">{t("sessions.events.count", { count: events.length })}</p>
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="m-0 min-w-0 text-sm font-semibold text-foreground">{t("sessions.events.count", { count: events.length })}</p>
         {canWrite && <Button
           onClick={() => { setEditEvent(null); setShowModal(true); }}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors h-auto"
+          className="flex h-auto w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.events.add")}
         </Button>}
@@ -180,12 +180,12 @@ export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps) {
                 {/* Timeline dot */}
                 <div className="absolute -start-10 top-4 w-4 h-4 rounded-full bg-card border-2 border-primary" aria-hidden="true" />
                 <div className="rounded-xl border border-border bg-card p-4 hover:shadow-sm transition-all group">
-                  <header className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-sm font-bold text-foreground m-0">{sessionEvent.title}</h4>
+                  <header className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <h4 className="m-0 min-w-0 truncate text-sm font-bold text-foreground">{sessionEvent.title}</h4>
                       <StatusBadge status={sessionEvent.type || "other"} config={eventTypeConfig} size="sm" />
                     </div>
-                    {canWrite && <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
+                    {canWrite && <div className="flex items-center gap-1 self-end opacity-100 transition-opacity sm:self-start md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
                       <Button aria-label={t("sessions.events.editNamed", { name: sessionEvent.title })} onClick={() => { setEditEvent(sessionEvent); setShowModal(true); }} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground" variant="ghost" size="icon">
                         <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>

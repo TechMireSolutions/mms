@@ -215,7 +215,7 @@ export function MessagingReportsPanel({
                           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
                             {getInitials(name)}
                           </span>
-                          <span className="truncate text-sm font-semibold text-foreground">{name}</span>
+                          <span className="min-w-0 truncate text-sm font-semibold text-foreground">{name}</span>
                         </div>
                         <div className="flex shrink-0 items-center gap-1.5">
                           <ChannelBadge channel={log.channel} />

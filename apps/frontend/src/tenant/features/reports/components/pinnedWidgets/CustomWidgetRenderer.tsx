@@ -209,16 +209,16 @@ export function WidgetDrilldownModal({
         className="w-full max-w-2xl bg-card dark:bg-card/90 border border-border/60 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] text-start"
       >
         {/* Modal Header */}
-        <div className="p-6 border-b border-border/45 bg-muted/20 flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-primary uppercase font-black tracking-widest block">{t("reports.widgets.drilldownTitle")}</span>
-            <h3 className="text-base font-black text-foreground">{t("reports.widgets.records", { title: resolveWidgetTitle(widget, t) })}</h3>
+        <div className="flex min-w-0 items-center justify-between gap-3 border-b border-border/45 bg-muted/20 p-6">
+          <div className="min-w-0 space-y-1">
+            <span className="block text-xs font-black uppercase tracking-widest text-primary">{t("reports.widgets.drilldownTitle")}</span>
+            <h3 className="truncate text-base font-black text-foreground">{t("reports.widgets.records", { title: resolveWidgetTitle(widget, t) })}</h3>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-none"
+            className="shrink-0 rounded-full border border-border text-muted-foreground shadow-none transition-all hover:bg-muted hover:text-foreground"
           >
             <X className="w-4 h-4" />
           </Button>

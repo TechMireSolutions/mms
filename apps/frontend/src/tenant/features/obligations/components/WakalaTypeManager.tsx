@@ -92,10 +92,10 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
 
   return (
     <div className="space-y-4">
-      <header className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground m-0">{t("obligations.wakala.count", { count: wakalaTypes.length })}</p>
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="m-0 min-w-0 text-sm text-muted-foreground">{t("obligations.wakala.count", { count: wakalaTypes.length })}</p>
         <Button type="button" onClick={() => setModal({ mode: "add", data: { mujtahid_representative_id: reps[0]?.id || "", obligation_type_id: obligationTypes[0]?.id || "" } })}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
+          className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto">
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.wakala.add")}
         </Button>
       </header>
@@ -115,16 +115,16 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
 
           return (
             <Card key={wakalaType.id} accentColor="primary" className="group/wakala">
-              <header className="flex items-start justify-between px-5 py-3 border-b border-border/40 ps-5.5">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-foreground m-0">{typeName}</h3>
-                    <span className="text-xs text-muted-foreground">{t("obligations.wakala.via")}</span>
-                    <span className="text-sm font-semibold text-foreground">{rep?.name || emDash}</span>
+              <header className="flex flex-col gap-2 border-b border-border/40 px-5 py-3 ps-5.5 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <h3 className="m-0 min-w-0 truncate text-sm font-bold text-foreground">{typeName}</h3>
+                    <span className="shrink-0 text-xs text-muted-foreground">{t("obligations.wakala.via")}</span>
+                    <span className="min-w-0 truncate text-sm font-semibold text-foreground">{rep?.name || emDash}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5 m-0">{t("obligations.wakala.mujtahidLabel", { name: mujtahid?.name || emDash })}</p>
+                  <p className="m-0 mt-0.5 truncate text-xs text-muted-foreground">{t("obligations.wakala.mujtahidLabel", { name: mujtahid?.name || emDash })}</p>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex shrink-0 items-center gap-1 self-end sm:self-start">
                   <span aria-label={t("obligations.wakala.totalPctAria", { pct: total.toFixed(0) })}>
                     <StatusBadge
                       status={isComplete ? "complete" : "incomplete"}

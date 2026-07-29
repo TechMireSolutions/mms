@@ -63,9 +63,9 @@ export function renderAddressFieldMetadata({
     primaryAddr?.[colId] || (contact[colId as keyof Contact] as string | undefined);
   if (!addressValue) return emptyNode;
   return (
-    <span className="flex items-center gap-1 truncate">
+    <span className="flex min-w-0 items-center gap-1 truncate">
       <MapPin className="w-3.5 h-3.5 text-primary/70 shrink-0" />
-      <span className="truncate">{String(addressValue)}</span>
+      <span className="min-w-0 truncate">{String(addressValue)}</span>
     </span>
   );
 }

@@ -361,9 +361,9 @@ export default function StudentList({
                         <div className="flex min-w-0 items-center gap-2.5">
                           <UserAvatar id={studentIdStr} name={studentCard.name || ""} className="h-8 w-8 shrink-0 rounded-full text-xs font-bold" />
                           <div className="min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <p className="truncate text-sm font-semibold text-foreground">{studentCard.name}</p>
-                              <GrBadge grNumber={studentCard.grNumber} />
+                            <div className="flex min-w-0 items-center gap-1.5">
+                              <p className="min-w-0 truncate text-sm font-semibold text-foreground">{studentCard.name}</p>
+                              <span className="shrink-0"><GrBadge grNumber={studentCard.grNumber} /></span>
                             </div>
                             <p className="truncate text-xs text-muted-foreground">
                               {isFieldEnabled("gender") && studentCard.gender ? `${toTitleCase(studentCard.gender)} · ` : ""}{studentCard.phone || t("students.list.noPhone")}

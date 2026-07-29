@@ -140,8 +140,8 @@ export default function SavedReports({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="text-start">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 text-start">
           <h3 className="text-sm font-semibold text-foreground">{t("reports.saved.title")}</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             {t("reports.saved.subtitle")}
@@ -150,7 +150,7 @@ export default function SavedReports({
         {onApplyFilters && (
           <Button
             onClick={() => setSaveOpen(true)}
-            className="flex items-center gap-1.5 min-h-11 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer"
+            className="flex w-full sm:w-auto items-center gap-1.5 min-h-11 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             {t("reports.saved.saveCurrent")}

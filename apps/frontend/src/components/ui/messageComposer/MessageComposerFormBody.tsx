@@ -79,11 +79,11 @@ export function MessageComposerFormBody({
         <MessagingVariableTokensBar onSelectToken={(token) => onMessageChange(appendVariableToken(message, token))} className="mb-1.5" />
         <p className="mb-2 flex items-center gap-1 text-xs italic text-muted-foreground/80"><Info className="h-3 w-3 flex-shrink-0 text-primary/70" />{t('messaging.fallbackHint')}</p>
         <Textarea id="messageBody" rows={4} value={message} onChange={(event) => onMessageChange(event.target.value)} placeholder={isSms ? t('contacts.smsMessagePlaceholder') : t('contacts.whatsapp.typeMessagePlaceholder')} />
-        <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-          <span className="flex items-center gap-1"><ShieldCheck className="h-3 w-3 text-success" />{t('messaging.createPresetDesc')}</span>
-          <div className="flex items-center gap-2 font-mono">
+        <div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+          <span className="flex min-w-0 items-center gap-1"><ShieldCheck className="h-3 w-3 shrink-0 text-success" />{t('messaging.createPresetDesc')}</span>
+          <div className="flex flex-wrap items-center gap-2 font-mono">
             {isSms && <span className={`rounded px-1.5 py-0.5 text-xs font-bold uppercase ${smsStats.isUnicode ? 'border border-warning/30 bg-warning/15 text-warning' : 'bg-muted text-foreground'}`}>{smsStats.isUnicode ? t('messaging.encodingUnicode') : t('messaging.encodingGsm')} • {t('messaging.smsSegmentStats', { segments: smsStats.totalSegments, remaining: smsStats.remainingInSegment })}</span>}
-            <span>{message.length} {t('contacts.whatsapp.chars')}</span>
+            <span className="shrink-0">{message.length} {t('contacts.whatsapp.chars')}</span>
           </div>
         </div>
         {isSms && smsStats.isUnicode && <p className="mt-1 flex items-center gap-1 text-xs font-medium text-warning"><AlertCircle className="h-3 w-3 flex-shrink-0" />{t('messaging.unicodeWarning')}</p>}
@@ -92,9 +92,9 @@ export function MessageComposerFormBody({
       <AnimatePresence mode="wait">
         {previewText && recipient && (
           <motion.div key={`${previewIndex}-${channel}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.15 }} className="rounded-xl border border-border/80 bg-muted/20 p-3.5 backdrop-blur-xs">
-            <h5 className="mb-2.5 flex items-center justify-between text-xs font-bold text-muted-foreground">
-              <span className="flex items-center gap-1.5 text-foreground"><Sparkles className="h-3.5 w-3.5 animate-pulse text-primary" />{t('messaging.livePreview', { name: recipient.name })}</span>
-              <div className="flex items-center gap-2">
+            <h5 className="mb-2.5 flex min-w-0 flex-wrap items-center justify-between gap-2 text-xs font-bold text-muted-foreground">
+              <span className="flex min-w-0 items-center gap-1.5 text-foreground"><Sparkles className="h-3.5 w-3.5 shrink-0 animate-pulse text-primary" /><span className="min-w-0 truncate">{t('messaging.livePreview', { name: recipient.name })}</span></span>
+              <div className="flex shrink-0 items-center gap-2">
                 {isBulk && <div className="flex items-center gap-1 text-xs"><Button type="button" variant="ghost" size="icon" className="min-h-11 min-w-11" disabled={previewIndex <= 0} onClick={() => onPreviewIndexChange(Math.max(0, previewIndex - 1))} aria-label={t('common.previous')}><ChevronLeft className="h-3 w-3 rtl:rotate-180" /></Button><span className="font-mono">{previewIndex + 1}/{eligibleRecipients.length}</span><Button type="button" variant="ghost" size="icon" className="min-h-11 min-w-11" disabled={previewIndex >= eligibleRecipients.length - 1} onClick={() => onPreviewIndexChange(Math.min(eligibleRecipients.length - 1, previewIndex + 1))} aria-label={t('common.next')}><ChevronRight className="h-3 w-3 rtl:rotate-180" /></Button></div>}
                 <ChannelBadge channel={channel} className="text-xs" />
               </div>
