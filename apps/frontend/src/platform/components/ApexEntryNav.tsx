@@ -28,7 +28,7 @@ export default function ApexEntryNav({
           {t("apex.forgotPasswordPicker")}{" "}
           <Link
             to={ROUTES.forgotPassword}
-            className="inline-flex min-h-10 items-center rounded-md px-1 font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+            className="inline-flex min-h-11 items-center rounded-md px-1 font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
           >
             {t("apex.goToForgotPicker")}
           </Link>
@@ -38,7 +38,7 @@ export default function ApexEntryNav({
         <p>
           <Link
             to={ROUTES.home}
-            className="inline-flex min-h-10 items-center rounded-md px-1 font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+            className="inline-flex min-h-11 items-center rounded-md px-1 font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
           >
             {t("apex.backToMain")}
           </Link>

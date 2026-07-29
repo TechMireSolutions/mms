@@ -38,7 +38,7 @@ export function ContactsQuickFilterBar({
             variant="outline"
             onClick={() => onQuickFilterChange(preset.id)}
             aria-pressed={isSelected}
-            className={`inline-flex items-center gap-1.5 h-auto px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shadow-none ${
+            className={`inline-flex items-center gap-1.5 min-h-11 px-3 rounded-lg text-xs font-medium transition-all whitespace-nowrap shadow-none ${
               isSelected
                 ? "bg-primary/10 text-primary border-primary/30 font-semibold shadow-2xs hover:bg-primary/15 hover:text-primary"
                 : "bg-card/40 text-muted-foreground hover:text-foreground border-border/40 hover:bg-card/80"

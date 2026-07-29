@@ -124,7 +124,7 @@ export default function CornerStyleSelector({
                 variant="ghost"
                 onClick={() => onChange(opt.value)}
                 className={cn(
-                  "h-auto text-[9px] font-black uppercase tracking-widest p-1 rounded-sm shadow-none",
+                  "min-h-11 text-xs font-black uppercase tracking-widest px-2 rounded-sm shadow-none",
                   isSelected
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"

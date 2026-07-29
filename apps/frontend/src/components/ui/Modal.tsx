@@ -93,8 +93,8 @@ export function Modal({
                     </div>
                   )}
                   <div>
-                    <h3 id={titleId} className="text-[14px] font-bold text-foreground leading-tight">{title}</h3>
-                    {subtitle && <p className="text-[11px] text-muted-foreground">{subtitle}</p>}
+                    <h3 id={titleId} className="text-sm font-bold text-foreground leading-tight">{title}</h3>
+                    {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -105,7 +105,7 @@ export function Modal({
                     size="icon"
                     onClick={onClose}
                     aria-label={t("common.close")}
-                    className="h-8 w-8 p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none"
+                    className="min-h-11 min-w-11 h-11 w-11 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none"
                   >
                     <X className="w-4 h-4" />
                   </Button>

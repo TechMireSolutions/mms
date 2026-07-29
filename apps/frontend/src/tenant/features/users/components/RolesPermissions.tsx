@@ -35,9 +35,10 @@ function PermCell({ checked, onChange, disabled = false }: PermCellProps): React
     <Button
       type="button"
       variant="ghost"
+      size="icon"
       onClick={() => !disabled && onChange(!checked)}
       disabled={disabled}
-      className={`mx-auto flex h-7 w-7 items-center justify-center rounded-lg border-2 transition-all p-0 shadow-none hover:bg-transparent ${
+      className={`mx-auto flex min-h-11 min-w-11 items-center justify-center rounded-lg border-2 transition-all p-0 shadow-none hover:bg-transparent ${
         checked
           ? 'border-primary bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground'
           : 'border-border bg-card text-transparent hover:border-primary/50'
@@ -222,8 +223,9 @@ function PermissionMatrixRow({
           <Button
             type="button"
             variant="ghost"
+            size="icon"
             onClick={() => (allChecked ? onClearAll(mod.id) : onSelectAll(mod.id))}
-            className={`mx-auto flex h-7 w-7 items-center justify-center rounded-lg border-2 text-xs font-bold transition-all p-0 h-7 w-7 shadow-none ${
+            className={`mx-auto flex min-h-11 min-w-11 items-center justify-center rounded-lg border-2 text-xs font-bold transition-all p-0 shadow-none ${
               allChecked
                 ? 'border-primary bg-primary/15 text-primary hover:bg-primary/25'
                 : 'border-primary/30 text-primary/60 hover:bg-primary/10'
@@ -468,11 +470,12 @@ export function RolesPermissions(): React.JSX.Element {
                   <Button
                     type="button"
                     variant="ghost"
+                    size="icon"
                     onClick={(event) => {
                       event.stopPropagation();
                       setEdit(workspaceRole);
                     }}
-                    className="rounded p-1 text-muted-foreground transition-colors hover:text-primary h-auto w-auto p-1 shadow-none hover:bg-transparent"
+                    className="rounded text-muted-foreground transition-colors hover:text-primary shadow-none hover:bg-transparent"
                     aria-label={t('users.permissions.editRoleDetails', { name: workspaceRoleLabel(workspaceRole, t) })}
                   >
                     <Pencil className="h-3 w-3" />

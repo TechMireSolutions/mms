@@ -47,7 +47,7 @@ export function MessageComposerRecipients({
     <>
       <div className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t('messaging.confirmRecipients')} ({displayedRecipients.length})</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('messaging.confirmRecipients')} ({displayedRecipients.length})</span>
           <SegmentedPillFilter
             options={[
               { value: 'all', label: `${t('messaging.filter.all')} (${validatedRecipients.length})` },
@@ -68,8 +68,8 @@ export function MessageComposerRecipients({
               <li key={recipient.id} className={`flex items-center gap-2 rounded p-1.5 text-xs transition-colors ${!recipient.isValid ? 'border border-warning/20 bg-warning/10 text-warning' : previewIndex === eligibleIndex ? 'bg-primary/10 font-semibold text-foreground' : 'text-muted-foreground hover:bg-muted/30'}`}>
                 <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/15 text-[9px] font-extrabold text-primary">{getInitials(recipient.name)}</span>
                 <Button type="button" variant="ghost" className="h-auto flex-1 justify-start truncate p-0 text-xs" onClick={() => { if (eligibleIndex >= 0) onPreviewIndexChange(eligibleIndex); }}>{recipient.name}</Button>
-                <span className="font-mono text-[10px] text-muted-foreground">({displayAddress})</span>
-                {recipient.isValid ? <Button type="button" variant="link" className="ms-auto h-auto flex-shrink-0 p-0 text-[11px] font-semibold text-primary" onClick={() => onSendOne(recipient, message)}>{isEmail ? t('messaging.sendEmail') : isSms ? t('contacts.openSmsApp') : t('contacts.whatsapp.open')}</Button> : <span className="ms-auto text-[10px] font-semibold text-warning">{t('messaging.skippedStatus')}</span>}
+                <span className="font-mono text-xs text-muted-foreground">({displayAddress})</span>
+                {recipient.isValid ? <Button type="button" variant="link" className="ms-auto inline-flex min-h-11 flex-shrink-0 items-center p-0 text-xs font-semibold text-primary" onClick={() => onSendOne(recipient, message)}>{isEmail ? t('messaging.sendEmail') : isSms ? t('contacts.openSmsApp') : t('contacts.whatsapp.open')}</Button> : <span className="ms-auto text-xs font-semibold text-warning">{t('messaging.skippedStatus')}</span>}
               </li>
             );
           })}

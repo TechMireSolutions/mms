@@ -85,7 +85,7 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
             variant="ghost"
             size="icon"
             aria-label="Notifications"
-            className="relative rounded-lg p-2 hover:bg-muted transition-colors h-9 w-9"
+            className="relative min-h-11 min-w-11 h-11 w-11 rounded-lg hover:bg-muted transition-colors"
           >
             <Bell className="h-[18px] w-[18px] text-muted-foreground" />
             {unreadCount > 0 && (
@@ -157,7 +157,7 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
             aria-label="Account menu"
             className={cn(
               "flex items-center rounded-lg transition-colors hover:bg-muted justify-start font-normal h-auto",
-              compact ? "gap-1 p-1.5" : "gap-2.5 py-1.5 pl-2 pr-3",
+              compact ? "min-h-11 min-w-11 gap-1 p-2" : "min-h-11 gap-2.5 py-2 pl-2 pr-3",
             )}
           >
             <Avatar className={compact ? "h-7 w-7" : "h-8 w-8"}>

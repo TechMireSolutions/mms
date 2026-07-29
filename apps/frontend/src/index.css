@@ -194,13 +194,32 @@
 }
 
 @layer base {
-  * {
+  *,
+  *::before,
+  *::after {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+
+  html {
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans max-w-full overflow-x-hidden;
     font-family: var(--font-sans);
+  }
+
+  #root {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
   }
 
   @media (prefers-reduced-motion: no-preference) {

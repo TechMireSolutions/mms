@@ -19,8 +19,8 @@ export function ToggleRow({
   return (
     <div className="flex items-center justify-between py-1.5 text-left">
       <div>
-        <p className="text-[13px] font-semibold text-foreground">{label}</p>
-        {description && <p className="text-[11px] text-muted-foreground">{description}</p>}
+        <p className="text-sm font-semibold text-foreground">{label}</p>
+        {description && <p className="text-xs text-muted-foreground">{description}</p>}
       </div>
       <Switch
         checked={value}

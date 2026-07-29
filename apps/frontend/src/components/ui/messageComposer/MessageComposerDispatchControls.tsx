@@ -39,7 +39,7 @@ export function MessageComposerDispatchControls({
         {skippedCount > 0 && (
           <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="flex items-center justify-between gap-2 rounded-lg border border-warning/20 bg-warning/10 p-2.5 text-xs text-warning">
             <div className="flex items-center gap-2"><AlertCircle className="h-4 w-4 flex-shrink-0" /><span>{t('messaging.skippedNotice', { count: String(skippedCount), type: isEmail ? t('messaging.emailAddress') : t('messaging.phoneNumber') })}</span></div>
-            <Button type="button" variant="link" onClick={onShowSkipped} className="h-auto flex-shrink-0 p-0 text-[11px] font-semibold">{t('messaging.viewSkipped')}</Button>
+            <Button type="button" variant="link" onClick={onShowSkipped} className="inline-flex min-h-11 flex-shrink-0 items-center p-0 text-xs font-semibold">{t('messaging.viewSkipped')}</Button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -50,8 +50,8 @@ export function MessageComposerDispatchControls({
               <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 animate-spin" />{t('messaging.dispatchProgress', { current: String(dispatchProgress.current), total: String(dispatchProgress.total) })}</span>
               <div className="flex items-center gap-2">
                 <span className="font-mono">{Math.round((dispatchProgress.current / dispatchProgress.total) * 100)}%</span>
-                <Button type="button" variant="outline" size="icon" className="h-6 w-6" onClick={() => onPausedChange(!isPaused)} title={isPaused ? t('messaging.resume') : t('messaging.pause')} aria-label={isPaused ? t('messaging.resume') : t('messaging.pause')}>{isPaused ? <Play className="h-3 w-3 text-success" /> : <Pause className="h-3 w-3 text-warning" />}</Button>
-                <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:bg-destructive/10" onClick={onCancel} title={t('messaging.cancelDispatch')} aria-label={t('messaging.cancelDispatch')}><XCircle className="h-3.5 w-3.5" /></Button>
+                <Button type="button" variant="outline" size="icon" className="min-h-11 min-w-11" onClick={() => onPausedChange(!isPaused)} title={isPaused ? t('messaging.resume') : t('messaging.pause')} aria-label={isPaused ? t('messaging.resume') : t('messaging.pause')}>{isPaused ? <Play className="h-3 w-3 text-success" /> : <Pause className="h-3 w-3 text-warning" />}</Button>
+                <Button type="button" variant="ghost" size="icon" className="min-h-11 min-w-11 text-destructive hover:bg-destructive/10" onClick={onCancel} title={t('messaging.cancelDispatch')} aria-label={t('messaging.cancelDispatch')}><XCircle className="h-3.5 w-3.5" /></Button>
               </div>
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted"><motion.div className={`h-full rounded-full ${isPaused ? 'bg-warning' : 'bg-primary'}`} initial={{ width: 0 }} animate={{ width: `${(dispatchProgress.current / dispatchProgress.total) * 100}%` }} transition={{ duration: 0.2 }} /></div>

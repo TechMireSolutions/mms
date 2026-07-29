@@ -148,10 +148,10 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
             autoFocus
           />
           {isDuplicateLabel && (
-            <p className="text-[11px] text-destructive mt-1">{t("fields.duplicateName")}</p>
+            <p className="text-xs text-destructive mt-1">{t("fields.duplicateName")}</p>
           )}
           {trimmedLabel.length > 0 && trimmedLabel.length < 2 && (
-            <p className="text-[11px] text-warning mt-1">{t("fields.nameTooShort")}</p>
+            <p className="text-xs text-warning mt-1">{t("fields.nameTooShort")}</p>
           )}
         </div>
         <div>
@@ -218,7 +218,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
             placeholder={draft.type === "tags" ? t("fields.tagsPlaceholder") : t("fields.optionsPlaceholder")}
           />
           {draft.type === "tags" && (
-            <p className="text-[10px] text-muted-foreground mt-1">{t("fields.tagsHint")}</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("fields.tagsHint")}</p>
           )}
         </div>
       )}
@@ -309,7 +309,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
           type="button"
           onClick={onCancel}
           variant="outline"
-          className="px-3 py-1.5 h-8 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors bg-card shadow-none"
+          className="px-3 py-2 min-h-11 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors bg-card shadow-none"
           aria-label={t("fields.cancelEditingAria")}
         >
           <X className="w-3.5 h-3.5" />
@@ -318,7 +318,7 @@ export function FieldEditor({ field, existingLabels = [], onSave, onCancel }: Fi
           type="button"
           onClick={handleSave}
           disabled={!isValid}
-          className="flex items-center gap-1.5 px-4 py-1.5 h-8 bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-40 transition-colors hover:bg-primary/90 shadow-none"
+          className="flex items-center gap-1.5 px-4 py-2 min-h-11 bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-40 transition-colors hover:bg-primary/90 shadow-none"
         >
           <Check className="w-3.5 h-3.5" />
           <span>{t("fields.saveField")}</span>
@@ -363,7 +363,7 @@ function FieldRow({
           type="button"
           onClick={() => setConfirming(false)}
           variant="outline"
-          className="px-2.5 py-1 h-8 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-colors bg-card shadow-none"
+          className="px-2.5 py-2 min-h-11 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-colors bg-card shadow-none"
         >
           {t("common.cancel")}
         </Button>
@@ -374,7 +374,7 @@ function FieldRow({
             onDelete();
           }}
           variant="destructive"
-          className="px-2.5 py-1 h-8 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold hover:bg-destructive/90 transition-colors shadow-none"
+          className="px-2.5 py-2 min-h-11 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold hover:bg-destructive/90 transition-colors shadow-none"
         >
           {t("common.delete")}
         </Button>
@@ -400,27 +400,27 @@ function FieldRow({
       <div className="flex-1 min-w-0 text-left">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-semibold text-foreground">{field.label}</span>
-          <span className="text-[11px] text-muted-foreground">{typeLabel}</span>
+          <span className="text-xs text-muted-foreground">{typeLabel}</span>
           {field.required && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/30 dark:bg-destructive/20 dark:text-destructive dark:border-destructive/30">
+            <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/30 dark:bg-destructive/20 dark:text-destructive dark:border-destructive/30">
               Required
             </span>
           )}
           {field.unique && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30 dark:bg-warning/20 dark:text-warning dark:border-warning/30">
+            <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30 dark:bg-warning/20 dark:text-warning dark:border-warning/30">
               Unique
             </span>
           )}
           {optionCount > 0 && (
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               [{optionCount} {field.type === "tags" ? "tags" : "options"}]
             </span>
           )}
           {field.type === "number" && field.mask && (
-            <span className="text-[10px] text-muted-foreground font-mono">mask: {field.mask}</span>
+            <span className="text-xs text-muted-foreground font-mono">mask: {field.mask}</span>
           )}
         </div>
-        {field.description && <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{field.description}</p>}
+        {field.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{field.description}</p>}
       </div>
 
       {/* Actions */}
@@ -428,7 +428,7 @@ function FieldRow({
         type="button"
         onClick={onEdit}
         variant="ghost"
-        className="p-1.5 h-8 w-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none"
+        className="min-h-11 min-w-11 h-11 w-11 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none"
         aria-label={t("fields.editNamedAria", { name: field.label })}
       >
         <Pencil className="w-3.5 h-3.5" />
@@ -437,7 +437,7 @@ function FieldRow({
         type="button"
         onClick={() => setConfirming(true)}
         variant="ghost"
-        className="p-1.5 h-8 w-8 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors shadow-none"
+        className="min-h-11 min-w-11 h-11 w-11 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors shadow-none"
         aria-label={t("fields.deleteNamedAria", { name: field.label })}
       >
         <Trash2 className="w-3.5 h-3.5" />
@@ -512,7 +512,7 @@ export function CustomFieldsBuilder({
           <Button
             type="button"
             onClick={startAdd}
-            className="flex items-center gap-1.5 px-3.5 py-2 h-9 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shadow-none"
+            className="flex items-center gap-1.5 px-3.5 py-2 min-h-11 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shadow-none"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Field</span>

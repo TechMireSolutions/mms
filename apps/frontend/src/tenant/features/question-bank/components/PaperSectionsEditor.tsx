@@ -58,7 +58,7 @@ export function PaperSectionsEditor({
                   onClick={() => onSelectSection(section.id)}
                   variant={active ? "default" : "outline"}
                   size="sm"
-                  className="h-auto px-3 py-1.5 text-xs"
+                  className="px-3 text-xs"
                 >
                   {t("questionBank.activeSection", { n: sectionIndex + 1 })}
                 </Button>
@@ -69,7 +69,7 @@ export function PaperSectionsEditor({
                     variant="ghost"
                     size="icon"
                     aria-label={t("questionBank.removeSectionAria", { title: section.title })}
-                    className="ml-auto h-8 w-8 text-muted-foreground hover:text-destructive"
+                    className="ml-auto text-muted-foreground hover:text-destructive"
                   >
                     <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                   </Button>
@@ -116,7 +116,7 @@ export function PaperSectionsEditor({
                           onClick={() => onRemoveQuestion(section.id, questionId)}
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          className="text-muted-foreground hover:text-destructive"
                           aria-label={t("questionBank.removeQuestionAria", { n: questionIndex + 1 })}
                         >
                           <X className="h-3.5 w-3.5" aria-hidden="true" />

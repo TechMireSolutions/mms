@@ -109,7 +109,7 @@ export default function TeacherDetail({
               variant="outline"
               size="icon"
               onClick={() => onEdit(teacher)}
-              className="h-8 w-8 p-1.5 rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              className="rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
               title={t("teachers.detail.editTitle")}
               aria-label={t("teachers.detail.editTitle")}
             >

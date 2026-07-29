@@ -305,10 +305,11 @@ export default function ExamsList({
                     {canWrite && !showDeleted && (
                       <Button
                         variant="ghost"
+                        size="icon"
                         type="button"
                         onClick={() => onEdit(exam)}
                         aria-label={t("examinations.editExamAria", { name: exam.name })}
-                        className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
+                        className="rounded-lg hover:bg-muted text-muted-foreground opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
                       >
                         <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
@@ -316,10 +317,11 @@ export default function ExamsList({
                     {canDelete && (showDeleted ? onRestore : onDelete) && (
                       <Button
                         variant="ghost"
+                        size="icon"
                         type="button"
                         onClick={() => { void handleRowTrashAction(exam.id); }}
                         aria-label={showDeleted ? t("examinations.trash.restore") : t("common.delete")}
-                        className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
+                        className="rounded-lg hover:bg-muted text-muted-foreground opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
                       >
                         {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
                       </Button>
@@ -488,10 +490,11 @@ export default function ExamsList({
                             {canWrite && !showDeleted && (
                               <Button
                                 variant="ghost"
+                                size="icon"
                                 type="button"
                                 onClick={() => onEdit(exam)}
                                 aria-label={t("examinations.editExamAria", { name: exam.name })}
-                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-all focus:opacity-100"
+                                className="rounded-lg hover:bg-muted text-muted-foreground transition-all focus:opacity-100"
                               >
                                 <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                               </Button>
@@ -499,10 +502,11 @@ export default function ExamsList({
                             {canDelete && (showDeleted ? onRestore : onDelete) && (
                               <Button
                                 variant="ghost"
+                                size="icon"
                                 type="button"
                                 onClick={() => { void handleRowTrashAction(exam.id); }}
                                 aria-label={showDeleted ? t("examinations.trash.restore") : t("common.delete")}
-                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-all focus:opacity-100"
+                                className="rounded-lg hover:bg-muted text-muted-foreground transition-all focus:opacity-100"
                               >
                                 {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
                               </Button>

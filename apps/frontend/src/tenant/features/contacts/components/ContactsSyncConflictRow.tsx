@@ -49,8 +49,9 @@ export function ContactsSyncConflictRow({
           <Button
             type="button"
             variant="ghost"
+            size="icon"
             onClick={() => setExpanded((value) => !value)}
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted/60"
             aria-expanded={expanded}
             aria-label={expanded ? t("contacts.sync.conflictCollapse") : t("contacts.sync.conflictExpand")}
           >
@@ -59,8 +60,9 @@ export function ContactsSyncConflictRow({
           <Button
             type="button"
             variant="ghost"
+            size="icon"
             onClick={() => onRequestDismiss(entry.id)}
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
             aria-label={t("contacts.sync.conflictDismissOne")}
           >
             <Trash2 className="w-4 h-4" />

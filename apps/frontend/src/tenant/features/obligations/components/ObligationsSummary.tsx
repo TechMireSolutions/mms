@@ -383,6 +383,7 @@ export function ObligationsSummary({
           <div className="rounded-xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground" role="alert">{t("obligations.summary.emptyFiltered")}</div>
         ) : (
           <div className="rounded-xl border border-border overflow-hidden">
+            <div className="overflow-x-auto max-w-full">
             <table className="w-full text-sm">
               <caption className="sr-only">{t("obligations.summary.wakala.title")}</caption>
               <thead className="bg-muted/60 border-b border-border">
@@ -434,6 +435,7 @@ export function ObligationsSummary({
                 </tr>
               </tfoot>
             </table>
+            </div>
           </div>
         )}
       </section>
@@ -467,6 +469,7 @@ export function ObligationsSummary({
           <div className="rounded-xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground" role="alert">{t("obligations.summary.emptyFiltered")}</div>
         ) : (
           <div className="rounded-xl border border-border overflow-hidden">
+            <div className="overflow-x-auto max-w-full">
             <table className="w-full text-sm">
               <caption className="sr-only">{t("obligations.summary.rep.title")}</caption>
               <thead className="bg-muted/60 border-b border-border">
@@ -516,6 +519,7 @@ export function ObligationsSummary({
                 </tr>
               </tfoot>
             </table>
+            </div>
           </div>
         )}
       </section>

@@ -41,7 +41,7 @@ export function ErrorState({
       <div className={`${stateConfig.bg} rounded-2xl flex items-center justify-center mb-4 ${compact ? "w-10 h-10" : "w-14 h-14"}`}>
         <Icon className={`${stateConfig.color} ${compact ? "w-5 h-5" : "w-7 h-7"}`} />
       </div>
-      <p className={`font-semibold text-foreground ${compact ? "text-sm" : "text-[15px]"}`}>
+      <p className={`font-semibold text-foreground ${compact ? "text-sm" : "text-base"}`}>
         {title || t(stateConfig.titleKey)}
       </p>
       {description && (

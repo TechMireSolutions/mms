@@ -169,7 +169,7 @@ export function ObligationCollectionList({
             variant="ghost"
             onClick={onToggleShowDeleted}
             aria-pressed={showDeleted}
-            className={`flex items-center gap-1.5 px-3 min-h-[40px] rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
+            className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
               showDeleted
                 ? "border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10"
                 : "border-border bg-card text-muted-foreground hover:text-foreground"
@@ -331,14 +331,16 @@ export function ObligationCollectionList({
                               <>
                                 <Button type="button" onClick={() => onMessage('whatsapp', [collection])}
                                   variant="ghost"
-                                  className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-success shadow-none transition-colors"
+                                  size="icon"
+                                  className="rounded-lg hover:bg-muted text-muted-foreground hover:text-success shadow-none transition-colors"
                                   title={t("obligations.list.actionWhatsApp")}
                                   aria-label={t("obligations.list.actionWhatsApp")}>
                                   <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
                                 </Button>
                                 <Button type="button" onClick={() => onMessage('sms', [collection])}
                                   variant="ghost"
-                                  className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-info shadow-none transition-colors"
+                                  size="icon"
+                                  className="rounded-lg hover:bg-muted text-muted-foreground hover:text-info shadow-none transition-colors"
                                   title={t("obligations.list.actionSms")}
                                   aria-label={t("obligations.list.actionSms")}>
                                   <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
@@ -347,7 +349,8 @@ export function ObligationCollectionList({
                             )}
                             <Button type="button" onClick={() => onView(collection)}
                               variant="ghost"
-                              className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary shadow-none transition-colors"
+                              size="icon"
+                              className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary shadow-none transition-colors"
                               aria-label={t("obligations.actions.view", { receipt: collection.receipt_no })}
                               title={t("obligations.actions.viewShort")}>
                               <Eye className="w-3.5 h-3.5" aria-hidden="true" />
@@ -355,7 +358,8 @@ export function ObligationCollectionList({
                             {!showDeleted && (
                               <Button type="button" onClick={() => setPrintCollection(collection)}
                                 variant="ghost"
-                                className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary shadow-none transition-colors"
+                                size="icon"
+                                className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary shadow-none transition-colors"
                                 aria-label={t("obligations.actions.print", { receipt: collection.receipt_no })}
                                 title={t("obligations.actions.printShort")}>
                                 <Printer className="w-3.5 h-3.5" aria-hidden="true" />
@@ -365,7 +369,8 @@ export function ObligationCollectionList({
                               <Button
                                 type="button"
                                 variant="ghost"
-                                className={`h-auto p-1.5 rounded-lg hover:bg-muted shadow-none transition-colors ${showDeleted ? "text-muted-foreground hover:text-primary" : "text-muted-foreground hover:text-destructive"}`}
+                                size="icon"
+                                className={`rounded-lg hover:bg-muted shadow-none transition-colors ${showDeleted ? "text-muted-foreground hover:text-primary" : "text-muted-foreground hover:text-destructive"}`}
                                 aria-label={showDeleted ? t("obligations.trash.restore") : t("common.delete")}
                                 onClick={() => {
                                   if (showDeleted) {

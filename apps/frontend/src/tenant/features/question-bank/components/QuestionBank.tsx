@@ -247,7 +247,7 @@ export function QuestionBank({
               variant="ghost"
               onClick={() => setSearch('')}
               aria-label={t('questionBank.clearSearch')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground h-auto p-0 hover:bg-transparent"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground min-h-11 min-w-11 hover:bg-transparent"
             >
               <X className="h-3.5 w-3.5" aria-hidden />
             </Button>
@@ -472,7 +472,7 @@ export function QuestionBank({
                         variant="ghost"
                         size="icon"
                         onClick={() => { setEditingQuestion(question); setShowModal(true); }}
-                        className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        className="rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
                         aria-label={t('questionBank.editQuestionAria', { text: question.text })}
                       >
                         <Edit2 className="h-3.5 w-3.5" aria-hidden />
@@ -484,7 +484,7 @@ export function QuestionBank({
                         variant="ghost"
                         size="icon"
                         onClick={() => { void handleRowTrashAction(question.id); }}
-                        className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        className="rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                         aria-label={showDeleted ? t('questionBank.trash.restore') : t('questionBank.deleteQuestionAria', { text: question.text })}
                       >
                         {showDeleted ? <RotateCcw className="h-3.5 w-3.5" aria-hidden /> : <Trash2 className="h-3.5 w-3.5" aria-hidden />}
@@ -615,7 +615,7 @@ export function QuestionBank({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => { setEditingQuestion(question); setShowModal(true); }}
-                                className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                className="rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
                                 aria-label={t('questionBank.editQuestionAria', { text: question.text })}
                               >
                                 <Edit2 className="h-3.5 w-3.5" aria-hidden />
@@ -627,7 +627,7 @@ export function QuestionBank({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => { void handleRowTrashAction(question.id); }}
-                                className="rounded-lg h-8 w-8 p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                className="rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                                 aria-label={showDeleted ? t('questionBank.trash.restore') : t('questionBank.deleteQuestionAria', { text: question.text })}
                               >
                                 {showDeleted ? <RotateCcw className="h-3.5 w-3.5" aria-hidden /> : <Trash2 className="h-3.5 w-3.5" aria-hidden />}

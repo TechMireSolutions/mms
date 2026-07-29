@@ -122,7 +122,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="h-8 w-8 p-0 text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+            className="min-h-11 min-w-11 h-11 w-11 p-0 text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
           >
             <span className="sr-only">{t("nav.closeSidebar")}</span>
             <X className="w-5 h-5" />

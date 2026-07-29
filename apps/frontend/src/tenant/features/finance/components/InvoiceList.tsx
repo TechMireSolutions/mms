@@ -331,35 +331,38 @@ export function InvoiceList({
                                 <>
                                   <Button
                                     variant="ghost"
+                                    size="icon"
                                     onClick={() => openComposer("whatsapp", [recipient])}
                                     title={t("messaging.sendWhatsapp")}
                                     aria-label={t("messaging.sendWhatsapp")}
-                                    className="p-1.5 rounded-lg hover:bg-muted text-success hover:text-success transition-colors"
+                                    className="rounded-lg hover:bg-muted text-success hover:text-success transition-colors"
                                   >
                                     <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
                                   </Button>
                                   <Button
                                     variant="ghost"
+                                    size="icon"
                                     onClick={() => openComposer("sms", [recipient])}
                                     title={t("messaging.sendSms")}
                                     aria-label={t("messaging.sendSms")}
-                                    className="p-1.5 rounded-lg hover:bg-muted text-info hover:text-info transition-colors"
+                                    className="rounded-lg hover:bg-muted text-info hover:text-info transition-colors"
                                   >
                                     <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
                                   </Button>
                                 </>
                               ) : null}
-                              <Button variant="ghost" onClick={() => onView(invoice)} aria-label={t("finance.viewInvoice", { id: invoice.id })} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                              <Button variant="ghost" size="icon" onClick={() => onView(invoice)} aria-label={t("finance.viewInvoice", { id: invoice.id })} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                                 <Eye className="w-3.5 h-3.5" aria-hidden="true" />
                               </Button>
                               {canWrite && !showDeleted && invoice.status !== "paid" && (
-                                <Button variant="ghost" onClick={() => onRecord(invoice)} aria-label={t("finance.recordPaymentFor", { id: invoice.id })} className="p-1.5 rounded-lg hover:bg-success/10 text-muted-foreground hover:text-success transition-colors">
+                                <Button variant="ghost" size="icon" onClick={() => onRecord(invoice)} aria-label={t("finance.recordPaymentFor", { id: invoice.id })} className="rounded-lg hover:bg-success/10 text-muted-foreground hover:text-success transition-colors">
                                   <ReceiptText className="w-3.5 h-3.5" aria-hidden="true" />
                                 </Button>
                               )}
                               {canDelete && (showDeleted ? onRestore : onDelete) && (
                                 <Button
                                   variant="ghost"
+                                  size="icon"
                                   onClick={() => showDeleted ? onRestore?.(invoice.id) : setPendingDeleteId(invoice.id)}
                                   aria-label={showDeleted ? t("finance.trash.restore") : t("common.delete")}
                                 >

@@ -212,7 +212,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
               variant="ghost"
               size="sm"
               onClick={() => setReportStatusFilter(null)}
-              className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+              className="px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
             >
               <X className="w-3 h-3 me-1" />
               {t("students.report.clearFilter")}
@@ -258,6 +258,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
         ) : (
           <div className="space-y-3">
             <div className="rounded-xl border border-border overflow-hidden">
+              <div className="overflow-x-auto max-w-full">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50">
                   <tr>
@@ -288,6 +289,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
             {studentsPage && (
               <ListPagination
@@ -309,6 +311,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
           <EmptyState icon={Users} title={t("students.report.noEnrollmentsFound")} compact />
         ) : (
           <Card className="overflow-hidden mt-4">
+            <div className="overflow-x-auto max-w-full">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border/50">
                 <tr>
@@ -337,6 +340,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
                 ))}
               </tbody>
             </table>
+            </div>
           </Card>
         )
       )}

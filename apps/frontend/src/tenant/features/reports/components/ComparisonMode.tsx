@@ -463,7 +463,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
             onClick={onClose}
             variant="ghost"
             size="icon"
-            className="h-8 w-8 p-0 rounded-lg hover:bg-muted transition-colors"
+            className="rounded-lg hover:bg-muted transition-colors"
             type="button"
             aria-label={t("reports.comparison.closeLabel")}
           >
@@ -539,6 +539,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
         {/* Delta table */}
         {mode === "sessions" && (
           <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto max-w-full">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border/50">
                 <tr>
@@ -587,6 +588,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>

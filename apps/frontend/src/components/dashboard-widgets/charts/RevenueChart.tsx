@@ -190,7 +190,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
                 variant="ghost"
                 onClick={() => setPeriod(periodOption)}
                 aria-pressed={period === periodOption}
-                className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 h-auto rounded-md transition-all shadow-none cursor-pointer ${
+                className={`min-h-11 text-xs font-bold uppercase tracking-wider px-2.5 rounded-md transition-all shadow-none cursor-pointer ${
                   period === periodOption ? "bg-card text-foreground hover:bg-card hover:text-foreground" : "text-muted-foreground hover:bg-transparent hover:text-muted-foreground"
                 }`}
               >

@@ -68,7 +68,7 @@ function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage, canWri
             size="icon"
             aria-label={t("sessions.classes.messageWhatsApp", { name: sessionClass.name })}
             onClick={() => onMessage?.("whatsapp", sessionClass)}
-            className="p-1.5 rounded-lg hover:bg-muted text-success hover:text-success transition-colors w-7 h-7"
+            className="rounded-lg hover:bg-muted text-success hover:text-success transition-colors"
             title={t("sessions.classes.messageWhatsApp", { name: sessionClass.name })}
           >
             <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
@@ -78,15 +78,15 @@ function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage, canWri
             size="icon"
             aria-label={t("sessions.classes.messageSms", { name: sessionClass.name })}
             onClick={() => onMessage?.("sms", sessionClass)}
-            className="p-1.5 rounded-lg hover:bg-muted text-info hover:text-info transition-colors w-7 h-7"
+            className="rounded-lg hover:bg-muted text-info hover:text-info transition-colors"
             title={t("sessions.classes.messageSms", { name: sessionClass.name })}
           >
             <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
           </Button>
-          <Button variant="ghost" size="icon" aria-label={t("sessions.classes.editNamed", { name: sessionClass.name })} onClick={() => onEdit(sessionClass)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors w-7 h-7">
+          <Button variant="ghost" size="icon" aria-label={t("sessions.classes.editNamed", { name: sessionClass.name })} onClick={() => onEdit(sessionClass)} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
             <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
           </Button>
-          <Button variant="ghost" size="icon" aria-label={t("sessions.classes.deleteNamed", { name: sessionClass.name })} onClick={() => onDelete(sessionClass.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors w-7 h-7">
+          <Button variant="ghost" size="icon" aria-label={t("sessions.classes.deleteNamed", { name: sessionClass.name })} onClick={() => onDelete(sessionClass.id)} className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
             <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
           </Button>
         </div>}

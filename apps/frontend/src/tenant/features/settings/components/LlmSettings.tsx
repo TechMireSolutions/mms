@@ -573,7 +573,7 @@ export default function LlmSettings(): React.JSX.Element {
                             variant="outline"
                             onClick={() => void handleTestConnection(config.id)}
                             disabled={testingId !== null || isGlobalDirty}
-                            className="h-7 text-[11px] px-3"
+                            className="text-[11px] px-3"
                           >
                             {testingId === config.id ? (
                               <Loader2 className="h-3 w-3 animate-spin" />
@@ -585,7 +585,7 @@ export default function LlmSettings(): React.JSX.Element {
                             size="sm"
                             variant="outline"
                             onClick={() => openEditModal(config)}
-                            className="h-7 text-[11px] p-2"
+                            className="text-[11px]"
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
@@ -593,7 +593,7 @@ export default function LlmSettings(): React.JSX.Element {
                             size="sm"
                             variant="outline"
                             onClick={() => handleDeleteConfig(config.id)}
-                            className="h-7 text-[11px] text-destructive hover:bg-destructive/10 p-2"
+                            className="text-[11px] text-destructive hover:bg-destructive/10"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -704,7 +704,7 @@ export default function LlmSettings(): React.JSX.Element {
                       size="sm"
                       variant="ghost"
                       onClick={() => setSandboxMessages([])}
-                      className="h-6 text-[10px] px-2 text-muted-foreground hover:text-foreground gap-1.5"
+                      className="text-[10px] px-2 text-muted-foreground hover:text-foreground gap-1.5"
                     >
                       <RotateCcw className="h-3 w-3" /> {t('settings.llmClearHistory')}
                     </Button>
@@ -781,7 +781,7 @@ export default function LlmSettings(): React.JSX.Element {
                     type="submit"
                     size="sm"
                     disabled={sandboxTesting || !sandboxInput.trim()}
-                    className="h-9 px-3 gap-1.5"
+                    className="min-h-11 px-3 gap-1.5"
                   >
                     <Send className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">{t('common.send')}</span>
@@ -833,9 +833,9 @@ export default function LlmSettings(): React.JSX.Element {
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => setModalOpen(false)}
-                className="p-1.5 h-8 w-8 text-muted-foreground hover:text-foreground shrink-0"
+                className="text-muted-foreground hover:text-foreground shrink-0"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -1053,7 +1053,7 @@ export default function LlmSettings(): React.JSX.Element {
                   variant="outline"
                   onClick={() => void handleModalTestConnection()}
                   disabled={modalTesting || (formApiKey.trim() === '' && !editingConfig)}
-                  className="text-[11px] h-9 px-4 w-full sm:w-auto"
+                  className="text-[11px] min-h-11 px-4 w-full sm:w-auto"
                 >
                   {modalTesting ? (
                     <Loader2 className="h-3 w-3 animate-spin mr-2" />
@@ -1065,14 +1065,14 @@ export default function LlmSettings(): React.JSX.Element {
                   type="button"
                   variant="outline"
                   onClick={() => setModalOpen(false)}
-                  className="text-[11px] h-9 px-4 w-full sm:w-auto"
+                  className="text-[11px] min-h-11 px-4 w-full sm:w-auto"
                 >
                   {t('common.cancel')}
                 </Button>
                 <Button
                   type="submit"
                   disabled={!formName.trim()}
-                  className="text-[11px] h-9 px-4 w-full sm:w-auto"
+                  className="text-[11px] min-h-11 px-4 w-full sm:w-auto"
                 >
                   {t('settings.llmModalApplyChanges')}
                 </Button>

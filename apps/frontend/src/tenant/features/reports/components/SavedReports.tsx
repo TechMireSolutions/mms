@@ -150,7 +150,7 @@ export default function SavedReports({
         {onApplyFilters && (
           <Button
             onClick={() => setSaveOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider h-9 cursor-pointer"
+            className="flex items-center gap-1.5 min-h-11 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             {t("reports.saved.saveCurrent")}
@@ -207,7 +207,7 @@ export default function SavedReports({
                       variant="ghost"
                       size="sm"
                       onClick={() => handleRun(report)}
-                      className="h-7 px-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10 gap-1 cursor-pointer"
+                      className="px-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10 gap-1 cursor-pointer"
                       type="button"
                     >
                       <Play className="w-3 h-3" /> {t("reports.saved.run")}
@@ -217,7 +217,7 @@ export default function SavedReports({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDelete(report.id)}
-                    className="h-7 px-2 text-xs font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1 ml-auto cursor-pointer"
+                    className="px-2 text-xs font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1 ml-auto cursor-pointer"
                     type="button"
                   >
                     <Trash2 className="w-3 h-3" /> {t("reports.saved.delete")}

@@ -89,7 +89,7 @@ export function PlatformProfilePasswordForm(): React.JSX.Element {
             />
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-            <Button type="submit" className="w-fit px-6 font-bold h-10 rounded-xl cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all" disabled={updatePassword.isPending}>
+            <Button type="submit" className="w-fit px-6 font-bold min-h-11 rounded-xl cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all" disabled={updatePassword.isPending}>
               {updatePassword.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />
@@ -99,7 +99,7 @@ export function PlatformProfilePasswordForm(): React.JSX.Element {
                 t("platform.profileChangePassword")
               )}
             </Button>
-            <Link to={ROUTES.platformForgotPassword} className="text-xs text-primary font-bold hover:underline">
+            <Link to={ROUTES.platformForgotPassword} className="inline-flex min-h-11 items-center text-xs text-primary font-bold hover:underline">
               {t("platform.profileForgotLink")}
             </Link>
           </div>

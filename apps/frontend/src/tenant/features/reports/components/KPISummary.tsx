@@ -1109,7 +1109,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
           type="button"
           variant="outline"
           onClick={() => setIsConfigOpen(!isConfigOpen)}
-          className="h-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border bg-card/60 backdrop-blur-md hover:bg-card hover:text-primary text-muted-foreground font-semibold shadow-sm"
+          className="min-h-11 flex items-center gap-1.5 px-2.5 rounded-lg border border-border bg-card/60 backdrop-blur-md hover:bg-card hover:text-primary text-muted-foreground font-semibold shadow-sm"
         >
           <SlidersHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
           {t("reports.kpiCustomize")}
@@ -1205,7 +1205,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
                           <div className="flex items-center gap-1 shrink-0">
                             <Button
                               onClick={() => handleEditCard(kpi)}
-                              className="h-auto w-auto p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary shadow-none"
+                              className="rounded hover:bg-primary/10 text-muted-foreground hover:text-primary shadow-none"
                               title={t("reports.kpiEditConfig")}
                               type="button"
                               variant="ghost"
@@ -1217,7 +1217,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
                             {isCustom && (
                               <Button
                                 onClick={() => handleDeleteCustomCard(kpi.id)}
-                                className="h-auto w-auto p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none"
+                                className="rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none"
                                 title={t("reports.kpiDeleteConfig")}
                                 type="button"
                                 variant="ghost"

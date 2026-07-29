@@ -43,14 +43,14 @@ export default function PageNotFound(): React.JSX.Element {
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               to={primaryLink}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-muted transition-colors"
+              className="inline-flex min-h-11 items-center px-4 py-2 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-muted transition-colors"
             >
               {primaryLabel}
             </Link>
             {isAuthenticated ? (
               <Link
                 to={ROUTES.settings}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-primary hover:underline"
+                className="inline-flex min-h-11 items-center px-4 py-2 text-sm font-medium text-primary hover:underline"
               >
                 {t("page.notFound.openSettings")}
               </Link>

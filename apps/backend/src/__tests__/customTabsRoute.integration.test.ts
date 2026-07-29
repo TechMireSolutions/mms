@@ -107,7 +107,7 @@ describe('custom tabs REST API routes', () => {
     expect(putBody.tab.label).toBe('Updated Route Test Tab');
     expect(putBody.tab.color).toBe('green');
 
-    // 4. PUT /api/custom-tabs/bulk (Bulk replace tabs)
+    // 4. PUT /api/custom-tabs/bulk (Bulk upsert — must not wipe existing tabs)
     const bulkRes = await app.inject({
       method: 'PUT',
       url: '/api/custom-tabs/bulk',
@@ -122,13 +122,16 @@ describe('custom tabs REST API routes', () => {
     });
     expect(bulkRes.statusCode).toBe(200);
     const bulkBody = JSON.parse(bulkRes.body);
-    expect(bulkBody.tabs.length).toBe(2);
-    expect(bulkBody.tabs[0].key).toBe('bulk_1');
-    expect(bulkBody.tabs[1].key).toBe('bulk_2');
-    expect(bulkBody.tabs[1].enabled).toBe(false);
+    const bulkKeys = bulkBody.tabs.map((tab: { key: string }) => tab.key);
+    expect(bulkKeys).toContain('route_test_tab');
+    expect(bulkKeys).toContain('bulk_1');
+    expect(bulkKeys).toContain('bulk_2');
+    const bulk2 = bulkBody.tabs.find((tab: { key: string; enabled?: boolean }) => tab.key === 'bulk_2');
+    expect(bulk2?.enabled).toBe(false);
 
     // Clean up
     await runWithTenant('demo', async () => {
+      await deleteCustomTab(`demo:contacts:route_test_tab`);
       await deleteCustomTab(`demo:contacts:bulk_1`);
       await deleteCustomTab(`demo:contacts:bulk_2`);
     });

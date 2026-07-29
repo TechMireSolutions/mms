@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   X, ArrowUpRight, ArrowRight, Users, EyeOff
@@ -17,7 +17,15 @@ import {
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { resolveThresholdChartHex, resolveWidgetChartHex } from "@/lib/brandingChartPalette";
 import { METADATA_FIELDS, computeCustomCard, CustomCard, getCollectionLabel, getFieldLabel } from "@/tenant/features/reports/components/reportMetadata";
-import { getCollection, saveCollection, getObject } from "@/lib/db";
+import { getObject } from "@/lib/db";
+import {
+  persistWidgetHasanatDistributionDelete,
+  persistWidgetRecordToggle,
+} from "@/lib/reports/widgetRecordToggle";
+import {
+  type ReportCollectionsSnapshot,
+  useWidgetCollections,
+} from "@/lib/reports/useReportCollections";
 import {
   CustomWidget,
   ALERT_COLOR_MAP,
@@ -38,7 +46,6 @@ import {
 } from "@/components/ui/table";
 import { SearchBar } from "@/components/ui/SearchBar";
 import {
-  getWidgetCollections,
   getFilteredRecords,
   computeWidgetSingleValue,
   computeContactsCustomCardValue,
@@ -81,15 +88,7 @@ export function WidgetDrilldownModal({
   onClose: () => void;
 }): React.JSX.Element {
   const { t } = useTranslation();
-  const [collections, setCollections] = useState(() => getWidgetCollections());
-
-  useEffect(() => {
-    const handleUpdate = () => {
-      setCollections(getWidgetCollections());
-    };
-    window.addEventListener("local-database-update", handleUpdate);
-    return () => window.removeEventListener("local-database-update", handleUpdate);
-  }, []);
+  const collections = useWidgetCollections();
 
   const widgetRecords = useMemo(() => getFilteredRecords(widget, collections), [widget, collections]);
 
@@ -116,49 +115,28 @@ export function WidgetDrilldownModal({
   }, [students]);
 
   const handleToggleStatus = (recordId: string) => {
-    try {
-      const collectionName = widget.collection;
-      const storedRecords = getCollection<Record<string, unknown>>(collectionName, []);
-      const updatedRecords = storedRecords.map((storedRecord) => {
-        if (String(storedRecord.id) === String(recordId)) {
-          if (collectionName === "students") {
-            const nextStatus = storedRecord.status === "active" ? "inactive" : "active";
-            return { ...storedRecord, status: nextStatus };
-          } else if (collectionName === "finance_invoices") {
-            const nextStatus = storedRecord.status === "paid" ? "unpaid" : "paid";
-            const finalAmt = Number(storedRecord.finalAmt || 0);
-            return { ...storedRecord, status: nextStatus, paidAmt: nextStatus === "paid" ? finalAmt : 0 };
-          } else if (collectionName === "attendance_records") {
-            const nextStatus = storedRecord.status === "present" ? "absent" : "present";
-            return { ...storedRecord, status: nextStatus };
-          } else if (collectionName === "contacts") {
-            const nextActive = storedRecord.isActive === false ? true : false;
-            return { ...storedRecord, isActive: nextActive };
-          } else if (collectionName === "sessions") {
-            const nextStatus = storedRecord.status === "active" ? "inactive" : "active";
-            return { ...storedRecord, status: nextStatus };
-          }
-        }
-        return storedRecord;
-      });
-      saveCollection(collectionName, updatedRecords);
-      window.dispatchEvent(new Event("local-database-update"));
-    } catch (error) {
-      console.error("Failed to toggle record status", error);
-      notify.error(t("reports.widgets.errorToggleFailed"));
-    }
+    void (async () => {
+      try {
+        await persistWidgetRecordToggle({
+          collectionName: widget.collection,
+          recordId,
+        });
+      } catch (error) {
+        console.error("Failed to toggle record status", error);
+        notify.error(t("reports.widgets.errorToggleFailed"));
+      }
+    })();
   };
 
   const handleDeleteDist = (distId: string) => {
-    try {
-      const distributions = getCollection<Record<string, unknown>>("hasanat_distributions", []);
-      const updatedDistributions = distributions.filter((distribution) => String(distribution.id) !== String(distId));
-      saveCollection("hasanat_distributions", updatedDistributions);
-      window.dispatchEvent(new Event("local-database-update"));
-    } catch (error) {
-      console.error("Failed to delete distribution", error);
-      notify.error(t("reports.widgets.errorDeleteFailed"));
-    }
+    void (async () => {
+      try {
+        await persistWidgetHasanatDistributionDelete(distId);
+      } catch (error) {
+        console.error("Failed to delete distribution", error);
+        notify.error(t("reports.widgets.errorDeleteFailed"));
+      }
+    })();
   };
 
   return (
@@ -185,7 +163,7 @@ export function WidgetDrilldownModal({
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="w-8 h-8 rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-none"
+            className="rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-none"
           >
             <X className="w-4 h-4" />
           </Button>
@@ -288,7 +266,8 @@ export function WidgetDrilldownModal({
                             <Button
                               onClick={() => handleDeleteDist(recordId)}
                               variant="destructive"
-                              className="h-6 px-2.5 rounded text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all cursor-pointer font-bold uppercase tracking-wider text-[9px] shadow-none"
+                              size="sm"
+                              className="px-2.5 rounded text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all cursor-pointer font-bold uppercase tracking-wider text-[9px] shadow-none"
                             >
                               {t("reports.widgets.delete")}
                             </Button>
@@ -296,7 +275,8 @@ export function WidgetDrilldownModal({
                             <Button
                               onClick={() => handleToggleStatus(recordId)}
                               variant="secondary"
-                              className="h-6 px-2.5 rounded bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border-transparent hover:border-transparent transition-all cursor-pointer font-bold uppercase tracking-wider text-[9px] shadow-none"
+                              size="sm"
+                              className="px-2.5 rounded bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border-transparent hover:border-transparent transition-all cursor-pointer font-bold uppercase tracking-wider text-[9px] shadow-none"
                             >
                               {t("reports.widgets.toggleStatus")}
                             </Button>
@@ -390,7 +370,7 @@ export function CustomWidgetRenderer({
   onMetricClick
 }: {
   widget: CustomWidget;
-  collections: ReturnType<typeof getWidgetCollections>;
+  collections: ReportCollectionsSnapshot;
   isCompact?: boolean;
   isEditMode?: boolean;
   onSwitchToggle: (widget: CustomWidget) => void;

@@ -155,6 +155,7 @@ export function TabarrukTab({ session, onUpdate, canWrite }: TabarrukTabProps) {
         </div>
       ) : (
         <div className="rounded-xl border border-border overflow-hidden bg-card">
+          <div className="overflow-x-auto max-w-full">
           <table className="w-full text-sm">
             <caption className="sr-only">{t("sessions.tabarruk.tableCaption")}</caption>
             <thead>
@@ -190,10 +191,10 @@ export function TabarrukTab({ session, onUpdate, canWrite }: TabarrukTabProps) {
                   </td>
                   <td className="px-4 py-3">
                     {canWrite && <div className="flex items-center gap-1 justify-end">
-                      <Button aria-label={t("sessions.tabarruk.editNamed", { name: tabarrukItem.item })} onClick={() => { setEditEntry(tabarrukItem); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 w-8 h-8" variant="ghost" size="icon">
+                      <Button aria-label={t("sessions.tabarruk.editNamed", { name: tabarrukItem.item })} onClick={() => { setEditEntry(tabarrukItem); setShowModal(true); }} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100" variant="ghost" size="icon">
                         <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
-                      <Button aria-label={t("sessions.tabarruk.deleteNamed", { name: tabarrukItem.item })} onClick={() => setDeleteTarget(tabarrukItem)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 w-8 h-8" variant="ghost" size="icon">
+                      <Button aria-label={t("sessions.tabarruk.deleteNamed", { name: tabarrukItem.item })} onClick={() => setDeleteTarget(tabarrukItem)} className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100" variant="ghost" size="icon">
                         <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
                     </div>}
@@ -202,6 +203,7 @@ export function TabarrukTab({ session, onUpdate, canWrite }: TabarrukTabProps) {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

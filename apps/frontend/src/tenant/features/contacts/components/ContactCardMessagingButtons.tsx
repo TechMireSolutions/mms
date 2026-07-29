@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 
 const MotionButton = motion.create(Button);
 
+const messagingBtnClass =
+  "min-h-11 min-w-11 rounded-xl border shadow-none transition-colors";
+
 export function ContactCardMessagingButtons({
   contact,
   displayName,
@@ -27,13 +30,13 @@ export function ContactCardMessagingButtons({
   const { t } = useTranslation();
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-1.5">
       {phone ? (
         <motion.a
           href={formatTelHref(phone)}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="p-2.5 rounded-xl border border-border/50 dark:border-border/30 bg-muted/40 dark:bg-card/60 text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/20 transition-colors shadow-xs"
+          className={`${messagingBtnClass} inline-flex items-center justify-center border-border/50 dark:border-border/30 bg-muted/40 dark:bg-card/60 text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/20 shadow-xs`}
           title={`${t("contacts.detail.call")} - ${displayName}`}
           aria-label={`${t("contacts.detail.call")} - ${displayName}`}
         >
@@ -41,7 +44,7 @@ export function ContactCardMessagingButtons({
         </motion.a>
       ) : (
         <div
-          className="p-2.5 rounded-xl border border-border/20 bg-card/20 text-muted-foreground/30 cursor-not-allowed opacity-40"
+          className={`${messagingBtnClass} inline-flex items-center justify-center border-border/20 bg-card/20 text-muted-foreground/30 cursor-not-allowed opacity-40`}
           title={`${t("contacts.detail.call")} - ${displayName}`}
         >
           <Phone aria-hidden="true" className="w-4 h-4" />
@@ -52,10 +55,11 @@ export function ContactCardMessagingButtons({
         <MotionButton
           type="button"
           variant="ghost"
+          size="icon"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => onWhatsApp([contact])}
-          className="h-auto p-2.5 rounded-xl border border-success/30 dark:border-success/20 bg-success/5 text-success hover:text-success hover:bg-success/10 cursor-pointer transition-colors shadow-none"
+          className={`${messagingBtnClass} border-success/30 dark:border-success/20 bg-success/5 text-success hover:text-success hover:bg-success/10`}
           title={`${t("contacts.whatsapp")} - ${displayName}`}
           aria-label={`${t("contacts.whatsapp")} - ${displayName}`}
         >
@@ -67,10 +71,11 @@ export function ContactCardMessagingButtons({
         <MotionButton
           type="button"
           variant="ghost"
+          size="icon"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => onSms([contact])}
-          className="h-auto p-2.5 rounded-xl border border-primary/30 dark:border-primary/20 bg-primary/5 text-primary hover:text-primary hover:bg-primary/10 cursor-pointer transition-colors shadow-none"
+          className={`${messagingBtnClass} border-primary/30 dark:border-primary/20 bg-primary/5 text-primary hover:text-primary hover:bg-primary/10`}
           title={`${t("contacts.sms")} - ${displayName}`}
           aria-label={`${t("contacts.sms")} - ${displayName}`}
         >
@@ -82,10 +87,11 @@ export function ContactCardMessagingButtons({
         <MotionButton
           type="button"
           variant="ghost"
+          size="icon"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => onEmail([contact])}
-          className="h-auto p-2.5 rounded-xl border border-secondary/30 dark:border-secondary/20 bg-secondary/5 text-secondary hover:text-secondary hover:bg-secondary/10 cursor-pointer transition-colors shadow-none"
+          className={`${messagingBtnClass} border-secondary/30 dark:border-secondary/20 bg-secondary/5 text-secondary hover:text-secondary hover:bg-secondary/10`}
           title={`${t("contacts.detail.emailAction")} - ${displayName}`}
           aria-label={`${t("contacts.detail.emailAction")} - ${displayName}`}
         >

@@ -81,7 +81,7 @@ export function ContactCardActions({
           showArchived={showArchived}
           canWrite={canWrite}
           canDelete={canDelete}
-          triggerClassName="p-2.5 rounded-xl border border-border/50 dark:border-border/30 hover:bg-muted hover:text-foreground text-muted-foreground transition-colors cursor-pointer h-auto shadow-none min-h-0 min-w-0"
+          triggerClassName="min-h-11 min-w-11 rounded-xl border border-border/50 dark:border-border/30 hover:bg-muted hover:text-foreground text-muted-foreground transition-colors cursor-pointer shadow-none"
         />
       </div>
     </div>

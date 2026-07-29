@@ -1,4 +1,3 @@
-import { getCollection } from "@/lib/db";
 import {
   type ContactsWidgetAggregateResult,
   type StudentsWidgetAggregateResult,
@@ -22,7 +21,20 @@ import {
   TEACHERS_METRICS_QUERY_KEY,
   TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
 } from "@/tenant/hooks/collections/teachers";
+import { ATTENDANCE_QUERY_KEY } from "@/tenant/hooks/collections/attendance";
+import { FINANCE_INVOICES_QUERY_KEY } from "@/tenant/hooks/collections/finance";
+import {
+  HASANAT_DENOMS_QUERY_KEY,
+  HASANAT_DISTRIBUTIONS_QUERY_KEY,
+} from "@/tenant/hooks/collections/hasanat";
+import {
+  QUESTION_BANK_QUESTIONS_QUERY_KEY,
+  QUESTION_BANK_RESULTS_QUERY_KEY,
+  QUESTION_BANK_TESTS_QUERY_KEY,
+} from "@/tenant/hooks/collections/questionBank";
+import { SESSIONS_QUERY_KEY } from "@/tenant/hooks/collections/sessions";
 import type { CustomWidget } from "./pinnedWidgetTypes";
+import type { ReportCollectionsSnapshot } from "@/lib/reports/useReportCollections";
 import type { Denomination, Distribution } from "@/lib/data/hasanatData";
 import type { Student } from "@/lib/data/studentsData";
 import type { Teacher } from "@/lib/data/teachersData";
@@ -31,6 +43,15 @@ import type { Invoice } from "@/lib/data/financeData";
 import type { AttendanceRecord } from "@/lib/data/attendanceData";
 import type { QuestionBankQuestion, QuestionBankTest, QuestionBankResult } from "@mms/shared";
 
+function readQueryCollection<T>(queryKey: readonly unknown[]): T[] | undefined {
+  const exact = queryClientInstance.getQueryData<T[]>(queryKey);
+  if (Array.isArray(exact)) return exact;
+  const matches = queryClientInstance.getQueriesData<T[]>({ queryKey });
+  for (const [, data] of matches) {
+    if (Array.isArray(data)) return data;
+  }
+  return undefined;
+}
 function readContactsWidgetAggregate(widgetId: string): ContactsWidgetAggregateResult | undefined {
   const queries = queryClientInstance.getQueriesData<Record<string, ContactsWidgetAggregateResult>>({
     queryKey: CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
@@ -115,18 +136,20 @@ function formatGenericWidgetValue(
   };
 }
 
-export function getWidgetCollections() {
+export function getWidgetCollections(): ReportCollectionsSnapshot {
   const contacts: Contact[] = [];
   const students: Student[] = [];
   const teachers: Teacher[] = [];
-  const invoices = getCollection<Invoice>("finance_invoices");
-  const attendance = getCollection<AttendanceRecord>("attendance_records");
-  const distributions = getCollection<Distribution>("hasanat_distributions");
-  const denominations = getCollection<Denomination>("hasanat_denoms");
-  const sessions = getCollection<Session>("sessions");
-  const questions = getCollection<QuestionBankQuestion>("questions");
-  const tests = getCollection<QuestionBankTest>("tests");
-  const assessmentResults = getCollection<QuestionBankResult>("assessment_results");
+
+  const invoices = readQueryCollection<Invoice>(FINANCE_INVOICES_QUERY_KEY) ?? [];
+  const attendance = readQueryCollection<AttendanceRecord>(ATTENDANCE_QUERY_KEY) ?? [];
+  const distributions = readQueryCollection<Distribution>(HASANAT_DISTRIBUTIONS_QUERY_KEY) ?? [];
+  const denominations = readQueryCollection<Denomination>(HASANAT_DENOMS_QUERY_KEY) ?? [];
+  const sessions = readQueryCollection<Session>(SESSIONS_QUERY_KEY) ?? [];
+  const questions = readQueryCollection<QuestionBankQuestion>(QUESTION_BANK_QUESTIONS_QUERY_KEY) ?? [];
+  const tests = readQueryCollection<QuestionBankTest>(QUESTION_BANK_TESTS_QUERY_KEY) ?? [];
+  const assessmentResults =
+    readQueryCollection<QuestionBankResult>(QUESTION_BANK_RESULTS_QUERY_KEY) ?? [];
 
   return {
     students,
@@ -148,16 +171,8 @@ export function getWidgetCollections() {
  */
 export function getFilteredRecords(
   widget: CustomWidget,
-  collections: ReturnType<typeof getWidgetCollections>,
+  collections: ReportCollectionsSnapshot,
 ): Record<string, unknown>[] {
-  if (
-    widget.collection === "contacts" ||
-    widget.collection === "students" ||
-    widget.collection === "teachers"
-  ) {
-    return [];
-  }
-
   const collectionRecords = (collections[widget.collection] || []) as Record<string, unknown>[];
   return collectionRecords.filter((collectionRecord) =>
     matchesWidgetFilter(
@@ -171,7 +186,7 @@ export function getFilteredRecords(
 
 export function computeWidgetSingleValue(
   widget: CustomWidget,
-  collections: ReturnType<typeof getWidgetCollections>,
+  collections: ReportCollectionsSnapshot,
 ): { value: number; formattedValue: string; isAlert: boolean; totalCount: number } {
   if (widget.collection === "contacts") {
     const aggregate = readContactsWidgetAggregate(widget.id);
@@ -255,7 +270,7 @@ export function computeWidgetSingleValue(
 
 export function computeWidgetChartData(
   widget: CustomWidget,
-  collections: ReturnType<typeof getWidgetCollections>,
+  collections: ReportCollectionsSnapshot,
 ): { name: string; value: number }[] {
   if (widget.collection === "contacts") {
     const aggregate = readContactsWidgetAggregate(widget.id);

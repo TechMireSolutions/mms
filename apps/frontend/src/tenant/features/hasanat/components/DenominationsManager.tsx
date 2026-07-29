@@ -88,7 +88,7 @@ function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
                 aria-pressed={data.icon === icon}
                 key={icon}
                 onClick={() => updateField("icon", icon)}
-                className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all ${data.icon === icon ? "bg-primary/15 ring-2 ring-primary" : "bg-muted hover:bg-muted/80"}`}
+                className={`min-h-11 min-w-11 rounded-lg text-lg flex items-center justify-center transition-all ${data.icon === icon ? "bg-primary/15 ring-2 ring-primary" : "bg-muted hover:bg-muted/80"}`}
               >
                 {icon}
               </Button>
@@ -106,12 +106,12 @@ function DenomModal({ open, denom, onClose, onSave }: DenomModalProps) {
                 aria-label={t("hasanat.denominations.selectColor", { color })}
                 key={color}
                 onClick={() => updateField("color", color)}
-                className={`w-7 h-7 rounded-full border-2 transition-all ${data.color === color ? "border-foreground scale-110" : "border-transparent"}`}
+                className={`min-h-11 min-w-11 rounded-full border-2 transition-all ${data.color === color ? "border-foreground scale-110" : "border-transparent"}`}
                 style={{ background: color }}
               />
             ))}
             <label className="sr-only" htmlFor="custom-color">{t("hasanat.denominations.customColor")}</label>
-            <Input id="custom-color" type="color" value={data.color} onChange={(event) => updateField("color", event.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 p-0" title={t("hasanat.denominations.customColor")} />
+            <Input id="custom-color" type="color" value={data.color} onChange={(event) => updateField("color", event.target.value)} className="min-h-11 min-w-11 rounded cursor-pointer border-0 p-0" title={t("hasanat.denominations.customColor")} />
           </div>
         </fieldset>
 
@@ -201,13 +201,13 @@ export function DenominationsManager({ denoms, onUpdate, canWrite = true }: Deno
               <span className="text-[11px] font-bold text-foreground px-2 py-1 rounded-lg bg-muted">{t("hasanat.denominations.ptsShort", { points: denomination.points })}</span>
               {canWrite && (
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button variant="ghost" type="button" onClick={() => toggleActive(denomination.id)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground" title={denomination.active ? t("hasanat.denominations.deactivate") : t("hasanat.denominations.activate")} aria-label={denomination.active ? t("hasanat.denominations.deactivate") : t("hasanat.denominations.activate")}>
+                  <Button variant="ghost" type="button" size="icon" onClick={() => toggleActive(denomination.id)} className="rounded-lg hover:bg-muted text-muted-foreground" title={denomination.active ? t("hasanat.denominations.deactivate") : t("hasanat.denominations.activate")} aria-label={denomination.active ? t("hasanat.denominations.deactivate") : t("hasanat.denominations.activate")}>
                     {denomination.active ? <ToggleRight className="w-4 h-4 text-primary" aria-hidden="true" /> : <ToggleLeft className="w-4 h-4" aria-hidden="true" />}
                   </Button>
-                  <Button variant="ghost" type="button" aria-label={`Edit ${denomination.name}`} onClick={() => { setEditDenom(denomination); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
+                  <Button variant="ghost" type="button" size="icon" aria-label={`Edit ${denomination.name}`} onClick={() => { setEditDenom(denomination); setShowModal(true); }} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
                     <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                   </Button>
-                  <Button variant="ghost" type="button" aria-label={`Delete ${denomination.name}`} onClick={() => handleDelete(denomination.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+                  <Button variant="ghost" type="button" size="icon" aria-label={`Delete ${denomination.name}`} onClick={() => handleDelete(denomination.id)} className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
                     <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                   </Button>
                 </div>

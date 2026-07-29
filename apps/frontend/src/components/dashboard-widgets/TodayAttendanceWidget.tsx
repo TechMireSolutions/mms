@@ -109,7 +109,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
             <span className="text-[10px] text-muted-foreground px-2 py-0.5 rounded-full bg-muted font-bold border border-border/40">{formatDate(displayDate)}</span>
           )}
         </div>
-        <Link to={ROUTES.attendance} className="flex items-center gap-1 text-xs text-primary font-bold hover:underline">
+        <Link to={ROUTES.attendance} className="inline-flex min-h-11 items-center gap-1 text-xs text-primary font-bold hover:underline">
           {t("dashboard.widgets.viewAll")} <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </header>
@@ -119,7 +119,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
           <div className="text-center py-8">
             <Users className="w-9 h-9 text-muted-foreground/30 mx-auto mb-2" />
             <p className="text-xs font-bold uppercase tracking-wider text-foreground m-0">{t("dashboard.widgets.noAttendanceRecorded")}</p>
-            <Link to={ROUTES.attendance} className="text-xs text-primary font-bold hover:underline mt-1.5 inline-block">
+            <Link to={ROUTES.attendance} className="inline-flex min-h-11 items-center text-xs text-primary font-bold hover:underline mt-1.5">
               {t("dashboard.widgets.markAttendance")}
             </Link>
           </div>

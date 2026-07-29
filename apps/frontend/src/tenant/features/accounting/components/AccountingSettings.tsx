@@ -354,13 +354,14 @@ export function AccountingSettings({
                     variant="link"
                     size="sm"
                     onClick={() => setFyModal({ label: "", startDate: "", endDate: "", status: "upcoming" })}
-                    className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors p-0 h-auto"
+                    className="flex items-center gap-1 min-h-11 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.settings.addYear")}
                   </Button>
                 )}
               </header>
               <div className="rounded-xl border border-border overflow-hidden">
+                <div className="overflow-x-auto max-w-full">
                 <table className="w-full text-sm">
                   <caption className="sr-only">{t("accounting.settings.fy.tableCaption")}</caption>
                   <thead className="bg-muted/50 border-b border-border">
@@ -391,7 +392,7 @@ export function AccountingSettings({
                                   size="icon"
                                   aria-label={`Edit ${fiscalYear.label}`}
                                   onClick={() => setFyModal({ ...fiscalYear })}
-                                  className="h-8 w-8 text-muted-foreground hover:text-foreground shadow-none"
+                                  className="text-muted-foreground hover:text-foreground shadow-none"
                                 >
                                   <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                                 </Button>
@@ -403,7 +404,7 @@ export function AccountingSettings({
                                   size="icon"
                                   aria-label={`Delete ${fiscalYear.label}`}
                                   onClick={() => { void handleDeleteFY(fiscalYear.id); }}
-                                  className="h-8 w-8 text-muted-foreground hover:text-destructive shadow-none"
+                                  className="text-muted-foreground hover:text-destructive shadow-none"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                                 </Button>
@@ -415,6 +416,7 @@ export function AccountingSettings({
                     })}
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
           </SectionCard>

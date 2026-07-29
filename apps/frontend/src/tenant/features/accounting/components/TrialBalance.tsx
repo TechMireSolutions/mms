@@ -108,6 +108,7 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
                   </h3>
                   <span className="text-[10px] font-semibold text-muted-foreground">{t("accounting.tb.accountsCount", { count: accountTypeRows.length })}</span>
                 </header>
+                <div className="overflow-x-auto max-w-full">
                 <table className="w-full text-sm">
                   <caption className="sr-only">{t("accounting.tb.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })}</caption>
                   <thead className="bg-muted/40 border-b border-border">
@@ -138,12 +139,14 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
                     </tr>
                   </tfoot>
                 </table>
+                </div>
               </section>
             );
           })}
 
           {/* Grand total */}
           <div className="rounded-xl border-2 border-foreground/20 overflow-hidden bg-muted/30">
+            <div className="overflow-x-auto max-w-full">
             <table className="w-full text-sm">
               <caption className="sr-only">{t("accounting.tb.grandTotalCaption")}</caption>
               <tfoot>
@@ -158,6 +161,7 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
                 </tr>
               </tfoot>
             </table>
+            </div>
           </div>
         </>
       )}

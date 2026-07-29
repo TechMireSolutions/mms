@@ -33,7 +33,7 @@ function moduleLabel(moduleId: string, t: (key: AppTranslationKey) => string): s
 
 /** Global download / background job centre (globle1 §8). */
 export function BackgroundJobsTray({
-  compact = false,
+  compact: _compact = false,
   className,
 }: BackgroundJobsTrayProps): React.JSX.Element | null {
   const { t } = useTranslation();
@@ -63,12 +63,11 @@ export function BackgroundJobsTray({
         aria-label={t("backgroundJobs.trayLabel")}
         onClick={() => setOpen(true)}
         className={cn(
-          "relative rounded-lg",
-          compact ? "h-9 w-9" : "h-10 w-10",
+          "relative min-h-11 min-w-11 h-11 w-11 rounded-lg",
           className,
         )}
       >
-        <Download className={cn("text-muted-foreground", compact ? "h-[18px] w-[18px]" : "h-5 w-5")} />
+        <Download className="h-5 w-5 text-muted-foreground" />
         {badgeCount > 0 && (
           <Badge
             variant="secondary"
@@ -96,7 +95,7 @@ export function BackgroundJobsTray({
                 type="button"
                 variant="outline"
                 onClick={refresh}
-                className="h-auto shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium shadow-none"
+                className="min-h-11 shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium shadow-none"
               >
                 <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
                 {t("backgroundJobs.refresh")}
@@ -139,7 +138,7 @@ export function BackgroundJobsTray({
                           size="icon"
                           onClick={() => void handleDownload(job.id)}
                           disabled={downloadingId === job.id}
-                          className="h-7 w-7 text-primary shadow-none"
+                          className="text-primary shadow-none"
                           aria-label={t("backgroundJobs.download")}
                         >
                           {downloadingId === job.id ? (
@@ -155,7 +154,7 @@ export function BackgroundJobsTray({
                           variant="ghost"
                           size="icon"
                           onClick={() => dismiss(job.id)}
-                          className="h-7 w-7 shadow-none"
+                          className="shadow-none"
                           aria-label={t("backgroundJobs.dismiss")}
                         >
                           <X className="w-3.5 h-3.5" />

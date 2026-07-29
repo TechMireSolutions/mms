@@ -124,6 +124,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
           <section aria-label={t("obligations.detail.distribution")}>
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 m-0">{t("obligations.detail.distribution")}</h4>
             <Card accentColor="emerald" className="p-0 overflow-hidden">
+              <div className="overflow-x-auto max-w-full">
               <table className="w-full text-sm">
                 <caption className="sr-only">{t("obligations.detail.distributionCaption", { receipt: selectedCollection.receipt_no })}</caption>
                 <thead className="bg-muted/60 border-b border-border">
@@ -149,6 +150,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
                   ))}
                 </tbody>
               </table>
+              </div>
             </Card>
           </section>
         )}

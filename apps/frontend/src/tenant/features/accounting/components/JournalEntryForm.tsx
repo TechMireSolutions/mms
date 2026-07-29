@@ -285,13 +285,14 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
                 variant="link"
                 size="sm"
                 onClick={addLine}
-                className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors p-0 h-auto"
+                className="flex items-center gap-1 min-h-11 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.form.addLine")}
               </Button>
             </div>
 
             <div className="rounded-xl border border-border overflow-hidden">
+              <div className="overflow-x-auto max-w-full">
               <table className="w-full text-sm">
                 <caption className="sr-only">{t("accounting.journal.form.linesCaption")}</caption>
                 <thead className="bg-muted/60 border-b border-border">
@@ -364,7 +365,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
                             aria-label={`Remove line ${lineIndex + 1}`}
                             onClick={() => removeLine(lineIndex)}
                             disabled={form.lines.length <= 2}
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+                            className="text-muted-foreground hover:text-destructive transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                           </Button>
@@ -382,6 +383,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
                   </tr>
                 </tfoot>
               </table>
+              </div>
             </div>
 
             <div className={`mt-2 flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold border transition-all duration-300 ${isBalanced ? "bg-success/10 text-success border-success/20 shadow-sm" : "bg-destructive/10 text-destructive border-destructive/20 shadow-sm"}`} role="status">

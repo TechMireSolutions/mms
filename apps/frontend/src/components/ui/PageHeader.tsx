@@ -31,9 +31,9 @@ export function PageHeader({
         )}
         <div>
           {breadcrumb && (
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">{breadcrumb}</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">{breadcrumb}</p>
           )}
-          <h1 className="text-[20px] font-bold text-foreground leading-tight">{title}</h1>
+          <h1 className="text-xl font-bold text-foreground leading-tight">{title}</h1>
           {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
         </div>
       </div>

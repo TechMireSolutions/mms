@@ -47,6 +47,7 @@ export function ContactsSyncConflictDiffBody({
       {local && diffs.length > 0 ? (
         <>
           <p className="text-xs font-semibold text-foreground">{t("contacts.sync.conflictDiffTitle")}</p>
+          <div className="overflow-x-auto max-w-full">
           <table className="w-full text-xs">
             <thead>
               <tr className="text-muted-foreground">
@@ -91,6 +92,7 @@ export function ContactsSyncConflictDiffBody({
               ))}
             </tbody>
           </table>
+          </div>
         </>
       ) : local ? (
         <p className="text-xs text-muted-foreground">

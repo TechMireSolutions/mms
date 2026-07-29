@@ -170,7 +170,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
             <Button
               variant="destructive"
               onClick={handleRemindAll}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors h-auto cursor-pointer"
+              className="flex items-center gap-1.5 min-h-11 px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors cursor-pointer"
             >
               <Bell className="w-3 h-3" aria-hidden="true" />
               {t("dashboard.widgets.remindAll")}
@@ -178,10 +178,11 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
           )}
           <Button
             variant="ghost"
+            size="icon"
             onClick={() => setExpanded((value) => !value)}
             aria-expanded={expanded}
             aria-label={t("dashboard.widgets.toggleOverdueList")}
-            className="h-8 w-8 p-0 rounded-lg hover:bg-destructive/15 text-destructive hover:text-destructive transition-colors shadow-none cursor-pointer"
+            className="rounded-lg hover:bg-destructive/15 text-destructive hover:text-destructive transition-colors shadow-none cursor-pointer"
           >
             {expanded ? <ChevronUp className="w-4 h-4" aria-hidden="true" /> : <ChevronDown className="w-4 h-4" aria-hidden="true" />}
           </Button>
@@ -292,7 +293,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                               onClick={() => handleRemind(overdueStudent)}
                               disabled={reminded || !hasPhone}
                               aria-label={reminded ? t("dashboard.widgets.reminderSentTo", { name: overdueStudent.name }) : t("dashboard.widgets.sendReminderTo", { name: overdueStudent.name })}
-                              className={`flex items-center gap-1 mx-auto px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors h-auto shadow-none cursor-pointer ${
+                              className={`flex items-center gap-1 mx-auto px-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors min-h-11 shadow-none cursor-pointer ${
                                 reminded
                                   ? "bg-success/10 text-success border border-success/35 cursor-default hover:bg-success/10 hover:text-success"
                                   : "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:text-primary"
@@ -321,7 +322,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                   onPageChange={setCurrentPage}
                 />
               </div>
-              <Link to={ROUTES.finance} className="text-xs font-bold text-primary hover:underline">
+              <Link to={ROUTES.finance} className="inline-flex min-h-11 items-center text-xs font-bold text-primary hover:underline">
                 {t("dashboard.widgets.viewAllOutstanding")}
               </Link>
             </footer>

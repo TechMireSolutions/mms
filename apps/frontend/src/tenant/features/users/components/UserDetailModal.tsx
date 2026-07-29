@@ -99,7 +99,8 @@ export function UserDetailModal({
                 <Button
                   variant="ghost"
                   type="button"
-                  className="h-6 w-6 rounded-lg p-0 text-muted-foreground hover:text-primary transition-colors hover:bg-muted"
+                  size="icon"
+                  className="rounded-lg text-muted-foreground hover:text-primary transition-colors hover:bg-muted"
                   onClick={() => openComposer('email', [{
                     id: user.id,
                     name: user.name,
@@ -130,7 +131,8 @@ export function UserDetailModal({
                     <Button
                       variant="ghost"
                       type="button"
-                      className="h-6 w-6 rounded-lg p-0 text-muted-foreground hover:text-primary transition-colors hover:bg-muted"
+                      size="icon"
+                  className="rounded-lg text-muted-foreground hover:text-primary transition-colors hover:bg-muted"
                       onClick={() => openComposer('whatsapp', [{
                         id: user.id,
                         name: user.name,
@@ -144,7 +146,8 @@ export function UserDetailModal({
                     <Button
                       variant="ghost"
                       type="button"
-                      className="h-6 w-6 rounded-lg p-0 text-muted-foreground hover:text-primary transition-colors hover:bg-muted"
+                      size="icon"
+                  className="rounded-lg text-muted-foreground hover:text-primary transition-colors hover:bg-muted"
                       onClick={() => openComposer('sms', [{
                         id: user.id,
                         name: user.name,

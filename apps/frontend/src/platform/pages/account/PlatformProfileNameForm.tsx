@@ -66,7 +66,7 @@ export function PlatformProfileNameForm({
               className="min-h-[44px]"
             />
           </div>
-          <Button type="submit" className="w-fit px-6 font-bold h-10 rounded-xl cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all" disabled={updateName.isPending || name === platformUser?.name}>
+          <Button type="submit" className="w-fit px-6 font-bold min-h-11 rounded-xl cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all" disabled={updateName.isPending || name === platformUser?.name}>
             {updateName.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />

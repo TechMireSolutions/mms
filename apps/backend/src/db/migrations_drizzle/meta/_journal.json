@@ -211,6 +211,13 @@
       "when": 1785178800000,
       "tag": "0029_tighten_tenant_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1785250000000,
+      "tag": "0030_custom_tabs_composite_pk_force_rls",
+      "breakpoints": true
     }
   ]
 }

@@ -186,10 +186,10 @@ export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps) {
                       <StatusBadge status={sessionEvent.type || "other"} config={eventTypeConfig} size="sm" />
                     </div>
                     {canWrite && <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button aria-label={t("sessions.events.editNamed", { name: sessionEvent.title })} onClick={() => { setEditEvent(sessionEvent); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground w-8 h-8" variant="ghost" size="icon">
+                      <Button aria-label={t("sessions.events.editNamed", { name: sessionEvent.title })} onClick={() => { setEditEvent(sessionEvent); setShowModal(true); }} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground" variant="ghost" size="icon">
                         <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
-                      <Button aria-label={t("sessions.events.deleteNamed", { name: sessionEvent.title })} onClick={() => setDeleteTarget(sessionEvent)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive w-8 h-8" variant="ghost" size="icon">
+                      <Button aria-label={t("sessions.events.deleteNamed", { name: sessionEvent.title })} onClick={() => setDeleteTarget(sessionEvent)} className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive" variant="ghost" size="icon">
                         <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
                     </div>}

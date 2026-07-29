@@ -519,7 +519,7 @@ export function DistributionManager({
           <label htmlFor="search-dist" className="sr-only">{t("hasanat.distribution.searchLabel")}</label>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
           <Input id="search-dist" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("hasanat.searchDistributions")} className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border text-sm bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
-          {search && <Button variant="ghost" type="button" aria-label={t("common.clearSearch")} onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"><X className="w-3.5 h-3.5" aria-hidden="true" /></Button>}
+          {search && <Button variant="ghost" type="button" size="icon" aria-label={t("common.clearSearch")} onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"><X className="w-3.5 h-3.5" aria-hidden="true" /></Button>}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -690,7 +690,7 @@ export function DistributionManager({
                           {(canWrite || onMessage) && !showDeleted && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" type="button" aria-label={t("hasanat.changeStatus")} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground text-xs font-medium flex items-center gap-1">
+                              <Button variant="ghost" type="button" size="icon" aria-label={t("hasanat.changeStatus")} className="rounded-lg hover:bg-muted text-muted-foreground">
                                 <Eye className="w-3.5 h-3.5" aria-hidden="true" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -732,7 +732,8 @@ export function DistributionManager({
                             <Button
                               variant="ghost"
                               type="button"
-                              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"
+                              size="icon"
+                              className="rounded-lg hover:bg-muted text-muted-foreground"
                               onClick={() => { void handleRowTrashAction(distribution.id); }}
                               aria-label={showDeleted ? t("hasanat.trash.restore") : t("common.delete")}
                             >

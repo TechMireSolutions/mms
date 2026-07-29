@@ -41,7 +41,7 @@ export function CollectionRowItem({
             <CopyBtn
               text={value}
               showToast
-              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground p-0 flex items-center justify-center opacity-100"
+              className="min-h-11 min-w-11 rounded-lg text-muted-foreground hover:text-foreground flex items-center justify-center opacity-100"
             />
           )}
           {onAction && ActionIcon ? (
@@ -51,7 +51,7 @@ export function CollectionRowItem({
               size="icon"
               onClick={onAction}
               aria-label={actionTitle || value}
-              className={`h-8 w-8 rounded-lg flex items-center justify-center shadow-none ${actionColorClass}`}
+              className={`rounded-lg shadow-none ${actionColorClass}`}
             >
               <ActionIcon className="w-3.5 h-3.5" />
             </Button>
@@ -61,7 +61,7 @@ export function CollectionRowItem({
               target={external ? "_blank" : undefined}
               rel={external ? "noopener noreferrer" : undefined}
               aria-label={actionTitle || value}
-              className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors ${actionColorClass}`}
+              className={`min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg transition-colors ${actionColorClass}`}
             >
               <ActionIcon className="w-3.5 h-3.5" />
             </a>

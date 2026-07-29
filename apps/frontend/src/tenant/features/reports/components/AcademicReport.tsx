@@ -275,7 +275,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedStudent(null)}
-                className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+                className="px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
               >
                 <X className="w-3 h-3 me-1" />
                 {t("examinations.report.clearStudentFilter")}
@@ -287,7 +287,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedClass(null)}
-                className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+                className="px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
               >
                 <X className="w-3 h-3 me-1" />
                 {t("examinations.report.clearClassFilter")}
@@ -348,6 +348,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
         <EmptyState icon={BookOpen} title={t("examinations.report.noResultsFound")} compact />
       ) : (
         <Card className="overflow-hidden">
+          <div className="overflow-x-auto max-w-full">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
@@ -392,6 +393,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
               ))}
             </tbody>
           </table>
+          </div>
         </Card>
       )}
     </div>

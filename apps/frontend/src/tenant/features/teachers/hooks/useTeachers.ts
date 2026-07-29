@@ -54,6 +54,28 @@ export function useTeachersPaginated(params: TeachersPaginatedParams) {
   });
 }
 
+/** Fetches all pages matching filters for report/export builders. */
+export async function fetchAllTeachersForQuery(
+  params: Omit<TeachersPaginatedParams, 'page' | 'enabled'> = {},
+  onProgress?: (fetched: number, total: number) => void,
+): Promise<Teacher[]> {
+  const limit = TEACHERS_MODULE_MANIFEST.maxPageSize;
+  const all: Teacher[] = [];
+  let page = 1;
+  let total = 0;
+
+  for (;;) {
+    const teachersPage = await apiJson<TeachersListPageResult>(buildTeachersPageUrl({ ...params, page, limit }));
+    all.push(...(teachersPage.teachers as Teacher[]));
+    total = teachersPage.total;
+    onProgress?.(all.length, total);
+    if (!teachersPage.hasMore || page >= 200) break;
+    page += 1;
+  }
+
+  return all;
+}
+
 export interface TeacherRecord {
   id: string | number;
   [key: string]: unknown;

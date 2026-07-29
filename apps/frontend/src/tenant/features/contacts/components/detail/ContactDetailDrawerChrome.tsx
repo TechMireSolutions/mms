@@ -21,9 +21,10 @@ export function ContactDetailDrawerHeaderActions({
   return (
     <Button
       variant="outline"
+      size="icon"
       onClick={() => onEdit(contact)}
       aria-label={t("contacts.detail.editProfile")}
-      className="h-8 w-8 p-1.5 rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shadow-none"
+      className="rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shadow-none"
       title={t("contacts.detail.editProfile")}
     >
       <Edit2 className="w-4 h-4" />

@@ -264,7 +264,7 @@ export function FormModal<K extends string = string>({
         type="button"
         variant={builderMode ? 'default' : 'outline'}
         onClick={() => onBuilderModeChange(!builderMode)}
-        className="text-[11px] h-8 px-2.5 flex items-center gap-1.5 font-bold uppercase tracking-wider transition-all duration-300"
+        className="text-xs min-h-11 px-2.5 flex items-center gap-1.5 font-bold uppercase tracking-wider transition-all duration-300"
       >
         {builderMode ? (
           <>
@@ -356,7 +356,7 @@ export function FormModal<K extends string = string>({
                     <span
                       aria-hidden
                       className={cn(
-                        "inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full text-[10px] font-extrabold transition-colors md:ms-auto md:min-w-0 md:h-auto md:px-1.5 md:py-0.5",
+                        "inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full text-xs font-extrabold transition-colors md:ms-auto md:min-w-0 md:h-auto md:px-1.5 md:py-0.5",
                         "absolute top-1 end-1 md:static",
                         active
                           ? "bg-primary text-primary-foreground"

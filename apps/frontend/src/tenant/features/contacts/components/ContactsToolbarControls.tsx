@@ -70,7 +70,7 @@ export function ContactsViewModeToggle({
         type="button"
         variant="ghost"
         onClick={() => onViewModeChange("table")}
-        className={`h-9 px-2.5 rounded-lg text-xs font-semibold transition-all ${
+        className={`min-h-11 min-w-11 h-11 px-2.5 rounded-lg text-xs font-semibold transition-all ${
           viewMode === "table"
             ? "bg-primary text-primary-foreground shadow-xs"
             : "text-muted-foreground hover:text-foreground"
@@ -83,7 +83,7 @@ export function ContactsViewModeToggle({
         type="button"
         variant="ghost"
         onClick={() => onViewModeChange("cards")}
-        className={`h-9 px-2.5 rounded-lg text-xs font-semibold transition-all ${
+        className={`min-h-11 min-w-11 h-11 px-2.5 rounded-lg text-xs font-semibold transition-all ${
           viewMode === "cards"
             ? "bg-primary text-primary-foreground shadow-xs"
             : "text-muted-foreground hover:text-foreground"

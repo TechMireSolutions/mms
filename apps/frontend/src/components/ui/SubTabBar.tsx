@@ -66,7 +66,7 @@ export function SubTabBar<K extends string>({
                   aria-controls={panelId}
                   onClick={() => onChange(tab.key)}
                   className={cn(
-                    "flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-xs font-semibold transition-colors",
+                    "flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-xs font-semibold transition-colors",
                     active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -109,7 +109,7 @@ export function SubTabBar<K extends string>({
                 type="button"
                 onClick={() => onChange(t.key)}
                 className={cn(
-                  "rounded-lg px-4 py-1.5 text-sm font-semibold transition-all flex items-center gap-1.5",
+                  "flex min-h-11 items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all",
                   value === t.key
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
@@ -127,14 +127,14 @@ export function SubTabBar<K extends string>({
   }
 
   return (
-    <div className={cn("flex w-fit gap-1 rounded-xl bg-muted p-1 max-lg:w-full max-lg:overflow-x-auto", className)}>
+    <div className={cn("flex w-full gap-1 overflow-x-auto rounded-xl bg-muted p-1 lg:w-fit", className)}>
       {tabs.map((t) => (
         <button
           key={t.key}
           type="button"
           onClick={() => onChange(t.key)}
           className={cn(
-            "whitespace-nowrap rounded-lg px-4 py-1.5 text-sm font-semibold transition-all flex items-center gap-1.5",
+            "flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition-all",
             value === t.key
               ? "bg-card text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",

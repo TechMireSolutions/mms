@@ -102,7 +102,7 @@ export default function StatsGrid({
                           e.stopPropagation();
                           onEditCustomCard(statItem.id);
                         }}
-                        className="p-1 w-7 h-7 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all cursor-pointer border border-transparent hover:border-primary/10"
+                        className="rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all cursor-pointer border border-transparent hover:border-primary/10"
                         title={t("dashboard.editCardConfig")}
                       >
                         <Pencil className="w-3.5 h-3.5" />
@@ -116,7 +116,7 @@ export default function StatsGrid({
                           e.stopPropagation();
                           onDeleteCustomCard(statItem.id);
                         }}
-                        className="p-1 w-7 h-7 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all cursor-pointer border border-transparent hover:border-destructive/10"
+                        className="rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all cursor-pointer border border-transparent hover:border-destructive/10"
                         title={t("dashboard.deleteCard")}
                       >
                         <Trash2 className="w-3.5 h-3.5" />

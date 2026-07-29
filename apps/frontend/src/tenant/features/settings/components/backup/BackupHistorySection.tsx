@@ -97,7 +97,7 @@ export default function BackupHistorySection({
                       variant="outline"
                       onClick={() => onRestore(backup)}
                       disabled={restoreId !== null || !backup.data}
-                      className={`min-h-[32px] px-3 font-semibold text-xs transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+                      className={`min-h-11 px-3 font-semibold text-xs transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
                         isRestoringThis ? 'border-primary/30 text-primary bg-primary/5' : ''
                       }`}
                     >
@@ -118,7 +118,7 @@ export default function BackupHistorySection({
                       onClick={() => onDownload(backup)}
                       aria-label={t('backup.download')}
                       disabled={restoreId !== null}
-                      className="h-8 w-8 text-muted-foreground"
+                      className="text-muted-foreground"
                     >
                       <HardDriveDownload className="h-4 w-4 transition-transform duration-300 group-hover/item:translate-y-0.5" aria-hidden />
                     </Button>

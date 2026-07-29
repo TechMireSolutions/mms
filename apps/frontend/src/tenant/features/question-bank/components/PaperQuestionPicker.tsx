@@ -100,7 +100,7 @@ export function PaperQuestionPicker({
                     onClick={() => onAddQuestion(question.id)}
                     disabled={!activeSection || selected}
                     size="sm"
-                    className="h-auto w-full px-3 py-1.5 text-xs sm:w-auto"
+                    className="min-h-11 w-full px-3 text-xs sm:w-auto"
                   >
                     {selected ? t("questionBank.questionAdded") : t("questionBank.addToPaper")}
                   </Button>

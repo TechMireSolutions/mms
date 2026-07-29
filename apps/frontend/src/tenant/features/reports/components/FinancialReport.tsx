@@ -233,7 +233,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
             variant="ghost"
             size="sm"
             onClick={() => setSelectedMonth(null)}
-            className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+            className="px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
           >
             <X className="w-3 h-3 me-1" />
             {t("finance.report.clearMonthFilter")}
@@ -259,6 +259,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
         <EmptyState icon={DollarSign} title={t("finance.report.noInvoicesMatch")} compact />
       ) : (
         <Card className="overflow-hidden">
+          <div className="overflow-x-auto max-w-full">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
@@ -302,6 +303,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
               ))}
             </tbody>
           </table>
+          </div>
         </Card>
       )}
 

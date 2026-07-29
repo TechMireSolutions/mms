@@ -43,7 +43,7 @@ export function ListPagination({
 
     return (
       <div 
-        className={cn("flex items-center justify-between text-xs text-muted-foreground py-2", className)}
+        className={cn("flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground py-2", className)}
         role="navigation"
         aria-label={navLabel}
       >
@@ -56,7 +56,7 @@ export function ListPagination({
             onClick={() => onPageChange(Math.max(1, page - 1))}
             disabled={page === 1}
             aria-label={t(prevKey)}
-            className="p-1.5 w-8 h-8 rounded-lg border border-border hover:bg-muted disabled:opacity-40 transition-colors"
+            className="rounded-lg border border-border hover:bg-muted disabled:opacity-40 transition-colors"
           >
             <ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />
           </Button>
@@ -67,7 +67,7 @@ export function ListPagination({
             onClick={() => onPageChange(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
             aria-label={t(nextKey)}
-            className="p-1.5 w-8 h-8 rounded-lg border border-border hover:bg-muted disabled:opacity-40 transition-colors"
+            className="rounded-lg border border-border hover:bg-muted disabled:opacity-40 transition-colors"
           >
             <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
           </Button>
@@ -85,17 +85,17 @@ export function ListPagination({
   const actualHasMore = hasMore || page < totalPages;
 
   return (
-    <div className={cn("flex items-center justify-between gap-3 px-1 py-2 text-sm", className)}>
+    <div className={cn("flex flex-wrap items-center justify-between gap-3 px-1 py-2 text-sm", className)}>
       <p className="text-muted-foreground text-xs">
         {t(rangeKey, { from, to, total })}
       </p>
-      <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center gap-1">
         <Button
           type="button"
           variant="outline"
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border disabled:opacity-40 hover:bg-muted/60 h-auto text-foreground shadow-none text-xs font-normal"
+          className="inline-flex min-h-11 items-center gap-1 px-2.5 py-2 rounded-lg border border-border disabled:opacity-40 hover:bg-muted/60 text-foreground shadow-none text-xs font-normal"
           aria-label={t(prevKey)}
         >
           <ChevronLeft className="w-4 h-4" />
@@ -109,7 +109,7 @@ export function ListPagination({
           variant="outline"
           disabled={!actualHasMore}
           onClick={() => onPageChange(page + 1)}
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border disabled:opacity-40 hover:bg-muted/60 h-auto text-foreground shadow-none text-xs font-normal"
+          className="inline-flex min-h-11 items-center gap-1 px-2.5 py-2 rounded-lg border border-border disabled:opacity-40 hover:bg-muted/60 text-foreground shadow-none text-xs font-normal"
           aria-label={t(nextKey)}
         >
           {t(nextKey)}

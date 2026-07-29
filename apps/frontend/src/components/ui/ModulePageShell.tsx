@@ -28,7 +28,7 @@ export function ModulePageShell({
   children,
 }: ModulePageShellProps): React.JSX.Element {
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
+    <div className="box-border mx-auto w-full min-w-0 max-w-7xl space-y-5">
       <title>{seoTitle}</title>
       <meta name="description" content={seoDescription} />
       {headerTitle && (

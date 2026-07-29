@@ -245,7 +245,7 @@ const WorkspaceRow = memo(function WorkspaceRow({
                 href={tenantLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline hover:text-primary/95 transition-colors group/link"
+                className="min-h-11 inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline hover:text-primary/95 transition-colors group/link"
               >
                 <ExternalLink className="w-3.5 h-3.5 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform duration-250" aria-hidden />
                 {t("platform.openWorkspace")}
@@ -258,7 +258,7 @@ const WorkspaceRow = memo(function WorkspaceRow({
               variant="ghost"
               size="sm"
               disabled={busy}
-              className="h-8 px-2.5 rounded-lg text-xs font-bold text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"
+              className="min-h-11 px-2.5 rounded-lg text-xs font-bold text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"
               onClick={() => setConfirmOpen(true)}
             >
               <Trash2 className="w-3.5 h-3.5 me-1.5" aria-hidden />

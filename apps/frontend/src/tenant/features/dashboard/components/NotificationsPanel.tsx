@@ -101,7 +101,7 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
                     variant="ghost"
                     size="icon"
                     onClick={() => setDismissed((d) => [...d, notif.id])}
-                    className="text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50 rounded-lg transition-colors flex-shrink-0 mt-0.5 p-0.5 w-6 h-6 shadow-none"
+                    className="text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50 rounded-lg transition-colors flex-shrink-0 mt-0.5 shadow-none"
                     aria-label={t('notifications.dismiss', { title: notif.title })}
                   >
                     <X className="w-3.5 h-3.5" aria-hidden="true" />

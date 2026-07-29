@@ -54,15 +54,15 @@ export function ContactsBulkActionBar({
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
-          className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-card/90 border border-primary/20 shadow-md backdrop-blur-md"
+          className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl bg-card/90 border border-primary/20 shadow-md backdrop-blur-md max-w-full"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <Users className="w-4 h-4 text-primary" />
             <span className="text-sm font-semibold text-foreground">
               {t("contacts.selectedCount", { count: selectedCount })}
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             {bulkActions.includes("whatsapp") && !viewingDeleted && canWriteMessaging && (
               <Button
                 type="button"

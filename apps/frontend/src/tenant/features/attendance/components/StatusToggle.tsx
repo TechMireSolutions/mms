@@ -27,7 +27,7 @@ export function StatusToggle({ value, onChange }: StatusToggleProps) {
     <div 
       role="group" 
       aria-label={t("attendance.filter.status")} 
-      className="flex rounded-lg border border-border overflow-hidden text-[11px] font-bold"
+      className="flex max-w-full overflow-x-auto rounded-lg border border-border text-xs font-bold"
     >
       {statuses.map((status: AttendanceStatus) => {
         const title = attendanceStatusLabel(status, t);
@@ -42,7 +42,7 @@ export function StatusToggle({ value, onChange }: StatusToggleProps) {
             title={title}
             aria-pressed={value === status.id}
             variant="ghost"
-            className={`px-2.5 py-1.5 transition-colors rounded-none h-auto ${
+            className={`shrink-0 px-2.5 py-1.5 transition-colors rounded-none min-h-11 ${
               value === status.id
                 ? `${status.bg} ${status.text} hover:${status.bg} hover:${status.text}`
                 : "bg-card text-muted-foreground hover:bg-muted"

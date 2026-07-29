@@ -14,7 +14,7 @@ export function AuthBackLink({
     <p className="text-center text-xs text-muted-foreground">
       <Link
         to={to}
-        className="inline-flex min-h-10 items-center gap-1.5 rounded-md px-2 font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+        className="inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
       >
         <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
         {label}
@@ -91,7 +91,7 @@ export function AuthResendCodeControl({
         size="sm"
         onClick={onResend}
         disabled={disabled}
-        className="h-10 gap-1.5 text-xs font-medium text-primary"
+        className="min-h-11 gap-1.5 text-xs font-medium text-primary"
       >
         <RefreshCw className="h-3.5 w-3.5" aria-hidden />
         {resendLabel}

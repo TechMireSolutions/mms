@@ -479,7 +479,7 @@ function Step3({ form, setForm, errors }: Step3Props): JSX.Element {
                   className="pl-9.5 pr-9"
                 />
                 <Button type="button" variant="ghost" onClick={() => setShowPwd((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground h-auto p-0 hover:bg-transparent shadow-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground min-h-11 min-w-11 hover:bg-transparent shadow-none"
                 >
                   {showPwd ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                 </Button>

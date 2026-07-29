@@ -90,7 +90,7 @@ const FieldItem = memo(function FieldItem({
             {field.labelKey ? t(field.labelKey) : field.label}
           </p>
           {isUnique && !onToggleUnique && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30 dark:bg-warning/20 dark:text-warning dark:border-warning/30">
+            <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30 dark:bg-warning/20 dark:text-warning dark:border-warning/30">
               {lblUnique}
             </span>
           )}
@@ -108,7 +108,7 @@ const FieldItem = memo(function FieldItem({
           onClick={onToggleRequired}
           variant="outline"
           size="sm"
-          className={`flex-shrink-0 h-7 px-3 text-xs font-semibold rounded-md border transition-all shadow-none
+          className={`flex-shrink-0 px-3 text-xs font-semibold rounded-md border transition-all shadow-none
               ${
                 isRequired
                   ? "bg-destructive/10 border-destructive/20 text-destructive hover:bg-destructive/15"
@@ -125,7 +125,7 @@ const FieldItem = memo(function FieldItem({
           onClick={onToggleUnique}
           variant="outline"
           size="sm"
-          className={`flex-shrink-0 h-7 px-3 text-xs font-semibold rounded-md border transition-all shadow-none
+          className={`flex-shrink-0 px-3 text-xs font-semibold rounded-md border transition-all shadow-none
               ${
                 isUnique
                   ? "bg-warning/10 border-warning/20 text-warning hover:bg-warning/15"
@@ -141,7 +141,7 @@ const FieldItem = memo(function FieldItem({
           type="button"
           onClick={onEdit}
           variant="ghost"
-          className="h-8 w-8 p-0 flex items-center justify-center flex-shrink-0 rounded-lg text-muted-foreground/80 hover:text-foreground hover:bg-muted transition-colors shadow-none"
+          className="min-h-11 min-w-11 h-11 w-11 p-0 flex items-center justify-center flex-shrink-0 rounded-lg text-muted-foreground/80 hover:text-foreground hover:bg-muted transition-colors shadow-none"
           title={t("fields.editDefaultsTitle")}
         >
           <SlidersHorizontal className="w-4 h-4" />
@@ -153,7 +153,7 @@ const FieldItem = memo(function FieldItem({
           type="button"
           onClick={onEditField}
           variant="ghost"
-          className="h-8 px-2.5 flex items-center justify-center flex-shrink-0 rounded-lg text-xs font-semibold text-muted-foreground/80 hover:text-foreground hover:bg-muted transition-colors shadow-none"
+          className="min-h-11 px-2.5 flex items-center justify-center flex-shrink-0 rounded-lg text-xs font-semibold text-muted-foreground/80 hover:text-foreground hover:bg-muted transition-colors shadow-none"
           title={t("fields.editCustomFieldTitle")}
         >
           <span>{t("common.edit")}</span>
@@ -165,7 +165,7 @@ const FieldItem = memo(function FieldItem({
           type="button"
           onClick={onDeleteField}
           variant="ghost"
-          className="h-8 px-2.5 flex items-center justify-center flex-shrink-0 rounded-lg text-xs font-semibold text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors shadow-none"
+          className="min-h-11 px-2.5 flex items-center justify-center flex-shrink-0 rounded-lg text-xs font-semibold text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors shadow-none"
           title={t("fields.deleteCustomFieldTitle")}
         >
           <span>{t("common.delete")}</span>
@@ -275,11 +275,11 @@ export function CoreFieldEditorList({
                         {editingId === field.key && !fullEditingId && (
                           <div className="ml-8 p-3 rounded-lg border border-border bg-muted/20 space-y-3 text-left">
                             <div>
-                              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1">
+                              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">
                                 {t("fields.defaultValueLabel")}
                               </label>
                               <Input
-                                className="text-xs py-1.5 h-8 bg-background"
+                                className="text-xs py-2 min-h-11 bg-background"
                                 value={(defaultValues[field.key] as string) || ""}
                                 onChange={(event) => onChangeDefaults?.(field.key, event.target.value)}
                                 placeholder={t("fields.defaultValuePlaceholder")}
@@ -287,11 +287,11 @@ export function CoreFieldEditorList({
                             </div>
                             {!core && (
                               <div>
-                                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1">
+                                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">
                                   {t("fields.permissionsLabel")}
                                 </label>
                                 <Input
-                                  className="text-xs py-1.5 h-8 bg-background"
+                                  className="text-xs py-2 min-h-11 bg-background"
                                   value={(permissions[field.key] || []).join(", ")}
                                   onChange={(event) => onChangePermissions?.(field.key, event.target.value.split(",").map((role) => role.trim()).filter(Boolean))}
                                   placeholder={t("fields.permissionsPlaceholder")}

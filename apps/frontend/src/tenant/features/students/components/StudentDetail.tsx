@@ -67,7 +67,7 @@ function GuardianContactCard({ label, badgeCode, badgeBg, badgeText, name, phone
                 variant="ghost"
                 size="icon"
                 onClick={onWhatsApp}
-                className="h-7 w-7 p-1 rounded-lg border border-border hover:bg-success/10 hover:border-success/30 text-success transition-colors"
+                className="rounded-lg border border-border hover:bg-success/10 hover:border-success/30 text-success transition-colors"
                 title={t("students.list.actionWhatsApp")}
                 aria-label={t("students.list.actionWhatsApp")}
               >
@@ -80,7 +80,7 @@ function GuardianContactCard({ label, badgeCode, badgeBg, badgeText, name, phone
                 variant="ghost"
                 size="icon"
                 onClick={onSms}
-                className="h-7 w-7 p-1 rounded-lg border border-border hover:bg-info/10 hover:border-info/30 text-info transition-colors"
+                className="rounded-lg border border-border hover:bg-info/10 hover:border-info/30 text-info transition-colors"
                 title={t("students.list.actionSms")}
                 aria-label={t("students.list.actionSms")}
               >
@@ -89,7 +89,7 @@ function GuardianContactCard({ label, badgeCode, badgeBg, badgeText, name, phone
             )}
             <a
               href={cleanTelUri(phone)}
-              className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               aria-label={t("students.detail.callPhone", { phone })}
               title={t("students.detail.callPhone", { phone })}
             >
@@ -222,7 +222,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
               variant="outline"
               size="icon"
               onClick={() => onEdit(student)}
-              className="h-8 w-8 p-1.5 rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              className="rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
               title={t("students.detail.editTitle")}
               aria-label={t("students.detail.editTitle")}
             >

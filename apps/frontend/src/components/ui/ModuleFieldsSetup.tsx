@@ -110,7 +110,7 @@ export function ModuleFieldsSetup({
         <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
         <div>
           <h4 className="font-semibold text-xs">{introTitle || t("contacts.setup.fieldsIntroTitle")}</h4>
-          <p className="text-[11px] mt-0.5 text-info/90">
+          <p className="text-xs mt-0.5 text-info/90">
             {introDescription || t("contacts.setup.fieldsIntroDescription")}
           </p>
         </div>
@@ -164,7 +164,7 @@ export function ModuleFieldsSetup({
                             setRenamingTabKey(tabId);
                             setRenameTabLabel(tab.label);
                           }}
-                          className="p-1 h-6 w-6 rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none flex items-center justify-center"
+                          className="min-h-11 min-w-11 p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none flex items-center justify-center"
                           title={t("common.edit")}
                         >
                           <Pencil className="w-3 h-3" />
@@ -173,7 +173,7 @@ export function ModuleFieldsSetup({
                           type="button"
                           variant="ghost"
                           onClick={() => handleDeleteTabLocal(tabId)}
-                          className="p-1 h-6 w-6 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none flex items-center justify-center"
+                          className="min-h-11 min-w-11 p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none flex items-center justify-center"
                           title={t("common.delete")}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -183,7 +183,7 @@ export function ModuleFieldsSetup({
                   </div>
                   <p className="text-xs text-muted-foreground">{tabDesc}</p>
                 </div>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
+                <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
                   {tabDefs.filter((field) => enabledSet.has(field.key)).length}/{tabDefs.length}
                 </span>
                 {tabId !== "basic" && isOn && (
@@ -191,7 +191,7 @@ export function ModuleFieldsSetup({
                     type="button"
                     variant="ghost"
                     onClick={() => handleToggleTabRequired(tabId)}
-                    className={`flex-shrink-0 px-2.5 py-1 h-auto text-[10px] font-bold border transition-all shadow-none ml-2
+                    className={`flex-shrink-0 min-h-11 px-2.5 text-xs font-bold border transition-all shadow-none ml-2
                       ${
                         isReq
                           ? "bg-destructive/10 border-destructive/30 text-destructive hover:bg-destructive/20 hover:text-destructive"

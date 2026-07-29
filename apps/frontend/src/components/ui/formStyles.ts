@@ -3,7 +3,7 @@ export const FORM_ERROR = 'text-xs text-destructive mt-1';
 
 /** Shared label class for modal / registry-driven forms. */
 export const FORM_LABEL =
-  'mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground';
+  'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground';
 
 /** Shared text input — full width, 44px min height, primary focus ring (no border/shadow transitions). */
 export const FORM_INPUT =
@@ -18,7 +18,7 @@ export const FORM_INPUT_ICON = `${FORM_INPUT} pl-9 pr-3`;
 
 /** Compact input for dense tables (e.g. journal lines). */
 export const FORM_INPUT_COMPACT =
-  'w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/40';
+  'w-full rounded-lg border border-border bg-background px-2 py-2 min-h-11 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/40';
 
 /** Compact builder panels (widget builder, analytics config). */
 export const FORM_INPUT_BUILDER = `${FORM_INPUT_COMPACT} bg-card/40 backdrop-blur-md font-semibold`;
@@ -29,7 +29,7 @@ export const FORM_OTP_DIGIT =
 
 /** Unified checkbox style — borders, focus rings, primary accent, cursor pointer. */
 export const FORM_CHECKBOX =
-  'h-4 w-4 shrink-0 rounded border border-border bg-background accent-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/40 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50';
+  "relative h-4 w-4 shrink-0 rounded border border-border bg-background accent-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/40 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']";
 
 /** Unified form card container style — matching the centralized Card component. */
 export const FORM_CARD =
@@ -37,5 +37,5 @@ export const FORM_CARD =
 
 /** Ultra-compact select trigger style (primarily for dashboard widget chart filters) */
 export const FORM_SELECT_MINI =
-  'h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none';
+  'min-h-11 h-11 px-2 py-2 rounded text-xs font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none';
 

@@ -547,7 +547,7 @@ export function JournalEntries({
             variant="ghost"
             size="sm"
             onClick={() => { setDateFrom(""); setDateTo(""); setTagFilter("all"); }}
-            className="self-end text-xs font-semibold text-muted-foreground hover:text-foreground px-2 py-1.5 h-auto"
+            className="self-end text-xs font-semibold text-muted-foreground hover:text-foreground px-2"
           >
             {t("accounting.journal.dashboard.clear")}
           </Button>
@@ -680,7 +680,7 @@ export function JournalEntries({
                             size="icon"
                             aria-label={`View entry ${entry.ref}`}
                             onClick={() => { setSelected(entry); setModal("view"); }}
-                            className="h-8 w-8 text-muted-foreground hover:text-primary"
+                            className="text-muted-foreground hover:text-primary"
                           >
                             <Eye className="w-3.5 h-3.5" aria-hidden="true" />
                           </Button>
@@ -693,7 +693,7 @@ export function JournalEntries({
                                   size="icon"
                                   aria-label={`Edit entry ${entry.ref}`}
                                   onClick={() => { setSelected(entry); setModal("edit"); }}
-                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                  className="text-muted-foreground hover:text-foreground"
                                 >
                                   <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                                 </Button>
@@ -705,7 +705,7 @@ export function JournalEntries({
                                   size="icon"
                                   aria-label={`Post entry ${entry.ref}`}
                                   onClick={() => void handlePost(entry)}
-                                  className="h-8 w-8 text-muted-foreground hover:text-success"
+                                  className="text-muted-foreground hover:text-success"
                                 >
                                   <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
                                 </Button>
@@ -719,7 +719,7 @@ export function JournalEntries({
                                   size="icon"
                                   aria-label={showDeleted ? t("accounting.trash.restore") : t("common.delete")}
                                   onClick={() => void handleDelete(entry.id)}
-                                  className={`h-8 w-8 text-muted-foreground ${showDeleted ? "hover:text-primary" : "hover:text-destructive"}`}
+                                  className={`text-muted-foreground ${showDeleted ? "hover:text-primary" : "hover:text-destructive"}`}
                                 >
                                   {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
                                 </Button>
@@ -731,7 +731,7 @@ export function JournalEntries({
                               size="icon"
                               aria-label={`Reverse entry ${entry.ref}`}
                               onClick={() => void handleReverse(entry)}
-                              className="h-8 w-8 text-muted-foreground hover:text-warning"
+                              className="text-muted-foreground hover:text-warning"
                             >
                               <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
                             </Button>

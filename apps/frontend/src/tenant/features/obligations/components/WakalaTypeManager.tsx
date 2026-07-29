@@ -137,12 +137,14 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
                   </span>
                   <Button type="button" aria-label={t("obligations.wakala.editAria", { name: typeName })} onClick={() => setModal({ mode: "edit", data: { ...wakalaType } })}
                     variant="ghost"
-                    className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
+                    size="icon"
+                    className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
                     <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                   </Button>
                   <Button type="button" aria-label={t("obligations.wakala.deleteAria", { name: typeName })} onClick={() => handleDeleteWakala(wakalaType.id)}
                     variant="ghost"
-                    className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
+                    size="icon"
+                    className="rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
                     <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                   </Button>
                 </div>
@@ -157,6 +159,7 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
                 {wakalaDistributions.length === 0 ? (
                   <p className="px-4 py-3 text-xs text-muted-foreground m-0">{t("obligations.wakala.noDistributions")}</p>
                 ) : (
+                  <div className="overflow-x-auto max-w-full">
                   <table className="w-full text-xs">
                     <caption className="sr-only">{t("obligations.wakala.distTableCaption")}</caption>
                     <thead className="border-b border-border">
@@ -179,12 +182,14 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
                             <div className="flex items-center justify-end gap-1">
                               <Button type="button" aria-label={t("obligations.wakala.distEditAria", { name: distribution.name })} onClick={() => setModal({ mode: "edit-dist", distMode: "edit", data: { ...distribution } })}
                                 variant="ghost"
-                                className="h-auto p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
+                                size="icon"
+                                className="rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
                                 <Pencil className="w-3 h-3" aria-hidden="true" />
                               </Button>
                               <Button type="button" aria-label={t("obligations.wakala.distDeleteAria", { name: distribution.name })} onClick={() => handleDeleteDist(distribution.id)}
                                 variant="ghost"
-                                className="h-auto p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
+                                size="icon"
+                                className="rounded hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
                                 <Trash2 className="w-3 h-3" aria-hidden="true" />
                               </Button>
                             </div>
@@ -193,6 +198,7 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 )}
                 <div className="px-4 py-2 border-t border-border">
                   <Button type="button" onClick={() => setModal({ mode: "add-dist", distMode: "add", data: { name: "", percentage: 0, wakala_type_id: wakalaType.id, type: "Liability" } })}

@@ -453,7 +453,7 @@ export const auditLogs = pgTable('audit_logs', {
 ]);
 
 export const customTabs = pgTable('custom_tabs', {
-  id: text('id').primaryKey(), // e.g. subdomain:moduleId:key
+  id: text('id').notNull(), // e.g. subdomain:moduleId:key
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   moduleId: text('module_id').notNull(),
   key: text('key').notNull(),
@@ -467,6 +467,7 @@ export const customTabs = pgTable('custom_tabs', {
   isSystem: boolean('is_system').notNull().default(false),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
   uniqueIndex('custom_tabs_workspace_module_key_idx').on(table.workspaceSubdomain, table.moduleId, table.key),
   index('custom_tabs_workspace_idx').on(table.workspaceSubdomain),
 ]);

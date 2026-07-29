@@ -143,7 +143,7 @@ export default function Login(): React.ReactElement {
             {t("auth.notYourMadrasa")}{" "}
             <a
               href={apexUrl(ROUTES.home)}
-              className="font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+              className="inline-flex min-h-11 items-center font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
             >
               {t("auth.viewAllMadrasaLinks")}
             </a>
@@ -190,7 +190,7 @@ export default function Login(): React.ReactElement {
 
             <label
               htmlFor={rememberFieldId}
-              className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg px-0.5 py-1"
+              className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-0.5 py-1"
             >
               <Checkbox
                 id={rememberFieldId}

@@ -317,7 +317,7 @@ export function TeacherList({
                     <td className="px-4 py-3">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg" aria-label={t('common.actions')}>
+                          <Button type="button" variant="ghost" size="icon" className="rounded-lg" aria-label={t('common.actions')}>
                             <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -382,7 +382,7 @@ export function TeacherList({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-6 end-6 z-40 bg-card/95 border border-primary/20 backdrop-blur-xl shadow-2xl rounded-2xl p-3 flex items-center gap-3 border-s-4 border-s-primary"
+            className="fixed bottom-6 end-6 z-40 max-w-full bg-card/95 border border-primary/20 backdrop-blur-xl shadow-2xl rounded-2xl p-3 flex flex-wrap items-center gap-3 border-s-4 border-s-primary"
           >
             <span className="text-xs font-bold text-foreground ps-1">
               {t('teachers.selectedCount', { count: selectedIds.length })}
@@ -394,7 +394,7 @@ export function TeacherList({
                   type="button"
                   variant="outline"
                   onClick={() => { if (onBulkRestore) setConfirmBulkRestoreOpen(true); }}
-                  className="px-3 py-1.5 rounded-lg border-primary/40 text-primary text-[11px] font-semibold hover:bg-primary/10 transition-colors h-auto flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg border-primary/40 text-primary text-[11px] font-semibold hover:bg-primary/10 transition-colors min-h-11 flex items-center gap-1.5"
                 >
                   <RotateCcw className="w-3.5 h-3.5" /> {t('teachers.bulkRestore')}
                 </Button>
@@ -406,7 +406,7 @@ export function TeacherList({
                     type="button"
                     variant="outline"
                     onClick={() => onWhatsApp(selectedTeachers)}
-                    className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
                   >
                     <MessageCircle className="w-3.5 h-3.5 text-success" /> {t('teachers.list.actionWhatsApp')}
                   </Button>
@@ -416,7 +416,7 @@ export function TeacherList({
                     type="button"
                     variant="outline"
                     onClick={() => onSms(selectedTeachers)}
-                    className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
                   >
                     <MessageSquare className="w-3.5 h-3.5 text-info" /> {t('teachers.list.actionSms')}
                   </Button>
@@ -426,7 +426,7 @@ export function TeacherList({
                     type="button"
                     variant="outline"
                     onClick={() => onEmail(selectedTeachers)}
-                    className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
                   >
                     <Mail className="w-3.5 h-3.5 text-primary" /> {t('teachers.list.actionEmail')}
                   </Button>
@@ -437,7 +437,7 @@ export function TeacherList({
                       <Button
                         type="button"
                         variant="outline"
-                        className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
                       >
                         <Tag className="w-3.5 h-3.5 text-primary" /> {t('teachers.bulkStatus')} <ChevronDown className="w-3 h-3 ms-0.5" />
                       </Button>
@@ -464,7 +464,7 @@ export function TeacherList({
                       type="button"
                       variant="destructive"
                       onClick={() => { if (onBulkDelete) setConfirmBulkDeleteOpen(true); }}
-                      className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-[11px] font-semibold hover:bg-destructive/90 transition-colors h-auto"
+                      className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-[11px] font-semibold hover:bg-destructive/90 transition-colors min-h-11"
                     >
                       {t('common.delete')}
                     </Button>

@@ -165,14 +165,14 @@ export function StatCard({
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide truncate">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide truncate">
                 {label}
               </p>
               <p className="text-lg font-bold text-foreground leading-tight tabular-nums">
                 {formattedValue}
               </p>
               {sub && (
-                <p className="text-[10px] font-semibold text-muted-foreground mt-1 opacity-70 truncate">
+                <p className="text-xs font-semibold text-muted-foreground mt-1 opacity-70 truncate">
                   {sub}
                 </p>
               )}
@@ -181,7 +181,7 @@ export function StatCard({
           {trend !== undefined && (
             <span
               className={cn(
-                "flex items-center gap-0.5 text-[10px] font-bold ms-2 shrink-0 select-none",
+                "flex items-center gap-0.5 text-xs font-bold ms-2 shrink-0 select-none",
                 trend >= 0 ? "text-success" : "text-destructive"
               )}
               aria-label={trend >= 0 ? t("ui.statCard.positiveTrend") : t("ui.statCard.negativeTrend")}
@@ -224,14 +224,14 @@ export function StatCard({
             </div>
           )}
           <div className="min-w-0">
-            <span className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1.5">
+            <span className="block text-xs font-black text-muted-foreground uppercase tracking-widest leading-none mb-1.5">
               {label}
             </span>
             <p className="text-lg font-black text-foreground leading-none tracking-tight tabular-nums">
               {formattedValue}
             </p>
             {sub && (
-              <p className="text-[10px] font-semibold text-muted-foreground mt-1 opacity-70 truncate">
+              <p className="text-xs font-semibold text-muted-foreground mt-1 opacity-70 truncate">
                 {sub}
               </p>
             )}
@@ -241,7 +241,7 @@ export function StatCard({
         {trend !== undefined && (
           <span
             className={cn(
-              "flex items-center gap-0.5 text-[11px] font-bold self-start ms-2 shrink-0 select-none",
+              "flex items-center gap-0.5 text-xs font-bold self-start ms-2 shrink-0 select-none",
               trend >= 0 ? "text-success" : "text-destructive"
             )}
             aria-label={trend >= 0 ? t("ui.statCard.positiveTrend") : t("ui.statCard.negativeTrend")}

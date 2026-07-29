@@ -60,7 +60,7 @@ function TabTrigger({
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-semibold">{tab.label}</span>
         {tab.description ? (
-          <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">
+          <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
             {tab.description}
           </span>
         ) : null}
@@ -205,7 +205,7 @@ export function ResponsiveAccordionTabs({
               const Icon = tab.icon;
               const active = activeTab === tab.id;
               const tabClass = cn(
-                "flex items-center gap-1.5 whitespace-nowrap border-b-2 px-4 py-3 text-[13px] font-semibold transition-all",
+                "flex min-h-11 items-center gap-1.5 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold transition-all",
                 active
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground",

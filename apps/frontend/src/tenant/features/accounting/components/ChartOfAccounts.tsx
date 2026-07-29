@@ -273,7 +273,7 @@ export function ChartOfAccounts({
                               size="icon"
                               aria-label={t("accounting.coa.editAria", { name: account.name })}
                               onClick={() => setModal({ ...account })}
-                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              className="text-muted-foreground hover:text-foreground"
                             >
                               <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                             </Button>
@@ -285,7 +285,7 @@ export function ChartOfAccounts({
                               size="icon"
                               aria-label={t("accounting.coa.reactivateAria", { name: account.name })}
                               onClick={() => handleReactivate(account.id)}
-                              className="h-8 w-8 text-muted-foreground hover:text-success"
+                              className="text-muted-foreground hover:text-success"
                             >
                               <Eye className="w-3.5 h-3.5" aria-hidden="true" />
                             </Button>
@@ -296,7 +296,7 @@ export function ChartOfAccounts({
                               size="icon"
                               aria-label={t("accounting.coa.deactivateAria", { name: account.name })}
                               onClick={() => handleDelete(account.id)}
-                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              className="text-muted-foreground hover:text-destructive"
                             >
                               <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />
                             </Button>

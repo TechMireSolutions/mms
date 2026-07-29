@@ -77,6 +77,7 @@ export function ObligationTypeManager({ types, onChange }: ObligationTypeManager
       </header>
 
       <section aria-label={t("obligations.types")} className="rounded-xl border border-border overflow-hidden">
+        <div className="overflow-x-auto max-w-full">
         <table className="w-full text-sm">
           <caption className="sr-only">{t("obligations.types")}</caption>
           <thead className="bg-muted/60 border-b border-border">
@@ -104,12 +105,14 @@ export function ObligationTypeManager({ types, onChange }: ObligationTypeManager
                   <div className="flex items-center justify-end gap-1">
                     <Button type="button" aria-label={t("obligations.types.editAria", { name: obligationType.name })} onClick={() => setModal({ mode: "edit", data: { ...obligationType } })}
                       variant="ghost"
-                      className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
+                      size="icon"
+                      className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
                       <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                     </Button>
                     <Button type="button" aria-label={t("obligations.types.deleteAria", { name: obligationType.name })} onClick={() => void handleDelete(obligationType.id)}
                       variant="ghost"
-                      className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
+                      size="icon"
+                      className="rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
                       <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                     </Button>
                   </div>
@@ -118,6 +121,7 @@ export function ObligationTypeManager({ types, onChange }: ObligationTypeManager
             ))}
           </tbody>
         </table>
+        </div>
       </section>
 
       {modal ? (

@@ -199,7 +199,7 @@ export function SettingsMetaBadge({
   return (
     <span
       className={cn(
-        'rounded-md border px-2 py-0.5 text-[11px] font-medium',
+        'rounded-md border px-2 py-0.5 text-xs font-medium',
         META_BADGE_STYLES[variant],
       )}
     >
@@ -220,7 +220,7 @@ export function SettingsColoursBadge({
 }): React.JSX.Element {
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted px-2 py-0.5 font-mono text-[10px] text-muted-foreground"
+      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground"
       aria-label={ariaLabel}
     >
       <span

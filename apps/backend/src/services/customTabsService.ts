@@ -4,7 +4,7 @@ import {
   findCustomTabById,
   saveCustomTabRow,
   deleteCustomTabRow,
-  replaceCustomTabsForModule,
+  bulkUpsertCustomTabsForModule,
   CustomTabDbInput
 } from '../db/repositories/customTabsRepository.js';
 
@@ -54,9 +54,12 @@ export async function deleteCustomTab(id: string) {
   await deleteCustomTabRow(tenant, id);
 }
 
-export async function replaceCustomTabs(moduleId: string, tabs: Omit<CustomTabDbInput, 'id' | 'workspaceSubdomain' | 'moduleId'>[]) {
+export async function bulkUpsertCustomTabs(
+  moduleId: string,
+  tabs: Omit<CustomTabDbInput, 'id' | 'workspaceSubdomain' | 'moduleId'>[]
+) {
   const tenant = getRequestTenant();
   if (!tenant) throw new Error('Tenant context required');
-  await replaceCustomTabsForModule(tenant, moduleId, tabs);
+  await bulkUpsertCustomTabsForModule(tenant, moduleId, tabs);
   return listCustomTabsByWorkspace(tenant, moduleId);
 }

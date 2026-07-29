@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   LayoutDashboard, Pin, PinOff, Trash2,
@@ -6,13 +6,17 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { AppTranslationKey } from "@mms/shared";
-import { getCollection, saveCollection, getObject, saveObject } from "@/lib/db";
+import { getObject, saveObject } from "@/lib/db";
+import {
+  isRestWidgetCollection,
+  persistWidgetRecordToggle,
+} from "@/lib/reports/widgetRecordToggle";
+import { useWidgetCollections } from "@/lib/reports/useReportCollections";
 import {
   CustomWidget,
 } from "@/tenant/features/reports/components/pinnedWidgets/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { getWidgetCollections } from "@/tenant/features/reports/components/pinnedWidgets/widgetDataUtils";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
 import { CustomWidgetRenderer } from "@/tenant/features/reports/components/pinnedWidgets/CustomWidgetRenderer";
@@ -64,15 +68,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
   } = useDashboardConfig();
 
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
-  const [collections, setCollections] = useState(() => getWidgetCollections());
-
-  useEffect(() => {
-    const handleUpdate = () => {
-      setCollections(getWidgetCollections());
-    };
-    window.addEventListener("local-database-update", handleUpdate);
-    return () => window.removeEventListener("local-database-update", handleUpdate);
-  }, []);
+  const collections = useWidgetCollections();
 
   const [sectionSettings, setSectionSettings] = useState<Record<string, boolean>>(() => {
     return getObject<Record<string, boolean>>("dashboard_section_settings", {
@@ -143,33 +139,30 @@ export default function PinnedWidgets({ category }: { category: string }): React
         const currentSwitchValue = getObject<unknown>(switchStateKey, false) === true || getObject<unknown>(switchStateKey, "false") === "true";
         saveObject(switchStateKey, !currentSwitchValue);
       }
-    } else {
-      const collectionName = widget.switchCollection;
-      const recordId = widget.switchRecordId;
-      const targetField = widget.switchField || "status";
-      if (!collectionName || !recordId) return;
+      window.dispatchEvent(new Event("local-database-update"));
+      return;
+    }
+
+    const collectionName = widget.switchCollection;
+    const recordId = widget.switchRecordId;
+    const targetField = widget.switchField || "status";
+    if (!collectionName || !recordId) return;
+    if (!isRestWidgetCollection(collectionName)) {
+      notify.error(t("reports.widgets.errorToggleFailed"));
+      return;
+    }
+    void (async () => {
       try {
-        const storedRecords = getCollection<Record<string, unknown>>(collectionName, []);
-        const updatedRecords = storedRecords.map((storedRecord) => {
-          if (String(storedRecord.id) === String(recordId)) {
-            const currentFieldValue = storedRecord[targetField];
-            let nextValue: unknown = !currentFieldValue;
-            if (currentFieldValue === "active") nextValue = "inactive";
-            else if (currentFieldValue === "inactive") nextValue = "active";
-            else if (currentFieldValue === "paid") nextValue = "unpaid";
-            else if (currentFieldValue === "unpaid") nextValue = "paid";
-            
-            return { ...storedRecord, [targetField]: nextValue };
-          }
-          return storedRecord;
+        await persistWidgetRecordToggle({
+          collectionName,
+          recordId: String(recordId),
+          field: targetField,
         });
-        saveCollection(collectionName, updatedRecords);
       } catch (error) {
         console.error(error);
         notify.error(t("reports.widgets.errorToggleFailed"));
       }
-    }
-    window.dispatchEvent(new Event("local-database-update"));
+    })();
   };
 
   const filteredWidgets = useMemo(() => {
@@ -415,7 +408,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                       variant="outline"
                       size="icon"
                       onClick={() => handleTogglePin(widget.id)}
-                      className={`h-auto w-auto p-1.5 rounded-lg border shadow-none ${
+                      className={`rounded-lg border shadow-none ${
                         widget.isPinnedToDashboard 
                           ? "border-primary bg-primary/10 text-primary" 
                           : "border-border text-muted-foreground hover:text-foreground"
@@ -430,7 +423,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                       variant="outline"
                       size="icon"
                       onClick={() => handleEditClick(widget)}
-                      className="h-auto w-auto p-1.5 rounded-lg border border-border text-muted-foreground hover:text-primary hover:bg-primary/10 shadow-none"
+                      className="rounded-lg border border-border text-muted-foreground hover:text-primary hover:bg-primary/10 shadow-none"
                       title={t("reports.widgets.editWidget")}
                     >
                       <Pencil className="w-3.5 h-3.5" />
@@ -441,7 +434,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                       variant="outline"
                       size="icon"
                       onClick={() => handleDeleteWidget(widget.id)}
-                      className="h-auto w-auto p-1.5 rounded-lg border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 shadow-none"
+                      className="rounded-lg border border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 shadow-none"
                       title={t("reports.widgets.deleteWidget")}
                     >
                       <Trash2 className="w-3.5 h-3.5" />

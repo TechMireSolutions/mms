@@ -13,7 +13,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { getWidgetCollections } from "@/tenant/features/reports/components/pinnedWidgets/widgetDataUtils";
+import { useWidgetCollections } from "@/lib/reports/useReportCollections";
 import { CustomWidgetRenderer } from "@/tenant/features/reports/components/pinnedWidgets/CustomWidgetRenderer";
 import { isListSummaryWidgetType } from "@/components/dashboard-widgets/registry";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
@@ -41,7 +41,7 @@ export function WidgetBuilder({
   mode = "kpi",
   initialWidgetType = "kpi"
 }: WidgetBuilderProps): React.JSX.Element {
-  const collections = useMemo(() => getWidgetCollections(), []);
+  const collections = useWidgetCollections();
   const palette = useBrandPalette();
   const { t } = useTranslation();
   
@@ -317,7 +317,7 @@ export function WidgetBuilder({
                 value={builderTitle}
                 onChange={(event) => setBuilderTitle(event.target.value)}
                 placeholder={t("reports.widgets.builder.placeholderTitle")}
-                className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-0"
+                className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-11"
               />
             </div>
 
@@ -426,7 +426,7 @@ export function WidgetBuilder({
                       value={builderFilterValue}
                       onChange={(event) => setBuilderFilterValue(event.target.value)}
                       placeholder={t("reports.widgets.builder.placeholderValue")}
-                      className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-11 disabled:opacity-40 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -453,7 +453,7 @@ export function WidgetBuilder({
                           value={fixedSubText}
                           onChange={(event) => setFixedSubText(event.target.value)}
                           placeholder={t("reports.widgets.builder.placeholderSubtitle")}
-                          className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-0"
+                          className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-11"
                         />
                       </div>
                     )}
@@ -467,7 +467,7 @@ export function WidgetBuilder({
                           type="button"
                           variant="ghost"
                           onClick={() => setTrendType("database")}
-                          className={`h-auto py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-none ${
+                          className={`min-h-11 text-xs font-bold uppercase tracking-wider rounded-lg shadow-none ${
                             trendType === "database"
                               ? "bg-primary text-primary-foreground shadow"
                               : "text-muted-foreground hover:text-foreground"
@@ -479,7 +479,7 @@ export function WidgetBuilder({
                           type="button"
                           variant="ghost"
                           onClick={() => setTrendType("manual")}
-                          className={`h-auto py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-none ${
+                          className={`min-h-11 text-xs font-bold uppercase tracking-wider rounded-lg shadow-none ${
                             trendType === "manual"
                               ? "bg-primary text-primary-foreground shadow"
                               : "text-muted-foreground hover:text-foreground"
@@ -518,7 +518,7 @@ export function WidgetBuilder({
                               type="button"
                               variant="outline"
                               onClick={() => setTrend(0)}
-                              className="h-auto px-2 py-1 text-[9px] font-bold uppercase tracking-wider bg-card hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg shadow-none"
+                              className="min-h-11 px-2 text-xs font-bold uppercase tracking-wider bg-card hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg shadow-none"
                               title={t("reports.widgets.builder.resetTrend")}
                             >
                               {t("reports.widgets.builder.reset")}
@@ -602,7 +602,7 @@ export function WidgetBuilder({
                       value={switchLabelOn}
                       onChange={(event) => setSwitchLabelOn(event.target.value)}
                       placeholder={t("reports.widgets.builder.placeholderActive")}
-                      className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-0"
+                      className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-11"
                     />
                   </div>
                   <div className="space-y-1">
@@ -612,7 +612,7 @@ export function WidgetBuilder({
                       value={switchLabelOff}
                       onChange={(event) => setSwitchLabelOff(event.target.value)}
                       placeholder={t("reports.widgets.builder.placeholderInactive")}
-                      className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-0"
+                      className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-11"
                     />
                   </div>
                 </div>
@@ -653,7 +653,7 @@ export function WidgetBuilder({
                       value={thresholdValue}
                       onChange={(event) => setThresholdValue(event.target.value)}
                       placeholder={t("reports.widgets.builder.placeholderThreshold")}
-                      className="w-full text-xs rounded-lg bg-card/40 text-foreground min-h-0 py-1.5"
+                      className="w-full text-xs rounded-lg bg-card/40 text-foreground min-h-11 py-1.5"
                     />
                   </div>
                   <div className="space-y-1">
@@ -693,7 +693,7 @@ export function WidgetBuilder({
                     type="button"
                     variant="outline"
                     onClick={() => setBuilderColor(colorOption.id)}
-                    className={`h-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-bold shadow-none ${
+                    className={`min-h-11 flex items-center gap-1.5 px-3 rounded-xl border text-xs font-bold shadow-none ${
                       isSelected
                         ? "border-primary ring-2 ring-primary/20 scale-105"
                         : "border-border hover:border-muted-foreground/30 text-muted-foreground bg-card/25"
@@ -721,7 +721,7 @@ export function WidgetBuilder({
                     placeholder={t("reports.widgets.builder.searchIcons")}
                     value={iconSearch}
                     onChange={(event) => setIconSearch(event.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 text-[11px] rounded-lg border border-border bg-card/20 backdrop-blur-md text-foreground focus:ring-1 focus:ring-primary/20 transition-all font-semibold animate-fade-in min-h-0"
+                    className="w-full pl-8 pr-3 py-1.5 text-[11px] rounded-lg border border-border bg-card/20 backdrop-blur-md text-foreground focus:ring-1 focus:ring-primary/20 transition-all font-semibold animate-fade-in min-h-11"
                   />
                 </div>
               </div>
@@ -733,7 +733,7 @@ export function WidgetBuilder({
                     type="button"
                     variant="outline"
                     onClick={() => setActiveIconTab(tab)}
-                    className={`h-auto px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider border shadow-none ${
+                    className={`px-2 rounded-lg text-[9px] font-bold uppercase tracking-wider border shadow-none ${
                       activeIconTab === tab
                         ? "bg-primary/10 border-primary/30 text-primary"
                         : "bg-card/30 border-border/50 text-muted-foreground hover:text-foreground hover:bg-card/50"
@@ -772,7 +772,7 @@ export function WidgetBuilder({
                         variant="outline"
                         size="icon"
                         onClick={() => setBuilderIcon(iconName)}
-                        className={`p-2 rounded-xl border flex items-center justify-center hover:scale-105 shadow-none ${
+                        className={`rounded-xl border flex items-center justify-center hover:scale-105 shadow-none ${
                           active ? "border-primary bg-primary/10 text-primary shadow-sm" : "border-border text-muted-foreground hover:text-foreground"
                         }`}
                         title={iconName}

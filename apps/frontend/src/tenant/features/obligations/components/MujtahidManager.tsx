@@ -101,17 +101,19 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
                 <div className="flex items-center gap-1">
                   <Button type="button" aria-label={t("obligations.mujtahids.addRepAria", { name: mujtahid.name })} onClick={() => setModal({ mode: "add-rep", data: { name: "", mujtahid_id: mujtahid.id } })}
                     variant="ghost"
-                    className="flex items-center gap-1 h-auto px-2 py-1.5 rounded-lg text-xs font-semibold text-primary hover:bg-primary/10 shadow-none transition-colors">
+                    className="flex min-h-11 items-center gap-1 px-2 py-2 rounded-lg text-xs font-semibold text-primary hover:bg-primary/10 shadow-none transition-colors">
                     <Plus className="w-3 h-3" aria-hidden="true" /> {t("obligations.mujtahids.addRep")}
                   </Button>
                   <Button type="button" aria-label={t("obligations.mujtahids.editAria", { name: mujtahid.name })} onClick={() => setModal({ mode: "edit", data: { ...mujtahid } })}
                     variant="ghost"
-                    className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
+                    size="icon"
+                    className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
                     <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                   </Button>
                   <Button type="button" aria-label={t("obligations.mujtahids.deleteAria", { name: mujtahid.name })} onClick={() => handleDeleteMujtahid(mujtahid.id)}
                     variant="ghost"
-                    className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
+                    size="icon"
+                    className="rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
                     <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                   </Button>
                 </div>
@@ -127,12 +129,14 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
                         <div className="flex items-center gap-1">
                           <Button type="button" aria-label={t("obligations.mujtahids.repEditAria", { name: representative.name })} onClick={() => setModal({ mode: "edit-rep", data: { ...representative } })}
                             variant="ghost"
-                            className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
+                            size="icon"
+                            className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
                             <Pencil className="w-3 h-3" aria-hidden="true" />
                           </Button>
                           <Button type="button" aria-label={t("obligations.mujtahids.repDeleteAria", { name: representative.name })} onClick={() => handleDeleteRep(representative.id)}
                             variant="ghost"
-                            className="h-auto p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
+                            size="icon"
+                            className="rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
                             <Trash2 className="w-3 h-3" aria-hidden="true" />
                           </Button>
                         </div>

@@ -42,11 +42,11 @@ export function SectionCard({
               );
             })()}
             <div>
-              {title && <h3 className="text-[13px] font-bold text-foreground">{title}</h3>}
-              {subtitle && <p className="text-[11px] text-muted-foreground">{subtitle}</p>}
+              {title && <h3 className="text-sm font-bold text-foreground">{title}</h3>}
+              {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
             </div>
           </div>
-          {actions && <div className="flex items-center gap-2">{actions}</div>}
+          {actions && <div className="flex items-center gap-2 flex-wrap">{actions}</div>}
         </div>
       )}
       <div className={cn(padding ? "px-5 py-4" : undefined, accentColor && "ps-6.5")}>{children}</div>

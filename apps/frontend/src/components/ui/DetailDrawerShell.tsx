@@ -81,11 +81,11 @@ export function DetailDrawerShell({
                     </div>
                   )}
                   <div className="min-w-0">
-                    <h2 id={titleId} className="text-[13px] font-bold text-foreground leading-tight truncate">
+                    <h2 id={titleId} className="text-sm font-bold text-foreground leading-tight truncate">
                       {title}
                     </h2>
                     {subtitle && (
-                      <span className="text-[10px] text-muted-foreground uppercase font-semibold block truncate mt-0.5">
+                      <span className="text-xs text-muted-foreground uppercase font-semibold block truncate mt-0.5">
                         {subtitle}
                       </span>
                     )}
@@ -99,7 +99,7 @@ export function DetailDrawerShell({
                     variant="ghost"
                     size="icon"
                     onClick={onClose}
-                    className="h-8 w-8 p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors shadow-none"
+                    className="min-h-11 min-w-11 h-11 w-11 rounded-lg hover:bg-muted text-muted-foreground transition-colors shadow-none"
                     aria-label={t("common.close")}
                   >
                     <X className="w-4 h-4" />

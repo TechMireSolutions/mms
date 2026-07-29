@@ -152,12 +152,12 @@ export function AttendanceRecords({
           className="flex-1 min-w-[180px]"
         />
 
-        <div className="flex rounded-lg border border-border overflow-hidden text-[11px] font-bold" role="group" aria-label={t("attendance.filter.status")}>
+        <div className="flex max-w-full overflow-x-auto rounded-lg border border-border text-xs font-bold" role="group" aria-label={t("attendance.filter.status")}>
           <Button
             type="button"
             variant={statusFilter === "all" ? "default" : "ghost"}
             onClick={() => { setStatusFilter("all"); setPage(1); }}
-            className="rounded-none h-8 px-3 text-[11px] font-bold border-r border-border"
+            className="shrink-0 rounded-none min-h-11 px-3 text-xs font-bold border-r border-border"
           >
             {t("attendance.filter.all")}
           </Button>
@@ -167,7 +167,7 @@ export function AttendanceRecords({
               key={status.id}
               variant={statusFilter === status.id ? "default" : "ghost"}
               onClick={() => { setStatusFilter(status.id); setPage(1); }}
-              className={`rounded-none h-8 px-3 text-[11px] font-bold border-r border-border last:border-r-0 ${statusFilter === status.id ? `${status.bg} ${status.text}` : ""}`}
+              className={`shrink-0 rounded-none min-h-11 px-3 text-xs font-bold border-r border-border last:border-r-0 ${statusFilter === status.id ? `${status.bg} ${status.text}` : ""}`}
             >
               {statusLabel(status.id)}
             </Button>
@@ -304,7 +304,7 @@ export function AttendanceRecords({
                             onClick={() => onMessage('whatsapp', [attendanceRecord])}
                             aria-label={t("attendance.message.whatsapp")}
                             title={t("attendance.message.whatsapp")}
-                            className="h-8 w-8 text-muted-foreground hover:text-success"
+                            className="text-muted-foreground hover:text-success"
                           >
                             <MessageCircle className="w-3.5 h-3.5" />
                           </Button>
@@ -315,7 +315,7 @@ export function AttendanceRecords({
                             onClick={() => onMessage('sms', [attendanceRecord])}
                             aria-label={t("attendance.message.sms")}
                             title={t("attendance.message.sms")}
-                            className="h-8 w-8 text-muted-foreground hover:text-info"
+                            className="text-muted-foreground hover:text-info"
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
                           </Button>
@@ -335,12 +335,12 @@ export function AttendanceRecords({
                             }
                           }}
                           aria-label={editingRecord?.id === attendanceRecord.id ? t("common.save") : t("common.edit")}
-                          className="h-8 w-8 text-muted-foreground hover:text-primary"
+                          className="text-muted-foreground hover:text-primary"
                         >
                           {editingRecord?.id === attendanceRecord.id ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
                         </Button>
                         {editingRecord?.id === attendanceRecord.id && (
-                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingRecord(null)} aria-label={t("common.cancel")}>
+                          <Button type="button" variant="ghost" size="icon" onClick={() => setEditingRecord(null)} aria-label={t("common.cancel")}>
                             <X className="w-3.5 h-3.5" />
                           </Button>
                         )}
@@ -355,7 +355,7 @@ export function AttendanceRecords({
                             ? void onRestoreRecord(attendanceRecord.id)
                             : setPendingDeleteId(attendanceRecord.id)}
                           aria-label={showDeleted ? t("attendance.restoreRecord") : t("attendance.deleteRecord")}
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          className="text-muted-foreground hover:text-destructive"
                         >
                           {showDeleted ? <RotateCcw className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
                         </Button>

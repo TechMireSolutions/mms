@@ -82,7 +82,7 @@ export function StatusBadge({
 
   const badgeConfigByStatus = { ...defaultConfig, ...(config || {}) };
   const badgeConfig = badgeConfigByStatus[status] || { label: status, cls: SEMANTIC_BADGE.muted };
-  const sizeClass = size === "sm" ? "text-[9px] px-1.5 py-0.5" : "text-[11px] px-2 py-0.5";
+  const sizeClass = size === "sm" ? "text-xs px-1.5 py-0.5" : "text-xs px-2 py-0.5";
 
   return (
     <span className={cn("inline-flex items-center gap-1 font-bold rounded-full border", sizeClass, badgeConfig.cls)}>

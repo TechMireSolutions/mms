@@ -7,6 +7,7 @@ export {
   STUDENTS_METRICS_QUERY_KEY,
   STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
   useStudentsPaginated,
+  fetchAllStudentsForQuery,
   useStudentMutations,
   useStudentById,
   useStudentsByIds,

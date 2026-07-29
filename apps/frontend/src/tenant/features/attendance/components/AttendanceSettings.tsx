@@ -203,7 +203,7 @@ export function AttendanceSettings() {
                     variant={(settingsDraft.defaultViewLayout || "list") === "list" ? "secondary" : "ghost"}
                     size="sm"
                     onClick={() => upd("defaultViewLayout", "list")}
-                    className="h-7 text-xs font-semibold rounded-lg px-3 shadow-none bg-transparent data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
+                    className="text-xs font-semibold rounded-lg px-3 shadow-none bg-transparent data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
                     data-state={(settingsDraft.defaultViewLayout || "list") === "list" ? "active" : "inactive"}
                   >
                     {t("attendance.settings.listView")}
@@ -213,7 +213,7 @@ export function AttendanceSettings() {
                     variant={settingsDraft.defaultViewLayout === "cards" ? "secondary" : "ghost"}
                     size="sm"
                     onClick={() => upd("defaultViewLayout", "cards")}
-                    className="h-7 text-xs font-semibold rounded-lg px-3 shadow-none bg-transparent data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
+                    className="text-xs font-semibold rounded-lg px-3 shadow-none bg-transparent data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
                     data-state={settingsDraft.defaultViewLayout === "cards" ? "active" : "inactive"}
                   >
                     {t("attendance.settings.cardGrid")}

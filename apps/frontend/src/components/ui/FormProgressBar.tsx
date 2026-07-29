@@ -22,11 +22,11 @@ export function FormProgressBar({
     <div className={cn('space-y-1', className)}>
       <div className="flex items-center justify-between">
         {label ? (
-          <span className="text-[10px] font-semibold uppercase text-muted-foreground">{label}</span>
+          <span className="text-xs font-semibold uppercase text-muted-foreground">{label}</span>
         ) : (
           <span />
         )}
-        <span className={cn('text-[11px] font-bold', complete ? 'text-primary' : 'text-primary/70')}>
+        <span className={cn('text-xs font-bold', complete ? 'text-primary' : 'text-primary/70')}>
           {Math.round(clamped)}%
         </span>
       </div>

@@ -132,11 +132,11 @@ export function EnrollmentList({
         />
 
         {!showDeleted && (
-          <div className="flex rounded-lg border border-border overflow-hidden text-[11px] font-bold" role="group" aria-label={t("enrollments.filter.status")}>
+          <div className="flex max-w-full overflow-x-auto rounded-lg border border-border text-xs font-bold" role="group" aria-label={t("enrollments.filter.status")}>
             <Button
               variant="ghost"
               onClick={() => { setStatus("all"); setPage(1); }}
-              className={`px-3 py-2 transition-colors rounded-none h-auto ${statusFilter === "all" ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
+              className={`shrink-0 px-3 py-2 transition-colors rounded-none min-h-11 ${statusFilter === "all" ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
             >
               {t("enrollments.filter.all")}
             </Button>
@@ -145,7 +145,7 @@ export function EnrollmentList({
                 key={status.id}
                 variant="ghost"
                 onClick={() => { setStatus(status.id); setPage(1); }}
-                className={`px-3 py-2 transition-colors rounded-none h-auto ${statusFilter === status.id ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
+                className={`shrink-0 px-3 py-2 transition-colors rounded-none min-h-11 ${statusFilter === status.id ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
               >
                 {statusConfig[status.id]?.label ?? status.id}
               </Button>
@@ -306,7 +306,7 @@ export function EnrollmentList({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => onRestore(enrollment.id)}
-                                className="p-1.5 w-8 h-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
+                                className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
                                 aria-label={t("enrollments.restore")}
                                 title={t("enrollments.restore")}
                               >
@@ -322,7 +322,7 @@ export function EnrollmentList({
                                   const phone = student?.phone || "";
                                   openComposer("whatsapp", [{ id: enrollment.id, name: studentDisplayName, phone, email: student?.email }]);
                                 }}
-                                className="p-1.5 w-8 h-8 rounded-lg hover:bg-muted text-success hover:text-success transition-colors"
+                                className="rounded-lg hover:bg-muted text-success hover:text-success transition-colors"
                                 title={t("enrollments.list.actionWhatsApp")}
                                 aria-label={t("enrollments.list.actionWhatsApp")}
                               >
@@ -335,7 +335,7 @@ export function EnrollmentList({
                                   const phone = student?.phone || "";
                                   openComposer("sms", [{ id: enrollment.id, name: studentDisplayName, phone, email: student?.email }]);
                                 }}
-                                className="p-1.5 w-8 h-8 rounded-lg hover:bg-muted text-info hover:text-info transition-colors"
+                                className="rounded-lg hover:bg-muted text-info hover:text-info transition-colors"
                                 title={t("enrollments.list.actionSms")}
                                 aria-label={t("enrollments.list.actionSms")}
                               >
@@ -345,7 +345,7 @@ export function EnrollmentList({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => onView(enrollment)}
-                                className="p-1.5 w-8 h-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
+                                className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
                                 aria-label={t("enrollments.actions.view", { name: studentDisplayName })}
                                 title={t("enrollments.actions.viewShort")}
                               >
@@ -356,7 +356,7 @@ export function EnrollmentList({
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => onCancel(enrollment.id)}
-                                  className="p-1.5 w-8 h-8 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                                  className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                                   aria-label={t("enrollments.actions.cancel", { name: studentDisplayName })}
                                   title={t("enrollments.actions.cancelShort")}
                                 >
@@ -368,7 +368,7 @@ export function EnrollmentList({
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => onDelete(enrollment.id)}
-                                  className="p-1.5 w-8 h-8 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                                  className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                                   aria-label={t("common.delete")}
                                   title={t("common.delete")}
                                 >

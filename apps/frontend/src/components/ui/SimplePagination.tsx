@@ -25,20 +25,20 @@ export function SimplePagination({
       <Button
         variant="outline"
         size="icon"
-        className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
+        className="rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
         disabled={currentPage === 1}
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
         aria-label={t("pagination.previousAria")}
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
-      <span className="text-[11px] font-bold text-muted-foreground select-none">
+      <span className="text-xs font-bold text-muted-foreground select-none">
         {currentPage} / {totalPages}
       </span>
       <Button
         variant="outline"
         size="icon"
-        className="h-7 w-7 rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
+        className="rounded-md border-border/60 hover:bg-background/80 transition-colors shadow-none cursor-pointer"
         disabled={currentPage === totalPages}
         onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
         aria-label={t("pagination.nextAria")}

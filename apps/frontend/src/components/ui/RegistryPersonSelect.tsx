@@ -108,7 +108,7 @@ export function RegistryPersonSelect({
         placeholder={placeholder}
       />
       {hasMore && (
-        <p className="text-[10px] text-muted-foreground">{t('registryPerson.refineSearch')}</p>
+        <p className="text-xs text-muted-foreground">{t('registryPerson.refineSearch')}</p>
       )}
     </div>
   );

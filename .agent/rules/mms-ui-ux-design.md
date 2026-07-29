@@ -131,3 +131,9 @@ Before declaring any layout implementation complete, verify:
 1. UI is correct at **375 px** (mobile), **768 px** (tablet), and **1440 px** (desktop).
 2. No text overlaps or clips at edge viewport widths.
 3. Form controls, buttons, and inputs remain touch-friendly at small viewports.
+
+### Systemic enforcement (do not fork)
+- Shell overflow / fluid width: `AppLayout`, `ModulePageShell`, `PlatformPageShell`, `index.css` (`box-sizing`, `#root` / `body` `overflow-x: hidden`, `img`/`video` `max-width: 100%`).
+- Touch targets: `Button` / `ActionButton` sizes use `min-h-11` (44px); modal/drawer closes and mobile nav chrome match.
+- Tables: shared `Table` wraps with `overflow-x-auto`; bare `<table>` inside cards must sit in `overflow-x-auto max-w-full`.
+- Breakpoints: mobile-default + `lg:` — avoid `max-lg:` for layout width (see `SubTabBar`).

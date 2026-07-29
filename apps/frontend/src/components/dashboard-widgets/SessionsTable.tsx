@@ -97,7 +97,7 @@ export default function SessionsTable({ title }: { title?: string }) {
             {t("dashboard.widgets.sessionsScheduled", { count: filteredSessions.length })}
           </span>
         </div>
-        <Link to={ROUTES.sessions} className="text-[12px] font-bold text-primary hover:underline">
+        <Link to={ROUTES.sessions} className="inline-flex min-h-11 items-center text-xs font-bold text-primary hover:underline">
           {t("dashboard.widgets.viewAll")}
         </Link>
       </header>

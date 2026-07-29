@@ -299,8 +299,9 @@ export default function ContactPicker({
           <Button
             type="button"
             variant="ghost"
+            size="icon"
             onClick={() => onChange(null)}
-            className="h-auto p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors focus:outline-none focus:ring-2 focus:ring-destructive/20 shadow-none"
+            className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors focus:outline-none focus:ring-2 focus:ring-destructive/20 shadow-none"
           >
             <X className="w-4 h-4" />
           </Button>
@@ -411,8 +412,9 @@ export default function ContactPicker({
             <Button
               type="button"
               variant="ghost"
+              size="icon"
               onClick={() => setQuery("")}
-              className="text-muted-foreground hover:text-foreground transition-colors p-1 h-auto rounded-md hover:bg-muted shadow-none"
+              className="text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted shadow-none"
             >
               <X className="w-3.5 h-3.5" />
             </Button>
@@ -421,6 +423,7 @@ export default function ContactPicker({
             <Button
               type="button"
               variant="ghost"
+              size="icon"
               onMouseDown={(event) => {
                 event.preventDefault();
                 openCreateFlow(query);
@@ -428,7 +431,7 @@ export default function ContactPicker({
               }}
               title={createActionLabel}
               aria-label={createActionLabel}
-              className="text-primary hover:text-primary hover:bg-primary/10 transition-colors p-1 h-auto rounded-md shadow-none"
+              className="text-primary hover:text-primary hover:bg-primary/10 transition-colors rounded-md shadow-none"
             >
               <Plus className="w-4 h-4" />
             </Button>

@@ -15,7 +15,7 @@ export function AuthForgotPasswordLink({
     <div className="flex justify-end pt-0.5">
       <Link
         to={to}
-        className="rounded-md px-1 py-1 text-xs font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+        className="inline-flex min-h-11 items-center rounded-md px-1 text-xs font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
       >
         {label}
       </Link>

@@ -118,7 +118,7 @@ export function ModuleColumnCustomizer({
               type="button"
               variant="ghost"
               onClick={onResetLayout}
-              className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1"
+              className="min-h-11 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1"
               title={labels.reset || 'Reset to defaults'}
             >
               <RotateCcw className="w-3 h-3" />
@@ -135,14 +135,14 @@ export function ModuleColumnCustomizer({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={labels.searchPlaceholder || 'Filter columns...'}
-              className="h-8 pl-8 text-xs bg-muted/30 border-border/60"
+              className="min-h-11 pl-8 text-xs bg-muted/30 border-border/60"
             />
           </div>
         )}
 
         <div className="max-h-72 overflow-y-auto pr-1 space-y-3">
           <div className="space-y-1">
-            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
               {labels.visibleAndOrder}
             </span>
             {visibleColumns.map((col) => (
@@ -169,7 +169,7 @@ export function ModuleColumnCustomizer({
                 />
                 <span className="flex-1 text-sm text-foreground text-left">{col.label}</span>
                 {col.fixed ? (
-                  <span className="text-[10px] text-muted-foreground">{labels.fixed}</span>
+                  <span className="text-xs text-muted-foreground">{labels.fixed}</span>
                 ) : (
                   <button
                     type="button"
@@ -189,7 +189,7 @@ export function ModuleColumnCustomizer({
 
           {hiddenColumns.length > 0 && (
             <div className="space-y-1 pt-1 border-t border-border">
-              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
                 {labels.hidden}
               </span>
               {hiddenColumns.map((col) => (

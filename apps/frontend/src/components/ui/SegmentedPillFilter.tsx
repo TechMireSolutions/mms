@@ -25,10 +25,10 @@ export function SegmentedPillFilter<T extends string>({
   className = '',
   size = 'md',
 }: SegmentedPillFilterProps<T>): React.JSX.Element {
-  const paddingClass = size === 'sm' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-[11px]';
+  const paddingClass = size === 'sm' ? 'px-2 py-2 text-xs' : 'px-3 py-2 text-xs';
 
   return (
-    <div className={cn('flex rounded-lg border border-border bg-muted/40 p-0.5', className)} role="group">
+    <div className={cn('flex w-full max-w-full overflow-x-auto rounded-lg border border-border bg-muted/40 p-0.5 sm:w-auto', className)} role="group">
       {options.map((opt) => {
         const isSelected = value === opt.value;
         return (
@@ -39,7 +39,7 @@ export function SegmentedPillFilter<T extends string>({
             aria-pressed={isSelected}
             onClick={() => onChange(opt.value)}
             className={cn(
-              'h-auto rounded-md font-bold uppercase shadow-none',
+              'min-h-11 h-auto shrink-0 rounded-md font-bold uppercase shadow-none',
               paddingClass,
               isSelected
                 ? 'bg-background shadow-xs text-foreground hover:bg-background'

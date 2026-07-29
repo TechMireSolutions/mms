@@ -30,7 +30,7 @@ const REMOVE_BTN = "text-muted-foreground/70 hover:text-destructive hover:bg-des
  */
 export function CardTypeLabel({ children }: { children: React.ReactNode }): React.JSX.Element {
   return (
-    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{children}</span>
+    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{children}</span>
   );
 }
 
@@ -195,8 +195,9 @@ export function EditableSelect({
                   <Button
                     type="button"
                     variant="ghost"
+                    size="icon"
                     onClick={(event) => handleRemove(option, event)}
-                    className={`min-w-[28px] min-h-[28px] p-0 flex items-center justify-center rounded transition-colors ${REMOVE_BTN}`}
+                    className={`rounded transition-colors ${REMOVE_BTN}`}
                     title={t("contacts.form.removeOption", { option })}
                   >
                     <X className="w-3.5 h-3.5" />
@@ -231,7 +232,7 @@ export function EditableSelect({
             type="button"
             size="sm"
             onClick={handleAdd}
-            className="px-2.5 py-1.5 text-xs font-semibold rounded-lg flex-shrink-0"
+            className="px-2.5 text-xs font-semibold rounded-lg flex-shrink-0"
           >
             {t("common.add")}
           </Button>
@@ -308,12 +309,12 @@ export function Field({ label, required = false, hint = undefined, error = undef
       </label>
       {enhancedChildren}
       {error ? (
-        <p id={errorId} role="alert" aria-live="polite" className="text-[10px] text-destructive mt-1 font-medium flex items-center gap-1">
+        <p id={errorId} role="alert" aria-live="polite" className="text-xs text-destructive mt-1 font-medium flex items-center gap-1">
           <AlertCircle className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </p>
       ) : (
-        hint && <p id={hintId} className="text-[10px] text-muted-foreground mt-1">{hint}</p>
+        hint && <p id={hintId} className="text-xs text-muted-foreground mt-1">{hint}</p>
       )}
     </div>
   );
@@ -628,7 +629,7 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
                 <span className="text-xl font-bold text-primary">{initials}</span>
               )}
             </div>
-            <label className="absolute -bottom-1 -end-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center cursor-pointer shadow-md hover:bg-primary/90 transition-colors z-10">
+            <label className="absolute -bottom-1 -end-1 min-h-11 min-w-11 w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center cursor-pointer shadow-md hover:bg-primary/90 transition-colors z-10">
               <Camera className="w-3 h-3" />
               <input id={`${field.key}-avatar-upload`} name={`${field.key}-avatar-upload`} type="file" accept="image/*" className="hidden" onChange={handleFile} />
             </label>
@@ -636,7 +637,7 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
           <div className="text-xs text-muted-foreground">
             <p className="font-semibold text-foreground mb-0.5">{field.label}</p>
             <p>{t("contacts.form.uploadAvatarInstructions")}</p>
-            <p className="text-[10px] opacity-80 mt-0.5">Recommended size: 300×300 px (stored as AVIF/WebP)</p>
+            <p className="text-xs opacity-80 mt-0.5">Recommended size: 300×300 px (stored as AVIF/WebP)</p>
             {fileUrl && (
               <Button
                 type="button"
@@ -699,7 +700,7 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
             onChange={(event) => onChange({ ...loc, lng: parseFloat(event.target.value) })}
           />
         </div>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20 text-[10px] text-primary font-bold">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20 text-xs text-primary font-bold">
           <MapPin className="w-3 h-3" />
           <span>{t("contacts.form.locationSetTo", { lat: loc.lat.toFixed(4), lng: loc.lng.toFixed(4) })}</span>
         </div>
@@ -710,10 +711,10 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
   if (field.type === "ai_summary") {
     return (
       <div className="space-y-2">
-        <div className="flex items-center gap-2 text-[10px] font-bold text-primary uppercase tracking-widest bg-primary/5 px-2 py-1 rounded w-fit">
+        <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-widest bg-primary/5 px-2 py-1 rounded w-fit">
           <BrainCircuit className="w-3 h-3" /> {t("contacts.form.aiInsights")}
         </div>
-        <div className="p-3 rounded-xl bg-muted/40 border border-border text-[11px] text-muted-foreground italic leading-relaxed">
+        <div className="p-3 rounded-xl bg-muted/40 border border-border text-xs text-muted-foreground italic leading-relaxed">
           {String(displayValue) || t("contacts.form.aiSummaryPlaceholder")}
         </div>
       </div>

@@ -40,7 +40,7 @@ export function CategoryManager({
           type="button"
           onClick={addCategory}
           variant="outline"
-          className="flex min-h-9 items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 h-auto text-xs font-semibold hover:bg-muted shadow-none"
+          className="flex min-h-11 items-center gap-1 rounded-lg border border-border px-2.5 text-xs font-semibold hover:bg-muted shadow-none"
         >
           <Plus className="h-3.5 w-3.5" aria-hidden />
           {t('questionBank.addCategory')}
@@ -54,21 +54,21 @@ export function CategoryManager({
           >
             <Input
               type="text"
-              className="w-12 rounded-lg border border-border bg-background px-2 py-1.5 h-9 text-center text-sm shadow-none"
+              className="w-12 rounded-lg border border-border bg-background px-2 py-1.5 min-h-11 text-center text-sm shadow-none"
               value={cat.icon}
               onChange={(event) => update(cat.id, { icon: event.target.value })}
               aria-label={t('questionBank.categoryIcon')}
             />
             <Input
               type="text"
-              className={`${FORM_INPUT} h-9 shadow-none`}
+              className={`${FORM_INPUT} min-h-11 shadow-none`}
               value={cat.name}
               onChange={(event) => update(cat.id, { name: event.target.value })}
               aria-label={t('questionBank.categoryName')}
             />
             <Input
               type="color"
-              className="h-9 w-full cursor-pointer rounded-lg border border-border bg-background p-0.5 shadow-none"
+              className="min-h-11 w-full cursor-pointer rounded-lg border border-border bg-background p-0.5 shadow-none"
               value={cat.color}
               onChange={(event) => update(cat.id, { color: event.target.value })}
               aria-label={t('questionBank.categoryColor')}
@@ -78,7 +78,8 @@ export function CategoryManager({
               type="button"
               onClick={() => removeCategory(cat.id)}
               variant="ghost"
-              className="rounded-lg p-1.5 h-auto text-muted-foreground hover:bg-destructive/10 hover:text-destructive shadow-none"
+              size="icon"
+              className="rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive shadow-none"
               aria-label={t('questionBank.removeCategory')}
             >
               <Trash2 className="h-3.5 w-3.5" aria-hidden />

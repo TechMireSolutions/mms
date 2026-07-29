@@ -192,7 +192,7 @@ export function CategorySelector({
           type="button"
           onClick={() => setShowCreate(true)}
           variant="outline"
-          className="flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border h-auto text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-foreground shadow-none"
+          className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border h-auto text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-foreground shadow-none"
         >
           <Plus className="h-3.5 w-3.5" aria-hidden />
           {t('questionBank.createCategory')}

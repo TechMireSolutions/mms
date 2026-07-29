@@ -37,14 +37,14 @@ export function FilterChips({
           <button
             key={chip.key}
             onClick={chip.onRemove}
-            className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+            className="flex min-h-11 items-center gap-1.5 text-xs font-semibold px-2.5 py-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
           >
             {chip.label}
             <X className="w-3 h-3" />
           </button>
         ))}
         {chips.length > 1 && onClearAll && (
-          <button onClick={onClearAll} className="text-xs text-muted-foreground hover:text-foreground underline transition-colors">
+          <button onClick={onClearAll} className="min-h-11 text-xs text-muted-foreground hover:text-foreground underline transition-colors">
             Clear all
           </button>
         )}

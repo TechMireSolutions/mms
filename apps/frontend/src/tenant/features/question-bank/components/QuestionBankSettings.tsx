@@ -167,7 +167,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
                   type="button"
                   variant="outline"
                   onClick={() => toggleQuestionType(entry.id)}
-                  className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors h-auto ${entry.enabled ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
+                  className={`rounded-full border px-3 text-xs font-semibold transition-colors min-h-11 ${entry.enabled ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
                 >
                   {t(`questionBank.type.${entry.id}` as AppTranslationKey)}
                 </Button>
@@ -186,7 +186,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
                   type="button"
                   variant="outline"
                   onClick={() => toggleDifficulty(entry.id)}
-                  className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors h-auto ${entry.enabled ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
+                  className={`rounded-full border px-3 text-xs font-semibold transition-colors min-h-11 ${entry.enabled ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
                 >
                   {t(`questionBank.difficulty.${entry.id}` as AppTranslationKey)}
                 </Button>

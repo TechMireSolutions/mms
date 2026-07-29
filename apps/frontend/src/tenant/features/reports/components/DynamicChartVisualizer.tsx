@@ -28,7 +28,8 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { getBrandingChartPalette } from "@/lib/brandingChartPalette";
 
-import { getCollection, getObject, saveObject } from "@/lib/db";
+import { getObject, saveObject } from "@/lib/db";
+import { useReportCollectionRows } from "@/lib/reports/useReportCollections";
 import { METADATA_FIELDS, VisualizerConfig, type ReportCollection, getFieldLabel, getCollectionLabel } from "@/tenant/features/reports/components/reportMetadata";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -149,6 +150,7 @@ export default function DynamicChartVisualizer({
   }, [containerWidth]);
 
   const activeMeta = METADATA_CONFIGS[collectionKey];
+  const { rows: collectionRows, denominations } = useReportCollectionRows(collectionKey);
 
   // Sync state on collection key change + auto-map default chart
   useEffect(() => {
@@ -191,10 +193,9 @@ export default function DynamicChartVisualizer({
     }
   }, [operation, activeMeta]);
 
-  // Read data from DB and apply queries with smart sorting/grouping
+  // Read data from Query-backed collections and apply queries with smart sorting/grouping
   const processedData = useMemo<AggregatedItem[]>(() => {
-    const collectionRows = getCollection(activeMeta.dbKey, activeMeta.defaultData as unknown[]) as Record<string, unknown>[];
-    const denominations = getCollection<any>("hasanat_denoms", []);
+    const denominationsForPoints = denominations;
     
     // 1. Apply multiple filters
     const filteredRows = collectionRows.filter((collectionRow) => {
@@ -250,7 +251,7 @@ export default function DynamicChartVisualizer({
             const points = getDenominationPoints(
               groupItem.denominationId as string,
               groupItem.denominationName as string,
-              denominations
+              denominationsForPoints
             );
             values.push(Number(groupItem.quantity || 1) * points);
           } else {
@@ -339,7 +340,7 @@ export default function DynamicChartVisualizer({
       }
       return sortedRows;
     }
-  }, [collectionKey, xAxisField, operation, targetField, filters, activeMeta]);
+  }, [collectionKey, xAxisField, operation, targetField, filters, collectionRows, denominations]);
 
   // Checks if this chart configuration is pinned to dashboard
   const isPinned = useMemo(() => {
@@ -688,7 +689,7 @@ export default function DynamicChartVisualizer({
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder={t("reports.visualizer.titlePlaceholder")}
-                className="w-full px-3 py-2 text-xs rounded-xl bg-card/50 text-foreground focus:ring-2 focus:ring-primary/20 font-semibold min-h-0"
+                className="w-full min-h-11 px-3 py-2 text-xs rounded-xl bg-card/50 text-foreground focus:ring-2 focus:ring-primary/20 font-semibold"
               />
             </div>
 
@@ -849,7 +850,7 @@ export default function DynamicChartVisualizer({
               type="button"
               variant="outline"
               onClick={handleAddFilter}
-              className="h-auto flex items-center gap-1 px-3 py-1.5 rounded-xl border border-border bg-card/50 text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-foreground hover:border-muted-foreground/30 shadow-none"
+              className="min-h-11 flex items-center gap-1 px-3 rounded-xl border border-border bg-card/50 text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-foreground hover:border-muted-foreground/30 shadow-none"
             >
               <Plus className="w-3 h-3" />
               {t("reports.visualizer.addRule")}
@@ -896,7 +897,7 @@ export default function DynamicChartVisualizer({
                     value={rule.value}
                     onChange={(event) => handleUpdateFilter(rule.id, { value: event.target.value })}
                     placeholder={t("reports.visualizer.filterValuePlaceholder")}
-                    className="flex-1 min-w-0 px-2 py-1 text-[11px] rounded-lg border border-border bg-card/60 text-foreground focus:ring-2 focus:ring-primary/20 font-semibold min-h-0 h-7"
+                    className="flex-1 min-w-0 min-h-11 px-2 py-2 text-xs rounded-lg border border-border bg-card/60 text-foreground focus:ring-2 focus:ring-primary/20 font-semibold"
                   />
 
                   {/* Remove */}
@@ -905,7 +906,7 @@ export default function DynamicChartVisualizer({
                     variant="ghost"
                     size="icon"
                     onClick={() => handleDeleteFilter(rule.id)}
-                    className="h-auto w-auto p-1 rounded hover:bg-destructive/15 text-muted-foreground hover:text-destructive shadow-none"
+                    className="rounded hover:bg-destructive/15 text-muted-foreground hover:text-destructive shadow-none"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
@@ -954,7 +955,7 @@ export default function DynamicChartVisualizer({
                       activePalette
                     });
                   }}
-                  className="h-auto flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-primary text-primary-foreground border border-primary/50 text-[10px] font-black uppercase tracking-wider hover:opacity-90 shadow-md shadow-primary/15"
+                  className="min-h-11 flex items-center gap-1.5 px-3.5 rounded-2xl bg-primary text-primary-foreground border border-primary/50 text-xs font-black uppercase tracking-wider hover:opacity-90 shadow-md shadow-primary/15"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   {t("reports.visualizer.saveVisual")}
@@ -966,7 +967,7 @@ export default function DynamicChartVisualizer({
                   type="button"
                   variant="outline"
                   onClick={onClose}
-                  className="h-auto flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border border-border bg-card/50 text-muted-foreground hover:text-foreground text-[10px] font-black uppercase tracking-wider shadow-none"
+                  className="min-h-11 flex items-center gap-1.5 px-3.5 rounded-2xl border border-border bg-card/50 text-muted-foreground hover:text-foreground text-xs font-black uppercase tracking-wider shadow-none"
                 >
                   {t("reports.visualizer.cancel")}
                 </Button>
@@ -977,7 +978,7 @@ export default function DynamicChartVisualizer({
                 type="button"
                 variant="outline"
                 onClick={handleTogglePin}
-                className={`h-auto flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border text-[10px] font-black uppercase tracking-wider shadow-none ${
+                className={`min-h-11 flex items-center gap-1.5 px-3.5 rounded-2xl border text-xs font-black uppercase tracking-wider shadow-none ${
                   isPinned
                     ? "border-success/30 bg-success/10 text-success shadow-md shadow-success/5 hover:bg-success/15 hover:text-success"
                     : "border-border bg-card/50 text-muted-foreground hover:text-foreground"
@@ -998,7 +999,7 @@ export default function DynamicChartVisualizer({
                           type="button"
                           variant="ghost"
                           onClick={() => setPdfOrientation("p")}
-                          className={`h-auto flex-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase shadow-none ${pdfOrientation === "p" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                          className={`min-h-11 flex-1 px-2 rounded-lg text-xs font-black uppercase shadow-none ${pdfOrientation === "p" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                         >
                           {t("reports.export.portrait")}
                         </Button>
@@ -1006,7 +1007,7 @@ export default function DynamicChartVisualizer({
                           type="button"
                           variant="ghost"
                           onClick={() => setPdfOrientation("l")}
-                          className={`h-auto flex-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase shadow-none ${pdfOrientation === "l" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                          className={`min-h-11 flex-1 px-2 rounded-lg text-xs font-black uppercase shadow-none ${pdfOrientation === "l" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                         >
                           {t("reports.export.landscape")}
                         </Button>
@@ -1034,7 +1035,7 @@ export default function DynamicChartVisualizer({
                   variant="outline"
                   size="icon"
                   onClick={() => window.print()}
-                  className="h-auto w-auto p-1.5 bg-card/60 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground rounded-xl shadow-none"
+                  className="bg-card/60 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground rounded-xl shadow-none"
                   title={t("reports.visualizer.printReport")}
                 >
                   <Printer className="w-3.5 h-3.5" />
@@ -1045,19 +1046,19 @@ export default function DynamicChartVisualizer({
                   variant="outline"
                   size="icon"
                   onClick={handleExportExcel}
-                  className="h-auto w-auto p-1.5 bg-card/60 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground rounded-xl shadow-none"
+                  className="bg-card/60 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground rounded-xl shadow-none"
                   title={t("reports.visualizer.exportExcel")}
                 >
                   <FileSpreadsheet className="w-3.5 h-3.5 text-success" />
                 </Button>
 
-                <div className="flex bg-card/60 border border-border/50 rounded-xl overflow-hidden p-0.5 items-center">
+                <div className="flex bg-card/60 border border-border/50 rounded-xl overflow-x-auto p-0.5 items-center">
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     onClick={handleExportPNG}
-                    className="h-auto w-auto p-1.5 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg shadow-none"
+                    className="hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg shadow-none"
                     title={t("reports.visualizer.exportPng")}
                   >
                     <Image className="w-3.5 h-3.5" />
@@ -1067,7 +1068,7 @@ export default function DynamicChartVisualizer({
                     variant="ghost"
                     size="icon"
                     onClick={handleExportPDF}
-                    className="h-auto w-auto p-1.5 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg shadow-none"
+                    className="hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg shadow-none"
                     title={t("reports.visualizer.exportPdf")}
                   >
                     <FileText className="w-3.5 h-3.5 text-destructive" />
@@ -1077,7 +1078,7 @@ export default function DynamicChartVisualizer({
                     variant="ghost"
                     size="icon"
                     onClick={() => setShowPdfSettings(!showPdfSettings)}
-                    className={`h-auto w-auto p-1.5 hover:bg-muted rounded-lg shadow-none ${showPdfSettings ? "text-primary bg-primary/10" : "text-muted-foreground"}`}
+                    className={`hover:bg-muted rounded-lg shadow-none ${showPdfSettings ? "text-primary bg-primary/10" : "text-muted-foreground"}`}
                     title={t("reports.visualizer.pdfSettings")}
                   >
                     <Settings className="w-3.5 h-3.5" />
@@ -1122,7 +1123,7 @@ export default function DynamicChartVisualizer({
               type="button"
               variant="ghost"
               onClick={() => setShowDataTable(!showDataTable)}
-              className="h-auto w-full flex items-center justify-between text-xs font-bold text-muted-foreground hover:text-foreground select-none shadow-none px-0"
+              className="min-h-11 w-full flex items-center justify-between text-xs font-bold text-muted-foreground hover:text-foreground select-none shadow-none px-0"
             >
               <span className="flex items-center gap-1.5">
                 <Table className="w-4 h-4 text-primary" />
@@ -1139,7 +1140,7 @@ export default function DynamicChartVisualizer({
                   exit={{ opacity: 0, height: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="border border-border/60 bg-card/25 rounded-2xl overflow-hidden mt-1 max-h-[220px] overflow-y-auto">
+                  <div className="border border-border/60 bg-card/25 rounded-2xl overflow-hidden mt-1 max-h-[220px] overflow-x-auto overflow-y-auto">
                     <table className="w-full text-xs text-left">
                       <thead className="bg-muted/50 border-b border-border/50 text-[10px] font-black uppercase text-muted-foreground tracking-wider">
                         <tr>

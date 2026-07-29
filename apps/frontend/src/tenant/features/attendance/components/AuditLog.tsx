@@ -122,7 +122,7 @@ export function AuditLog({ filters }: AuditLogProps) {
           size="icon"
           onClick={reload} 
           aria-label={t("attendance.audit.reload")}
-          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground"
         >
           <RefreshCw className="w-3.5 h-3.5" />
         </Button>
@@ -157,6 +157,7 @@ export function AuditLog({ filters }: AuditLogProps) {
         </div>
       ) : (
         <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
+          <div className="overflow-x-auto max-w-full">
           <table className="w-full text-sm">
             <thead className="bg-muted/60 border-b border-border">
               <tr>
@@ -181,6 +182,7 @@ export function AuditLog({ filters }: AuditLogProps) {
               })}
             </tbody>
           </table>
+          </div>
         </Card>
       )}
     </section>

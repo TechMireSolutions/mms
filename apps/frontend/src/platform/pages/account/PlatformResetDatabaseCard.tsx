@@ -54,7 +54,7 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
         <Button
           type="button"
           variant="destructive"
-          className="w-full font-bold h-10 rounded-xl cursor-pointer transition-all"
+          className="w-full font-bold min-h-11 rounded-xl cursor-pointer transition-all"
           onClick={() => {
             setResetError(null);
             setConfirmText("");

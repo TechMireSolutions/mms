@@ -197,7 +197,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
 
       <label
         htmlFor="terms"
-        className="flex min-h-10 cursor-pointer items-start gap-2.5 rounded-lg pt-1 select-none"
+        className="flex min-h-11 cursor-pointer items-start gap-2.5 rounded-lg pt-1 select-none"
       >
         <Checkbox
           id="terms"

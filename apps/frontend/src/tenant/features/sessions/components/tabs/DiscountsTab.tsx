@@ -183,13 +183,13 @@ export function DiscountsTab({ session, onUpdate, canWrite }: DiscountsTabProps)
                 {discountItem.conditions && <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{discountItem.conditions}</p>}
               </div>
               {canWrite && <div className="flex items-center gap-1.5 flex-shrink-0">
-                <Button aria-label={discountItem.active ? t("sessions.discounts.deactivate") : t("sessions.discounts.activate")} onClick={() => { void toggleActive(discountItem.id); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors w-8 h-8" title={discountItem.active ? t("sessions.discounts.deactivate") : t("sessions.discounts.activate")} variant="ghost" size="icon">
+                <Button aria-label={discountItem.active ? t("sessions.discounts.deactivate") : t("sessions.discounts.activate")} onClick={() => { void toggleActive(discountItem.id); }} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title={discountItem.active ? t("sessions.discounts.deactivate") : t("sessions.discounts.activate")} variant="ghost" size="icon">
                   {discountItem.active ? <ToggleRight className="w-4 h-4 text-primary" aria-hidden="true" /> : <ToggleLeft className="w-4 h-4" aria-hidden="true" />}
                 </Button>
-                <Button aria-label={t("sessions.discounts.editNamed", { name: discountItem.name })} onClick={() => { setEditDiscount(discountItem); setShowModal(true); }} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors w-8 h-8" variant="ghost" size="icon">
+                <Button aria-label={t("sessions.discounts.editNamed", { name: discountItem.name })} onClick={() => { setEditDiscount(discountItem); setShowModal(true); }} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" variant="ghost" size="icon">
                   <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>
-                <Button aria-label={t("sessions.discounts.deleteNamed", { name: discountItem.name })} onClick={() => setDeleteTarget(discountItem)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors w-8 h-8" variant="ghost" size="icon">
+                <Button aria-label={t("sessions.discounts.deleteNamed", { name: discountItem.name })} onClick={() => setDeleteTarget(discountItem)} className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" variant="ghost" size="icon">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>
               </div>}

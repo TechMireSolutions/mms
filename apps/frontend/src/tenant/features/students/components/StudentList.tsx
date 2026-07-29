@@ -248,7 +248,7 @@ export default function StudentList({
                   <div className="absolute top-3 end-3">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label={t("students.list.actionsAria")} className="h-7 w-7 p-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                        <Button variant="ghost" size="icon" aria-label={t("students.list.actionsAria")} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                           <MoreHorizontal className="w-3.5 h-3.5" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -511,7 +511,7 @@ export default function StudentList({
                         <td className="px-4 py-3">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" aria-label={t("students.list.actionsAria")} className="h-8 w-8 p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100">
+                              <Button variant="ghost" size="icon" aria-label={t("students.list.actionsAria")} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100">
                                 <MoreHorizontal className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -589,7 +589,7 @@ export default function StudentList({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-6 end-6 z-40 bg-card/95 border border-primary/20 backdrop-blur-xl shadow-2xl rounded-2xl p-3 flex items-center gap-3 border-s-4 border-s-primary"
+            className="fixed bottom-6 end-6 z-40 max-w-full bg-card/95 border border-primary/20 backdrop-blur-xl shadow-2xl rounded-2xl p-3 flex flex-wrap items-center gap-3 border-s-4 border-s-primary"
           >
             <span className="text-xs font-bold text-foreground ps-1">
               {t("students.selectedCount", { count: selectedIds.length })}
@@ -603,7 +603,7 @@ export default function StudentList({
                 type="button"
                 variant="outline"
                 onClick={() => { if (onBulkRestore) setConfirmBulkRestoreOpen(true); }}
-                className="px-3 py-1.5 rounded-lg border-primary/40 text-primary text-[11px] font-semibold hover:bg-primary/10 transition-colors h-auto flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg border-primary/40 text-primary text-[11px] font-semibold hover:bg-primary/10 transition-colors min-h-11 flex items-center gap-1.5"
               >
                 <RotateCcw className="w-3.5 h-3.5" /> {t("students.bulkRestore")}
               </Button>
@@ -614,7 +614,7 @@ export default function StudentList({
                   type="button"
                   variant="outline"
                   onClick={() => openComposer("whatsapp", selectedStudents.map((s) => toMessagingRecipient(s)))}
-                  className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
                 >
                   <MessageCircle className="w-3.5 h-3.5 text-success" /> {t("students.list.actionWhatsApp")}
                 </Button>
@@ -623,7 +623,7 @@ export default function StudentList({
                   type="button"
                   variant="outline"
                   onClick={() => openComposer("sms", selectedStudents.map((s) => toMessagingRecipient(s)))}
-                  className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
                 >
                   <MessageSquare className="w-3.5 h-3.5 text-info" /> {t("students.list.actionSms")}
                 </Button>
@@ -632,7 +632,7 @@ export default function StudentList({
                   type="button"
                   variant="outline"
                   onClick={() => openComposer("email", selectedStudents.filter((s) => s.email).map((s) => toMessagingRecipient(s)))}
-                  className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
                 >
                   <Mail className="w-3.5 h-3.5 text-primary" /> {t("students.list.actionEmail")}
                 </Button>
@@ -643,7 +643,7 @@ export default function StudentList({
                       <Button
                         type="button"
                         variant="outline"
-                        className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors h-auto flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
                       >
                         <Tag className="w-3.5 h-3.5 text-primary" /> {t("students.columns.status")} <ChevronDown className="w-3 h-3 ms-0.5" />
                       </Button>
@@ -671,7 +671,7 @@ export default function StudentList({
                       type="button"
                       variant="destructive"
                       onClick={() => { if (onBulkDelete) setConfirmBulkDeleteOpen(true); }}
-                      className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-[11px] font-semibold hover:bg-destructive/90 transition-colors h-auto"
+                      className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-[11px] font-semibold hover:bg-destructive/90 transition-colors min-h-11"
                     >
                       {t("students.list.remove")}
                     </Button>

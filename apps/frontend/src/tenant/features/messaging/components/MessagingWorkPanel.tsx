@@ -159,13 +159,13 @@ export function MessagingWorkPanel({
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <SearchBar placeholder={t('messaging.search.placeholder')} value={searchContact} onChange={setSearchContact} className="max-w-sm flex-grow" />
-          <div className="flex items-center gap-1.5 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto max-w-full text-xs">
             <Button
               variant="outline"
               size="sm"
               disabled={selectingReachable}
               onClick={() => void selectReachable('phone')}
-              className="h-8 text-[11px] font-semibold"
+              className="text-[11px] font-semibold"
             >
               <CheckSquare className="me-1 h-3.5 w-3.5 text-info" /> {t('messaging.selectAllValidPhone')}
             </Button>
@@ -174,19 +174,19 @@ export function MessagingWorkPanel({
               size="sm"
               disabled={selectingReachable}
               onClick={() => void selectReachable('email')}
-              className="h-8 text-[11px] font-semibold"
+              className="text-[11px] font-semibold"
             >
               <CheckSquare className="me-1 h-3.5 w-3.5 text-warning" /> {t('messaging.selectAllValidEmail')}
             </Button>
             {selectedList.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => onSelectedByIdChange({})} className="h-8 text-[11px] text-destructive">
+              <Button variant="ghost" size="sm" onClick={() => onSelectedByIdChange({})} className="text-[11px] text-destructive">
                 <XSquare className="me-1 h-3.5 w-3.5" /> {t('messaging.clearSelection')}
               </Button>
             )}
           </div>
         </div>
 
-        <div className="max-h-[380px] overflow-y-auto rounded-lg border border-border/60">
+        <div className="max-h-[380px] max-w-full overflow-x-auto overflow-y-auto rounded-lg border border-border/60">
           <table className="w-full table-fixed text-start text-xs">
             <thead className="bg-muted/40 font-semibold uppercase tracking-wider text-muted-foreground">
               <tr className="border-b border-border/60">

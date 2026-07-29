@@ -51,7 +51,7 @@ export function ContactsWorkGenderFilterChip({
               size="icon"
               type="button"
               onClick={onClear}
-              className="h-4 w-4 p-0 hover:bg-transparent hover:opacity-70"
+              className="hover:bg-transparent hover:opacity-70"
               aria-label={t("contacts.clearFilters")}
             >
               <X className="w-3 h-3" />

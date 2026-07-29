@@ -195,7 +195,7 @@ export default function DashboardCustomizePanel({
                         onClick={() => onEditWidget(widget)}
                         variant="ghost"
                         size="icon"
-                        className="w-7 h-7 border border-border/60 hover:border-primary/30 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer rounded-lg"
+                        className="border border-border/60 hover:border-primary/30 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer rounded-lg"
                         title={t('dashboard.editWidget')}
                       >
                         <Pencil className="w-3.5 h-3.5" />
@@ -205,7 +205,7 @@ export default function DashboardCustomizePanel({
                           onClick={() => onDeleteWidget(widget.id)}
                           variant="ghost"
                           size="icon"
-                          className="w-7 h-7 border border-border/60 hover:border-destructive/30 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shadow-none cursor-pointer rounded-lg"
+                          className="border border-border/60 hover:border-destructive/30 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shadow-none cursor-pointer rounded-lg"
                           title={t('dashboard.deleteWidget')}
                         >
                           <Trash2 className="w-3.5 h-3.5" />

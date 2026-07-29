@@ -305,7 +305,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
                   updatePref("hasanatChartType", value as "pie" | "bar" | "radar");
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className="min-h-11 min-w-11 px-1.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
                   <SelectValue placeholder={t("reports.visualizer.chartType")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -321,7 +321,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
                   updatePref("hasanatChartColor", value);
                 }}
               >
-                <SelectTrigger className="h-6 px-1.5 py-0.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className="min-h-11 min-w-11 px-1.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
                   <SelectValue placeholder={t("reports.visualizer.colorPalette")} />
                 </SelectTrigger>
                 <SelectContent>

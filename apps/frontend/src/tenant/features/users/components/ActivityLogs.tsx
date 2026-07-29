@@ -118,6 +118,7 @@ export function ActivityLogs({
         </div>
       ) : (
         <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
+          <div className="overflow-x-auto max-w-full">
           <table className="w-full text-sm table-fixed">
             <thead className="border-b border-border bg-muted/60">
               <tr>
@@ -177,6 +178,7 @@ export function ActivityLogs({
               ))}
             </tbody>
           </table>
+          </div>
         </Card>
       )}
 
@@ -189,7 +191,7 @@ export function ActivityLogs({
             size="icon"
             disabled={page <= 1}
             onClick={() => setPage((currentPage) => currentPage - 1)}
-            className="rounded-lg border border-border p-1.5 disabled:opacity-40 h-8 w-8 shadow-none"
+            className="rounded-lg border border-border disabled:opacity-40 shadow-none"
             aria-label={t('users.activityPrev')}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -200,7 +202,7 @@ export function ActivityLogs({
             size="icon"
             disabled={page >= totalPages}
             onClick={() => setPage((currentPage) => currentPage + 1)}
-            className="rounded-lg border border-border p-1.5 disabled:opacity-40 h-8 w-8 shadow-none"
+            className="rounded-lg border border-border disabled:opacity-40 shadow-none"
             aria-label={t('users.activityNext')}
           >
             <ChevronRight className="h-4 w-4" />

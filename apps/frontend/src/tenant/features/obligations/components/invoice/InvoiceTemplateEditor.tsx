@@ -37,7 +37,7 @@ function StyleBtn({ active, onClick, children, title }: StyleBtnProps) {
   return (
     <Button type="button" title={title} onClick={onClick}
       variant="ghost"
-      className={`w-7 h-7 flex items-center justify-center p-0 rounded text-xs transition-colors border shadow-none ${active ? "bg-primary text-primary-foreground border-primary hover:bg-primary/95" : "border-border hover:bg-muted text-foreground"}`}>
+      className={`min-h-11 min-w-11 flex items-center justify-center p-0 rounded text-xs transition-colors border shadow-none ${active ? "bg-primary text-primary-foreground border-primary hover:bg-primary/95" : "border-border hover:bg-muted text-foreground"}`}>
       {children}
     </Button>
   );
@@ -61,10 +61,10 @@ interface StyleInputProps {
 function StyleInput({ label, value, onChange, type = "text", min, max, step, className = "" }: StyleInputProps) {
   return (
     <div className={`flex flex-col gap-0.5 ${className}`}>
-      <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-wide">{label}</span>
+      <span className="text-xs font-bold uppercase text-muted-foreground tracking-wide">{label}</span>
       <Input type={type} value={value} onChange={(event) => onChange(type === "number" ? Number(event.target.value) : event.target.value)}
         min={min} max={max} step={step}
-        className="w-full px-1.5 py-0.5 h-auto text-xs border border-border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
+        className="w-full min-h-11 px-1.5 py-2 text-xs border border-border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
     </div>
   );
 }
@@ -366,10 +366,12 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
         <div className="flex items-center gap-1 ml-2">
           <Button type="button" onClick={undo} disabled={!history.length} title={t("obligations.invoiceTemplate.undo")}
             variant="ghost"
-            className="p-1.5 h-auto rounded hover:bg-muted disabled:opacity-30 transition-colors shadow-none"><Undo2 className="w-4 h-4" aria-hidden="true" /></Button>
+            size="icon"
+            className="rounded hover:bg-muted disabled:opacity-30 transition-colors shadow-none"><Undo2 className="w-4 h-4" aria-hidden="true" /></Button>
           <Button type="button" onClick={redo} disabled={!future.length} title={t("obligations.invoiceTemplate.redo")}
             variant="ghost"
-            className="p-1.5 h-auto rounded hover:bg-muted disabled:opacity-30 transition-colors shadow-none"><Redo2 className="w-4 h-4" aria-hidden="true" /></Button>
+            size="icon"
+            className="rounded hover:bg-muted disabled:opacity-30 transition-colors shadow-none"><Redo2 className="w-4 h-4" aria-hidden="true" /></Button>
         </div>
 
         {/* Page size */}
@@ -378,7 +380,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
           {Object.entries(PAGE_SIZES).map(([pageSizeKey]) => (
             <Button type="button" key={pageSizeKey} onClick={() => handlePageSize(pageSizeKey)}
               variant={template.pageSize === pageSizeKey ? "default" : "outline"}
-              className={`h-auto px-2.5 py-1 text-xs font-semibold rounded border transition-colors shadow-none ${template.pageSize === pageSizeKey ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}>
+              className={`min-h-11 px-2.5 text-xs font-semibold rounded border transition-colors shadow-none ${template.pageSize === pageSizeKey ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}>
               {pageSizeKey}
             </Button>
           ))}
@@ -387,19 +389,20 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
         {/* Guides toggle */}
         <Button type="button" onClick={() => setShowGuides(!showGuides)} title={t("obligations.invoiceTemplate.toggleGuides")}
           variant="ghost"
-          className="p-1.5 h-auto rounded hover:bg-muted transition-colors ml-1 shadow-none">
+          size="icon"
+          className="rounded hover:bg-muted transition-colors ml-1 shadow-none">
           {showGuides ? <Eye className="w-4 h-4 text-primary" aria-hidden="true" /> : <EyeOff className="w-4 h-4 text-muted-foreground" aria-hidden="true" />}
         </Button>
 
         <div className="ml-auto flex items-center gap-2">
           <Button type="button" onClick={handleSave}
-            className="flex items-center gap-1.5 h-auto px-4 py-1.5 text-xs font-bold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+            className="flex min-h-11 items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
             <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? t("obligations.invoiceTemplate.saved") : t("obligations.invoiceTemplate.save")}
           </Button>
           {fullscreen && (
             <Button type="button" onClick={onClose}
               variant="outline"
-              className="px-3 py-1.5 h-auto text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none">
+              className="min-h-11 px-3 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none">
               {t("obligations.invoiceTemplate.close")}
             </Button>
           )}
@@ -412,28 +415,28 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
         {/* Left panel — element palette */}
         <aside className="w-48 flex-shrink-0 border-r border-border bg-card overflow-y-auto p-3 space-y-4">
           <div>
-            <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.addElements")}</p>
+            <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.addElements")}</p>
             <div className="space-y-1">
               <Button type="button" onClick={addStaticText}
                 variant="outline"
-                className="w-full text-left px-2.5 py-1.5 h-auto text-xs font-semibold rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors flex items-center gap-2 shadow-none justify-start">
+                className="w-full text-left min-h-11 px-2.5 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors flex items-center gap-2 shadow-none justify-start">
                 <Type className="w-3.5 h-3.5 text-primary" aria-hidden="true" /> {t("obligations.invoiceTemplate.staticText")}
               </Button>
               <Button type="button" onClick={addDivider}
                 variant="outline"
-                className="w-full text-left px-2.5 py-1.5 h-auto text-xs font-semibold rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors flex items-center gap-2 shadow-none justify-start">
+                className="w-full text-left min-h-11 px-2.5 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors flex items-center gap-2 shadow-none justify-start">
                 <Minus className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" /> {t("obligations.invoiceTemplate.dividerLine")}
               </Button>
             </div>
           </div>
 
           <div>
-            <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.addFields")}</p>
+            <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.addFields")}</p>
             <div className="space-y-1">
               {AVAILABLE_FIELDS.map((fieldOption) => (
                 <Button type="button" key={fieldOption.field} onClick={() => addField(fieldOption)}
                   variant="outline"
-                  className="w-full text-left px-2.5 py-1.5 h-auto text-[10px] font-medium rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors shadow-none justify-start">
+                  className="w-full text-left min-h-11 px-2.5 py-2 text-xs font-medium rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors shadow-none justify-start">
                   {fieldOption.label}
                 </Button>
               ))}
@@ -473,12 +476,12 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
             <div className="text-xs text-muted-foreground text-center pt-10 space-y-1">
               <Move className="w-6 h-6 mx-auto opacity-30" aria-hidden="true" />
               <p className="m-0">{t("obligations.invoiceTemplate.emptyHint")}</p>
-              <p className="text-[10px] opacity-60 m-0">{t("obligations.invoiceTemplate.emptyHintDetail")}</p>
+              <p className="text-xs opacity-60 m-0">{t("obligations.invoiceTemplate.emptyHintDetail")}</p>
             </div>
           ) : (
             <>
               <div>
-                <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">
+                <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">
                   {selectedElement.type === "field"
                     ? t("obligations.invoiceTemplate.propsField")
                     : selectedElement.type === "logo"
@@ -501,7 +504,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
 
               {/* Position & size */}
               <div>
-                <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.positionSize")}</p>
+                <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.positionSize")}</p>
                 <div className="grid grid-cols-2 gap-2">
                   <StyleInput label="X" type="number" value={selectedElement.x} onChange={(nextValue) => patchEl(selectedElement.id, { x: snap(Number(nextValue)) })} step={SNAP} />
                   <StyleInput label="Y" type="number" value={selectedElement.y} onChange={(nextValue) => patchEl(selectedElement.id, { y: snap(Number(nextValue)) })} step={SNAP} />
@@ -513,7 +516,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
               {/* Typography */}
               {selectedElement.type !== "logo" && selectedElement.type !== "divider" && (
                 <div>
-                  <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.typography")}</p>
+                  <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.typography")}</p>
                   <div className="space-y-2">
                     <StyleInput label={t("obligations.invoiceTemplate.fontSize")} type="number" value={selectedElement.style?.fontSize || 10}
                       onChange={(nextValue) => patchStyle(selectedElement.id, { fontSize: Number(nextValue) })} min={7} max={72} />
@@ -531,7 +534,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
                     </div>
                     {/* Alignment */}
                     <div>
-                      <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-wide block mb-1">{t("obligations.invoiceTemplate.alignment")}</span>
+                      <span className="text-xs font-bold uppercase text-muted-foreground tracking-wide block mb-1">{t("obligations.invoiceTemplate.alignment")}</span>
                       <div className="flex gap-1">
                         {([
                           { value: "left", titleKey: "obligations.invoiceTemplate.alignLeft" as const, Icon: AlignLeft },
@@ -547,7 +550,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
                     </div>
                     {/* Font family */}
                     <div>
-                      <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-wide block mb-1">{t("obligations.invoiceTemplate.font")}</span>
+                      <span className="text-xs font-bold uppercase text-muted-foreground tracking-wide block mb-1">{t("obligations.invoiceTemplate.font")}</span>
                       <FormSelect value={selectedElement.style?.fontFamily || "inherit"}
                         onChange={(fontFamily) => patchStyle(selectedElement.id, { fontFamily })}
                         className="w-full"
@@ -574,7 +577,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
               {/* Divider color */}
               {selectedElement.type === "divider" && (
                 <div>
-                  <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.divider")}</p>
+                  <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.divider")}</p>
                   <StyleInput label={t("obligations.invoiceTemplate.color")} type="color" value={selectedElement.style?.color || PRINT_NEUTRAL.border}
                     onChange={(nextValue) => patchStyle(selectedElement.id, { color: String(nextValue) })} />
                 </div>
@@ -584,12 +587,12 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
               <div className="pt-2 border-t border-border flex gap-2">
                 <Button type="button" onClick={() => duplicateEl(selectedElement.id)}
                   variant="outline"
-                  className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 h-auto text-[10px] font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none">
+                  className="flex-1 flex items-center justify-center gap-1 min-h-11 px-2 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none">
                   <Copy className="w-3 h-3" aria-hidden="true" /> {t("obligations.invoiceTemplate.duplicate")}
                 </Button>
                 <Button type="button" onClick={() => deleteEl(selectedElement.id)}
                   variant="outline"
-                  className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 h-auto text-[10px] font-semibold rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors shadow-none">
+                  className="flex-1 flex items-center justify-center gap-1 min-h-11 px-2 py-2 text-xs font-semibold rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors shadow-none">
                   <Trash2 className="w-3 h-3" aria-hidden="true" /> {t("obligations.invoiceTemplate.delete")}
                 </Button>
               </div>
@@ -607,8 +610,8 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
           ["Del", t("obligations.invoiceTemplate.hintDelete")],
           ["Esc", t("obligations.invoiceTemplate.hintDeselect")],
         ].map(([shortcutKey, shortcutLabel]) => (
-          <span key={shortcutKey} className="text-[9px] text-muted-foreground">
-            <kbd className="px-1 py-0.5 rounded border border-border bg-muted text-foreground font-mono text-[9px]">{shortcutKey}</kbd> {shortcutLabel}
+          <span key={shortcutKey} className="text-xs text-muted-foreground">
+            <kbd className="px-1 py-0.5 rounded border border-border bg-muted text-foreground font-mono text-xs">{shortcutKey}</kbd> {shortcutLabel}
           </span>
         ))}
       </footer>

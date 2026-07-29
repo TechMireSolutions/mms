@@ -197,7 +197,7 @@ function OfflineBanner({ offline, queue, onSync }: { offline: boolean; queue: Of
             {t("attendance.mark.offlineBannerOffline")}
             {queue.length > 0 && <span className="px-1.5 py-0.5 rounded-full bg-warning/30 text-[10px] font-bold">{queue.length} {t("attendance.mark.pending")}</span>}
           </div>
-          <Button onClick={onSync} variant="ghost" size="sm" className="text-xs font-bold px-2.5 py-1 rounded-lg bg-warning/30 hover:bg-warning/40 hover:text-warning transition-colors flex items-center gap-1 h-auto">
+          <Button onClick={onSync} variant="ghost" size="sm" className="text-xs font-bold px-2.5 py-2 rounded-lg bg-warning/30 hover:bg-warning/40 hover:text-warning transition-colors flex min-h-11 items-center gap-1">
             <UploadCloud className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.syncNow")}
           </Button>
         </motion.div>
@@ -209,7 +209,7 @@ function OfflineBanner({ offline, queue, onSync }: { offline: boolean; queue: Of
             <Wifi className="w-4 h-4" aria-hidden="true" />
             {t("attendance.mark.offlineBannerOnline", { count: queue.length })}
           </div>
-          <Button onClick={onSync} variant="ghost" size="sm" className="text-xs font-bold px-2.5 py-1 rounded-lg bg-success/30 hover:bg-success/40 hover:text-success transition-colors flex items-center gap-1 h-auto">
+          <Button onClick={onSync} variant="ghost" size="sm" className="text-xs font-bold px-2.5 py-2 rounded-lg bg-success/30 hover:bg-success/40 hover:text-success transition-colors flex min-h-11 items-center gap-1">
             <UploadCloud className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.syncNow")}
           </Button>
         </motion.div>
@@ -233,7 +233,7 @@ function GeoTag({ geo, onRequest }: { geo: GeoData | "loading" | null; onRequest
   );
   return (
     <Button onClick={onRequest} variant="outline" size="sm"
-      className="flex items-center gap-1 text-[11px] text-muted-foreground font-medium px-2 py-1 rounded-lg border border-dashed border-border hover:bg-muted hover:text-muted-foreground transition-colors h-auto bg-transparent">
+      className="flex min-h-11 items-center gap-1 text-xs text-muted-foreground font-medium px-2 py-2 rounded-lg border border-dashed border-border hover:bg-muted hover:text-muted-foreground transition-colors bg-transparent">
       <MapPin className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.tagLocation")}
     </Button>
   );
@@ -261,7 +261,7 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
           <p className="text-[11px] text-muted-foreground">{t("attendance.mark.cameraPreview")}</p>
         </div>
       </div>
-      <Button onClick={onClose} variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground transition-colors h-auto py-1">{t("attendance.mark.dismiss")}</Button>
+      <Button onClick={onClose} variant="ghost" size="sm" className="min-h-11 text-xs text-muted-foreground hover:text-foreground transition-colors py-2">{t("attendance.mark.dismiss")}</Button>
     </MotionCard>
   );
 }
@@ -569,14 +569,14 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
         <div className="flex items-center gap-2 flex-wrap">
           {isDraft && <span className="px-2 py-1 rounded-lg bg-warning/15 text-warning text-[11px] font-bold">{t("attendance.mark.draftSaved")}</span>}
           <Button onClick={() => setShowFaceAI((isOpen) => !isOpen)} variant="outline" size="sm"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted hover:text-foreground transition-colors h-auto">
+            className="flex min-h-11 items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
             <Scan className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.faceAi")}
           </Button>
-          <div className="flex rounded-lg border border-border overflow-hidden text-xs font-semibold" role="group" aria-label={t("attendance.mark.bulkActionsAria")}>
-            <Button onClick={() => markAll("present")} variant="ghost" className="px-3 py-1.5 rounded-none bg-success/10 text-success hover:bg-success/15 hover:text-success transition-colors flex items-center gap-1 h-auto font-semibold">
+          <div className="flex max-w-full overflow-x-auto rounded-lg border border-border text-xs font-semibold" role="group" aria-label={t("attendance.mark.bulkActionsAria")}>
+            <Button onClick={() => markAll("present")} variant="ghost" className="shrink-0 min-h-11 px-3 py-2 rounded-none bg-success/10 text-success hover:bg-success/15 hover:text-success transition-colors flex items-center gap-1 font-semibold">
               <CheckCircle2 className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.allPresent")}
             </Button>
-            <Button onClick={() => markAll("absent")} variant="ghost" className="px-3 py-1.5 rounded-none bg-destructive/10 text-destructive hover:bg-destructive/15 hover:text-destructive transition-colors flex items-center gap-1 h-auto font-semibold">
+            <Button onClick={() => markAll("absent")} variant="ghost" className="shrink-0 min-h-11 px-3 py-2 rounded-none bg-destructive/10 text-destructive hover:bg-destructive/15 hover:text-destructive transition-colors flex items-center gap-1 font-semibold">
               <XCircle className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.allAbsent")}
             </Button>
           </div>
@@ -749,12 +749,12 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
         <p className="text-xs text-muted-foreground">{t("attendance.mark.summary", { total: rows.length, shown: filteredRows.length })}</p>
         <div className="flex gap-2">
           <Button onClick={() => void handleSaveDraft()} variant="outline"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-card text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors h-auto">
+            className="flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-card text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
             <Save className="w-3.5 h-3.5" aria-hidden="true" /> {t("attendance.mark.saveDraft")}
           </Button>
           <Button onClick={() => void handleSubmit()}
             disabled={!canWriteAttendance}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors h-auto">
+            className="flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors">
             <Send className="w-3.5 h-3.5" aria-hidden="true" />
             {isOffline ? t("attendance.mark.saveOffline") : submitted ? t("attendance.mark.updateAttendance") : t("attendance.mark.submitAttendance")}
           </Button>

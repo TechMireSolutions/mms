@@ -124,7 +124,7 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
           value={activeTab}
           onChange={setActiveTab}
           panelIdPrefix="reports-tools"
-          className="max-lg:w-full lg:w-auto"
+          className="w-full lg:w-auto"
         />
       </div>
 

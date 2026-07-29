@@ -194,7 +194,7 @@ export function QuestionSourcesTab({
             type="button"
             variant="outline"
             onClick={startNewBook}
-            className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-muted h-auto"
+            className="min-h-11 rounded-lg border border-border px-3 text-xs font-semibold hover:bg-muted"
           >
             {t('questionBank.addSourceBook')}
           </Button>
@@ -221,7 +221,7 @@ export function QuestionSourcesTab({
                     type="button"
                     variant="outline"
                     onClick={() => startEditBook(book)}
-                    className="rounded-lg border border-border px-2 py-1 text-[11px] font-semibold hover:bg-muted h-auto"
+                    className="min-h-11 rounded-lg border border-border px-2 text-[11px] font-semibold hover:bg-muted"
                   >
                     {t('questionBank.editSourceBook')}
                   </Button>
@@ -230,7 +230,7 @@ export function QuestionSourcesTab({
                     variant="outline"
                     size="icon"
                     onClick={() => deleteBook(book.id)}
-                    className="rounded-lg border border-border px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-destructive h-7 w-7"
+                    className="rounded-lg border border-border text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-destructive"
                     aria-label={t('questionBank.deleteSourceBook', { name: book.name })}
                   >
                     <Trash2 className="h-3.5 w-3.5" aria-hidden />
@@ -269,7 +269,7 @@ export function QuestionSourcesTab({
                         variant="outline"
                         onClick={() => fieldId !== 'sourceBookName' && toggleBookField(fieldId)}
                         disabled={fieldId === 'sourceBookName'}
-                        className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold h-auto ${
+                        className={`min-h-11 rounded-full border px-2.5 text-[11px] font-semibold ${
                           selected
                             ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary'
                             : 'border-border text-muted-foreground hover:bg-muted'
@@ -326,7 +326,7 @@ export function QuestionSourcesTab({
                       type="button"
                       variant="outline"
                       onClick={() => removeCitation(index)}
-                      className="flex min-h-8 items-center gap-1 rounded-lg border border-border px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:text-destructive h-auto"
+                      className="flex min-h-11 items-center gap-1 rounded-lg border border-border px-2 text-[11px] font-semibold text-muted-foreground hover:text-destructive"
                     >
                       <Trash2 className="h-3.5 w-3.5" aria-hidden />
                       {t('questionBank.removeCitation')}
@@ -379,7 +379,7 @@ export function QuestionSourcesTab({
             type="button"
             variant="outline"
             onClick={addCitation}
-            className="flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-foreground bg-transparent"
+            className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-foreground bg-transparent"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden />
             {t('questionBank.addBookCitation')}

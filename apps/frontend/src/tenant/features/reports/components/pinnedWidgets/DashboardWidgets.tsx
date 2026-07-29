@@ -2,10 +2,14 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { PinOff, Trash2, Pencil, LayoutDashboard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getCollection, saveCollection, getObject, saveObject } from "@/lib/db";
+import { getObject, saveObject } from "@/lib/db";
+import {
+  isRestWidgetCollection,
+  persistWidgetRecordToggle,
+} from "@/lib/reports/widgetRecordToggle";
+import { useWidgetCollections } from "@/lib/reports/useReportCollections";
 import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
-import { getWidgetCollections } from "@/tenant/features/reports/components/pinnedWidgets/widgetDataUtils";
 import { CustomWidgetRenderer, WidgetDrilldownModal } from "@/tenant/features/reports/components/pinnedWidgets/CustomWidgetRenderer";
 import { isComposedWidgetType } from "@/components/dashboard-widgets/registry";
 import { useContactsWidgetAggregates } from "@/tenant/hooks/collections/contacts";
@@ -38,13 +42,12 @@ export function DashboardWidgets({
   const { t } = useTranslation();
   const { gridMode, updatePref } = useDashboardConfig();
   const [localWidgets, setLocalWidgets] = useState<CustomWidget[]>([]);
-  const [collections, setCollections] = useState(() => getWidgetCollections());
+  const collections = useWidgetCollections();
   
   const [drilldownWidget, setDrilldownWidget] = useState<CustomWidget | null>(null);
 
   useEffect(() => {
     const handleUpdate = () => {
-      setCollections(getWidgetCollections());
       if (widgets) return;
       try {
         const savedWidgets = getObject<CustomWidget[] | null>("kpi_custom_widgets", null);
@@ -118,33 +121,30 @@ export function DashboardWidgets({
         const isEnabled = getObject<unknown>(switchStateKey, false) === true || getObject<unknown>(switchStateKey, "false") === "true";
         saveObject(switchStateKey, !isEnabled);
       }
-    } else {
-      const collectionName = widget.switchCollection;
-      const recordId = widget.switchRecordId;
-      const targetField = widget.switchField || "status";
-      if (!collectionName || !recordId) return;
+      window.dispatchEvent(new Event("local-database-update"));
+      return;
+    }
+
+    const collectionName = widget.switchCollection;
+    const recordId = widget.switchRecordId;
+    const targetField = widget.switchField || "status";
+    if (!collectionName || !recordId) return;
+    if (!isRestWidgetCollection(collectionName)) {
+      notify.error(t("reports.widgets.errorToggleFailed"));
+      return;
+    }
+    void (async () => {
       try {
-        const storedRecords = getCollection<Record<string, unknown>>(collectionName, []);
-        const updatedRecords = storedRecords.map((storedRecord) => {
-          if (String(storedRecord.id) === String(recordId)) {
-            const currentFieldValue = storedRecord[targetField];
-            let nextValue: unknown = !currentFieldValue;
-            if (currentFieldValue === "active") nextValue = "inactive";
-            else if (currentFieldValue === "inactive") nextValue = "active";
-            else if (currentFieldValue === "paid") nextValue = "unpaid";
-            else if (currentFieldValue === "unpaid") nextValue = "paid";
-            
-            return { ...storedRecord, [targetField]: nextValue };
-          }
-          return storedRecord;
+        await persistWidgetRecordToggle({
+          collectionName,
+          recordId: String(recordId),
+          field: targetField,
         });
-        saveCollection(collectionName, updatedRecords);
       } catch (error) {
         console.error(error);
         notify.error(t("reports.widgets.errorToggleFailed"));
       }
-    }
-    window.dispatchEvent(new Event("local-database-update"));
+    })();
   };
 
   const handleToggleGridMode = (mode: "comfortable" | "compact") => {
@@ -167,7 +167,7 @@ export function DashboardWidgets({
             type="button"
             variant="ghost"
             onClick={() => handleToggleGridMode("comfortable")}
-            className={`h-auto px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider relative z-10 shadow-none ${
+            className={`min-h-11 px-3 rounded-lg text-[9px] font-black uppercase tracking-wider relative z-10 shadow-none ${
               gridMode === "comfortable" 
                 ? "text-foreground" 
                 : "text-muted-foreground hover:text-foreground"
@@ -186,7 +186,7 @@ export function DashboardWidgets({
             type="button"
             variant="ghost"
             onClick={() => handleToggleGridMode("compact")}
-            className={`h-auto px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider relative z-10 shadow-none ${
+            className={`min-h-11 px-3 rounded-lg text-[9px] font-black uppercase tracking-wider relative z-10 shadow-none ${
               gridMode === "compact" 
                 ? "text-foreground" 
                 : "text-muted-foreground hover:text-foreground"
@@ -253,7 +253,7 @@ export function DashboardWidgets({
                         event.stopPropagation();
                         onEditWidget(widget);
                       }}
-                      className="h-auto w-auto p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-primary hover:text-primary-foreground text-muted-foreground shadow-none"
+                      className="rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-primary hover:text-primary-foreground text-muted-foreground shadow-none"
                       title={t("reports.widgets.editWidget")}
                     >
                       <Pencil className="w-3 h-3" />
@@ -268,7 +268,7 @@ export function DashboardWidgets({
                         event.stopPropagation();
                         onDeleteWidget(widget.id);
                       }}
-                      className="h-auto w-auto p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-destructive hover:text-destructive-foreground text-muted-foreground shadow-none"
+                      className="rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-destructive hover:text-destructive-foreground text-muted-foreground shadow-none"
                       title={t("reports.widgets.deleteWidget")}
                     >
                       <Trash2 className="w-3 h-3" />
@@ -279,7 +279,7 @@ export function DashboardWidgets({
                     variant="outline"
                     size="icon"
                     onClick={() => handleLocalUnpin(widget.id)}
-                    className="h-auto w-auto p-1.5 rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none"
+                    className="rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none"
                     title={t("reports.widgets.unpinWidget")}
                   >
                     <PinOff className="w-3 h-3" />

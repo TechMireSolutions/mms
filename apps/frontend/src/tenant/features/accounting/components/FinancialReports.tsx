@@ -42,6 +42,7 @@ function ReportSection({ title, rows, totalLabel, total, debitNormal, color }: R
       <header className={`px-4 py-2.5 border-b border-border ${color || "bg-muted/60"}`}>
         <h3 className="text-xs font-bold uppercase tracking-wide text-foreground m-0">{title}</h3>
       </header>
+      <div className="overflow-x-auto max-w-full">
       <table className="w-full text-sm">
         <caption className="sr-only">{t("accounting.reports.sectionDataCaption", { title })}</caption>
         <tbody className="divide-y divide-border">
@@ -73,6 +74,7 @@ function ReportSection({ title, rows, totalLabel, total, debitNormal, color }: R
           </tr>
         </tfoot>
       </table>
+      </div>
     </section>
   );
 }
@@ -256,6 +258,7 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
             <header className="px-4 py-2.5 bg-info/10/60 border-b border-border">
               <h3 className="text-xs font-bold uppercase tracking-wide m-0">{t("accounting.reports.cashflow.title")}</h3>
             </header>
+            <div className="overflow-x-auto max-w-full">
             <table className="w-full text-sm">
               <caption className="sr-only">{t("accounting.reports.cashflow.breakdownCaption")}</caption>
               <tbody className="divide-y divide-border">
@@ -294,6 +297,7 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
                 </tr>
               </tfoot>
             </table>
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">

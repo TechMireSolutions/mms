@@ -209,9 +209,10 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                       <div className="flex items-center justify-end gap-1.5">
                         <Button
                           variant="ghost"
+                          size="icon"
                           aria-label={`${t("contacts.whatsapp.open")} ${outstandingFee.student}`}
                           title={t("contacts.whatsapp.open")}
-                          className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shadow-none cursor-pointer"
+                          className="rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shadow-none cursor-pointer"
                           disabled={!outstandingFee.contact}
                           onClick={() => {
                             openComposer("whatsapp", [{
@@ -228,9 +229,10 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                         </Button>
                         <Button
                           variant="ghost"
+                          size="icon"
                           aria-label={`${t("dashboard.widgets.sendReminder")} ${outstandingFee.student}`}
                           title={t("dashboard.widgets.sendReminder")}
-                          className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer"
+                          className="rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer"
                           disabled={!outstandingFee.contact}
                           onClick={() => {
                             openComposer("sms", [{
@@ -256,7 +258,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
       </div>
 
       <footer className="px-5 py-3.5 border-t border-border/45 flex items-center justify-between bg-muted/10 select-none">
-        <Link to={ROUTES.finance} className="text-xs font-bold text-primary hover:underline">
+        <Link to={ROUTES.finance} className="inline-flex min-h-11 items-center text-xs font-bold text-primary hover:underline">
           {t("dashboard.widgets.viewAllOutstanding")}
         </Link>
         <SimplePagination

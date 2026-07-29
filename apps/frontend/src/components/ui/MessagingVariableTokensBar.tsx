@@ -26,7 +26,7 @@ export function MessagingVariableTokensBar({
   return (
     <div className={`flex flex-wrap items-center gap-1 ${className}`}>
       {showLabel && (
-        <span className="text-[10px] text-muted-foreground font-semibold me-1">
+        <span className="text-xs text-muted-foreground font-semibold me-1">
           {t('messaging.insertVariable')}:
         </span>
       )}
@@ -39,7 +39,7 @@ export function MessagingVariableTokensBar({
           onClick={() => onSelectToken(token)}
           title={t('messaging.variableExample', { example: fallbackExample })}
           aria-label={t(labelKey as AppTranslationKey)}
-          className="h-auto px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted hover:bg-primary/10 hover:text-primary border-border/40"
+          className="h-auto min-h-11 px-1.5 py-2 rounded text-xs font-mono bg-muted hover:bg-primary/10 hover:text-primary border-border/40"
         >
           {token}
         </Button>

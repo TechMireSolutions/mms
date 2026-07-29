@@ -44,6 +44,6 @@ describe('StatusBadge Component', () => {
 
   it('applies small size styling when size is sm', () => {
     const html = renderToStaticMarkup(<StatusBadge status="active" size="sm" />);
-    expect(html).toContain('text-[9px]');
+    expect(html).toContain('text-xs');
   });
 });

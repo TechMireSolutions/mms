@@ -10,7 +10,7 @@ import {
   createCustomTab,
   updateCustomTab,
   deleteCustomTab,
-  replaceCustomTabs,
+  bulkUpsertCustomTabs,
 } from '../../services/customTabsService.js';
 import {
   customTabSchema,
@@ -56,11 +56,11 @@ export default async function customTabRoutes(
     return reply.send({ tabs });
   });
 
-  // PUT /api/custom-tabs/bulk
+  // PUT /api/custom-tabs/bulk — upsert only (never wipe missing rows)
   registerBulkPutRoute(fastify, {
     collection: CUSTOM_TABS_COLLECTION,
     schema: customTabBulkSaveSchema,
-    saveFn: async (data) => replaceCustomTabs(data.moduleId, data.tabs),
+    saveFn: async (data) => bulkUpsertCustomTabs(data.moduleId, data.tabs),
     responseKey: 'tabs',
     errorMessagePrefix: 'custom tabs',
   });

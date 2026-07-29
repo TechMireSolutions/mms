@@ -155,7 +155,8 @@ function DraggableField({
           disabled={isFirst}
           onClick={onMoveUp}
           variant="ghost"
-          className="w-5 h-5 flex items-center justify-center p-0 rounded-lg hover:bg-muted disabled:opacity-20 text-[10px] text-muted-foreground font-black cursor-pointer transition-colors"
+          size="icon"
+          className="rounded-lg hover:bg-muted disabled:opacity-20 text-[10px] text-muted-foreground font-black cursor-pointer transition-colors"
           type="button"
           title={t("reports.builder.moveUp")}
         >
@@ -165,7 +166,8 @@ function DraggableField({
           disabled={isLast}
           onClick={onMoveDown}
           variant="ghost"
-          className="w-5 h-5 flex items-center justify-center p-0 rounded-lg hover:bg-muted disabled:opacity-20 text-[10px] text-muted-foreground font-black cursor-pointer transition-colors"
+          size="icon"
+          className="rounded-lg hover:bg-muted disabled:opacity-20 text-[10px] text-muted-foreground font-black cursor-pointer transition-colors"
           type="button"
           title={t("reports.builder.moveDown")}
         >
@@ -174,7 +176,8 @@ function DraggableField({
         <Button
           onClick={onRemove}
           variant="ghost"
-          className="w-5 h-5 flex items-center justify-center p-0 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive cursor-pointer transition-all"
+          size="icon"
+          className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive cursor-pointer transition-all"
           type="button"
           title={t("reports.builder.removeField")}
         >
@@ -519,7 +522,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           onClick={onClose}
           variant="ghost"
           size="icon"
-          className="h-9 w-9 p-0 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+          className="rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
           type="button"
         >
           <X className="w-5 h-5" />
@@ -598,7 +601,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                     key={availableField}
                     onClick={() => addField(availableField)}
                     variant="ghost"
-                    className="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-primary/10 text-xs font-semibold text-left text-foreground transition-all group cursor-pointer justify-start h-auto"
+                    className="w-full flex items-center gap-2.5 px-3 rounded-xl hover:bg-primary/10 text-xs font-semibold text-left text-foreground transition-all group cursor-pointer justify-start"
                     type="button"
                   >
                     <Plus className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-transform shrink-0" />
@@ -655,18 +658,18 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                 {t("reports.builder.docAlignment")}
               </label>
               <div className="flex gap-1 p-1 bg-muted/30 border border-border/50 rounded-xl">
-                 <Button 
+                 <Button
                   onClick={() => setOrientation("p")}
                   variant={orientation === "p" ? "default" : "ghost"}
-                  className={`flex-1 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer h-auto ${orientation === "p" ? "bg-card text-foreground shadow-sm hover:bg-card hover:text-foreground" : "text-sidebar-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                  className={`flex-1 min-h-11 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${orientation === "p" ? "bg-card text-foreground shadow-sm hover:bg-card hover:text-foreground" : "text-sidebar-muted-foreground hover:text-foreground hover:bg-muted"}`}
                   type="button"
                  >
                    {t("reports.builder.portrait")}
                  </Button>
-                 <Button 
+                 <Button
                   onClick={() => setOrientation("l")}
                   variant={orientation === "l" ? "default" : "ghost"}
-                  className={`flex-1 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer h-auto ${orientation === "l" ? "bg-card text-foreground shadow-sm hover:bg-card hover:text-foreground" : "text-sidebar-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                  className={`flex-1 min-h-11 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${orientation === "l" ? "bg-card text-foreground shadow-sm hover:bg-card hover:text-foreground" : "text-sidebar-muted-foreground hover:text-foreground hover:bg-muted"}`}
                   type="button"
                  >
                    {t("reports.builder.landscape")}
@@ -706,7 +709,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                 <Button
                   onClick={() => setSelectedFields([])}
                   variant="link"
-                  className="text-[9px] font-bold uppercase tracking-wider text-destructive hover:text-destructive/80 transition-colors flex items-center gap-1 cursor-pointer h-auto p-0 hover:no-underline"
+                  className="min-h-11 text-xs font-bold uppercase tracking-wider text-destructive hover:text-destructive/80 transition-colors flex items-center gap-1 cursor-pointer px-2 hover:no-underline"
                   type="button"
                 >
                   <Trash2 className="w-3.5 h-3.5" /> {t("reports.builder.clearColumns")}
@@ -762,7 +765,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                   <Button 
                     onClick={handleExportExcel}
                     variant="outline"
-                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-success hover:text-success px-3 py-1.5 rounded-xl border border-success/30 bg-success/10 hover:bg-success/15 transition-all shadow-sm cursor-pointer h-auto"
+                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-success hover:text-success px-3 rounded-xl border border-success/30 bg-success/10 hover:bg-success/15 transition-all shadow-sm cursor-pointer"
                     type="button"
                     title={t("reports.builder.exportExcelTooltip")}
                   >
@@ -771,7 +774,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                   <Button 
                     onClick={handleExportPdf}
                     variant="outline"
-                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-destructive hover:text-destructive px-3 py-1.5 rounded-xl border border-destructive/30 bg-destructive/10 hover:bg-destructive/15 transition-all shadow-sm cursor-pointer h-auto"
+                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-destructive hover:text-destructive px-3 rounded-xl border border-destructive/30 bg-destructive/10 hover:bg-destructive/15 transition-all shadow-sm cursor-pointer"
                     type="button"
                     title={t("reports.builder.exportPdfTooltip")}
                   >

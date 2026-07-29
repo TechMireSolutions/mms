@@ -109,6 +109,7 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
           )}
 
           <Card accentColor="primary" className="p-0 overflow-hidden">
+            <div className="overflow-x-auto max-w-full">
             <table className="w-full text-sm">
               <caption className="sr-only">{t("accounting.journal.detail.account")}</caption>
               <thead className="bg-muted/60 border-b border-border/40">
@@ -152,6 +153,7 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
                 </tr>
               </tfoot>
             </table>
+            </div>
           </Card>
 
           <div className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border ${Math.abs(totalDebit - totalCredit) < 0.01 ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"}`} role="status">

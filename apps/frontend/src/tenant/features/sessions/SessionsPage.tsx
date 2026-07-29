@@ -172,7 +172,6 @@ function SessionCard({
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
               aria-label={t("sessions.restore")}
               onClick={(event) => {
                 event.stopPropagation();
@@ -186,7 +185,6 @@ function SessionCard({
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
               aria-label={t("common.delete")}
               onClick={(event) => {
                 event.stopPropagation();
@@ -713,7 +711,7 @@ export default function Sessions() {
                               <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label={t("common.actions")}>
+                                    <Button type="button" variant="ghost" size="icon" aria-label={t("common.actions")}>
                                       <ChevronDown className="w-4 h-4" />
                                     </Button>
                                   </DropdownMenuTrigger>

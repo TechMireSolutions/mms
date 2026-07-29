@@ -215,7 +215,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
             variant="ghost"
             size="sm"
             onClick={() => setSelectedClass(null)}
-            className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+            className="px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
           >
             <X className="w-3 h-3 me-1" />
             {t("attendance.report.clearClassFilter")}
@@ -239,6 +239,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
         <EmptyState icon={UserCheck} title={t("attendance.report.noData")} description={t("attendance.report.adjustFilters")} compact />
       ) : (
         <Card className="overflow-hidden">
+          <div className="overflow-x-auto max-w-full">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
@@ -278,6 +279,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
               ))}
             </tbody>
           </table>
+          </div>
         </Card>
       )}
 
@@ -302,6 +304,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
         <EmptyState icon={Users} title={t("attendance.report.noStudentRecords")} compact />
       ) : (
         <Card className="overflow-hidden">
+          <div className="overflow-x-auto max-w-full">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
@@ -332,6 +335,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
               ))}
             </tbody>
           </table>
+          </div>
         </Card>
       )}
 

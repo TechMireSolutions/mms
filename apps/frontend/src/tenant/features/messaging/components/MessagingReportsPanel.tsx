@@ -246,7 +246,7 @@ export function MessagingReportsPanel({
                                   ? toMessagingRecipient(contact, { getDisplayName, getPrimaryPhone, getPrimaryEmail })
                                   : { id: log.contactId, name, phone: '', email: '' });
                               }}
-                              className="h-7 text-xs font-semibold text-primary hover:bg-primary/10"
+                              className="text-xs font-semibold text-primary hover:bg-primary/10"
                             >
                               <RotateCcw className="me-1 h-3.5 w-3.5" />
                               {t('messaging.resend')}

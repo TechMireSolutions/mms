@@ -168,7 +168,7 @@ export function BudgetTab({ session, onUpdate, canWrite }: BudgetTabProps) {
           </div>
           {canWrite && <Button
             onClick={() => setAddType("income")}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-success/10 text-success text-xs font-semibold hover:bg-success/15 border border-success/20 transition-colors h-auto hover:text-success"
+            className="flex items-center gap-1 min-h-11 px-3 py-1.5 rounded-lg bg-success/10 text-success text-xs font-semibold hover:bg-success/15 border border-success/20 transition-colors hover:text-success"
           >
             <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.budget.addIncome")}
           </Button>}
@@ -185,7 +185,7 @@ export function BudgetTab({ session, onUpdate, canWrite }: BudgetTabProps) {
                 </div>
                  <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{formatDate(incomeEntry.date)}</p>
                  <p className="text-[13px] font-bold text-success flex-shrink-0 m-0">{formatMoney(incomeEntry.amount, session.currency)}</p>
-                {canWrite && <Button aria-label={t("sessions.budget.deleteIncomeNamed", { name: incomeEntry.category })} onClick={() => setDeleteTarget({ type: "income", entry: incomeEntry })} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 w-7 h-7" variant="ghost" size="icon">
+                {canWrite && <Button aria-label={t("sessions.budget.deleteIncomeNamed", { name: incomeEntry.category })} onClick={() => setDeleteTarget({ type: "income", entry: incomeEntry })} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0" variant="ghost" size="icon">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>}
               </article>
@@ -202,7 +202,7 @@ export function BudgetTab({ session, onUpdate, canWrite }: BudgetTabProps) {
           </div>
           {canWrite && <Button
             onClick={() => setAddType("expense")}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-semibold hover:bg-destructive/15 border border-destructive/20 transition-colors h-auto hover:text-destructive"
+            className="flex items-center gap-1 min-h-11 px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-semibold hover:bg-destructive/15 border border-destructive/20 transition-colors hover:text-destructive"
           >
             <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.budget.addExpense")}
           </Button>}
@@ -219,7 +219,7 @@ export function BudgetTab({ session, onUpdate, canWrite }: BudgetTabProps) {
                 </div>
                  <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{formatDate(expenseEntry.date)}</p>
                  <p className="text-[13px] font-bold text-destructive flex-shrink-0 m-0">{formatMoney(expenseEntry.amount, session.currency)}</p>
-                {canWrite && <Button aria-label={t("sessions.budget.deleteExpenseNamed", { name: expenseEntry.category })} onClick={() => setDeleteTarget({ type: "expense", entry: expenseEntry })} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 w-7 h-7" variant="ghost" size="icon">
+                {canWrite && <Button aria-label={t("sessions.budget.deleteExpenseNamed", { name: expenseEntry.category })} onClick={() => setDeleteTarget({ type: "expense", entry: expenseEntry })} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0" variant="ghost" size="icon">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>}
               </article>

@@ -24,7 +24,7 @@ export default function AppLayout(): React.JSX.Element {
   useSessionTimeout();
 
   return (
-    <div className="min-h-screen bg-background islamic-pattern">
+    <div className="box-border min-h-screen w-full max-w-full overflow-x-hidden bg-background islamic-pattern">
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">
         <Sidebar
@@ -52,7 +52,7 @@ export default function AppLayout(): React.JSX.Element {
             event.stopPropagation();
             setMobileOpen(true);
           }}
-          className="shrink-0 rounded-lg p-2 transition-colors hover:bg-muted"
+          className="shrink-0 rounded-lg transition-colors hover:bg-muted"
         >
           <Menu className="h-5 w-5 text-foreground" />
         </Button>
@@ -61,7 +61,7 @@ export default function AppLayout(): React.JSX.Element {
             <img
               src={branding.logoUrl}
               alt="Logo"
-              className={`h-7 w-7 shrink-0 rounded-md ${LOGO_IMAGE}`}
+              className={`h-7 w-7 max-w-full shrink-0 rounded-md ${LOGO_IMAGE}`}
               width={28}
               height={28}
             />
@@ -81,16 +81,16 @@ export default function AppLayout(): React.JSX.Element {
 
       {/* Main Content */}
       <main
-        className={`pt-14 lg:pt-16 min-h-screen flex flex-col transition-all duration-300 ${
+        className={`min-h-screen min-w-0 max-w-full flex flex-col pt-14 lg:pt-16 transition-all duration-300 ${
           isRtl
             ? sidebarCollapsed ? "lg:pr-[72px]" : "lg:pr-[260px]"
             : sidebarCollapsed ? "lg:pl-[72px]" : "lg:pl-[260px]"
         }`}
       >
-        <div className="flex-grow p-4 md:p-6 lg:p-8">
+        <div className="min-w-0 max-w-full flex-grow p-4 md:p-6 lg:p-8">
           <Outlet />
         </div>
-        <footer className="py-3 px-6 border-t border-border/50 text-center text-[10.5px] font-semibold text-muted-foreground bg-card/20 select-none">
+        <footer className="border-t border-border/50 bg-card/20 px-4 py-3 text-center text-xs font-semibold text-muted-foreground select-none sm:px-6">
           {branding.footerText || "© 2026 MMS. All rights reserved."}
         </footer>
       </main>

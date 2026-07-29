@@ -39,7 +39,7 @@ export function PlatformPageShell({
   return (
     <div
       dir={dir}
-      className="min-h-screen w-full overflow-x-hidden bg-background flex flex-col selection:bg-primary/10 selection:text-primary"
+      className="box-border flex min-h-screen w-full max-w-full overflow-x-hidden flex-col bg-background selection:bg-primary/10 selection:text-primary"
     >
       {isPlatformAuthenticated ? (
         <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md shadow-sm transition-all duration-300">
@@ -66,7 +66,7 @@ export function PlatformPageShell({
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "h-9 px-3 rounded-lg font-bold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
+                  "min-h-11 px-3 rounded-lg font-bold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
                   location.pathname === ROUTES.home
                     ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
@@ -84,7 +84,7 @@ export function PlatformPageShell({
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-9 px-3 rounded-lg font-bold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
+                    "min-h-11 px-3 rounded-lg font-bold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
                     location.pathname === ROUTES.platformAdmins
                       ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary shadow-sm"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
@@ -102,7 +102,7 @@ export function PlatformPageShell({
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "h-9 px-3 rounded-lg font-bold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
+                  "min-h-11 px-3 rounded-lg font-bold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
                   location.pathname === ROUTES.platformAccount
                     ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
@@ -139,7 +139,7 @@ export function PlatformPageShell({
                 variant="ghost"
                 size="icon"
                 onClick={platformLogout}
-                className="h-9 w-9 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:scale-105 active:scale-95 transition-all"
+                className="min-h-11 min-w-11 h-11 w-11 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:scale-105 active:scale-95 transition-all"
                 title={t("platform.signOut")}
                 aria-label={t("platform.signOut")}
               >
@@ -153,7 +153,7 @@ export function PlatformPageShell({
             <Link
               to={ROUTES.home}
               className={cn(
-                "flex flex-col items-center gap-1 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-all active:scale-95",
+                "flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-lg px-3 py-2 text-xs font-bold transition-all active:scale-95",
                 location.pathname === ROUTES.home
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
@@ -167,7 +167,7 @@ export function PlatformPageShell({
               <Link
                 to={ROUTES.platformAdmins}
                 className={cn(
-                  "flex flex-col items-center gap-1 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-all active:scale-95",
+                  "flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-lg px-3 py-2 text-xs font-bold transition-all active:scale-95",
                   location.pathname === ROUTES.platformAdmins
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
@@ -181,7 +181,7 @@ export function PlatformPageShell({
             <Link
               to={ROUTES.platformAccount}
               className={cn(
-                "flex flex-col items-center gap-1 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-all active:scale-95",
+                "flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-lg px-3 py-2 text-xs font-bold transition-all active:scale-95",
                 location.pathname === ROUTES.platformAccount
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
@@ -195,7 +195,7 @@ export function PlatformPageShell({
       ) : null}
 
       <main className="flex-1 w-full flex flex-col justify-center py-8">
-        <div className={cn("w-full mx-auto px-4 sm:px-6", maxClass)}>
+        <div className={cn("box-border w-full min-w-0 mx-auto px-4 sm:px-6", maxClass)}>
           {children}
         </div>
       </main>
