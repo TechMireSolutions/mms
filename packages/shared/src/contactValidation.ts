@@ -14,6 +14,18 @@ const REQUIRED_TAB_I18N: Partial<Record<string, AppTranslationKey>> = {
 
 const EMAIL_RE = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
 
+/** Absolute URL, scheme-less domain/path, or @handle / username. */
+export function isUrlOrSocialHandle(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) return true;
+  if (/\s/.test(trimmed)) return false;
+  if (/^https?:\/\/\S+$/i.test(trimmed)) return true;
+  if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}([/?#]\S*)?$/i.test(trimmed)) return true;
+  if (/^@[\w][\w.-]*$/.test(trimmed)) return true;
+  if (/^[\w][\w.-]*(\/[\w./-]*)?$/.test(trimmed)) return true;
+  return false;
+}
+
 const TEXT_LIKE_FIELD_TYPES: ReadonlySet<FieldDefinition['type']> = new Set([
   "text",
   "textarea",
@@ -99,7 +111,10 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
       break;
     }
     case "url": {
-      baseSchema = z.string().url(`${fieldDefinition.label} is not a valid URL.`);
+      // Accept absolute URLs, scheme-less domains, or social handles (existing social configs may still use type=url).
+      baseSchema = z.string().refine((value) => isUrlOrSocialHandle(value), {
+        message: `${fieldDefinition.label} is not a valid URL or handle.`,
+      });
       break;
     }
     case "date": {

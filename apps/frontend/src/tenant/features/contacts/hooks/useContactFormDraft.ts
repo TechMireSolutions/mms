@@ -5,6 +5,27 @@ import { useContactFormSubLists } from "@/tenant/features/contacts/hooks/useCont
 import { useContactFormSave } from "@/tenant/features/contacts/hooks/useContactFormSave";
 import { useContactFormDraftHelpers } from "@/tenant/features/contacts/hooks/useContactFormDraftHelpers";
 
+/** Ensure Social / Emergency tabs open with one editable row (zero-click). */
+function withEmptyCollectionRows(
+  draft: Partial<Contact>,
+  socialPlatforms: string[],
+  relationshipOptions: string[],
+): Partial<Contact> {
+  const socials = draft.socials ?? [];
+  const emergencyContacts = draft.emergencyContacts ?? [];
+  return {
+    ...draft,
+    socials:
+      socials.length > 0
+        ? socials
+        : [{ platform: socialPlatforms[0] || "Facebook", url: "" }],
+    emergencyContacts:
+      emergencyContacts.length > 0
+        ? emergencyContacts
+        : [{ relationship: relationshipOptions[0] || "Father", contactId: "" }],
+  };
+}
+
 export function useContactFormDraft({
   open,
   contact,
@@ -47,7 +68,11 @@ export function useContactFormDraft({
   }, [countryCodes, defaultCountryCode]);
 
   const [contactDraft, setContactDraft] = useState<Partial<Contact>>(() =>
-    normalizeContactForEdit(contact, initialDraft, defaultCity, defaultProvince, defaultCountry),
+    withEmptyCollectionRows(
+      normalizeContactForEdit(contact, initialDraft, defaultCity, defaultProvince, defaultCountry),
+      socialPlatforms,
+      relationshipOptions,
+    ),
   );
 
   const { saving, validationErrors, setValidationErrors, handleSave } = useContactFormSave({
@@ -59,7 +84,7 @@ export function useContactFormDraft({
     onValidationTab,
   });
 
-  const { addSubListItem, updateSubListItem, removeSubListItem } =
+  const { addSubListItem, ensureSubListItem, updateSubListItem, removeSubListItem } =
     useContactFormSubLists(setContactDraft);
 
   const {
@@ -86,7 +111,11 @@ export function useContactFormDraft({
   useEffect(() => {
     if (!open) return;
     setContactDraft(
-      normalizeContactForEdit(contact, initialDraft, defaultCity, defaultProvince, defaultCountry),
+      withEmptyCollectionRows(
+        normalizeContactForEdit(contact, initialDraft, defaultCity, defaultProvince, defaultCountry),
+        socialPlatforms,
+        relationshipOptions,
+      ),
     );
     setValidationErrors([]);
   }, [open, contact, initialDraft, defaultCity, defaultProvince, defaultCountry, setValidationErrors]);
@@ -114,6 +143,7 @@ export function useContactFormDraft({
     handleAvatarChange,
     handlePhoneBlur,
     addSubListItem,
+    ensureSubListItem,
     updateSubListItem,
     removeSubListItem,
     handleSave,

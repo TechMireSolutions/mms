@@ -1,4 +1,4 @@
-import React, { ElementType, ReactNode } from "react";
+import React, { ElementType, ReactNode, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -82,6 +82,8 @@ export interface ContactSubListShellProps {
   emptyMessage: string;
   addLabel: string;
   onAdd: () => void;
+  /** Idempotent seed when the list is empty (zero-click first row). */
+  onEnsureRow: () => void;
   children: ReactNode;
 }
 
@@ -92,8 +94,14 @@ export function ContactSubListShell({
   emptyMessage,
   addLabel,
   onAdd,
+  onEnsureRow,
   children,
 }: ContactSubListShellProps): JSX.Element {
+  useEffect(() => {
+    if (!isEmpty) return;
+    onEnsureRow();
+  }, [isEmpty, onEnsureRow]);
+
   return (
     <div className="space-y-3 text-start">
       {isEmpty ? <EmptyListCard icon={emptyIcon} message={emptyMessage} /> : null}

@@ -20,16 +20,21 @@ export function ContactSocialsTab({
   socialPlatforms,
   getListItemError,
   addSubListItem,
+  ensureSubListItem,
   updateSubListItem,
   removeSubListItem,
 }: ContactSocialsTabProps): JSX.Element {
   const { t } = useTranslation();
   const socials = contactDraft.socials || [];
+  const emptySocial = () => ({
+    platform: resolveSocialPlatformLabel(undefined, socialPlatforms, t),
+    url: "",
+  });
   const addSocial = () => {
-    addSubListItem("socials", {
-      platform: resolveSocialPlatformLabel(undefined, socialPlatforms, t),
-      url: "",
-    });
+    addSubListItem("socials", emptySocial());
+  };
+  const ensureSocial = () => {
+    ensureSubListItem("socials", emptySocial());
   };
   const removeSocial = (idx: number) => removeSubListItem("socials", idx);
   const updateSocial = (idx: number, patch: Partial<SocialLink>) => updateSubListItem("socials", idx, patch);
@@ -41,6 +46,7 @@ export function ContactSocialsTab({
       emptyMessage={t("contacts.form.noSocialLinksYet")}
       addLabel={t("contacts.form.addSocialLink")}
       onAdd={addSocial}
+      onEnsureRow={ensureSocial}
     >
       <AnimatePresence initial={false}>
         {socials.map((soc, idx) => {

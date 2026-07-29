@@ -20,16 +20,21 @@ export function ContactEmailsTab({
   emailLabels,
   getListItemError,
   addSubListItem,
+  ensureSubListItem,
   updateSubListItem,
   removeSubListItem,
 }: ContactEmailsTabProps): JSX.Element {
   const { t } = useTranslation();
   const emails = contactDraft.emails || [];
+  const emptyEmail = () => ({
+    label: resolveEmailLabel(undefined, emailLabels, t),
+    address: "",
+  });
   const addEmail = () => {
-    addSubListItem("emails", {
-      label: resolveEmailLabel(undefined, emailLabels, t),
-      address: "",
-    });
+    addSubListItem("emails", emptyEmail());
+  };
+  const ensureEmail = () => {
+    ensureSubListItem("emails", emptyEmail());
   };
   const removeEmail = (idx: number) => removeSubListItem("emails", idx);
   const updateEmail = (idx: number, patch: Partial<EmailAddress>) => updateSubListItem("emails", idx, patch);
@@ -41,6 +46,7 @@ export function ContactEmailsTab({
       emptyMessage={t("contacts.form.noEmailAddressesYet")}
       addLabel={t("contacts.form.addEmailAddress")}
       onAdd={addEmail}
+      onEnsureRow={ensureEmail}
     >
       <AnimatePresence initial={false}>
         {emails.map((email, idx) => {

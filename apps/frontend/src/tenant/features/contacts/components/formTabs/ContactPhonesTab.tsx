@@ -29,18 +29,23 @@ export function ContactPhonesTab({
   countryCodeOptions,
   getListItemError,
   addSubListItem,
+  ensureSubListItem,
   updateSubListItem,
   removeSubListItem,
   handlePhoneBlur,
 }: ContactPhonesTabProps): JSX.Element {
   const { t } = useTranslation();
   const phones = contactDraft.phones || [];
+  const emptyPhone = () => ({
+    label: resolvePhoneLabel(undefined, phoneLabels, t),
+    number: "",
+    countryCode: defaultCountryCode,
+  });
   const addPhone = () => {
-    addSubListItem("phones", {
-      label: resolvePhoneLabel(undefined, phoneLabels, t),
-      number: "",
-      countryCode: defaultCountryCode,
-    });
+    addSubListItem("phones", emptyPhone());
+  };
+  const ensurePhone = () => {
+    ensureSubListItem("phones", emptyPhone());
   };
   const removePhone = (idx: number) => removeSubListItem("phones", idx);
   const updatePhone = (idx: number, patch: Partial<PhoneNumber>) => updateSubListItem("phones", idx, patch);
@@ -52,6 +57,7 @@ export function ContactPhonesTab({
       emptyMessage={t("contacts.form.noPhoneNumbersYet")}
       addLabel={t("contacts.form.addPhoneNumber")}
       onAdd={addPhone}
+      onEnsureRow={ensurePhone}
     >
       <AnimatePresence initial={false}>
         {phones.map((phone, idx) => {

@@ -7,6 +7,11 @@ export type AddSubListItem = <K extends ContactSubListKey>(
   newItem: NonNullable<Contact[K]>[number],
 ) => void;
 
+export type EnsureSubListItem = <K extends ContactSubListKey>(
+  fieldKey: K,
+  newItem: NonNullable<Contact[K]>[number],
+) => void;
+
 export type UpdateSubListItem = <K extends ContactSubListKey>(
   fieldKey: K,
   idx: number,
@@ -17,6 +22,7 @@ export type RemoveSubListItem = (fieldKey: ContactSubListKey, idx: number) => vo
 
 export interface ContactSubListMutationProps {
   addSubListItem: AddSubListItem;
+  ensureSubListItem: EnsureSubListItem;
   updateSubListItem: UpdateSubListItem;
   removeSubListItem: RemoveSubListItem;
 }

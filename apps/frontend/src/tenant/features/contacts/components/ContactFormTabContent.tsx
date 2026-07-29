@@ -51,6 +51,7 @@ export function ContactFormTabContent({
           countryCodeOptions={draft.countryCodeOptions}
           getListItemError={draft.getListItemError}
           addSubListItem={draft.addSubListItem}
+          ensureSubListItem={draft.ensureSubListItem}
           updateSubListItem={draft.updateSubListItem}
           removeSubListItem={draft.removeSubListItem}
           handlePhoneBlur={draft.handlePhoneBlur}
@@ -64,6 +65,7 @@ export function ContactFormTabContent({
           emailLabels={draft.emailLabels}
           getListItemError={draft.getListItemError}
           addSubListItem={draft.addSubListItem}
+          ensureSubListItem={draft.ensureSubListItem}
           updateSubListItem={draft.updateSubListItem}
           removeSubListItem={draft.removeSubListItem}
         />
@@ -79,6 +81,7 @@ export function ContactFormTabContent({
           defaultCountry={defaultCountry}
           getListItemError={draft.getListItemError}
           addSubListItem={draft.addSubListItem}
+          ensureSubListItem={draft.ensureSubListItem}
           updateSubListItem={draft.updateSubListItem}
           removeSubListItem={draft.removeSubListItem}
         />
@@ -91,6 +94,7 @@ export function ContactFormTabContent({
           socialPlatforms={draft.socialPlatforms}
           getListItemError={draft.getListItemError}
           addSubListItem={draft.addSubListItem}
+          ensureSubListItem={draft.ensureSubListItem}
           updateSubListItem={draft.updateSubListItem}
           removeSubListItem={draft.removeSubListItem}
         />
@@ -103,6 +107,7 @@ export function ContactFormTabContent({
           relationshipOptions={draft.relationshipOptions}
           getListItemError={draft.getListItemError}
           addSubListItem={draft.addSubListItem}
+          ensureSubListItem={draft.ensureSubListItem}
           updateSubListItem={draft.updateSubListItem}
           removeSubListItem={draft.removeSubListItem}
         />

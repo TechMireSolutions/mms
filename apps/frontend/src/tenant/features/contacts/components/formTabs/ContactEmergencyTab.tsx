@@ -18,16 +18,21 @@ export function ContactEmergencyTab({
   relationshipOptions,
   getListItemError,
   addSubListItem,
+  ensureSubListItem,
   updateSubListItem,
   removeSubListItem,
 }: ContactEmergencyTabProps): JSX.Element {
   const { t } = useTranslation();
   const emergencyContacts = contactDraft.emergencyContacts || [];
+  const emptyEmergency = () => ({
+    relationship: relationshipOptions[0] || RELATIONSHIPS[0] || "",
+    contactId: "",
+  });
   const addEmergency = () => {
-    addSubListItem("emergencyContacts", {
-      relationship: relationshipOptions[0] || RELATIONSHIPS[0] || "",
-      contactId: "",
-    });
+    addSubListItem("emergencyContacts", emptyEmergency());
+  };
+  const ensureEmergency = () => {
+    ensureSubListItem("emergencyContacts", emptyEmergency());
   };
   const removeEmergency = (idx: number) => removeSubListItem("emergencyContacts", idx);
   const updateEmergency = (idx: number, patch: Partial<EmergencyContact>) =>
@@ -49,6 +54,7 @@ export function ContactEmergencyTab({
       emptyMessage={t("contacts.form.noEmergencyContactsYet")}
       addLabel={t("contacts.form.addEmergencyContact")}
       onAdd={addEmergency}
+      onEnsureRow={ensureEmergency}
     >
       <AnimatePresence initial={false}>
         {emergencyContacts.map((em, idx) => {
@@ -75,7 +81,6 @@ export function ContactEmergencyTab({
                     });
                   }}
                   excludeIds={excludeIds(idx)}
-                  allowCreate={false}
                   searchPlaceholder={t("contacts.form.searchByName")}
                   emptyTitle={t("contacts.form.noContactsFound")}
                   id={`emergency-contact-${idx}`}

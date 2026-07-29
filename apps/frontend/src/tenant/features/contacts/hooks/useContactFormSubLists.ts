@@ -3,6 +3,7 @@ import type { Contact } from "@mms/shared";
 import type {
   AddSubListItem,
   ContactSubListKey,
+  EnsureSubListItem,
   RemoveSubListItem,
   UpdateSubListItem,
 } from "@/tenant/features/contacts/components/formTabs/types";
@@ -18,6 +19,18 @@ export function useContactFormSubLists(
           ...prev,
           [fieldKey]: [...currentList, newItem],
         };
+      });
+    },
+    [setContactDraft],
+  );
+
+  /** Seed one row when the list is empty (idempotent under Strict Mode). */
+  const ensureSubListItem = useCallback<EnsureSubListItem>(
+    (fieldKey, newItem) => {
+      setContactDraft((prev) => {
+        const currentList = (prev[fieldKey] as NonNullable<Contact[typeof fieldKey]>) || [];
+        if (currentList.length > 0) return prev;
+        return { ...prev, [fieldKey]: [newItem] };
       });
     },
     [setContactDraft],
@@ -49,5 +62,5 @@ export function useContactFormSubLists(
     [setContactDraft],
   );
 
-  return { addSubListItem, updateSubListItem, removeSubListItem };
+  return { addSubListItem, ensureSubListItem, updateSubListItem, removeSubListItem };
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { calculateSmsSegments } from "./smsUtils.js";
-import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray, personalizeMessage, validateRecipientAddress, getDisplayName, MESSAGING_VARIABLE_TOKENS } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray, personalizeMessage, validateRecipientAddress, getDisplayName, MESSAGING_VARIABLE_TOKENS, normalizeContactForEdit, cleanContactDraft } from "./utils.js";
 
 
 
@@ -606,7 +606,42 @@ describe("getDisplayName", () => {
   });
 });
 
+describe("normalizeContactForEdit", () => {
+  it("pre-populates one empty row for socials and emergency contacts", () => {
+    const draft = normalizeContactForEdit(undefined, undefined);
+    expect(draft.socials).toEqual([{ platform: "Facebook", url: "" }]);
+    expect(draft.emergencyContacts).toEqual([{ relationship: "Father", contactId: "" }]);
+  });
 
+  it("keeps existing socials and emergency contacts", () => {
+    const draft = normalizeContactForEdit(
+      {
+        socials: [{ platform: "Instagram", url: "https://instagram.com/a" }],
+        emergencyContacts: [{ relationship: "Mother", contactId: "c-2" }],
+      },
+      undefined,
+    );
+    expect(draft.socials).toEqual([{ platform: "Instagram", url: "https://instagram.com/a" }]);
+    expect(draft.emergencyContacts).toEqual([{ relationship: "Mother", contactId: "c-2" }]);
+  });
+});
+
+describe("cleanContactDraft", () => {
+  it("strips blank social and emergency rows before save", () => {
+    const cleaned = cleanContactDraft({
+      socials: [
+        { platform: "WhatsApp", url: "" },
+        { platform: "Instagram", url: "https://instagram.com/a" },
+      ],
+      emergencyContacts: [
+        { relationship: "Father", contactId: "" },
+        { relationship: "Mother", contactId: "c-2" },
+      ],
+    });
+    expect(cleaned.socials).toEqual([{ platform: "Instagram", url: "https://instagram.com/a" }]);
+    expect(cleaned.emergencyContacts).toEqual([{ relationship: "Mother", contactId: "c-2" }]);
+  });
+});
 
 
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildDynamicContactSchema } from '../contactValidation.js';
+import { buildDynamicContactSchema, isUrlOrSocialHandle } from '../contactValidation.js';
 import type { FieldConfig } from '../contactTypes.js';
 
 describe('buildDynamicContactSchema', () => {
@@ -134,5 +134,82 @@ describe('buildDynamicContactSchema', () => {
       myMultiSelect: ['W']
     });
     expect(invalidMulti.success).toBe(false);
+  });
+
+  it('accepts social handles and URLs for url-typed fields', () => {
+    const config: FieldConfig = {
+      version: 1,
+      enabledTabs: ['basic', 'socials'],
+      requiredTabs: [],
+      fields: {
+        basic: [
+          {
+            key: 'firstName',
+            label: 'First Name',
+            type: 'text',
+            enabled: true,
+            order: 1,
+            required: true,
+          },
+        ],
+        socials: [
+          {
+            key: 'platform',
+            label: 'Platform',
+            type: 'select',
+            options: ['Facebook'],
+            enabled: true,
+            order: 0,
+            required: false,
+          },
+          {
+            key: 'url',
+            label: 'Social URL / Handle',
+            type: 'url',
+            enabled: true,
+            order: 1,
+            required: false,
+          },
+        ],
+      },
+    };
+
+    const schema = buildDynamicContactSchema(
+      config,
+      new Set(config.enabledTabs),
+      new Set(config.requiredTabs),
+      config.fields,
+      'en',
+    );
+
+    expect(
+      schema.safeParse({
+        firstName: 'John',
+        socials: [{ platform: 'Facebook', url: '@madrasa' }],
+      }).success,
+    ).toBe(true);
+    expect(
+      schema.safeParse({
+        firstName: 'John',
+        socials: [{ platform: 'Facebook', url: 'https://instagram.com/a' }],
+      }).success,
+    ).toBe(true);
+    expect(
+      schema.safeParse({
+        firstName: 'John',
+        socials: [{ platform: 'Facebook', url: 'not a handle' }],
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe('isUrlOrSocialHandle', () => {
+  it('accepts urls, domains, and handles', () => {
+    expect(isUrlOrSocialHandle('')).toBe(true);
+    expect(isUrlOrSocialHandle('https://x.com/a')).toBe(true);
+    expect(isUrlOrSocialHandle('instagram.com/user')).toBe(true);
+    expect(isUrlOrSocialHandle('@user_name')).toBe(true);
+    expect(isUrlOrSocialHandle('username')).toBe(true);
+    expect(isUrlOrSocialHandle('bad value')).toBe(false);
   });
 });

@@ -26,19 +26,24 @@ export function ContactAddressesTab({
   defaultCountry,
   getListItemError,
   addSubListItem,
+  ensureSubListItem,
   updateSubListItem,
   removeSubListItem,
 }: ContactAddressesTabProps): JSX.Element {
   const { t } = useTranslation();
   const addresses = contactDraft.addresses || [];
+  const emptyAddress = () => ({
+    label: resolveAddressLabel(undefined, addressLabels, t),
+    line1: "",
+    city: defaultCity,
+    state: defaultProvince,
+    country: defaultCountry,
+  });
   const addAddress = () => {
-    addSubListItem("addresses", {
-      label: resolveAddressLabel(undefined, addressLabels, t),
-      line1: "",
-      city: defaultCity,
-      state: defaultProvince,
-      country: defaultCountry,
-    });
+    addSubListItem("addresses", emptyAddress());
+  };
+  const ensureAddress = () => {
+    ensureSubListItem("addresses", emptyAddress());
   };
   const removeAddress = (idx: number) => removeSubListItem("addresses", idx);
   const updateAddress = (idx: number, patch: Partial<Address>) => updateSubListItem("addresses", idx, patch);
@@ -50,6 +55,7 @@ export function ContactAddressesTab({
       emptyMessage={t("contacts.form.noAddressesYet")}
       addLabel={t("contacts.form.addAddress")}
       onAdd={addAddress}
+      onEnsureRow={ensureAddress}
     >
       <AnimatePresence initial={false}>
         {addresses.map((addr, idx) => {
