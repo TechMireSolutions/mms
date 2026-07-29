@@ -138,11 +138,17 @@ Before declaring any layout implementation complete, verify:
 2. No text overlaps or clips at edge viewport widths.
 3. Form controls, buttons, and inputs remain touch-friendly at small viewports.
 4. RTL (`dir="rtl"`) does not introduce page-level horizontal overflow — logical CSS (`ps`/`pe`/`ms`/`me`/`start`/`end`/`text-start`).
-5. Automated smoke: `e2e/tests/responsive-shell.spec.ts` (overflow + touch targets + RTL at the three viewports).
+5. Automated smoke:
+   - Public / unauthenticated: `e2e/tests/responsive-shell.spec.ts` (overflow + touch targets + RTL at 375 / 768 / 1440).
+   - Authenticated AppLayout: `e2e/tests/responsive-authenticated.spec.ts` (dashboard overflow, RTL, mobile drawer / desktop header chrome).
+   - Shared helpers: `e2e/helpers/responsive.ts`, `e2e/helpers/tenantBootstrap.ts`.
+   - CI runs these two files as separate steps (`pnpm test:e2e tests/…` — do not insert a bare `--` before the path; it is forwarded to Playwright and drops the filter).
 
 ### Systemic enforcement (do not fork)
-- Shell overflow / fluid width: `AppLayout`, `ModulePageShell`, `PlatformPageShell`, `index.css` (`box-sizing`, `#root` / `body` `overflow-x: hidden`, `img`/`video` `max-width: 100%`).
+- Shell overflow / fluid width: `AppLayout`, `ModulePageShell`, `PlatformPageShell`, `index.css` (`box-sizing`, `#root` / `body` `overflow-x: hidden`, `img`/`video`/`svg` `max-width: 100%`).
 - Touch targets: `Button` / `ActionButton` sizes use `min-h-11` (44px); modal/drawer closes and mobile nav chrome match.
+- Toast chrome: toast provider/viewport use `pointer-events-none`; individual toasts keep `pointer-events-auto` so empty toast layers never block shell controls.
 - Tables: shared `Table` wraps with `overflow-x-auto`; bare `<table>` inside cards must sit in `overflow-x-auto max-w-full`.
 - Breakpoints: mobile-default + `lg:` — avoid `max-lg:` for layout width (see `SubTabBar`).
-- Regression tests: `e2e/tests/responsive-shell.spec.ts`.
+- Auth e2e selectors: platform setup/sign-in and force-password-change keep **stable** field ids (`#platform-setup-email`, `#platform-email`, `#current-password`, …) — do not replace with `useId()` on those screens.
+- Regression tests: `e2e/tests/responsive-shell.spec.ts`, `e2e/tests/responsive-authenticated.spec.ts`.
