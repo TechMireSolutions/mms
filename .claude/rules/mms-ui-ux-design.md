@@ -101,3 +101,38 @@ Use `useModuleTierTabs()` to render exactly three tabs: `work` (operational list
 - **Long lists**: Prefer server pagination; virtualize dense Work tables when row counts are large.
 - **Observer De-registration**: Clean up ResizeObservers, event listeners, and timers on unmount.
 - **SEO Routing Safeguards**: Enforce `noindex` on authenticated app layout paths.
+
+---
+
+## 7. Responsiveness & Layout
+
+### Mobile-First Approach
+- Write default (mobile) styles first; layer up with `min-width` Tailwind breakpoints (`sm:`, `md:`, `lg:`, `xl:`).
+- **Never hardcode fixed widths in pixels** (e.g., `w-[1200px]`). Use relative units (`%`, `rem`, `vw`, `max-w-*`, Grid, Flexbox) so content reflows naturally.
+- Root containers must never exceed `100vw`; apply `max-w-full` and `box-sizing: border-box` (`box-border`) to prevent horizontal overflow.
+
+### MMS Breakpoints
+Adhere to these thresholds — they map to the Tailwind v4 tokens already defined in `index.css`:
+
+| Alias | Range | Tailwind prefix |
+|-------|-------|-----------------|
+| Mobile default | < 640 px | (base) |
+| Mobile large / tablet portrait | 640 – 768 px | `sm:` |
+| Tablet landscape | 768 – 1024 px | `md:` |
+| Laptop / small desktop | 1024 – 1280 px | `lg:` |
+| Large desktop | > 1280 px | `xl:` |
+
+### Navigation & Interactivity
+- **Mobile nav**: Convert horizontal top-nav bars to hamburger menus, slide-out drawers, or bottom navigation on screens `< md` (< 768 px).
+- **Touch targets**: Every interactive element (button, link, icon trigger) must have a minimum tap area of `44 × 44 px` — use `min-h-[44px] min-w-[44px]` or padding equivalents.
+- **Wide tables**: Wrap `<DataTable>` / `<table>` in a horizontally-scrollable container (`overflow-x-auto`) or switch to card-row layouts at `< md`.
+
+### Typography & Visual Media
+- **Fluid type**: Use `rem`/`em`/`clamp()` for font sizes — never hardcode `px` font sizes in feature components.
+- **Images & video**: All `<img>`, `<video>`, and SVG elements must carry `max-w-full h-auto` so they shrink inside smaller viewports.
+
+### Pre-Commit Verification
+Before declaring any layout implementation complete, verify:
+1. UI is correct at **375 px** (mobile), **768 px** (tablet), and **1440 px** (desktop).
+2. No text overlaps or clips at edge viewport widths.
+3. Form controls, buttons, and inputs remain touch-friendly at small viewports.
