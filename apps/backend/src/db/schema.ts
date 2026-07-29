@@ -1,6 +1,6 @@
 import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, serial, primaryKey, foreignKey } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import type { PlatformRole } from '@mms/shared';
+import type { GenericSavedReportCategory, PlatformRole } from '@mms/shared';
 
 export const collections = pgTable('collections', {
   name: text('name').primaryKey(),
@@ -470,6 +470,27 @@ export const customTabs = pgTable('custom_tabs', {
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
   uniqueIndex('custom_tabs_workspace_module_key_idx').on(table.workspaceSubdomain, table.moduleId, table.key),
   index('custom_tabs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
+/** Personal report presets for non-Contacts module report categories. */
+export const savedReports = pgTable('saved_reports', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  category: text('category').$type<GenericSavedReportCategory>().notNull(),
+  name: text('name').notNull(),
+  filters: jsonb('filters').$type<Record<string, unknown>>().notNull(),
+  lastRunAt: timestamp('last_run_at', { mode: 'date' }).notNull(),
+  createdBy: text('created_by').notNull(),
+  createdByName: text('created_by_name').notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  index('saved_reports_workspace_category_creator_idx').on(
+    table.workspaceSubdomain,
+    table.category,
+    table.createdBy,
+  ),
 ]);
 
 export const platformActivityLogs = pgTable('platform_activity_logs', {

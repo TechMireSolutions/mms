@@ -117,6 +117,7 @@ export * from './platformSchemas.js';
 export * from './apiSchemas.js';
 export * from './messagingSchemas.js';
 export * from './messagingModuleManifest.js';
+export * from './savedReportsSchemas.js';
 export * from './dashboardModuleManifest.js';
 export * from './whatsappProvider.js';
 export * from './vcardUtils.js';

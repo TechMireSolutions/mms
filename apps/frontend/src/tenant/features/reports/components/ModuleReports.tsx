@@ -27,7 +27,11 @@ import QuestionBankReport from "@/tenant/features/reports/components/QuestionBan
 import SavedReports from "@/tenant/features/reports/components/SavedReports";
 import ContactsSavedReports from "@/tenant/features/reports/components/ContactsSavedReports";
 import { VisualizerConfig } from "@/tenant/features/reports/components/reportMetadata";
-import { useLocalSavedReportsSource } from "@/hooks/useSavedReportsSource";
+import { useGenericSavedReportsSource } from "@/hooks/useSavedReportsSource";
+import {
+  GENERIC_SAVED_REPORT_CATEGORIES,
+  type GenericSavedReportCategory,
+} from "@mms/shared";
 
 type ModuleReportCategory = "students" | "teachers" | "contacts" | "attendance" | "financial" | "academic" | "examinations" | "questionBank" | "hasanat" | "sessions" | "faculty" | "saved";
 
@@ -44,16 +48,22 @@ const DEFAULT_FILTERS = {
   student: "",
 };
 
-function LocalSavedReportsPanel({
+function isGenericSavedReportCategory(
+  category: ModuleReportCategory,
+): category is GenericSavedReportCategory {
+  return (GENERIC_SAVED_REPORT_CATEGORIES as readonly string[]).includes(category);
+}
+
+function GenericSavedReportsPanel({
   category,
   filters,
   onApplyFilters,
 }: {
-  category: Exclude<ModuleReportCategory, "contacts">;
+  category: GenericSavedReportCategory;
   filters: Record<string, unknown>;
   onApplyFilters: (filters: Record<string, unknown>) => void;
 }): React.JSX.Element {
-  const source = useLocalSavedReportsSource(category);
+  const source = useGenericSavedReportsSource(category);
   return (
     <SavedReports
       category={category}
@@ -204,8 +214,8 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
              <div className="pb-4">
                 {category === "contacts" ? (
                   <ContactsSavedReports />
-                ) : (
-                  <LocalSavedReportsPanel
+                ) : isGenericSavedReportCategory(category) ? (
+                  <GenericSavedReportsPanel
                     category={category}
                     filters={filters}
                     onApplyFilters={(appliedFilters) => {
@@ -213,7 +223,7 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
                       setActiveTab("dashboard");
                     }}
                   />
-                )}
+                ) : null}
              </div>
           </motion.div>
         )}

@@ -12,12 +12,14 @@ import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { notify } from "@/lib/notify";
-import { formatDate, type AppTranslationKey } from "@mms/shared";
-import type {
-  LocalSavedReport,
-  LocalSavedReportCreateInput,
-  SavedReportsSource,
-} from "@/hooks/useSavedReportsSource";
+import {
+  formatDate,
+  type AppTranslationKey,
+  type GenericSavedReport,
+  type GenericSavedReportCategory,
+  type GenericSavedReportCreateInput,
+} from "@mms/shared";
+import type { SavedReportsSource } from "@/hooks/useSavedReportsSource";
 
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 
@@ -35,8 +37,8 @@ const CATEGORY_BADGE_CLS: Record<string, string> = {
 };
 
 interface SavedReportsProps {
-  category: string;
-  source: SavedReportsSource<LocalSavedReport, LocalSavedReportCreateInput>;
+  category: GenericSavedReportCategory;
+  source: SavedReportsSource<GenericSavedReport, GenericSavedReportCreateInput>;
   filters?: Record<string, unknown>;
   onApplyFilters?: (filters: Record<string, unknown>) => void;
 }
@@ -75,6 +77,7 @@ export default function SavedReports({
     try {
       await createReport({
         name: trimmedName,
+        category,
         filters,
       });
       notify.success(t("contacts.savedReports.saveSuccess"));
@@ -85,10 +88,10 @@ export default function SavedReports({
     } finally {
       setSaving(false);
     }
-  }, [name, filters, createReport, t]);
+  }, [name, category, filters, createReport, t]);
 
   const handleRun = useCallback(
-    async (report: LocalSavedReport) => {
+    async (report: GenericSavedReport) => {
       if (!onApplyFilters) return;
 
       try {
@@ -188,10 +191,10 @@ export default function SavedReports({
                     <Clock className="w-3 h-3" />
                     {formatLastRunTime(report.lastRun)}
                   </span>
-                  {report.createdBy && (
+                  {report.createdByName && (
                     <span className="flex items-center gap-1">
                       <User className="w-3 h-3" />
-                      {report.createdBy}
+                      {report.createdByName}
                     </span>
                   )}
                 </div>
