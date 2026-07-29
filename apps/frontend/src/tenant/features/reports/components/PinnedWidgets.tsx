@@ -175,7 +175,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
 
 
   return (
-    <div className="space-y-4 font-sans text-left">
+    <div className="space-y-4 font-sans text-start">
       {/* Pinned widgets controls header banner */}
       <div className="flex items-center justify-between p-4 rounded-2xl surface-glass shadow-sm select-none">
         <div className="flex items-center gap-2">
@@ -391,7 +391,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                 key={widget.id}
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="rounded-2xl border border-border/60 bg-card/50 backdrop-blur-md p-5 space-y-4 shadow-sm relative group text-left font-sans"
+                className="rounded-2xl border border-border/60 bg-card/50 backdrop-blur-md p-5 space-y-4 shadow-sm relative group text-start font-sans"
               >
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">

@@ -262,7 +262,7 @@ export function SessionForm({
                 value={sessionDraft.description || ""}
                 onChange={(event) => updateDraft({ description: event.target.value })}
                 placeholder={t("sessions.form.descriptionPlaceholder")}
-                className="min-h-[80px]"
+                className="min-h-[5rem]"
               />
             </Field>
           </Card>

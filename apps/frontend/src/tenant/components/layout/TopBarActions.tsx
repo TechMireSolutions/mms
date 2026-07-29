@@ -87,9 +87,9 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
             aria-label="Notifications"
             className="relative min-h-11 min-w-11 h-11 w-11 rounded-lg hover:bg-muted transition-colors"
           >
-            <Bell className="h-[18px] w-[18px] text-muted-foreground" />
+            <Bell className="h-4.5 w-4.5 text-muted-foreground" />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive animate-pulse" />
+              <span className="absolute top-1.5 end-1.5 h-2 w-2 rounded-full bg-destructive animate-pulse" />
             )}
           </Button>
         </PopoverTrigger>
@@ -157,7 +157,7 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
             aria-label="Account menu"
             className={cn(
               "flex items-center rounded-lg transition-colors hover:bg-muted justify-start font-normal h-auto",
-              compact ? "min-h-11 min-w-11 gap-1 p-2" : "min-h-11 gap-2.5 py-2 pl-2 pr-3",
+              compact ? "min-h-11 min-w-11 gap-1 p-2" : "min-h-11 gap-2.5 py-2 ps-2 pe-3",
             )}
           >
             <Avatar className={compact ? "h-7 w-7" : "h-8 w-8"}>
@@ -167,7 +167,7 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
             </Avatar>
             {!compact ? (
               <>
-                <div className="hidden text-left sm:block">
+                <div className="hidden text-start sm:block">
                   <p className="text-sm font-medium leading-none">{user?.name ?? "User"}</p>
                 </div>
                 <ChevronDown className="hidden h-3 w-3 text-muted-foreground sm:block" />
@@ -185,13 +185,13 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link to={ROUTES.profile}>
-              <User className="mr-2 h-4 w-4" />
+              <User className="me-2 h-4 w-4" />
               {t("account.title")}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to={ROUTES.settings}>
-              <Settings className="mr-2 h-4 w-4" />
+              <Settings className="me-2 h-4 w-4" />
               Settings
             </Link>
           </DropdownMenuItem>
@@ -200,7 +200,7 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
             className="text-destructive"
             onClick={() => logout(true)}
           >
-            <LogOut className="mr-2 h-4 w-4" />
+            <LogOut className="me-2 h-4 w-4" />
             Sign out
           </DropdownMenuItem>
         </DropdownMenuContent>

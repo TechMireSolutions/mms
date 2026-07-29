@@ -128,7 +128,7 @@ export function EnrollmentList({
           value={search}
           onChange={handleSearchChange}
           placeholder={t("enrollments.searchPlaceholder")}
-          className="flex-1 min-w-[180px]"
+          className="flex-1 min-w-[11.25rem]"
         />
 
         {!showDeleted && (
@@ -209,41 +209,41 @@ export function EnrollmentList({
               <thead className="bg-muted/20 border-b border-border/50">
                 <tr>
                   {showStudent && (
-                    <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                       {t("enrollments.columns.student")}
                     </ResizableTableHead>
                   )}
                   {showSession && (
-                    <ResizableTableHead columnKey="session" width={getColumnWidth?.("session")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="session" width={getColumnWidth?.("session")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                       {t("enrollments.columns.session")}
                     </ResizableTableHead>
                   )}
                   {showClass && (
-                    <ResizableTableHead columnKey="class" width={getColumnWidth?.("class")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="class" width={getColumnWidth?.("class")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                       {t("enrollments.columns.class")}
                     </ResizableTableHead>
                   )}
                   {showEnrolledDate && (
-                    <ResizableTableHead columnKey="enrolledDate" width={getColumnWidth?.("enrolledDate")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="enrolledDate" width={getColumnWidth?.("enrolledDate")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                       {t("enrollments.columns.enrolledDate")}
                     </ResizableTableHead>
                   )}
                   {showFinalFee && (
-                    <ResizableTableHead columnKey="finalFee" width={getColumnWidth?.("finalFee")} onResize={onColumnResize} className="px-3 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="finalFee" width={getColumnWidth?.("finalFee")} onResize={onColumnResize} className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">
                       {t("enrollments.columns.finalFee")}
                     </ResizableTableHead>
                   )}
                   {showStatus && (
-                    <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                       {t("enrollments.columns.status")}
                     </ResizableTableHead>
                   )}
                   {showPayment && (
-                    <ResizableTableHead columnKey="payment" width={getColumnWidth?.("payment")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="payment" width={getColumnWidth?.("payment")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                       {t("enrollments.columns.payment")}
                     </ResizableTableHead>
                   )}
-                  <th scope="col" className="px-3 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase">
+                  <th scope="col" className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">
                     {t("enrollments.columns.actions")}
                   </th>
                 </tr>
@@ -265,7 +265,7 @@ export function EnrollmentList({
                         </td>
                       )}
                       {showSession && (
-                        <td className="px-3 py-2.5 text-xs text-foreground max-w-[160px] truncate">{enrollment.sessionName}</td>
+                        <td className="px-3 py-2.5 text-xs text-foreground max-w-[10rem] truncate">{enrollment.sessionName}</td>
                       )}
                       {showClass && (
                         <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{enrollment.className || "—"}</td>
@@ -274,7 +274,7 @@ export function EnrollmentList({
                         <td className="px-3 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap">{formatDate(enrollment.enrolledDate)}</td>
                       )}
                       {showFinalFee && (
-                        <td className="px-3 py-2.5 text-right font-semibold text-foreground whitespace-nowrap">
+                        <td className="px-3 py-2.5 text-end font-semibold text-foreground whitespace-nowrap">
                           {formatCurrency(enrollment.finalFee)}
                           {enrollment.discountPct > 0 && (
                             <span
@@ -298,7 +298,7 @@ export function EnrollmentList({
                             : "—"}
                         </td>
                       )}
-                      <td className="px-3 py-2.5 text-right">
+                      <td className="px-3 py-2.5 text-end">
                         <div className="flex items-center justify-end gap-1">
                           {showDeleted ? (
                             canDelete && onRestore && (

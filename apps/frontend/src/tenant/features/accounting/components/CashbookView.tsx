@@ -126,7 +126,7 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
           value={search}
           onChange={setSearch}
           placeholder={t("reports.widgets.searchRecords")}
-          className="flex-1 min-w-[180px]"
+          className="flex-1 min-w-[11.25rem]"
         />
         <SegmentedPillFilter
           value={filterType}
@@ -152,11 +152,11 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
               <caption className="sr-only">{t("accounting.cashbook.tableCaption")}</caption>
               <thead className="bg-muted/60 border-b border-border">
                 <tr>
-                  <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.date")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.type")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.description")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-xs font-semibold text-success uppercase">{t("accounting.cashbook.moneyIn")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-xs font-semibold text-destructive uppercase">{t("accounting.cashbook.moneyOut")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.date")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.type")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.description")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-end text-xs font-semibold text-success uppercase">{t("accounting.cashbook.moneyIn")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-end text-xs font-semibold text-destructive uppercase">{t("accounting.cashbook.moneyOut")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -187,16 +187,16 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
                         />
                       </div>
                     </td>
-                    <td className="px-3 py-3 text-foreground max-w-[200px] truncate">
+                    <td className="px-3 py-3 text-foreground max-w-[12.5rem] truncate">
                       <p className="font-medium m-0">{row.description}</p>
                       <p className="text-xs text-muted-foreground font-mono m-0">{row.ref}</p>
                     </td>
-                    <td className="px-3 py-3 text-right">
+                    <td className="px-3 py-3 text-end">
                       {row.flowType === "in" ? (
                         <span className="font-mono font-bold text-success">{formatCurrency(row.flowAmount)}</span>
                       ) : <span className="text-muted-foreground/30">—</span>}
                     </td>
-                    <td className="px-3 py-3 text-right">
+                    <td className="px-3 py-3 text-end">
                       {row.flowType === "out" ? (
                         <span className="font-mono font-bold text-destructive">{formatCurrency(row.flowAmount)}</span>
                       ) : <span className="text-muted-foreground/30">—</span>}
@@ -207,8 +207,8 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
                   <td colSpan={3} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{t("accounting.cashbook.transactionCount", { count: rows.length })}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-success text-xs">{formatCurrency(totalIn)}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-destructive text-xs">{formatCurrency(totalOut)}</td>
+                  <td className="px-3 py-2 text-end font-mono font-bold text-success text-xs">{formatCurrency(totalIn)}</td>
+                  <td className="px-3 py-2 text-end font-mono font-bold text-destructive text-xs">{formatCurrency(totalOut)}</td>
                 </tr>
               </tfoot>
             </table>

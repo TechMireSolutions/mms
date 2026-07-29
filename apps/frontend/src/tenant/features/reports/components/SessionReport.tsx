@@ -313,19 +313,19 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
                   t("sessions.report.colUtilisation"),
                   t("sessions.report.colStatus"),
                 ].map((headerLabel) => (
-                  <th key={headerLabel} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
+                  <th key={headerLabel} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {sessionCapacityData.map((sessionCapacity) => (
                 <tr key={`${sessionCapacity.sessionId}-${sessionCapacity.classId}`} className="hover:bg-muted/30">
-                  <td className="px-3 py-2.5 font-medium max-w-[180px] truncate">
+                  <td className="px-3 py-2.5 font-medium max-w-[11.25rem] truncate">
                     <Button
                       type="button"
                       variant="ghost"
                       onClick={() => toggleSessionFilter(sessionCapacity.session)}
-                      className="h-auto px-0 py-0 max-w-[180px] truncate font-medium text-foreground hover:text-primary"
+                      className="h-auto px-0 py-0 max-w-[11.25rem] truncate font-medium text-foreground hover:text-primary"
                     >
                       {sessionCapacity.session}
                     </Button>
@@ -365,7 +365,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
       )}
 
       {/* Dashboard widgets preview */}
-      <div className="border-t border-border/50 pt-6 mt-6 space-y-4 text-left">
+      <div className="border-t border-border/50 pt-6 mt-6 space-y-4 text-start">
         <div>
           <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{t("sessions.report.dashboardWidgetTitle")}</h3>
           <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("sessions.report.dashboardWidgetSubtitle")}</p>

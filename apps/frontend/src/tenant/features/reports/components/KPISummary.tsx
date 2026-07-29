@@ -163,7 +163,7 @@ function SubtextDisplay({ text }: { text: string }): React.JSX.Element {
         type="button"
         variant="link"
         onClick={(event) => { event.stopPropagation(); setExpanded((previousExpanded) => !previousExpanded); }}
-        className="ml-1 min-h-11 px-1 text-primary hover:underline font-extrabold inline-flex items-center text-xs shadow-none"
+        className="ms-1 min-h-11 px-1 text-primary hover:underline font-extrabold inline-flex items-center text-xs shadow-none"
       >
         {expanded ? t("common.showLess") : t("common.readMore")}
       </Button>
@@ -1161,7 +1161,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
               </div>
 
               {/* Settings Checklist Column (1/3 width) */}
-              <div className="rounded-2xl border border-border/50 bg-card/25 p-5 shadow-inner space-y-4 text-left flex flex-col justify-between">
+              <div className="rounded-2xl border border-border/50 bg-card/25 p-5 shadow-inner space-y-4 text-start flex flex-col justify-between">
                 <div>
                   <div className="pb-2 border-b border-border">
                     <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">{t("reports.kpiVisibility")}</h4>
@@ -1171,7 +1171,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
                     {t("reports.kpiVisibilityDesc")}
                   </p>
 
-                  <div className="space-y-1.5 mt-3 max-h-[320px] overflow-y-auto pr-1">
+                  <div className="space-y-1.5 mt-3 max-h-[20rem] overflow-y-auto pe-1">
                     {possibleCards.map((kpi) => {
                       const isSelected = selectedCardIds.includes(kpi.id);
                       const isCustom = customCards.some((c) => c.id === kpi.id);
@@ -1259,7 +1259,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }}
-              className="rounded-2xl border border-border bg-card/60 backdrop-blur-md p-3.5 flex flex-col justify-between text-left shadow-sm hover:shadow-md hover:border-primary/20 transition-all group min-h-[120px]"
+              className="rounded-2xl border border-border bg-card/60 backdrop-blur-md p-3.5 flex flex-col justify-between text-start shadow-sm hover:shadow-md hover:border-primary/20 transition-all group min-h-[7.5rem]"
             >
               {/* Header Zone: Icon */}
               <header className="flex items-center justify-between gap-1.5 select-none">
@@ -1299,7 +1299,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
               if (configPanel) configPanel.scrollIntoView({ behavior: "smooth" });
             }, 100);
           }}
-          className="rounded-2xl border border-dashed border-border/85 hover:border-primary/50 bg-card/25 hover:bg-primary/5 hover:text-primary transition-all duration-300 flex flex-col items-center justify-center p-3 text-muted-foreground min-h-[100px] text-center cursor-pointer"
+          className="rounded-2xl border border-dashed border-border/85 hover:border-primary/50 bg-card/25 hover:bg-primary/5 hover:text-primary transition-all duration-300 flex flex-col items-center justify-center p-3 text-muted-foreground min-h-[6.25rem] text-center cursor-pointer"
         >
           <Plus className="w-5 h-5 mb-1 text-muted-foreground hover:text-primary" />
           <span className="text-xs font-bold">{t("reports.kpiAddCustom")}</span>

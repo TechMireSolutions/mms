@@ -111,7 +111,7 @@ export default function SessionsTable({ title }: { title?: string }) {
         />
       </div>
 
-      <div className="divide-y divide-border/40 min-h-[200px]">
+      <div className="divide-y divide-border/40 min-h-[12.5rem]">
         {paginatedSessions.length === 0 ? (
           <div className="text-center py-12 text-xs text-muted-foreground select-none">
             {t("sessions.report.noData")}

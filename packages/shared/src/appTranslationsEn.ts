@@ -19,6 +19,8 @@ export const APP_TRANSLATIONS_EN = {
   "nav.settings": "Settings",
   "nav.collapse": "Collapse",
   "nav.closeSidebar": "Close sidebar",
+  "nav.openMenu": "Open navigation menu",
+  "nav.globalSearchPlaceholder": "Search students, sessions\u2026",
 
   "settings.title": "Settings",
   "settings.searchPlaceholder": "Search settings...",

@@ -85,7 +85,7 @@ export function InvoiceDetail({ invoice, onClose, onRecord, canWrite = true }: I
         {/* Fee breakdown */}
         <article className="relative overflow-hidden group/breakdown rounded-xl border border-border bg-card/45 backdrop-blur-xs shadow-sm">
           <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/60" />
-          <header className="px-4 py-2 bg-muted/30 border-b border-border pl-5">
+          <header className="px-4 py-2 bg-muted/30 border-b border-border ps-5">
             <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wide m-0">{t("finance.detail.breakdown")}</h4>
           </header>
           <div className="divide-y divide-border/50">

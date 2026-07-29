@@ -360,7 +360,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
                   t("examinations.report.colMarks"),
                   t("examinations.report.colGrade"),
                 ].map((headerLabel) => (
-                  <th key={headerLabel} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
+                  <th key={headerLabel} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
                 ))}
               </tr>
             </thead>

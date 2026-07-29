@@ -11,7 +11,7 @@ export const FORM_INPUT =
 
 export const FORM_SELECT = `${FORM_INPUT} cursor-pointer`;
 
-export const FORM_TEXTAREA = `${FORM_INPUT} min-h-[80px] resize-none py-2`;
+export const FORM_TEXTAREA = `${FORM_INPUT} min-h-20 resize-none py-2`;
 
 /** Input with a left icon (e.g. user modals). */
 export const FORM_INPUT_ICON = `${FORM_INPUT} ps-9 pe-3`;
@@ -25,7 +25,7 @@ export const FORM_INPUT_BUILDER = `${FORM_INPUT_COMPACT} bg-card/40 backdrop-blu
 
 /** OTP digit cell (2FA, platform verify). */
 export const FORM_OTP_DIGIT =
-  'w-11 min-h-[52px] text-center text-xl font-bold rounded-xl border-2 bg-card text-foreground focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20';
+  'w-11 min-h-[3.25rem] text-center text-xl font-bold rounded-xl border-2 bg-card text-foreground focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20';
 
 /** Unified checkbox style — borders, focus rings, primary accent, cursor pointer. */
 export const FORM_CHECKBOX =

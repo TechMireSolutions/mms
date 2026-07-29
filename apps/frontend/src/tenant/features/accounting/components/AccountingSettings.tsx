@@ -366,10 +366,10 @@ export function AccountingSettings({
                   <caption className="sr-only">{t("accounting.settings.fy.tableCaption")}</caption>
                   <thead className="bg-muted/50 border-b border-border">
                     <tr>
-                      <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.label")}</th>
-                      <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.period")}</th>
-                      <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.status")}</th>
-                      <th scope="col" className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.actions")}</th>
+                      <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.label")}</th>
+                      <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.period")}</th>
+                      <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.status")}</th>
+                      <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.actions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -383,7 +383,7 @@ export function AccountingSettings({
                           <td className="px-4 py-2.5">
                             <StatusBadge status={fiscalYear.status} config={fyStatusConfig} size="sm" />
                           </td>
-                          <td className="px-4 py-2.5 text-right">
+                          <td className="px-4 py-2.5 text-end">
                             <div className="flex items-center justify-end gap-1">
                               {canEditSetup && (
                                 <Button
@@ -476,7 +476,7 @@ export function AccountingSettings({
         <Button
           type="button"
           onClick={() => { void handleSave(); }}
-          className={saved ? "bg-success hover:bg-success/90 text-success-foreground ml-auto" : "ml-auto"}
+          className={saved ? "bg-success hover:bg-success/90 text-success-foreground ms-auto" : "ms-auto"}
         >
           {saved ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.settings.btnSaved")}</> : <><Save className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.settings.btnSave")}</>}
         </Button>

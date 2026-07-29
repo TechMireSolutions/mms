@@ -54,7 +54,7 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
 
   return (
     <Card accentColor="primary" className="p-5 space-y-4 shadow-sm hover:shadow-md border-border/80">
-      <div className="flex items-center gap-2.5 pb-1 border-b border-border/40 pl-1">
+      <div className="flex items-center gap-2.5 pb-1 border-b border-border/40 ps-1">
         <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
           <Shield className="w-3.5 h-3.5 text-primary" />
         </div>
@@ -91,7 +91,7 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
           type="button"
           onClick={() => { void handleSave(); }}
           disabled={saving}
-          className={cn("ml-auto", saved && "bg-success hover:bg-success/90 text-success-foreground")}
+          className={cn("ms-auto", saved && "bg-success hover:bg-success/90 text-success-foreground")}
         >
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
           <span>{saved ? t("users.settingsSavedShort") : t("users.settingsSaveBtn")}</span>

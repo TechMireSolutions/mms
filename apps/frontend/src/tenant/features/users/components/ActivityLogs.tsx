@@ -84,13 +84,13 @@ export function ActivityLogs({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[180px] flex-1">
+        <div className="relative min-w-[11.25rem] flex-1">
           <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t('users.activitySearch')}
-            className="pl-9.5"
+            className="ps-9.5"
           />
         </div>
         <FormSelect
@@ -98,14 +98,14 @@ export function ActivityLogs({
           onChange={setUser}
           options={userOptions}
           aria-label={t('users.activityFilterUser')}
-          className="w-auto min-w-[140px]"
+          className="w-auto min-w-[8.75rem]"
         />
         <FormSelect
           value={actionFilter}
           onChange={setAct}
           options={actionOptions}
           aria-label={t('users.activityFilterAction')}
-          className="w-auto min-w-[160px]"
+          className="w-auto min-w-[10rem]"
         />
         <DatePicker value={dateFrom} onChange={setFrom} className="text-sm" />
         <DatePicker value={dateTo} onChange={setTo} className="text-sm" />
@@ -126,7 +126,7 @@ export function ActivityLogs({
                   columnKey="time"
                   width={getColumnWidth?.('time')}
                   onResize={onColumnResize}
-                  className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
+                  className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground"
                 >
                   {t('users.activityColTime')}
                 </ResizableTableHead>
@@ -134,7 +134,7 @@ export function ActivityLogs({
                   columnKey="user"
                   width={getColumnWidth?.('user')}
                   onResize={onColumnResize}
-                  className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
+                  className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground"
                 >
                   {t('users.activityColUser')}
                 </ResizableTableHead>
@@ -142,7 +142,7 @@ export function ActivityLogs({
                   columnKey="action"
                   width={getColumnWidth?.('action')}
                   onResize={onColumnResize}
-                  className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
+                  className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground"
                 >
                   {t('users.activityColAction')}
                 </ResizableTableHead>
@@ -150,7 +150,7 @@ export function ActivityLogs({
                   columnKey="detail"
                   width={getColumnWidth?.('detail')}
                   onResize={onColumnResize}
-                  className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
+                  className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground"
                 >
                   {t('users.activityColDetail')}
                 </ResizableTableHead>
@@ -158,7 +158,7 @@ export function ActivityLogs({
                   columnKey="ip"
                   width={getColumnWidth?.('ip')}
                   onResize={onColumnResize}
-                  className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
+                  className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground"
                 >
                   {t('users.activityColIp')}
                 </ResizableTableHead>

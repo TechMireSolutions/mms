@@ -82,7 +82,7 @@ export default function BackupCredentialsModal({
               value={email}
               readOnly={emailReadOnly}
               onChange={(event) => setEmail(event.target.value)}
-              className="pl-9"
+              className="ps-9"
               autoComplete="username"
               disabled={loading || emailReadOnly}
             />

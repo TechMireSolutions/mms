@@ -151,7 +151,7 @@ export function QuestionForm({
   };
 
   const renderCategoriesTab = () => (
-    <div className="space-y-5 text-left">
+    <div className="space-y-5 text-start">
       <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm">
         <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
           <Tag className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
@@ -204,7 +204,7 @@ export function QuestionForm({
     const trueLabel = t('questionBank.true');
     const falseLabel = t('questionBank.false');
     return (
-      <div className="space-y-5 text-left">
+      <div className="space-y-5 text-start">
         <Card accentColor="info" className="p-5.5 px-6.5 pb-6 space-y-4.5 shadow-sm">
           <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
             <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
@@ -351,7 +351,7 @@ export function QuestionForm({
     const availableFieldIds = ['sourceSurah', 'sourceAyah', 'sourceHadithNumber', 'sourceBookName', 'sourcePageNumber'] as QuestionSourceFieldId[];
 
     return (
-      <div className="space-y-5 text-left">
+      <div className="space-y-5 text-start">
         <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm">
           <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
             <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
@@ -374,7 +374,7 @@ export function QuestionForm({
 
   const footerStart = questionDraft.text ? (
     <div className="flex flex-wrap items-center gap-2.5 text-xs">
-      <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60 truncate max-w-[200px]">
+      <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60 truncate max-w-[12.5rem]">
         {questionDraft.text}
       </span>
       <div className="flex items-center gap-1.5">

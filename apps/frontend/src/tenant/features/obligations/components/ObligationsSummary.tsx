@@ -232,13 +232,13 @@ export function ObligationsSummary({
     <div className="space-y-6">
       {/* ── Filter Bar ── */}
       <Card accentColor="primary" className="p-4 space-y-3 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
-        <header className="flex items-center gap-2 mb-1 pl-1">
+        <header className="flex items-center gap-2 mb-1 ps-1">
           <Filter className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
           <h2 className="text-sm font-bold text-foreground m-0">{t("obligations.summary.filters.title")}</h2>
           {hasFilters && (
             <Button type="button" onClick={() => { setDateFrom(""); setDateTo(""); setRepFilter("all"); setTypeFilter("all"); setUserFilter("all"); setSearch(""); }}
               variant="link"
-              className="ml-auto min-h-11 px-2 text-xs text-primary font-semibold hover:underline shadow-none">{t("obligations.summary.filters.clearAll")}</Button>
+              className="ms-auto min-h-11 px-2 text-xs text-primary font-semibold hover:underline shadow-none">{t("obligations.summary.filters.clearAll")}</Button>
           )}
         </header>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
@@ -251,7 +251,7 @@ export function ObligationsSummary({
               value={search} 
               onChange={(event) => setSearch(event.target.value)}
               placeholder={t("obligations.summary.filters.searchPlaceholder")}
-              className="w-full ps-8 pr-3 py-2 text-xs rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" 
+              className="w-full ps-8 pe-3 py-2 text-xs rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" 
             />
           </div>
           {/* Date From */}
@@ -388,12 +388,12 @@ export function ObligationsSummary({
               <caption className="sr-only">{t("obligations.summary.wakala.title")}</caption>
               <thead className="bg-muted/60 border-b border-border">
                 <tr>
-                  <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colRepWakala")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colMujtahid")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colObligation")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colCollections")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colTotalAmountShort")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colDistributions")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colRepWakala")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colMujtahid")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colObligation")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colCollections")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colTotalAmountShort")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colDistributions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -411,8 +411,8 @@ export function ObligationsSummary({
                     <td className="px-3 py-3">
                       <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full">{w.obligationType}</span>
                     </td>
-                    <td className="px-3 py-3 text-right text-sm font-semibold text-foreground">{w.count}</td>
-                    <td className="px-3 py-3 text-right font-mono font-bold text-success text-sm">{formatCurrency(w.total)}</td>
+                    <td className="px-3 py-3 text-end text-sm font-semibold text-foreground">{w.count}</td>
+                    <td className="px-3 py-3 text-end font-mono font-bold text-success text-sm">{formatCurrency(w.total)}</td>
                     <td className="px-3 py-3">
                       {w.distributions.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
@@ -430,7 +430,7 @@ export function ObligationsSummary({
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
                   <td colSpan={4} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{t("obligations.summary.wakala.configCount", { count: wakalaSummary.length })}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-success text-xs">{formatCurrency(totalAmount)}</td>
+                  <td className="px-3 py-2 text-end font-mono font-bold text-success text-xs">{formatCurrency(totalAmount)}</td>
                   <td />
                 </tr>
               </tfoot>
@@ -474,12 +474,12 @@ export function ObligationsSummary({
               <caption className="sr-only">{t("obligations.summary.rep.title")}</caption>
               <thead className="bg-muted/60 border-b border-border">
                 <tr>
-                  <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.rep.colRepresentative")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.rep.colMujtahid")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.rep.colByType")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.rep.colCollections")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.rep.colTotalCollectedShort")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-xs font-semibold text-destructive uppercase">{t("obligations.summary.rep.colDueToRepShort")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.rep.colRepresentative")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.rep.colMujtahid")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.rep.colByType")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.rep.colCollections")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.rep.colTotalCollectedShort")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-end text-xs font-semibold text-destructive uppercase">{t("obligations.summary.rep.colDueToRepShort")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -503,9 +503,9 @@ export function ObligationsSummary({
                         ))}
                       </div>
                     </td>
-                    <td className="px-3 py-3 text-right text-sm font-semibold text-foreground">{r.count}</td>
-                    <td className="px-3 py-3 text-right font-mono font-bold text-foreground text-sm">{formatCurrency(r.total)}</td>
-                    <td className="px-3 py-3 text-right">
+                    <td className="px-3 py-3 text-end text-sm font-semibold text-foreground">{r.count}</td>
+                    <td className="px-3 py-3 text-end font-mono font-bold text-foreground text-sm">{formatCurrency(r.total)}</td>
+                    <td className="px-3 py-3 text-end">
                       <span className="font-mono font-bold text-destructive text-sm">{formatCurrency(r.due)}</span>
                     </td>
                   </tr>
@@ -514,8 +514,8 @@ export function ObligationsSummary({
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
                   <td colSpan={4} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{t("obligations.summary.rep.repCount", { count: repSummary.length })}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-foreground text-xs">{formatCurrency(totalAmount)}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-destructive text-xs">{formatCurrency(repSummary.reduce((sum, representativeSummary) => sum + representativeSummary.due, 0))}</td>
+                  <td className="px-3 py-2 text-end font-mono font-bold text-foreground text-xs">{formatCurrency(totalAmount)}</td>
+                  <td className="px-3 py-2 text-end font-mono font-bold text-destructive text-xs">{formatCurrency(repSummary.reduce((sum, representativeSummary) => sum + representativeSummary.due, 0))}</td>
                 </tr>
               </tfoot>
             </table>
@@ -561,7 +561,7 @@ export function ObligationsSummary({
                 <div className="h-1.5 rounded-full transition-all"
                   style={{ width: `${totalAmount ? (typeItem.total / totalAmount) * 100 : 0}%`, background: COLORS[i % COLORS.length] }} />
               </div>
-              <p className="text-xs text-muted-foreground text-right m-0">{totalAmount ? ((typeItem.total / totalAmount) * 100).toFixed(1) : 0}%</p>
+              <p className="text-xs text-muted-foreground text-end m-0">{totalAmount ? ((typeItem.total / totalAmount) * 100).toFixed(1) : 0}%</p>
             </Card>
           ))}
         </div>

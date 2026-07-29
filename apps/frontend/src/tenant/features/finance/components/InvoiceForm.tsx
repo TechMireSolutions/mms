@@ -134,7 +134,7 @@ export function InvoiceForm({
       saving={saving || submitting}
       saveDisabled={!canSave}
     >
-      <div className="space-y-5 text-left">
+      <div className="space-y-5 text-start">
         <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 shadow-sm">
           <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
             <ReceiptText className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />

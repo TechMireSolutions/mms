@@ -428,7 +428,7 @@ export function QuestionBank({
                         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           {t('questionBank.previewOrdering')}
                         </p>
-                        <ol className="mt-1 list-decimal space-y-0.5 pl-4 text-xs text-foreground">
+                        <ol className="mt-1 list-decimal space-y-0.5 ps-4 text-xs text-foreground">
                           {question.options.filter(Boolean).map((item) => (
                             <li key={item}>{item}</li>
                           ))}
@@ -513,36 +513,36 @@ export function QuestionBank({
                       </th>
                     )}
                     {showText && (
-                      <ResizableTableHead columnKey="text" width={getColumnWidth?.("text")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      <ResizableTableHead columnKey="text" width={getColumnWidth?.("text")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                         {t('questionBank.columns.text')}
                       </ResizableTableHead>
                     )}
                     {showCategory && (
-                      <ResizableTableHead columnKey="category" width={getColumnWidth?.("category")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="category" width={getColumnWidth?.("category")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t('questionBank.columns.category')}
                       </ResizableTableHead>
                     )}
                     {showLanguage && (
-                      <ResizableTableHead columnKey="language" width={getColumnWidth?.("language")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="language" width={getColumnWidth?.("language")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t('questionBank.columns.language')}
                       </ResizableTableHead>
                     )}
                     {showType && (
-                      <ResizableTableHead columnKey="type" width={getColumnWidth?.("type")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="type" width={getColumnWidth?.("type")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t('questionBank.columns.type')}
                       </ResizableTableHead>
                     )}
                     {showDifficulty && (
-                      <ResizableTableHead columnKey="difficulty" width={getColumnWidth?.("difficulty")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="difficulty" width={getColumnWidth?.("difficulty")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t('questionBank.columns.difficulty')}
                       </ResizableTableHead>
                     )}
                     {showSource && (
-                      <ResizableTableHead columnKey="source" width={getColumnWidth?.("source")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="source" width={getColumnWidth?.("source")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t('questionBank.columns.source')}
                       </ResizableTableHead>
                     )}
-                    <th scope="col" className="px-4 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <th scope="col" className="px-4 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       <span className="sr-only">{t('questionBank.columns.actions')}</span>
                     </th>
                   </tr>
@@ -570,7 +570,7 @@ export function QuestionBank({
                           </td>
                         )}
                         {showText && (
-                          <td className="px-4 py-3 text-sm font-semibold text-foreground max-w-[280px]">
+                          <td className="px-4 py-3 text-sm font-semibold text-foreground max-w-[17.5rem]">
                             <p className="line-clamp-2 m-0">{question.text}</p>
                           </td>
                         )}
@@ -603,11 +603,11 @@ export function QuestionBank({
                           </td>
                         )}
                         {showSource && (
-                          <td className="px-4 py-3 text-xs text-muted-foreground max-w-[200px] truncate">
+                          <td className="px-4 py-3 text-xs text-muted-foreground max-w-[12.5rem] truncate">
                             {citation || '—'}
                           </td>
                         )}
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-end">
                           <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
                             {canWrite && !showDeleted && (
                               <Button

@@ -34,6 +34,8 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "nav.settings": "الإعدادات",
   "nav.collapse": "طي",
   "nav.closeSidebar": "إغلاق الشريط الجانبي",
+  "nav.openMenu": "فتح قائمة التنقل",
+  "nav.globalSearchPlaceholder": "ابحث عن الطلاب والجلسات…",
 
   "settings.title": "الإعدادات",
   "settings.searchPlaceholder": "ابحث في الإعدادات...",

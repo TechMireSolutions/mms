@@ -282,7 +282,7 @@ export function TeacherForm({
             value={teacherDraft.notes || ""}
             onChange={(event) => updateDraft({ notes: event.target.value })}
             placeholder={t("teachers.form.notesPlaceholder")}
-            className="min-h-[80px]"
+            className="min-h-[5rem]"
           />
         </Field>
       </Card>

@@ -137,7 +137,7 @@ export function AuditLog({ filters }: AuditLogProps) {
           onChange={setClassId}
           placeholder={t("attendance.audit.allClasses")}
           options={allClasses.map((sessionClass) => ({ value: sessionClass.id, label: sessionClass.name }))}
-          className="text-sm min-w-[160px]"
+          className="text-sm min-w-[10rem]"
         />
         
         <DatePicker
@@ -161,10 +161,10 @@ export function AuditLog({ filters }: AuditLogProps) {
           <table className="w-full text-sm">
             <thead className="bg-muted/60 border-b border-border">
               <tr>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("attendance.audit.colTime")}</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("attendance.audit.colAction")}</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("attendance.audit.colDetails")}</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("attendance.audit.colBy")}</th>
+                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("attendance.audit.colTime")}</th>
+                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("attendance.audit.colAction")}</th>
+                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("attendance.audit.colDetails")}</th>
+                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("attendance.audit.colBy")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">

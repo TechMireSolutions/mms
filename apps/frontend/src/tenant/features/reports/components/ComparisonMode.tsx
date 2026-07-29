@@ -450,7 +450,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
       className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl shadow-sm overflow-hidden"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-primary/5 border-b border-border/50 text-left">
+      <div className="flex items-center justify-between px-4 py-3 bg-primary/5 border-b border-border/50 text-start">
         <div className="flex items-center gap-2">
           <GitCompare className="w-4 h-4 text-primary" />
           <span className="text-sm font-bold text-foreground">{t("reports.comparison.title")}</span>
@@ -475,7 +475,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
       <div className="p-4 space-y-4">
         {/* Selectors */}
         {mode === "sessions" ? (
-          <div className="grid grid-cols-2 gap-3 text-left">
+          <div className="grid grid-cols-2 gap-3 text-start">
             {[
               { label: "A", value: valA, setValue: setValA, color: "text-primary" },
               { label: "B", value: valB, setValue: setValB, color: "text-warning" }
@@ -492,7 +492,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 text-left">
+          <div className="grid grid-cols-2 gap-4 text-start">
             {[
               { label: t("reports.comparison.rangeA"), range: rangeA, setRange: setRangeA, color: "text-primary" },
               { label: t("reports.comparison.rangeB"), range: rangeB, setRange: setRangeB, color: "text-warning" }
@@ -517,11 +517,11 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
         )}
 
         {/* Chart */}
-        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm text-left">
+        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm text-start">
           <p className="text-xs text-muted-foreground mb-3">
             {t("reports.comparison.comparing")} <span className="font-semibold text-primary">{labelA}</span> {t("reports.comparison.vs")} <span className="font-semibold text-warning">{labelB}</span>
           </p>
-          <div className="h-[220px] w-full">
+          <div className="h-[13.75rem] w-full">
             <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
               <BarChart data={translatedData as Array<ComparisonDataItem | DateRangeDataItem>} barSize={22}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -543,13 +543,13 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border/50">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-bold text-muted-foreground uppercase tracking-widest">{t("reports.comparison.metric")}</th>
-                  <th className="px-3 py-2 text-left text-xs font-bold text-primary uppercase tracking-widest">{isContacts ? t("reports.comparison.targetA") : t("reports.comparison.sessionA")}</th>
-                  <th className="px-3 py-2 text-left text-xs font-bold text-warning uppercase tracking-widest">{isContacts ? t("reports.comparison.targetB") : t("reports.comparison.sessionB")}</th>
-                  <th className="px-3 py-2 text-left text-xs font-bold text-muted-foreground uppercase tracking-widest">{t("reports.comparison.diff")}</th>
+                  <th className="px-3 py-2 text-start text-xs font-bold text-muted-foreground uppercase tracking-widest">{t("reports.comparison.metric")}</th>
+                  <th className="px-3 py-2 text-start text-xs font-bold text-primary uppercase tracking-widest">{isContacts ? t("reports.comparison.targetA") : t("reports.comparison.sessionA")}</th>
+                  <th className="px-3 py-2 text-start text-xs font-bold text-warning uppercase tracking-widest">{isContacts ? t("reports.comparison.targetB") : t("reports.comparison.sessionB")}</th>
+                  <th className="px-3 py-2 text-start text-xs font-bold text-muted-foreground uppercase tracking-widest">{t("reports.comparison.diff")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/50 text-left bg-transparent">
+              <tbody className="divide-y divide-border/50 text-start bg-transparent">
                 {(translatedData as ComparisonDataItem[]).map((row) => {
                   const diff = parseFloat((row.a - row.b).toFixed(1));
                   

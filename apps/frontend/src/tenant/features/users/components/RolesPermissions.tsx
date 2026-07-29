@@ -257,7 +257,7 @@ function PermissionMatrix({
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-muted/60">
             <tr>
-              <th className="min-w-[140px] px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground">
+              <th className="min-w-[8.75rem] px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
                 {t('users.permissions.colModule')}
               </th>
               {PERMISSION_ACTIONS.map((permissionAction) => (
@@ -418,7 +418,7 @@ export function RolesPermissions(): React.JSX.Element {
     <div className="space-y-5">
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm font-bold text-foreground">{t('users.permissions.rolesTitle')}</p>
             {isAdmin ? (
               <Button type="button" variant="ghost" size="sm" className="min-h-11 px-2 text-xs" onClick={() => setEdit('new')}>
@@ -444,7 +444,7 @@ export function RolesPermissions(): React.JSX.Element {
                   setSel(workspaceRole);
                 }
               }}
-              className={`w-full cursor-pointer rounded-xl border-2 p-3 text-left transition-all ${
+              className={`w-full cursor-pointer rounded-xl border-2 p-3 text-start transition-all ${
                 displayRole?.id === workspaceRole.id
                   ? 'border-primary bg-primary/5'
                   : 'border-border bg-card hover:border-primary/40'

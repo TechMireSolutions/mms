@@ -141,7 +141,7 @@ export default function SavedReports({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="text-left">
+        <div className="text-start">
           <h3 className="text-sm font-semibold text-foreground">{t("reports.saved.title")}</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             {t("reports.saved.subtitle")}
@@ -173,7 +173,7 @@ export default function SavedReports({
                 layout
                 whileHover={{ y: -4, scale: 1.015 }}
                 transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                className="flex flex-col gap-3 text-left group cursor-pointer hover:shadow-surface-lg p-5"
+                className="flex flex-col gap-3 text-start group cursor-pointer hover:shadow-surface-lg p-5"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -217,7 +217,7 @@ export default function SavedReports({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDelete(report.id)}
-                    className="px-2 text-xs font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1 ml-auto cursor-pointer"
+                    className="px-2 text-xs font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1 ms-auto cursor-pointer"
                     type="button"
                   >
                     <Trash2 className="w-3 h-3" /> {t("reports.saved.delete")}

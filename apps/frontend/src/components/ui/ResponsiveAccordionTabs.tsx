@@ -42,7 +42,7 @@ function TabTrigger({
 }): React.JSX.Element {
   const Icon = tab.icon;
   const className = cn(
-    "flex min-h-11 w-full items-start gap-3 px-4 py-3.5 text-left transition-colors",
+    "flex min-h-11 w-full items-start gap-3 px-4 py-3.5 text-start transition-colors",
     active ? "text-primary" : "text-foreground hover:bg-muted/40",
   );
   const body = (
@@ -245,9 +245,9 @@ export function ResponsiveAccordionTabs({
               const Icon = tab.icon;
               const active = activeTab === tab.id;
               const linkClass = cn(
-                "block w-full rounded-lg border px-3 py-2.5 text-left transition-all",
+                "block w-full min-h-11 rounded-lg border px-3 py-2.5 text-start transition-all",
                 active
-                  ? "border-primary/25 border-l-[3px] border-l-primary bg-primary/5 text-primary shadow-sm"
+                  ? "border-primary/25 border-s-[3px] border-s-primary bg-primary/5 text-primary shadow-sm"
                   : "border-transparent text-muted-foreground hover:border-border/50 hover:bg-muted/50 hover:text-foreground",
               );
 
@@ -271,7 +271,7 @@ export function ResponsiveAccordionTabs({
                       <p
                         className={cn(
                           "text-xs leading-snug text-muted-foreground",
-                          Icon && "pl-9",
+                          Icon && "ps-9",
                           active && "text-primary/80",
                         )}
                       >
@@ -306,7 +306,7 @@ export function ResponsiveAccordionTabs({
                     <p
                       className={cn(
                         "text-xs leading-snug text-muted-foreground",
-                        Icon && "pl-9",
+                        Icon && "ps-9",
                         active && "text-primary/80",
                       )}
                     >

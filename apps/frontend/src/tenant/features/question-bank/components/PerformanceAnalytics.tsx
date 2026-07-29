@@ -195,7 +195,7 @@ export function PerformanceAnalytics({
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SectionCard accentColor="primary" title={t("questionBank.analytics.classTrend")}>
-          <div className="h-[180px]" aria-hidden>
+          <div className="h-[11.25rem]" aria-hidden>
             <SafeResponsiveContainer width="100%" height="100%">
               <LineChart data={trendData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -213,7 +213,7 @@ export function PerformanceAnalytics({
 
         <SectionCard accentColor="info" title={t("questionBank.analytics.categoryAccuracy")}>
           {radarData.length >= 3 ? (
-            <div className="h-[180px]" aria-hidden>
+            <div className="h-[11.25rem]" aria-hidden>
               <SafeResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData}>
                   <PolarGrid stroke="hsl(var(--border))" />
@@ -227,7 +227,7 @@ export function PerformanceAnalytics({
               </SafeResponsiveContainer>
             </div>
           ) : (
-            <div className="flex h-[180px] items-center justify-center text-sm text-muted-foreground" role="status">
+            <div className="flex h-[11.25rem] items-center justify-center text-sm text-muted-foreground" role="status">
               {t("questionBank.analytics.radarInsufficient")}
             </div>
           )}
@@ -236,7 +236,7 @@ export function PerformanceAnalytics({
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SectionCard accentColor="success" title={t("questionBank.analytics.studentPerformance")}>
-          <div className="h-[180px]" aria-hidden>
+          <div className="h-[11.25rem]" aria-hidden>
             <SafeResponsiveContainer width="100%" height="100%">
               <BarChart data={studentStats} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
@@ -253,7 +253,7 @@ export function PerformanceAnalytics({
         </SectionCard>
 
         <SectionCard accentColor="warning" title={t("questionBank.analytics.difficultyBreakdown")}>
-          <div className="h-[180px]" aria-hidden>
+          <div className="h-[11.25rem]" aria-hidden>
             <SafeResponsiveContainer width="100%" height="100%">
               <BarChart data={diffData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -271,7 +271,7 @@ export function PerformanceAnalytics({
       </div>
 
       <SectionCard accentColor="info" title={t("questionBank.analytics.categoryBreakdown")} padding={false}>
-        <div className="divide-y divide-border/50 pl-6.5" role="list">
+        <div className="divide-y divide-border/50 ps-6.5" role="list">
           {catPerformance.sort((a, b) => a.accuracy - b.accuracy).map((categoryResult) => (
             <div key={categoryResult.name} className="flex items-center gap-4 px-4 py-3" role="listitem">
               <span className="flex-shrink-0 text-xl" aria-hidden>{categoryResult.icon}</span>

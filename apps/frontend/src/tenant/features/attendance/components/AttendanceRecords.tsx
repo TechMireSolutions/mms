@@ -149,7 +149,7 @@ export function AttendanceRecords({
           value={search}
           onChange={handleSearchChange}
           placeholder={t("attendance.searchStudent")}
-          className="flex-1 min-w-[180px]"
+          className="flex-1 min-w-[11.25rem]"
         />
 
         <div className="flex max-w-full overflow-x-auto rounded-lg border border-border text-xs font-bold" role="group" aria-label={t("attendance.filter.status")}>
@@ -157,7 +157,7 @@ export function AttendanceRecords({
             type="button"
             variant={statusFilter === "all" ? "default" : "ghost"}
             onClick={() => { setStatusFilter("all"); setPage(1); }}
-            className="shrink-0 rounded-none min-h-11 px-3 text-xs font-bold border-r border-border"
+            className="shrink-0 rounded-none min-h-11 px-3 text-xs font-bold border-e border-border"
           >
             {t("attendance.filter.all")}
           </Button>
@@ -167,7 +167,7 @@ export function AttendanceRecords({
               key={status.id}
               variant={statusFilter === status.id ? "default" : "ghost"}
               onClick={() => { setStatusFilter(status.id); setPage(1); }}
-              className={`shrink-0 rounded-none min-h-11 px-3 text-xs font-bold border-r border-border last:border-r-0 ${statusFilter === status.id ? `${status.bg} ${status.text}` : ""}`}
+              className={`shrink-0 rounded-none min-h-11 px-3 text-xs font-bold border-e border-border last:border-e-0 ${statusFilter === status.id ? `${status.bg} ${status.text}` : ""}`}
             >
               {statusLabel(status.id)}
             </Button>
@@ -203,41 +203,41 @@ export function AttendanceRecords({
             <thead className="bg-muted/60 border-b border-border">
               <tr>
                 {showDate && (
-                  <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                  <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                     {t("attendance.columns.date")}
                   </ResizableTableHead>
                 )}
                 {showClass && (
-                  <ResizableTableHead columnKey="class" width={getColumnWidth?.("class")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                  <ResizableTableHead columnKey="class" width={getColumnWidth?.("class")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                     {t("attendance.columns.class")}
                   </ResizableTableHead>
                 )}
                 {showStudent && (
-                  <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                  <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                     {t("attendance.columns.student")}
                   </ResizableTableHead>
                 )}
                 {showStatus && (
-                  <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                  <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                     {t("attendance.columns.status")}
                   </ResizableTableHead>
                 )}
                 {showTimeIn && (
-                  <ResizableTableHead columnKey="timeIn" width={getColumnWidth?.("timeIn")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                  <ResizableTableHead columnKey="timeIn" width={getColumnWidth?.("timeIn")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                     {t("attendance.columns.timeIn")}
                   </ResizableTableHead>
                 )}
                 {showTimeOut && (
-                  <ResizableTableHead columnKey="timeOut" width={getColumnWidth?.("timeOut")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                  <ResizableTableHead columnKey="timeOut" width={getColumnWidth?.("timeOut")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                     {t("attendance.columns.timeOut")}
                   </ResizableTableHead>
                 )}
                 {showNotes && (
-                  <ResizableTableHead columnKey="notes" width={getColumnWidth?.("notes")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                  <ResizableTableHead columnKey="notes" width={getColumnWidth?.("notes")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                     {t("attendance.columns.notes")}
                   </ResizableTableHead>
                 )}
-                <th className="px-3 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase">
+                <th className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">
                   <span className="sr-only">{t("common.actions")}</span>
                 </th>
               </tr>
@@ -291,9 +291,9 @@ export function AttendanceRecords({
                     </td>
                   )}
                   {showNotes && (
-                    <td className="px-3 py-2.5 max-w-[160px] truncate text-xs text-muted-foreground">{attendanceRecord.notes || "—"}</td>
+                    <td className="px-3 py-2.5 max-w-[10rem] truncate text-xs text-muted-foreground">{attendanceRecord.notes || "—"}</td>
                   )}
-                  <td className="px-3 py-2.5 text-right">
+                  <td className="px-3 py-2.5 text-end">
                     <div className="flex items-center justify-end gap-1">
                       {onMessage && !showDeleted && (
                         <>

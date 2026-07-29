@@ -452,7 +452,7 @@ export function JournalEntries({
           value={search}
           onChange={setSearch}
           placeholder={t("accounting.journal.dashboard.searchPlaceholder")}
-          className="min-w-[180px]"
+          className="min-w-[11.25rem]"
         />
         <FormSelect 
           aria-label={t("accounting.journal.filterStatusAria")}
@@ -580,41 +580,41 @@ export function JournalEntries({
                     </th>
                   )}
                   {showRef && (
-                    <ResizableTableHead columnKey="ref" width={getColumnWidth?.("ref")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="ref" width={getColumnWidth?.("ref")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.ref")}
                     </ResizableTableHead>
                   )}
                   {showDate && (
-                    <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.date")}
                     </ResizableTableHead>
                   )}
                   {showDescription && (
-                    <ResizableTableHead columnKey="description" width={getColumnWidth?.("description")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="description" width={getColumnWidth?.("description")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.description")}
                     </ResizableTableHead>
                   )}
                   {showTags && (
-                    <ResizableTableHead columnKey="tags" width={getColumnWidth?.("tags")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase hidden lg:table-cell">
+                    <ResizableTableHead columnKey="tags" width={getColumnWidth?.("tags")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase hidden lg:table-cell">
                       {t("accounting.columns.journal.tags")}
                     </ResizableTableHead>
                   )}
                   {showDebit && (
-                    <ResizableTableHead columnKey="debit" width={getColumnWidth?.("debit")} onResize={onColumnResize} className="px-3 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="debit" width={getColumnWidth?.("debit")} onResize={onColumnResize} className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.debit")}
                     </ResizableTableHead>
                   )}
                   {showCredit && (
-                    <ResizableTableHead columnKey="credit" width={getColumnWidth?.("credit")} onResize={onColumnResize} className="px-3 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="credit" width={getColumnWidth?.("credit")} onResize={onColumnResize} className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.credit")}
                     </ResizableTableHead>
                   )}
                   {showStatus && (
-                    <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.status")}
                     </ResizableTableHead>
                   )}
-                  <th scope="col" className="px-3 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase">
+                  <th scope="col" className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">
                     {t("accounting.columns.actions")}
                   </th>
                 </tr>
@@ -647,7 +647,7 @@ export function JournalEntries({
                         </td>
                       )}
                       {showDescription && (
-                        <td className="px-3 py-2.5 text-foreground max-w-[200px] truncate">{entry.description}</td>
+                        <td className="px-3 py-2.5 text-foreground max-w-[12.5rem] truncate">{entry.description}</td>
                       )}
                       {showTags && (
                         <td className="px-3 py-2.5 hidden lg:table-cell">
@@ -662,19 +662,19 @@ export function JournalEntries({
                         </td>
                       )}
                       {showDebit && (
-                        <td className="px-3 py-2.5 text-right font-mono text-xs font-semibold text-info">
+                        <td className="px-3 py-2.5 text-end font-mono text-xs font-semibold text-info">
                           {formatCurrency ? formatCurrency(totalDebit) : formatMoney(totalDebit)}
                         </td>
                       )}
                       {showCredit && (
-                        <td className="px-3 py-2.5 text-right font-mono text-xs font-semibold text-success">
+                        <td className="px-3 py-2.5 text-end font-mono text-xs font-semibold text-success">
                           {formatCurrency ? formatCurrency(totalCredit) : formatMoney(totalCredit)}
                         </td>
                       )}
                       {showStatus && (
                         <td className="px-3 py-2.5"><StatusBadge status={entry.status} config={journalStatusConfig} size="sm" /></td>
                       )}
-                      <td className="px-3 py-2.5 text-right">
+                      <td className="px-3 py-2.5 text-end">
                         <div className="flex items-center justify-end gap-1">
                           <Button
                             type="button"
@@ -750,16 +750,16 @@ export function JournalEntries({
                     {filtered.length !== 1 ? t("accounting.journal.dashboard.entriesCount", { count: filtered.length }) : t("accounting.journal.dashboard.entryCount", { count: filtered.length })}
                   </td>
                   {showDebit && (
-                    <td className="px-3 py-2 text-right font-mono font-bold text-info text-xs">
+                    <td className="px-3 py-2 text-end font-mono font-bold text-info text-xs">
                       {formatCurrency ? formatCurrency(grandDebit) : formatMoney(grandDebit)}
                     </td>
                   )}
                   {showCredit && (
-                    <td className="px-3 py-2 text-right font-mono font-bold text-success text-xs">
+                    <td className="px-3 py-2 text-end font-mono font-bold text-success text-xs">
                       {formatCurrency ? formatCurrency(grandCredit) : formatMoney(grandCredit)}
                     </td>
                   )}
-                  <td colSpan={(showStatus ? 1 : 0) + 1} className="px-3 py-2 text-right text-xs font-semibold text-muted-foreground">
+                  <td colSpan={(showStatus ? 1 : 0) + 1} className="px-3 py-2 text-end text-xs font-semibold text-muted-foreground">
                     {Math.abs(grandDebit - grandCredit) < 0.01
                       ? <span className="text-success">{t("accounting.journal.dashboard.balanced")}</span>
                       : <span className="text-destructive">{t("accounting.journal.dashboard.difference", { diff: formatCurrency(Math.abs(grandDebit - grandCredit)) })}</span>

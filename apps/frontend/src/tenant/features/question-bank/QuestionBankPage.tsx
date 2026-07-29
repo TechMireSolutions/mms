@@ -407,7 +407,7 @@ export default function QuestionBankPage(): React.JSX.Element {
           tabs={PAPER_BUILDER_TABS}
           activeTab={paperBuilderTab}
           onTabChange={setPaperBuilderTab}
-          panelClassName="h-[94vh] max-w-[calc(100vw-1rem)] rounded-xl sm:h-[92vh] sm:max-w-[calc(100vw-2rem)] sm:rounded-2xl xl:max-w-6xl"
+          panelClassName="h-[94vh] max-w-[calc(100%-1rem)] rounded-xl sm:h-[92vh] sm:max-w-[calc(100%-2rem)] sm:rounded-2xl xl:max-w-6xl"
         >
           <PaperBuilder
             key={paperBuilderSession}

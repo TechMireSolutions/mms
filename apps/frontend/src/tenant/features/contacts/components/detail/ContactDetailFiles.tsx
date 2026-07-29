@@ -60,7 +60,7 @@ export function ContactDetailFiles({
           <h4 className="text-sm font-bold text-foreground">
             {isUploading ? t('contacts.detail.uploading') : t('contacts.detail.cloudStorageRepository')}
           </h4>
-          <p className="text-xs text-muted-foreground mt-1 max-w-[180px]">
+          <p className="text-xs text-muted-foreground mt-1 max-w-[11.25rem]">
             {t('contacts.detail.dragDropDocuments')}
           </p>
         </div>

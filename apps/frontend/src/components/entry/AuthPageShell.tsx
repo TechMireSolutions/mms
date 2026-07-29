@@ -15,7 +15,7 @@ export function AuthPageBackdrop(): React.JSX.Element {
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute bottom-[8%] right-[8%] h-56 w-56 rounded-full bg-secondary/[0.06] blur-3xl"
+        className="pointer-events-none absolute bottom-[8%] end-[8%] h-56 w-56 rounded-full bg-secondary/[0.06] blur-3xl"
         aria-hidden
       />
     </>
@@ -38,7 +38,7 @@ export function AuthCardShell({
   return (
     <div
       className={cn(
-        "relative z-10 w-full max-w-[420px]",
+        "relative z-10 w-full max-w-[26.25rem]",
         !reducedMotion && "animate-fade-in",
         className,
       )}

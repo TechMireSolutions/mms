@@ -397,7 +397,7 @@ function FieldRow({
       </span>
 
       {/* Field metadata */}
-      <div className="flex-1 min-w-0 text-left">
+      <div className="flex-1 min-w-0 text-start">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-semibold text-foreground">{field.label}</span>
           <span className="text-xs text-muted-foreground">{typeLabel}</span>
@@ -501,7 +501,7 @@ export function CustomFieldsBuilder({
   return (
     <div className="space-y-3">
       {/* Header */}
-      <div className="flex items-center justify-between text-left">
+      <div className="flex items-center justify-between text-start">
         <div>
           <h4 className="text-sm font-bold text-foreground">Custom Fields</h4>
           <p className="text-xs text-muted-foreground mt-0.5">

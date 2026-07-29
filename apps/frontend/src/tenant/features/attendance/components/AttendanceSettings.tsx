@@ -185,11 +185,11 @@ export function AttendanceSettings() {
 
           {/* Advanced Features */}
           <Card accentColor="success" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
-            <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 pl-6.5">
+            <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 ps-6.5">
               <Scan className="w-4 h-4 text-primary" />
               <h2 className="text-sm font-bold text-foreground m-0">{t("attendance.settings.advanced")}</h2>
             </header>
-            <div className="px-4 pl-6.5 pb-2">
+            <div className="px-4 ps-6.5 pb-2">
               <SettingRow label={t("attendance.settings.offlineMode")} sub={t("attendance.settings.offlineModeDesc")}>
                 <Switch checked={settingsDraft.offlineEnabled} onCheckedChange={(value) => upd("offlineEnabled", value)} />
               </SettingRow>

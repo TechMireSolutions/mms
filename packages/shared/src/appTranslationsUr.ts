@@ -34,6 +34,8 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "nav.settings": "ترتیبات",
   "nav.collapse": "سمیٹیں",
   "nav.closeSidebar": "سائڈبار بند کریں",
+  "nav.openMenu": "نیویگیشن مینو کھولیں",
+  "nav.globalSearchPlaceholder": "طلباء، سیشن تلاش کریں…",
 
   "settings.title": "ترتیبات",
   "settings.searchPlaceholder": "ترتیبات تلاش کریں...",

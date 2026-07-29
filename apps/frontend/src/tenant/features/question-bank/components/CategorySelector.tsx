@@ -170,7 +170,7 @@ export function CategorySelector({
               type="button"
               onClick={handleCreate}
               disabled={!newName.trim()}
-              className="rounded-lg bg-primary h-auto px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              className="rounded-lg bg-primary min-h-11 h-auto px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               {t('questionBank.createCategory')}
             </Button>
@@ -181,7 +181,7 @@ export function CategorySelector({
                 setNewName('');
               }}
               variant="outline"
-              className="rounded-lg border border-border h-auto px-3 py-2 text-xs font-medium hover:bg-muted shadow-none"
+              className="rounded-lg border border-border min-h-11 h-auto px-3 py-2 text-xs font-medium hover:bg-muted shadow-none"
             >
               {t('questionBank.cancel')}
             </Button>

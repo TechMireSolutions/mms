@@ -69,7 +69,7 @@ export function PaperSectionsEditor({
                     variant="ghost"
                     size="icon"
                     aria-label={t("questionBank.removeSectionAria", { title: section.title })}
-                    className="ml-auto text-muted-foreground hover:text-destructive"
+                    className="ms-auto text-muted-foreground hover:text-destructive"
                   >
                     <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                   </Button>

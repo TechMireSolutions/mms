@@ -200,7 +200,7 @@ export function ExportToolbar({
             type="button"
             aria-pressed={compactFormat === "pdf"}
             onClick={() => setCompactFormat("pdf")}
-            className={`flex min-h-11 items-center gap-1 h-auto px-2.5 py-2 rounded-none shadow-none border-l border-border font-bold transition-colors ${compactFormat === "pdf" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "bg-card text-muted-foreground hover:bg-muted"}`}
+            className={`flex min-h-11 items-center gap-1 h-auto px-2.5 py-2 rounded-none shadow-none border-s border-border font-bold transition-colors ${compactFormat === "pdf" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "bg-card text-muted-foreground hover:bg-muted"}`}
           >
             <FileText className="w-3 h-3" aria-hidden="true" />
             {t("reports.export.pdf")}
@@ -220,7 +220,7 @@ export function ExportToolbar({
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 flex-wrap py-2 text-left relative">
+    <div className="flex items-center justify-between gap-3 flex-wrap py-2 text-start relative">
       <p className="text-xs text-muted-foreground">
         {titlePrefix}
         <span className="font-semibold text-foreground">{title}</span>
@@ -229,7 +229,7 @@ export function ExportToolbar({
       
       <div className="flex items-center gap-2 flex-wrap">
         {showPdfSettings && (
-          <div className="absolute end-0 bottom-full mb-2 bg-card border border-border rounded-xl p-3 shadow-xl z-50 flex flex-col gap-3 min-w-[200px] max-w-full">
+          <div className="absolute end-0 bottom-full mb-2 bg-card border border-border rounded-xl p-3 shadow-xl z-50 flex flex-col gap-3 min-w-[12.5rem] max-w-full">
              <div className="space-y-1.5">
                <label htmlFor="export-orientation" className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t("reports.export.orientation")}</label>
                <div className="flex gap-1 p-1 bg-muted rounded-lg">
@@ -285,7 +285,7 @@ export function ExportToolbar({
             onClick={handlePdfExport}
             disabled={finalRows.length === 0}
             variant="ghost"
-            className="flex min-h-11 items-center gap-1.5 px-3 py-2 border-r border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 rounded-none"
+            className="flex min-h-11 items-center gap-1.5 px-3 py-2 border-e border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 rounded-none"
             type="button"
           >
             <FileText className="w-3.5 h-3.5 text-destructive" aria-hidden="true" />

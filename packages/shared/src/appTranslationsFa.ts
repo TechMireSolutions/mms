@@ -3009,6 +3009,8 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "nav.attendance": "حضور و غیاب",
   "nav.collapse": "جمع کردن",
   "nav.closeSidebar": "بستن نوار کناری",
+  "nav.openMenu": "باز کردن منوی ناوبری",
+  "nav.globalSearchPlaceholder": "جستجوی دانش‌آموزان و جلسات…",
   "nav.contacts": "مخاطبین",
   "nav.dashboard": "داشبورد",
   "nav.enrollments": "ثبت‌نام",

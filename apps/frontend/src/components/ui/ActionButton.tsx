@@ -52,7 +52,7 @@ export function ActionButton({
       {loading ? (
         <div className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
       ) : (
-        Icon && <Icon style={{ width: "14px", height: "14px" }} />
+        Icon && <Icon className="h-3.5 w-3.5" />
       )}
       {children}
     </button>

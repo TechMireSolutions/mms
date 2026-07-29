@@ -180,7 +180,7 @@ export function DenominationsManager({ denoms, onUpdate, canWrite = true }: Deno
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.06 }}
-            className={`p-4 pl-5.5 group ${!denomination.active ? "opacity-60" : ""}`}
+            className={`p-4 ps-5.5 group ${!denomination.active ? "opacity-60" : ""}`}
           >
             <div className="absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300" style={{ backgroundColor: denomination.active ? denomination.color : "hsl(var(--muted-foreground))" }} />
             {/* Card visual */}

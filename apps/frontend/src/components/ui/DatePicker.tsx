@@ -191,7 +191,7 @@ export function DatePicker({
         <PopoverTrigger
           type="button"
           disabled={disabled}
-          className="mr-2 min-h-11 min-w-11 flex items-center justify-center hover:bg-muted/80 rounded-md text-muted-foreground hover:text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0"
+          className="me-2 min-h-11 min-w-11 flex items-center justify-center hover:bg-muted/80 rounded-md text-muted-foreground hover:text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0"
           aria-label={t("datePicker.openAria")}
         >
           <CalendarIcon className="h-4 w-4 opacity-70" />
@@ -229,7 +229,7 @@ export function DatePicker({
         <button
           type="button"
           onClick={handleClear}
-          className="min-h-11 min-w-11 flex items-center justify-center hover:bg-muted/80 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0 ml-1"
+          className="min-h-11 min-w-11 flex items-center justify-center hover:bg-muted/80 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0 ms-1"
           aria-label={t("datePicker.clearAria")}
         >
           <X className="h-3.5 w-3.5" />

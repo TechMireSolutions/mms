@@ -87,7 +87,7 @@ function EventModal({ open, event, onClose, onSave, saving }: EventModalProps) {
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="event-description">{t("sessions.events.form.description")}</label>
-          <Textarea id="event-description" className="min-h-[64px] resize-none" value={eventDraft.description || ""} onChange={(inputEvent) => updateEventDraft("description", inputEvent.target.value)} placeholder={t("sessions.events.form.descriptionPlaceholder")} />
+          <Textarea id="event-description" className="min-h-[4rem] resize-none" value={eventDraft.description || ""} onChange={(inputEvent) => updateEventDraft("description", inputEvent.target.value)} placeholder={t("sessions.events.form.descriptionPlaceholder")} />
         </div>
       </div>
     </FormModal>
@@ -167,7 +167,7 @@ export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps) {
       ) : (
         <div className="relative">
           {/* Timeline line */}
-          <div className="absolute left-[18px] top-0 bottom-0 w-0.5 bg-border" aria-hidden="true" />
+          <div className="absolute start-[18px] top-0 bottom-0 w-0.5 bg-border" aria-hidden="true" />
           <div className="space-y-4 ps-10">
             {events.map((sessionEvent, index) => (
               <motion.article
@@ -178,7 +178,7 @@ export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps) {
                 className="relative"
               >
                 {/* Timeline dot */}
-                <div className="absolute -left-10 top-4 w-4 h-4 rounded-full bg-card border-2 border-primary" aria-hidden="true" />
+                <div className="absolute -start-10 top-4 w-4 h-4 rounded-full bg-card border-2 border-primary" aria-hidden="true" />
                 <div className="rounded-xl border border-border bg-card p-4 hover:shadow-sm transition-all group">
                   <header className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2 flex-wrap">

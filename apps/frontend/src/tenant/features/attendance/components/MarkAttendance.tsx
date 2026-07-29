@@ -607,8 +607,8 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
           <table className="w-full text-sm">
             <thead className="bg-muted/60 border-b border-border">
               <tr>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase w-8">#</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("attendance.columns.student")}</th>
+                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase w-8">#</th>
+                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("attendance.columns.student")}</th>
                 {orderedFields.map((field) => {
                   const isEnabled = isFieldEnabled(field.id);
                   if (!isEnabled) return null;
@@ -616,7 +616,7 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
                     <th
                       key={field.id}
                       className={`px-3 py-2.5 text-xs font-semibold text-muted-foreground uppercase ${
-                        field.id === "status" ? "text-center" : "text-left"
+                        field.id === "status" ? "text-center" : "text-start"
                       } ${field.id === "timeIn" || field.id === "timeOut" ? "w-28" : ""}`}
                     >
                       {field.label} {field.required ? "*" : ""}
@@ -710,7 +710,7 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
                                 onChange={(value: string) => setRow(row.studentId, field.id, value)}
                                 options={field.options || []}
                                 placeholder={t("common.selectPlaceholder")}
-                                className="min-w-[120px]"
+                                className="min-w-[7.5rem]"
                               />
                             ) : field.type === "boolean" ? (
                               <Checkbox

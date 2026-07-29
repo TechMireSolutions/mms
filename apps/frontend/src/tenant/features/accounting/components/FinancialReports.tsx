@@ -54,7 +54,7 @@ function ReportSection({ title, rows, totalLabel, total, debitNormal, color }: R
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-medium text-foreground">{reportRow.name}</span>
-                    <span className="font-mono font-semibold text-foreground ml-2">{formatNumber(Math.abs(rowAmount))}</span>
+                    <span className="font-mono font-semibold text-foreground ms-2">{formatNumber(Math.abs(rowAmount))}</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-muted overflow-hidden" aria-hidden="true">
                     <div className="h-full rounded-full bg-primary/40 transition-all" style={{ width: `${percentage}%` }} />
@@ -233,11 +233,11 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
           <ReportSection title={t("accounting.reports.equity")} rows={equityRows} totalLabel={t("accounting.reports.totalEquity")}
             total={equityTotal} debitNormal={false} color="bg-primary/10" />
           <div className="grid grid-cols-2 gap-3">
-            <article className="px-5 py-3 rounded-xl border border-border bg-info/10 text-right">
+            <article className="px-5 py-3 rounded-xl border border-border bg-info/10 text-end">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.reports.totalAssets")}</h4>
               <p className="font-mono font-bold text-info text-lg m-0">{formatCurrency(assets)}</p>
             </article>
-            <article className="px-5 py-3 rounded-xl border border-border bg-primary/10 text-right">
+            <article className="px-5 py-3 rounded-xl border border-border bg-primary/10 text-end">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.reports.liabilitiesAndEquity")}</h4>
               <p className="font-mono font-bold text-primary text-lg m-0">{formatCurrency(liabilities + equity)}</p>
             </article>
@@ -264,23 +264,23 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
               <tbody className="divide-y divide-border">
                 <tr className="bg-muted/10">
                   <td className="px-4 py-3 font-semibold text-foreground">{t("accounting.reports.cashflow.netSurplusOrDeficit")}</td>
-                  <td className="px-4 py-3 text-right font-mono font-semibold">{formatCurrency(netSurplus)}</td>
+                  <td className="px-4 py-3 text-end font-mono font-semibold">{formatCurrency(netSurplus)}</td>
                 </tr>
                 <tr>
                   <td className="px-4 py-3 text-muted-foreground ps-8">{t("accounting.reports.cashflow.depreciation")}</td>
-                  <td className="px-4 py-3 text-right font-mono text-muted-foreground">
+                  <td className="px-4 py-3 text-end font-mono text-muted-foreground">
                     {formatCurrency(depreciationAdjustment)}
                   </td>
                 </tr>
                 <tr>
                   <td className="px-4 py-3 text-muted-foreground ps-8">{t("accounting.reports.cashflow.receivables")}</td>
-                  <td className="px-4 py-3 text-right font-mono text-muted-foreground">
+                  <td className="px-4 py-3 text-end font-mono text-muted-foreground">
                     {formatCurrency(receivablesChange)}
                   </td>
                 </tr>
                 <tr>
                   <td className="px-4 py-3 text-muted-foreground ps-8">{t("accounting.reports.cashflow.payables")}</td>
-                  <td className="px-4 py-3 text-right font-mono text-muted-foreground">
+                  <td className="px-4 py-3 text-end font-mono text-muted-foreground">
                     {formatCurrency(payablesChange)}
                   </td>
                 </tr>
@@ -288,9 +288,9 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
                   <td className="px-4 py-2.5 font-bold text-foreground">{t("accounting.reports.cashflow.netCashOperations")}</td>
-                  <td className="px-4 py-2.5 text-right font-mono font-bold text-foreground text-base">
+                  <td className="px-4 py-2.5 text-end font-mono font-bold text-foreground text-base">
                     {formatCurrency(Math.abs(netCashFlow))}
-                    <span className={`text-xs ml-1 ${netCashFlow >= 0 ? "text-success" : "text-destructive"}`}>
+                    <span className={`text-xs ms-1 ${netCashFlow >= 0 ? "text-success" : "text-destructive"}`}>
                       {netCashFlow >= 0 ? t("accounting.reports.cashflow.inflow") : t("accounting.reports.cashflow.outflow")}
                     </span>
                   </td>

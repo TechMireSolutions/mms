@@ -114,10 +114,10 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
               <caption className="sr-only">{t("accounting.journal.detail.account")}</caption>
               <thead className="bg-muted/60 border-b border-border/40">
                 <tr>
-                  <th scope="col" className="px-5 py-2 text-left text-xs font-semibold text-muted-foreground uppercase">{t("accounting.journal.detail.account")}</th>
-                  <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase hidden sm:table-cell">{t("accounting.journal.detail.note")}</th>
-                  <th scope="col" className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground uppercase">{t("accounting.journal.detail.debit")}</th>
-                  <th scope="col" className="px-5 py-2 text-right text-xs font-semibold text-muted-foreground uppercase">{t("accounting.journal.detail.credit")}</th>
+                  <th scope="col" className="px-5 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">{t("accounting.journal.detail.account")}</th>
+                  <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase hidden sm:table-cell">{t("accounting.journal.detail.note")}</th>
+                  <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-muted-foreground uppercase">{t("accounting.journal.detail.debit")}</th>
+                  <th scope="col" className="px-5 py-2 text-end text-xs font-semibold text-muted-foreground uppercase">{t("accounting.journal.detail.credit")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -135,10 +135,10 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
                         </div>
                       </td>
                       <td className="px-4 py-2.5 text-xs text-muted-foreground hidden sm:table-cell">{line.description || "—"}</td>
-                      <td className="px-4 py-2.5 text-right font-mono font-semibold text-info">
+                      <td className="px-4 py-2.5 text-end font-mono font-semibold text-info">
                         {line.debit > 0 ? formatCurrency(line.debit) : "—"}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-mono font-semibold text-success">
+                      <td className="px-4 py-2.5 text-end font-mono font-semibold text-success">
                         {line.credit > 0 ? formatCurrency(line.credit) : "—"}
                       </td>
                     </tr>
@@ -148,8 +148,8 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
               <tfoot className="border-t-2 border-border bg-muted/30">
                 <tr>
                   <td colSpan={2} className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase">{t("accounting.journal.detail.totals")}</td>
-                  <td className="px-4 py-2 text-right font-mono font-bold text-info">{formatCurrency(totalDebit)}</td>
-                  <td className="px-4 py-2 text-right font-mono font-bold text-success">{formatCurrency(totalCredit)}</td>
+                  <td className="px-4 py-2 text-end font-mono font-bold text-info">{formatCurrency(totalDebit)}</td>
+                  <td className="px-4 py-2 text-end font-mono font-bold text-success">{formatCurrency(totalCredit)}</td>
                 </tr>
               </tfoot>
             </table>

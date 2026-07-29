@@ -181,7 +181,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
                 variant="ghost"
                 onClick={() => toggleMonthFilter(monthTotals.month)}
                 aria-pressed={selectedMonth === monthTotals.month}
-                className={`flex h-auto w-full items-center gap-3 px-2 py-1.5 justify-start ${
+                className={`flex min-h-11 h-auto w-full items-center gap-3 px-2 py-1.5 justify-start ${
                   selectedMonth === monthTotals.month ? "bg-primary/10 text-primary" : ""
                 }`}
               >
@@ -189,7 +189,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
                 <div className="flex-1 h-2 rounded-full bg-muted">
                   <div className="h-2 rounded-full bg-primary" style={{ width: `${monthTotals.rate}%` }} />
                 </div>
-                <span className="text-xs font-bold text-foreground w-10 text-right">{monthTotals.rate}%</span>
+                <span className="text-xs font-bold text-foreground w-10 text-end">{monthTotals.rate}%</span>
               </Button>
             ))}
           </div>
@@ -273,7 +273,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
                   t("finance.columns.dueDate"),
                   t("finance.columns.status"),
                 ].map((headerLabel) => (
-                  <th key={headerLabel} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
+                  <th key={headerLabel} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
                 ))}
               </tr>
             </thead>
@@ -308,7 +308,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
       )}
 
       {/* Dashboard widgets preview */}
-      <div className="border-t border-border/50 pt-6 mt-6 space-y-4 text-left">
+      <div className="border-t border-border/50 pt-6 mt-6 space-y-4 text-start">
         <div>
           <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{t("finance.report.dashboardWidgetsTitle")}</h3>
           <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("finance.report.dashboardWidgetsSubtitle")}</p>

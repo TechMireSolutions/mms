@@ -94,7 +94,7 @@ export function AccountingDateFilterBar({
           type="button"
           variant="outline"
           onClick={onExportCSV}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors ml-auto min-h-11"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors ms-auto min-h-11"
         >
           <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.ledger.exportCsv")}
         </Button>

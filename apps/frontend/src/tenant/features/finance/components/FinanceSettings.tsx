@@ -80,7 +80,7 @@ export function FinanceSettings(): React.ReactElement {
         </p>
       ) : (
     <Card accentColor="primary" className="p-5 space-y-4 shadow-sm hover:shadow-md border-border/80" aria-labelledby="finance-settings-title">
-      <div className="flex items-center gap-2.5 pb-1 border-b border-border/40 pl-1">
+      <div className="flex items-center gap-2.5 pb-1 border-b border-border/40 ps-1">
         <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
           <DollarSign className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         </div>
@@ -201,7 +201,7 @@ export function FinanceSettings(): React.ReactElement {
         <Button
           type="button"
           onClick={handleSave}
-          className={saved ? "bg-success hover:bg-success/90 text-success-foreground ml-auto" : "ml-auto"}
+          className={saved ? "bg-success hover:bg-success/90 text-success-foreground ms-auto" : "ms-auto"}
         >
           <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? t("settings.savedBadge") : t("common.save")}
         </Button>

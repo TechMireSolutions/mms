@@ -218,27 +218,27 @@ export function RedemptionTracker({
               <thead>
                 <tr className="border-b border-border bg-muted/30">
                   {showStudent && (
-                    <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.student")}
                     </ResizableTableHead>
                   )}
                   {showReward && (
-                    <ResizableTableHead columnKey="reward" width={getColumnWidth?.("reward")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <ResizableTableHead columnKey="reward" width={getColumnWidth?.("reward")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.reward")}
                     </ResizableTableHead>
                   )}
                   {showPointsUsed && (
-                    <ResizableTableHead columnKey="pointsUsed" width={getColumnWidth?.("pointsUsed")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <ResizableTableHead columnKey="pointsUsed" width={getColumnWidth?.("pointsUsed")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.pointsUsed")}
                     </ResizableTableHead>
                   )}
                   {showDate && (
-                    <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.date")}
                     </ResizableTableHead>
                   )}
                   {showApprovedBy && (
-                    <ResizableTableHead columnKey="approvedBy" width={getColumnWidth?.("approvedBy")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <ResizableTableHead columnKey="approvedBy" width={getColumnWidth?.("approvedBy")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.approvedBy")}
                     </ResizableTableHead>
                   )}

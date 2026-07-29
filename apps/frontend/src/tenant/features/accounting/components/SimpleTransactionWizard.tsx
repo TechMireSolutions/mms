@@ -137,7 +137,7 @@ function StepTypeSelection({ selected, onSelect }: { selected: QuickActionType |
                   <Button key={item.id} type="button" variant="ghost" aria-pressed={isSelected} onClick={() => onSelect({ ...item, groupKey: group.groupKey, color: group.color })}
                     className={`h-auto flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all text-center ${isSelected ? colors.selected : `border-border bg-card hover:bg-muted/50 ${colors.item}`}`}>
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isSelected ? colors.icon : "bg-muted text-muted-foreground"}`} aria-hidden="true">
-                      <Icon className="w-4.5 h-4.5 w-[18px] h-[18px]" />
+                      <Icon className="h-4.5 w-4.5" />
                     </div>
                     <span className={`text-xs font-semibold leading-tight ${isSelected ? "text-foreground" : "text-muted-foreground"}`}>{t(item.labelKey)}</span>
                   </Button>
@@ -336,18 +336,18 @@ function StepReview({
               <div className="min-w-[20rem]">
               <div className="grid grid-cols-3 gap-0 bg-muted/60 border-b border-border">
                 <div className="px-3 py-2 font-bold text-muted-foreground uppercase">{t("accounting.journal.detail.account")}</div>
-                <div className="px-3 py-2 font-bold text-muted-foreground uppercase text-right">{t("accounting.columns.journal.debit")}</div>
-                <div className="px-3 py-2 font-bold text-muted-foreground uppercase text-right">{t("accounting.columns.journal.credit")}</div>
+                <div className="px-3 py-2 font-bold text-muted-foreground uppercase text-end">{t("accounting.columns.journal.debit")}</div>
+                <div className="px-3 py-2 font-bold text-muted-foreground uppercase text-end">{t("accounting.columns.journal.credit")}</div>
               </div>
               <div className="grid grid-cols-3 bg-info/10/50 border-b border-border">
                 <div className="px-3 py-2 font-semibold text-foreground">{debitAccount?.name || "—"}</div>
-                <div className="px-3 py-2 text-right font-mono text-info font-bold">{formatCurrency(amount)}</div>
-                <div className="px-3 py-2 text-right text-muted-foreground">—</div>
+                <div className="px-3 py-2 text-end font-mono text-info font-bold">{formatCurrency(amount)}</div>
+                <div className="px-3 py-2 text-end text-muted-foreground">—</div>
               </div>
               <div className="grid grid-cols-3 bg-success/10/50">
                 <div className="px-3 py-2 font-semibold text-foreground">{creditAccount?.name || "—"}</div>
-                <div className="px-3 py-2 text-right text-muted-foreground">—</div>
-                <div className="px-3 py-2 text-right font-mono text-success font-bold">{formatCurrency(amount)}</div>
+                <div className="px-3 py-2 text-end text-muted-foreground">—</div>
+                <div className="px-3 py-2 text-end font-mono text-success font-bold">{formatCurrency(amount)}</div>
               </div>
               </div>
             </div>

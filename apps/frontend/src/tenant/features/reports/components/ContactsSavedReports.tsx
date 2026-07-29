@@ -203,7 +203,7 @@ export default function ContactsSavedReports({
   return (
     <div className="space-y-4 border-t border-border/50 pt-6 mt-6">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="text-left">
+        <div className="text-start">
           <h3 className="text-sm font-semibold text-foreground">{t("contacts.savedReports.title")}</h3>
           <p className="text-xs text-muted-foreground mt-0.5">{t("contacts.savedReports.subtitle")}</p>
         </div>
@@ -236,7 +236,7 @@ export default function ContactsSavedReports({
             return (
               <div
                 key={savedReport.id}
-                className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm flex flex-col gap-3 text-left"
+                className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm flex flex-col gap-3 text-start"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -285,7 +285,7 @@ export default function ContactsSavedReports({
                     type="button"
                     variant="ghost"
                     onClick={() => void handleDelete(savedReport.id)}
-                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors ml-auto min-h-11 px-2 hover:bg-transparent shadow-none"
+                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors ms-auto min-h-11 px-2 hover:bg-transparent shadow-none"
                   >
                     <Trash2 className="w-3 h-3" />
                     {t("contacts.savedReports.delete")}

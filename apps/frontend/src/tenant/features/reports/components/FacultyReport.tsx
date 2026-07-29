@@ -180,7 +180,7 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
                   t("teachers.report.colStudents"),
                   t("teachers.report.colHoursWeek"),
                 ].map((heading) => (
-                  <th key={heading} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">{heading}</th>
+                  <th key={heading} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{heading}</th>
                 ))}
               </tr>
             </thead>

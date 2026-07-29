@@ -106,8 +106,8 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
       >
 
         {/* Monthly Revenue vs Expenses */}
-        <Card accentColor="primary" className="lg:col-span-2 p-5 pl-6.5">
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">{t("accounting.dashboard.revenueVsExpenses")}</h3>
+        <Card accentColor="primary" className="lg:col-span-2 p-5 ps-6.5">
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ms-1">{t("accounting.dashboard.revenueVsExpenses")}</h3>
           {monthlyData.length === 0 ? (
             <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">{t("accounting.dashboard.noPostedData")}</div>
           ) : (
@@ -127,8 +127,8 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
         </Card>
 
         {/* Expense Breakdown Pie */}
-        <Card accentColor="info" className="p-5 pl-6.5">
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">{t("accounting.dashboard.expenseBreakdown")}</h3>
+        <Card accentColor="info" className="p-5 ps-6.5">
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ms-1">{t("accounting.dashboard.expenseBreakdown")}</h3>
           {expenseBreakdown.length === 0 ? (
             <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">{t("accounting.dashboard.noExpenseData")}</div>
           ) : (
@@ -169,8 +169,8 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
       >
 
         {/* Balance Sheet snapshot */}
-        <Card accentColor="primary" className="p-5 pl-6.5">
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">{t("accounting.dashboard.balanceSheetSnapshot")}</h3>
+        <Card accentColor="primary" className="p-5 ps-6.5">
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ms-1">{t("accounting.dashboard.balanceSheetSnapshot")}</h3>
           <div className="space-y-3">
             {bsData.map((balanceSheetItem) => {
               const max = Math.max(...bsData.map((snapshotItem) => snapshotItem.value), 1);
@@ -198,8 +198,8 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
         </Card>
 
         {/* Recent Entries */}
-        <Card accentColor="warning" className="p-5 pl-6.5">
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ml-1">{t("accounting.dashboard.recentEntries")}</h3>
+        <Card accentColor="warning" className="p-5 ps-6.5">
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ms-1">{t("accounting.dashboard.recentEntries")}</h3>
           <div className="space-y-2">
             {recentEntries.map((journalEntry) => {
               const totalDebit = journalEntry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
@@ -215,7 +215,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
                     <p className="text-xs font-bold text-primary font-mono m-0">{journalEntry.ref}</p>
                     <p className="text-xs text-foreground truncate m-0">{journalEntry.description}</p>
                   </div>
-                  <div className="text-right flex-shrink-0">
+                  <div className="text-end flex-shrink-0">
                     <p className="text-xs font-mono font-bold text-foreground m-0">{formatCurrency(totalDebit)}</p>
                     <p className="text-xs text-muted-foreground m-0">{formatDate(journalEntry.date)}</p>
                   </div>

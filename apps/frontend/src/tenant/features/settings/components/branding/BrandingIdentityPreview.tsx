@@ -54,7 +54,7 @@ export default function BrandingIdentityPreview({ data }: BrandingIdentityPrevie
             </p>
           )}
           {data.website && (
-            <p className="truncate pl-5">{data.website}</p>
+            <p className="truncate ps-5">{data.website}</p>
           )}
           {formattedAddress && (
             <p className="flex items-start gap-2">

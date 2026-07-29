@@ -110,7 +110,7 @@ export default function DashboardCustomizePanel({
               </p>
             </div>
 
-            <div className="space-y-2 max-h-[300px] overflow-y-auto pe-1">
+            <div className="space-y-2 max-h-[18.75rem] overflow-y-auto pe-1">
               {dashboardMetricCards.map((dashboardCard) => {
                 const isChecked = !disabledCardIds.includes(dashboardCard.id);
                 return (
@@ -155,7 +155,7 @@ export default function DashboardCustomizePanel({
               </p>
             </div>
 
-            <div className="space-y-2 max-h-[260px] overflow-y-auto pe-1">
+            <div className="space-y-2 max-h-[16.25rem] overflow-y-auto pe-1">
               {customWidgets.length === 0 ? (
                 <p className="text-xs text-muted-foreground italic py-4 text-center">{t('dashboard.noWidgets')}</p>
               ) : (

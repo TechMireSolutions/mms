@@ -60,15 +60,15 @@ interface StepIndicatorProps {
 
 function StepIndicator({ step, t }: StepIndicatorProps): JSX.Element {
   return (
-    <div className="flex items-center gap-0 mb-6">
+    <div className="mb-6 flex max-w-full items-center gap-0 overflow-x-auto pb-1">
       {STEP_DEFS.map((stepDefinition, stepIndex) => {
         const done    = step > stepDefinition.id;
         const active  = step === stepDefinition.id;
         const Icon    = stepDefinition.icon;
         return (
           <React.Fragment key={stepDefinition.id}>
-            <div className="flex flex-col items-center gap-1">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
+            <div className="flex min-w-[5rem] flex-col items-center gap-1">
+              <div className={`flex h-11 w-11 items-center justify-center rounded-full border-2 transition-all ${
                 done   ? "bg-primary border-primary text-primary-foreground" :
                 active ? "border-primary bg-primary/10 text-primary" :
                          "border-border bg-muted text-muted-foreground"
@@ -80,7 +80,7 @@ function StepIndicator({ step, t }: StepIndicatorProps): JSX.Element {
               </span>
             </div>
             {stepIndex < STEP_DEFS.length - 1 && (
-              <div className={`flex-1 h-0.5 mb-4 mx-1 transition-all ${step > stepDefinition.id ? "bg-primary" : "bg-border"}`} />
+              <div className={`mx-1 mb-4 h-0.5 min-w-4 flex-1 transition-all ${step > stepDefinition.id ? "bg-primary" : "bg-border"}`} />
             )}
           </React.Fragment>
         );
@@ -122,7 +122,7 @@ interface LabelProps {
 function Label({ children, required = false }: LabelProps): JSX.Element {
   return (
     <label className={FORM_LABEL}>
-      {children}{required && <span className="text-destructive ml-0.5">*</span>}
+      {children}{required && <span className="text-destructive ms-0.5">*</span>}
     </label>
   );
 }
@@ -171,7 +171,7 @@ function RoleCard({ role, selected, onSelect }: RoleCardProps): JSX.Element {
         {showPerms && (
           <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }}
             className="overflow-hidden border-t border-border">
-            <div className="p-3 grid grid-cols-2 gap-1">
+            <div className="p-3 grid grid-cols-1 gap-1 sm:grid-cols-2">
               {Object.entries(role.permissions || {})
                 .filter(([moduleId]) => isRbacModuleEnabled(moduleId, globalSettings.enabledModules))
                 .map(([moduleId, permissions]) => (
@@ -341,7 +341,7 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
       {/* Dynamic custom fields */}
       {orderedFields.filter((field) => !["name", "email", "role"].includes(field.id)).length > 0 && (
         <div className="space-y-4">
-          <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest pl-1">{t("users.addAdditionalDetails")}</h4>
+          <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest ps-1">{t("users.addAdditionalDetails")}</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {orderedFields.filter((field) => !["name", "email", "role"].includes(field.id)).map((field) => {
               const value = (form as unknown as Record<string, unknown>)[field.id] ?? "";
@@ -351,7 +351,7 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
                   <Label required={field.required}>{field.label}</Label>
                   {field.type === "textarea" ? (
                     <Textarea
-                      className="min-h-[60px]"
+                      className="min-h-[3.75rem]"
                       value={value as string}
                       onChange={(e) => updateFieldValue(e.target.value)}
                       placeholder={field.placeholder || t("users.addEnterField", { label: field.label.toLowerCase() })}
@@ -427,7 +427,7 @@ function Step3({ form, setForm, errors }: Step3Props): JSX.Element {
     <div className="space-y-4">
       <div>
         <Label>{t("users.addAccountMethod")}</Label>
-        <div className="grid grid-cols-2 gap-2 mt-1">
+        <div className="grid grid-cols-1 gap-2 mt-1 sm:grid-cols-2">
           {[
             { id: "invite", labelKey: "users.addMethodInvite" as const, descKey: "users.addMethodInviteDesc" as const, icon: Mail },
             { id: "password", labelKey: "users.addMethodPassword" as const, descKey: "users.addMethodPasswordDesc" as const, icon: Lock },
@@ -436,7 +436,7 @@ function Step3({ form, setForm, errors }: Step3Props): JSX.Element {
             const active = form.setupMethod === setupOption.id;
             return (
               <Button type="button" variant="ghost" key={setupOption.id} onClick={() => setForm((previousForm) => ({ ...previousForm, setupMethod: setupOption.id as "invite" | "password" }))}
-                className={`p-3 rounded-xl border-2 text-left transition-all h-auto flex flex-col items-start shadow-none ${
+                className={`p-3 rounded-xl border-2 text-start transition-all h-auto flex flex-col items-start shadow-none ${
                   active ? "border-primary bg-primary/5 hover:bg-primary/5 text-foreground" : "border-border bg-card hover:border-primary/40 text-muted-foreground hover:text-foreground"
                 }`}>
                 <div className="flex items-center gap-1.5 mb-1">
@@ -476,7 +476,7 @@ function Step3({ form, setForm, errors }: Step3Props): JSX.Element {
                   placeholder={passwordHint}
                   value={form.password || ""}
                   onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                  className="pl-9.5 pr-9"
+                  className="ps-9.5 pe-9"
                 />
                 <Button type="button" variant="ghost" onClick={() => setShowPwd((v) => !v)}
                   className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground min-h-11 min-w-11 hover:bg-transparent shadow-none"

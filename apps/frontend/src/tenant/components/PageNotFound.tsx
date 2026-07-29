@@ -32,7 +32,7 @@ export default function PageNotFound(): React.JSX.Element {
           </div>
 
           {isAuthenticated && can("users.manage") ? (
-            <div className="mt-8 p-4 bg-muted/50 rounded-lg border border-border text-left">
+            <div className="mt-8 p-4 bg-muted/50 rounded-lg border border-border text-start">
               <p className="text-sm font-medium text-foreground">{t("page.notFound.adminNote")}</p>
               <p className="text-sm text-muted-foreground leading-relaxed mt-1">
                 {t("page.notFound.adminNoteBody")}

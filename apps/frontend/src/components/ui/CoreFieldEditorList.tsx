@@ -273,7 +273,7 @@ export function CoreFieldEditorList({
                           labels={labels}
                         />
                         {editingId === field.key && !fullEditingId && (
-                          <div className="ml-8 p-3 rounded-lg border border-border bg-muted/20 space-y-3 text-left">
+                          <div className="ms-8 p-3 rounded-lg border border-border bg-muted/20 space-y-3 text-start">
                             <div>
                               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">
                                 {t("fields.defaultValueLabel")}
@@ -301,7 +301,7 @@ export function CoreFieldEditorList({
                           </div>
                         )}
                         {fullEditingId === field.key && onEditField && (
-                          <div className="ml-8 mt-1">
+                          <div className="ms-8 mt-1">
                             <FieldEditor
                               field={field}
                               existingLabels={fields.map((fieldDefinition) => fieldDefinition.label)}

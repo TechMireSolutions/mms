@@ -149,7 +149,7 @@ export default function StatsGrid({
         <Button
           variant="outline"
           onClick={onAddCardClick}
-          className="border border-dashed border-border rounded-xl p-4 md:p-5 flex flex-col items-center justify-center gap-2 hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all duration-300 group text-muted-foreground min-h-[115px] h-auto"
+          className="border border-dashed border-border rounded-xl p-4 md:p-5 flex flex-col items-center justify-center gap-2 hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all duration-300 group text-muted-foreground min-h-[7.1875rem] h-auto"
         >
           <div className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
             <Plus className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />

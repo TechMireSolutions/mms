@@ -151,7 +151,7 @@ export function WidgetDrilldownModal({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ type: "spring", duration: 0.35, bounce: 0.15 }}
-        className="w-full max-w-2xl bg-card dark:bg-card/90 border border-border/60 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] text-left"
+        className="w-full max-w-2xl bg-card dark:bg-card/90 border border-border/60 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] text-start"
       >
         {/* Modal Header */}
         <div className="p-6 border-b border-border/45 bg-muted/20 flex items-center justify-between">
@@ -193,11 +193,11 @@ export function WidgetDrilldownModal({
             <div className="overflow-x-auto">
               <Table className="w-full text-xs">
                 <TableHeader>
-                  <TableRow className="border-b border-border text-muted-foreground uppercase font-black text-xs tracking-wider text-left hover:bg-transparent">
+                  <TableRow className="border-b border-border text-muted-foreground uppercase font-black text-xs tracking-wider text-start hover:bg-transparent">
                     <TableHead className="pb-3 text-muted-foreground h-auto">{t("reports.widgets.refName")}</TableHead>
                     <TableHead className="pb-3 text-muted-foreground h-auto">{t("reports.widgets.primaryInfo")}</TableHead>
                     <TableHead className="pb-3 text-muted-foreground h-auto">{t("reports.widgets.currentStatus")}</TableHead>
-                    <TableHead className="pb-3 text-right text-muted-foreground h-auto">{t("reports.widgets.microAction")}</TableHead>
+                    <TableHead className="pb-3 text-end text-muted-foreground h-auto">{t("reports.widgets.microAction")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="divide-y divide-border/60">
@@ -242,7 +242,7 @@ export function WidgetDrilldownModal({
  
                     return (
                       <TableRow key={recordId} className="hover:bg-muted/10">
-                        <TableCell className="py-3.5 pr-2 font-bold text-foreground max-w-[180px] truncate">{name}</TableCell>
+                        <TableCell className="py-3.5 pe-2 font-bold text-foreground max-w-[11.25rem] truncate">{name}</TableCell>
                         <TableCell className="py-3.5 text-muted-foreground font-semibold">{detailText}</TableCell>
                         <TableCell className="py-3.5">
                           <StatusBadge
@@ -261,7 +261,7 @@ export function WidgetDrilldownModal({
                             }}
                           />
                         </TableCell>
-                        <TableCell className="py-3.5 text-right">
+                        <TableCell className="py-3.5 text-end">
                           {widget.collection === "hasanat_distributions" ? (
                             <Button
                               onClick={() => handleDeleteDist(recordId)}
@@ -512,7 +512,7 @@ export function CustomWidgetRenderer({
           whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 450, damping: 20 }}
           onClick={() => onMetricClick(widget)}
-          className="w-[100px] h-[100px] p-2.5 text-center flex flex-col justify-between items-center rounded-2xl cursor-pointer outline-none select-none relative overflow-hidden surface-glass hover:border-primary/20 hover:shadow-md"
+          className="w-[6.25rem] h-[6.25rem] p-2.5 text-center flex flex-col justify-between items-center rounded-2xl cursor-pointer outline-none select-none relative overflow-hidden surface-glass hover:border-primary/20 hover:shadow-md"
           type="button"
         >
           <span className="text-xs font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
@@ -533,10 +533,10 @@ export function CustomWidgetRenderer({
         layout
         whileHover={{ y: -4, scale: 1.015 }}
         transition={{ type: "spring", stiffness: 350, damping: 25 }}
-        className="rounded-2xl surface-glass p-5 hover:shadow-surface-lg transition-all relative text-left flex flex-col justify-between min-h-[140px] font-sans overflow-hidden group"
+        className="rounded-2xl surface-glass p-5 hover:shadow-surface-lg transition-all relative text-start flex flex-col justify-between min-h-[8.75rem] font-sans overflow-hidden group"
       >
-        <div className={`absolute start-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] ${colorClasses.bar}/60 group-hover:${colorClasses.bar} transition-colors duration-300`} />
-        <div className={`absolute -right-8 -top-8 w-20 h-20 rounded-full ${colorClasses.glow} transition-all duration-500`} />
+        <div className={`absolute start-0 top-0 bottom-0 w-[3.5px] rounded-e-[2px] ${colorClasses.bar}/60 group-hover:${colorClasses.bar} transition-colors duration-300`} />
+        <div className={`absolute -end-8 -top-8 w-20 h-20 rounded-full ${colorClasses.glow} transition-all duration-500`} />
         <div className="flex items-start justify-between">
           <div className={`w-9 h-9 rounded-lg ${colorClasses.bg} ring-4 ${colorClasses.ring} flex items-center justify-center aspect-square flex-shrink-0`}>
             <Icon className={`w-4.5 h-4.5 ${colorClasses.text}`} style={{ width: 18, height: 18 }} />
@@ -590,7 +590,7 @@ export function CustomWidgetRenderer({
             whileTap={{ scale: 0.96 }}
             transition={{ type: "spring", stiffness: 450, damping: 20 }}
             onClick={() => onMetricClick(widget)}
-            className={`w-[100px] h-[100px] p-1.5 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
+            className={`w-[6.25rem] h-[6.25rem] p-1.5 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
               alertScheme 
                 ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse` 
                 : "surface-glass hover:border-primary/20 hover:shadow-md"
@@ -615,7 +615,7 @@ export function CustomWidgetRenderer({
             whileTap={{ scale: 0.96 }}
             transition={{ type: "spring", stiffness: 450, damping: 20 }}
             onClick={() => onMetricClick(widget)}
-            className={`w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
+            className={`w-[6.25rem] h-[6.25rem] p-2 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
               alertScheme 
                 ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse` 
                 : "surface-glass hover:border-primary/20 hover:shadow-md"
@@ -643,7 +643,7 @@ export function CustomWidgetRenderer({
           whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 450, damping: 20 }}
           onClick={() => onMetricClick(widget)}
-          className={`w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
+          className={`w-[6.25rem] h-[6.25rem] p-2 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
             alertScheme 
               ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse` 
               : "surface-glass hover:border-primary/20 hover:shadow-md"
@@ -670,7 +670,7 @@ export function CustomWidgetRenderer({
           whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 450, damping: 20 }}
           onClick={() => onMetricClick(widget)}
-          className={`w-[100px] h-[100px] p-1.5 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
+          className={`w-[6.25rem] h-[6.25rem] p-1.5 text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
             alertScheme 
               ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse` 
               : "surface-glass hover:border-primary/20 hover:shadow-md"
@@ -693,7 +693,7 @@ export function CustomWidgetRenderer({
     if (resolvedWidgetType === "switch") {
       return (
         <div
-          className="w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl surface-glass overflow-hidden relative transition-all duration-300 hover:border-primary/20 hover:shadow-md"
+          className="w-[6.25rem] h-[6.25rem] p-2 text-center flex flex-col justify-between items-center rounded-2xl surface-glass overflow-hidden relative transition-all duration-300 hover:border-primary/20 hover:shadow-md"
         >
           <span className="text-xs font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
             {resolveWidgetTitle(widget, t)}
@@ -738,15 +738,15 @@ export function CustomWidgetRenderer({
           : "surface-glass"
       }`}
     >
-      <div className={`absolute start-0 top-0 bottom-0 w-[3.5px] rounded-r-[2px] transition-colors duration-300 ${
+      <div className={`absolute start-0 top-0 bottom-0 w-[3.5px] rounded-e-[2px] transition-colors duration-300 ${
         isAlert
           ? "bg-destructive/60 group-hover:bg-destructive"
           : `${colorTheme.bar}/60`
       }`} />
-      <div className={`absolute -right-8 -top-8 w-24 h-24 rounded-full ${colorTheme.glow} transition-all duration-500`} />
+      <div className={`absolute -end-8 -top-8 w-24 h-24 rounded-full ${colorTheme.glow} transition-all duration-500`} />
       {/* Widget Card Header */}
       <div className="flex items-center justify-between">
-        <div className="space-y-0.5 text-left">
+        <div className="space-y-0.5 text-start">
           <span className="text-xs font-black text-foreground uppercase tracking-widest leading-none block">
             {resolveWidgetTitle(widget, t)}
           </span>
@@ -773,11 +773,11 @@ export function CustomWidgetRenderer({
       </div>
 
       {/* Widget Card Body */}
-      <div className="py-4 flex items-center justify-between min-h-[70px]">
+      <div className="py-4 flex items-center justify-between min-h-[4.375rem]">
         {resolvedWidgetType === "kpi" && (
           <Button
             onClick={() => onMetricClick(widget)}
-            className="h-auto text-left select-none outline-none group/kpi shadow-none px-0 py-0 hover:bg-transparent"
+            className="h-auto text-start select-none outline-none group/kpi shadow-none px-0 py-0 hover:bg-transparent"
             type="button"
             variant="ghost"
           >
@@ -797,7 +797,7 @@ export function CustomWidgetRenderer({
           <div className="flex items-center gap-4 w-full">
             <Button
               onClick={() => onMetricClick(widget)}
-              className="flex-1 h-auto text-left outline-none group/prog shadow-none px-0 py-0 hover:bg-transparent justify-start"
+              className="flex-1 h-auto text-start outline-none group/prog shadow-none px-0 py-0 hover:bg-transparent justify-start"
               type="button"
               variant="ghost"
             >
@@ -817,7 +817,7 @@ export function CustomWidgetRenderer({
 
         {resolvedWidgetType === "switch" && (
           <div className="flex items-center justify-between w-full">
-            <div className="text-left">
+            <div className="text-start">
               <span className={`text-base font-black uppercase tracking-wider ${isSwitchOn ? "text-primary" : "text-muted-foreground"}`}>
                 {switchLabel}
               </span>
@@ -836,7 +836,7 @@ export function CustomWidgetRenderer({
         )}
 
         {resolvedWidgetType === "chart" && (
-          <div className="w-full h-[80px] -mb-2">
+          <div className="w-full h-[5rem] -mb-2">
             <React.Suspense fallback={<div className="w-full h-full bg-muted/20 animate-pulse rounded-xl" />}>
               <CustomWidgetChartFallback widget={widget} collections={collections} />
             </React.Suspense>

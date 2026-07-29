@@ -114,7 +114,7 @@ export function StudentResultCard({ result, exam, allResults, onClose, onCertifi
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 divide-x divide-border border-t border-border" role="status" aria-label={t("examinations.resultCard.metricsAria")}>
+        <div className="grid grid-cols-1 divide-y divide-border border-t border-border sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:rtl:divide-x-reverse" role="status" aria-label={t("examinations.resultCard.metricsAria")}>
           <div className="min-w-0 px-2 py-3.5 text-center sm:px-3">
             <p className="text-sm font-bold text-foreground break-words">{`${result.marksObtained}/${exam.totalMarks}`}</p>
             <p className="text-xs text-muted-foreground">{t("examinations.resultCard.marks")}</p>
@@ -132,15 +132,15 @@ export function StudentResultCard({ result, exam, allResults, onClose, onCertifi
         {/* Exam info */}
         <section className="relative overflow-hidden group/examinfo px-5.5 py-4 space-y-2 border-t border-border/60 text-sm text-muted-foreground" aria-label={t("examinations.resultCard.examDetailsAria")}>
           <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/examinfo:bg-primary" />
-          <div className="flex justify-between ml-1">
+          <div className="flex justify-between ms-1">
             <span>{t("examinations.resultCard.exam")}</span>
             <span className="font-semibold text-foreground">{exam.name}</span>
           </div>
-          <div className="flex justify-between ml-1">
+          <div className="flex justify-between ms-1">
             <span>{t("examinations.resultCard.subject")}</span>
             <span className="font-semibold text-foreground">{exam.subject}</span>
           </div>
-          <div className="flex justify-between ml-1">
+          <div className="flex justify-between ms-1">
             <span>{t("examinations.resultCard.date")}</span>
             <span className="font-semibold text-foreground">{formatDate(exam.date, true)}</span>
           </div>

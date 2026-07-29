@@ -355,7 +355,7 @@ export default function ContactPicker({
                   onChange(contact.id, contact);
                   closeDropdown();
                 }}
-                className="w-full flex items-center h-auto font-normal justify-start gap-3 px-3.5 py-2.5 hover:bg-muted transition-colors text-left focus:outline-none rounded-none shadow-none text-foreground"
+                className="w-full flex items-center h-auto font-normal justify-start gap-3 px-3.5 py-2.5 hover:bg-muted transition-colors text-start focus:outline-none rounded-none shadow-none text-foreground"
               >
                 <UserAvatar
                   id={contact.id}

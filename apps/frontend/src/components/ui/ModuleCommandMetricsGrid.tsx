@@ -13,23 +13,24 @@ interface ModuleCommandMetricsGridProps {
   items: MetricItem[];
 }
 
+const GRID_COLS_BY_COUNT: Record<number, string> = {
+  1: 'grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1',
+  2: 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2',
+  3: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3',
+  4: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4',
+  5: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
+  6: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6',
+  7: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7',
+  8: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-8',
+};
+
 /**
  * Renders a responsive grid of metric cards with automated column width calculation
  * and staggered Framer Motion entrance animations.
  */
 export function ModuleCommandMetricsGrid({ items }: ModuleCommandMetricsGridProps): React.JSX.Element {
   const count = items.length;
-
-  let gridColsClass = 'grid-cols-2 sm:grid-cols-3';
-  if (count === 6) {
-    gridColsClass += ' lg:grid-cols-6';
-  } else if (count === 7) {
-    gridColsClass += ' lg:grid-cols-4 xl:grid-cols-7';
-  } else if (count === 8) {
-    gridColsClass += ' lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-8';
-  } else {
-    gridColsClass += ` lg:grid-cols-${Math.min(count, 4)} xl:grid-cols-${count}`;
-  }
+  const gridColsClass = GRID_COLS_BY_COUNT[count] ?? GRID_COLS_BY_COUNT[4];
 
   return (
     <div className={`grid ${gridColsClass} gap-2`}>

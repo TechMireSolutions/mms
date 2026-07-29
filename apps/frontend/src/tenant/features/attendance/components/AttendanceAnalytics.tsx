@@ -233,7 +233,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
                   <div key={status.id} className="flex items-center gap-2 text-xs">
                     <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: COLORS[index % COLORS.length] }} />
                     <span className="text-muted-foreground">{attendanceStatusLabel(status, t)}</span>
-                    <span className="font-bold text-foreground ml-auto">{totalStats[status.id] || 0}</span>
+                    <span className="font-bold text-foreground ms-auto">{totalStats[status.id] || 0}</span>
                   </div>
                 ))}
               </div>

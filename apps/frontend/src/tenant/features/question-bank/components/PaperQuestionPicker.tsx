@@ -83,7 +83,7 @@ export function PaperQuestionPicker({
         />
       </div>
 
-      <div className="max-h-[360px] space-y-2 overflow-y-auto pr-1 sm:max-h-[460px] lg:max-h-[560px]">
+      <div className="max-h-[22.5rem] space-y-2 overflow-y-auto pe-1 sm:max-h-[28.75rem] lg:max-h-[35rem]">
         {questions.length === 0 ? (
           <p className="m-0 rounded-lg border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
             {t("questionBank.noQuestionsAvailable")}

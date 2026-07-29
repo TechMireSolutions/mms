@@ -106,7 +106,7 @@ export function ModuleFieldsSetup({
   return (
     <div className="space-y-4">
       {/* Intro info box */}
-      <div className="flex items-start gap-3 p-4 rounded-xl bg-info/10 border border-info/30 text-sm text-info text-left">
+      <div className="flex items-start gap-3 p-4 rounded-xl bg-info/10 border border-info/30 text-sm text-info text-start">
         <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
         <div>
           <h4 className="font-semibold text-xs">{introTitle || t("contacts.setup.fieldsIntroTitle")}</h4>
@@ -117,11 +117,11 @@ export function ModuleFieldsSetup({
       </div>
 
       {/* Fields header */}
-      <div className="flex items-center justify-between flex-wrap gap-2 text-left">
+      <div className="flex items-center justify-between flex-wrap gap-2 text-start">
         <div className="flex items-center gap-2">
           <Layout className="w-4 h-4 text-primary" />
           <h3 className="text-sm font-bold text-foreground">{t("contacts.setup.fieldsByTab")}</h3>
-          <span className="text-xs text-muted-foreground ml-1 flex items-center gap-1">
+          <span className="text-xs text-muted-foreground ms-1 flex items-center gap-1">
             <span>— {t("contacts.setup.dragToReorder")} </span>
             <GripVertical className="w-3.5 h-3.5 text-muted-foreground/60 inline align-middle" />
             <span>{t("contacts.setup.toReorder")}</span>
@@ -152,11 +152,11 @@ export function ModuleFieldsSetup({
                     disabled={tabId === "basic"}
                   />
                 </div>
-                <div className="flex-1 min-w-0 ml-2">
+                <div className="flex-1 min-w-0 ms-2">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-foreground">{tabLabel}</span>
                     {!tab.isSystem && (
-                      <div className="flex items-center gap-1.5 ml-2">
+                      <div className="flex items-center gap-1.5 ms-2">
                         <Button
                           type="button"
                           variant="ghost"
@@ -191,7 +191,7 @@ export function ModuleFieldsSetup({
                     type="button"
                     variant="ghost"
                     onClick={() => handleToggleTabRequired(tabId)}
-                    className={`flex-shrink-0 min-h-11 px-2.5 text-xs font-bold border transition-all shadow-none ml-2
+                    className={`flex-shrink-0 min-h-11 px-2.5 text-xs font-bold border transition-all shadow-none ms-2
                       ${
                         isReq
                           ? "bg-destructive/10 border-destructive/30 text-destructive hover:bg-destructive/20 hover:text-destructive"
@@ -280,7 +280,7 @@ export function ModuleFieldsSetup({
         saveDisabled={!newTabLabel.trim()}
         saveLabel={t("contacts.setup.addTab")}
       >
-        <div className="space-y-3 text-left">
+        <div className="space-y-3 text-start">
           <label htmlFor="newTabLabel" className="text-xs font-semibold text-foreground">
             {t("contacts.setup.customTabName")} *
           </label>
@@ -313,7 +313,7 @@ export function ModuleFieldsSetup({
         saveDisabled={!renameTabLabel.trim()}
         saveLabel={t("contacts.setup.renameTabButton")}
       >
-        <div className="space-y-3 text-left">
+        <div className="space-y-3 text-start">
           <label htmlFor="renameTabLabel" className="text-xs font-semibold text-foreground">
             {t("contacts.setup.customTabName")} *
           </label>

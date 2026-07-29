@@ -178,14 +178,14 @@ export function ResultsView({
           )}
 
           <Card accentColor="warning" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm" aria-label={t("examinations.rankings")}>
-            <div className="px-4 py-3 border-b border-border/40 flex items-center gap-2 pl-6.5 bg-muted/20">
+            <div className="px-4 py-3 border-b border-border/40 flex items-center gap-2 ps-6.5 bg-muted/20">
               <Trophy className="w-4 h-4 text-warning" aria-hidden="true" />
               <h3 className="text-sm font-bold text-foreground m-0">{t("examinations.rankingsTitle", { name: exam.name })}</h3>
             </div>
             {rankedResults.length === 0 ? (
               <div className="py-10 text-center text-sm text-muted-foreground" role="status">{t("examinations.empty.results")}</div>
             ) : (
-              <div className="divide-y divide-border/50 pl-6.5" role="list">
+              <div className="divide-y divide-border/50 ps-6.5" role="list">
                 {rankedResults.map((rankedResult) => (
                   <motion.div
                     key={rankedResult.id}
@@ -231,7 +231,7 @@ export function ResultsView({
                     )}
 
                     {showMarks && (
-                      <div className="text-right flex-shrink-0">
+                      <div className="text-end flex-shrink-0">
                         <p className="text-sm font-bold text-foreground m-0">
                           {rankedResult.marksObtained}
                           <span className="text-xs font-normal text-muted-foreground">/{exam.totalMarks}</span>
@@ -243,7 +243,7 @@ export function ResultsView({
                     )}
 
                     {!showMarks && showPercentage && (
-                      <div className="text-right flex-shrink-0 text-sm text-muted-foreground">{rankedResult.pct}%</div>
+                      <div className="text-end flex-shrink-0 text-sm text-muted-foreground">{rankedResult.pct}%</div>
                     )}
 
                     {showGrade && (

@@ -170,10 +170,10 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
         const pct = totalStock > 0 ? Math.round((totalRemaining / totalStock) * 100) : 0;
 
         return (
-          <Card key={den.id} className="pl-5.5">
+          <Card key={den.id} className="ps-5.5">
             <div className="absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300" style={{ backgroundColor: den.color }} />
             {/* Den header */}
-            <header className="px-4 py-3 flex items-center gap-3 border-b border-border/40 bg-muted/20 pl-4">
+            <header className="px-4 py-3 flex items-center gap-3 border-b border-border/40 bg-muted/20 ps-4">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg" style={{ background: den.color }} aria-hidden="true">
                 {den.icon}
               </div>
@@ -185,7 +185,7 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
                 <div className="h-1.5 rounded-full bg-border overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${den.name} availability`}>
                   <div className="h-full rounded-full" style={{ width: `${pct}%`, background: den.color }} />
                 </div>
-                <p className="text-xs text-right text-muted-foreground mt-0.5 m-0">{pct}%</p>
+                <p className="text-xs text-end text-muted-foreground mt-0.5 m-0">{pct}%</p>
               </div>
             </header>
 
@@ -200,7 +200,7 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
                       <p className="text-sm font-medium text-foreground m-0">{batch.note || t("hasanat.stock.batchFallback")}</p>
                       <p className="text-xs text-muted-foreground m-0">{t("hasanat.stock.addedMeta", { date: batch.addedDate, by: batch.addedBy || "—" })}</p>
                     </div>
-                    <div className="text-right flex-shrink-0">
+                    <div className="text-end flex-shrink-0">
                       <p className="text-sm font-bold text-foreground m-0">{batch.remaining}<span className="text-muted-foreground font-normal">/{batch.quantity}</span></p>
                       <p className="text-xs text-muted-foreground m-0">{t("hasanat.stock.pctLeft", { pct: batchPercentage })}</p>
                     </div>

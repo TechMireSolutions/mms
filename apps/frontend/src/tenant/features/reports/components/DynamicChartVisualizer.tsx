@@ -546,7 +546,7 @@ export default function DynamicChartVisualizer({
   const renderChart = () => {
     if (processedData.length === 0) {
       return (
-        <div className="h-[250px] flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border/50 rounded-3xl bg-card/20">
+        <div className="h-[15.625rem] flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border/50 rounded-3xl bg-card/20">
           <Info className="w-6 h-6 mb-2 opacity-40 animate-bounce" />
           <p className="text-xs font-bold text-foreground">{t("reports.visualizer.noData")}</p>
           <p className="text-xs text-muted-foreground mt-0.5">{t("reports.visualizer.noDataSubtitle")}</p>
@@ -665,7 +665,7 @@ export default function DynamicChartVisualizer({
   const topGroup = processedData[0]?.name || "N/A";
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-left font-sans">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-start font-sans">
       
       {/* 1. Left Configurator Panel (5 cols) */}
       <div className="lg:col-span-5 space-y-5 print:hidden">
@@ -857,7 +857,7 @@ export default function DynamicChartVisualizer({
             </Button>
           </div>
 
-          <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
+          <div className="space-y-2.5 max-h-[13.75rem] overflow-y-auto pe-1">
             {filters.length === 0 ? (
               <p className="text-xs text-muted-foreground italic py-3 text-center bg-card/10 rounded-2xl border border-dashed border-border/40">{t("reports.visualizer.noFilters")}</p>
             ) : (
@@ -991,7 +991,7 @@ export default function DynamicChartVisualizer({
               {/* Exports button group */}
               <div className="flex items-center gap-1.5 relative">
                 {showPdfSettings && (
-                  <div className="absolute end-0 bottom-full mb-2 bg-card border border-border rounded-2xl p-4 shadow-xl z-50 flex flex-col gap-3.5 min-w-[200px] backdrop-blur-xl">
+                  <div className="absolute end-0 bottom-full mb-2 bg-card border border-border rounded-2xl p-4 shadow-xl z-50 flex flex-col gap-3.5 min-w-[12.5rem] backdrop-blur-xl">
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t("reports.visualizer.pdfOrientation")}</label>
                       <div className="flex gap-1 p-1 bg-muted rounded-xl">
@@ -1140,8 +1140,8 @@ export default function DynamicChartVisualizer({
                   exit={{ opacity: 0, height: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="border border-border/60 bg-card/25 rounded-2xl overflow-hidden mt-1 max-h-[220px] overflow-x-auto overflow-y-auto">
-                    <table className="w-full text-xs text-left">
+                  <div className="border border-border/60 bg-card/25 rounded-2xl overflow-hidden mt-1 max-h-[13.75rem] overflow-x-auto overflow-y-auto">
+                    <table className="w-full text-xs text-start">
                       <thead className="bg-muted/50 border-b border-border/50 text-xs font-black uppercase text-muted-foreground tracking-wider">
                         <tr>
                           <th className="px-4 py-2.5">{t("reports.visualizer.xAxisCategory")}</th>

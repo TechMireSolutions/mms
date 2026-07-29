@@ -34,7 +34,7 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
 ### Design Token Strictness
 - **No Hardcoded Tailwind Values**: NEVER use hardcoded hex or one-off palette classes (e.g. `bg-gray-100`, `text-blue-500`, `rounded-[2rem]`).
 - **Use Semantic Design Tokens**: Use tokens mapped in `index.css` `@theme` (e.g., `text-foreground`, `text-primary`, `bg-background`, `bg-card`, `border-border`, `rounded-2xl`, `gap-3`).
-- **Touch-target exception**: Design-system primitives may use approved arbitrary sizes from `formStyles` / primitives (e.g. `min-h-[44px]`, `min-w-[44px]`) — do not invent new arbitrary values in feature code.
+- **Touch-target exception**: Design-system primitives may use approved sizes from `formStyles` / primitives (e.g. `min-h-11`, `min-w-11`) — do not invent new arbitrary values in feature code.
 - **Semantic Colors**: For success/warning/destructive affordances, use semantic tokens (e.g., `text-destructive`, `bg-destructive/10`, theme `--success`).
 - **Glassmorphism**: Consistent card overlays use `backdrop-blur` and translucent borders.
 
@@ -44,12 +44,12 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
 
 ### Form Shell & Layout
 - Layout repeatable entity forms using full-width single column flows (`COLLECTION_BODY`) inside `space-y-3` containers.
-- Form inputs, selects, and textareas must share a standard sizing of `min-h-[44px]` (via the `INPUT` constant).
+- Form inputs, selects, and textareas must share a standard sizing of `min-h-11` (via `FORM_INPUT` in `formStyles`).
 - Create/edit forms, builder forms, and other popup workflows must use the shared `FormModal` shell for header, icon, subtitle, tabs, progress, focus trap, sizing, and mobile behavior. Use raw `Modal` only for lightweight confirmation/content dialogs that are not forms or builders.
 - Long forms and builder workflows should split major tasks into `FormModal` tabs instead of placing every control in one tall scrolling surface. Keep each tab purposeful (details, saved drafts, sections, picker, preview) and preserve form state across tab switches.
 
 ### Overlays & Scroll Controls
-- **Stable Heights**: Tabbed forms must not shift height dynamically. Enforce fixed boundaries with `FormModal(tall)` (`h-[88vh] max-h-[700px]` with scrollable body `flex-1 overflow-y-auto`).
+- **Stable Heights**: Tabbed forms must not shift height dynamically. Enforce fixed boundaries with `FormModal(tall)` (`h-[88vh] max-h-[43.75rem]` with scrollable body `flex-1 overflow-y-auto`).
 - **Scroll Containment**: Lock parent body scrolls using `useBodyScrollLock()` and apply `overscroll-contain` to scrollable modal boxes.
 - **Mobile-First Builders**: Wide builder forms may pass explicit `panelClassName` sizing to `FormModal`, but controls must remain usable at phone widths before desktop grids are introduced.
 
@@ -125,11 +125,11 @@ Adhere to these thresholds — they map to the Tailwind v4 tokens already define
 
 ### Navigation & Interactivity
 - **Mobile nav**: Convert horizontal top-nav bars to hamburger menus, slide-out drawers, or bottom navigation on screens `< md` (< 768 px).
-- **Touch targets**: Every interactive element (button, link, icon trigger) must have a minimum tap area of `44 × 44 px` — use `min-h-[44px] min-w-[44px]` or padding equivalents.
+- **Touch targets**: Every interactive element (button, link, icon trigger) must have a minimum tap area of `44 × 44 px` — use `min-h-11 min-w-11` (or padding equivalents that preserve that floor).
 - **Wide tables**: Wrap `<DataTable>` / `<table>` in a horizontally-scrollable container (`overflow-x-auto`) or switch to card-row layouts at `< md`.
 
 ### Typography & Visual Media
-- **Fluid type**: Use `rem`/`em`/`clamp()` for font sizes — never hardcode `px` font sizes in feature components.
+- **Fluid type**: Use `rem`/`em`/`clamp()` for font sizes — never hardcode `px` font sizes in feature components. Prefer rem for layout size utilities too (`max-w-[26.25rem]`, not `max-w-[420px]`).
 - **Images & video**: All `<img>`, `<video>`, and SVG elements must carry `max-w-full h-auto` so they shrink inside smaller viewports.
 
 ### Pre-Commit Verification
@@ -137,9 +137,12 @@ Before declaring any layout implementation complete, verify:
 1. UI is correct at **375 px** (mobile), **768 px** (tablet), and **1440 px** (desktop).
 2. No text overlaps or clips at edge viewport widths.
 3. Form controls, buttons, and inputs remain touch-friendly at small viewports.
+4. RTL (`dir="rtl"`) does not introduce page-level horizontal overflow — logical CSS (`ps`/`pe`/`ms`/`me`/`start`/`end`/`text-start`).
+5. Automated smoke: `e2e/tests/responsive-shell.spec.ts` (overflow + touch targets + RTL at the three viewports).
 
 ### Systemic enforcement (do not fork)
 - Shell overflow / fluid width: `AppLayout`, `ModulePageShell`, `PlatformPageShell`, `index.css` (`box-sizing`, `#root` / `body` `overflow-x: hidden`, `img`/`video` `max-width: 100%`).
 - Touch targets: `Button` / `ActionButton` sizes use `min-h-11` (44px); modal/drawer closes and mobile nav chrome match.
 - Tables: shared `Table` wraps with `overflow-x-auto`; bare `<table>` inside cards must sit in `overflow-x-auto max-w-full`.
 - Breakpoints: mobile-default + `lg:` — avoid `max-lg:` for layout width (see `SubTabBar`).
+- Regression tests: `e2e/tests/responsive-shell.spec.ts`.

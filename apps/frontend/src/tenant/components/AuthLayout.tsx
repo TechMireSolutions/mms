@@ -111,7 +111,7 @@ export default function AuthLayout({
               )}
               <p className="text-base font-semibold text-foreground">{displayName}</p>
               {displayTagline ? (
-                <p className="max-w-[280px] text-sm leading-relaxed text-muted-foreground">
+                <p className="max-w-[17.5rem] text-sm leading-relaxed text-muted-foreground">
                   {displayTagline}
                 </p>
               ) : null}

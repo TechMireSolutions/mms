@@ -110,7 +110,7 @@ export function ContactSubListShell({
         type="button"
         variant="ghost"
         onClick={onAdd}
-        className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors p-0 justify-start mt-2 cursor-pointer"
+        className="flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors px-0 py-2 justify-start mt-2 cursor-pointer"
       >
         <Plus className="w-4 h-4" aria-hidden />
         <span>{addLabel}</span>

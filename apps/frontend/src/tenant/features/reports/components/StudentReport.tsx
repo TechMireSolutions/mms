@@ -262,14 +262,14 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
               <table className="w-full text-sm">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("students.report.colName")}</th>
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">{t("students.report.colGender")}</th>
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">{t("students.report.colClass")}</th>
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">{t("students.report.colSession")}</th>
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">{t("students.report.colCity")}</th>
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">{t("students.report.colAge")}</th>
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">{t("students.report.colRegistered")}</th>
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("students.report.colStatus")}</th>
+                    <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("students.report.colName")}</th>
+                    <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">{t("students.report.colGender")}</th>
+                    <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">{t("students.report.colClass")}</th>
+                    <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">{t("students.report.colSession")}</th>
+                    <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">{t("students.report.colCity")}</th>
+                    <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">{t("students.report.colAge")}</th>
+                    <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">{t("students.report.colRegistered")}</th>
+                    <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("students.report.colStatus")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -278,7 +278,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
                       <td className="px-3 py-2.5 font-medium text-foreground">{student.name}</td>
                       <td className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{toTitleCase(student.gender)}</td>
                       <td className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{student.class}</td>
-                      <td className="px-3 py-2.5 text-muted-foreground max-w-[160px] truncate hidden md:table-cell">{student.session}</td>
+                      <td className="px-3 py-2.5 text-muted-foreground max-w-[10rem] truncate hidden md:table-cell">{student.session}</td>
                       <td className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{student.city}</td>
                       <td className="px-3 py-2.5 text-muted-foreground hidden md:table-cell">{student.age}</td>
                       <td className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{student.registered}</td>
@@ -322,7 +322,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
                     t("students.report.colEnrolled"),
                     t("students.report.colStatus"),
                   ].map((headerLabel) => (
-                    <th key={headerLabel} className="px-4 py-3 text-left text-xs font-black text-muted-foreground uppercase tracking-widest">{headerLabel}</th>
+                    <th key={headerLabel} className="px-4 py-3 text-start text-xs font-black text-muted-foreground uppercase tracking-widest">{headerLabel}</th>
                   ))}
                 </tr>
               </thead>

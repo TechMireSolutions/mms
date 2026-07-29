@@ -66,7 +66,7 @@ export function DetailDrawerShell({
             aria-modal="true"
             aria-labelledby={titleId}
             className={cn(
-              "relative w-full max-w-full sm:max-w-sm h-full bg-card/90 border-l border-border/80 shadow-2xl flex flex-col z-10 backdrop-blur-xl text-left min-w-0",
+              "relative w-full max-w-full sm:max-w-sm h-full bg-card/90 border-s border-border/80 shadow-2xl flex flex-col z-10 backdrop-blur-xl text-start min-w-0",
               className
             )}
             aria-label={ariaLabel}

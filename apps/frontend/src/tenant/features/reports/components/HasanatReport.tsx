@@ -287,7 +287,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
                   t("hasanat.report.colRedeemed"),
                   t("hasanat.report.colBalance"),
                 ].map((headerLabel) => (
-                  <th key={headerLabel} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
+                  <th key={headerLabel} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
                 ))}
               </tr>
             </thead>
@@ -324,7 +324,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
       )}
 
       {/* Dashboard widgets preview */}
-      <div className="border-t border-border/50 pt-6 mt-6 space-y-4 text-left">
+      <div className="border-t border-border/50 pt-6 mt-6 space-y-4 text-start">
         <div>
           <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{t("hasanat.report.dashboardWidgetTitle")}</h3>
           <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("hasanat.report.dashboardWidgetSubtitle")}</p>

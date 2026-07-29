@@ -145,13 +145,13 @@ export default function TimezoneSelect({
               !normalizedValue && 'text-muted-foreground',
             )}
           >
-            <span className="truncate text-left text-sm">{selectedLabel}</span>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
+            <span className="truncate text-start text-sm">{selectedLabel}</span>
+            <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[min(100vw-2rem,24rem)] p-0" align="start">
+        <PopoverContent className="w-[min(calc(100%-2rem),24rem)] p-0" align="start">
           <div className="flex items-center border-b px-3">
-            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
+            <Search className="me-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -164,7 +164,7 @@ export default function TimezoneSelect({
             <Button
               type="button"
               variant="ghost"
-              className="w-full justify-start items-center gap-2 rounded-sm px-2 py-2 text-left font-normal hover:bg-accent hover:text-accent-foreground"
+              className="w-full justify-start items-center gap-2 rounded-sm px-2 py-2 text-start font-normal hover:bg-accent hover:text-accent-foreground"
               onClick={() => void handleLocationDetect()}
               disabled={detecting}
             >
@@ -178,7 +178,7 @@ export default function TimezoneSelect({
             <Button
               type="button"
               variant="ghost"
-              className="w-full justify-start items-center gap-2 rounded-sm px-2 py-2 text-left font-normal hover:bg-accent hover:text-accent-foreground"
+              className="w-full justify-start items-center gap-2 rounded-sm px-2 py-2 text-start font-normal hover:bg-accent hover:text-accent-foreground"
               onClick={applyDeviceTimezone}
             >
               <LocateFixed className="h-4 w-4 text-primary" aria-hidden />
@@ -199,7 +199,7 @@ export default function TimezoneSelect({
                       type="button"
                       variant="ghost"
                       className={cn(
-                        'w-full justify-start items-center gap-2 rounded-sm px-2 py-1.5 text-left font-normal hover:bg-accent hover:text-accent-foreground',
+                        'w-full justify-start items-center gap-2 rounded-sm px-2 py-1.5 text-start font-normal hover:bg-accent hover:text-accent-foreground',
                         normalizedValue === timezoneOption.value && 'bg-accent text-accent-foreground',
                       )}
                       onClick={() => applyTimezone(timezoneOption.value, true)}
@@ -212,7 +212,7 @@ export default function TimezoneSelect({
                         aria-hidden
                       />
                       <span className="truncate">{timezoneOption.label}</span>
-                      <span className="ml-auto pl-2 font-mono text-xs text-muted-foreground">
+                      <span className="ms-auto ps-2 font-mono text-xs text-muted-foreground">
                         {timezoneOption.value}
                       </span>
                     </Button>

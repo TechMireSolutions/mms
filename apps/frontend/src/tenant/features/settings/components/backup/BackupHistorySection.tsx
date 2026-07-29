@@ -103,7 +103,7 @@ export default function BackupHistorySection({
                     >
                       {isRestoringThis ? (
                         <>
-                          <RefreshCw className="h-3 w-3 animate-spin mr-1.5" aria-hidden />
+                          <RefreshCw className="h-3 w-3 animate-spin me-1.5" aria-hidden />
                           {t('backup.restoring')}
                         </>
                       ) : (

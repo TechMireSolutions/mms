@@ -29,7 +29,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
   const [openedAt, setOpenedAt] = useState<number>(0);
 
   const settings = useGlobalSettings();
-  const { t, isRtl } = useTranslation();
+  const { t } = useTranslation();
   const enabledModules = settings.enabledModules || {};
 
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>(() => {
@@ -95,7 +95,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
       />
 
       {/* Drawer */}
-      <div className={`fixed top-0 h-full w-[280px] bg-sidebar z-50 lg:hidden shadow-2xl flex flex-col ${isRtl ? "right-0" : "left-0"}`}>
+      <div className="fixed start-0 top-0 z-50 flex h-full w-[min(17.5rem,85vw)] flex-col bg-sidebar shadow-2xl lg:hidden">
         <div className="h-16 flex items-center justify-between px-5 border-b border-sidebar-border flex-shrink-0">
           <div className="flex items-center gap-3">
             {branding.logoUrl ? (
@@ -114,7 +114,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
               </div>
             )}
             <span className="text-sidebar-foreground font-semibold text-sm">
-              {branding.madrasaName || "Madrasa MS"}
+              {branding.madrasaName || t("entry.productName")}
             </span>
           </div>
           <Button
@@ -149,7 +149,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${hasActiveSub ? "text-sidebar-primary" : ""}`} />
+                      <Icon className={`h-4.5 w-4.5 flex-shrink-0 ${hasActiveSub ? "text-sidebar-primary" : ""}`} />
                       <span className="text-sm font-medium">{t(item.labelKey)}</span>
                     </div>
                     <ChevronRight
@@ -214,7 +214,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
                     : "text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                 }`}
               >
-                <Icon className={`w-[18px] h-[18px] ${isActive ? "text-sidebar-primary" : ""}`} />
+                <Icon className={`h-4.5 w-4.5 ${isActive ? "text-sidebar-primary" : ""}`} />
                 <span className="text-sm font-medium">{t(item.labelKey)}</span>
               </Link>
             );

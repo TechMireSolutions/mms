@@ -230,7 +230,7 @@ export function WidgetBuilder({
   };
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card/40 backdrop-blur-lg p-6 space-y-4 font-sans text-left">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card/40 backdrop-blur-lg p-6 space-y-4 font-sans text-start">
       {/* Builder Header Warning banner detailing Single-Metric rule */}
       <div className="pb-3 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
@@ -294,7 +294,7 @@ export function WidgetBuilder({
                         setBuilderOperation("count");
                       }
                     }}
-                    className={`h-auto p-3 rounded-2xl border text-left flex flex-col justify-between transition-all shadow-none ${
+                    className={`h-auto p-3 rounded-2xl border text-start flex flex-col justify-between transition-all shadow-none ${
                       isSelectedType
                         ? "border-primary bg-primary/10 text-primary shadow-sm" 
                         : "border-border bg-card/30 text-muted-foreground hover:border-muted-foreground/20"
@@ -632,7 +632,7 @@ export function WidgetBuilder({
               </label>
 
               {thresholdEnabled && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-fade-in text-left">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-fade-in text-start">
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.triggerCondition")}</label>
                     <FormSelect
@@ -675,7 +675,7 @@ export function WidgetBuilder({
           )}
 
           {/* Theme Palette selecting color */}
-          <div className="space-y-1.5 text-left font-sans">
+          <div className="space-y-1.5 text-start font-sans">
             <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.defaultColor")}</label>
             <div className="flex flex-wrap gap-2">
               {([
@@ -721,7 +721,7 @@ export function WidgetBuilder({
                     placeholder={t("reports.widgets.builder.searchIcons")}
                     value={iconSearch}
                     onChange={(event) => setIconSearch(event.target.value)}
-                    className="w-full ps-8 pr-3 py-1.5 text-xs rounded-lg border border-border bg-card/20 backdrop-blur-md text-foreground focus:ring-1 focus:ring-primary/20 transition-all font-semibold animate-fade-in min-h-11"
+                    className="w-full ps-8 pe-3 py-1.5 text-xs rounded-lg border border-border bg-card/20 backdrop-blur-md text-foreground focus:ring-1 focus:ring-primary/20 transition-all font-semibold animate-fade-in min-h-11"
                   />
                 </div>
               </div>
@@ -744,7 +744,7 @@ export function WidgetBuilder({
                 ))}
               </div>
 
-              <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5 bg-card/20 border border-border/50 p-2.5 rounded-2xl max-h-[110px] overflow-y-auto pr-1">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(2.75rem,1fr))] gap-1.5 bg-card/20 border border-border/50 p-2.5 rounded-2xl max-h-[6.875rem] overflow-y-auto pe-1">
                 {(() => {
                   const ICON_CATEGORIES: Record<string, string[]> = {
                     academic: ["GraduationCap", "Users", "UserCheck", "Award", "ShieldCheck", "BookOpen"],
@@ -789,9 +789,9 @@ export function WidgetBuilder({
         </div>
 
         {/* Scalability Testing Preview Column */}
-        <div className="p-4 rounded-2xl border border-border bg-card/10 backdrop-blur-xl flex flex-col justify-between relative min-h-[350px]">
+        <div className="p-4 rounded-2xl border border-border bg-card/10 backdrop-blur-xl flex flex-col justify-between relative min-h-[21.875rem]">
           <div className="space-y-4">
-            <div className="flex items-center justify-between text-left">
+            <div className="flex items-center justify-between text-start">
               <span className="text-xs font-black text-muted-foreground uppercase tracking-widest block">{t("reports.widgets.builder.testerPreview")}</span>
               <span className="text-xs text-primary font-bold">{scalerSize}x{scalerSize}px</span>
             </div>
@@ -810,7 +810,7 @@ export function WidgetBuilder({
             </div>
 
             {/* Centered sizing container */}
-            <div className="flex items-center justify-center py-4 bg-muted/10 rounded-2xl border border-dashed border-border/60 min-h-[220px]">
+            <div className="flex items-center justify-center py-4 bg-muted/10 rounded-2xl border border-dashed border-border/60 min-h-[13.75rem]">
               <div 
                 className="overflow-hidden border border-border shadow-lg rounded-3xl transition-all duration-100 flex items-center justify-center bg-card/40 backdrop-blur-md animate-fade-in"
                 style={{ width: scalerSize, height: scalerSize }}

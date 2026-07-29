@@ -72,7 +72,7 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
         className="w-full"
       />
 
-      <div className="space-y-2 max-h-80 overflow-y-auto pr-1" role="radiogroup" aria-label={t("enrollments.wizard.step1StudentsAria")}>
+      <div className="space-y-2 max-h-80 overflow-y-auto pe-1" role="radiogroup" aria-label={t("enrollments.wizard.step1StudentsAria")}>
         {!isFetching && students.length === 0 && (
           <div className="text-center py-10 text-muted-foreground text-sm" role="status">{t("enrollments.wizard.noStudents")}</div>
         )}
@@ -86,7 +86,7 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
               aria-checked={selected}
               onClick={() => onChange(student)}
               variant="outline"
-              className={`w-full text-left flex items-start gap-3 p-4 rounded-xl border-2 transition-all h-auto justify-start hover:bg-transparent ${
+              className={`w-full text-start flex items-start gap-3 p-4 rounded-xl border-2 transition-all h-auto justify-start hover:bg-transparent ${
                 selected ? "border-primary bg-primary/5 hover:bg-primary/5 text-foreground hover:text-foreground" : "border-border bg-card hover:border-primary/40 hover:bg-muted/30 text-foreground hover:text-foreground"
               }`}
             >

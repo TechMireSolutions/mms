@@ -180,7 +180,7 @@ export default function BrandColorPanel({
                 variant="ghost"
                 onClick={() => onApplyPreset(preset.primaryColor, preset.secondaryColor)}
                 className={cn(
-                  'h-auto flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-all hover:border-primary/40',
+                  'h-auto flex items-center gap-2.5 rounded-xl border p-2.5 text-start transition-all hover:border-primary/40',
                   active ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-border bg-muted/20',
                 )}
               >
@@ -189,7 +189,7 @@ export default function BrandColorPanel({
                   style={{ backgroundColor: preset.primaryColor }}
                 >
                   <span
-                    className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-background"
+                    className="absolute -bottom-0.5 -end-0.5 h-3.5 w-3.5 rounded-full border-2 border-background"
                     style={{ backgroundColor: preset.secondaryColor }}
                     aria-hidden
                   />
@@ -201,7 +201,7 @@ export default function BrandColorPanel({
                   ) : null}
                   {lowContrast ? (
                     <AlertTriangle
-                      className="absolute -left-1 -top-1 h-3 w-3 text-warning drop-shadow-sm dark:text-warning"
+                      className="absolute -start-1 -top-1 h-3 w-3 text-warning drop-shadow-sm dark:text-warning"
                       aria-label={t('theme.presetContrastLow')}
                     />
                   ) : null}
@@ -277,7 +277,7 @@ export default function BrandColorPanel({
           </span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-3 border-b border-border p-4 md:border-b-0 md:border-r">
+          <div className="space-y-3 border-b border-border p-4 md:border-b-0 md:border-e">
             <Button
               type="button"
               variant="ghost"

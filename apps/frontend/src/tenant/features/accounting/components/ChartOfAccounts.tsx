@@ -127,7 +127,7 @@ export function ChartOfAccounts({
           value={search}
           onChange={setSearch}
           placeholder={t("accounting.coa.searchAccounts")}
-          className="flex-1 min-w-[180px]"
+          className="flex-1 min-w-[11.25rem]"
         />
         <FormSelect 
           aria-label={t("accounting.coa.filterTypeAria")}
@@ -165,7 +165,7 @@ export function ChartOfAccounts({
             type="button"
             variant="default"
             onClick={() => setModal({ id: "", code: "", name: "", type: "Asset", subtype: "", description: "", isActive: true })}
-            className="flex items-center gap-1.5 rounded-xl text-sm font-semibold ml-auto"
+            className="flex items-center gap-1.5 rounded-xl text-sm font-semibold ms-auto"
           >
             <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.coa.addAccount")}
           </Button>
@@ -208,31 +208,31 @@ export function ChartOfAccounts({
                 <thead className="bg-muted/40 border-b border-border">
                   <tr>
                     {showCode && (
-                      <ResizableTableHead columnKey="code" width={getColumnWidth?.("code")} onResize={onColumnResize} className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="code" width={getColumnWidth?.("code")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">
                         {t("accounting.columns.account.code")}
                       </ResizableTableHead>
                     )}
                     {showName && (
-                      <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">
                         {t("accounting.columns.account.name")}
                       </ResizableTableHead>
                     )}
                     {showSubtype && (
-                      <ResizableTableHead columnKey="subtype" width={getColumnWidth?.("subtype")} onResize={onColumnResize} className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">
+                      <ResizableTableHead columnKey="subtype" width={getColumnWidth?.("subtype")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">
                         {t("accounting.columns.account.subtype")}
                       </ResizableTableHead>
                     )}
                     {showDescription && (
-                      <ResizableTableHead columnKey="description" width={getColumnWidth?.("description")} onResize={onColumnResize} className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase hidden lg:table-cell">
+                      <ResizableTableHead columnKey="description" width={getColumnWidth?.("description")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase hidden lg:table-cell">
                         {t("accounting.columns.account.description")}
                       </ResizableTableHead>
                     )}
                     {showNormalBalance && (
-                      <ResizableTableHead columnKey="normalBalance" width={getColumnWidth?.("normalBalance")} onResize={onColumnResize} className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="normalBalance" width={getColumnWidth?.("normalBalance")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">
                         {t("accounting.columns.account.normalBalance")}
                       </ResizableTableHead>
                     )}
-                    <th scope="col" className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground uppercase">
+                    <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.actions")}
                     </th>
                   </tr>
@@ -246,14 +246,14 @@ export function ChartOfAccounts({
                       {showName && (
                         <td className="px-4 py-2.5">
                           <span className="font-semibold text-foreground">{account.name}</span>
-                          {account.isActive === false && <span className="ml-2 text-xs text-muted-foreground font-semibold bg-muted px-1.5 py-0.5 rounded-full">{t("accounting.coa.inactive")}</span>}
+                          {account.isActive === false && <span className="ms-2 text-xs text-muted-foreground font-semibold bg-muted px-1.5 py-0.5 rounded-full">{t("accounting.coa.inactive")}</span>}
                         </td>
                       )}
                       {showSubtype && (
                         <td className="px-4 py-2.5 text-xs text-muted-foreground hidden md:table-cell">{account.subtype || "—"}</td>
                       )}
                       {showDescription && (
-                        <td className="px-4 py-2.5 text-xs text-muted-foreground hidden lg:table-cell max-w-[200px] truncate">{account.description || "—"}</td>
+                        <td className="px-4 py-2.5 text-xs text-muted-foreground hidden lg:table-cell max-w-[12.5rem] truncate">{account.description || "—"}</td>
                       )}
                       {showNormalBalance && (
                         <td className="px-4 py-2.5">
@@ -264,7 +264,7 @@ export function ChartOfAccounts({
                           />
                         </td>
                       )}
-                      <td className="px-4 py-2.5 text-right">
+                      <td className="px-4 py-2.5 text-end">
                         <div className="flex items-center justify-end gap-1">
                           {canWrite && (
                             <Button

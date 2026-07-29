@@ -69,7 +69,7 @@ export function Step2SelectSession({ value, onChange, sessions = [] }: Step2Sele
               disabled={isFull}
               onClick={() => !isFull && onChange(session)}
               variant="outline"
-              className={`w-full text-left p-4 rounded-xl border-2 transition-all h-auto disabled:opacity-50 disabled:cursor-not-allowed justify-start hover:bg-transparent ${
+              className={`w-full text-start p-4 rounded-xl border-2 transition-all h-auto disabled:opacity-50 disabled:cursor-not-allowed justify-start hover:bg-transparent ${
                 selected ? "border-primary bg-primary/5 hover:bg-primary/5 text-foreground hover:text-foreground" : "border-border bg-card hover:border-primary/40 hover:bg-muted/30 text-foreground hover:text-foreground"
               }`}
             >

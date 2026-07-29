@@ -71,7 +71,7 @@ export function BackgroundJobsTray({
         {badgeCount > 0 && (
           <Badge
             variant="secondary"
-            className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 text-xs flex items-center justify-center"
+            className="absolute -top-0.5 -end-0.5 h-4 min-w-4 px-1 text-xs flex items-center justify-center"
           >
             {badgeCount}
           </Badge>

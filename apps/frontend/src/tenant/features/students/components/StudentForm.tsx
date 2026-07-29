@@ -558,7 +558,7 @@ export default function StudentForm({
                     value={studentDraft.notes || ""}
                     onChange={(event) => updateDraft({ notes: event.target.value })}
                     placeholder={t("students.form.notesPlaceholder")}
-                    className="min-h-[120px] bg-background"
+                    className="min-h-[7.5rem] bg-background"
                   />
                 </Field>
               </SectionCard>

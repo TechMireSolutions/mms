@@ -31,7 +31,7 @@ export default function BackupExportSection({
       icon={Database}
       className="border border-border bg-gradient-to-br from-card to-muted/20 shadow-lg relative overflow-hidden group hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
     >
-      <div className="absolute top-0 right-0 h-32 w-32 bg-primary/5 rounded-bl-full pointer-events-none group-hover:bg-primary/10 transition-colors duration-300" />
+      <div className="absolute top-0 end-0 h-32 w-32 bg-primary/5 rounded-es-full pointer-events-none group-hover:bg-primary/10 transition-colors duration-300" />
       
       <div className="space-y-5 relative z-10 pt-1 flex-1 flex flex-col justify-between">
         {/* Dynamic content area */}

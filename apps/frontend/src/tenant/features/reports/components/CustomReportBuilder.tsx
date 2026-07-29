@@ -505,7 +505,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 8 }}
-      className="rounded-3xl border border-border/50 bg-card/45 backdrop-blur-2xl shadow-2xl overflow-hidden text-left"
+      className="rounded-3xl border border-border/50 bg-card/45 backdrop-blur-2xl shadow-2xl overflow-hidden text-start"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-border/50 bg-card/30">
@@ -536,7 +536,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           
           {/* Report name */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ml-1">
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
               {t("reports.builder.reportTitleLabel")}
             </label>
             <Input
@@ -550,7 +550,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
 
           {/* Data source */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ml-1">
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
               {t("reports.builder.queryDataSource")}
             </label>
             <FormSelect
@@ -583,7 +583,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
 
           {/* Available Fields (Column Schema Picker) */}
           <div className="space-y-1.5">
-            <div className="flex justify-between items-center ml-1">
+            <div className="flex justify-between items-center ms-1">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">
                 {t("reports.builder.schemaFieldsPicker")}
               </label>
@@ -601,7 +601,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                     key={availableField}
                     onClick={() => addField(availableField)}
                     variant="ghost"
-                    className="w-full flex items-center gap-2.5 px-3 rounded-xl hover:bg-primary/10 text-xs font-semibold text-left text-foreground transition-all group cursor-pointer justify-start"
+                    className="w-full flex items-center gap-2.5 px-3 rounded-xl hover:bg-primary/10 text-xs font-semibold text-start text-foreground transition-all group cursor-pointer justify-start"
                     type="button"
                   >
                     <Plus className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-transform shrink-0" />
@@ -613,9 +613,9 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           </div>
 
           {/* Aggregates Parameters */}
-          <div className="grid grid-cols-2 gap-3 text-left">
+          <div className="grid grid-cols-2 gap-3 text-start">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ml-1">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
                 {t("reports.builder.aggregatorFunction")}
               </label>
               <FormSelect
@@ -635,7 +635,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ml-1">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
                 {t("reports.builder.groupCategory")}
               </label>
               <FormSelect
@@ -652,9 +652,9 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           </div>
 
           {/* Document Setup */}
-          <div className="grid grid-cols-2 gap-3 text-left">
+          <div className="grid grid-cols-2 gap-3 text-start">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ml-1">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
                 {t("reports.builder.docAlignment")}
               </label>
               <div className="flex gap-1 p-1 bg-muted/30 border border-border/50 rounded-xl">
@@ -677,7 +677,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                </div>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ml-1">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
                 {t("reports.builder.exportLayoutFormat")}
               </label>
               <FormSelect
@@ -701,7 +701,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           
           {/* Selected Columns Sort Row */}
           <div className="space-y-2">
-            <div className="flex justify-between items-center ml-1">
+            <div className="flex justify-between items-center ms-1">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">
                 {t("reports.builder.selectedColumns", { count: selectedFields.length })}
               </label>
@@ -723,7 +723,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                   {t("reports.builder.emptyColumns")}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar text-left">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto pe-1 custom-scrollbar text-start">
                   <AnimatePresence>
                     {selectedFields.map((selectedField, index) => (
                       <DraggableField
@@ -744,7 +744,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
 
           {/* Real-time preview list container */}
           <div className="space-y-3 flex-1 flex flex-col justify-end mt-4">
-            <div className="flex items-center justify-between ml-1">
+            <div className="flex items-center justify-between ms-1">
               <div className="flex items-center gap-2">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">
                   {t("reports.builder.liveVisualizer", { count: previewData.length })}
@@ -784,7 +784,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
               )}
             </div>
 
-            <div className="rounded-3xl border border-border/80 overflow-hidden shadow-xl bg-card/65 backdrop-blur-md flex-1 min-h-[220px]">
+            <div className="rounded-3xl border border-border/80 overflow-hidden shadow-xl bg-card/65 backdrop-blur-md flex-1 min-h-[13.75rem]">
               {previewData.length === 0 ? (
                 <div className="w-full h-full flex flex-col justify-center items-center gap-2 py-12 text-muted-foreground text-xs italic">
                   <Settings className="w-7 h-7 animate-spin text-muted-foreground opacity-30" />
@@ -796,7 +796,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                     <thead className="bg-muted/40 border-b border-border/70 sticky top-0 z-10 backdrop-blur-lg">
                       <tr>
                         {selectedFields.map((selectedField) => (
-                          <th key={selectedField} className="px-4 py-3.5 text-left text-xs font-black text-muted-foreground uppercase tracking-widest whitespace-nowrap">{selectedField}</th>
+                          <th key={selectedField} className="px-4 py-3.5 text-start text-xs font-black text-muted-foreground uppercase tracking-widest whitespace-nowrap">{selectedField}</th>
                         ))}
                       </tr>
                     </thead>

@@ -202,7 +202,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
         <form className="space-y-5" onSubmit={(event) => event.preventDefault()}>
           {/* Header fields */}
           <Card accentColor="primary" className="p-0">
-            <fieldset className="p-5.5 px-6.5 pb-6 space-y-4 border-0 m-0 text-left">
+            <fieldset className="p-5.5 px-6.5 pb-6 space-y-4 border-0 m-0 text-start">
             <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
               <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
               <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("accounting.journal.form.entryDetails")}</h3>
@@ -250,7 +250,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
 
           {/* Tags */}
           <Card accentColor="info" className="p-0">
-            <fieldset className="p-5.5 px-6.5 pb-6 border-0 m-0 text-left">
+            <fieldset className="p-5.5 px-6.5 pb-6 border-0 m-0 text-start">
             <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-3">
               <Tag className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
               <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("accounting.journal.form.tagsTitle")}</h3>
@@ -274,7 +274,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
 
           {/* Lines */}
           <Card accentColor="primary" className="p-0">
-            <fieldset className="p-5.5 px-6.5 pb-6 space-y-4 border-0 m-0 text-left">
+            <fieldset className="p-5.5 px-6.5 pb-6 space-y-4 border-0 m-0 text-start">
             <div className="flex items-center justify-between pb-1.5 border-b border-border/40 mb-2">
               <div className="flex items-center gap-2.5">
                 <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />

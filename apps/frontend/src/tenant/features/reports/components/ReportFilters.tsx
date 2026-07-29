@@ -135,7 +135,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
             <div className="px-4 pb-4 flex flex-wrap gap-4 border-t border-border/50 pt-4">
               {/* Session */}
               {allowed.includes("session") && (
-                <div className="flex flex-col gap-1 text-left min-w-[8.75rem] flex-1">
+                <div className="flex flex-col gap-1 text-start min-w-[8.75rem] flex-1">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.session")}</label>
                   <FormSelect
                     value={filters.session}
@@ -148,7 +148,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
 
               {/* Class */}
               {allowed.includes("class") && (
-                <div className="flex flex-col gap-1 text-left min-w-[8.75rem] flex-1">
+                <div className="flex flex-col gap-1 text-start min-w-[8.75rem] flex-1">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.class")}</label>
                   <FormSelect
                     value={filters.class}
@@ -161,7 +161,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
 
               {/* Status */}
               {allowed.includes("status") && (
-                <div className="flex flex-col gap-1 text-left min-w-[7.5rem] flex-1">
+                <div className="flex flex-col gap-1 text-start min-w-[7.5rem] flex-1">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.status")}</label>
                   <FormSelect
                     value={filters.status}
@@ -179,7 +179,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
 
               {/* Date From */}
               {allowed.includes("dateFrom") && (
-                <div className="flex flex-col gap-1 text-left min-w-[8.125rem] flex-1">
+                <div className="flex flex-col gap-1 text-start min-w-[8.125rem] flex-1">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1"><Calendar className="w-3 h-3" />{t("reports.filters.from")}</label>
                   <DatePicker
                     value={filters.dateFrom}
@@ -190,7 +190,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
 
               {/* Date To */}
               {allowed.includes("dateTo") && (
-                <div className="flex flex-col gap-1 text-left min-w-[8.125rem] flex-1">
+                <div className="flex flex-col gap-1 text-start min-w-[8.125rem] flex-1">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1"><Calendar className="w-3 h-3" />{t("reports.filters.to")}</label>
                   <DatePicker
                     value={filters.dateTo}
@@ -201,7 +201,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
 
               {/* Student */}
               {allowed.includes("student") && (
-                <div className="flex flex-col gap-1 text-left min-w-[9.375rem] flex-1">
+                <div className="flex flex-col gap-1 text-start min-w-[9.375rem] flex-1">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.student")}</label>
                   <Input
                     type="text"

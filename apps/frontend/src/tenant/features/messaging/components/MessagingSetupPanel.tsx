@@ -135,7 +135,7 @@ export function MessagingSetupPanel({
             </div>
             <form onSubmit={(event) => void save(event)} className="space-y-3">
               <div><label className={FORM_LABEL} htmlFor="tplLabel">{t('messaging.templateLabel')}</label><Input id="tplLabel" value={label} onChange={(event) => setLabel(event.target.value)} placeholder={t('messaging.templateLabelPlaceholder')} required /></div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <div><label className={FORM_LABEL} htmlFor="tplCategory">{t('messaging.category')}</label><FormSelect id="tplCategory" value={category} onChange={(value) => setCategory(value as MessageCategory)} options={templateCategorySelectOptions} /></div>
                 <div><label className={FORM_LABEL} htmlFor="tplChannel">{t('messaging.targetChannel')}</label><FormSelect id="tplChannel" value={channel} onChange={(value) => setChannel(value as typeof channel)} options={channelSelectOptions} /></div>
               </div>

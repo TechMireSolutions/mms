@@ -136,7 +136,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
       saveDisabled={!paymentDraft.amount || Number(paymentDraft.amount) <= 0}
       footerStart={footerStart || undefined}
     >
-      <div className="space-y-5 text-left">
+      <div className="space-y-5 text-start">
         {invoice && (
           <Card accentColor="primary" className="p-5 px-6 space-y-2 shadow-sm">
             <div className="flex items-center justify-between gap-4">
@@ -144,7 +144,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
                 <h4 className="text-sm font-bold text-foreground m-0">{invoice.studentName}</h4>
                 <p className="text-xs text-muted-foreground m-0 mt-0.5">{invoice.id} · {invoice.class}</p>
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <p className="text-xs uppercase font-bold text-muted-foreground">{t("finance.balanceDue")}</p>
                 <p className="text-sm font-bold text-primary m-0 mt-0.5">{formatCurrency(balance)}</p>
               </div>

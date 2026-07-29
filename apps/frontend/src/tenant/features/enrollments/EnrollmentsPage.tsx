@@ -343,7 +343,7 @@ export default function EnrollmentsPage() {
         title={t("enrollments.new")}
         size="xl"
         hideFooter
-        panelClassName="h-[88vh] max-h-[700px]"
+        panelClassName="h-[88vh] max-h-[43.75rem]"
       >
         <ErrorBoundary>
           <EnrollmentWizard

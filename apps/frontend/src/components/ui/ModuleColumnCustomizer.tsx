@@ -140,7 +140,7 @@ export function ModuleColumnCustomizer({
           </div>
         )}
 
-        <div className="max-h-72 overflow-y-auto pr-1 space-y-3">
+        <div className="max-h-72 overflow-y-auto pe-1 space-y-3">
           <div className="space-y-1">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
               {labels.visibleAndOrder}
@@ -167,7 +167,7 @@ export function ModuleColumnCustomizer({
                 <GripVertical
                   className={`w-3.5 h-3.5 flex-shrink-0 ${col.fixed ? 'opacity-20' : 'text-muted-foreground cursor-grab'}`}
                 />
-                <span className="flex-1 text-sm text-foreground text-left">{col.label}</span>
+                <span className="flex-1 text-sm text-foreground text-start">{col.label}</span>
                 {col.fixed ? (
                   <span className="text-xs text-muted-foreground">{labels.fixed}</span>
                 ) : (
@@ -200,7 +200,7 @@ export function ModuleColumnCustomizer({
                     e.stopPropagation();
                     toggle(col.key);
                   }}
-                  className="flex items-center justify-between w-full px-2.5 min-h-11 rounded-lg border border-transparent hover:bg-muted transition-colors text-left group"
+                  className="flex items-center justify-between w-full px-2.5 min-h-11 rounded-lg border border-transparent hover:bg-muted transition-colors text-start group"
                 >
                   <div className="flex items-center gap-2">
                     <EyeOff className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />

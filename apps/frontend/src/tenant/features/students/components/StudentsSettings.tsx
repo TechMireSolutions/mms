@@ -95,7 +95,7 @@ export default function StudentsSettings(): React.ReactElement {
                 <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
                   {t("students.settings.grSectionTitle")}
                 </h4>
-                <div className="grid grid-cols-2 gap-3 text-left">
+                <div className="grid grid-cols-2 gap-3 text-start">
                   <Field
                     label={t("students.settings.grTemplate")}
                     hint={t("students.settings.grTemplateHint", { seq: "{seq}", year: "{year}" })}
@@ -138,7 +138,7 @@ export default function StudentsSettings(): React.ReactElement {
               </div>
 
               <div className="py-3 border-t border-border mt-3 flex items-center justify-between">
-                <div className="text-left">
+                <div className="text-start">
                   <p className="text-sm font-semibold text-foreground">{t("students.settings.defaultViewLayout")}</p>
                   <p className="text-xs text-muted-foreground">{t("students.settings.defaultViewLayoutDesc")}</p>
                 </div>
@@ -184,7 +184,7 @@ export default function StudentsSettings(): React.ReactElement {
             <Button
               type="button"
               onClick={handleSave}
-              className={saved ? "bg-success hover:bg-success/90 text-success-foreground ml-auto" : "ml-auto"}
+              className={saved ? "bg-success hover:bg-success/90 text-success-foreground ms-auto" : "ms-auto"}
             >
               <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? t("students.settings.saveSuccess") : t("students.settings.saveSettings")}
             </Button>

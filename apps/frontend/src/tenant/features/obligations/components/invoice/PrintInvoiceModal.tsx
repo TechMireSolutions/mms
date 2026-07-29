@@ -103,7 +103,7 @@ export function PrintInvoiceModal({
             type="button"
             onClick={onOpenEditor}
             variant="outline"
-            className="flex items-center gap-1.5 px-3 py-1.5 h-auto text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none"
+            className="flex min-h-11 items-center gap-1.5 px-3 py-1.5 h-auto text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none"
           >
             <Settings className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.print.customizeTemplate")}
           </Button>
@@ -146,7 +146,7 @@ export function PrintInvoiceModal({
         </div>
       }
     >
-      <div className="flex justify-center bg-muted/20 border border-dashed border-border rounded-xl p-4 overflow-x-auto min-h-[300px]">
+      <div className="flex justify-center bg-muted/20 border border-dashed border-border rounded-xl p-4 overflow-x-auto min-h-[18.75rem]">
         <div ref={printRef} style={{ lineHeight: 1.4 }}>
           <InvoicePrintPreview
             template={template}

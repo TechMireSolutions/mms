@@ -287,7 +287,7 @@ export default function ExamsList({
                   role="listitem"
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0 pr-2">
+                    <div className="flex-1 min-w-0 pe-2">
                       {showStatus && (
                         <div className="flex items-center gap-2 mb-1.5">
                           <StatusBadge status={exam.status} config={statusConfig} size="sm" />
@@ -397,46 +397,46 @@ export default function ExamsList({
                       </th>
                     )}
                     {showName && (
-                      <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t("examinations.columns.exam.name")}
                       </ResizableTableHead>
                     )}
                     {showSubject && (
-                      <ResizableTableHead columnKey="subject" width={getColumnWidth?.("subject")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="subject" width={getColumnWidth?.("subject")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t("examinations.columns.exam.subject")}
                       </ResizableTableHead>
                     )}
                     {showDate && (
-                      <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t("examinations.columns.exam.date")}
                       </ResizableTableHead>
                     )}
                     {showDuration && (
-                      <ResizableTableHead columnKey="duration" width={getColumnWidth?.("duration")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="duration" width={getColumnWidth?.("duration")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t("examinations.columns.exam.duration")}
                       </ResizableTableHead>
                     )}
                     {showStatus && (
-                      <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t("examinations.columns.exam.status")}
                       </ResizableTableHead>
                     )}
                     {showTotalMarks && (
-                      <ResizableTableHead columnKey="totalMarks" width={getColumnWidth?.("totalMarks")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="totalMarks" width={getColumnWidth?.("totalMarks")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t("examinations.columns.exam.totalMarks")}
                       </ResizableTableHead>
                     )}
                     {showPassingMarks && (
-                      <ResizableTableHead columnKey="passingMarks" width={getColumnWidth?.("passingMarks")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="passingMarks" width={getColumnWidth?.("passingMarks")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t("examinations.columns.exam.passingMarks")}
                       </ResizableTableHead>
                     )}
                     {showClasses && (
-                      <ResizableTableHead columnKey="classes" width={getColumnWidth?.("classes")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="classes" width={getColumnWidth?.("classes")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t("examinations.columns.exam.classes")}
                       </ResizableTableHead>
                     )}
-                    <th scope="col" className="px-4 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <th scope="col" className="px-4 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       <span className="sr-only">{t("examinations.columns.actions")}</span>
                     </th>
                   </tr>
@@ -481,11 +481,11 @@ export default function ExamsList({
                           <td className="px-4 py-3 text-sm text-foreground">{exam.passingMarks}</td>
                         )}
                         {showClasses && (
-                          <td className="px-4 py-3 text-xs text-muted-foreground max-w-[160px] truncate">
+                          <td className="px-4 py-3 text-xs text-muted-foreground max-w-[10rem] truncate">
                             {assignedClasses.map((sessionClass) => sessionClass.name).join(", ") || "—"}
                           </td>
                         )}
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-end">
                           <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
                             {canWrite && !showDeleted && (
                               <Button

@@ -70,7 +70,7 @@ function TabarrukModal({ open, entry, onClose, onSave, saving }: TabarrukModalPr
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="tabarruk-note">{t("sessions.tabarruk.form.note")}</label>
-          <Textarea id="tabarruk-note" className="min-h-[60px] resize-none" value={tabarrukDraft.note || ""} onChange={(event) => updateTabarrukDraft("note", event.target.value)} placeholder={t("sessions.tabarruk.form.notePlaceholder")} />
+          <Textarea id="tabarruk-note" className="min-h-[3.75rem] resize-none" value={tabarrukDraft.note || ""} onChange={(event) => updateTabarrukDraft("note", event.target.value)} placeholder={t("sessions.tabarruk.form.notePlaceholder")} />
         </div>
       </div>
     </FormModal>

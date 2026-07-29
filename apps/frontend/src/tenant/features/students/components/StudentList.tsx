@@ -239,7 +239,7 @@ export default function StudentList({
                     isSelected ? "border-primary bg-primary/[0.015]" : "border-border/50 hover:border-primary/20"
                   }`}
                 >
-                  <div className="absolute top-3 left-3">
+                  <div className="absolute top-3 start-3">
                     <Checkbox
                       checked={isSelected}
                       onCheckedChange={() => handleSelectOne(studentIdStr)}
@@ -287,7 +287,7 @@ export default function StudentList({
 
                   <div className="flex flex-col items-center text-center mt-3 mb-4">
                     <UserAvatar id={studentIdStr} name={studentCard.name || ""} className="w-12 h-12 rounded-full text-sm font-bold shadow-sm" />
-                    <h4 className="text-sm font-bold text-foreground mt-2 group-hover:text-primary transition-colors truncate w-full max-w-[150px]">
+                    <h4 className="text-sm font-bold text-foreground mt-2 group-hover:text-primary transition-colors truncate w-full max-w-[9.375rem]">
                       {studentCard.name}
                     </h4>
                     <GrBadge grNumber={studentCard.grNumber} className="mt-1" />
@@ -309,13 +309,13 @@ export default function StudentList({
                     {isFieldEnabled("fatherLink") && studentCard.fatherName && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">{t("students.detail.father")}:</span>
-                        <span className="font-semibold text-foreground truncate max-w-[100px]">{studentCard.fatherName}</span>
+                        <span className="font-semibold text-foreground truncate max-w-[6.25rem]">{studentCard.fatherName}</span>
                       </div>
                     )}
                     {isFieldEnabled("guardianLink") && studentCard.guardianName && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">{t("students.detail.guardian")}:</span>
-                        <span className="font-semibold text-foreground truncate max-w-[100px]">{studentCard.guardianName}</span>
+                        <span className="font-semibold text-foreground truncate max-w-[6.25rem]">{studentCard.guardianName}</span>
                       </div>
                     )}
                     <div className="flex justify-between items-center">
@@ -345,7 +345,7 @@ export default function StudentList({
                   width={getColumnWidth?.("name")}
                   onResize={onColumnResize}
                   onClick={() => handleSort("name")}
-                  className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none"
+                  className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none"
                 >
                   <div className="flex items-center gap-1">
                     {t("students.columns.name")} {renderSortIcon("name")}
@@ -357,7 +357,7 @@ export default function StudentList({
                     width={getColumnWidth?.("dob")}
                     onResize={onColumnResize}
                     onClick={() => handleSort("age")}
-                    className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden sm:table-cell"
+                    className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden sm:table-cell"
                   >
                     <div className="flex items-center gap-1">
                       {t("students.columns.dob")} {renderSortIcon("age")}
@@ -370,7 +370,7 @@ export default function StudentList({
                     width={getColumnWidth?.("parents")}
                     onResize={onColumnResize}
                     onClick={() => handleSort("fatherName")}
-                    className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden md:table-cell"
+                    className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden md:table-cell"
                   >
                     <div className="flex items-center gap-1">
                       {t("students.columns.parents")} {renderSortIcon("fatherName")}
@@ -378,7 +378,7 @@ export default function StudentList({
                   </ResizableTableHead>
                 )}
                 {showSessions && (
-                <ResizableTableHead columnKey="sessions" width={getColumnWidth?.("sessions")} onResize={onColumnResize} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">
+                <ResizableTableHead columnKey="sessions" width={getColumnWidth?.("sessions")} onResize={onColumnResize} className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">
                   {t("students.columns.sessions")}
                 </ResizableTableHead>
                 )}
@@ -389,7 +389,7 @@ export default function StudentList({
                   width={getColumnWidth?.("status")}
                   onResize={onColumnResize}
                   onClick={() => handleSort("status")}
-                  className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden sm:table-cell"
+                  className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden sm:table-cell"
                 >
                   <div className="flex items-center gap-1">
                     {t("students.columns.status")} {renderSortIcon("status")}

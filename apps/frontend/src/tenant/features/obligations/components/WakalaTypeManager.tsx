@@ -115,7 +115,7 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
 
           return (
             <Card key={wakalaType.id} accentColor="primary" className="group/wakala">
-              <header className="flex items-start justify-between px-5 py-3 border-b border-border/40 pl-5.5">
+              <header className="flex items-start justify-between px-5 py-3 border-b border-border/40 ps-5.5">
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-bold text-foreground m-0">{typeName}</h3>
@@ -164,10 +164,10 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
                     <caption className="sr-only">{t("obligations.wakala.distTableCaption")}</caption>
                     <thead className="border-b border-border">
                       <tr>
-                        <th scope="col" className="px-4 py-2 text-left font-semibold text-muted-foreground">{t("obligations.wakala.colName")}</th>
-                        <th scope="col" className="px-4 py-2 text-left font-semibold text-muted-foreground">{t("obligations.wakala.colType")}</th>
-                        <th scope="col" className="px-4 py-2 text-left font-semibold text-muted-foreground">{t("obligations.wakala.colPct")}</th>
-                        <th scope="col" className="px-4 py-2 text-right font-semibold text-muted-foreground"><span className="sr-only">{t("obligations.wakala.colActions")}</span></th>
+                        <th scope="col" className="px-4 py-2 text-start font-semibold text-muted-foreground">{t("obligations.wakala.colName")}</th>
+                        <th scope="col" className="px-4 py-2 text-start font-semibold text-muted-foreground">{t("obligations.wakala.colType")}</th>
+                        <th scope="col" className="px-4 py-2 text-start font-semibold text-muted-foreground">{t("obligations.wakala.colPct")}</th>
+                        <th scope="col" className="px-4 py-2 text-end font-semibold text-muted-foreground"><span className="sr-only">{t("obligations.wakala.colActions")}</span></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -178,7 +178,7 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
                             <StatusBadge status={distribution.type} config={distributionTypeConfig} size="sm" />
                           </td>
                           <td className="px-4 py-2 font-mono font-semibold text-foreground">{distribution.percentage}%</td>
-                          <td className="px-4 py-2 text-right">
+                          <td className="px-4 py-2 text-end">
                             <div className="flex items-center justify-end gap-1">
                               <Button type="button" aria-label={t("obligations.wakala.distEditAria", { name: distribution.name })} onClick={() => setModal({ mode: "edit-dist", distMode: "edit", data: { ...distribution } })}
                                 variant="ghost"

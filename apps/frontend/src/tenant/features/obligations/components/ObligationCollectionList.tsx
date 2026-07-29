@@ -136,7 +136,7 @@ export function ObligationCollectionList({
   return (
     <div className="space-y-4">
       <section aria-label={t("obligations.filter.label")} className="flex flex-wrap gap-2 items-center">
-        <div className="relative flex-1 min-w-[180px]">
+        <div className="relative flex-1 min-w-[11.25rem]">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
           <Input
             type="search"
@@ -144,10 +144,10 @@ export function ObligationCollectionList({
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t("obligations.searchPlaceholder")}
-            className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full ps-9 pe-4 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
-        <div className="min-w-[150px]">
+        <div className="min-w-[9.375rem]">
           <FormSelect
             aria-label={t("obligations.filter.type")}
             value={typeFilter}
@@ -233,41 +233,41 @@ export function ObligationCollectionList({
                       </th>
                     )}
                     {showReceiptNo && (
-                      <ResizableTableHead columnKey="receiptNo" width={getColumnWidth?.("receiptNo")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="receiptNo" width={getColumnWidth?.("receiptNo")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.receiptNo")}
                       </ResizableTableHead>
                     )}
                     {showReceivedDate && (
-                      <ResizableTableHead columnKey="receivedDate" width={getColumnWidth?.("receivedDate")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="receivedDate" width={getColumnWidth?.("receivedDate")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.receivedDate")}
                       </ResizableTableHead>
                     )}
                     {showSender && (
-                      <ResizableTableHead columnKey="sender" width={getColumnWidth?.("sender")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="sender" width={getColumnWidth?.("sender")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.sender")}
                       </ResizableTableHead>
                     )}
                     {showObligationType && (
-                      <ResizableTableHead columnKey="obligationType" width={getColumnWidth?.("obligationType")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="obligationType" width={getColumnWidth?.("obligationType")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.obligationType")}
                       </ResizableTableHead>
                     )}
                     {showRepMujtahid && (
-                      <ResizableTableHead columnKey="repMujtahid" width={getColumnWidth?.("repMujtahid")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="repMujtahid" width={getColumnWidth?.("repMujtahid")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.repMujtahid")}
                       </ResizableTableHead>
                     )}
                     {showAmount && (
-                      <ResizableTableHead columnKey="amount" width={getColumnWidth?.("amount")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="amount" width={getColumnWidth?.("amount")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.amount")}
                       </ResizableTableHead>
                     )}
                     {showPaymentMode && (
-                      <ResizableTableHead columnKey="paymentMode" width={getColumnWidth?.("paymentMode")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="paymentMode" width={getColumnWidth?.("paymentMode")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.paymentMode")}
                       </ResizableTableHead>
                     )}
-                    <th scope="col" className="px-3 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase">
+                    <th scope="col" className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">
                       <span className="sr-only">{t("obligations.columns.actions")}</span>
                     </th>
                   </tr>
@@ -325,7 +325,7 @@ export function ObligationCollectionList({
                             <StatusBadge status={collection.payment_mode} config={paymentModeConfig} size="sm" />
                           </td>
                         )}
-                        <td className="px-3 py-2.5 text-right">
+                        <td className="px-3 py-2.5 text-end">
                           <div className="flex items-center justify-end gap-1">
                             {onMessage && !showDeleted && (
                               <>

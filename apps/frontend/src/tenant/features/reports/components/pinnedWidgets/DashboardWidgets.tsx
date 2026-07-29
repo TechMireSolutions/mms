@@ -154,7 +154,7 @@ export function DashboardWidgets({
   if (activeWidgets.length === 0) return null;
 
   return (
-    <div className="space-y-4 text-left font-sans mt-5">
+    <div className="space-y-4 text-start font-sans mt-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <LayoutDashboard className="w-4 h-4 text-primary" />
@@ -241,8 +241,8 @@ export function DashboardWidgets({
                 </ErrorBoundary>
                 
                 {/* Overlaid unpin/edit/delete action handles */}
-                <div className={`absolute top-2.5 right-2.5 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 z-10 transition-all ${
-                  gridMode === "compact" ? "scale-75 top-0.5 right-0.5" : ""
+                <div className={`absolute top-2.5 end-2.5 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 z-10 transition-all ${
+                  gridMode === "compact" ? "top-0.5 end-0.5" : ""
                 }`}>
                   {isEditMode && onEditWidget && (
                     <Button

@@ -52,7 +52,7 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
         )}
       </header>
 
-      <div className="divide-y divide-border/40 max-h-[340px] overflow-y-auto">
+      <div className="divide-y divide-border/40 max-h-[21.25rem] overflow-y-auto">
         <AnimatePresence initial={false}>
           {visible.length === 0 ? (
             <div className="py-12 text-center px-5 flex flex-col items-center justify-center select-none">
@@ -60,7 +60,7 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
                 <Bell className="w-5 h-5 text-muted-foreground/55" />
               </div>
               <p className="text-xs font-black uppercase text-foreground/80 m-0 tracking-wider">{t('notifications.empty')}</p>
-              <p className="text-xs text-muted-foreground mt-1.5 m-0 max-w-[200px] leading-normal">{t('notifications.emptyHint')}</p>
+              <p className="text-xs text-muted-foreground mt-1.5 m-0 max-w-[12.5rem] leading-normal">{t('notifications.emptyHint')}</p>
             </div>
           ) : (
             visible.map((notif) => {

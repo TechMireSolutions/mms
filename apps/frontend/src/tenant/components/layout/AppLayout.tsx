@@ -11,6 +11,7 @@ import { getInitials } from "@mms/shared";
 import { useSessionTimeout } from "@/tenant/hooks/useSessionTimeout";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
+import { cn } from "@/lib/utils";
 
 /**
  * Main authenticated application shell layout. Orchestrates the primary sidebar,
@@ -20,7 +21,7 @@ export default function AppLayout(): React.JSX.Element {
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const branding = useBranding();
-  const { isRtl } = useTranslation();
+  const { t } = useTranslation();
   useSessionTimeout();
 
   return (
@@ -42,12 +43,12 @@ export default function AppLayout(): React.JSX.Element {
       </div>
 
       {/* Mobile Top Bar */}
-      <div className="lg:hidden surface-glass fixed top-0 left-0 right-0 z-40 flex h-14 items-center gap-2 px-3 sm:px-4">
+      <div className="lg:hidden surface-glass fixed top-0 inset-x-0 z-40 flex h-14 items-center gap-2 px-3 sm:px-4">
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          aria-label="Open navigation menu"
+          aria-label={t("nav.openMenu")}
           onClick={(event) => {
             event.stopPropagation();
             setMobileOpen(true);
@@ -73,7 +74,7 @@ export default function AppLayout(): React.JSX.Element {
             </div>
           )}
           <span className="truncate text-sm font-semibold">
-            {branding.madrasaName || "Madrasa MS"}
+            {branding.madrasaName || t("entry.productName")}
           </span>
         </div>
         <TopBarActions compact />
@@ -81,17 +82,19 @@ export default function AppLayout(): React.JSX.Element {
 
       {/* Main Content */}
       <main
-        className={`min-h-screen min-w-0 max-w-full flex flex-col pt-14 lg:pt-16 transition-all duration-300 ${
-          isRtl
-            ? sidebarCollapsed ? "lg:pr-[72px]" : "lg:pr-[260px]"
-            : sidebarCollapsed ? "lg:pl-[72px]" : "lg:pl-[260px]"
-        }`}
+        className={cn(
+          "flex min-h-screen min-w-0 max-w-full flex-col pt-14 transition-all duration-300 lg:pt-16",
+          sidebarCollapsed ? "lg:ps-[4.5rem]" : "lg:ps-[16.25rem]",
+        )}
       >
         <div className="min-w-0 max-w-full flex-grow p-4 md:p-6 lg:p-8">
           <Outlet />
         </div>
         <footer className="border-t border-border/50 bg-card/20 px-4 py-3 text-center text-xs font-semibold text-muted-foreground select-none sm:px-6">
-          {branding.footerText || "© 2026 MMS. All rights reserved."}
+          {branding.footerText || t("theme.footerDefault", {
+            year: new Date().getFullYear(),
+            name: branding.madrasaName || t("entry.productName"),
+          })}
         </footer>
       </main>
     </div>

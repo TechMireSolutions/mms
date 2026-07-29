@@ -101,7 +101,7 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card accentColor="primary" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
           <h3 className="text-sm font-bold text-foreground mb-3">{t("enrollments.reports.byStatus")}</h3>
-          <div className="h-[200px]" aria-hidden="true">
+          <div className="h-[12.5rem]" aria-hidden="true">
             <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
               <PieChart>
                 <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} paddingAngle={3}>
@@ -117,11 +117,11 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
         <Card accentColor="info" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
           <h3 className="text-sm font-bold text-foreground mb-3">{t("enrollments.reports.bySession")}</h3>
           {sessionData.length === 0 ? (
-            <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm" role="status">
+            <div className="flex items-center justify-center h-[12.5rem] text-muted-foreground text-sm" role="status">
               {t("enrollments.reports.noData")}
             </div>
           ) : (
-            <div className="h-[200px]" aria-hidden="true">
+            <div className="h-[12.5rem]" aria-hidden="true">
               <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
                 <BarChart data={sessionData} barSize={20}>
                   <XAxis dataKey="name" tick={{ fontSize: 10 }} tickLine={false} />

@@ -186,7 +186,7 @@ export function MessagingWorkPanel({
           </div>
         </div>
 
-        <div className="max-h-[380px] max-w-full overflow-x-auto overflow-y-auto rounded-lg border border-border/60">
+        <div className="max-h-[23.75rem] max-w-full overflow-x-auto overflow-y-auto rounded-lg border border-border/60">
           <table className="w-full table-fixed text-start text-xs">
             <thead className="bg-muted/40 font-semibold uppercase tracking-wider text-muted-foreground">
               <tr className="border-b border-border/60">

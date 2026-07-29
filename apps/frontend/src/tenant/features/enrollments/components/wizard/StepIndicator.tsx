@@ -24,7 +24,7 @@ interface StepIndicatorProps {
 export function StepIndicator({ steps, current }: StepIndicatorProps): React.ReactElement {
   const { t } = useTranslation();
   return (
-    <div className="flex items-center gap-0" role="list" aria-label={t("enrollments.wizard.stepsAria")}>
+    <div className="flex max-w-full items-center gap-0 overflow-x-auto pb-1" role="list" aria-label={t("enrollments.wizard.stepsAria")}>
       {steps.map((step, index) => {
         const done    = index < current;
         const active  = index === current;
@@ -37,12 +37,12 @@ export function StepIndicator({ steps, current }: StepIndicatorProps): React.Rea
         return (
           <React.Fragment key={step.id}>
             <div
-              className="flex flex-col items-center gap-1.5 min-w-[80px]"
+              className="flex min-w-[5rem] flex-col items-center gap-1.5"
               role="listitem"
               aria-current={active ? "step" : undefined}
             >
               <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all ${
+                className={`flex h-11 w-11 items-center justify-center rounded-full border-2 transition-all ${
                   done   ? "bg-primary border-primary text-primary-foreground" :
                   active ? "bg-primary/10 border-primary text-primary" :
                            "bg-muted border-border text-muted-foreground"
@@ -69,7 +69,7 @@ export function StepIndicator({ steps, current }: StepIndicatorProps): React.Rea
             </div>
             {index < steps.length - 1 && (
               <div
-                className={`flex-1 h-0.5 mb-5 min-w-[16px] transition-colors ${done ? "bg-primary" : "bg-border"}`}
+                className={`mb-5 h-0.5 min-w-4 flex-1 transition-colors ${done ? "bg-primary" : "bg-border"}`}
                 aria-hidden="true"
               />
             )}

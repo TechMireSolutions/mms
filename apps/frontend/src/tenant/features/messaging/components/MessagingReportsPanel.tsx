@@ -286,7 +286,7 @@ export function MessagingReportsPanel({
           <p className="text-xs text-muted-foreground">{t('messaging.volumeBreakdownDesc')}</p>
         </div>
         {chartData.length > 0 ? (
-          <div className="flex h-[240px] w-full items-center justify-center">
+          <div className="flex h-[15rem] w-full items-center justify-center">
             <SafeResponsiveContainer height={240}>
               <PieChart>
                 <Pie data={chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
@@ -300,7 +300,7 @@ export function MessagingReportsPanel({
             </SafeResponsiveContainer>
           </div>
         ) : (
-          <div className="flex h-[240px] flex-col items-center justify-center text-muted-foreground">
+          <div className="flex h-[15rem] flex-col items-center justify-center text-muted-foreground">
             <BarChart2 className="mb-2 h-8 w-8 opacity-45" />
             <p className="text-xs font-semibold">{t('messaging.noDispatches')}</p>
           </div>

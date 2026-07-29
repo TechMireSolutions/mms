@@ -69,15 +69,15 @@ export default function DateFormatSelect({
               'h-auto min-h-11 w-full justify-between px-3 py-2 font-normal sm:flex-1',
             )}
           >
-            <span className="truncate text-left text-sm">
+            <span className="truncate text-start text-sm">
               <span className="font-mono">{selected.pattern}</span>
               <span className="mx-2 text-muted-foreground">·</span>
               <span className="text-muted-foreground">{selected.sample}</span>
             </span>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
+            <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[min(100vw-2rem,22rem)] p-1" align="start">
+        <PopoverContent className="w-[min(calc(100%-2rem),22rem)] p-1" align="start">
           <div className="max-h-[min(50vh,18rem)] overflow-y-auto">
             {options.map((dateFormatOption) => (
               <Button
@@ -85,7 +85,7 @@ export default function DateFormatSelect({
                 type="button"
                 variant="ghost"
                 className={cn(
-                  'h-auto w-full justify-start items-start gap-2 rounded-sm px-2 py-2 text-left font-normal hover:bg-accent hover:text-accent-foreground',
+                  'min-h-11 h-auto w-full justify-start items-start gap-2 rounded-sm px-2 py-2 text-start font-normal hover:bg-accent hover:text-accent-foreground',
                   normalizedValue === dateFormatOption.value && 'bg-accent text-accent-foreground',
                 )}
                 onClick={() => {
@@ -102,8 +102,8 @@ export default function DateFormatSelect({
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block font-mono text-xs">{dateFormatOption.pattern}</span>
-                  <span className="block text-muted-foreground text-left">{dateFormatOption.sample}</span>
-                  <span className="block text-left text-xs text-muted-foreground/80">
+                  <span className="block text-muted-foreground text-start">{dateFormatOption.sample}</span>
+                  <span className="block text-start text-xs text-muted-foreground/80">
                     {t(dateFormatOption.hintKey as AppTranslationKey)}
                   </span>
                 </span>

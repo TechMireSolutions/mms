@@ -68,7 +68,7 @@ function ResultRow({ result, test, questions }: ResultRowProps): React.ReactElem
         aria-expanded={open}
         aria-label={t("questionBank.grading.showDetailAria", { name: result.studentName })}
         variant="ghost"
-        className="flex w-full items-center justify-between gap-3 h-auto px-4 py-3 text-left transition-colors hover:bg-muted/20 shadow-none rounded-none"
+        className="flex w-full items-center justify-between gap-3 h-auto px-4 py-3 text-start transition-colors hover:bg-muted/20 shadow-none rounded-none"
       >
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-foreground">
@@ -77,7 +77,7 @@ function ResultRow({ result, test, questions }: ResultRowProps): React.ReactElem
           <p className="text-sm font-semibold text-foreground m-0">{result.studentName}</p>
         </div>
         <div className="flex flex-shrink-0 items-center gap-4">
-          <div className="text-right">
+          <div className="text-end">
             <p className="text-sm font-bold text-foreground m-0">{marksObtained}/{totalMarks}</p>
             <p className="text-xs text-muted-foreground m-0">{percentageScore}%</p>
           </div>
@@ -210,7 +210,7 @@ export function AutoGrading({ tests, results, questions }: AutoGradingProps): Re
                 className={`rounded-lg border px-3.5 py-2 text-sm font-semibold transition-all h-auto shadow-none ${isSelected ? "border-primary bg-primary/5 text-primary hover:bg-primary/10" : "border-border bg-card text-foreground hover:bg-muted"}`}
               >
                 {item.name}
-                <span className="ml-1.5 text-xs text-muted-foreground">
+                <span className="ms-1.5 text-xs text-muted-foreground">
                   ({t("questionBank.grading.resultsCount", { count })})
                 </span>
               </Button>

@@ -28,7 +28,7 @@ export default function BackupImportSection({
       icon={Upload}
       className="border border-border bg-gradient-to-br from-card to-muted/20 shadow-lg relative overflow-hidden group hover:shadow-xl transition-all duration-300"
     >
-      <div className="absolute top-0 right-0 h-24 w-24 bg-primary/5 rounded-bl-full pointer-events-none group-hover:bg-primary/10 transition-colors duration-300" />
+      <div className="absolute top-0 end-0 h-24 w-24 bg-primary/5 rounded-es-full pointer-events-none group-hover:bg-primary/10 transition-colors duration-300" />
 
       <label
         onDragEnter={(event) => {
@@ -69,7 +69,7 @@ export default function BackupImportSection({
         {selectedFileName ? (
           <div className="mt-3 mx-4 flex items-center gap-2 rounded-lg bg-primary/10 border border-primary/20 px-3 py-1.5 animate-in fade-in zoom-in duration-200">
             <FileJson className="h-4 w-4 text-primary shrink-0 animate-pulse" />
-            <span className="text-xs font-semibold text-primary truncate max-w-[200px]">
+            <span className="text-xs font-semibold text-primary truncate max-w-[12.5rem]">
               {t('backup.fileSelected', { name: selectedFileName })}
             </span>
           </div>

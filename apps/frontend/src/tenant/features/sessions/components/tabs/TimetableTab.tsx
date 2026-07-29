@@ -52,7 +52,7 @@ function ActivityChip({ entry, onDelete, canWrite }: ActivityChipProps) {
         size="icon"
         aria-label={t("sessions.timetable.deleteNamed", { name: entry.activity })}
         onClick={() => onDelete(entry.id)}
-        className="opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity text-current hover:text-destructive ml-1 flex-shrink-0"
+        className="opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity text-current hover:text-destructive ms-1 flex-shrink-0"
       >
         <Trash2 className="w-3 h-3" aria-hidden="true" />
       </Button>}

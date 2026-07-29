@@ -338,7 +338,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
         </div>
       </header>
 
-      <div className="flex flex-col sm:flex-row items-center gap-4 min-h-[120px]">
+      <div className="flex flex-col sm:flex-row items-center gap-4 min-h-[7.5rem]">
         {/* Chart Drawing Container */}
         {chartType === "pie" && (
           <div className="flex-shrink-0" aria-hidden="true">
@@ -380,7 +380,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
         )}
 
         {chartType === "radar" && (
-          <div className="flex-shrink-0 w-full sm:w-[150px] h-[120px]" aria-hidden="true">
+          <div className="flex-shrink-0 w-full sm:w-[9.375rem] h-[7.5rem]" aria-hidden="true">
             <SafeResponsiveContainer height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="75%" data={hasanatData}>
                 <PolarGrid stroke="hsl(var(--border))" />

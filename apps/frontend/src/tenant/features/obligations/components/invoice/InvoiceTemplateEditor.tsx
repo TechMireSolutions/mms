@@ -363,7 +363,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
       {/* ── Top bar ─────────────────────────────────────────────────────── */}
       <header className="flex items-center gap-3 px-4 py-2.5 border-b border-border bg-card flex-shrink-0 flex-wrap">
         <h2 className="font-bold text-sm text-foreground m-0">{t("obligations.invoiceTemplate.title")}</h2>
-        <div className="flex items-center gap-1 ml-2">
+        <div className="flex items-center gap-1 ms-2">
           <Button type="button" onClick={undo} disabled={!history.length} title={t("obligations.invoiceTemplate.undo")}
             variant="ghost"
             size="icon"
@@ -375,7 +375,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
         </div>
 
         {/* Page size */}
-        <div className="flex items-center gap-1.5 ml-2">
+        <div className="flex items-center gap-1.5 ms-2">
           <span className="text-xs text-muted-foreground font-semibold">{t("obligations.invoiceTemplate.page")}</span>
           {Object.entries(PAGE_SIZES).map(([pageSizeKey]) => (
             <Button type="button" key={pageSizeKey} onClick={() => handlePageSize(pageSizeKey)}
@@ -390,11 +390,11 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
         <Button type="button" onClick={() => setShowGuides(!showGuides)} title={t("obligations.invoiceTemplate.toggleGuides")}
           variant="ghost"
           size="icon"
-          className="rounded hover:bg-muted transition-colors ml-1 shadow-none">
+          className="rounded hover:bg-muted transition-colors ms-1 shadow-none">
           {showGuides ? <Eye className="w-4 h-4 text-primary" aria-hidden="true" /> : <EyeOff className="w-4 h-4 text-muted-foreground" aria-hidden="true" />}
         </Button>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ms-auto flex items-center gap-2">
           <Button type="button" onClick={handleSave}
             className="flex min-h-11 items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
             <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? t("obligations.invoiceTemplate.saved") : t("obligations.invoiceTemplate.save")}
@@ -413,18 +413,18 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
       <div className="flex flex-1 overflow-hidden">
 
         {/* Left panel — element palette */}
-        <aside className="w-48 flex-shrink-0 border-r border-border bg-card overflow-y-auto p-3 space-y-4">
+        <aside className="w-48 flex-shrink-0 border-e border-border bg-card overflow-y-auto p-3 space-y-4">
           <div>
             <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.addElements")}</p>
             <div className="space-y-1">
               <Button type="button" onClick={addStaticText}
                 variant="outline"
-                className="w-full text-left min-h-11 px-2.5 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors flex items-center gap-2 shadow-none justify-start">
+                className="w-full text-start min-h-11 px-2.5 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors flex items-center gap-2 shadow-none justify-start">
                 <Type className="w-3.5 h-3.5 text-primary" aria-hidden="true" /> {t("obligations.invoiceTemplate.staticText")}
               </Button>
               <Button type="button" onClick={addDivider}
                 variant="outline"
-                className="w-full text-left min-h-11 px-2.5 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors flex items-center gap-2 shadow-none justify-start">
+                className="w-full text-start min-h-11 px-2.5 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors flex items-center gap-2 shadow-none justify-start">
                 <Minus className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" /> {t("obligations.invoiceTemplate.dividerLine")}
               </Button>
             </div>
@@ -436,7 +436,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
               {AVAILABLE_FIELDS.map((fieldOption) => (
                 <Button type="button" key={fieldOption.field} onClick={() => addField(fieldOption)}
                   variant="outline"
-                  className="w-full text-left min-h-11 px-2.5 py-2 text-xs font-medium rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors shadow-none justify-start">
+                  className="w-full text-start min-h-11 px-2.5 py-2 text-xs font-medium rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors shadow-none justify-start">
                   {fieldOption.label}
                 </Button>
               ))}
@@ -471,7 +471,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
         </main>
 
         {/* Right panel — properties */}
-        <aside className="w-60 flex-shrink-0 border-l border-border bg-card overflow-y-auto p-3 space-y-4">
+        <aside className="w-60 flex-shrink-0 border-s border-border bg-card overflow-y-auto p-3 space-y-4">
           {!selectedElement ? (
             <div className="text-xs text-muted-foreground text-center pt-10 space-y-1">
               <Move className="w-6 h-6 mx-auto opacity-30" aria-hidden="true" />

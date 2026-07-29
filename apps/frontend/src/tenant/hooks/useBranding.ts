@@ -74,7 +74,7 @@ export function useBranding(): BrandingSettings {
     if (branding.madrasaName) {
       document.title = pageLabel
         ? `${pageLabel} | ${branding.madrasaName}`
-        : `${branding.madrasaName} - Madrasa MS`;
+        : `${branding.madrasaName} - ${t("entry.productName")}`;
     }
 
     applyTenantDocumentFavicon({

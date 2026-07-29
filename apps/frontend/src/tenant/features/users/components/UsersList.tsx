@@ -113,7 +113,7 @@ export function UsersList({
           value={search}
           onChange={setSearch}
           placeholder={t('users.searchPlaceholder')}
-          className="min-w-[180px] flex-1"
+          className="min-w-[11.25rem] flex-1"
         />
         <FormSelect
           id="role-filter"
@@ -273,7 +273,7 @@ export function UsersList({
                     columnKey="user"
                     width={getColumnWidth?.('user')}
                     onResize={onColumnResize}
-                    className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
+                    className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground"
                   >
                     {t('users.colUser')}
                   </ResizableTableHead>
@@ -281,7 +281,7 @@ export function UsersList({
                     columnKey="role"
                     width={getColumnWidth?.('role')}
                     onResize={onColumnResize}
-                    className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
+                    className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground"
                   >
                     {t('users.colRole')}
                   </ResizableTableHead>
@@ -289,7 +289,7 @@ export function UsersList({
                     columnKey="status"
                     width={getColumnWidth?.('status')}
                     onResize={onColumnResize}
-                    className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
+                    className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground"
                   >
                     {t('users.colStatus')}
                   </ResizableTableHead>
@@ -297,7 +297,7 @@ export function UsersList({
                     columnKey="lastLogin"
                     width={getColumnWidth?.('lastLogin')}
                     onResize={onColumnResize}
-                    className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
+                    className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground"
                   >
                     {t('users.colLastLogin')}
                   </ResizableTableHead>
@@ -305,7 +305,7 @@ export function UsersList({
                     columnKey="created"
                     width={getColumnWidth?.('created')}
                     onResize={onColumnResize}
-                    className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
+                    className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground"
                   >
                     {t('users.colCreated')}
                   </ResizableTableHead>
@@ -313,11 +313,11 @@ export function UsersList({
                     columnKey="twoFactor"
                     width={getColumnWidth?.('twoFactor')}
                     onResize={onColumnResize}
-                    className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
+                    className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground"
                   >
                     {t('users.col2fa')}
                   </ResizableTableHead>
-                  <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase text-muted-foreground">
+                  <th className="px-3 py-2.5 text-end text-xs font-semibold uppercase text-muted-foreground">
                     {t('users.colActions')}
                   </th>
                 </tr>
@@ -360,7 +360,7 @@ export function UsersList({
                         {user.twoFactorEnabled ? t('users.twoFactorOn') : t('users.twoFactorOff')}
                       </SettingsMetaBadge>
                     </td>
-                    <td className="px-3 py-2.5 text-right">
+                    <td className="px-3 py-2.5 text-end">
                       <div className="flex items-center justify-end gap-1">
                         <Button
                           type="button"

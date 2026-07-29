@@ -39,7 +39,7 @@ function Row({ label, value }: RowProps): React.ReactElement {
   return (
     <div className="flex items-start justify-between gap-4 py-2.5 border-b border-border last:border-0">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="text-xs font-semibold text-foreground text-right">{value || "—"}</span>
+      <span className="text-xs font-semibold text-foreground text-end">{value || "—"}</span>
     </div>
   );
 }

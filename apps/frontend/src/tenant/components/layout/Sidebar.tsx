@@ -12,6 +12,7 @@ import { NAV_ITEMS } from "@/lib/config/navConfig";
 import { isNavPathActive, ROUTES } from "@/lib/config/routes";
 import { prefetchRoute } from "@/lib/routing/routePrefetch";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 
 export interface SidebarProps {
   /** If true, shrinks the sidebar to an icon-only strip. */
@@ -29,7 +30,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
   const branding = useBranding();
 
   const settings = useGlobalSettings();
-  const { t, isRtl } = useTranslation();
+  const { t } = useTranslation();
   const enabledModules = settings.enabledModules || {};
 
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>(() => {
@@ -78,11 +79,10 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
 
   return (
     <aside
-      className={`fixed top-0 h-screen bg-sidebar z-40 flex flex-col transition-all duration-300 ease-in-out ${
-        isRtl ? "right-0" : "left-0"
-      } ${
-        collapsed ? "w-[72px]" : "w-[260px]"
-      }`}
+      className={cn(
+        "fixed start-0 top-0 z-40 flex h-screen flex-col bg-sidebar transition-all duration-300 ease-in-out",
+        collapsed ? "w-[4.5rem]" : "w-[16.25rem]",
+      )}
     >
       {/* Logo */}
       <div className="h-16 flex items-center px-5 border-b border-sidebar-border">
@@ -111,7 +111,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
                 className="overflow-hidden whitespace-nowrap"
               >
                 <span className="text-sidebar-foreground font-semibold text-sm tracking-wide">
-                  {branding.madrasaName || "Madrasa MS"}
+                  {branding.madrasaName || t("entry.productName")}
                 </span>
               </motion.div>
             )}
@@ -140,7 +140,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${hasActiveSub ? "text-sidebar-primary" : ""}`} />
+                    <Icon className={`h-4.5 w-4.5 flex-shrink-0 ${hasActiveSub ? "text-sidebar-primary" : ""}`} />
                     <AnimatePresence>
                       {!collapsed && (
                         <motion.span
@@ -170,7 +170,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2, ease: "easeInOut" }}
-                      className="overflow-hidden pl-7 space-y-1 border-l border-sidebar-border/40 ml-[21px]"
+                      className="overflow-hidden ps-7 space-y-1 border-s border-sidebar-border/40 ms-[21px]"
                     >
                       {item.subItems.map((sub) => {
                         const isSubActive = isNavPathActive(location.pathname, sub.path);
@@ -191,7 +191,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
                             {isSubActive && (
                               <motion.div
                                 layoutId="sidebar-indicator-sub"
-                                className="absolute left-[-8px] top-1/2 -translate-y-1/2 w-[3px] h-3 bg-sidebar-primary rounded-r-full"
+                                className="absolute start-[-8px] top-1/2 -translate-y-1/2 w-[0.1875rem] h-3 bg-sidebar-primary rounded-e-full"
                                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                               />
                             )}
@@ -227,11 +227,11 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
               {isActive && (
                 <motion.div
                   layoutId="sidebar-indicator"
-                  className="absolute start-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-sidebar-primary rounded-r-full"
+                  className="absolute start-0 top-1/2 -translate-y-1/2 w-[0.1875rem] h-5 bg-sidebar-primary rounded-e-full"
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
               )}
-              <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${
+              <Icon className={`h-4.5 w-4.5 flex-shrink-0 ${
                 isActive ? "text-sidebar-primary" : ""
               }`} />
               <AnimatePresence>
@@ -257,13 +257,13 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
           type="button"
           variant="ghost"
           onClick={onToggle}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors h-auto"
+          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sidebar-muted-foreground transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
         >
           {collapsed ? (
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="h-4 w-4 rtl:rotate-180" />
           ) : (
             <>
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
               <span className="text-xs font-medium">{t("nav.collapse")}</span>
             </>
           )}

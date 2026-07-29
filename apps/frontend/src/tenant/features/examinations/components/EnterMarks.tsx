@@ -138,11 +138,11 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
 
           {/* Marks entry table */}
           <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
-            <div className="px-4 py-3 border-b border-border/40 flex items-center gap-2 pl-6.5 bg-muted/20">
+            <div className="px-4 py-3 border-b border-border/40 flex items-center gap-2 ps-6.5 bg-muted/20">
               <Users className="w-4 h-4 text-primary" aria-hidden="true" />
               <h3 className="text-sm font-bold text-foreground">{t("examinations.marks")}</h3>
             </div>
-            <div className="divide-y divide-border/50 pl-6.5" role="list">
+            <div className="divide-y divide-border/50 ps-6.5" role="list">
               {students.map((student, index) => {
                 const markValue = marks[String(student.id)] ?? "";
                 const percentage = exam.totalMarks > 0 && markValue !== "" ? Math.round((Number(markValue) / exam.totalMarks) * 100) : null;

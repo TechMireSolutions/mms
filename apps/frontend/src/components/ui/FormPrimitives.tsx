@@ -179,7 +179,7 @@ export function EditableSelect({
                 aria-selected={isSelected}
                 onMouseEnter={() => setHighlightedIndex(index)}
                 onClick={() => select(option)}
-                className={`flex items-center justify-between gap-2 px-3 py-2 text-sm cursor-pointer transition-colors ${
+                className={`flex min-h-11 items-center justify-between gap-2 px-3 py-2 text-sm cursor-pointer transition-colors ${
                   isSelected
                     ? "bg-primary/5 text-primary font-semibold"
                     : isHighlighted
@@ -420,7 +420,7 @@ function TagsInput({ selected = [], predefined = [], onChange, id, name }: TagsI
               <button
                 type="button"
                 onClick={() => remove(tag)}
-                className="p-1 -mr-1 hover:text-destructive focus:outline-none transition-colors rounded-full me-0.5"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center -me-1 rounded-full hover:text-destructive focus:outline-none transition-colors"
                 aria-label={t("contacts.form.removeTag", { tag })}
               >
                 <X className="w-3 h-3" />
@@ -543,7 +543,7 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
   if (field.type === "boolean") {
     const isChecked = !!value;
     return (
-      <div className="flex items-center gap-2 pt-1 h-[44px]">
+      <div className="flex h-11 items-center gap-2 pt-1">
         <Checkbox
           id={field.key}
           checked={isChecked}

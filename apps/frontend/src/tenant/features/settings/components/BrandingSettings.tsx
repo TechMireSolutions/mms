@@ -135,7 +135,7 @@ export default function BrandingSettings(): React.JSX.Element {
                 autoComplete="email"
                 value={data.email}
                 placeholder={t('branding.emailPlaceholder')}
-                className="pl-9"
+                className="ps-9"
                 onChange={(event) => upd('email', event.target.value)}
               />
             </div>
@@ -151,7 +151,7 @@ export default function BrandingSettings(): React.JSX.Element {
                 autoComplete="tel"
                 value={data.phone}
                 placeholder={t('branding.phonePlaceholder')}
-                className="pl-9"
+                className="ps-9"
                 onChange={(event) => upd('phone', event.target.value)}
               />
             </div>
@@ -166,7 +166,7 @@ export default function BrandingSettings(): React.JSX.Element {
                 inputMode="url"
                 value={data.website}
                 placeholder={t('branding.websitePlaceholder')}
-                className="pl-9"
+                className="ps-9"
                 onChange={(event) => upd('website', event.target.value)}
               />
             </div>

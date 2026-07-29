@@ -215,7 +215,7 @@ export function FormModal<K extends string = string>({
     !hasTabs && progress === undefined,
   );
 
-  const panelClassName = cn(tall ? 'h-[88vh] max-h-[700px]' : undefined, panelClassNameProp);
+  const panelClassName = cn(tall ? 'h-[88vh] max-h-[43.75rem]' : undefined, panelClassNameProp);
 
   const effectiveSize = useMemo((): NonNullable<FormModalProps<K>['size']> => {
     const requested = size ?? 'lg';
@@ -344,7 +344,7 @@ export function FormModal<K extends string = string>({
                   aria-selected={active}
                   role="tab"
                   className={cn(
-                    "relative flex items-center justify-center md:justify-start gap-1.5 md:gap-2 rounded-lg px-2 py-2.5 md:px-3.5 text-xs font-semibold transition-all flex-1 md:flex-initial md:w-full min-h-11 md:min-h-0 md:whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                    "relative flex items-center justify-center md:justify-start gap-1.5 md:gap-2 rounded-lg px-2 py-2.5 md:px-3.5 text-xs font-semibold transition-all flex-1 md:flex-initial md:w-full min-h-11 md:whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
                     active
                       ? "bg-card text-foreground shadow-sm border border-border/80 font-bold"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -413,7 +413,7 @@ export function FormModal<K extends string = string>({
             )}
           >
             {footerStart ? <div className="min-w-0 sm:flex-1">{footerStart}</div> : null}
-            <div className="ml-auto flex items-center gap-2.5">
+            <div className="ms-auto flex items-center gap-2.5">
               <Button type="button" variant="outline" onClick={onClose}>
                 {resolvedCancelLabel}
               </Button>

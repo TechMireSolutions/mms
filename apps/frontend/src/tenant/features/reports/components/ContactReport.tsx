@@ -34,7 +34,7 @@ export default function ContactReport(props: ContactReportProps): React.JSX.Elem
   }
 
   return (
-    <div className="space-y-6 text-left p-4">
+    <div className="space-y-6 text-start p-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard icon={Users} label={t("contacts.report.totalContacts")} value={totalContacts} color="primary" />
         <StatCard icon={UserCheck} label={t("contacts.report.activeContacts")} value={activeContacts} color="green" />

@@ -89,7 +89,7 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
           const isOpen = expanded[mujtahid.id];
           return (
             <Card key={mujtahid.id} accentColor="primary" className="group/mujtahid">
-              <header className="flex items-center justify-between px-5 py-3 pl-5.5">
+              <header className="flex items-center justify-between px-5 py-3 ps-5.5">
                 <Button type="button" onClick={() => setExpanded((expandedById) => ({ ...expandedById, [mujtahid.id]: !expandedById[mujtahid.id] }))}
                   aria-expanded={isOpen}
                   variant="ghost"

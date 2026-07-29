@@ -401,7 +401,7 @@ export default function Examinations(): React.JSX.Element {
           title={t("examinations.marks")}
           size="xl"
           hideFooter
-          panelClassName="h-[88vh] max-h-[700px]"
+          panelClassName="h-[88vh] max-h-[43.75rem]"
         >
           <EnterMarks exams={exams} results={examResults} onSaveResults={handleSaveResults} />
         </FormModal>

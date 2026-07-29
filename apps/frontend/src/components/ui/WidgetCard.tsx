@@ -19,7 +19,7 @@ export const WidgetCard = React.forwardRef<HTMLDivElement, WidgetCardProps>(
         ref={ref}
         accentColor={accentColor}
         className={cn(
-          "hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-left",
+          "hover:-translate-y-1 hover:shadow-surface-lg transition-all duration-300 text-start",
           accentColor === "destructive" && "border-destructive/30 hover:border-destructive/55",
           className
         )}

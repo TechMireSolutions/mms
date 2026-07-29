@@ -66,7 +66,7 @@ export function SubTabBar<K extends string>({
                   aria-controls={panelId}
                   onClick={() => onChange(tab.key)}
                   className={cn(
-                    "flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-xs font-semibold transition-colors",
+                    "flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2.5 text-start text-xs font-semibold transition-colors",
                     active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                   )}
                 >

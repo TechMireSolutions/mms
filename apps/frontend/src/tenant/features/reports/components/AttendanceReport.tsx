@@ -170,7 +170,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
   };
 
   return (
-    <div className="space-y-4 text-left">
+    <div className="space-y-4 text-start">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard icon={UserCheck} label={t("attendance.report.avgAttendance")} value={`${avgRate}%`} color="green" />
         <StatCard icon={Users} label={t("attendance.report.classesCount")} value={filteredSummary.length} color="primary" />
@@ -250,7 +250,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
                   t("attendance.report.colPerfectAttendance"),
                   t("attendance.report.colBelowThreshold"),
                 ].map((headerLabel) => (
-                  <th key={headerLabel} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
+                  <th key={headerLabel} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
                 ))}
               </tr>
             </thead>
@@ -317,7 +317,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
                   t("attendance.report.colTotal"),
                   t("attendance.report.colRate"),
                 ].map((headerLabel) => (
-                  <th key={headerLabel} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
+                  <th key={headerLabel} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
                 ))}
               </tr>
             </thead>
