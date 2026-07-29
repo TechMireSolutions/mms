@@ -32,7 +32,7 @@ export function GoogleContactsConnectedState({
             type="button"
             variant="outline"
             onClick={onDisconnect}
-            className="flex items-center gap-1 text-xs transition-colors border border-border bg-card rounded-lg px-2.5 min-h-[44px] text-muted-foreground hover:bg-destructive/10 hover:text-destructive shadow-none"
+            className="flex items-center gap-1 text-xs transition-colors border border-border bg-card rounded-lg px-2.5 min-h-11 text-muted-foreground hover:bg-destructive/10 hover:text-destructive shadow-none"
           >
             <Unlink className="w-3 h-3" />
             <span>{t("contacts.sync.disconnect")}</span>
@@ -68,7 +68,7 @@ export function GoogleContactsConnectedState({
           type="button"
           onClick={onSync}
           disabled={syncing}
-          className="flex items-center gap-2 px-5 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors shadow-none"
+          className="flex items-center gap-2 px-5 min-h-11 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors shadow-none"
         >
           {syncing ? (
             <>

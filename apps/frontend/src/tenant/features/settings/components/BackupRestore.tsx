@@ -84,7 +84,7 @@ export default function BackupRestore(): React.JSX.Element {
             type="button"
             variant="outline"
             onClick={() => backup.setClearHistoryOpen(true)}
-            className="flex min-h-[44px] items-center gap-2 px-5 py-2.5 rounded-lg font-semibold"
+            className="flex min-h-11 items-center gap-2 px-5 py-2.5 rounded-lg font-semibold"
           >
             <Trash2 className="h-3.5 w-3.5" />
             <span>{t('backup.clearHistory')}</span>

@@ -72,7 +72,7 @@ export function GoogleContactsSetupForm({
         <Button
           type="button"
           onClick={onSave}
-          className="px-4 min-h-[44px] rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors shadow-none"
+          className="px-4 min-h-11 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors shadow-none"
         >
           {t("contacts.sync.saveCredentials")}
         </Button>
@@ -80,7 +80,7 @@ export function GoogleContactsSetupForm({
           type="button"
           variant="outline"
           onClick={onCancel}
-          className="px-4 min-h-[44px] rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-colors bg-card shadow-none"
+          className="px-4 min-h-11 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-colors bg-card shadow-none"
         >
           {t("common.cancel")}
         </Button>

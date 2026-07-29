@@ -95,11 +95,11 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
           <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/70" />
           <Receipt className="w-5 h-5 text-primary" aria-hidden="true" />
           <div>
-            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide m-0">{t("obligations.columns.receiptNo")}</h3>
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide m-0">{t("obligations.columns.receiptNo")}</h3>
             <p className="text-xl font-bold text-primary font-mono m-0">{selectedCollection.receipt_no}</p>
           </div>
           <div className="ms-auto text-end">
-            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">{t("obligations.columns.receivedDate")}</h3>
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("obligations.columns.receivedDate")}</h3>
             <p className="text-sm font-semibold text-foreground m-0">{formatDate(selectedCollection.received_date)}</p>
           </div>
         </header>
@@ -129,10 +129,10 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
                 <caption className="sr-only">{t("obligations.detail.distributionCaption", { receipt: selectedCollection.receipt_no })}</caption>
                 <thead className="bg-muted/60 border-b border-border">
                   <tr>
-                    <th scope="col" className="px-5 py-2 text-start text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.detail.colName")}</th>
-                    <th scope="col" className="px-4 py-2 text-start text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.detail.colType")}</th>
-                    <th scope="col" className="px-4 py-2 text-end text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.detail.colPct")}</th>
-                    <th scope="col" className="px-5 py-2 text-end text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.columns.amount")}</th>
+                    <th scope="col" className="px-5 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.detail.colName")}</th>
+                    <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.detail.colType")}</th>
+                    <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-muted-foreground uppercase">{t("obligations.detail.colPct")}</th>
+                    <th scope="col" className="px-5 py-2 text-end text-xs font-semibold text-muted-foreground uppercase">{t("obligations.columns.amount")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">

@@ -167,7 +167,7 @@ export function DiscountsTab({ session, onUpdate, canWrite }: DiscountsTabProps)
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
-                  <h4 className="text-[13px] font-bold text-foreground m-0">{discountItem.name}</h4>
+                  <h4 className="text-sm font-bold text-foreground m-0">{discountItem.name}</h4>
                   <StatusBadge
                     status={discountItem.active ? "active" : "inactive"}
                     config={{
@@ -177,10 +177,10 @@ export function DiscountsTab({ session, onUpdate, canWrite }: DiscountsTabProps)
                     size="sm"
                   />
                 </div>
-                <p className="text-[13px] font-semibold text-primary m-0">
+                <p className="text-sm font-semibold text-primary m-0">
                   {t("sessions.discounts.off", { amount: discountItem.type === "percentage" ? `${discountItem.value}%` : formatMoney(discountItem.value, session.currency) })}
                 </p>
-                {discountItem.conditions && <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{discountItem.conditions}</p>}
+                {discountItem.conditions && <p className="text-xs text-muted-foreground mt-0.5 m-0">{discountItem.conditions}</p>}
               </div>
               {canWrite && <div className="flex items-center gap-1.5 flex-shrink-0">
                 <Button aria-label={discountItem.active ? t("sessions.discounts.deactivate") : t("sessions.discounts.activate")} onClick={() => { void toggleActive(discountItem.id); }} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title={discountItem.active ? t("sessions.discounts.deactivate") : t("sessions.discounts.activate")} variant="ghost" size="icon">

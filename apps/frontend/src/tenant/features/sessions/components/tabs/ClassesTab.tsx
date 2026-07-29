@@ -58,11 +58,11 @@ function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage, canWri
             <GraduationCap className="w-4.5 h-4.5 text-primary" style={{ width: 18, height: 18 }} />
           </div>
           <div>
-            <h4 className="text-[14px] font-bold text-foreground m-0">{sessionClass.name}</h4>
-            <p className="text-[11px] text-muted-foreground m-0">{sessionClass.room || t("sessions.classes.noRoom")}</p>
+            <h4 className="text-sm font-bold text-foreground m-0">{sessionClass.name}</h4>
+            <p className="text-xs text-muted-foreground m-0">{sessionClass.room || t("sessions.classes.noRoom")}</p>
           </div>
         </div>
-        {canWrite && <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {canWrite && <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
           <Button
             variant="ghost"
             size="icon"
@@ -94,24 +94,24 @@ function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage, canWri
 
       <div className="grid grid-cols-2 gap-2 mb-3">
         <div className="rounded-lg bg-muted/40 px-3 py-2">
-          <p className="text-[10px] text-muted-foreground font-medium m-0">{t("sessions.classes.ageRange")}</p>
-          <p className="text-[13px] font-semibold text-foreground m-0">{t("sessions.classes.ageYears", { min: sessionClass.ageMin, max: sessionClass.ageMax })}</p>
+          <p className="text-xs text-muted-foreground font-medium m-0">{t("sessions.classes.ageRange")}</p>
+          <p className="text-sm font-semibold text-foreground m-0">{t("sessions.classes.ageYears", { min: sessionClass.ageMin, max: sessionClass.ageMax })}</p>
         </div>
         <div className="rounded-lg bg-muted/40 px-3 py-2">
-          <p className="text-[10px] text-muted-foreground font-medium m-0">{t("sessions.classes.form.gender")}</p>
+          <p className="text-xs text-muted-foreground font-medium m-0">{t("sessions.classes.form.gender")}</p>
           <StatusBadge status={sessionClass.gender || "any"} config={genderConfig} size="sm" />
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-[12px] text-muted-foreground mb-3">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
         <Users className="w-3.5 h-3.5" aria-hidden="true" />
         <span>{t('sessions.classes.teacher')}: <span className="font-medium text-foreground">{teacherLabel}</span></span>
       </div>
 
       <div aria-label={t("sessions.classes.enrolledCapacity", { enrolled: sessionClass.enrolled, capacity: sessionClass.capacity })}>
         <div className="flex items-center justify-between mb-1" aria-hidden="true">
-          <span className="text-[11px] text-muted-foreground">{t("sessions.classes.form.capacity")}</span>
-          <span className="text-[11px] font-semibold text-foreground">{sessionClass.enrolled}/{sessionClass.capacity}</span>
+          <span className="text-xs text-muted-foreground">{t("sessions.classes.form.capacity")}</span>
+          <span className="text-xs font-semibold text-foreground">{sessionClass.enrolled}/{sessionClass.capacity}</span>
         </div>
         <div className="h-1.5 rounded-full bg-border overflow-hidden" aria-hidden="true">
           <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: `${Math.min(capacityPercent, 100)}%` }} />
@@ -254,7 +254,7 @@ function ClassModal({ open, sessionClass, onClose, onSave, saving }: ClassModalP
             className="w-full"
           />
           {teacherOptions.length === 0 && (
-            <p className="text-[11px] text-muted-foreground mt-1.5">{t('sessions.classes.noTeachersHint')}</p>
+            <p className="text-xs text-muted-foreground mt-1.5">{t('sessions.classes.noTeachersHint')}</p>
           )}
         </div>
         <div>

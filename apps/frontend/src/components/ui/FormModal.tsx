@@ -327,7 +327,7 @@ export function FormModal<K extends string = string>({
           className="flex flex-col md:flex-row gap-6 h-full items-stretch"
         >
           <TabsPrimitive.List
-            className="flex flex-row md:flex-col shrink-0 h-auto w-full md:w-auto md:min-w-[180px] bg-muted/20 p-1 rounded-xl gap-0.5 md:gap-1 border border-border overflow-x-auto md:overflow-x-visible md:border-e md:border-t-0 md:border-b-0 md:border-s-0 md:pe-4"
+            className="flex flex-row md:flex-col shrink-0 h-auto w-full md:w-auto md:min-w-[11.25rem] bg-muted/20 p-1 rounded-xl gap-0.5 md:gap-1 border border-border overflow-x-auto md:overflow-x-visible md:border-e md:border-t-0 md:border-b-0 md:border-s-0 md:pe-4"
           >
             {tabs.map((tab) => {
               const active = activeTab === tab.key;
@@ -421,7 +421,7 @@ export function FormModal<K extends string = string>({
                 type="button"
                 onClick={onSave}
                 disabled={saving || saveDisabled || saved}
-                className="min-w-[120px]"
+                className="min-w-[7.5rem]"
               >
                 {saved ? (
                   <>

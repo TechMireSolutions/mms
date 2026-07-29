@@ -33,8 +33,8 @@ export function PaperPreviewPanel({
     <section className="rounded-xl border border-border bg-muted/20 p-3 sm:p-4" aria-label={t("questionBank.paperPreview")}>
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="m-0 text-[13px] font-bold text-foreground">{t("questionBank.paperPreview")}</h3>
-          <p className="m-0 text-[11px] text-muted-foreground">{t("questionBank.paperPreviewDesc")}</p>
+          <h3 className="m-0 text-sm font-bold text-foreground">{t("questionBank.paperPreview")}</h3>
+          <p className="m-0 text-xs text-muted-foreground">{t("questionBank.paperPreviewDesc")}</p>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
           <Button type="button" onClick={onSave} disabled={selectedCount === 0 || saving} variant="outline" size="sm" className="w-full sm:w-auto">

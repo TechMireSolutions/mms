@@ -60,7 +60,7 @@ export function StepIndicator({ steps, current }: StepIndicatorProps): React.Rea
                 )}
               </div>
               <span
-                className={`text-[10px] font-semibold text-center leading-tight ${
+                className={`text-xs font-semibold text-center leading-tight ${
                   active ? "text-primary font-bold" : done ? "text-foreground" : "text-muted-foreground"
                 }`}
               >

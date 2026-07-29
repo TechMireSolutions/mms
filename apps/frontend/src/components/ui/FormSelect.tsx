@@ -20,7 +20,7 @@ export interface FormSelectProps {
 }
 
 const SELECT_CLASS =
-  "w-full min-h-[44px] cursor-pointer appearance-none rounded-lg border border-border bg-muted/30 px-3 py-2 pr-10 text-sm text-foreground shadow-sm transition-all focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50";
+  "w-full min-h-11 cursor-pointer appearance-none rounded-lg border border-border bg-muted/30 px-3 py-2 pe-10 text-sm text-foreground shadow-sm transition-all focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50";
 
 /**
  * Native select with a visible chevron — clearly reads as a dropdown before interaction.
@@ -61,7 +61,7 @@ export function FormSelect({
         })}
       </select>
       <ChevronDown
-        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+        className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
         aria-hidden
       />
     </div>

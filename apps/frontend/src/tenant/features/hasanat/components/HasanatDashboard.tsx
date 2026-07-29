@@ -110,8 +110,8 @@ export function HasanatDashboard({
               {pieData.map((entry) => (
                 <div key={entry.name} className="flex items-center gap-2.5">
                   <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: entry.color }} aria-hidden="true" />
-                  <span className="text-[12px] text-muted-foreground flex-1">{entry.name}</span>
-                  <span className="text-[12px] font-bold text-foreground">{entry.value}</span>
+                  <span className="text-sm text-muted-foreground flex-1">{entry.name}</span>
+                  <span className="text-sm font-bold text-foreground">{entry.value}</span>
                 </div>
               ))}
             </div>
@@ -128,13 +128,13 @@ export function HasanatDashboard({
                 <div key={denomination.id}>
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[14px]" aria-hidden="true">{denomination.icon}</span>
-                      <span className="text-[12px] font-semibold text-foreground">{denomination.name}</span>
-                      <span className="text-[10px] font-bold text-muted-foreground">
+                      <span className="text-sm" aria-hidden="true">{denomination.icon}</span>
+                      <span className="text-sm font-semibold text-foreground">{denomination.name}</span>
+                      <span className="text-xs font-bold text-muted-foreground">
                         {t("hasanat.dashboard.pts", { count: denomination.points })}
                       </span>
                     </div>
-                    <span className="text-[11px] text-muted-foreground">{denomination.remaining}/{denomination.total}</span>
+                    <span className="text-xs text-muted-foreground">{denomination.remaining}/{denomination.total}</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-border overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${denomination.name} stock usage`}>
                     <div
@@ -158,7 +158,7 @@ export function HasanatDashboard({
         <Card accentColor="success" className="p-5 shadow-sm hover:shadow-md border-border/80">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-foreground m-0">{t("hasanat.dashboard.overallStockUsage")}</h3>
-            <span className="text-[13px] font-bold text-foreground">
+            <span className="text-sm font-bold text-foreground">
               {t("hasanat.dashboard.stockUsagePct", { count: usedPct })}
             </span>
           </div>
@@ -171,10 +171,10 @@ export function HasanatDashboard({
             />
           </div>
           <div className="flex justify-between mt-1.5">
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {t("hasanat.dashboard.stockUsed", { count: totalStock - totalRemaining })}
             </span>
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {t("hasanat.dashboard.stockRemaining", { count: totalRemaining })}
             </span>
           </div>

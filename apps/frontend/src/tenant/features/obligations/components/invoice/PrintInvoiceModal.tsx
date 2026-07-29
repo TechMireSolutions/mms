@@ -111,7 +111,7 @@ export function PrintInvoiceModal({
       }
       footer={
         <div className="flex w-full items-center justify-between">
-          <p className="text-[10px] text-muted-foreground m-0">
+          <p className="text-xs text-muted-foreground m-0">
             {t("obligations.print.pageSize", {
               size: template.pageSize,
               width: size.width,

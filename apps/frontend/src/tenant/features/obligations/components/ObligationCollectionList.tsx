@@ -137,7 +137,7 @@ export function ObligationCollectionList({
     <div className="space-y-4">
       <section aria-label={t("obligations.filter.label")} className="flex flex-wrap gap-2 items-center">
         <div className="relative flex-1 min-w-[180px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
           <Input
             type="search"
             aria-label={t("obligations.searchPlaceholder")}
@@ -233,41 +233,41 @@ export function ObligationCollectionList({
                       </th>
                     )}
                     {showReceiptNo && (
-                      <ResizableTableHead columnKey="receiptNo" width={getColumnWidth?.("receiptNo")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="receiptNo" width={getColumnWidth?.("receiptNo")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.receiptNo")}
                       </ResizableTableHead>
                     )}
                     {showReceivedDate && (
-                      <ResizableTableHead columnKey="receivedDate" width={getColumnWidth?.("receivedDate")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="receivedDate" width={getColumnWidth?.("receivedDate")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.receivedDate")}
                       </ResizableTableHead>
                     )}
                     {showSender && (
-                      <ResizableTableHead columnKey="sender" width={getColumnWidth?.("sender")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="sender" width={getColumnWidth?.("sender")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.sender")}
                       </ResizableTableHead>
                     )}
                     {showObligationType && (
-                      <ResizableTableHead columnKey="obligationType" width={getColumnWidth?.("obligationType")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="obligationType" width={getColumnWidth?.("obligationType")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.obligationType")}
                       </ResizableTableHead>
                     )}
                     {showRepMujtahid && (
-                      <ResizableTableHead columnKey="repMujtahid" width={getColumnWidth?.("repMujtahid")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="repMujtahid" width={getColumnWidth?.("repMujtahid")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.repMujtahid")}
                       </ResizableTableHead>
                     )}
                     {showAmount && (
-                      <ResizableTableHead columnKey="amount" width={getColumnWidth?.("amount")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="amount" width={getColumnWidth?.("amount")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.amount")}
                       </ResizableTableHead>
                     )}
                     {showPaymentMode && (
-                      <ResizableTableHead columnKey="paymentMode" width={getColumnWidth?.("paymentMode")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="paymentMode" width={getColumnWidth?.("paymentMode")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
                         {t("obligations.columns.paymentMode")}
                       </ResizableTableHead>
                     )}
-                    <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">
+                    <th scope="col" className="px-3 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase">
                       <span className="sr-only">{t("obligations.columns.actions")}</span>
                     </th>
                   </tr>
@@ -308,13 +308,13 @@ export function ObligationCollectionList({
                         )}
                         {showObligationType && (
                           <td className="px-3 py-2.5">
-                            <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full">{obligationType?.name || "—"}</span>
+                            <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full">{obligationType?.name || "—"}</span>
                           </td>
                         )}
                         {showRepMujtahid && (
                           <td className="px-3 py-2.5 text-xs text-muted-foreground">
                             <span>{rep?.name || "—"}</span>
-                            {mujtahid && <span className="text-[10px] block text-muted-foreground/70">{mujtahid.name}</span>}
+                            {mujtahid && <span className="text-xs block text-muted-foreground/70">{mujtahid.name}</span>}
                           </td>
                         )}
                         {showAmount && (

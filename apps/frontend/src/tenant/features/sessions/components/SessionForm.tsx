@@ -163,10 +163,10 @@ export function SessionForm({
         {sessionDraft.name}
       </span>
       <div className="flex items-center gap-1.5">
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px]">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-xs">
           {sessionDraft.type}
         </span>
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-md font-semibold text-[10px] border capitalize ${
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-md font-semibold text-xs border capitalize ${
           sessionDraft.status === "active"
             ? "bg-success/10 text-success border-success/20"
             : sessionDraft.status === "completed"
@@ -178,7 +178,7 @@ export function SessionForm({
       </div>
     </div>
   ) : (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-[11px] font-bold border border-destructive/20">
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-xs font-bold border border-destructive/20">
       {t("sessions.form.nameRequired")}
     </span>
   );

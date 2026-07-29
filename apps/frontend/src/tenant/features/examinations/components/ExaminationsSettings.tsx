@@ -55,7 +55,7 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
         <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
           <FileText className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         </div>
-        <h3 id="exams-settings-title" className="text-[13px] font-bold text-foreground">
+        <h3 id="exams-settings-title" className="text-sm font-bold text-foreground">
           {showFields ? t("examinations.settings.titleFields") : t("examinations.settings.titlePreferences")}
         </h3>
       </div>

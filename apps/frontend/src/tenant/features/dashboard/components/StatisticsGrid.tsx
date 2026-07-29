@@ -74,7 +74,7 @@ export default function StatsGrid({
               <div className="flex items-center gap-1">
                 {statItem.trend !== 0 && !isEditMode && (
                   <span
-                    className={`inline-flex items-center gap-1 text-[10px] font-black px-1.5 py-0.5 rounded-full border transition-colors ${
+                    className={`inline-flex items-center gap-1 text-xs font-black px-1.5 py-0.5 rounded-full border transition-colors ${
                       hasPositiveTrend 
                         ? "bg-success/10 text-success border-success/20" 
                         : "bg-destructive/10 text-destructive border-destructive/20"
@@ -129,16 +129,16 @@ export default function StatsGrid({
 
             <div className="flex items-end justify-between mt-1">
               <main className="space-y-0.5 flex-1 min-w-0">
-                <p className="text-[22px] font-black text-foreground tracking-tight leading-none m-0 truncate tabular-nums">
+                <p className="text-2xl font-black text-foreground tracking-tight leading-none m-0 truncate tabular-nums">
                   {statItem.value}
                 </p>
-                <h4 className="text-[12px] font-bold text-foreground/80 mt-1.5 m-0 truncate tracking-wide">
+                <h4 className="text-sm font-bold text-foreground/80 mt-1.5 m-0 truncate tracking-wide">
                   {statItem.title}
                 </h4>
               </main>
             </div>
 
-            <footer className="text-[11px] text-muted-foreground mt-3 border-t border-border/30 pt-2 m-0 truncate">
+            <footer className="text-xs text-muted-foreground mt-3 border-t border-border/30 pt-2 m-0 truncate">
               {statItem.sub}
             </footer>
           </MotionWidgetCard>

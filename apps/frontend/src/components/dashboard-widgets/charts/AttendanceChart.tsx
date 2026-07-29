@@ -40,7 +40,7 @@ const AttTooltip = ({ active = false, payload = [], label = "" }: Partial<Toolti
   if (!active || !payload?.length) return null;
   return (
     <div className="surface-glass rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-start">
-      <p className="text-muted-foreground text-[10px] m-0">{label}</p>
+      <p className="text-muted-foreground text-xs m-0">{label}</p>
       <p className="font-bold text-foreground m-0">{payload[0].value}%</p>
     </div>
   );
@@ -51,7 +51,7 @@ const HasanatTooltip = ({ active = false, payload = [] }: Partial<TooltipContent
   if (!active || !payload?.length) return null;
   return (
     <div className="surface-glass rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-start">
-      <p className="text-muted-foreground text-[10px] m-0">{payload[0].name}</p>
+      <p className="text-muted-foreground text-xs m-0">{payload[0].name}</p>
       <p className="font-bold text-foreground m-0">{t("hasanat.dashboard.pts", { count: formatNumber(payload[0].value) })}</p>
 
     </div>
@@ -122,7 +122,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
           <h3 id="attendance-chart-heading" className="text-sm font-bold text-foreground m-0">
             {t("widget.title.attendanceRate")}
           </h3>
-          <p className="text-[12px] text-muted-foreground mt-1 m-0 font-medium">
+          <p className="text-sm text-muted-foreground mt-1 m-0 font-medium">
             {t("dashboard.charts.attendance.subtitle")}
           </p>
         </div>
@@ -168,7 +168,7 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
           )}
           <div className="text-end select-none">
             <p className="text-lg font-black text-foreground m-0 tabular-nums">{avg}%</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5 m-0 font-medium">{t("dashboard.charts.attendance.weeklyAvg")}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 m-0 font-medium">{t("dashboard.charts.attendance.weeklyAvg")}</p>
           </div>
         </div>
       </header>
@@ -291,7 +291,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
           <h3 id="hasanat-chart-heading" className="text-sm font-bold text-foreground m-0">
             {t("widget.title.hasanatDistribution")}
           </h3>
-          <p className="text-[12px] text-muted-foreground mt-1 m-0 font-medium">
+          <p className="text-sm text-muted-foreground mt-1 m-0 font-medium">
             {t("dashboard.charts.hasanat.subtitle")}
           </p>
         </div>
@@ -305,7 +305,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
                   updatePref("hasanatChartType", value as "pie" | "bar" | "radar");
                 }}
               >
-                <SelectTrigger className="min-h-11 min-w-11 px-1.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className="min-h-11 min-w-11 px-1.5 rounded text-xs font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
                   <SelectValue placeholder={t("reports.visualizer.chartType")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -321,7 +321,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
                   updatePref("hasanatChartColor", value);
                 }}
               >
-                <SelectTrigger className="min-h-11 min-w-11 px-1.5 rounded text-[10px] font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
+                <SelectTrigger className="min-h-11 min-w-11 px-1.5 rounded text-xs font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
                   <SelectValue placeholder={t("reports.visualizer.colorPalette")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -402,9 +402,9 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }) {
                 <div className="flex items-center justify-between mb-1 select-none">
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full" style={{ background: hasanatPoint.color }} aria-hidden="true" />
-                    <span className="text-[11px] text-muted-foreground">{hasanatPoint.name}</span>
+                    <span className="text-xs text-muted-foreground">{hasanatPoint.name}</span>
                   </div>
-                  <span className="text-[11px] font-semibold text-foreground">{percentage}%</span>
+                  <span className="text-xs font-semibold text-foreground">{percentage}%</span>
                 </div>
                 <div className="h-1 rounded-full bg-muted overflow-hidden" aria-hidden="true">
                   <div className="h-full rounded-full transition-all duration-500" style={{ width: `${percentage}%`, background: hasanatPoint.color }} />

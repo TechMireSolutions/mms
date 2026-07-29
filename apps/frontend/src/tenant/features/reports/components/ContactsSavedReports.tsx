@@ -241,16 +241,16 @@ export default function ContactsSavedReports({
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h4 className="text-sm font-semibold text-foreground">{savedReport.name}</h4>
-                    <p className="text-[11px] text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {formatDrillDownSummary(savedReport.drillDown, searchLabel)}
                     </p>
                     <div className="flex flex-wrap gap-1.5 mt-2">
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                         <Users className="w-3 h-3" />
                         {shareLabel(savedReport.shareScope)}
                       </span>
                       {issues.length > 0 && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-warning/15 text-warning">
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-warning/15 text-warning">
                           <AlertTriangle className="w-3 h-3" />
                           {t("contacts.savedReports.staleBadge")}
                         </span>
@@ -259,7 +259,7 @@ export default function ContactsSavedReports({
                   </div>
                   <Bookmark className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                 </div>
-                <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
+                <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {formatLastRun(savedReport.lastRunAt)}
@@ -276,7 +276,7 @@ export default function ContactsSavedReports({
                     type="button"
                     variant="link"
                     onClick={() => void handleRun(savedReport)}
-                    className="flex items-center gap-1 text-xs font-medium text-primary hover:underline p-0 h-auto shadow-none"
+                    className="flex items-center gap-1 text-xs font-medium text-primary hover:underline min-h-11 px-2 shadow-none"
                   >
                     <Play className="w-3 h-3" />
                     {t("contacts.savedReports.run")}
@@ -285,7 +285,7 @@ export default function ContactsSavedReports({
                     type="button"
                     variant="ghost"
                     onClick={() => void handleDelete(savedReport.id)}
-                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors ml-auto p-0 h-auto hover:bg-transparent shadow-none"
+                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors ml-auto min-h-11 px-2 hover:bg-transparent shadow-none"
                   >
                     <Trash2 className="w-3 h-3" />
                     {t("contacts.savedReports.delete")}

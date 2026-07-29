@@ -93,7 +93,7 @@ export function ContactPhonesTab({
                   options={countryCodeOptions}
                   value={phone.countryCode || defaultCountryCode}
                   onChange={(val) => updatePhone(idx, { countryCode: val })}
-                  className="w-[90px] shrink-0"
+                  className="w-[5.625rem] shrink-0"
                   id={`phone-country-${idx}`}
                   name={`phone-country-${idx}`}
                 />

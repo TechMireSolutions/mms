@@ -241,7 +241,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
             {selectedSession && (
               <>
                 <span className="font-medium text-foreground">{t("sessions.report.sessionFilterLabel")}</span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[11px] border border-primary/20">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-xs border border-primary/20">
                   {selectedSession}
                 </span>
               </>
@@ -249,7 +249,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
             {selectedClass && (
               <>
                 <span className="font-medium text-foreground">{t("sessions.report.classFilterLabel")}</span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[11px] border border-primary/20">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-xs border border-primary/20">
                   {selectedClass}
                 </span>
               </>
@@ -262,7 +262,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedSession(null)}
-                className="px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+                className="px-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
               >
                 <X className="w-3 h-3 me-1" />
                 {t("sessions.report.clearSessionFilter")}
@@ -274,7 +274,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedClass(null)}
-                className="px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+                className="px-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
               >
                 <X className="w-3 h-3 me-1" />
                 {t("sessions.report.clearClassFilter")}
@@ -313,7 +313,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
                   t("sessions.report.colUtilisation"),
                   t("sessions.report.colStatus"),
                 ].map((headerLabel) => (
-                  <th key={headerLabel} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
+                  <th key={headerLabel} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
                 ))}
               </tr>
             </thead>
@@ -368,7 +368,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
       <div className="border-t border-border/50 pt-6 mt-6 space-y-4 text-left">
         <div>
           <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{t("sessions.report.dashboardWidgetTitle")}</h3>
-          <p className="text-[10px] text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("sessions.report.dashboardWidgetSubtitle")}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("sessions.report.dashboardWidgetSubtitle")}</p>
         </div>
         <SessionsTable />
       </div>

@@ -42,7 +42,7 @@ function TabTrigger({
 }): React.JSX.Element {
   const Icon = tab.icon;
   const className = cn(
-    "flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors",
+    "flex min-h-11 w-full items-start gap-3 px-4 py-3.5 text-left transition-colors",
     active ? "text-primary" : "text-foreground hover:bg-muted/40",
   );
   const body = (
@@ -265,12 +265,12 @@ export function ResponsiveAccordionTabs({
                           <Icon className="h-3.5 w-3.5" aria-hidden />
                         </span>
                       ) : null}
-                      <span className="text-[12.5px] font-semibold">{tab.label}</span>
+                      <span className="text-sm font-semibold">{tab.label}</span>
                     </div>
                     {tab.description ? (
                       <p
                         className={cn(
-                          "text-[10.5px] leading-snug text-muted-foreground",
+                          "text-xs leading-snug text-muted-foreground",
                           Icon && "pl-9",
                           active && "text-primary/80",
                         )}
@@ -300,12 +300,12 @@ export function ResponsiveAccordionTabs({
                         <Icon className="h-3.5 w-3.5" aria-hidden />
                       </span>
                     ) : null}
-                    <span className="text-[12.5px] font-semibold">{tab.label}</span>
+                    <span className="text-sm font-semibold">{tab.label}</span>
                   </div>
                   {tab.description ? (
                     <p
                       className={cn(
-                        "text-[10.5px] leading-snug text-muted-foreground",
+                        "text-xs leading-snug text-muted-foreground",
                         Icon && "pl-9",
                         active && "text-primary/80",
                       )}

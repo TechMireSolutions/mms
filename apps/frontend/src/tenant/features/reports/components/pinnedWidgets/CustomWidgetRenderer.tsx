@@ -156,7 +156,7 @@ export function WidgetDrilldownModal({
         {/* Modal Header */}
         <div className="p-6 border-b border-border/45 bg-muted/20 flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-[10px] text-primary uppercase font-black tracking-widest block">{t("reports.widgets.drilldownTitle")}</span>
+            <span className="text-xs text-primary uppercase font-black tracking-widest block">{t("reports.widgets.drilldownTitle")}</span>
             <h3 className="text-base font-black text-foreground">{t("reports.widgets.records", { title: resolveWidgetTitle(widget, t) })}</h3>
           </div>
           <Button
@@ -177,7 +177,7 @@ export function WidgetDrilldownModal({
             placeholder={t("reports.widgets.searchRecords")}
             className="flex-1 max-w-sm"
           />
-          <span className="text-[10px] text-muted-foreground font-bold px-2 py-1.5 bg-muted rounded-full border border-border flex-shrink-0">
+          <span className="text-xs text-muted-foreground font-bold px-2 py-1.5 bg-muted rounded-full border border-border flex-shrink-0">
             {t("reports.widgets.foundCount", { count: filteredRecords.length })}
           </span>
         </div>
@@ -193,7 +193,7 @@ export function WidgetDrilldownModal({
             <div className="overflow-x-auto">
               <Table className="w-full text-xs">
                 <TableHeader>
-                  <TableRow className="border-b border-border text-muted-foreground uppercase font-black text-[9px] tracking-wider text-left hover:bg-transparent">
+                  <TableRow className="border-b border-border text-muted-foreground uppercase font-black text-xs tracking-wider text-left hover:bg-transparent">
                     <TableHead className="pb-3 text-muted-foreground h-auto">{t("reports.widgets.refName")}</TableHead>
                     <TableHead className="pb-3 text-muted-foreground h-auto">{t("reports.widgets.primaryInfo")}</TableHead>
                     <TableHead className="pb-3 text-muted-foreground h-auto">{t("reports.widgets.currentStatus")}</TableHead>
@@ -267,7 +267,7 @@ export function WidgetDrilldownModal({
                               onClick={() => handleDeleteDist(recordId)}
                               variant="destructive"
                               size="sm"
-                              className="px-2.5 rounded text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all cursor-pointer font-bold uppercase tracking-wider text-[9px] shadow-none"
+                              className="px-2.5 rounded text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all cursor-pointer font-bold uppercase tracking-wider text-xs shadow-none"
                             >
                               {t("reports.widgets.delete")}
                             </Button>
@@ -276,7 +276,7 @@ export function WidgetDrilldownModal({
                               onClick={() => handleToggleStatus(recordId)}
                               variant="secondary"
                               size="sm"
-                              className="px-2.5 rounded bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border-transparent hover:border-transparent transition-all cursor-pointer font-bold uppercase tracking-wider text-[9px] shadow-none"
+                              className="px-2.5 rounded bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border-transparent hover:border-transparent transition-all cursor-pointer font-bold uppercase tracking-wider text-xs shadow-none"
                             >
                               {t("reports.widgets.toggleStatus")}
                             </Button>
@@ -294,7 +294,7 @@ export function WidgetDrilldownModal({
         {/* Modal Pagination Footer */}
         {totalPages > 1 && (
           <div className="px-6 py-4 border-t border-border/45 bg-muted/20 flex items-center justify-end select-none text-xs gap-4">
-            <span className="text-[11px] font-bold text-muted-foreground">
+            <span className="text-xs font-bold text-muted-foreground">
               {t("reports.widgets.foundCount", { count: filteredRecords.length })}
             </span>
               <SimplePagination
@@ -351,7 +351,7 @@ function ProgressRing({
           strokeLinecap="round"
         />
       </svg>
-      <span className={`absolute font-black tracking-tight text-foreground ${isCompact ? "text-[8px]" : "text-xs font-mono"}`}>
+      <span className={`absolute font-black tracking-tight text-foreground ${isCompact ? "text-xs" : "text-xs font-mono"}`}>
         {percentage}%
       </span>
     </div>
@@ -515,13 +515,13 @@ export function CustomWidgetRenderer({
           className="w-[100px] h-[100px] p-2.5 text-center flex flex-col justify-between items-center rounded-2xl cursor-pointer outline-none select-none relative overflow-hidden surface-glass hover:border-primary/20 hover:shadow-md"
           type="button"
         >
-          <span className="text-[7.5px] font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
+          <span className="text-xs font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
             {resolveWidgetTitle(widget, t)}
           </span>
           <span className="text-base font-black tracking-tight font-mono my-auto max-w-full truncate text-foreground">
             {computed.value}
           </span>
-          <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
+          <span className="text-xs font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
             {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
           </span>
         </motion.button>
@@ -542,7 +542,7 @@ export function CustomWidgetRenderer({
             <Icon className={`w-4.5 h-4.5 ${colorClasses.text}`} style={{ width: 18, height: 18 }} />
           </div>
           {computed.trend !== 0 && (
-            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+            <span className={`text-xs font-black px-2 py-0.5 rounded-full ${
               isPositive ? "bg-success/10 text-success border border-success/20" : "bg-destructive/10 text-destructive border border-destructive/20"
             }`}>
               {isPositive ? "+" : ""}{computed.trend}%
@@ -550,14 +550,14 @@ export function CustomWidgetRenderer({
           )}
         </div>
         <div className="space-y-0.5 flex-1 min-w-0 mt-3">
-          <p className="text-[20px] font-black text-foreground tracking-tight leading-none truncate">
+          <p className="text-xl font-black text-foreground tracking-tight leading-none truncate">
             {computed.value}
           </p>
-          <h4 className="text-[11px] font-black uppercase tracking-wider text-muted-foreground mt-1 truncate">
+          <h4 className="text-xs font-black uppercase tracking-wider text-muted-foreground mt-1 truncate">
             {computed.title}
           </h4>
         </div>
-        <footer className="text-[10px] text-muted-foreground mt-3 border-t border-border/30 pt-2 truncate">
+        <footer className="text-xs text-muted-foreground mt-3 border-t border-border/30 pt-2 truncate">
           {computed.sub}
         </footer>
       </motion.div>
@@ -597,13 +597,13 @@ export function CustomWidgetRenderer({
             }`}
             type="button"
           >
-            <span className="text-[7.5px] font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
+            <span className="text-xs font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
               {resolveWidgetTitle(widget, t)}
             </span>
             <div className="my-auto">
               <ProgressRing percentage={value} colorHex={colorHex} isCompact />
             </div>
-            <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
+            <span className="text-xs font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
               {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
             </span>
           </motion.button>
@@ -622,13 +622,13 @@ export function CustomWidgetRenderer({
             }`}
             type="button"
           >
-            <span className="text-[7.5px] font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
+            <span className="text-xs font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
               {resolveWidgetTitle(widget, t)}
             </span>
             <span className={`text-base font-black tracking-tight font-mono my-auto max-w-full truncate ${alertScheme ? alertScheme.text : "text-foreground"}`}>
               {formattedValue}
             </span>
-            <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
+            <span className="text-xs font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
               {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
             </span>
           </motion.button>
@@ -650,13 +650,13 @@ export function CustomWidgetRenderer({
           }`}
           type="button"
         >
-          <span className="text-[7.5px] font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
+          <span className="text-xs font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
             {resolveWidgetTitle(widget, t)}
           </span>
           <span className={`text-base font-black tracking-tight font-mono my-auto max-w-full truncate ${alertScheme ? alertScheme.text : "text-foreground"}`}>
             {formattedValue}
           </span>
-          <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
+          <span className="text-xs font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
             {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
           </span>
         </motion.button>
@@ -677,13 +677,13 @@ export function CustomWidgetRenderer({
           }`}
           type="button"
         >
-          <span className="text-[7.5px] font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
+          <span className="text-xs font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
             {resolveWidgetTitle(widget, t)}
           </span>
           <div className="my-auto">
             <ProgressRing percentage={value} colorHex={colorHex} isCompact />
           </div>
-          <span className="text-[6.5px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
+          <span className="text-xs font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
             {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
           </span>
         </motion.button>
@@ -695,7 +695,7 @@ export function CustomWidgetRenderer({
         <div
           className="w-[100px] h-[100px] p-2 text-center flex flex-col justify-between items-center rounded-2xl surface-glass overflow-hidden relative transition-all duration-300 hover:border-primary/20 hover:shadow-md"
         >
-          <span className="text-[7.5px] font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
+          <span className="text-xs font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
             {resolveWidgetTitle(widget, t)}
           </span>
           
@@ -706,7 +706,7 @@ export function CustomWidgetRenderer({
             aria-label={switchLabel}
           />
 
-          <span className="text-[7px] font-black uppercase tracking-widest mb-0.5" style={{ color: isSwitchOn ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
+          <span className="text-xs font-black uppercase tracking-widest mb-0.5" style={{ color: isSwitchOn ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
             {switchLabel}
           </span>
         </div>
@@ -747,10 +747,10 @@ export function CustomWidgetRenderer({
       {/* Widget Card Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-0.5 text-left">
-          <span className="text-[10px] font-black text-foreground uppercase tracking-widest leading-none block">
+          <span className="text-xs font-black text-foreground uppercase tracking-widest leading-none block">
             {resolveWidgetTitle(widget, t)}
           </span>
-          <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">
+          <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
             {(() => {
               const widgetTitle = resolveWidgetTitle(widget, t);
               const collectionLabel = getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t);
@@ -786,7 +786,7 @@ export function CustomWidgetRenderer({
               {formattedValue}
               <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/35 group-hover/kpi:text-primary group-hover/kpi:translate-x-0.5 group-hover/kpi:-translate-y-0.5 transition-all" />
             </h4>
-            <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider mt-1">
+            <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mt-1">
               {t("reports.widgets.clickToViewRecords")}
             </p>
             </span>
@@ -806,7 +806,7 @@ export function CustomWidgetRenderer({
                 {t("reports.widgets.progression")}
                 <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover/prog:translate-x-0.5 transition-transform" />
               </h4>
-              <p className="text-[9px] text-muted-foreground font-semibold mt-1">
+              <p className="text-xs text-muted-foreground font-semibold mt-1">
                 {t("reports.widgets.progressionDesc")}
               </p>
               </span>
@@ -821,7 +821,7 @@ export function CustomWidgetRenderer({
               <span className={`text-base font-black uppercase tracking-wider ${isSwitchOn ? "text-primary" : "text-muted-foreground"}`}>
                 {switchLabel}
               </span>
-              <p className="text-[9px] text-muted-foreground font-semibold mt-1">
+              <p className="text-xs text-muted-foreground font-semibold mt-1">
                 {t("reports.widgets.clickToToggle")}
               </p>
             </div>

@@ -293,7 +293,7 @@ export default function StudentList({
                     <GrBadge grNumber={studentCard.grNumber} className="mt-1" />
                   </div>
 
-                  <div className="space-y-2 border-t border-border/40 pt-3 text-[11px]">
+                  <div className="space-y-2 border-t border-border/40 pt-3 text-xs">
                     {isFieldEnabled("gender") && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">{t("students.gender")}:</span>
@@ -345,7 +345,7 @@ export default function StudentList({
                   width={getColumnWidth?.("name")}
                   onResize={onColumnResize}
                   onClick={() => handleSort("name")}
-                  className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none"
+                  className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none"
                 >
                   <div className="flex items-center gap-1">
                     {t("students.columns.name")} {renderSortIcon("name")}
@@ -357,7 +357,7 @@ export default function StudentList({
                     width={getColumnWidth?.("dob")}
                     onResize={onColumnResize}
                     onClick={() => handleSort("age")}
-                    className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden sm:table-cell"
+                    className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden sm:table-cell"
                   >
                     <div className="flex items-center gap-1">
                       {t("students.columns.dob")} {renderSortIcon("age")}
@@ -370,7 +370,7 @@ export default function StudentList({
                     width={getColumnWidth?.("parents")}
                     onResize={onColumnResize}
                     onClick={() => handleSort("fatherName")}
-                    className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden md:table-cell"
+                    className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden md:table-cell"
                   >
                     <div className="flex items-center gap-1">
                       {t("students.columns.parents")} {renderSortIcon("fatherName")}
@@ -378,7 +378,7 @@ export default function StudentList({
                   </ResizableTableHead>
                 )}
                 {showSessions && (
-                <ResizableTableHead columnKey="sessions" width={getColumnWidth?.("sessions")} onResize={onColumnResize} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">
+                <ResizableTableHead columnKey="sessions" width={getColumnWidth?.("sessions")} onResize={onColumnResize} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">
                   {t("students.columns.sessions")}
                 </ResizableTableHead>
                 )}
@@ -389,7 +389,7 @@ export default function StudentList({
                   width={getColumnWidth?.("status")}
                   onResize={onColumnResize}
                   onClick={() => handleSort("status")}
-                  className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden sm:table-cell"
+                  className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground select-none hidden sm:table-cell"
                 >
                   <div className="flex items-center gap-1">
                     {t("students.columns.status")} {renderSortIcon("status")}
@@ -439,15 +439,15 @@ export default function StudentList({
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <UserAvatar id={studentIdStr} name={studentRow.name || ""} className="w-8 h-8 rounded-full text-[11px] font-bold" />
+                            <UserAvatar id={studentIdStr} name={studentRow.name || ""} className="w-8 h-8 rounded-full text-xs font-bold" />
                             <div>
                               <div className="flex items-center gap-1.5">
-                                <p className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors">
+                                <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
                                   {studentRow.name}
                                 </p>
                                 <GrBadge grNumber={studentRow.grNumber} />
                               </div>
-                              <p className="text-[11px] text-muted-foreground">
+                              <p className="text-xs text-muted-foreground">
                                 {isFieldEnabled("gender") && studentRow.gender ? `${toTitleCase(studentRow.gender)} · ` : ""}{studentRow.phone || t("students.list.noPhone")}
                               </p>
                             </div>
@@ -455,10 +455,10 @@ export default function StudentList({
                         </td>
                         {showDob && (
                           <td className="px-4 py-3 hidden sm:table-cell">
-                            <p className="text-[13px] font-medium text-foreground">
+                            <p className="text-sm font-medium text-foreground">
                               {age ? t("students.list.ageYears", { age }) : "—"}
                             </p>
-                            <p className="text-[11px] text-muted-foreground">
+                            <p className="text-xs text-muted-foreground">
                               {formatDate(studentRow.dob, true)}
                             </p>
                           </td>
@@ -466,17 +466,17 @@ export default function StudentList({
                         {showParents && (
                           <td className="px-4 py-3 hidden md:table-cell">
                             {isFieldEnabled("fatherLink") && (
-                              <p className="text-[13px] text-foreground">
+                              <p className="text-sm text-foreground">
                                 {studentRow.fatherName || "—"}
                               </p>
                             )}
                             {isFieldEnabled("motherLink") && (
-                              <p className="text-[11px] text-muted-foreground">
+                              <p className="text-xs text-muted-foreground">
                                 {studentRow.motherName || "—"}
                               </p>
                             )}
                             {isFieldEnabled("guardianLink") && (
-                              <p className="text-[11px] text-muted-foreground">
+                              <p className="text-xs text-muted-foreground">
                                 {studentRow.guardianName || "—"}
                               </p>
                             )}
@@ -486,14 +486,14 @@ export default function StudentList({
                         <td className="px-4 py-3 hidden lg:table-cell">
                           <div className="flex flex-wrap gap-1">
                             {sessionNames.length === 0 ? (
-                              <span className="text-[11px] text-muted-foreground italic">
+                              <span className="text-xs text-muted-foreground italic">
                                 {t("students.list.notEnrolled")}
                               </span>
                             ) : (
                               sessionNames.map((sessionName) => (
                                 <span
                                   key={sessionName}
-                                  className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/10"
+                                  className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/10"
                                 >
                                   {sessionName}
                                 </span>
@@ -511,7 +511,7 @@ export default function StudentList({
                         <td className="px-4 py-3">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" aria-label={t("students.list.actionsAria")} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100">
+                              <Button variant="ghost" size="icon" aria-label={t("students.list.actionsAria")} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
                                 <MoreHorizontal className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -589,7 +589,7 @@ export default function StudentList({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-6 end-6 z-40 max-w-full bg-card/95 border border-primary/20 backdrop-blur-xl shadow-2xl rounded-2xl p-3 flex flex-wrap items-center gap-3 border-s-4 border-s-primary"
+            className="fixed inset-x-4 bottom-4 z-40 max-w-full sm:inset-x-auto sm:end-6 sm:bottom-6 bg-card/95 border border-primary/20 backdrop-blur-xl shadow-2xl rounded-2xl p-3 flex flex-wrap items-center gap-3 border-s-4 border-s-primary"
           >
             <span className="text-xs font-bold text-foreground ps-1">
               {t("students.selectedCount", { count: selectedIds.length })}
@@ -603,7 +603,7 @@ export default function StudentList({
                 type="button"
                 variant="outline"
                 onClick={() => { if (onBulkRestore) setConfirmBulkRestoreOpen(true); }}
-                className="px-3 py-1.5 rounded-lg border-primary/40 text-primary text-[11px] font-semibold hover:bg-primary/10 transition-colors min-h-11 flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg border-primary/40 text-primary text-xs font-semibold hover:bg-primary/10 transition-colors min-h-11 flex items-center gap-1.5"
               >
                 <RotateCcw className="w-3.5 h-3.5" /> {t("students.bulkRestore")}
               </Button>
@@ -614,7 +614,7 @@ export default function StudentList({
                   type="button"
                   variant="outline"
                   onClick={() => openComposer("whatsapp", selectedStudents.map((s) => toMessagingRecipient(s)))}
-                  className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
                 >
                   <MessageCircle className="w-3.5 h-3.5 text-success" /> {t("students.list.actionWhatsApp")}
                 </Button>
@@ -623,7 +623,7 @@ export default function StudentList({
                   type="button"
                   variant="outline"
                   onClick={() => openComposer("sms", selectedStudents.map((s) => toMessagingRecipient(s)))}
-                  className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
                 >
                   <MessageSquare className="w-3.5 h-3.5 text-info" /> {t("students.list.actionSms")}
                 </Button>
@@ -632,7 +632,7 @@ export default function StudentList({
                   type="button"
                   variant="outline"
                   onClick={() => openComposer("email", selectedStudents.filter((s) => s.email).map((s) => toMessagingRecipient(s)))}
-                  className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
                 >
                   <Mail className="w-3.5 h-3.5 text-primary" /> {t("students.list.actionEmail")}
                 </Button>
@@ -643,7 +643,7 @@ export default function StudentList({
                       <Button
                         type="button"
                         variant="outline"
-                        className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
                       >
                         <Tag className="w-3.5 h-3.5 text-primary" /> {t("students.columns.status")} <ChevronDown className="w-3 h-3 ms-0.5" />
                       </Button>
@@ -671,7 +671,7 @@ export default function StudentList({
                       type="button"
                       variant="destructive"
                       onClick={() => { if (onBulkDelete) setConfirmBulkDeleteOpen(true); }}
-                      className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-[11px] font-semibold hover:bg-destructive/90 transition-colors min-h-11"
+                      className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold hover:bg-destructive/90 transition-colors min-h-11"
                     >
                       {t("students.list.remove")}
                     </Button>

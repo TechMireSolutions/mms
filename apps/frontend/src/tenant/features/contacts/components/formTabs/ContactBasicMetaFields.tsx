@@ -65,7 +65,7 @@ export function ContactBasicMetaFields({
       )}
 
       {isFieldEnabled("basic", "isSyed") && (
-        <div className="flex flex-col justify-end min-h-[44px]">
+        <div className="flex flex-col justify-end min-h-11">
           <label
             htmlFor="isSyed"
             className={cn(

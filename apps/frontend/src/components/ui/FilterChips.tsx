@@ -31,7 +31,7 @@ export function FilterChips({
         initial={{ opacity: 0, height: 0 }}
         animate={{ opacity: 1, height: "auto" }}
         exit={{ opacity: 0, height: 0 }}
-        className="flex items-center gap-2 flex-wrap overflow-hidden"
+        className="flex items-center gap-2 flex-wrap"
       >
         {chips.map((chip) => (
           <button

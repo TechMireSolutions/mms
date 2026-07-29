@@ -184,7 +184,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
           </div>
           <div>
             <h3 className="text-sm font-bold text-foreground leading-none tracking-tight">{t("reports.widgets.title")}</h3>
-            <p className="text-[10px] text-muted-foreground mt-1 uppercase font-semibold tracking-wider font-sans">{t("reports.widgets.subtitle")}</p>
+            <p className="text-xs text-muted-foreground mt-1 uppercase font-semibold tracking-wider font-sans">{t("reports.widgets.subtitle")}</p>
           </div>
         </div>
         
@@ -199,7 +199,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
               handleOpenCreateBuilder();
             }
           }}
-          className={`h-auto flex items-center gap-1.5 px-4 py-2 rounded-xl border text-[11px] font-bold uppercase tracking-wider shadow-none ${
+          className={`h-auto flex items-center gap-1.5 px-4 py-2 rounded-xl border text-xs font-bold uppercase tracking-wider shadow-none ${
             isBuilderOpen 
               ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 hover:text-primary-foreground" 
               : "border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground hover:bg-muted/30"
@@ -215,7 +215,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
         <div className="p-5 rounded-2xl space-y-4 surface-glass shadow-sm select-none">
           <div>
             <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">{t("reports.widgets.controlsTitle")}</h4>
-            <p className="text-[9px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">{t("reports.widgets.controlsSubtitle")}</p>
+            <p className="text-xs text-muted-foreground mt-1 uppercase font-bold tracking-wider">{t("reports.widgets.controlsSubtitle")}</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {category === "students" && (
@@ -228,7 +228,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.studentsCard")}</p>
-                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.studentsCardDesc")}</p>
+                    <p className="text-xs text-muted-foreground">{t("reports.widgets.studentsCardDesc")}</p>
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
@@ -239,7 +239,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.enrollmentChart")}</p>
-                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.enrollmentChartDesc")}</p>
+                    <p className="text-xs text-muted-foreground">{t("reports.widgets.enrollmentChartDesc")}</p>
                   </div>
                 </label>
               </>
@@ -255,7 +255,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.sessionsCard")}</p>
-                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.sessionsCardDesc")}</p>
+                    <p className="text-xs text-muted-foreground">{t("reports.widgets.sessionsCardDesc")}</p>
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
@@ -266,7 +266,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.classesCard")}</p>
-                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.classesCardDesc")}</p>
+                    <p className="text-xs text-muted-foreground">{t("reports.widgets.classesCardDesc")}</p>
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
@@ -277,7 +277,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.sessionsTable")}</p>
-                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.sessionsTableDesc")}</p>
+                    <p className="text-xs text-muted-foreground">{t("reports.widgets.sessionsTableDesc")}</p>
                   </div>
                 </label>
               </>
@@ -293,7 +293,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.attendanceCard")}</p>
-                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.attendanceCardDesc")}</p>
+                    <p className="text-xs text-muted-foreground">{t("reports.widgets.attendanceCardDesc")}</p>
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
@@ -304,7 +304,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.attendanceChart")}</p>
-                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.attendanceChartDesc")}</p>
+                    <p className="text-xs text-muted-foreground">{t("reports.widgets.attendanceChartDesc")}</p>
                   </div>
                 </label>
               </>
@@ -320,7 +320,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.feeCard")}</p>
-                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.feeCardDesc")}</p>
+                    <p className="text-xs text-muted-foreground">{t("reports.widgets.feeCardDesc")}</p>
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
@@ -331,7 +331,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.outstandingInvoicesCard")}</p>
-                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.outstandingInvoicesCardDesc")}</p>
+                    <p className="text-xs text-muted-foreground">{t("reports.widgets.outstandingInvoicesCardDesc")}</p>
                   </div>
                 </label>
                 <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
@@ -342,7 +342,7 @@ export default function PinnedWidgets({ category }: { category: string }): React
                   />
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-foreground">{t("reports.widgets.revenueChart")}</p>
-                    <p className="text-[10px] text-muted-foreground">{t("reports.widgets.revenueChartDesc")}</p>
+                    <p className="text-xs text-muted-foreground">{t("reports.widgets.revenueChartDesc")}</p>
                   </div>
                 </label>
               </>
@@ -395,8 +395,8 @@ export default function PinnedWidgets({ category }: { category: string }): React
               >
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <span className="text-[10px] font-black text-foreground uppercase tracking-widest leading-none block">{resolveWidgetTitle(widget, t)}</span>
-                    <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">
+                    <span className="text-xs font-black text-foreground uppercase tracking-widest leading-none block">{resolveWidgetTitle(widget, t)}</span>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
                       {typeLabelKey ? t(typeLabelKey) : (widget.widgetType || "kpi")} • {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection.replace("_", " "), t)}
                     </p>
                   </div>

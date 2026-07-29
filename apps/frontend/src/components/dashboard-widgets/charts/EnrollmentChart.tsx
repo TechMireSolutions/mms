@@ -34,7 +34,7 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
   if (!active || !payload?.length) return null;
   return (
     <div className="surface-glass rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-start">
-      <p className="text-muted-foreground/80 text-[10px] mb-0.5 m-0 font-medium select-none">{label}</p>
+      <p className="text-muted-foreground/80 text-xs mb-0.5 m-0 font-medium select-none">{label}</p>
       <p className="font-bold text-foreground m-0 tabular-nums">
         {t("dashboard.widgets.studentsCount", { count: Number(payload[0].value) })}
       </p>
@@ -88,7 +88,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
           <h3 id="enrollment-chart-heading" className="text-sm font-bold text-foreground m-0">
             {t("widget.title.enrollmentTrends")}
           </h3>
-          <p className="text-[12px] text-muted-foreground mt-1 m-0 font-medium">
+          <p className="text-sm text-muted-foreground mt-1 m-0 font-medium">
             {t("dashboard.charts.enrollment.subtitle")}
           </p>
         </div>
@@ -150,7 +150,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
           )}
           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${activeColor.bg} ${activeColor.text}`} aria-label={`Growth: ${growth}%`}>
             <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
-            <span className="text-[11px] font-bold tabular-nums">+{growth}%</span>
+            <span className="text-xs font-bold tabular-nums">+{growth}%</span>
           </div>
         </div>
       </header>

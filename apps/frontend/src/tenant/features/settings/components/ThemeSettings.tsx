@@ -66,7 +66,7 @@ export default function ThemeSettings(): React.JSX.Element {
         />
       }
     >
-      <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium" aria-live="polite">
+      <div className="flex flex-wrap items-center gap-2 text-xs font-medium" aria-live="polite">
         <span className="text-muted-foreground">{t('theme.activeConfig')}:</span>
         <SettingsMetaBadge variant="primary">{displayModeSummary}</SettingsMetaBadge>
         <SettingsMetaBadge variant="muted">
@@ -188,7 +188,7 @@ export default function ThemeSettings(): React.JSX.Element {
         </div>
 
         <div className="mt-4 space-y-3">
-          <p className="text-[11px] font-medium text-muted-foreground">{t('theme.authPreviewLabel')}</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('theme.authPreviewLabel')}</p>
           <div className="overflow-hidden rounded-xl border border-border bg-card">
             <div className="flex flex-col items-center gap-3 border-b border-border bg-muted/20 px-6 py-8">
               {data.logoUrl.trim() ? (

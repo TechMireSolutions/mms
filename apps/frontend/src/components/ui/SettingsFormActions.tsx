@@ -39,7 +39,7 @@ export function SettingsFormActions({
         type="button"
         onClick={onSave}
         disabled={saveDisabled || !dirty || saving}
-        className="min-h-[44px] px-5 py-2.5 ml-auto"
+        className="min-h-11 px-5 py-2.5 ml-auto"
       >
         {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
         <span>{saveText}</span>

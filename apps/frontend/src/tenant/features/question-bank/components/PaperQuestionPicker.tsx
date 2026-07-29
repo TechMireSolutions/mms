@@ -61,8 +61,8 @@ export function PaperQuestionPicker({
   return (
     <section className="rounded-xl border border-border bg-card p-3 sm:p-4">
       <div className="mb-3">
-        <h3 className="m-0 text-[13px] font-bold text-foreground">{t("questionBank.addQuestionsFromBank")}</h3>
-        <p className="m-0 text-[11px] text-muted-foreground">
+        <h3 className="m-0 text-sm font-bold text-foreground">{t("questionBank.addQuestionsFromBank")}</h3>
+        <p className="m-0 text-xs text-muted-foreground">
           {activeSection ? t("questionBank.addingToSection", { title: activeSection.title }) : t("questionBank.noActiveSection")}
         </p>
       </div>

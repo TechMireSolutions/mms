@@ -60,7 +60,7 @@ export function Modal({
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div className={cn("fixed inset-0 flex items-center justify-center p-4", priority ? "z-[60]" : "z-50")}>
+        <div className={cn("fixed inset-0 flex items-center justify-center p-3 sm:p-4", priority ? "z-[60]" : "z-50")}>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -78,26 +78,26 @@ export function Modal({
             aria-modal="true"
             aria-labelledby={titleId}
             className={cn(
-              "relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full z-10 max-h-[90vh] flex flex-col backdrop-blur-xl",
+              "relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full z-10 max-h-[90vh] flex flex-col backdrop-blur-xl min-w-0",
               SIZE[size],
               panelClassName
             )}
           >
             {/* Header */}
             <div className="flex-shrink-0 border-b border-border/40 px-5 py-4 bg-muted/5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2.5">
                   {Icon && (
-                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <Icon className="w-4 h-4 text-primary" />
                     </div>
                   )}
-                  <div>
-                    <h3 id={titleId} className="text-sm font-bold text-foreground leading-tight">{title}</h3>
-                    {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+                  <div className="min-w-0">
+                    <h3 id={titleId} className="text-sm font-bold text-foreground leading-tight truncate">{title}</h3>
+                    {subtitle && <p className="text-xs text-muted-foreground truncate">{subtitle}</p>}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex shrink-0 items-center gap-2">
                   {headerActions}
                   <Button
                     type="button"

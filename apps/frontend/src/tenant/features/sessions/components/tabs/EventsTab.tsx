@@ -168,7 +168,7 @@ export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps) {
         <div className="relative">
           {/* Timeline line */}
           <div className="absolute left-[18px] top-0 bottom-0 w-0.5 bg-border" aria-hidden="true" />
-          <div className="space-y-4 pl-10">
+          <div className="space-y-4 ps-10">
             {events.map((sessionEvent, index) => (
               <motion.article
                 key={sessionEvent.id}
@@ -182,10 +182,10 @@ export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps) {
                 <div className="rounded-xl border border-border bg-card p-4 hover:shadow-sm transition-all group">
                   <header className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-[13px] font-bold text-foreground m-0">{sessionEvent.title}</h4>
+                      <h4 className="text-sm font-bold text-foreground m-0">{sessionEvent.title}</h4>
                       <StatusBadge status={sessionEvent.type || "other"} config={eventTypeConfig} size="sm" />
                     </div>
-                    {canWrite && <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {canWrite && <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
                       <Button aria-label={t("sessions.events.editNamed", { name: sessionEvent.title })} onClick={() => { setEditEvent(sessionEvent); setShowModal(true); }} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground" variant="ghost" size="icon">
                         <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
@@ -194,12 +194,12 @@ export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps) {
                       </Button>
                     </div>}
                   </header>
-                  <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground mb-2">
+                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-2">
                     <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" aria-hidden="true" />{formatDate(sessionEvent.date, true)}</span>
                     {sessionEvent.time && <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" aria-hidden="true" />{sessionEvent.time}</span>}
                     {sessionEvent.location && <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" aria-hidden="true" />{sessionEvent.location}</span>}
                   </div>
-                  {sessionEvent.description && <p className="text-[12px] text-muted-foreground leading-relaxed m-0">{sessionEvent.description}</p>}
+                  {sessionEvent.description && <p className="text-sm text-muted-foreground leading-relaxed m-0">{sessionEvent.description}</p>}
                 </div>
               </motion.article>
             ))}

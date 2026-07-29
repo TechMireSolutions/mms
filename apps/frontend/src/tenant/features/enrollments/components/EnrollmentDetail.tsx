@@ -91,7 +91,7 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
       headerExtra={
         <div className="flex items-center gap-2 flex-wrap mt-1">
           {student?.grNumber && (
-            <span className="bg-primary/5 text-primary text-[10px] px-2 py-0.5 rounded border border-primary/10 font-bold uppercase">
+            <span className="bg-primary/5 text-primary text-xs px-2 py-0.5 rounded border border-primary/10 font-bold uppercase">
               {t("enrollments.detail.grNumber")}: {student.grNumber}
             </span>
           )}
@@ -147,7 +147,7 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
                   </div>
                   <div className="pb-2">
                     <p className="text-xs font-semibold text-foreground">{timelineItem.event}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {formatDateTime(timelineItem.ts)} · {timelineItem.by}
                     </p>
                   </div>

@@ -266,7 +266,7 @@ export default function StudentForm({
 
   const renderFieldError = (message?: string) => {
     if (!message) return null;
-    return <p className="text-[10px] text-destructive mt-1 font-medium">{message}</p>;
+    return <p className="text-xs text-destructive mt-1 font-medium">{message}</p>;
   };
 
   const renderContactProfileValue = (
@@ -366,7 +366,7 @@ export default function StudentForm({
       </div>
     </div>
   ) : (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-[11px] font-bold border border-destructive/20">
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-xs font-bold border border-destructive/20">
       {t("students.form.contactRequired")}
     </span>
   );
@@ -437,7 +437,7 @@ export default function StudentForm({
                     <div className="flex items-center justify-between w-full">
                       <span>{t("students.form.grNumber")}</span>
                       {isGrAutoAssigned && (
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-md me-1">
+                        <span className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-md me-1">
                           {t("students.form.grAutoAssigned")}
                         </span>
                       )}
@@ -447,7 +447,7 @@ export default function StudentForm({
                   error={getFieldError("grNumber")}
                 >
                   <div className="relative flex items-center group/input">
-                    <Hash className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                    <Hash className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                     <Input
                       required
                       value={studentDraft.grNumber || ""}
@@ -468,7 +468,7 @@ export default function StudentForm({
 
                 <div className="sm:col-span-2">
                   <Field label={t("students.form.registeredDate")}>
-                    <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/20 px-3 py-2.5 min-h-[44px] text-sm text-muted-foreground select-none font-medium">
+                    <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/20 px-3 py-2.5 min-h-11 text-sm text-muted-foreground select-none font-medium">
                       <Clock className="w-4 h-4 text-muted-foreground/60 shrink-0" />
                       <span>
                         {studentDraft.registeredDate

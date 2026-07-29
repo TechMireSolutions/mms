@@ -105,7 +105,7 @@ export function ModuleColumnCustomizer({
     <Popover>
       <PopoverTrigger
         type="button"
-        className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+        className="flex items-center gap-1.5 px-3 min-h-11 rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
       >
         <Settings2 className="w-3.5 h-3.5" />
         <span>{labels.trigger}</span>
@@ -129,13 +129,13 @@ export function ModuleColumnCustomizer({
 
         {columnRegistry.length > 6 && (
           <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Search className="w-3.5 h-3.5 absolute start-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={labels.searchPlaceholder || 'Filter columns...'}
-              className="min-h-11 pl-8 text-xs bg-muted/30 border-border/60"
+              className="min-h-11 ps-8 text-xs bg-muted/30 border-border/60"
             />
           </div>
         )}
@@ -177,7 +177,7 @@ export function ModuleColumnCustomizer({
                       e.stopPropagation();
                       toggle(col.key);
                     }}
-                    className="min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                    className="min-w-11 min-h-11 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                     aria-label={labels.hideColumn(col.label)}
                   >
                     <Eye className="w-3.5 h-3.5" />
@@ -200,7 +200,7 @@ export function ModuleColumnCustomizer({
                     e.stopPropagation();
                     toggle(col.key);
                   }}
-                  className="flex items-center justify-between w-full px-2.5 min-h-[44px] rounded-lg border border-transparent hover:bg-muted transition-colors text-left group"
+                  className="flex items-center justify-between w-full px-2.5 min-h-11 rounded-lg border border-transparent hover:bg-muted transition-colors text-left group"
                 >
                   <div className="flex items-center gap-2">
                     <EyeOff className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />

@@ -122,15 +122,15 @@ function SessionCard({
               <StatusBadge status={session.type || "other"} config={typeConfig} size="sm" />
               <StatusBadge status={session.status} config={statusConfig} size="sm" />
             </div>
-            <h3 className="text-[14px] font-bold text-foreground truncate group-hover:text-primary transition-colors">{session.name}</h3>
+            <h3 className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">{session.name}</h3>
             {session.description && (
-              <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{session.description}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{session.description}</p>
             )}
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 mt-1" />
         </div>
 
-        <div className="grid grid-cols-3 gap-2 mb-3">
+        <div className="grid grid-cols-1 gap-2 mb-3 sm:grid-cols-3">
           {[
             { icon: Calendar, label: t("sessions.card.start"), value: formatDate(session.startDate, true) },
             { icon: Users, label: t("sessions.card.enrolled"), value: `${totalEnrolled}/${totalCapacity || t("common.notSpecified")}` },
@@ -139,9 +139,9 @@ function SessionCard({
             <div key={label} className="rounded-lg bg-muted/30 px-2.5 py-2">
               <div className="flex items-center gap-1 mb-0.5">
                 <Icon className="w-2.5 h-2.5 text-muted-foreground" />
-                <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wide">{label}</span>
+                <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">{label}</span>
               </div>
-              <p className="text-[11px] font-bold text-foreground truncate">{value}</p>
+              <p className="text-xs font-bold text-foreground truncate">{value}</p>
             </div>
           ))}
         </div>
@@ -154,7 +154,7 @@ function SessionCard({
                 style={{ width: `${Math.min(capacityPercent, 100)}%` }}
               />
             </div>
-            <p className="text-[10px] text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               {t("sessions.card.capacityUsed", {
                 percent: capacityPercent,
                 count: classCount,
@@ -166,7 +166,7 @@ function SessionCard({
       </Button>
 
       {canDelete && (
-        <div className="absolute top-3 end-3 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-3 end-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
           {showDeleted ? (
             <Button
               type="button"
@@ -493,9 +493,9 @@ export default function Sessions() {
                   <Button
                     type="button"
                     variant="ghost"
-                    className={`flex items-center gap-2 px-3.5 min-h-[44px] rounded-xl border text-sm font-medium transition-colors ${filterStatus.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-foreground hover:bg-muted"}`}
+                    className={`flex items-center gap-2 px-3.5 min-h-11 rounded-xl border text-sm font-medium transition-colors ${filterStatus.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-foreground hover:bg-muted"}`}
                   >
-                    <Filter className="w-3.5 h-3.5" /> {t("sessions.filter.status")} {filterStatus.length > 0 && <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">{filterStatus.length}</span>}
+                    <Filter className="w-3.5 h-3.5" /> {t("sessions.filter.status")} {filterStatus.length > 0 && <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">{filterStatus.length}</span>}
                     <ChevronDown className="w-3 h-3" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -515,9 +515,9 @@ export default function Sessions() {
                   <Button
                     type="button"
                     variant="ghost"
-                    className={`flex items-center gap-2 px-3.5 min-h-[44px] rounded-xl border text-sm font-medium transition-colors ${filterType.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-foreground hover:bg-muted"}`}
+                    className={`flex items-center gap-2 px-3.5 min-h-11 rounded-xl border text-sm font-medium transition-colors ${filterType.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-foreground hover:bg-muted"}`}
                   >
-                    <BookOpen className="w-3.5 h-3.5" /> {t("sessions.filter.type")} {filterType.length > 0 && <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">{filterType.length}</span>}
+                    <BookOpen className="w-3.5 h-3.5" /> {t("sessions.filter.type")} {filterType.length > 0 && <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">{filterType.length}</span>}
                     <ChevronDown className="w-3 h-3" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -546,7 +546,7 @@ export default function Sessions() {
                   variant="ghost"
                   onClick={() => setShowDeleted((previous) => !previous)}
                   aria-pressed={showDeleted}
-                  className={`flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
+                  className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
                     showDeleted
                       ? "border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10"
                       : "border-border bg-card text-muted-foreground hover:text-foreground"
@@ -567,7 +567,7 @@ export default function Sessions() {
             />
 
             {selectedIds.length > 0 && (
-              <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-card/90 border border-primary/20 shadow-md backdrop-blur-md">
+              <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl bg-card/90 border border-primary/20 shadow-md backdrop-blur-md">
                 <span className="text-sm font-semibold text-foreground">
                   {t("sessions.selectedCount", { count: selectedIds.length })}
                 </span>
@@ -620,42 +620,42 @@ export default function Sessions() {
                           </th>
                         )}
                         {showName && (
-                          <ResizableTableHead columnKey="name" width={columnLayout.getColumnWidth("name")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
-                            <Button type="button" variant="ghost" className="h-auto p-0 text-[11px] font-semibold uppercase tracking-wide" onClick={() => handleSort("name")}>
+                          <ResizableTableHead columnKey="name" width={columnLayout.getColumnWidth("name")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 text-xs font-semibold uppercase tracking-wide" onClick={() => handleSort("name")}>
                               {t("sessions.columns.name")}
                               {sortField === "name" && (sortDir === "asc" ? <ChevronUp className="ms-1 w-3 h-3" /> : <ChevronDown className="ms-1 w-3 h-3" />)}
                             </Button>
                           </ResizableTableHead>
                         )}
                         {showType && (
-                          <ResizableTableHead columnKey="type" width={columnLayout.getColumnWidth("type")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
-                            <Button type="button" variant="ghost" className="h-auto p-0 text-[11px] font-semibold uppercase tracking-wide" onClick={() => handleSort("type")}>
+                          <ResizableTableHead columnKey="type" width={columnLayout.getColumnWidth("type")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 text-xs font-semibold uppercase tracking-wide" onClick={() => handleSort("type")}>
                               {t("sessions.columns.type")}
                               {sortField === "type" && (sortDir === "asc" ? <ChevronUp className="ms-1 w-3 h-3" /> : <ChevronDown className="ms-1 w-3 h-3" />)}
                             </Button>
                           </ResizableTableHead>
                         )}
                         {showDuration && (
-                          <ResizableTableHead columnKey="duration" width={columnLayout.getColumnWidth("duration")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                          <ResizableTableHead columnKey="duration" width={columnLayout.getColumnWidth("duration")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                             {t("sessions.columns.duration")}
                           </ResizableTableHead>
                         )}
                         {showFee && (
-                          <ResizableTableHead columnKey="fee" width={columnLayout.getColumnWidth("fee")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
-                            <Button type="button" variant="ghost" className="h-auto p-0 text-[11px] font-semibold uppercase tracking-wide" onClick={() => handleSort("baseFee")}>
+                          <ResizableTableHead columnKey="fee" width={columnLayout.getColumnWidth("fee")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 text-xs font-semibold uppercase tracking-wide" onClick={() => handleSort("baseFee")}>
                               {t("sessions.columns.fee")}
                               {sortField === "baseFee" && (sortDir === "asc" ? <ChevronUp className="ms-1 w-3 h-3" /> : <ChevronDown className="ms-1 w-3 h-3" />)}
                             </Button>
                           </ResizableTableHead>
                         )}
                         {showEnrolled && (
-                          <ResizableTableHead columnKey="enrolled" width={columnLayout.getColumnWidth("enrolled")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                          <ResizableTableHead columnKey="enrolled" width={columnLayout.getColumnWidth("enrolled")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                             {t("sessions.columns.enrolled")}
                           </ResizableTableHead>
                         )}
                         {showStatus && (
-                          <ResizableTableHead columnKey="status" width={columnLayout.getColumnWidth("status")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
-                            <Button type="button" variant="ghost" className="h-auto p-0 text-[11px] font-semibold uppercase tracking-wide" onClick={() => handleSort("status")}>
+                          <ResizableTableHead columnKey="status" width={columnLayout.getColumnWidth("status")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 text-xs font-semibold uppercase tracking-wide" onClick={() => handleSort("status")}>
                               {t("sessions.columns.status")}
                               {sortField === "status" && (sortDir === "asc" ? <ChevronUp className="ms-1 w-3 h-3" /> : <ChevronDown className="ms-1 w-3 h-3" />)}
                             </Button>

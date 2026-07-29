@@ -107,7 +107,7 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
           <h3 id="fee-collection-heading" className="text-sm font-bold text-foreground m-0 truncate">
             {title || t("dashboard.widgets.feeCollectionSummary")}
           </h3>
-          <p className="text-[11px] text-muted-foreground mt-0.5 m-0 font-medium">{displayDate}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 m-0 font-medium">{displayDate}</p>
         </div>
         <div className="text-end shrink-0">
           <p className="text-base font-black text-foreground m-0 tabular-nums">{formatCurrency(totalCollected)}</p>
@@ -117,7 +117,7 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
             ) : (
               <TrendingDown className="w-3.5 h-3.5" aria-hidden="true" />
             )}
-            <span className="text-[10px] font-bold">
+            <span className="text-xs font-bold">
               {t("dashboard.widgets.comparisonTrend", { value: displayTrendPct, month: comparisonMonthName })}
             </span>
           </div>
@@ -137,8 +137,8 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
           {breakdown.map((b) => (
             <div key={b.label} className="flex items-center gap-1.5">
               <div className={`w-2.5 h-2.5 rounded-full ${b.color}`} aria-hidden="true" />
-              <span className="text-[11px] font-medium text-muted-foreground">{b.label}</span>
-              <span className="text-[11px] font-bold text-foreground tabular-nums">{b.pct}%</span>
+              <span className="text-xs font-medium text-muted-foreground">{b.label}</span>
+              <span className="text-xs font-bold text-foreground tabular-nums">{b.pct}%</span>
             </div>
           ))}
         </div>
@@ -150,8 +150,8 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
             return (
               <article key={classSummary.name} className="space-y-1.5">
                 <header className="flex items-center justify-between">
-                  <span className="text-[12px] text-foreground font-semibold">{classSummary.name}</span>
-                  <span className="text-[11px] text-muted-foreground font-medium tabular-nums">
+                  <span className="text-sm text-foreground font-semibold">{classSummary.name}</span>
+                  <span className="text-xs text-muted-foreground font-medium tabular-nums">
                     {formatCurrency(classSummary.collected)} / {formatCurrency(classSummary.target)}
                   </span>
                 </header>

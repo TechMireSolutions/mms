@@ -195,7 +195,7 @@ function OfflineBanner({ offline, queue, onSync }: { offline: boolean; queue: Of
           <div className="flex items-center gap-2 text-sm font-semibold">
             <WifiOff className="w-4 h-4" aria-hidden="true" />
             {t("attendance.mark.offlineBannerOffline")}
-            {queue.length > 0 && <span className="px-1.5 py-0.5 rounded-full bg-warning/30 text-[10px] font-bold">{queue.length} {t("attendance.mark.pending")}</span>}
+            {queue.length > 0 && <span className="px-1.5 py-0.5 rounded-full bg-warning/30 text-xs font-bold">{queue.length} {t("attendance.mark.pending")}</span>}
           </div>
           <Button onClick={onSync} variant="ghost" size="sm" className="text-xs font-bold px-2.5 py-2 rounded-lg bg-warning/30 hover:bg-warning/40 hover:text-warning transition-colors flex min-h-11 items-center gap-1">
             <UploadCloud className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.syncNow")}
@@ -222,12 +222,12 @@ function OfflineBanner({ offline, queue, onSync }: { offline: boolean; queue: Of
 function GeoTag({ geo, onRequest }: { geo: GeoData | "loading" | null; onRequest: () => void }) {
   const { t } = useTranslation();
   if (geo === "loading") return (
-    <span className="flex items-center gap-1 text-[11px] text-muted-foreground font-medium px-2 py-1 rounded-lg bg-muted animate-pulse">
+    <span className="flex items-center gap-1 text-xs text-muted-foreground font-medium px-2 py-1 rounded-lg bg-muted animate-pulse">
       <MapPin className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.gettingLocation")}
     </span>
   );
   if (geo) return (
-    <span className="flex items-center gap-1 text-[11px] text-success font-medium px-2 py-1 rounded-lg bg-success/10 border border-success/30">
+    <span className="flex items-center gap-1 text-xs text-success font-medium px-2 py-1 rounded-lg bg-success/10 border border-success/30">
       <MapPin className="w-3 h-3" aria-hidden="true" /> {geo.lat.toFixed(4)}, {geo.lng.toFixed(4)}
     </span>
   );
@@ -251,14 +251,14 @@ function FaceRecognitionPlaceholder({ onClose }: { onClose: () => void }) {
       <div>
         <h3 className="text-sm font-bold text-foreground m-0">{t("attendance.mark.facialRecognition")}</h3>
         <p className="text-xs text-muted-foreground mt-1">{t("attendance.mark.facialRecognitionDesc")}</p>
-        <span className="inline-block mt-2 px-2.5 py-1 rounded-full bg-warning/15 text-warning text-[11px] font-bold">{t("attendance.mark.comingSoon")}</span>
+        <span className="inline-block mt-2 px-2.5 py-1 rounded-full bg-warning/15 text-warning text-xs font-bold">{t("attendance.mark.comingSoon")}</span>
       </div>
       <div className="rounded-xl border-2 border-dashed border-border bg-muted/30 flex items-center justify-center" style={{ height: 160 }}>
         <div className="text-center space-y-2">
           <div className="w-16 h-20 border-2 border-primary/30 rounded-lg mx-auto flex items-center justify-center">
             <div className="w-8 h-10 border border-primary/20 rounded-sm" />
           </div>
-          <p className="text-[11px] text-muted-foreground">{t("attendance.mark.cameraPreview")}</p>
+          <p className="text-xs text-muted-foreground">{t("attendance.mark.cameraPreview")}</p>
         </div>
       </div>
       <Button onClick={onClose} variant="ghost" size="sm" className="min-h-11 text-xs text-muted-foreground hover:text-foreground transition-colors py-2">{t("attendance.mark.dismiss")}</Button>
@@ -549,17 +549,17 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold text-foreground m-0">{classInfo?.name}</h2>
             {submitted && (
-              <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-success/15 text-success font-bold">
+              <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-success/15 text-success font-bold">
                 <CheckCircle2 className="w-2.5 h-2.5" aria-hidden="true" /> {t("attendance.mark.submitted")}
               </span>
             )}
             {isOffline && (
-              <span className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-warning/15 text-warning font-bold">
+              <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-warning/15 text-warning font-bold">
                 <WifiOff className="w-2.5 h-2.5" aria-hidden="true" /> {t("attendance.mark.offline")}
               </span>
             )}
           </div>
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             {sessionInfo?.name} · {classInfo?.teacherName} · {filters.date}
           </p>
           <div className="flex items-center gap-2 mt-1.5">
@@ -567,7 +567,7 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {isDraft && <span className="px-2 py-1 rounded-lg bg-warning/15 text-warning text-[11px] font-bold">{t("attendance.mark.draftSaved")}</span>}
+          {isDraft && <span className="px-2 py-1 rounded-lg bg-warning/15 text-warning text-xs font-bold">{t("attendance.mark.draftSaved")}</span>}
           <Button onClick={() => setShowFaceAI((isOpen) => !isOpen)} variant="outline" size="sm"
             className="flex min-h-11 items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
             <Scan className="w-3 h-3" aria-hidden="true" /> {t("attendance.mark.faceAi")}
@@ -584,14 +584,11 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
       </header>
 
       {/* Stats Strip */}
-      <div 
-        className="grid gap-2"
-        style={{ gridTemplateColumns: `repeat(${statuses.length || 4}, minmax(0, 1fr))` }}
-      >
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-[repeat(auto-fit,minmax(5.5rem,1fr))]">
         {statuses.map((status: AttendanceStatus) => (
-          <div key={status.id} className={`rounded-xl ${status.bg} ${status.text} border ${status.border} px-3 py-2 text-center`}>
+          <div key={status.id} className={`min-w-0 rounded-xl ${status.bg} ${status.text} border ${status.border} px-3 py-2 text-center`}>
             <p className="text-lg font-bold">{stats[status.id] || 0}</p>
-            <p className="text-[11px] font-semibold">{attendanceStatusLabel(status, t)}</p>
+            <p className="text-xs font-semibold truncate">{attendanceStatusLabel(status, t)}</p>
           </div>
         ))}
       </div>
@@ -610,15 +607,15 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
           <table className="w-full text-sm">
             <thead className="bg-muted/60 border-b border-border">
               <tr>
-                <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase w-8">#</th>
-                <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("attendance.columns.student")}</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase w-8">#</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("attendance.columns.student")}</th>
                 {orderedFields.map((field) => {
                   const isEnabled = isFieldEnabled(field.id);
                   if (!isEnabled) return null;
                   return (
                     <th
                       key={field.id}
-                      className={`px-3 py-2.5 text-[11px] font-semibold text-muted-foreground uppercase ${
+                      className={`px-3 py-2.5 text-xs font-semibold text-muted-foreground uppercase ${
                         field.id === "status" ? "text-center" : "text-left"
                       } ${field.id === "timeIn" || field.id === "timeOut" ? "w-28" : ""}`}
                     >
@@ -635,7 +632,7 @@ export function MarkAttendance({ filters, role, records, persistBatch }: MarkAtt
                 const statusInfo = getAttendanceStatusInfo(row.status, statuses);
                 return (
                   <motion.tr key={row.studentId} layout className={`transition-colors hover:bg-muted/20 ${statusInfo?.bg || ""}`}>
-                    <td className="px-3 py-2.5 text-[11px] text-muted-foreground font-mono">{row.rollNo}</td>
+                    <td className="px-3 py-2.5 text-xs text-muted-foreground font-mono">{row.rollNo}</td>
                     <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{row.name}</td>
                     {orderedFields.map((field) => {
                       const isEnabled = isFieldEnabled(field.id);

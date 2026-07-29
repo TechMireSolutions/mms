@@ -93,10 +93,10 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
                 <Button type="button" onClick={() => setExpanded((expandedById) => ({ ...expandedById, [mujtahid.id]: !expandedById[mujtahid.id] }))}
                   aria-expanded={isOpen}
                   variant="ghost"
-                  className="flex items-center gap-2 h-auto p-0 text-sm font-semibold text-foreground hover:text-primary hover:bg-transparent shadow-none transition-colors">
+                  className="flex items-center gap-2 min-h-11 h-auto px-1 text-sm font-semibold text-foreground hover:text-primary hover:bg-transparent shadow-none transition-colors">
                   {isOpen ? <ChevronDown className="w-4 h-4" aria-hidden="true" /> : <ChevronRight className="w-4 h-4" aria-hidden="true" />}
                   {mujtahid.name}
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 bg-muted text-muted-foreground rounded-full">{t("obligations.mujtahids.repsCount", { count: mujtahidReps.length })}</span>
+                  <span className="text-xs font-bold px-1.5 py-0.5 bg-muted text-muted-foreground rounded-full">{t("obligations.mujtahids.repsCount", { count: mujtahidReps.length })}</span>
                 </Button>
                 <div className="flex items-center gap-1">
                   <Button type="button" aria-label={t("obligations.mujtahids.addRepAria", { name: mujtahid.name })} onClick={() => setModal({ mode: "add-rep", data: { name: "", mujtahid_id: mujtahid.id } })}

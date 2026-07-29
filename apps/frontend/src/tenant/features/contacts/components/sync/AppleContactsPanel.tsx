@@ -36,7 +36,7 @@ export function AppleContactsPanel({
           <Smartphone className="w-3.5 h-3.5 text-muted-foreground" />
         </div>
         <span className="text-sm font-bold text-foreground">{t("contacts.sync.appleTitle")}</span>
-        <span className="text-[10px] text-muted-foreground">{t("contacts.sync.vcardLabel")}</span>
+        <span className="text-xs text-muted-foreground">{t("contacts.sync.vcardLabel")}</span>
       </div>
       <div className="p-4 space-y-4 text-start">
         <AppleContactsExportGuide t={t} />

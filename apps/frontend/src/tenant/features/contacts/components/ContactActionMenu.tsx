@@ -89,7 +89,7 @@ export function ContactActionMenu({
           variant="ghost"
           className={
             triggerClassName ||
-            "min-w-[44px] min-h-[44px] p-0 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            "min-w-11 min-h-11 p-0 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
           }
           type="button"
           aria-label={t("contacts.table.actions")}

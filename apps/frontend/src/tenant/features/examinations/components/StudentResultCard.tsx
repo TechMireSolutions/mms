@@ -107,30 +107,30 @@ export function StudentResultCard({ result, exam, allResults, onClose, onCertifi
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[26px] font-bold" style={{ color: grade.color }}>{grade.label}</span>
-              <span className="text-[11px] text-muted-foreground font-semibold">{percentage}%</span>
+              <span className="text-2xl font-bold" style={{ color: grade.color }}>{grade.label}</span>
+              <span className="text-xs text-muted-foreground font-semibold">{percentage}%</span>
             </div>
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-3 divide-x divide-border border-t border-border" role="status" aria-label={t("examinations.resultCard.metricsAria")}>
-          <div className="px-3 py-3.5 text-center">
-            <p className="text-[14px] font-bold text-foreground">{`${result.marksObtained}/${exam.totalMarks}`}</p>
-            <p className="text-[10px] text-muted-foreground">{t("examinations.resultCard.marks")}</p>
+          <div className="min-w-0 px-2 py-3.5 text-center sm:px-3">
+            <p className="text-sm font-bold text-foreground break-words">{`${result.marksObtained}/${exam.totalMarks}`}</p>
+            <p className="text-xs text-muted-foreground">{t("examinations.resultCard.marks")}</p>
           </div>
-          <div className="px-3 py-3.5 text-center">
-            <p className="text-[14px] font-bold text-foreground">{getRankSuffix(position)} / {total}</p>
-            <p className="text-[10px] text-muted-foreground">{t("examinations.resultCard.rank")}</p>
+          <div className="min-w-0 px-2 py-3.5 text-center sm:px-3">
+            <p className="text-sm font-bold text-foreground break-words">{getRankSuffix(position)} / {total}</p>
+            <p className="text-xs text-muted-foreground">{t("examinations.resultCard.rank")}</p>
           </div>
-          <div className="px-3 py-3.5 text-center flex flex-col items-center gap-1">
+          <div className="min-w-0 px-2 py-3.5 text-center flex flex-col items-center gap-1 sm:px-3">
             <StatusBadge status={result.passed ? "pass" : "fail"} config={passFailConfig} size="sm" />
-            <p className="text-[10px] text-muted-foreground">{t("examinations.resultCard.status")}</p>
+            <p className="text-xs text-muted-foreground">{t("examinations.resultCard.status")}</p>
           </div>
         </div>
 
         {/* Exam info */}
-        <section className="relative overflow-hidden group/examinfo px-5.5 py-4 space-y-2 border-t border-border/60 text-[12px] text-muted-foreground" aria-label={t("examinations.resultCard.examDetailsAria")}>
+        <section className="relative overflow-hidden group/examinfo px-5.5 py-4 space-y-2 border-t border-border/60 text-sm text-muted-foreground" aria-label={t("examinations.resultCard.examDetailsAria")}>
           <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/examinfo:bg-primary" />
           <div className="flex justify-between ml-1">
             <span>{t("examinations.resultCard.exam")}</span>

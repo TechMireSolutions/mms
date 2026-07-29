@@ -210,41 +210,41 @@ export function TeacherList({
                   </th>
                 )}
                 <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-3 text-start">
-                  <Button type="button" variant="ghost" className="h-auto p-0 hover:bg-transparent flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('name')}>
+                  <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('name')}>
                     {t('teachers.field.name')} {renderSortIcon('name')}
                   </Button>
                 </ResizableTableHead>
                 {showSpecialization && (
                   <ResizableTableHead columnKey="specialization" width={getColumnWidth?.("specialization")} onResize={onColumnResize} className="px-4 py-3 text-start hidden sm:table-cell">
-                    <Button type="button" variant="ghost" className="h-auto p-0 hover:bg-transparent flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('specialization')}>
+                    <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('specialization')}>
                       {t('teachers.field.specialization')} {renderSortIcon('specialization')}
                     </Button>
                   </ResizableTableHead>
                 )}
                 {showQualification && (
                   <ResizableTableHead columnKey="qualification" width={getColumnWidth?.("qualification")} onResize={onColumnResize} className="px-4 py-3 text-start hidden md:table-cell">
-                    <Button type="button" variant="ghost" className="h-auto p-0 hover:bg-transparent flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('qualification')}>
+                    <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('qualification')}>
                       {t('teachers.field.qualification')} {renderSortIcon('qualification')}
                     </Button>
                   </ResizableTableHead>
                 )}
                 {showJoinDate && (
                   <ResizableTableHead columnKey="joinDate" width={getColumnWidth?.("joinDate")} onResize={onColumnResize} className="px-4 py-3 text-start hidden md:table-cell">
-                    <Button type="button" variant="ghost" className="h-auto p-0 hover:bg-transparent flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('joinDate')}>
+                    <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('joinDate')}>
                       {t('teachers.field.joinDate')} {renderSortIcon('joinDate')}
                     </Button>
                   </ResizableTableHead>
                 )}
                 {showStatus && (
                   <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-4 py-3 text-start">
-                    <Button type="button" variant="ghost" className="h-auto p-0 hover:bg-transparent flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('status')}>
+                    <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('status')}>
                       {t('teachers.field.status')} {renderSortIcon('status')}
                     </Button>
                   </ResizableTableHead>
                 )}
                 {visibleCustomFields.map((field) => (
                   <ResizableTableHead key={field.id} columnKey={`custom:${field.id}`} width={getColumnWidth?.(`custom:${field.id}`)} onResize={onColumnResize} className="px-4 py-3 text-start hidden lg:table-cell">
-                    <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       {field.label ?? field.id}
                     </span>
                   </ResizableTableHead>
@@ -278,7 +278,7 @@ export function TeacherList({
                       <div className="min-w-0">
                         <p className="font-medium text-foreground truncate hover:text-primary transition-colors">{displayName}</p>
                         {teacher.employeeId && (
-                          <p className="text-[11px] text-muted-foreground">{teacher.employeeId}</p>
+                          <p className="text-xs text-muted-foreground">{teacher.employeeId}</p>
                         )}
                       </div>
                     </Button>
@@ -382,7 +382,7 @@ export function TeacherList({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-6 end-6 z-40 max-w-full bg-card/95 border border-primary/20 backdrop-blur-xl shadow-2xl rounded-2xl p-3 flex flex-wrap items-center gap-3 border-s-4 border-s-primary"
+            className="fixed inset-x-4 bottom-4 z-40 max-w-full sm:inset-x-auto sm:end-6 sm:bottom-6 bg-card/95 border border-primary/20 backdrop-blur-xl shadow-2xl rounded-2xl p-3 flex flex-wrap items-center gap-3 border-s-4 border-s-primary"
           >
             <span className="text-xs font-bold text-foreground ps-1">
               {t('teachers.selectedCount', { count: selectedIds.length })}
@@ -394,7 +394,7 @@ export function TeacherList({
                   type="button"
                   variant="outline"
                   onClick={() => { if (onBulkRestore) setConfirmBulkRestoreOpen(true); }}
-                  className="px-3 py-1.5 rounded-lg border-primary/40 text-primary text-[11px] font-semibold hover:bg-primary/10 transition-colors min-h-11 flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg border-primary/40 text-primary text-xs font-semibold hover:bg-primary/10 transition-colors min-h-11 flex items-center gap-1.5"
                 >
                   <RotateCcw className="w-3.5 h-3.5" /> {t('teachers.bulkRestore')}
                 </Button>
@@ -406,7 +406,7 @@ export function TeacherList({
                     type="button"
                     variant="outline"
                     onClick={() => onWhatsApp(selectedTeachers)}
-                    className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
                   >
                     <MessageCircle className="w-3.5 h-3.5 text-success" /> {t('teachers.list.actionWhatsApp')}
                   </Button>
@@ -416,7 +416,7 @@ export function TeacherList({
                     type="button"
                     variant="outline"
                     onClick={() => onSms(selectedTeachers)}
-                    className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
                   >
                     <MessageSquare className="w-3.5 h-3.5 text-info" /> {t('teachers.list.actionSms')}
                   </Button>
@@ -426,7 +426,7 @@ export function TeacherList({
                     type="button"
                     variant="outline"
                     onClick={() => onEmail(selectedTeachers)}
-                    className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
                   >
                     <Mail className="w-3.5 h-3.5 text-primary" /> {t('teachers.list.actionEmail')}
                   </Button>
@@ -437,7 +437,7 @@ export function TeacherList({
                       <Button
                         type="button"
                         variant="outline"
-                        className="px-3 py-1.5 rounded-lg border-border text-[11px] font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
                       >
                         <Tag className="w-3.5 h-3.5 text-primary" /> {t('teachers.bulkStatus')} <ChevronDown className="w-3 h-3 ms-0.5" />
                       </Button>
@@ -464,7 +464,7 @@ export function TeacherList({
                       type="button"
                       variant="destructive"
                       onClick={() => { if (onBulkDelete) setConfirmBulkDeleteOpen(true); }}
-                      className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-[11px] font-semibold hover:bg-destructive/90 transition-colors min-h-11"
+                      className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold hover:bg-destructive/90 transition-colors min-h-11"
                     >
                       {t('common.delete')}
                     </Button>

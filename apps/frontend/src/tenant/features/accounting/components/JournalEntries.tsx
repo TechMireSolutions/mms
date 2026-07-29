@@ -324,24 +324,24 @@ export function JournalEntries({
             {/* Natural language entry */}
             {canWrite && (
             <article className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
-              <header className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-4 h-4 text-primary" aria-hidden="true" />
+              <header className="flex flex-wrap items-center gap-2 mb-3">
+                <Sparkles className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
                 <h3 className="text-sm font-bold text-foreground m-0">{t("accounting.journal.dashboard.whatHappened")}</h3>
                 <span className="text-xs text-muted-foreground">{t("accounting.journal.dashboard.typePlainLanguage")}</span>
               </header>
-              <form onSubmit={handleNlSubmit} className="flex gap-2">
-                <div className="relative flex-1">
+              <form onSubmit={handleNlSubmit} className="flex flex-col gap-2 sm:flex-row">
+                <div className="relative min-w-0 flex-1">
                   <label htmlFor="nl-input" className="sr-only">{t("accounting.journal.dashboard.nlInputAria")}</label>
                   <Input id="nl-input" value={nlInput} onChange={(event) => handleNlChange(event.target.value)}
                     placeholder={t("accounting.journal.dashboard.placeholderNl")}
                     className="w-full px-4 py-3" />
                   {nlSuggestion && (
-                    <div className="absolute top-full left-0 mt-1 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold shadow-lg z-10 flex items-center gap-1.5" role="status">
-                      <CheckCircle2 className="w-3 h-3" aria-hidden="true" /> {t("accounting.journal.dashboard.autoDetected", { label: t(nlSuggestion.labelKey) })}
+                    <div className="absolute top-full start-0 mt-1 max-w-full px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold shadow-lg z-10 flex items-center gap-1.5" role="status">
+                      <CheckCircle2 className="w-3 h-3 shrink-0" aria-hidden="true" /> {t("accounting.journal.dashboard.autoDetected", { label: t(nlSuggestion.labelKey) })}
                     </div>
                   )}
                 </div>
-                <Button type="submit" className="px-4 py-3 rounded-xl text-sm font-semibold whitespace-nowrap h-auto">
+                <Button type="submit" className="min-h-11 w-full sm:w-auto px-4 py-3 rounded-xl text-sm font-semibold whitespace-nowrap">
                   {t("accounting.journal.dashboard.record")}
                 </Button>
               </form>
@@ -357,13 +357,13 @@ export function JournalEntries({
                   const Icon = qa.icon;
                   return (
                     <Button key={qa.labelKey} type="button" variant="outline" onClick={() => setSimpleModal({ prefillType: qa.type })}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted hover:border-primary/30 transition-all shadow-sm h-auto">
+                      className="flex min-h-11 items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted hover:border-primary/30 transition-all shadow-sm">
                       <Icon className="w-4 h-4 text-primary" aria-hidden="true" /> {t(qa.labelKey)}
                     </Button>
                   );
                 })}
                 <Button type="button" variant="ghost" onClick={() => setSimpleModal({ prefillType: null })}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-primary/40 bg-primary/5 text-sm font-semibold text-primary hover:bg-primary/10 transition-all h-auto">
+                  className="flex min-h-11 items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-primary/40 bg-primary/5 text-sm font-semibold text-primary hover:bg-primary/10 transition-all">
                   <Plus className="w-4 h-4" aria-hidden="true" /> {t("accounting.journal.dashboard.otherTransaction")}
                 </Button>
               </nav>
@@ -374,7 +374,7 @@ export function JournalEntries({
             <section aria-label={t("accounting.journal.dashboard.recentTransactions")}>
               <header className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide m-0">{t("accounting.journal.dashboard.recentTransactions")}</h3>
-                <Button type="button" variant="link" size="sm" onClick={exportCSV} className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors p-0 h-auto">
+                <Button type="button" variant="link" size="sm" onClick={exportCSV} className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors min-h-11 px-2">
                   <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.export")}
                 </Button>
               </header>
@@ -391,24 +391,26 @@ export function JournalEntries({
                     const amount = entry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
                     const isMoneyIn = (entry.tags || []).some((tag) => ["Fees","Donation","Capital"].includes(tag)) || ["fee_collection","donation","rent_income","other_income"].includes(entry.transaction_type || "");
                     return (
-                      <Card key={entry.id} accentColor={isMoneyIn ? "success" : "destructive"} className="flex items-center gap-4 px-5 py-3 hover:bg-muted/20 transition-all duration-300">
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ml-1 ${isMoneyIn ? "bg-success/15" : "bg-destructive/15"}`} aria-hidden="true">
+                      <Card key={entry.id} accentColor={isMoneyIn ? "success" : "destructive"} className="flex flex-col gap-3 px-5 py-3 hover:bg-muted/20 transition-all duration-300 sm:flex-row sm:items-center sm:gap-4">
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isMoneyIn ? "bg-success/15" : "bg-destructive/15"}`} aria-hidden="true">
                           {isMoneyIn ? <TrendingUp className="w-4 h-4 text-success" /> : <TrendingUp className="w-4 h-4 text-destructive rotate-180" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="text-sm font-semibold text-foreground truncate m-0">{entry.description}</h4>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[11px] text-muted-foreground">{formatDate(entry.date)}</span>
-                            <span className="text-[11px] font-mono text-muted-foreground">{entry.ref}</span>
+                          <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                            <span className="text-xs text-muted-foreground">{formatDate(entry.date)}</span>
+                            <span className="text-xs font-mono text-muted-foreground">{entry.ref}</span>
                             {(entry.tags || []).map((tag) => (
-                              <span key={tag} className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">
+                              <span key={tag} className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">
                                 {t(`accounting.journal.tag.${tag.toLowerCase()}` as AppTranslationKey)}
                               </span>
                             ))}
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 flex-shrink-0">
-                          <div className="text-right">
+                        </div>
+                        <div className="flex items-center justify-between gap-3 sm:justify-end flex-shrink-0 ps-12 sm:ps-0">
+                          <div className="text-end">
                             <p className={`text-sm font-bold font-mono m-0 ${isMoneyIn ? "text-success" : "text-destructive"}`}>
                               {isMoneyIn ? "+" : "−"}{formatCurrency(amount)}
                             </p>
@@ -512,7 +514,7 @@ export function JournalEntries({
       {showFilters && (
         <div className="flex flex-wrap gap-3 p-4 rounded-xl border border-border bg-muted/30">
           <div>
-            <label htmlFor="filter-from" className="text-[10px] font-semibold text-muted-foreground uppercase">{t("accounting.journal.dashboard.fromDate")}</label>
+            <label htmlFor="filter-from" className="text-xs font-semibold text-muted-foreground uppercase">{t("accounting.journal.dashboard.fromDate")}</label>
             <DatePicker
               id="filter-from"
               value={dateFrom}
@@ -520,7 +522,7 @@ export function JournalEntries({
             />
           </div>
           <div>
-            <label htmlFor="filter-to" className="text-[10px] font-semibold text-muted-foreground uppercase">{t("accounting.journal.dashboard.toDate")}</label>
+            <label htmlFor="filter-to" className="text-xs font-semibold text-muted-foreground uppercase">{t("accounting.journal.dashboard.toDate")}</label>
             <DatePicker
               id="filter-to"
               value={dateTo}
@@ -528,7 +530,7 @@ export function JournalEntries({
             />
           </div>
           <div>
-            <label htmlFor="filter-tag" className="text-[10px] font-semibold text-muted-foreground uppercase">{t("accounting.journal.dashboard.tag")}</label>
+            <label htmlFor="filter-tag" className="text-xs font-semibold text-muted-foreground uppercase">{t("accounting.journal.dashboard.tag")}</label>
             <FormSelect 
               id="filter-tag" 
               value={tagFilter} 
@@ -578,41 +580,41 @@ export function JournalEntries({
                     </th>
                   )}
                   {showRef && (
-                    <ResizableTableHead columnKey="ref" width={getColumnWidth?.("ref")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="ref" width={getColumnWidth?.("ref")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.ref")}
                     </ResizableTableHead>
                   )}
                   {showDate && (
-                    <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.date")}
                     </ResizableTableHead>
                   )}
                   {showDescription && (
-                    <ResizableTableHead columnKey="description" width={getColumnWidth?.("description")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="description" width={getColumnWidth?.("description")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.description")}
                     </ResizableTableHead>
                   )}
                   {showTags && (
-                    <ResizableTableHead columnKey="tags" width={getColumnWidth?.("tags")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden lg:table-cell">
+                    <ResizableTableHead columnKey="tags" width={getColumnWidth?.("tags")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase hidden lg:table-cell">
                       {t("accounting.columns.journal.tags")}
                     </ResizableTableHead>
                   )}
                   {showDebit && (
-                    <ResizableTableHead columnKey="debit" width={getColumnWidth?.("debit")} onResize={onColumnResize} className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="debit" width={getColumnWidth?.("debit")} onResize={onColumnResize} className="px-3 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.debit")}
                     </ResizableTableHead>
                   )}
                   {showCredit && (
-                    <ResizableTableHead columnKey="credit" width={getColumnWidth?.("credit")} onResize={onColumnResize} className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="credit" width={getColumnWidth?.("credit")} onResize={onColumnResize} className="px-3 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.credit")}
                     </ResizableTableHead>
                   )}
                   {showStatus && (
-                    <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                    <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.journal.status")}
                     </ResizableTableHead>
                   )}
-                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase">
+                  <th scope="col" className="px-3 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase">
                     {t("accounting.columns.actions")}
                   </th>
                 </tr>
@@ -635,8 +637,8 @@ export function JournalEntries({
                       {showRef && (
                         <td className="px-3 py-2.5">
                           <span className="font-mono text-xs font-bold text-primary">{entry.ref}</span>
-                          {entry.reversed_ref && <p className="text-[10px] text-warning font-semibold m-0">{t("accounting.journal.dashboard.reversalOf", { ref: entry.reversed_ref })}</p>}
-                          {entry.simple_mode && <span className="text-[10px] text-primary/60 font-semibold m-0">{t("accounting.journal.dashboard.simpleMode")}</span>}
+                          {entry.reversed_ref && <p className="text-xs text-warning font-semibold m-0">{t("accounting.journal.dashboard.reversalOf", { ref: entry.reversed_ref })}</p>}
+                          {entry.simple_mode && <span className="text-xs text-primary/60 font-semibold m-0">{t("accounting.journal.dashboard.simpleMode")}</span>}
                         </td>
                       )}
                       {showDate && (
@@ -651,11 +653,11 @@ export function JournalEntries({
                         <td className="px-3 py-2.5 hidden lg:table-cell">
                           <div className="flex flex-wrap gap-1">
                             {(entry.tags || []).slice(0, 2).map((tag) => (
-                              <span key={tag} className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">
+                              <span key={tag} className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">
                                 {t(`accounting.journal.tag.${tag.toLowerCase()}` as AppTranslationKey)}
                               </span>
                             ))}
-                            {(entry.tags || []).length > 2 && <span className="text-[10px] text-muted-foreground">+{entry.tags.length - 2}</span>}
+                            {(entry.tags || []).length > 2 && <span className="text-xs text-muted-foreground">+{entry.tags.length - 2}</span>}
                           </div>
                         </td>
                       )}
@@ -757,7 +759,7 @@ export function JournalEntries({
                       {formatCurrency ? formatCurrency(grandCredit) : formatMoney(grandCredit)}
                     </td>
                   )}
-                  <td colSpan={(showStatus ? 1 : 0) + 1} className="px-3 py-2 text-right text-[11px] font-semibold text-muted-foreground">
+                  <td colSpan={(showStatus ? 1 : 0) + 1} className="px-3 py-2 text-right text-xs font-semibold text-muted-foreground">
                     {Math.abs(grandDebit - grandCredit) < 0.01
                       ? <span className="text-success">{t("accounting.journal.dashboard.balanced")}</span>
                       : <span className="text-destructive">{t("accounting.journal.dashboard.difference", { diff: formatCurrency(Math.abs(grandDebit - grandCredit)) })}</span>

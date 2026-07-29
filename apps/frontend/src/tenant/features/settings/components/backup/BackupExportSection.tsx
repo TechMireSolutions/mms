@@ -43,7 +43,7 @@ export default function BackupExportSection({
                 <span>{t('backup.createSuccess')}</span>
               </div>
               
-              <div className="grid grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                 <StatCard
                   variant="compact"
                   icon={Layers}
@@ -69,7 +69,7 @@ export default function BackupExportSection({
             </div>
           ) : (
             <div className="space-y-2.5">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 block">
                 {t('backup.safetyBackupNote')}
               </span>
               <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
@@ -101,7 +101,7 @@ export default function BackupExportSection({
             variant="default"
             onClick={onStartExport}
             disabled={isCreating || !adminEmail}
-            className="w-full sm:w-auto gap-2.5 min-h-[44px] px-6 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg active:scale-[0.98] rounded-xl relative overflow-hidden"
+            className="w-full sm:w-auto gap-2.5 min-h-11 px-6 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg active:scale-[0.98] rounded-xl relative overflow-hidden"
           >
             {isCreating ? (
               <RefreshCw className="h-4 w-4 animate-spin" aria-hidden />

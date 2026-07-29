@@ -298,7 +298,7 @@ export default function AccountProfile(): React.JSX.Element {
                     )}
 
                     {profile.contact && (
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300 rounded-full backdrop-blur-[1px]">
+                      <div className="absolute inset-0 bg-black/40 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 flex items-center justify-center transition-all duration-300 rounded-full backdrop-blur-[1px]">
                         <Camera className="w-6 h-6 text-white transform scale-90 group-hover:scale-100 transition-transform duration-300" />
                       </div>
                     )}
@@ -394,7 +394,7 @@ export default function AccountProfile(): React.JSX.Element {
                           onChange={(event) => setName(event.target.value)}
                           required
                           autoComplete="name"
-                          className="min-h-[44px]"
+                          className="min-h-11"
                         />
                       </div>
                       <div className="space-y-1 text-start">
@@ -405,7 +405,7 @@ export default function AccountProfile(): React.JSX.Element {
                           onChange={(event) => setPhone(event.target.value)}
                           required
                           autoComplete="tel"
-                          className="min-h-[44px]"
+                          className="min-h-11"
                         />
                       </div>
                       <div className="space-y-1 text-start">
@@ -417,12 +417,12 @@ export default function AccountProfile(): React.JSX.Element {
                           onChange={(event) => setContactEmail(event.target.value)}
                           required
                           autoComplete="email"
-                          className="min-h-[44px]"
+                          className="min-h-11"
                         />
-                        <p className="text-[11px] text-muted-foreground mt-1">{t("account.contactEmailHint")}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t("account.contactEmailHint")}</p>
                       </div>
                       <div className="pt-2">
-                        <Button type="submit" disabled={savingContact} className="w-full sm:w-auto min-h-[44px] px-6">
+                        <Button type="submit" disabled={savingContact} className="w-full sm:w-auto min-h-11 px-6">
                           {savingContact ? <Loader2 className="h-4 w-4 animate-spin" /> : t("account.saveContact")}
                         </Button>
                       </div>
@@ -452,7 +452,7 @@ export default function AccountProfile(): React.JSX.Element {
                     <div className="flex items-center gap-3 p-3 bg-muted/30 border border-border/30 rounded-xl text-sm">
                       <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
                       <div className="text-start">
-                        <p className="text-[11px] text-muted-foreground font-medium">{t("account.loginEmail")}</p>
+                        <p className="text-xs text-muted-foreground font-medium">{t("account.loginEmail")}</p>
                         <p className="font-semibold text-foreground mt-0.5">{profile.loginEmail}</p>
                       </div>
                     </div>
@@ -481,7 +481,7 @@ export default function AccountProfile(): React.JSX.Element {
                             type="button"
                             variant="outline"
                             onClick={() => setShowEmailForm(true)}
-                            className="w-full min-h-[44px]"
+                            className="w-full min-h-11"
                           >
                             {t("account.changeLoginEmail")}
                           </Button>
@@ -506,7 +506,7 @@ export default function AccountProfile(): React.JSX.Element {
                                   onChange={(event) => setNewLoginEmail(event.target.value)}
                                   required
                                   autoComplete="email"
-                                  className="min-h-[44px]"
+                                  className="min-h-11"
                                 />
                               </div>
                               <div className="space-y-1 text-start">
@@ -518,7 +518,7 @@ export default function AccountProfile(): React.JSX.Element {
                                   onChange={(event) => setLoginPassword(event.target.value)}
                                   required
                                   autoComplete="current-password"
-                                  className="min-h-[44px]"
+                                  className="min-h-11"
                                 />
                               </div>
                               <div className="flex flex-wrap gap-2 pt-2">
@@ -526,7 +526,7 @@ export default function AccountProfile(): React.JSX.Element {
                                   type="submit"
                                   variant="outline"
                                   disabled={loginEmailBusy || !newLoginEmail.trim() || !loginPassword}
-                                  className="w-full sm:w-auto min-h-[44px]"
+                                  className="w-full sm:w-auto min-h-11"
                                 >
                                   {loginEmailBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : t("account.sendCode")}
                                 </Button>
@@ -539,7 +539,7 @@ export default function AccountProfile(): React.JSX.Element {
                                     setLoginPassword("");
                                   }}
                                   disabled={loginEmailBusy}
-                                  className="w-full sm:w-auto min-h-[44px]"
+                                  className="w-full sm:w-auto min-h-11"
                                 >
                                   {t("common.cancel")}
                                 </Button>
@@ -566,14 +566,14 @@ export default function AccountProfile(): React.JSX.Element {
                                   onChange={(event) => setVerifyCode(event.target.value)}
                                   required
                                   autoComplete="one-time-code"
-                                  className="min-h-[44px]"
+                                  className="min-h-11"
                                 />
                               </div>
                               <div className="flex flex-wrap gap-2 pt-2">
                                 <Button
                                   type="submit"
                                   disabled={loginEmailBusy || !verifyCode.trim()}
-                                  className="flex-1 sm:flex-none min-h-[44px]"
+                                  className="flex-1 sm:flex-none min-h-11"
                                 >
                                   {loginEmailBusy ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -592,7 +592,7 @@ export default function AccountProfile(): React.JSX.Element {
                                     setVerifyCode("");
                                   }}
                                   disabled={loginEmailBusy}
-                                  className="flex-1 sm:flex-none min-h-[44px]"
+                                  className="flex-1 sm:flex-none min-h-11"
                                 >
                                   {t("common.cancel")}
                                 </Button>
@@ -623,7 +623,7 @@ export default function AccountProfile(): React.JSX.Element {
                           type="button"
                           variant="outline"
                           onClick={() => setShowPasswordForm(true)}
-                          className="w-full min-h-[44px]"
+                          className="w-full min-h-11"
                         >
                           {t("account.changePassword")}
                         </Button>
@@ -643,7 +643,7 @@ export default function AccountProfile(): React.JSX.Element {
                           onChange={(event) => setCurrentPassword(event.target.value)}
                           required
                           autoComplete="current-password"
-                          className="min-h-[44px]"
+                          className="min-h-11"
                         />
                         <div className="space-y-1">
                           <PasswordInput
@@ -653,12 +653,12 @@ export default function AccountProfile(): React.JSX.Element {
                             onChange={(event) => setNewPassword(event.target.value)}
                             required
                             autoComplete="new-password"
-                            className="min-h-[44px]"
+                            className="min-h-11"
                           />
                           
                           <div className="space-y-2 mt-2">
                             <div className="flex justify-between items-center text-xs">
-                              <span className="text-muted-foreground text-[11px] leading-snug">
+                              <span className="text-muted-foreground text-xs leading-snug">
                                 {t("account.passwordRulesHint")}
                               </span>
                               {newPassword && passwordStrength.key && (
@@ -691,7 +691,7 @@ export default function AccountProfile(): React.JSX.Element {
                             onChange={(event) => setConfirmPassword(event.target.value)}
                             required
                             autoComplete="new-password"
-                            className="min-h-[44px]"
+                            className="min-h-11"
                           />
                           {newPassword && confirmPassword && (
                             <p className={`text-xs mt-1 font-medium ${newPassword === confirmPassword ? "text-success" : "text-destructive"}`}>
@@ -704,7 +704,7 @@ export default function AccountProfile(): React.JSX.Element {
                             type="submit"
                             variant="outline"
                             disabled={passwordBusy || !currentPassword || !newPassword || newPassword !== confirmPassword}
-                            className="w-full sm:w-auto min-h-[44px]"
+                            className="w-full sm:w-auto min-h-11"
                           >
                             {passwordBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : t("account.changePassword")}
                           </Button>
@@ -718,7 +718,7 @@ export default function AccountProfile(): React.JSX.Element {
                               setConfirmPassword("");
                             }}
                             disabled={passwordBusy}
-                            className="w-full sm:w-auto min-h-[44px]"
+                            className="w-full sm:w-auto min-h-11"
                           >
                             {t("common.cancel")}
                           </Button>

@@ -167,7 +167,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                         <div className="h-8 flex-1 rounded-lg flex items-center gap-2 px-3 text-white text-xs font-semibold" style={{ background: selectedDenomination.color }}>
                           <span>{selectedDenomination.icon}</span><span>{selectedDenomination.name}</span>
                         </div>
-                        <span className={`text-[11px] font-semibold ${totalAvailable === 0 ? "text-destructive" : "text-success"}`}>
+                        <span className={`text-xs font-semibold ${totalAvailable === 0 ? "text-destructive" : "text-success"}`}>
                           {t("hasanat.form.availableCount", { count: totalAvailable })}
                         </span>
                       </div>
@@ -197,7 +197,7 @@ function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeM
                               recipientStudentId: recipientTypeOption.id === "student" ? previousData.recipientStudentId : undefined,
                               recipientTeacherId: recipientTypeOption.id === "faculty" ? previousData.recipientTeacherId : undefined,
                             }))}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border text-sm font-medium transition-colors ${data.recipientType === recipientTypeOption.id ? "border-primary bg-primary/5 text-primary" : "border-border hover:bg-muted text-muted-foreground"}`}
+                            className={`flex-1 min-h-11 flex items-center justify-center gap-1.5 py-2 rounded-lg border text-sm font-medium transition-colors ${data.recipientType === recipientTypeOption.id ? "border-primary bg-primary/5 text-primary" : "border-border hover:bg-muted text-muted-foreground"}`}
                           >
                             <Icon className="w-3.5 h-3.5" aria-hidden="true" /> {recipientTypeOption.label}
                           </Button>
@@ -514,13 +514,14 @@ export function DistributionManager({
 
   return (
     <section aria-label={t("hasanat.distribution.aria")} className="space-y-4">
-      <header className="flex gap-3 flex-col sm:flex-row">
-        <div className="relative flex-1">
+      <header className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="relative min-w-0 flex-1">
           <label htmlFor="search-dist" className="sr-only">{t("hasanat.distribution.searchLabel")}</label>
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <Input id="search-dist" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("hasanat.searchDistributions")} className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border text-sm bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
-          {search && <Button variant="ghost" type="button" size="icon" aria-label={t("common.clearSearch")} onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"><X className="w-3.5 h-3.5" aria-hidden="true" /></Button>}
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+          <Input id="search-dist" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("hasanat.searchDistributions")} className="w-full ps-10 pe-11 py-2.5 rounded-xl border border-border text-sm bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
+          {search && <Button variant="ghost" type="button" size="icon" aria-label={t("common.clearSearch")} onClick={() => setSearch("")} className="absolute end-1 top-1/2 -translate-y-1/2 text-muted-foreground"><X className="w-3.5 h-3.5" aria-hidden="true" /></Button>}
         </div>
+        <div className="flex flex-wrap items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button type="button" className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium ${filterStatus.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card hover:bg-muted"}`}>
@@ -560,6 +561,7 @@ export function DistributionManager({
             <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("hasanat.distributeCards")}
           </Button>
         )}
+        </div>
       </header>
 
       <Card accentColor="primary" className="shadow-sm hover:shadow-md border-border/80 p-0 overflow-hidden bg-card/45 backdrop-blur-sm">
@@ -581,46 +583,46 @@ export function DistributionManager({
                   </th>
                 )}
                 {showCard && (
-                  <ResizableTableHead columnKey="card" width={getColumnWidth?.("card")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="card" width={getColumnWidth?.("card")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("hasanat.columns.distribution.card")}
                   </ResizableTableHead>
                 )}
                 {showRecipient && (
-                  <ResizableTableHead columnKey="recipient" width={getColumnWidth?.("recipient")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="recipient" width={getColumnWidth?.("recipient")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("hasanat.columns.distribution.recipient")}
                   </ResizableTableHead>
                 )}
                 {showRecipientClass && (
-                  <ResizableTableHead columnKey="recipientClass" width={getColumnWidth?.("recipientClass")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="recipientClass" width={getColumnWidth?.("recipientClass")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("hasanat.columns.distribution.recipientClass")}
                   </ResizableTableHead>
                 )}
                 {showQuantity && (
-                  <ResizableTableHead columnKey="quantity" width={getColumnWidth?.("quantity")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="quantity" width={getColumnWidth?.("quantity")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("hasanat.columns.distribution.quantity")}
                   </ResizableTableHead>
                 )}
                 {showReason && (
-                  <ResizableTableHead columnKey="reason" width={getColumnWidth?.("reason")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="reason" width={getColumnWidth?.("reason")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("hasanat.columns.distribution.reason")}
                   </ResizableTableHead>
                 )}
                 {showIssuedDate && (
-                  <ResizableTableHead columnKey="issuedDate" width={getColumnWidth?.("issuedDate")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="issuedDate" width={getColumnWidth?.("issuedDate")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("hasanat.columns.distribution.issuedDate")}
                   </ResizableTableHead>
                 )}
                 {showIssuedBy && (
-                  <ResizableTableHead columnKey="issuedBy" width={getColumnWidth?.("issuedBy")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="issuedBy" width={getColumnWidth?.("issuedBy")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("hasanat.columns.distribution.issuedBy")}
                   </ResizableTableHead>
                 )}
                 {showStatus && (
-                  <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("hasanat.columns.distribution.status")}
                   </ResizableTableHead>
                 )}
-                <th scope="col" className="px-4 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                <th scope="col" className="px-4 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                   <span className="sr-only">{t("hasanat.columns.actions")}</span>
                 </th>
               </tr>
@@ -647,8 +649,8 @@ export function DistributionManager({
                           <div className="flex items-center gap-2">
                             <span className="text-base" aria-hidden="true">{denomination?.icon || "⭐"}</span>
                             <div>
-                              <p className="text-[12px] font-semibold text-foreground whitespace-nowrap m-0">{distribution.denominationName}</p>
-                              {denomination && <p className="text-[10px] font-bold m-0" style={{ color: denomination.color }}>{denomination.points} pts</p>}
+                              <p className="text-sm font-semibold text-foreground whitespace-nowrap m-0">{distribution.denominationName}</p>
+                              {denomination && <p className="text-xs font-bold m-0" style={{ color: denomination.color }}>{denomination.points} pts</p>}
                             </div>
                           </div>
                         </td>
@@ -657,28 +659,28 @@ export function DistributionManager({
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1.5">
                             {distribution.recipientType === "faculty" ? <Users2 className="w-3 h-3 text-muted-foreground" aria-hidden="true" /> : <User className="w-3 h-3 text-muted-foreground" aria-hidden="true" />}
-                            <span className="text-[13px] font-semibold text-foreground whitespace-nowrap">{distribution.recipientName}</span>
+                            <span className="text-sm font-semibold text-foreground whitespace-nowrap">{distribution.recipientName}</span>
                           </div>
                         </td>
                       )}
                       {showRecipientClass && (
-                        <td className="px-4 py-3 text-[12px] text-muted-foreground">{distribution.recipientClass || "—"}</td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground">{distribution.recipientClass || "—"}</td>
                       )}
                       {showQuantity && (
                         <td className="px-4 py-3">
-                          <span className="text-[13px] font-bold text-foreground">{distribution.quantity}</span>
+                          <span className="text-sm font-bold text-foreground">{distribution.quantity}</span>
                         </td>
                       )}
                       {showReason && (
                         <td className="px-4 py-3 max-w-[160px]">
-                          <p className="text-[12px] text-muted-foreground truncate m-0">{distribution.reason}</p>
+                          <p className="text-sm text-muted-foreground truncate m-0">{distribution.reason}</p>
                         </td>
                       )}
                       {showIssuedDate && (
-                        <td className="px-4 py-3 text-[11px] text-muted-foreground whitespace-nowrap">{distribution.issuedDate}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{distribution.issuedDate}</td>
                       )}
                       {showIssuedBy && (
-                        <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">{distribution.issuedBy || "—"}</td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{distribution.issuedBy || "—"}</td>
                       )}
                       {showStatus && (
                         <td className="px-4 py-3">
@@ -686,7 +688,7 @@ export function DistributionManager({
                         </td>
                       )}
                       <td className="px-4 py-3">
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end gap-1">
+                        <div className="opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity flex items-center justify-end gap-1">
                           {(canWrite || onMessage) && !showDeleted && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>

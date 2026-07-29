@@ -66,7 +66,7 @@ export default function DateFormatSelect({
             aria-label={t('global.dateFormat')}
             disabled={disabled}
             className={cn(
-              'h-auto min-h-[44px] w-full justify-between px-3 py-2 font-normal sm:flex-1',
+              'h-auto min-h-11 w-full justify-between px-3 py-2 font-normal sm:flex-1',
             )}
           >
             <span className="truncate text-left text-sm">
@@ -103,7 +103,7 @@ export default function DateFormatSelect({
                 <span className="min-w-0 flex-1">
                   <span className="block font-mono text-xs">{dateFormatOption.pattern}</span>
                   <span className="block text-muted-foreground text-left">{dateFormatOption.sample}</span>
-                  <span className="block text-left text-[11px] text-muted-foreground/80">
+                  <span className="block text-left text-xs text-muted-foreground/80">
                     {t(dateFormatOption.hintKey as AppTranslationKey)}
                   </span>
                 </span>

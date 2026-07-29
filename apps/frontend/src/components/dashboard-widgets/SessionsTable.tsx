@@ -93,7 +93,7 @@ export default function SessionsTable({ title }: { title?: string }) {
           <h3 id="sessions-table-heading" className="text-sm font-bold text-foreground m-0">
             {title || t("dashboard.widgets.todaysSessions")}
           </h3>
-          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
+          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
             {t("dashboard.widgets.sessionsScheduled", { count: filteredSessions.length })}
           </span>
         </div>
@@ -126,13 +126,13 @@ export default function SessionsTable({ title }: { title?: string }) {
               className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted/30 transition-colors"
             >
               <div className="w-24 flex-shrink-0 text-start">
-                <p className="text-[13px] font-bold text-foreground m-0 tabular-nums">{session.time}</p>
+                <p className="text-sm font-bold text-foreground m-0 tabular-nums">{session.time}</p>
               </div>
 
               <div className="flex-shrink-0">
                 {session.status === "live" ? (
                   <span
-                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-success bg-success/10 px-2 py-0.5 rounded-full border border-success/20 select-none animate-pulse"
+                    className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-success bg-success/10 px-2 py-0.5 rounded-full border border-success/20 select-none animate-pulse"
                     aria-label={t("dashboard.widgets.sessionLiveAria")}
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-success animate-ping shrink-0" />
@@ -144,11 +144,11 @@ export default function SessionsTable({ title }: { title?: string }) {
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold text-foreground truncate m-0">{session.name}</p>
-                <p className="text-[11px] text-muted-foreground/80 mt-0.5 m-0 font-medium">{session.teacher}</p>
+                <p className="text-sm font-bold text-foreground truncate m-0">{session.name}</p>
+                <p className="text-xs text-muted-foreground/80 mt-0.5 m-0 font-medium">{session.teacher}</p>
               </div>
 
-              <div className="hidden sm:flex items-center gap-3.5 text-[11px] text-muted-foreground/75 flex-shrink-0 font-semibold select-none">
+              <div className="hidden sm:flex items-center gap-3.5 text-xs text-muted-foreground/75 flex-shrink-0 font-semibold select-none">
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
                   <span className="sr-only">{t("dashboard.widgets.roomLabel")}</span> {session.room}

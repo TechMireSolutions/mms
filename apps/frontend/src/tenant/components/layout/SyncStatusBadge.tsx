@@ -32,7 +32,7 @@ export default function SyncStatusBadge(): React.JSX.Element | null {
     return (
       <div
         aria-label={t("sync.status.syncingAria")}
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-[11px] font-medium"
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium"
       >
         <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
         <span className="hidden sm:inline">{t("sync.status.syncing")}</span>
@@ -47,7 +47,7 @@ export default function SyncStatusBadge(): React.JSX.Element | null {
           <div
             role="alert"
             aria-label={t("sync.status.errorAria")}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-destructive/10 text-destructive text-[11px] font-semibold cursor-default"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-destructive/10 text-destructive text-xs font-semibold cursor-default"
           >
             <CloudOff className="w-3 h-3" aria-hidden="true" />
             <span className="hidden sm:inline">{t("sync.status.error")}</span>

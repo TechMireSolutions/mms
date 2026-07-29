@@ -274,7 +274,7 @@ export default function CreateMadrasa({ data, onChange }: CreateMadrasaProps): R
           <FieldHint id="onboarding-footer-hint">{t("theme.footerHint")}</FieldHint>
         </div>
         <div className="mt-4 rounded-lg border border-border bg-muted/30 px-4 py-3 text-center">
-          <p className="text-[11px] text-muted-foreground">{t("theme.footerPreviewLabel")}</p>
+          <p className="text-xs text-muted-foreground">{t("theme.footerPreviewLabel")}</p>
           <p className="mt-1 text-xs text-foreground">{resolvedFooter}</p>
         </div>
       </SectionCard>

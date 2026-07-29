@@ -43,9 +43,9 @@ export function ContactBasicAvatarSection({
             className="w-full h-full text-2xl"
           />
 
-          <label className="absolute inset-0 bg-black/45 flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white gap-1 rounded-full">
+          <label className="absolute inset-0 bg-black/45 flex flex-col items-center justify-center cursor-pointer opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity duration-300 text-white gap-1 rounded-full">
             <Camera className="w-4 h-4" />
-            <span className="text-[10px] font-bold uppercase tracking-wider">
+            <span className="text-xs font-bold uppercase tracking-wider">
               {t("account.changePhoto")}
             </span>
             <input
@@ -67,12 +67,12 @@ export function ContactBasicAvatarSection({
         </h3>
         <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1">
           {contactDraft.gender && contactDraft.gender !== "unspecified" && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground border border-border/80">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-muted text-muted-foreground border border-border/80">
               {formatContactGenderLabel(contactDraft.gender, t)}
             </span>
           )}
           {contactDraft.isSyed && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/15 text-primary border border-primary/20">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/15 text-primary border border-primary/20">
               {t("contacts.fields.isSyed")}
             </span>
           )}

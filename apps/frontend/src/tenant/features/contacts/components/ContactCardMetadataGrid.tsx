@@ -48,7 +48,7 @@ export function ContactCardMetadataGrid({
             key={col.id}
             className="flex flex-col gap-0.5 bg-muted/40 dark:bg-muted/15 px-2.5 py-1.5 rounded-xl border border-border/30 dark:border-border/10 text-start min-w-0"
           >
-            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-tight truncate leading-none">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-tight truncate leading-none">
               {colLabel}
             </span>
             <div className="text-xs font-semibold text-foreground truncate mt-0.5">
@@ -80,7 +80,7 @@ export function ContactCardDeletedBanner({
   }
 
   return (
-    <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-2.5 space-y-1 text-[11px] text-destructive text-start">
+    <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-2.5 space-y-1 text-xs text-destructive text-start">
       <div className="flex items-center gap-1.5 font-bold">
         <AlertTriangle className="w-3.5 h-3.5" />
         <span>{t("contacts.table.deletedAt", { date: formatDate(contact.deletedAt) })}</span>

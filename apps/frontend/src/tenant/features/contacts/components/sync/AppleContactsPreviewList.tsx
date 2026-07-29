@@ -29,7 +29,7 @@ export function AppleContactsPreviewList({
           type="button"
           variant="ghost"
           onClick={onClear}
-          className="text-xs min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors bg-transparent shadow-none"
+          className="text-xs min-h-11 min-w-11 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors bg-transparent shadow-none"
         >
           {t("contacts.sync.clear")}
         </Button>
@@ -57,7 +57,7 @@ export function AppleContactsPreviewList({
           type="button"
           onClick={onImport}
           disabled={importing}
-          className="flex items-center gap-2 px-5 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors shadow-none"
+          className="flex items-center gap-2 px-5 min-h-11 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors shadow-none"
         >
           {importing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
           <span>{t("contacts.sync.importCount", { count: previewList.length })}</span>
@@ -66,7 +66,7 @@ export function AppleContactsPreviewList({
           type="button"
           variant="outline"
           onClick={onChooseDifferent}
-          className="px-4 min-h-[44px] rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-card shadow-none"
+          className="px-4 min-h-11 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-card shadow-none"
         >
           {t("contacts.sync.chooseDifferentFile")}
         </Button>

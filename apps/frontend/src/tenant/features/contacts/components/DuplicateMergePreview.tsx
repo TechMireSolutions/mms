@@ -50,7 +50,7 @@ export function MergePreview({
             type="button"
             variant="outline"
             onClick={onClose}
-            className="min-h-[44px] px-4 font-medium"
+            className="min-h-11 px-4 font-medium"
           >
             {t("common.cancel")}
           </Button>
@@ -58,7 +58,7 @@ export function MergePreview({
             type="button"
             onClick={onConfirm}
             disabled={confirming}
-            className="flex items-center gap-2 px-5 min-h-[44px] font-semibold"
+            className="flex items-center gap-2 px-5 min-h-11 font-semibold"
           >
             {confirming ? <Loader2 className="w-4 h-4 animate-spin" /> : <GitMerge className="w-4 h-4" />}
             <span>{confirming ? t("common.loading") : t("contacts.duplicates.confirmMerge")}</span>
@@ -76,7 +76,7 @@ export function MergePreview({
         </div>
 
         <div>
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
             {t("contacts.duplicates.mergedResult")}
           </p>
           <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-2 text-foreground">
@@ -92,15 +92,15 @@ export function MergePreview({
 
               return (
                 <div key={field} className="flex items-center gap-2">
-                  <span className="text-[11px] text-muted-foreground w-24 flex-shrink-0">
+                  <span className="text-xs text-muted-foreground w-24 flex-shrink-0">
                     {getDuplicateFieldLabel(field, t)}:
                   </span>
-                  <span className="text-[13px] font-medium text-foreground flex-1 truncate">
+                  <span className="text-sm font-medium text-foreground flex-1 truncate">
                     {mergedValue || emptyDash}
                   </span>
                   {fromOther && (
                     <span
-                      className={`text-[10px] ${colors.highlightBg} px-1.5 py-0.5 rounded-full font-medium`}
+                      className={`text-xs ${colors.highlightBg} px-1.5 py-0.5 rounded-full font-medium`}
                     >
                       {t("contacts.duplicates.fromDuplicate")}
                     </span>

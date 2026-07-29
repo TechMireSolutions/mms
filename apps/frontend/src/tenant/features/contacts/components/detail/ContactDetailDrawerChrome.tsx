@@ -63,7 +63,7 @@ export function ContactDetailDrawerFooter({
 
   return (
     <>
-      <div className="flex items-center gap-2 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+      <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
         <Clock className="w-3 h-3" />
         {(contact.updatedAt || contact.createdAt) && (
           <span>
@@ -74,7 +74,7 @@ export function ContactDetailDrawerFooter({
       </div>
       <div className="flex items-center gap-1.5">
         <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${DETAIL_STYLES.liveIntelIndicator}`} />
-        <span className={`text-[9px] font-bold uppercase ${DETAIL_STYLES.liveIntelText}`}>
+        <span className={`text-xs font-bold uppercase ${DETAIL_STYLES.liveIntelText}`}>
           {t("contacts.detail.liveIntel")}
         </span>
       </div>

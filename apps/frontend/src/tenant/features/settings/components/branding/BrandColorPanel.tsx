@@ -210,7 +210,7 @@ export default function BrandColorPanel({
                   <span className="block truncate text-xs font-semibold text-foreground">
                     {t(preset.labelKey)}
                   </span>
-                  <span className="block truncate font-mono text-[10px] text-muted-foreground">
+                  <span className="block truncate font-mono text-xs text-muted-foreground">
                     {preset.primaryColor}
                   </span>
                 </span>
@@ -250,7 +250,7 @@ export default function BrandColorPanel({
         {primaryContrast !== null ? (
           <Badge
             variant={meetsWcagAaTextContrast(primaryContrast) ? 'secondary' : 'outline'}
-            className="text-[10px]"
+            className="text-xs"
           >
             {primaryContrastLabel}
           </Badge>
@@ -258,7 +258,7 @@ export default function BrandColorPanel({
         {secondaryContrast !== null ? (
           <Badge
             variant={meetsWcagAaTextContrast(secondaryContrast) ? 'secondary' : 'outline'}
-            className="text-[10px]"
+            className="text-xs"
           >
             {t('theme.contrastAccent', { ratio: secondaryContrast.toFixed(1) })}
           </Badge>
@@ -269,7 +269,7 @@ export default function BrandColorPanel({
         <div className="flex items-center gap-2 border-b border-border bg-muted/30 px-4 py-2">
           <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
           <p className="text-xs font-semibold text-foreground">{t('theme.semanticPreviewTitle')}</p>
-          <p className="text-[10px] text-muted-foreground">{t('theme.semanticPreviewDesc')}</p>
+          <p className="text-xs text-muted-foreground">{t('theme.semanticPreviewDesc')}</p>
           <span className="ms-auto">
             <SettingsMetaBadge variant="muted">
               {t(previewMode === 'dark' ? 'global.themeDark' : 'global.themeLight')}
@@ -296,13 +296,13 @@ export default function BrandColorPanel({
             </Button>
             <div className="flex flex-wrap gap-2">
               <span
-                className="rounded-full px-2.5 py-1 text-[10px] font-semibold"
+                className="rounded-full px-2.5 py-1 text-xs font-semibold"
                 style={{ backgroundColor: `${primaryColor}22`, color: primaryColor }}
               >
                 {t('theme.previewStatusBadge')}
               </span>
               <span
-                className="rounded-full px-2.5 py-1 text-[10px] font-semibold"
+                className="rounded-full px-2.5 py-1 text-xs font-semibold"
                 style={{ backgroundColor: `${secondaryColor}22`, color: secondaryColor }}
               >
                 {t('theme.previewAccentBadge')}
@@ -324,7 +324,7 @@ export default function BrandColorPanel({
                 {t('theme.previewCardTitle')}
               </p>
               <p
-                className="mt-1 text-[10px]"
+                className="mt-1 text-xs"
                 style={{ color: brandingTokenToCss(tokens['--muted-foreground']!) }}
               >
                 {t('theme.previewCardBody')}
@@ -335,7 +335,7 @@ export default function BrandColorPanel({
               style={{ backgroundColor: brandingTokenToCss(tokens['--sidebar-background']!) }}
             >
               <span
-                className="text-[10px] font-medium"
+                className="text-xs font-medium"
                 style={{ color: brandingTokenToCss(tokens['--sidebar-foreground']!) }}
               >
                 {t('theme.previewSidebar')}
@@ -347,7 +347,7 @@ export default function BrandColorPanel({
               />
             </div>
             <div className="space-y-1.5">
-              <p className="text-[10px] font-medium text-muted-foreground">{t('theme.chartPreviewTitle')}</p>
+              <p className="text-xs font-medium text-muted-foreground">{t('theme.chartPreviewTitle')}</p>
               <div className="flex gap-1">
                 {chartPalette.charts.map((hex, index) => (
                   <span
@@ -377,7 +377,7 @@ export default function BrandColorPanel({
                 style={{ backgroundColor: brandingTokenToCss(tokens[swatch.token]!) }}
                 aria-hidden
               />
-              <span className="text-[10px] font-medium text-muted-foreground">{t(swatch.labelKey)}</span>
+              <span className="text-xs font-medium text-muted-foreground">{t(swatch.labelKey)}</span>
             </div>
           ))}
         </div>

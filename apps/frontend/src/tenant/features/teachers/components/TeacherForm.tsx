@@ -164,10 +164,10 @@ export function TeacherForm({
         {linkedContact.name}
       </span>
       <div className="flex items-center gap-1.5">
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px]">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-xs">
           {t("teachers.form.employeeIdBadge", { id: teacherDraft.employeeId || t("common.notSpecified") })}
         </span>
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-md font-semibold border text-[10px] capitalize ${
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-md font-semibold border text-xs capitalize ${
           teacherDraft.status === "active"
             ? "bg-success/10 text-success border-success/20"
             : "bg-muted text-muted-foreground border-border"
@@ -182,7 +182,7 @@ export function TeacherForm({
       </div>
     </div>
   ) : requireContactLink ? (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-[11px] font-bold border border-destructive/20">
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-xs font-bold border border-destructive/20">
       {t("teachers.form.contactRequired")}
     </span>
   ) : null;
@@ -205,7 +205,7 @@ export function TeacherForm({
           error={!!errors.contactId}
         />
         {errors.contactId && (
-          <p className="text-[10px] text-destructive mt-1 font-medium">{errors.contactId}</p>
+          <p className="text-xs text-destructive mt-1 font-medium">{errors.contactId}</p>
         )}
       </Card>
 

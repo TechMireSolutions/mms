@@ -25,8 +25,8 @@ export function SavedPapersPanel({
   return (
     <section className="rounded-xl border border-border bg-card p-4" aria-label={t("questionBank.savedPapers")}>
       <div className="mb-3">
-        <h3 className="m-0 text-[13px] font-bold text-foreground">{t("questionBank.savedPapers")}</h3>
-        <p className="m-0 text-[11px] text-muted-foreground">{t("questionBank.savedPapersDesc")}</p>
+        <h3 className="m-0 text-sm font-bold text-foreground">{t("questionBank.savedPapers")}</h3>
+        <p className="m-0 text-xs text-muted-foreground">{t("questionBank.savedPapersDesc")}</p>
       </div>
 
       {sortedPapers.length === 0 ? (
@@ -46,10 +46,10 @@ export function SavedPapersPanel({
                   <FileText className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" aria-hidden="true" />
                   <div className="min-w-0 flex-1">
                     <p className="m-0 truncate text-xs font-bold text-foreground">{paper.name}</p>
-                    <p className="m-0 text-[11px] text-muted-foreground">
+                    <p className="m-0 text-xs text-muted-foreground">
                       {t("questionBank.paperQuestionSummary", { count: paper.questionIds.length })}
                     </p>
-                    <p className="m-0 text-[11px] text-muted-foreground">
+                    <p className="m-0 text-xs text-muted-foreground">
                       {t("questionBank.paperCreatedOn", { date: formatPaperDate(paper.createdAt) })}
                     </p>
                   </div>

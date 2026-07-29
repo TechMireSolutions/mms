@@ -37,7 +37,7 @@ export function ContactsFilterMenuButton({
         <Button
           type="button"
           variant="ghost"
-          className={`flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
+          className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
             activeFilterCount > 0
               ? "border-primary/30 bg-primary/5 text-primary hover:text-primary hover:bg-primary/5"
               : "border-border bg-card text-foreground"
@@ -46,7 +46,7 @@ export function ContactsFilterMenuButton({
           <SlidersHorizontal className="w-3.5 h-3.5" />
           <span>{t("contacts.filters")}</span>
           {activeFilterCount > 0 && (
-            <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+            <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
               {activeFilterCount}
             </span>
           )}

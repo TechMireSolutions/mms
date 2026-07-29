@@ -27,8 +27,8 @@ export function ContactIdentityMeta({
   const showSyed = Boolean(isSyed);
   if (!hasGender && !showSyed) return null;
 
-  const textSize = size === "md" ? "text-xs" : "text-[11px]";
-  const syedSize = size === "md" ? "text-[10px] px-2 py-0.5" : "text-[9px] px-1.5 py-0.5";
+  const textSize = size === "md" ? "text-xs" : "text-xs";
+  const syedSize = size === "md" ? "text-xs px-2 py-0.5" : "text-xs px-1.5 py-0.5";
   const iconSize = size === "md" ? "w-4 h-4" : "w-3.5 h-3.5";
 
   return (

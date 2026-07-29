@@ -16,7 +16,7 @@ export function ContactsClearFiltersButton({
       type="button"
       variant="ghost"
       onClick={onClearFilters}
-      className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+      className="flex items-center gap-1.5 px-3 min-h-11 rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
     >
       <RefreshCw className="w-3.5 h-3.5" />
       <span>{t("contacts.clearFilters")}</span>
@@ -39,7 +39,7 @@ export function ContactsDeletedToggleButton({
       variant="ghost"
       onClick={() => onShowDeletedChange(!showDeletedArchives)}
       aria-pressed={showDeletedArchives}
-      className={`flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
+      className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
         showDeletedArchives
           ? "border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10"
           : "border-border bg-card text-muted-foreground hover:text-foreground"

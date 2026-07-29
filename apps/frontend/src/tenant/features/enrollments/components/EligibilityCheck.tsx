@@ -88,7 +88,7 @@ export function EligibilityCheck(): React.ReactElement {
             <div className="flex items-center gap-2">
               <p className="text-sm font-bold text-foreground">{student.name}</p>
               {student.grNumber && (
-                <span className="bg-primary/5 text-primary text-[9px] px-1.5 py-0.5 rounded border border-primary/10 font-bold uppercase">
+                <span className="bg-primary/5 text-primary text-xs px-1.5 py-0.5 rounded border border-primary/10 font-bold uppercase">
                   {t("enrollments.detail.grNumber")}: {student.grNumber}
                 </span>
               )}

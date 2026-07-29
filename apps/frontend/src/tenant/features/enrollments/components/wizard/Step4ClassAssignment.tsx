@@ -106,8 +106,8 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
                   <div>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="text-sm font-bold text-foreground">{sessionClass.name}</p>
-                      {isSuggested && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{t("enrollments.wizard.step4Recommended")}</span>}
-                      {full && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive">{t("enrollment.session.full")}</span>}
+                      {isSuggested && <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{t("enrollments.wizard.step4Recommended")}</span>}
+                      {full && <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive">{t("enrollment.session.full")}</span>}
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5 flex-wrap">
                       <span>{t("enrollments.wizard.step4AgeRange", { min: sessionClass.ageMin, max: sessionClass.ageMax })}</span>
@@ -128,7 +128,7 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
                       style={{ width: `${(sessionClass.enrolled / sessionClass.capacity) * 100}%` }}
                     />
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{t("enrollments.wizard.step4SpotsLeft", { count: spotsLeft })}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("enrollments.wizard.step4SpotsLeft", { count: spotsLeft })}</p>
                 </div>
               </div>
             </Button>

@@ -34,7 +34,7 @@ export const TableHeaderCell = memo(function TableHeaderCell({
       width={width}
       onResize={onResize}
       aria-sort={ariaSort}
-      className={`px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer select-none hover:text-foreground transition-colors ${className || ""}`}
+      className={`px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer select-none hover:text-foreground transition-colors ${className || ""}`}
       onClick={() => onSort(field)}
     >
       <div className="flex items-center gap-1">

@@ -19,13 +19,13 @@ export function renderSolarDobMetadata({
 }): React.ReactNode {
   if (!dob) return emptyNode;
   return (
-    <div className="flex flex-col gap-0.5 text-[11px] leading-normal font-mono">
+    <div className="flex flex-col gap-0.5 text-xs leading-normal font-mono">
       <span className="font-semibold text-foreground flex items-center gap-1">
         <Sun className="w-3 h-3 text-warning shrink-0" aria-hidden="true" />
         <span>{formatDate(dob)}</span>
       </span>
       {showDetailedSolarAge ? (
-        <span className="text-[10px] text-muted-foreground">
+        <span className="text-xs text-muted-foreground">
           {calculateDetailedSolarAge(dob, language)}
         </span>
       ) : null}
@@ -48,13 +48,13 @@ export function renderLunarDobMetadata({
 }): React.ReactNode {
   if (!dob || !showLunarDob) return emptyNode;
   return (
-    <div className="flex flex-col gap-0.5 text-[11px] leading-normal font-mono">
+    <div className="flex flex-col gap-0.5 text-xs leading-normal font-mono">
       <span className="font-semibold text-foreground flex items-center gap-1">
         <Moon className="w-3 h-3 text-muted-foreground shrink-0" aria-hidden="true" />
         <span>{getLunarDateString(dob, language)}</span>
       </span>
       {showDetailedLunarAge ? (
-        <span className="text-[10px] text-muted-foreground">
+        <span className="text-xs text-muted-foreground">
           {calculateDetailedLunarAge(dob, language)}
         </span>
       ) : null}

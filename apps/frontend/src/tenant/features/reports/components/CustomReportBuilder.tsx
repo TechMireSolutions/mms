@@ -156,7 +156,7 @@ function DraggableField({
           onClick={onMoveUp}
           variant="ghost"
           size="icon"
-          className="rounded-lg hover:bg-muted disabled:opacity-20 text-[10px] text-muted-foreground font-black cursor-pointer transition-colors"
+          className="rounded-lg hover:bg-muted disabled:opacity-20 text-xs text-muted-foreground font-black cursor-pointer transition-colors"
           type="button"
           title={t("reports.builder.moveUp")}
         >
@@ -167,7 +167,7 @@ function DraggableField({
           onClick={onMoveDown}
           variant="ghost"
           size="icon"
-          className="rounded-lg hover:bg-muted disabled:opacity-20 text-[10px] text-muted-foreground font-black cursor-pointer transition-colors"
+          className="rounded-lg hover:bg-muted disabled:opacity-20 text-xs text-muted-foreground font-black cursor-pointer transition-colors"
           type="button"
           title={t("reports.builder.moveDown")}
         >
@@ -515,7 +515,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           </div>
           <div>
             <h3 className="text-sm font-black text-foreground uppercase tracking-wider leading-none">{t("reports.builder.title")}</h3>
-            <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">{t("reports.builder.subtitle")}</p>
+            <p className="text-xs text-muted-foreground mt-1 uppercase font-bold tracking-wider">{t("reports.builder.subtitle")}</p>
           </div>
         </div>
         <Button
@@ -536,7 +536,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           
           {/* Report name */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ml-1">
               {t("reports.builder.reportTitleLabel")}
             </label>
             <Input
@@ -550,7 +550,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
 
           {/* Data source */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ml-1">
               {t("reports.builder.queryDataSource")}
             </label>
             <FormSelect
@@ -584,10 +584,10 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           {/* Available Fields (Column Schema Picker) */}
           <div className="space-y-1.5">
             <div className="flex justify-between items-center ml-1">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">
                 {t("reports.builder.schemaFieldsPicker")}
               </label>
-              <span className="text-[9px] text-muted-foreground font-black uppercase bg-primary/10 px-1.5 py-0.5 rounded-md text-primary">{t("reports.builder.availableCount", { count: available.length })}</span>
+              <span className="text-xs text-muted-foreground font-black uppercase bg-primary/10 px-1.5 py-0.5 rounded-md text-primary">{t("reports.builder.availableCount", { count: available.length })}</span>
             </div>
             <div className="rounded-2xl border border-border bg-background/30 p-2.5 space-y-1 max-h-52 overflow-y-auto custom-scrollbar">
               {available.length === 0 ? (
@@ -615,7 +615,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           {/* Aggregates Parameters */}
           <div className="grid grid-cols-2 gap-3 text-left">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ml-1">
                 {t("reports.builder.aggregatorFunction")}
               </label>
               <FormSelect
@@ -635,7 +635,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ml-1">
                 {t("reports.builder.groupCategory")}
               </label>
               <FormSelect
@@ -654,7 +654,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           {/* Document Setup */}
           <div className="grid grid-cols-2 gap-3 text-left">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ml-1">
                 {t("reports.builder.docAlignment")}
               </label>
               <div className="flex gap-1 p-1 bg-muted/30 border border-border/50 rounded-xl">
@@ -677,7 +677,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                </div>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ml-1">
                 {t("reports.builder.exportLayoutFormat")}
               </label>
               <FormSelect
@@ -702,7 +702,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           {/* Selected Columns Sort Row */}
           <div className="space-y-2">
             <div className="flex justify-between items-center ml-1">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">
                 {t("reports.builder.selectedColumns", { count: selectedFields.length })}
               </label>
               {selectedFields.length > 0 && (
@@ -746,14 +746,14 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           <div className="space-y-3 flex-1 flex flex-col justify-end mt-4">
             <div className="flex items-center justify-between ml-1">
               <div className="flex items-center gap-2">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">
                   {t("reports.builder.liveVisualizer", { count: previewData.length })}
                 </label>
                 {groupBy && (
-                  <span className="text-[9px] font-bold uppercase bg-primary/15 text-primary px-1.5 py-0.5 rounded-md">{t("reports.builder.groupedBadge")}</span>
+                  <span className="text-xs font-bold uppercase bg-primary/15 text-primary px-1.5 py-0.5 rounded-md">{t("reports.builder.groupedBadge")}</span>
                 )}
                 {aggregate !== "None" && (
-                  <span className="text-[9px] font-bold uppercase bg-success/15 text-success px-1.5 py-0.5 rounded-md">
+                  <span className="text-xs font-bold uppercase bg-success/15 text-success px-1.5 py-0.5 rounded-md">
                     {t(`reports.visualizer.op${aggregate === "Average" ? "Avg" : aggregate}` as AppTranslationKey)}
                   </span>
                 )}
@@ -765,7 +765,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                   <Button 
                     onClick={handleExportExcel}
                     variant="outline"
-                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-success hover:text-success px-3 rounded-xl border border-success/30 bg-success/10 hover:bg-success/15 transition-all shadow-sm cursor-pointer"
+                    className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-success hover:text-success px-3 rounded-xl border border-success/30 bg-success/10 hover:bg-success/15 transition-all shadow-sm cursor-pointer"
                     type="button"
                     title={t("reports.builder.exportExcelTooltip")}
                   >
@@ -774,7 +774,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                   <Button 
                     onClick={handleExportPdf}
                     variant="outline"
-                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-destructive hover:text-destructive px-3 rounded-xl border border-destructive/30 bg-destructive/10 hover:bg-destructive/15 transition-all shadow-sm cursor-pointer"
+                    className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-destructive hover:text-destructive px-3 rounded-xl border border-destructive/30 bg-destructive/10 hover:bg-destructive/15 transition-all shadow-sm cursor-pointer"
                     type="button"
                     title={t("reports.builder.exportPdfTooltip")}
                   >
@@ -796,7 +796,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
                     <thead className="bg-muted/40 border-b border-border/70 sticky top-0 z-10 backdrop-blur-lg">
                       <tr>
                         {selectedFields.map((selectedField) => (
-                          <th key={selectedField} className="px-4 py-3.5 text-left text-[9px] font-black text-muted-foreground uppercase tracking-widest whitespace-nowrap">{selectedField}</th>
+                          <th key={selectedField} className="px-4 py-3.5 text-left text-xs font-black text-muted-foreground uppercase tracking-widest whitespace-nowrap">{selectedField}</th>
                         ))}
                       </tr>
                     </thead>
@@ -820,7 +820,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
             </div>
             
             {previewData.length > 0 && (
-              <div className="flex items-center justify-between px-1 text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+              <div className="flex items-center justify-between px-1 text-xs font-bold text-muted-foreground uppercase tracking-wider">
                 <span>{t("reports.builder.autoFetched")}</span>
                 <span>{groupBy ? t("reports.builder.groupedBy", { field: resolveFieldLabel(groupBy) }) : t("reports.builder.flatLayout")}</span>
               </div>

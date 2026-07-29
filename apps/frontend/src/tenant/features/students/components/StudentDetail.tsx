@@ -50,13 +50,13 @@ function GuardianContactCard({ label, badgeCode, badgeBg, badgeText, name, phone
     <Card accentColor="info" className="p-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0 text-start ms-1">
-          <div className={`w-8 h-8 rounded-lg ${badgeBg} ${badgeText} flex items-center justify-center text-[10px] font-bold flex-shrink-0`}>
+          <div className={`w-8 h-8 rounded-lg ${badgeBg} ${badgeText} flex items-center justify-center text-xs font-bold flex-shrink-0`}>
             {badgeCode}
           </div>
           <div className="min-w-0">
-            <span className={`text-[8px] font-black uppercase tracking-widest ${badgeText} mb-0.5 block`}>{label}</span>
+            <span className={`text-xs font-black uppercase tracking-widest ${badgeText} mb-0.5 block`}>{label}</span>
             <h5 className="text-xs font-bold text-foreground truncate">{name}</h5>
-            {phone && <p className="text-[10px] text-muted-foreground mt-0.5">{phone}</p>}
+            {phone && <p className="text-xs text-muted-foreground mt-0.5">{phone}</p>}
           </div>
         </div>
         {phone && (
@@ -116,7 +116,7 @@ function StudentDetailAttributeRow({ icon: Icon, label, value }: StudentDetailAt
         <Icon className="w-3.5 h-3.5" />
       </div>
       <div className="flex-1 min-w-0 text-start">
-        <span className="block text-[9px] font-bold text-muted-foreground uppercase tracking-tight mb-0.5">{label}</span>
+        <span className="block text-xs font-bold text-muted-foreground uppercase tracking-tight mb-0.5">{label}</span>
         <span className="text-xs font-semibold text-foreground">{value}</span>
       </div>
     </div>
@@ -233,7 +233,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
         footer={
           <div className="flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-success" />
-            <span className="text-[9px] font-bold text-success uppercase">{t("students.detail.synced")}</span>
+            <span className="text-xs font-bold text-success uppercase">{t("students.detail.synced")}</span>
           </div>
         }
       >
@@ -259,7 +259,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
             >
               <a href={cleanTelUri(primaryPhone)}>
                 <Phone className="w-4 h-4 mx-auto" />
-                <span className="text-[10px] font-bold">{t("students.detail.call")}</span>
+                <span className="text-xs font-bold">{t("students.detail.call")}</span>
               </a>
             </Button>
           )}
@@ -271,7 +271,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
               className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-success/10 hover:border-success/30 transition-all text-success text-center cursor-pointer shadow-none"
             >
               <MessageCircle className="w-4 h-4 mx-auto" />
-              <span className="text-[10px] font-bold">{t("students.list.actionWhatsApp")}</span>
+              <span className="text-xs font-bold">{t("students.list.actionWhatsApp")}</span>
             </Button>
           )}
           {primaryPhone && (
@@ -282,7 +282,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
               className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-warning/10 hover:border-warning/30 transition-all text-warning text-center cursor-pointer shadow-none"
             >
               <MessageSquare className="w-4 h-4 mx-auto" />
-              <span className="text-[10px] font-bold">{t("students.list.actionSms")}</span>
+              <span className="text-xs font-bold">{t("students.list.actionSms")}</span>
             </Button>
           )}
           {primaryEmail && (
@@ -293,7 +293,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
               className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/30 transition-all text-primary text-center cursor-pointer shadow-none"
             >
               <Mail className="w-4 h-4 mx-auto" />
-              <span className="text-[10px] font-bold">{t("students.list.actionEmail")}</span>
+              <span className="text-xs font-bold">{t("students.list.actionEmail")}</span>
             </Button>
           )}
         </div>
@@ -301,7 +301,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
         {/* Ordered Attributes & Connections list */}
         {sortedEnabledFields.some((field) => field.key === "fatherLink" ? (fatherContact || student.fatherName) : field.key === "motherLink" ? (motherContact || student.motherName) : field.key === "guardianLink" ? (guardianContact || student.guardianName) : true) && (
           <div className="space-y-4">
-            <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">{t("students.detail.sectionDetails")}</h4>
+            <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest ps-1">{t("students.detail.sectionDetails")}</h4>
             <div className="space-y-2.5">
               {sortedEnabledFields.map((field) => {
                 if (field.key === "gender") {
@@ -403,11 +403,11 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
         {/* Internal Notes */}
         {student.notes && (
           <div className="space-y-2">
-            <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">{t("students.form.notesSection")}</h4>
+            <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest ps-1">{t("students.form.notesSection")}</h4>
             <div className="p-3.5 rounded-2xl border border-border/60 bg-card/45 backdrop-blur-xs text-xs text-foreground space-y-1">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <FileText className="w-3.5 h-3.5 text-primary" />
-                <span className="text-[10px] font-bold uppercase">{t("students.form.notesSection")}</span>
+                <span className="text-xs font-bold uppercase">{t("students.form.notesSection")}</span>
               </div>
               <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">{student.notes}</p>
             </div>
@@ -416,12 +416,12 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
 
         {/* Sessions details */}
         <div className="space-y-3">
-          <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ps-1">{t("students.detail.enrolledSessions", { count: enrolledSessionDetails.length })}</h4>
+          <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest ps-1">{t("students.detail.enrolledSessions", { count: enrolledSessionDetails.length })}</h4>
           {enrolledSessionDetails.length === 0 ? (
             <div className="p-6 rounded-2xl border border-dashed border-border bg-muted/10 text-center">
               <BookOpen className="w-8 h-8 mx-auto text-muted-foreground/30 mb-2" />
               <p className="text-xs font-bold text-muted-foreground">{t("students.detail.notEnrolled")}</p>
-              <p className="text-[10px] text-muted-foreground mt-1">{t("students.detail.notEnrolledDesc")}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("students.detail.notEnrolledDesc")}</p>
             </div>
           ) : (
             <div className="space-y-2.5">
@@ -432,17 +432,17 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                   className="p-3.5 space-y-2"
                 >
                   <div className="flex items-center justify-between ms-1">
-                    <span className="bg-primary/5 text-primary border border-primary/10 text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase">
+                    <span className="bg-primary/5 text-primary border border-primary/10 text-xs px-1.5 py-0.5 rounded-full font-bold uppercase">
                       {session.type}
                     </span>
-                    <span className="text-[10px] font-bold text-muted-foreground">
+                    <span className="text-xs font-bold text-muted-foreground">
                       {t("students.detail.sessionFee", { amount: formatMoney(session.baseFee ?? 0, session.currency) })}
                     </span>
                   </div>
                   <h5 className="text-xs font-bold text-foreground ms-1">{session.name}</h5>
                   {session.classes && session.classes.length > 0 ? (
-                    <div className="text-[10px] text-muted-foreground space-y-1 bg-muted/40 p-2 rounded-lg ms-1">
-                      <p className="font-semibold uppercase tracking-wider text-[8px] text-muted-foreground/80">{t("students.detail.classAssignments")}</p>
+                    <div className="text-xs text-muted-foreground space-y-1 bg-muted/40 p-2 rounded-lg ms-1">
+                      <p className="font-semibold uppercase tracking-wider text-xs text-muted-foreground/80">{t("students.detail.classAssignments")}</p>
                       {session.classes.map((sessionClass: { id: string; name?: string; teacherName?: string; room?: string; schedule?: string }) => (
                         <div key={sessionClass.id} className="flex justify-between gap-1.5">
                           <span className="font-medium text-foreground">{t("students.detail.classByTeacher", { name: sessionClass.name ?? "", teacher: sessionClass.teacherName ?? "" })}</span>
@@ -451,7 +451,7 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
                       ))}
                     </div>
                   ) : (
-                    <p className="text-[10px] text-muted-foreground italic ms-1">{t("students.detail.noClassesConfigured")}</p>
+                    <p className="text-xs text-muted-foreground italic ms-1">{t("students.detail.noClassesConfigured")}</p>
                   )}
                 </Card>
               ))}

@@ -80,7 +80,7 @@ export default function WorkspaceRegistryList({
           ))}
         </AnimatePresence>
       </motion.ul>
-      <p className="flex items-center justify-center gap-1.5 pt-1 text-center text-[10px] font-medium text-muted-foreground/70">
+      <p className="flex items-center justify-center gap-1.5 pt-1 text-center text-xs font-medium text-muted-foreground/70">
         <ExternalLink className="h-3.5 w-3.5" aria-hidden />
         {t("apex.opensSignInHint")}
       </p>
@@ -128,7 +128,7 @@ const RegistryWorkspaceRow = memo(function RegistryWorkspaceRow({
               {workspace.subdomain}.{appDomain}
             </p>
             {workspace.tagline ? (
-              <p className="truncate text-[11px] font-medium text-muted-foreground/75">
+              <p className="truncate text-xs font-medium text-muted-foreground/75">
                 {workspace.tagline}
               </p>
             ) : null}

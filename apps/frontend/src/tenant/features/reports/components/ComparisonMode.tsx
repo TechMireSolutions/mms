@@ -481,7 +481,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
               { label: "B", value: valB, setValue: setValB, color: "text-warning" }
             ].map(({ label, value, setValue, color }) => (
               <div key={label} className="flex flex-col gap-1">
-                <label className={`text-[11px] font-bold uppercase tracking-wide ${color}`}>{isContacts ? t("reports.comparison.stage") : t("reports.comparison.session")} {label}</label>
+                <label className={`text-xs font-bold uppercase tracking-wide ${color}`}>{isContacts ? t("reports.comparison.stage") : t("reports.comparison.session")} {label}</label>
                 <FormSelect
                   value={value}
                   onChange={(newValue) => setValue(newValue)}
@@ -498,7 +498,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
               { label: t("reports.comparison.rangeB"), range: rangeB, setRange: setRangeB, color: "text-warning" }
             ].map(({ label, range, setRange, color }) => (
               <div key={label} className="space-y-2">
-                <p className={`text-[11px] font-bold uppercase tracking-wide ${color}`}>{label}</p>
+                <p className={`text-xs font-bold uppercase tracking-wide ${color}`}>{label}</p>
                 <div className="flex gap-2 items-center">
                   <DatePicker
                     value={range.from}
@@ -543,10 +543,10 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border/50">
                 <tr>
-                  <th className="px-3 py-2 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.comparison.metric")}</th>
-                  <th className="px-3 py-2 text-left text-[11px] font-bold text-primary uppercase tracking-widest">{isContacts ? t("reports.comparison.targetA") : t("reports.comparison.sessionA")}</th>
-                  <th className="px-3 py-2 text-left text-[11px] font-bold text-warning uppercase tracking-widest">{isContacts ? t("reports.comparison.targetB") : t("reports.comparison.sessionB")}</th>
-                  <th className="px-3 py-2 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.comparison.diff")}</th>
+                  <th className="px-3 py-2 text-left text-xs font-bold text-muted-foreground uppercase tracking-widest">{t("reports.comparison.metric")}</th>
+                  <th className="px-3 py-2 text-left text-xs font-bold text-primary uppercase tracking-widest">{isContacts ? t("reports.comparison.targetA") : t("reports.comparison.sessionA")}</th>
+                  <th className="px-3 py-2 text-left text-xs font-bold text-warning uppercase tracking-widest">{isContacts ? t("reports.comparison.targetB") : t("reports.comparison.sessionB")}</th>
+                  <th className="px-3 py-2 text-left text-xs font-bold text-muted-foreground uppercase tracking-widest">{t("reports.comparison.diff")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50 text-left bg-transparent">

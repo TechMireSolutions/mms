@@ -77,13 +77,13 @@ export function ContactDetailTimeline({
                 </div>
                 <Card className="p-4 shadow-xs hover:border-primary/20 group-hover:border-primary/20">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
                       {ACTIVITY_TYPE_I18N[act.type] ? t(ACTIVITY_TYPE_I18N[act.type]) : act.type}
                     </span>
-                    <span className="text-[10px] font-bold text-muted-foreground/60">{formatDate(act.date)}</span>
+                    <span className="text-xs font-bold text-muted-foreground/60">{formatDate(act.date)}</span>
                   </div>
                   <p className="text-xs text-foreground font-medium leading-relaxed">{act.content}</p>
-                  {act.by && <span className="block mt-2 text-[9px] font-bold text-primary italic">— {act.by}</span>}
+                  {act.by && <span className="block mt-2 text-xs font-bold text-primary italic">— {act.by}</span>}
                 </Card>
               </motion.div>
             );

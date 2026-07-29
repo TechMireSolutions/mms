@@ -40,7 +40,7 @@ export function renderSyedMetadata({
   t: Translate;
 }): React.ReactNode {
   return contact.isSyed ? (
-    <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 rounded border ${SEMANTIC_BADGE.success}`}>
+    <span className={`inline-flex items-center gap-1 text-xs font-black uppercase px-2 py-0.5 rounded border ${SEMANTIC_BADGE.success}`}>
       <CheckCircle2 className="w-3 h-3 text-success" />
       {t("contacts.table.yesSyed")}
     </span>
@@ -79,7 +79,7 @@ export function renderWhatsAppMetadata({
 }): React.ReactNode {
   return (
     <span
-      className={`text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${
+      className={`text-xs font-extrabold uppercase px-1.5 py-0.5 rounded border ${
         hasWhatsApp(contact) ? COLOR_PALETTES.success.bg : COLOR_PALETTES.slate.bg
       }`}
     >

@@ -43,7 +43,7 @@ export function ContactsPendingBanner({
           type="button"
           variant="link"
           onClick={onFlush}
-          className="shrink-0 text-xs font-semibold underline hover:no-underline p-0 h-auto text-info shadow-none"
+          className="shrink-0 text-xs font-semibold underline hover:no-underline min-h-11 px-2 text-info shadow-none"
         >
           {t("contacts.sync.retryNow")}
         </Button>
@@ -77,7 +77,7 @@ export function ContactsConflictBanner({
           type="button"
           variant="link"
           onClick={onReview}
-          className="text-xs font-semibold underline hover:no-underline p-0 h-auto text-warning shadow-none"
+          className="text-xs font-semibold underline hover:no-underline min-h-11 px-2 text-warning shadow-none"
         >
           {t("contacts.sync.reviewConflicts")}
         </Button>
@@ -85,7 +85,7 @@ export function ContactsConflictBanner({
           type="button"
           variant="link"
           onClick={onDismissAll}
-          className="text-xs font-semibold underline hover:no-underline opacity-80 p-0 h-auto text-warning shadow-none"
+          className="text-xs font-semibold underline hover:no-underline opacity-80 min-h-11 px-2 text-warning shadow-none"
         >
           {t("contacts.sync.dismissConflicts")}
         </Button>

@@ -58,7 +58,7 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
         <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
           <Shield className="w-3.5 h-3.5 text-primary" />
         </div>
-        <h3 className="text-[13px] font-bold text-foreground">{t("users.settingsPrefsTitle")}</h3>
+        <h3 className="text-sm font-bold text-foreground">{t("users.settingsPrefsTitle")}</h3>
       </div>
 
       {showPrefs && (

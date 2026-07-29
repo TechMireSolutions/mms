@@ -106,7 +106,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
             {title || (isToday ? t("dashboard.widgets.todaysAttendanceSummary") : t("dashboard.widgets.latestAttendanceSummary"))}
           </h2>
           {!isToday && (
-            <span className="text-[10px] text-muted-foreground px-2 py-0.5 rounded-full bg-muted font-bold border border-border/40">{formatDate(displayDate)}</span>
+            <span className="text-xs text-muted-foreground px-2 py-0.5 rounded-full bg-muted font-bold border border-border/40">{formatDate(displayDate)}</span>
           )}
         </div>
         <Link to={ROUTES.attendance} className="inline-flex min-h-11 items-center gap-1 text-xs text-primary font-bold hover:underline">
@@ -138,21 +138,18 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
               </div>
               <div className="text-end">
                 <p className={`text-2xl font-black tabular-nums leading-none m-0 ${rateColor}`}>{rate}%</p>
-                <p className="text-[11px] text-muted-foreground mt-1 m-0 font-medium">{t("dashboard.widgets.studentsCount", { count: stats.total })}</p>
+                <p className="text-xs text-muted-foreground mt-1 m-0 font-medium">{t("dashboard.widgets.studentsCount", { count: stats.total })}</p>
               </div>
             </div>
 
             {/* Status pills */}
-            <div 
-              className="grid gap-2"
-              style={{ gridTemplateColumns: `repeat(${statuses.length || 4}, minmax(0, 1fr))` }}
-            >
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-[repeat(auto-fit,minmax(4.5rem,1fr))]">
               {statuses.map((status: AttendanceStatus) => {
                 const count = stats[status.id] || 0;
                 return (
-                  <div key={status.id} className={`rounded-xl ${status.bg} ${status.text} border ${status.border} px-2 py-2.5 text-center shadow-xs transition-all duration-300 hover:scale-[1.02]`}>
+                  <div key={status.id} className={`min-w-0 rounded-xl ${status.bg} ${status.text} border ${status.border} px-2 py-2.5 text-center shadow-xs transition-all duration-300 hover:scale-[1.02]`}>
                     <p className="text-base font-black tabular-nums leading-none mb-1">{count}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-wider opacity-90 m-0">{t(`attendance.status.${status.id}` as AppTranslationKey) || status.label}</p>
+                    <p className="text-xs font-bold uppercase tracking-wider opacity-90 m-0 truncate">{t(`attendance.status.${status.id}` as AppTranslationKey) || status.label}</p>
                   </div>
                 );
               })}
@@ -168,7 +165,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
 
             {/* Class breakdown */}
             <div className="space-y-3">
-              <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-wider select-none">{t("dashboard.widgets.byClass")}</h3>
+              <h3 className="text-xs font-black text-muted-foreground uppercase tracking-wider select-none">{t("dashboard.widgets.byClass")}</h3>
               {classBreakdown.map((classStats) => (
                 <div key={classStats.classId} className="flex items-center gap-3">
                   <span className="text-xs font-bold text-foreground w-28 truncate">{classStats.name}</span>

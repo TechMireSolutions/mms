@@ -241,7 +241,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
           <div className="flex flex-wrap items-center gap-2">
             <Filter className="h-3.5 w-3.5 text-primary" />
             <span className="font-medium text-foreground">{t("hasanat.report.facultyFilterLabel")}</span>
-            <span className="inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+            <span className="inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
               {selectedFaculty}
             </span>
           </div>
@@ -250,7 +250,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
             variant="ghost"
             size="sm"
             onClick={() => setSelectedFaculty(null)}
-            className="px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+            className="px-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
           >
             <X className="me-1 h-3 w-3" />
             {t("hasanat.report.clearFacultyFilter")}
@@ -287,7 +287,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
                   t("hasanat.report.colRedeemed"),
                   t("hasanat.report.colBalance"),
                 ].map((headerLabel) => (
-                  <th key={headerLabel} className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
+                  <th key={headerLabel} className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
                 ))}
               </tr>
             </thead>
@@ -311,7 +311,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
                   <td className="px-3 py-2.5 font-semibold text-primary">{hasanatRow.distributed}</td>
                   <td className="px-3 py-2.5 font-semibold text-success">{hasanatRow.redeemed}</td>
                   <td className="px-3 py-2.5">
-                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${hasanatRow.balance > 0 ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${hasanatRow.balance > 0 ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"}`}>
                       {hasanatRow.balance}
                     </span>
                   </td>
@@ -327,7 +327,7 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
       <div className="border-t border-border/50 pt-6 mt-6 space-y-4 text-left">
         <div>
           <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{t("hasanat.report.dashboardWidgetTitle")}</h3>
-          <p className="text-[10px] text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("hasanat.report.dashboardWidgetSubtitle")}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("hasanat.report.dashboardWidgetSubtitle")}</p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <HasanatChart />

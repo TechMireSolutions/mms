@@ -547,7 +547,7 @@ export default function LlmSettings(): React.JSX.Element {
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                               {config.isDefaultText && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[9px] font-semibold text-primary">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
                                   <Check className="h-3 w-3" /> {t('settings.llmTextDefault')}
                                 </span>
                               )}
@@ -556,12 +556,12 @@ export default function LlmSettings(): React.JSX.Element {
                           <div className="space-y-2 text-xs text-muted-foreground">
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-foreground">{t('settings.llmModelToken')}</span>
-                              <span className="font-mono text-[10px] bg-muted px-2 py-1 rounded leading-none truncate">{config.model}</span>
+                              <span className="font-mono text-xs bg-muted px-2 py-1 rounded leading-none truncate">{config.model}</span>
                             </div>
                             {config.baseUrl && (
                               <div className="flex items-center gap-2 truncate">
                                 <Globe className="h-4 w-4 shrink-0" />
-                                <span className="font-mono text-[10px] truncate">{config.baseUrl}</span>
+                                <span className="font-mono text-xs truncate">{config.baseUrl}</span>
                               </div>
                             )}
                           </div>
@@ -573,7 +573,7 @@ export default function LlmSettings(): React.JSX.Element {
                             variant="outline"
                             onClick={() => void handleTestConnection(config.id)}
                             disabled={testingId !== null || isGlobalDirty}
-                            className="text-[11px] px-3"
+                            className="text-xs px-3"
                           >
                             {testingId === config.id ? (
                               <Loader2 className="h-3 w-3 animate-spin" />
@@ -585,7 +585,7 @@ export default function LlmSettings(): React.JSX.Element {
                             size="sm"
                             variant="outline"
                             onClick={() => openEditModal(config)}
-                            className="text-[11px]"
+                            className="text-xs"
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
@@ -593,7 +593,7 @@ export default function LlmSettings(): React.JSX.Element {
                             size="sm"
                             variant="outline"
                             onClick={() => handleDeleteConfig(config.id)}
-                            className="text-[11px] text-destructive hover:bg-destructive/10"
+                            className="text-xs text-destructive hover:bg-destructive/10"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -634,7 +634,7 @@ export default function LlmSettings(): React.JSX.Element {
                     {testResult.success ? testResult.response : testResult.message}
                   </p>
                   {testResult.success && testResult.metrics && (
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 border-t border-success/10 pt-3 text-[11px] font-semibold text-success/80">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 border-t border-success/10 pt-3 text-xs font-semibold text-success/80">
                       <div>
                         <span className="block font-normal text-muted-foreground/85">{t('settings.llmLatency')}</span>
                         <span>{testResult.metrics.latencyMs} ms</span>
@@ -695,7 +695,7 @@ export default function LlmSettings(): React.JSX.Element {
               <div className="border border-border bg-muted/10 rounded-2xl flex flex-col overflow-hidden shadow-inner">
                 {/* Chat Header */}
                 <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/20 shrink-0">
-                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground/80 uppercase tracking-wider">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider">
                     <MessageSquare className="h-3.5 w-3.5" />
                     <span>{t('settings.llmSandboxHistory')}</span>
                   </div>
@@ -704,7 +704,7 @@ export default function LlmSettings(): React.JSX.Element {
                       size="sm"
                       variant="ghost"
                       onClick={() => setSandboxMessages([])}
-                      className="text-[10px] px-2 text-muted-foreground hover:text-foreground gap-1.5"
+                      className="text-xs px-2 text-muted-foreground hover:text-foreground gap-1.5"
                     >
                       <RotateCcw className="h-3 w-3" /> {t('settings.llmClearHistory')}
                     </Button>
@@ -717,7 +717,7 @@ export default function LlmSettings(): React.JSX.Element {
                     <div className="h-full flex flex-col items-center justify-center text-center p-6 my-6 opacity-60">
                       <Sparkles className="h-8 w-8 text-primary mb-2.5 animate-pulse" />
                       <p className="font-semibold text-xs text-foreground">{t('settings.llmSandboxReady')}</p>
-                      <p className="text-[11px] text-muted-foreground max-w-[280px] mt-1">
+                      <p className="text-xs text-muted-foreground max-w-[280px] mt-1">
                         {t('settings.llmSandboxReadyDesc')}
                       </p>
                     </div>
@@ -734,14 +734,14 @@ export default function LlmSettings(): React.JSX.Element {
                               isUser
                                 ? 'bg-primary text-primary-foreground rounded-tr-none'
                                 : msg.error
-                                ? 'bg-destructive/10 text-destructive border border-destructive/20 rounded-tl-none font-mono text-[11px]'
+                                ? 'bg-destructive/10 text-destructive border border-destructive/20 rounded-tl-none font-mono text-xs'
                                 : 'bg-card text-foreground border border-border rounded-tl-none'
                             }`}
                           >
                             <p className="whitespace-pre-wrap">{msg.content}</p>
                           </div>
                           {!isUser && msg.metrics && (
-                            <div className="flex items-center gap-3 mt-1.5 px-2 text-[9px] font-semibold text-muted-foreground/80">
+                            <div className="flex items-center gap-3 mt-1.5 px-2 text-xs font-semibold text-muted-foreground/80">
                               <span>{t('settings.llmLatency')}: {msg.metrics.latencyMs}ms</span>
                               <span>•</span>
                               <span>{t('settings.llmWordCount')}: {msg.metrics.wordCount}</span>
@@ -757,7 +757,7 @@ export default function LlmSettings(): React.JSX.Element {
                   {sandboxTesting && (
                     <div className="flex items-center gap-2 text-muted-foreground px-2 py-1">
                       <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />
-                      <span className="text-[10px] font-medium animate-pulse">{t('settings.llmThinking')}</span>
+                      <span className="text-xs font-medium animate-pulse">{t('settings.llmThinking')}</span>
                     </div>
                   )}
                 </div>
@@ -775,7 +775,7 @@ export default function LlmSettings(): React.JSX.Element {
                     value={sandboxInput}
                     onChange={(event) => setSandboxInput(event.target.value)}
                     disabled={sandboxTesting}
-                    className="flex-1 h-9 text-xs"
+                    className="flex-1 min-h-11 text-xs"
                   />
                   <Button
                     type="submit"
@@ -810,7 +810,7 @@ export default function LlmSettings(): React.JSX.Element {
             role="dialog"
             aria-modal="true"
             aria-label={editingConfig ? t('settings.llmModalEditTitle') : t('settings.llmModalAddTitle')}
-            className="fixed top-4 left-4 right-4 sm:left-1/2 sm:-ml-64 sm:right-auto z-50 w-auto sm:w-[512px] bg-card border border-border shadow-2xl rounded-2xl flex flex-col overflow-hidden max-h-[85vh]"
+            className="fixed top-4 left-4 right-4 z-50 w-auto max-w-full sm:left-1/2 sm:right-auto sm:w-[min(32rem,calc(100vw-2rem))] sm:-translate-x-1/2 bg-card border border-border shadow-2xl rounded-2xl flex flex-col overflow-hidden max-h-[85vh]"
           >
             {/* Grab Handle Header */}
             <div
@@ -822,10 +822,10 @@ export default function LlmSettings(): React.JSX.Element {
                   <Brain className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-[14px] font-bold text-foreground leading-tight">
+                  <h3 className="text-sm font-bold text-foreground leading-tight">
                     {editingConfig ? t('settings.llmModalEditTitle') : t('settings.llmModalAddTitle')}
                   </h3>
-                  <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
+                  <p className="text-xs text-muted-foreground font-medium mt-0.5">
                     {t('settings.llmModalRepositionDesc')}
                   </p>
                 </div>
@@ -888,7 +888,7 @@ export default function LlmSettings(): React.JSX.Element {
                           type="button"
                           variant="link"
                           onClick={() => setShowCustomModelInput(!showCustomModelInput)}
-                          className="text-[10px] text-primary hover:underline font-normal h-auto p-0"
+                          className="text-xs text-primary hover:underline font-normal min-h-11 px-2"
                         >
                           {showCustomModelInput ? t('settings.llmModalSelectFromList') : t('settings.llmModalTypeManually')}
                         </Button>
@@ -915,7 +915,7 @@ export default function LlmSettings(): React.JSX.Element {
                 <div className="space-y-2">
                   <Label htmlFor="baseUrl" className="flex items-center gap-2">
                     {t('settings.llmModalBaseUrl')}
-                    <span className="text-[10px] bg-muted px-2 py-1 rounded text-muted-foreground font-normal">
+                    <span className="text-xs bg-muted px-2 py-1 rounded text-muted-foreground font-normal">
                       {t('settings.llmModalOptional')}
                     </span>
                   </Label>
@@ -951,7 +951,7 @@ export default function LlmSettings(): React.JSX.Element {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-xs font-semibold">
                         <Label htmlFor="temperature">{t('settings.llmModalTemperature')}</Label>
-                        <span className="text-muted-foreground/80 font-mono text-[10px]">{formTemperature.toFixed(1)}</span>
+                        <span className="text-muted-foreground/80 font-mono text-xs">{formTemperature.toFixed(1)}</span>
                       </div>
                       <Slider
                         id="temperature"
@@ -961,7 +961,7 @@ export default function LlmSettings(): React.JSX.Element {
                         value={[formTemperature]}
                         onValueChange={(val) => setFormTemperature(val[0])}
                       />
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {t('settings.llmModalTemperatureDesc')}
                       </p>
                     </div>
@@ -979,7 +979,7 @@ export default function LlmSettings(): React.JSX.Element {
                           value={formMaxTokens}
                           onChange={(event) => setFormMaxTokens(parseInt(event.target.value, 10) || 2048)}
                         />
-                        <p className="text-[10px] text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           {t('settings.llmModalMaxTokensDesc')}
                         </p>
                       </div>
@@ -987,7 +987,7 @@ export default function LlmSettings(): React.JSX.Element {
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-xs font-semibold">
                           <Label htmlFor="topP">{t('settings.llmModalTopP')}</Label>
-                          <span className="text-muted-foreground/80 font-mono text-[10px]">{formTopP.toFixed(2)}</span>
+                          <span className="text-muted-foreground/80 font-mono text-xs">{formTopP.toFixed(2)}</span>
                         </div>
                         <Slider
                           id="topP"
@@ -997,7 +997,7 @@ export default function LlmSettings(): React.JSX.Element {
                           value={[formTopP]}
                           onValueChange={(val) => setFormTopP(val[0])}
                         />
-                        <p className="text-[10px] text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           {t('settings.llmModalTopPDesc')}
                         </p>
                       </div>
@@ -1032,11 +1032,11 @@ export default function LlmSettings(): React.JSX.Element {
                     <p className="font-semibold mb-1">
                       {modalTestResult.success ? t('settings.llmTestSuccess') : t('settings.llmTestFailed')}
                     </p>
-                    <p className="whitespace-pre-wrap leading-relaxed opacity-90 font-mono text-[10px] mb-3">
+                    <p className="whitespace-pre-wrap leading-relaxed opacity-90 font-mono text-xs mb-3">
                       {modalTestResult.success ? modalTestResult.response : modalTestResult.message}
                     </p>
                     {modalTestResult.success && modalTestResult.metrics && (
-                      <div className="flex items-center gap-4 text-[9px] font-semibold text-success/80 border-t border-success/10 pt-2">
+                      <div className="flex items-center gap-4 text-xs font-semibold text-success/80 border-t border-success/10 pt-2">
                         <span>{t('settings.llmLatency')}: {modalTestResult.metrics.latencyMs} ms</span>
                         <span>{t('settings.llmWordCount')}: {modalTestResult.metrics.wordCount}</span>
                         <span>{t('settings.llmSpeed')}: {formatLlmSpeed(modalTestResult.metrics.wordCount, modalTestResult.metrics.latencyMs)}</span>
@@ -1053,7 +1053,7 @@ export default function LlmSettings(): React.JSX.Element {
                   variant="outline"
                   onClick={() => void handleModalTestConnection()}
                   disabled={modalTesting || (formApiKey.trim() === '' && !editingConfig)}
-                  className="text-[11px] min-h-11 px-4 w-full sm:w-auto"
+                  className="text-xs min-h-11 px-4 w-full sm:w-auto"
                 >
                   {modalTesting ? (
                     <Loader2 className="h-3 w-3 animate-spin mr-2" />
@@ -1065,14 +1065,14 @@ export default function LlmSettings(): React.JSX.Element {
                   type="button"
                   variant="outline"
                   onClick={() => setModalOpen(false)}
-                  className="text-[11px] min-h-11 px-4 w-full sm:w-auto"
+                  className="text-xs min-h-11 px-4 w-full sm:w-auto"
                 >
                   {t('common.cancel')}
                 </Button>
                 <Button
                   type="submit"
                   disabled={!formName.trim()}
-                  className="text-[11px] min-h-11 px-4 w-full sm:w-auto"
+                  className="text-xs min-h-11 px-4 w-full sm:w-auto"
                 >
                   {t('settings.llmModalApplyChanges')}
                 </Button>

@@ -171,7 +171,7 @@ export function PerformanceAnalytics({
         >
           <div className="mb-3 flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-warning" aria-hidden />
-            <h3 className="text-[13px] font-bold text-warning">{t("questionBank.analytics.weakAreas")}</h3>
+            <h3 className="text-sm font-bold text-warning">{t("questionBank.analytics.weakAreas")}</h3>
           </div>
           <div className="flex flex-wrap gap-2.5" role="list">
             {weakAreas.map((categoryResult) => (
@@ -182,8 +182,8 @@ export function PerformanceAnalytics({
               >
                 <span className="text-base" aria-hidden>{categoryResult.icon}</span>
                 <div>
-                  <p className="text-[12px] font-bold text-warning">{categoryResult.name}</p>
-                  <p className="text-[10px] text-warning/90">
+                  <p className="text-sm font-bold text-warning">{categoryResult.name}</p>
+                  <p className="text-xs text-warning/90">
                     {t("questionBank.analytics.accuracy", { percent: categoryResult.accuracy })}
                   </p>
                 </div>
@@ -277,8 +277,8 @@ export function PerformanceAnalytics({
               <span className="flex-shrink-0 text-xl" aria-hidden>{categoryResult.icon}</span>
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center justify-between">
-                  <p className="text-[12px] font-semibold text-foreground">{categoryResult.name}</p>
-                  <span className={`text-[11px] font-bold ${questionAccuracyTextClass(categoryResult.accuracy)}`}>{categoryResult.accuracy}%</span>
+                  <p className="text-sm font-semibold text-foreground">{categoryResult.name}</p>
+                  <span className={`text-xs font-bold ${questionAccuracyTextClass(categoryResult.accuracy)}`}>{categoryResult.accuracy}%</span>
                 </div>
                 <div className="h-1.5 overflow-hidden rounded-full bg-border" aria-hidden>
                   <div
@@ -286,7 +286,7 @@ export function PerformanceAnalytics({
                     style={{ width: `${categoryResult.accuracy}%` }}
                   />
                 </div>
-                <p className="mt-0.5 text-[10px] text-muted-foreground">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   {t("questionBank.analytics.correctRatio", { correct: categoryResult.correct, total: categoryResult.total })}
                 </p>
               </div>
@@ -312,14 +312,14 @@ export function PerformanceAnalytics({
           <div className="space-y-2.5" role="list">
             {studentStats.map((studentStat, studentIndex) => (
               <div key={studentStat.name} className="flex items-center gap-3" role="listitem">
-                <span className="w-6 flex-shrink-0 text-[12px] font-bold text-muted-foreground">{studentIndex + 1}</span>
+                <span className="w-6 flex-shrink-0 text-sm font-bold text-muted-foreground">{studentIndex + 1}</span>
                 <div className="flex-1">
                   <div className="mb-0.5 flex items-center justify-between">
-                    <p className="text-[12px] font-semibold text-foreground">
+                    <p className="text-sm font-semibold text-foreground">
                       {studentStat.name}{" "}
                       <span className="font-normal text-muted-foreground">· {studentStat.class}</span>
                     </p>
-                    <p className="text-[12px] font-bold text-foreground">{studentStat.avg}%</p>
+                    <p className="text-sm font-bold text-foreground">{studentStat.avg}%</p>
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-border" aria-hidden>
                     <div className="h-full rounded-full bg-primary" style={{ width: `${studentStat.avg}%` }} />

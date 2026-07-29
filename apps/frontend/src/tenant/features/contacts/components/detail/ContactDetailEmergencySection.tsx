@@ -26,14 +26,14 @@ export function ContactDetailEmergencySection({
         return (
           <div key={emergencyContactIndex} className="p-3 border-b border-border/50 last:border-b-0">
             <div className="flex items-center gap-2 mb-1.5">
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${DETAIL_STYLES.emergencyBadge}`}>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded border uppercase ${DETAIL_STYLES.emergencyBadge}`}>
                 {t("contacts.detail.emergencyContact")}
               </span>
             </div>
             <div className="text-xs space-y-1">
               {emergencyContact.relationship ? (
                 <>
-                  <span className="text-[9px] font-bold text-muted-foreground uppercase block">
+                  <span className="text-xs font-bold text-muted-foreground uppercase block">
                     {t("contacts.fields.relationship")}
                   </span>
                   <span className="font-semibold text-foreground block">
@@ -41,7 +41,7 @@ export function ContactDetailEmergencySection({
                   </span>
                 </>
               ) : null}
-              <span className="text-[9px] font-bold text-muted-foreground uppercase block">
+              <span className="text-xs font-bold text-muted-foreground uppercase block">
                 {t("contacts.detail.relationships")}
               </span>
               {target ? (
@@ -49,7 +49,7 @@ export function ContactDetailEmergencySection({
                   type="button"
                   variant="link"
                   onClick={() => onNavigateToContact(target.id)}
-                  className="font-semibold text-primary hover:underline text-start h-auto p-0 shadow-none justify-start text-xs"
+                  className="font-semibold text-primary hover:underline text-start min-h-11 h-auto px-1 shadow-none justify-start text-xs"
                 >
                   {getDisplayName(target)}
                 </Button>

@@ -67,16 +67,16 @@ export function InvoiceDetail({ invoice, onClose, onRecord, canWrite = true }: I
       <div className="space-y-5">
         <div className="flex items-center justify-between" aria-label={t("finance.detail.status", { status: statusConfig[invoice.status]?.label ?? invoice.status })}>
           <StatusBadge status={invoice.status} config={statusConfig} size="sm" />
-          <span className="text-[11px] text-muted-foreground">{t("finance.detail.due", { date: formatDate(invoice.dueDate) })}</span>
+          <span className="text-xs text-muted-foreground">{t("finance.detail.due", { date: formatDate(invoice.dueDate) })}</span>
         </div>
 
         {/* Student & session info */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2.5 text-[13px]">
+          <div className="flex items-center gap-2.5 text-sm">
             <User className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
             <span className="font-semibold text-foreground">{invoice.studentName}</span>
           </div>
-          <div className="flex items-center gap-2.5 text-[12px] text-muted-foreground">
+          <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
             <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
             <span>{invoice.class} · {invoice.session}</span>
           </div>
@@ -86,13 +86,13 @@ export function InvoiceDetail({ invoice, onClose, onRecord, canWrite = true }: I
         <article className="relative overflow-hidden group/breakdown rounded-xl border border-border bg-card/45 backdrop-blur-xs shadow-sm">
           <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/60" />
           <header className="px-4 py-2 bg-muted/30 border-b border-border pl-5">
-            <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide m-0">{t("finance.detail.breakdown")}</h4>
+            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wide m-0">{t("finance.detail.breakdown")}</h4>
           </header>
           <div className="divide-y divide-border/50">
             {rows.map((row) => (
               <div key={row.label} className={`flex items-center justify-between px-4 py-2.5 ${row.highlight ? "bg-primary/5" : ""}`}>
-                <span className={`text-[12px] ${row.highlight ? "font-bold text-foreground" : "text-muted-foreground"}`}>{row.label}</span>
-                <span className={`text-[13px] font-bold ${row.highlight ? "text-primary" : row.neg ? "text-destructive" : "text-foreground"}`}>{row.value}</span>
+                <span className={`text-sm ${row.highlight ? "font-bold text-foreground" : "text-muted-foreground"}`}>{row.label}</span>
+                <span className={`text-sm font-bold ${row.highlight ? "text-primary" : row.neg ? "text-destructive" : "text-foreground"}`}>{row.value}</span>
               </div>
             ))}
           </div>
@@ -100,7 +100,7 @@ export function InvoiceDetail({ invoice, onClose, onRecord, canWrite = true }: I
 
         {/* Payment info */}
         {invoice.paidDate && (
-          <div className="flex items-center gap-2.5 text-[12px] text-muted-foreground">
+          <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
             <CreditCard className="w-3.5 h-3.5" aria-hidden="true" />
             <span>{t("finance.detail.paidVia", { date: formatDate(invoice.paidDate), method: invoice.method ?? t("common.none") })}</span>
           </div>

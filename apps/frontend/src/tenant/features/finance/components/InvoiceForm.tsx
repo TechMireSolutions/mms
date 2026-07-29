@@ -147,11 +147,11 @@ export function InvoiceForm({
                 {t("finance.form.studentName")}
               </label>
               <div className="relative flex items-center group/input">
-                <User className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <User className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
                   id="invoice-student-name"
                   name="studentName"
-                  className={`${FORM_INPUT} pl-10`}
+                  className={`${FORM_INPUT} ps-10`}
                   value={draft.studentName}
                   onChange={(event) => setField("studentName", event.target.value)}
                   required
@@ -163,11 +163,11 @@ export function InvoiceForm({
                 {t("finance.form.studentId")}
               </label>
               <div className="relative flex items-center group/input">
-                <Hash className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Hash className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
                   id="invoice-student-id"
                   name="studentId"
-                  className={`${FORM_INPUT} pl-10`}
+                  className={`${FORM_INPUT} ps-10`}
                   value={draft.studentId}
                   onChange={(event) => setField("studentId", event.target.value)}
                 />
@@ -178,11 +178,11 @@ export function InvoiceForm({
                 {t("finance.form.class")}
               </label>
               <div className="relative flex items-center group/input">
-                <School className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <School className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
                   id="invoice-class"
                   name="class"
-                  className={`${FORM_INPUT} pl-10`}
+                  className={`${FORM_INPUT} ps-10`}
                   value={draft.class}
                   onChange={(event) => setField("class", event.target.value)}
                   required
@@ -194,11 +194,11 @@ export function InvoiceForm({
                 {t("finance.form.session")}
               </label>
               <div className="relative flex items-center group/input">
-                <Calendar className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Calendar className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
                   id="invoice-session"
                   name="session"
-                  className={`${FORM_INPUT} pl-10`}
+                  className={`${FORM_INPUT} ps-10`}
                   value={draft.session}
                   onChange={(event) => setField("session", event.target.value)}
                   required
@@ -210,14 +210,14 @@ export function InvoiceForm({
                 {t("finance.columns.baseFee")}
               </label>
               <div className="relative flex items-center group/input">
-                <DollarSign className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <DollarSign className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
                   id="invoice-base-fee"
                   name="baseFee"
                   type="number"
                   min="0"
                   step="0.01"
-                  className={`${FORM_INPUT} pl-10`}
+                  className={`${FORM_INPUT} ps-10`}
                   value={draft.baseFee}
                   onChange={(event) => setField("baseFee", event.target.value)}
                   required
@@ -257,14 +257,14 @@ export function InvoiceForm({
                 {t("finance.form.discountAmount")}
               </label>
               <div className="relative flex items-center group/input">
-                <Tag className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Tag className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
                   id="invoice-discount-value"
                   name="discountValue"
                   type="number"
                   min="0"
                   step="0.01"
-                  className={`${FORM_INPUT} pl-10`}
+                  className={`${FORM_INPUT} ps-10`}
                   value={draft.discountValue}
                   onChange={(event) => setField("discountValue", event.target.value)}
                 />
@@ -274,17 +274,17 @@ export function InvoiceForm({
         </Card>
 
         <Card accentColor="primary" className="p-5 px-6 shadow-sm">
-          <div className="grid grid-cols-3 gap-3 text-sm">
+          <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
             <div>
-              <p className="m-0 text-[10px] font-bold uppercase text-muted-foreground">{t("finance.columns.baseFee")}</p>
+              <p className="m-0 text-xs font-bold uppercase text-muted-foreground">{t("finance.columns.baseFee")}</p>
               <p className="m-0 mt-0.5 font-bold text-foreground text-sm">{formatCurrency(baseFee)}</p>
             </div>
             <div>
-              <p className="m-0 text-[10px] font-bold uppercase text-muted-foreground">{t("finance.columns.discount")}</p>
+              <p className="m-0 text-xs font-bold uppercase text-muted-foreground">{t("finance.columns.discount")}</p>
               <p className="m-0 mt-0.5 font-bold text-warning text-sm">-{formatCurrency(discountAmt)}</p>
             </div>
             <div>
-              <p className="m-0 text-[10px] font-bold uppercase text-muted-foreground">{t("finance.form.finalAmount")}</p>
+              <p className="m-0 text-xs font-bold uppercase text-muted-foreground">{t("finance.form.finalAmount")}</p>
               <p className="m-0 mt-0.5 font-extrabold text-primary text-sm">{formatCurrency(finalAmt)}</p>
             </div>
           </div>

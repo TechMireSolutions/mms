@@ -114,7 +114,7 @@ export function AuditLog({ filters }: AuditLogProps) {
         <div className="flex items-center gap-2">
           <ClipboardList className="w-4 h-4 text-primary" />
           <h2 className="text-sm font-bold text-foreground m-0">{t("attendance.audit.title")}</h2>
-          <span className="text-[11px] text-muted-foreground">{t("attendance.audit.entriesCount", { count: log.length })}</span>
+          <span className="text-xs text-muted-foreground">{t("attendance.audit.entriesCount", { count: log.length })}</span>
         </div>
         <Button 
           type="button"
@@ -161,17 +161,17 @@ export function AuditLog({ filters }: AuditLogProps) {
           <table className="w-full text-sm">
             <thead className="bg-muted/60 border-b border-border">
               <tr>
-                <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("attendance.audit.colTime")}</th>
-                <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("attendance.audit.colAction")}</th>
-                <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("attendance.audit.colDetails")}</th>
-                <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("attendance.audit.colBy")}</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("attendance.audit.colTime")}</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("attendance.audit.colAction")}</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("attendance.audit.colDetails")}</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("attendance.audit.colBy")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {log.map((entry, index) => {
                 return (
                   <tr key={index} className="hover:bg-muted/20 transition-colors">
-                    <td className="px-3 py-2.5 text-[11px] font-mono text-muted-foreground whitespace-nowrap">{formatDateTime(entry.ts)}</td>
+                    <td className="px-3 py-2.5 text-xs font-mono text-muted-foreground whitespace-nowrap">{formatDateTime(entry.ts)}</td>
                     <td className="px-3 py-2.5">
                       <StatusBadge status={entry.action} config={actionConfig} size="sm" />
                     </td>

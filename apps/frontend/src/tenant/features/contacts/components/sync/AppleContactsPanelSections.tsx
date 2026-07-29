@@ -100,7 +100,7 @@ export function AppleContactsExportBar({
         variant="outline"
         onClick={onExport}
         disabled={contactCount === 0}
-        className="flex items-center gap-1.5 px-3.5 min-h-[44px] rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50 transition-colors bg-card shadow-none"
+        className="flex items-center gap-1.5 px-3.5 min-h-11 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50 transition-colors bg-card shadow-none"
       >
         <Download className="w-3.5 h-3.5" />
         <span>{t("contacts.sync.exportVcf", { count: contactCount })}</span>

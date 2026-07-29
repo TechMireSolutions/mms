@@ -31,11 +31,11 @@ export function ContactDetailOverviewHero({
       <div className="space-y-2">
         <div className="flex items-center gap-1.5 text-primary">
           <BrainCircuit className="w-3.5 h-3.5" />
-          <span className="text-[10px] font-bold uppercase tracking-widest">
+          <span className="text-xs font-bold uppercase tracking-widest">
             {t("contacts.detail.aiIntelligence")}
           </span>
         </div>
-        <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 text-[12px] text-foreground leading-relaxed italic relative">
+        <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 text-sm text-foreground leading-relaxed italic relative">
           {contact.aiSummary || t("contacts.detail.defaultAiSummary")}
         </div>
       </div>

@@ -59,7 +59,7 @@ function ReportSection({ title, rows, totalLabel, total, debitNormal, color }: R
                   <div className="h-1.5 rounded-full bg-muted overflow-hidden" aria-hidden="true">
                     <div className="h-full rounded-full bg-primary/40 transition-all" style={{ width: `${percentage}%` }} />
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-0.5 font-mono m-0">{reportRow.code} · {reportRow.subtype || reportRow.type}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 font-mono m-0">{reportRow.code} · {reportRow.subtype || reportRow.type}</p>
                 </td>
               </tr>
             );
@@ -267,19 +267,19 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
                   <td className="px-4 py-3 text-right font-mono font-semibold">{formatCurrency(netSurplus)}</td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-muted-foreground pl-8">{t("accounting.reports.cashflow.depreciation")}</td>
+                  <td className="px-4 py-3 text-muted-foreground ps-8">{t("accounting.reports.cashflow.depreciation")}</td>
                   <td className="px-4 py-3 text-right font-mono text-muted-foreground">
                     {formatCurrency(depreciationAdjustment)}
                   </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-muted-foreground pl-8">{t("accounting.reports.cashflow.receivables")}</td>
+                  <td className="px-4 py-3 text-muted-foreground ps-8">{t("accounting.reports.cashflow.receivables")}</td>
                   <td className="px-4 py-3 text-right font-mono text-muted-foreground">
                     {formatCurrency(receivablesChange)}
                   </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-muted-foreground pl-8">{t("accounting.reports.cashflow.payables")}</td>
+                  <td className="px-4 py-3 text-muted-foreground ps-8">{t("accounting.reports.cashflow.payables")}</td>
                   <td className="px-4 py-3 text-right font-mono text-muted-foreground">
                     {formatCurrency(payablesChange)}
                   </td>
@@ -300,17 +300,17 @@ export function FinancialReports({ accounts, entries, fiscalYears, settings: _se
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <article className="rounded-xl border border-border px-4 py-3 bg-success/10/60 text-center">
-              <h4 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">{t("accounting.reports.cashflow.cashInflow")}</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.reports.cashflow.cashInflow")}</h4>
               <p className="font-mono font-bold text-success text-lg mt-1 m-0">{formatCurrency(cashInflow)}</p>
             </article>
             <article className="rounded-xl border border-border px-4 py-3 bg-destructive/10/60 text-center">
-              <h4 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">{t("accounting.reports.cashflow.cashOutflow")}</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.reports.cashflow.cashOutflow")}</h4>
               <p className="font-mono font-bold text-destructive text-lg mt-1 m-0">{formatCurrency(cashOutflow)}</p>
             </article>
             <article className={`rounded-xl border border-border px-4 py-3 text-center ${netCashFlow >= 0 ? "bg-primary/5" : "bg-destructive/10/60"}`}>
-              <h4 className="text-[10px] font-semibold text-muted-foreground uppercase m-0">{t("accounting.reports.cashflow.netCashFlow")}</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.reports.cashflow.netCashFlow")}</h4>
               <p className={`font-mono font-bold text-lg mt-1 m-0 ${netCashFlow >= 0 ? "text-primary" : "text-destructive"}`}>{formatCurrency(Math.abs(netCashFlow))}</p>
             </article>
           </div>

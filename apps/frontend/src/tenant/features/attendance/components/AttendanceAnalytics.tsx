@@ -258,7 +258,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
             {lowAttendance.map((studentRate) => (
               <div key={studentRate.name} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card/45 backdrop-blur-sm border border-warning/30">
                 <span className="text-xs font-semibold text-foreground">{studentRate.name}</span>
-                <span className="text-[11px] font-bold text-destructive">{studentRate.rate}%</span>
+                <span className="text-xs font-bold text-destructive">{studentRate.rate}%</span>
               </div>
             ))}
           </div>
@@ -276,7 +276,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
           <div className="space-y-2">
             {topStudents.map((studentRate, index) => (
               <div key={studentRate.name} className="flex items-center gap-3">
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${index === 0 ? "bg-warning/15 text-warning" : index === 1 ? "bg-muted text-muted-foreground" : "bg-warning/10 text-warning"}`}>{index + 1}</span>
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${index === 0 ? "bg-warning/15 text-warning" : index === 1 ? "bg-muted text-muted-foreground" : "bg-warning/10 text-warning"}`}>{index + 1}</span>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-0.5">
                     <span className="text-sm font-semibold text-foreground">{studentRate.name}</span>

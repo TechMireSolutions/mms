@@ -169,7 +169,7 @@ export default function Dashboard() {
           <Button
             onClick={() => setIsEditMode(!isEditMode)}
             variant={isEditMode ? 'default' : 'outline'}
-            className={`flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all duration-300 rounded-xl cursor-pointer shadow-none h-9.5 ${
+            className={`flex min-h-11 items-center justify-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all duration-300 rounded-xl cursor-pointer shadow-none ${
               isEditMode
                 ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20 border-transparent hover:bg-primary/95'
                 : 'surface-glass text-muted-foreground hover:text-foreground hover:bg-muted/30 border-border/60'

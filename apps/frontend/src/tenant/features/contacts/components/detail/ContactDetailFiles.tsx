@@ -77,7 +77,7 @@ export function ContactDetailFiles({
         <Button
           disabled={isUploading}
           onClick={() => fileInputRef.current?.click()}
-          className="mt-2 px-6 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:scale-105 active:scale-95 transition-all shadow-none"
+          className="mt-2 px-6 min-h-11 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:scale-105 active:scale-95 transition-all shadow-none"
           type="button"
         >
           {t('contacts.detail.browseFiles')}
@@ -87,7 +87,7 @@ export function ContactDetailFiles({
       <div className="space-y-3">
         {(!contact.attachments || contact.attachments.length === 0) ? (
           <div className="py-10 text-center">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{t('contacts.detail.repositoryEmpty')}</p>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">{t('contacts.detail.repositoryEmpty')}</p>
           </div>
         ) : (
           contact.attachments.map((file) => (
@@ -98,7 +98,7 @@ export function ContactDetailFiles({
                 </div>
                 <div className="min-w-0">
                   <h5 className="text-xs font-bold text-foreground truncate">{file.name}</h5>
-                  <p className="text-[9px] text-muted-foreground mt-1">{(file.size / 1024).toFixed(1)} {t('contacts.detail.kbLabel')} · {formatDate(file.date)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{(file.size / 1024).toFixed(1)} {t('contacts.detail.kbLabel')} · {formatDate(file.date)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -106,7 +106,7 @@ export function ContactDetailFiles({
                   href={file.url}
                   download={file.name}
                   aria-label={t('contacts.detail.downloadFile', { name: file.name })}
-                  className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-all"
+                  className="min-w-11 min-h-11 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-all"
                 >
                   <ExternalLink className="w-4 h-4" />
                 </a>
@@ -115,7 +115,7 @@ export function ContactDetailFiles({
                     variant="ghost"
                     aria-label={t('contacts.detail.deleteFile', { name: file.name })}
                     onClick={() => onRequestDelete({ id: file.id, name: file.name })}
-                    className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all shadow-none"
+                    className="min-w-11 min-h-11 flex items-center justify-center rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all shadow-none"
                     type="button"
                   >
                     <Trash2 className="w-4 h-4" />

@@ -222,7 +222,7 @@ export function MessagingReportsPanel({
                     return (
                       <tr key={log.id} className="transition-colors hover:bg-muted/10">
                         <td className="flex items-center gap-2 px-4 py-3 font-semibold text-foreground">
-                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] font-black text-primary">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
                             {getInitials(name)}
                           </span>
                           {name}

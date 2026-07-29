@@ -152,11 +152,11 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
               <caption className="sr-only">{t("accounting.cashbook.tableCaption")}</caption>
               <thead className="bg-muted/60 border-b border-border">
                 <tr>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.date")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.type")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.description")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-success uppercase">{t("accounting.cashbook.moneyIn")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-right text-[11px] font-semibold text-destructive uppercase">{t("accounting.cashbook.moneyOut")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.date")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.type")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.description")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-right text-xs font-semibold text-success uppercase">{t("accounting.cashbook.moneyIn")}</th>
+                  <th scope="col" className="px-3 py-2.5 text-right text-xs font-semibold text-destructive uppercase">{t("accounting.cashbook.moneyOut")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -189,7 +189,7 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
                     </td>
                     <td className="px-3 py-3 text-foreground max-w-[200px] truncate">
                       <p className="font-medium m-0">{row.description}</p>
-                      <p className="text-[10px] text-muted-foreground font-mono m-0">{row.ref}</p>
+                      <p className="text-xs text-muted-foreground font-mono m-0">{row.ref}</p>
                     </td>
                     <td className="px-3 py-3 text-right">
                       {row.flowType === "in" ? (

@@ -162,7 +162,7 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
           <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/70" />
           <Receipt className="w-5 h-5 text-primary" aria-hidden="true" />
           <div>
-            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide m-0">{t("obligations.form.receiptAuto")}</h3>
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide m-0">{t("obligations.form.receiptAuto")}</h3>
             <p className="text-lg font-bold text-primary font-mono m-0">{form.receipt_no}</p>
           </div>
         </header>

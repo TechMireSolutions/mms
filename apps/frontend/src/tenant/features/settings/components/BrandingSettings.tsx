@@ -127,7 +127,7 @@ export default function BrandingSettings(): React.JSX.Element {
           <div className="space-y-2">
             <Label htmlFor="branding-email">{t('branding.email')}</Label>
             <div className="relative">
-              <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+              <Mail className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
               <Input
                 id="branding-email"
                 type="email"
@@ -143,7 +143,7 @@ export default function BrandingSettings(): React.JSX.Element {
           <div className="space-y-2">
             <Label htmlFor="branding-phone">{t('branding.phone')}</Label>
             <div className="relative">
-              <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+              <Phone className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
               <Input
                 id="branding-phone"
                 type="tel"
@@ -159,7 +159,7 @@ export default function BrandingSettings(): React.JSX.Element {
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="branding-website">{t('branding.website')}</Label>
             <div className="relative">
-              <Globe className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+              <Globe className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
               <Input
                 id="branding-website"
                 type="url"

@@ -156,7 +156,7 @@ export default function ModuleSettingsNavGrid({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium" aria-live="polite">
+      <div className="flex flex-wrap items-center gap-2 text-xs font-medium" aria-live="polite">
         <SettingsMetaBadge variant="primary">
           {t('module.system.stats', {
             enabled: moduleStats.enabled,

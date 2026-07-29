@@ -44,7 +44,7 @@ export function QuestionTypeAnswerFields({
 
     return (
       <div className="space-y-3 sm:col-span-2">
-        <p className="text-[11px] text-muted-foreground">{t('questionBank.fillBlankHint')}</p>
+        <p className="text-xs text-muted-foreground">{t('questionBank.fillBlankHint')}</p>
         <span className={FORM_LABEL}>{t('questionBank.blankAnswers')}</span>
         <div className="space-y-2">
           {blanks.map((blank, index) => (
@@ -115,7 +115,7 @@ export function QuestionTypeAnswerFields({
                 type="button"
                 variant="outline"
                 onClick={() => syncPairs(pairs.filter((_, i) => i !== index))}
-                className="flex min-h-11 items-center justify-center gap-1 self-end rounded-lg border border-border px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-destructive"
+                className="flex min-h-11 items-center justify-center gap-1 self-end rounded-lg border border-border px-2 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-destructive"
                 aria-label={t('questionBank.removeMatchingPair', { n: index + 1 })}
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden />
@@ -157,7 +157,7 @@ export function QuestionTypeAnswerFields({
         <span className={FORM_LABEL}>{t('questionBank.orderingItems')}</span>
         {items.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
-            <span className="w-6 flex-shrink-0 text-center text-[11px] font-bold text-muted-foreground">{index + 1}</span>
+            <span className="w-6 flex-shrink-0 text-center text-xs font-bold text-muted-foreground">{index + 1}</span>
             <Input
               className={FORM_INPUT}
               value={item}

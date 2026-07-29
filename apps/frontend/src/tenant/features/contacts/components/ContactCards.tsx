@@ -92,7 +92,7 @@ export default function ContactCards({
               {allSelected ? t("contacts.deselect") : t("contacts.table.selectAll")}
             </label>
           </div>
-          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground bg-muted/60 px-2.5 py-1 rounded-full border border-border/10">
+          <span className="text-xs font-black uppercase tracking-wider text-muted-foreground bg-muted/60 px-2.5 py-1 rounded-full border border-border/10">
             {contacts.length} {contacts.length === 1 ? t("contacts.form.contact") : t("contacts.table.contacts")}
           </span>
         </div>

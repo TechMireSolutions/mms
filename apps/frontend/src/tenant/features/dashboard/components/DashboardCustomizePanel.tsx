@@ -150,7 +150,7 @@ export default function DashboardCustomizePanel({
               <p className="font-bold text-foreground">
                 {t('dashboard.pinnedCharts', { count: pinnedDashboardWidgetCount })}
               </p>
-              <p className="text-[10px] text-muted-foreground/80 font-semibold">
+              <p className="text-xs text-muted-foreground/80 font-semibold">
                 {t('dashboard.totalWidgets', { count: customWidgets.length })}
               </p>
             </div>
@@ -180,7 +180,7 @@ export default function DashboardCustomizePanel({
                         <p className="text-xs font-bold text-foreground leading-tight truncate">
                           {resolveWidgetTitle(widget, t)}
                         </p>
-                        <p className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider capitalize truncate">
+                        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider capitalize truncate">
                           {getCollectionLabel(
                             widget.collection,
                             METADATA_FIELDS[widget.collection]?.name || widget.collection,
@@ -220,7 +220,7 @@ export default function DashboardCustomizePanel({
             <Button
               variant="outline"
               onClick={() => onOpenWidgetBuilder('kpi', null)}
-              className="w-full flex items-center justify-center gap-1.5 py-3.5 rounded-xl border border-dashed border-border/80 hover:border-primary/50 text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-primary transition-all bg-card/10 hover:bg-primary/5 shadow-none h-auto cursor-pointer"
+              className="w-full flex items-center justify-center gap-1.5 py-3.5 rounded-xl border border-dashed border-border/80 hover:border-primary/50 text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-primary transition-all bg-card/10 hover:bg-primary/5 shadow-none h-auto cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               {t('dashboard.createWidget')}

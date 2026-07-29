@@ -87,7 +87,7 @@ export function SessionsSettings(): React.JSX.Element {
             <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
               <Calendar className="w-3.5 h-3.5 text-primary" />
             </div>
-            <h3 className="text-[13px] font-bold text-foreground">{t("sessions.settings.title")}</h3>
+            <h3 className="text-sm font-bold text-foreground">{t("sessions.settings.title")}</h3>
           </div>
 
           {showPrefs && (
@@ -172,8 +172,8 @@ export function SessionsSettings(): React.JSX.Element {
 
                 <div className="py-3 border-t border-border mt-3 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-[13px] font-semibold text-foreground">{t("sessions.settings.defaultViewLayout")}</p>
-                    <p className="text-[11px] text-muted-foreground">{t("sessions.settings.defaultViewLayoutHint")}</p>
+                    <p className="text-sm font-semibold text-foreground">{t("sessions.settings.defaultViewLayout")}</p>
+                    <p className="text-xs text-muted-foreground">{t("sessions.settings.defaultViewLayoutHint")}</p>
                   </div>
                   <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
                     <Button

@@ -73,7 +73,7 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
         <Button
           type="button"
           onClick={handlePrint}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-[12px] font-semibold hover:bg-primary/90"
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90"
         >
           <Printer className="w-3.5 h-3.5" aria-hidden="true" /> {t("examinations.certificatePreview.printDownload")}
         </Button>

@@ -71,10 +71,10 @@ export default function QuickActionsPanel({ dashboardRole }: QuickActionsPanelPr
                   <Icon className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} />
                 </div>
                 <div>
-                  <p className="text-[13px] font-bold text-foreground group-hover/item:text-primary transition-colors m-0 leading-tight">
+                  <p className="text-sm font-bold text-foreground group-hover/item:text-primary transition-colors m-0 leading-tight">
                     {label}
                   </p>
-                  <p className="text-[11px] text-muted-foreground/80 mt-1 m-0 leading-normal transition-colors group-hover/item:text-muted-foreground">
+                  <p className="text-xs text-muted-foreground/80 mt-1 m-0 leading-normal transition-colors group-hover/item:text-muted-foreground">
                     {t(quickAction.descKey)}
                   </p>
                 </div>

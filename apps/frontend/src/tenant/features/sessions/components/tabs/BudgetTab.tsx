@@ -144,7 +144,7 @@ export function BudgetTab({ session, onUpdate, canWrite }: BudgetTabProps) {
 
   return (
     <div className="space-y-5">
-      <section aria-label={t("sessions.budget.summaryAriaLabel")} className="grid grid-cols-3 gap-3">
+      <section aria-label={t("sessions.budget.summaryAriaLabel")} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {[
           { label: t("sessions.budget.totalIncome"), value: totalIncome, icon: TrendingUp, color: "text-success", bg: "bg-success/10" },
           { label: t("sessions.budget.totalExpenses"), value: totalExpenses, icon: TrendingDown, color: "text-destructive", bg: "bg-destructive/10" },
@@ -154,8 +154,8 @@ export function BudgetTab({ session, onUpdate, canWrite }: BudgetTabProps) {
             <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center mb-2`} aria-hidden="true">
               <stat.icon className={`w-4 h-4 ${stat.color}`} style={{ color: stat.color.includes("success") ? "hsl(var(--success))" : "hsl(var(--destructive))" }} />
             </div>
-            <p className={`text-[16px] font-bold ${stat.color} m-0`}>{formatMoney(stat.value, session.currency)}</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5 m-0">{stat.label}</p>
+            <p className={`text-base font-bold ${stat.color} m-0`}>{formatMoney(stat.value, session.currency)}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 m-0">{stat.label}</p>
           </article>
         ))}
       </section>
@@ -180,11 +180,11 @@ export function BudgetTab({ session, onUpdate, canWrite }: BudgetTabProps) {
             budget.incomes.map((incomeEntry: BudgetIncome, index: number) => (
               <article key={incomeEntry.id} className={`flex items-center gap-3 px-4 py-3 ${index > 0 ? "border-t border-border/50" : ""}`}>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium text-foreground m-0">{incomeEntry.category}</p>
-                  {incomeEntry.note && <p className="text-[11px] text-muted-foreground truncate m-0">{incomeEntry.note}</p>}
+                  <p className="text-sm font-medium text-foreground m-0">{incomeEntry.category}</p>
+                  {incomeEntry.note && <p className="text-xs text-muted-foreground truncate m-0">{incomeEntry.note}</p>}
                 </div>
-                 <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{formatDate(incomeEntry.date)}</p>
-                 <p className="text-[13px] font-bold text-success flex-shrink-0 m-0">{formatMoney(incomeEntry.amount, session.currency)}</p>
+                 <p className="text-sm text-muted-foreground flex-shrink-0 m-0">{formatDate(incomeEntry.date)}</p>
+                 <p className="text-sm font-bold text-success flex-shrink-0 m-0">{formatMoney(incomeEntry.amount, session.currency)}</p>
                 {canWrite && <Button aria-label={t("sessions.budget.deleteIncomeNamed", { name: incomeEntry.category })} onClick={() => setDeleteTarget({ type: "income", entry: incomeEntry })} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0" variant="ghost" size="icon">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>}
@@ -214,11 +214,11 @@ export function BudgetTab({ session, onUpdate, canWrite }: BudgetTabProps) {
             budget.expenses.map((expenseEntry: BudgetExpense, index: number) => (
               <article key={expenseEntry.id} className={`flex items-center gap-3 px-4 py-3 ${index > 0 ? "border-t border-border/50" : ""}`}>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium text-foreground m-0">{expenseEntry.category}</p>
-                  {expenseEntry.note && <p className="text-[11px] text-muted-foreground truncate m-0">{expenseEntry.note}</p>}
+                  <p className="text-sm font-medium text-foreground m-0">{expenseEntry.category}</p>
+                  {expenseEntry.note && <p className="text-xs text-muted-foreground truncate m-0">{expenseEntry.note}</p>}
                 </div>
-                 <p className="text-[12px] text-muted-foreground flex-shrink-0 m-0">{formatDate(expenseEntry.date)}</p>
-                 <p className="text-[13px] font-bold text-destructive flex-shrink-0 m-0">{formatMoney(expenseEntry.amount, session.currency)}</p>
+                 <p className="text-sm text-muted-foreground flex-shrink-0 m-0">{formatDate(expenseEntry.date)}</p>
+                 <p className="text-sm font-bold text-destructive flex-shrink-0 m-0">{formatMoney(expenseEntry.amount, session.currency)}</p>
                 {canWrite && <Button aria-label={t("sessions.budget.deleteExpenseNamed", { name: expenseEntry.category })} onClick={() => setDeleteTarget({ type: "expense", entry: expenseEntry })} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0" variant="ghost" size="icon">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>}

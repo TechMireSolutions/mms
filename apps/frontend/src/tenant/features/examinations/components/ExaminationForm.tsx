@@ -140,10 +140,10 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
             <div className="sm:col-span-2">
               <Field label={t("examinations.form.fields.name")} required error={errors.name}>
                 <div className="relative flex items-center group/input">
-                  <BookOpen className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                  <BookOpen className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                   <Input
                     id="exam-name"
-                    className={`${FORM_INPUT} pl-10`}
+                    className={`${FORM_INPUT} ps-10`}
                     value={examDraft.name || ""}
                     onChange={(event) => updateDraft({ name: event.target.value })}
                     placeholder={t("examinations.form.placeholders.name")}
@@ -181,11 +181,11 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
 
             <Field label={t("examinations.form.fields.totalMarks")}>
               <div className="relative flex items-center group/input">
-                <Trophy className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <Trophy className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
                   id="exam-total"
                   type="number"
-                  className={`${FORM_INPUT} pl-10`}
+                  className={`${FORM_INPUT} ps-10`}
                   value={examDraft.totalMarks ?? 100}
                   onChange={(event) => updateDraft({ totalMarks: Number(event.target.value) })}
                   min={1}
@@ -196,11 +196,11 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
 
             <Field label={t("examinations.form.fields.passingMarks")} error={errors.passingMarks}>
               <div className="relative flex items-center group/input">
-                <CheckCircle2 className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                <CheckCircle2 className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
                   id="exam-passing"
                   type="number"
-                  className={`${FORM_INPUT} pl-10`}
+                  className={`${FORM_INPUT} ps-10`}
                   value={examDraft.passingMarks ?? 50}
                   onChange={(event) => updateDraft({ passingMarks: Number(event.target.value) })}
                   min={1}
@@ -213,11 +213,11 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
             <div className="sm:col-span-2">
               <Field label={t("examinations.form.fields.durationMinutes")}>
                 <div className="relative flex items-center group/input">
-                  <Clock className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                  <Clock className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                   <Input
                     id="exam-duration"
                     type="number"
-                    className={`${FORM_INPUT} pl-10`}
+                    className={`${FORM_INPUT} ps-10`}
                     value={examDraft.duration ?? 60}
                     onChange={(event) => updateDraft({ duration: Number(event.target.value) })}
                     min={5}
@@ -252,7 +252,7 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
                           const updatedClassIds = classIds.includes(sessionClass.id) ? classIds.filter((classId) => classId !== sessionClass.id) : [...classIds, sessionClass.id];
                           updateDraft({ classIds: updatedClassIds });
                         }}
-                        className={`px-3 py-1.5 rounded-lg border text-[12px] font-semibold transition-all ${
+                        className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-all ${
                           active
                             ? "bg-primary text-primary-foreground border-primary"
                             : "border-border bg-muted hover:bg-muted/80 text-foreground"

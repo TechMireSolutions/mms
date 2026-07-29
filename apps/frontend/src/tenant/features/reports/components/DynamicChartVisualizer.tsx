@@ -549,7 +549,7 @@ export default function DynamicChartVisualizer({
         <div className="h-[250px] flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border/50 rounded-3xl bg-card/20">
           <Info className="w-6 h-6 mb-2 opacity-40 animate-bounce" />
           <p className="text-xs font-bold text-foreground">{t("reports.visualizer.noData")}</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{t("reports.visualizer.noDataSubtitle")}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{t("reports.visualizer.noDataSubtitle")}</p>
         </div>
       );
     }
@@ -676,14 +676,14 @@ export default function DynamicChartVisualizer({
             </div>
             <div>
               <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">{t("reports.visualizer.configTitle")}</h4>
-              <p className="text-[9px] text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("reports.visualizer.configSubtitle")}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("reports.visualizer.configSubtitle")}</p>
             </div>
           </div>
 
           <div className="space-y-3.5">
             {/* Widget Title */}
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.chartTitleLabel")}</label>
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.chartTitleLabel")}</label>
               <Input
                 type="text"
                 value={title}
@@ -696,7 +696,7 @@ export default function DynamicChartVisualizer({
             {/* Collection source selection */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.dataCollection")}</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.dataCollection")}</label>
                 <FormSelect
                   value={collectionKey}
                   onChange={(value) => setCollectionKey(value as keyof typeof METADATA_CONFIGS)}
@@ -713,7 +713,7 @@ export default function DynamicChartVisualizer({
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.xAxisDimension")}</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.xAxisDimension")}</label>
                 <FormSelect
                   value={xAxisField}
                   onChange={setXAxisField}
@@ -729,7 +729,7 @@ export default function DynamicChartVisualizer({
             {/* Formula operation & target */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.operation")}</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.operation")}</label>
                 <FormSelect
                   value={operation}
                   onChange={(value) => setOperation(value as "count" | "sum" | "avg" | "min" | "max")}
@@ -749,7 +749,7 @@ export default function DynamicChartVisualizer({
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.targetField")}</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.targetField")}</label>
                 <FormSelect
                   disabled={operation === "count"}
                   value={targetField}
@@ -770,7 +770,7 @@ export default function DynamicChartVisualizer({
             {/* Visualizer Type & Color Palette Theme */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.chartType")}</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.chartType")}</label>
                 <FormSelect
                   value={chartType}
                   onChange={(value) => setChartType(value as "bar" | "line" | "area" | "pie" | "radar")}
@@ -787,9 +787,9 @@ export default function DynamicChartVisualizer({
 
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.colorPalette")}</label>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.colorPalette")}</label>
                   {isColorblindSafeChartPalette(activePalette) && (
-                    <span className="text-[8px] bg-success/15 text-success px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest leading-none">{t('charts.accessibleBadge')}</span>
+                    <span className="text-xs bg-success/15 text-success px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest leading-none">{t('charts.accessibleBadge')}</span>
                   )}
                 </div>
                 <FormSelect
@@ -806,23 +806,23 @@ export default function DynamicChartVisualizer({
 
             {/* Styling options */}
             <div className="pt-2">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-2">{t("reports.visualizer.displayCustomizations")}</span>
-              <div className="grid grid-cols-3 gap-2">
-                <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-[11px] font-semibold text-foreground">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">{t("reports.visualizer.displayCustomizations")}</span>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-xs font-semibold text-foreground">
                   <Checkbox
                     checked={showGrid}
                     onCheckedChange={(checked) => setShowGrid(Boolean(checked))}
                   />
                   {t("reports.visualizer.gridLines")}
                 </label>
-                <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-[11px] font-semibold text-foreground">
+                <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-xs font-semibold text-foreground">
                   <Checkbox
                     checked={showLegend}
                     onCheckedChange={(checked) => setShowLegend(Boolean(checked))}
                   />
                   {t("reports.visualizer.legends")}
                 </label>
-                <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-[11px] font-semibold text-foreground">
+                <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-xs font-semibold text-foreground">
                   <Checkbox
                     checked={showTooltip}
                     onCheckedChange={(checked) => setShowTooltip(Boolean(checked))}
@@ -843,7 +843,7 @@ export default function DynamicChartVisualizer({
               </div>
               <div>
                 <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">{t("reports.visualizer.queryFilters")}</h4>
-                <p className="text-[9px] text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("reports.visualizer.filtersSubtitle")}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("reports.visualizer.filtersSubtitle")}</p>
               </div>
             </div>
             <Button
@@ -925,7 +925,7 @@ export default function DynamicChartVisualizer({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-4">
             <div className="space-y-1">
               <h3 className="text-base font-black text-foreground tracking-tight leading-none">{title}</h3>
-              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">
+              <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">
                 {(() => {
                   const collName = getCollectionLabel(collectionKey, activeMeta.name, t);
                   const activeField = activeMeta.fields.find((f) => f.value === xAxisField);
@@ -993,7 +993,7 @@ export default function DynamicChartVisualizer({
                 {showPdfSettings && (
                   <div className="absolute end-0 bottom-full mb-2 bg-card border border-border rounded-2xl p-4 shadow-xl z-50 flex flex-col gap-3.5 min-w-[200px] backdrop-blur-xl">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.visualizer.pdfOrientation")}</label>
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t("reports.visualizer.pdfOrientation")}</label>
                       <div className="flex gap-1 p-1 bg-muted rounded-xl">
                         <Button 
                           type="button"
@@ -1014,7 +1014,7 @@ export default function DynamicChartVisualizer({
                       </div>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t("reports.visualizer.pdfPageSize")}</label>
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t("reports.visualizer.pdfPageSize")}</label>
                       <FormSelect 
                         value={pdfFormat}
                         onChange={setPdfFormat}
@@ -1095,21 +1095,21 @@ export default function DynamicChartVisualizer({
 
           {/* Interactive KPI overview boxes */}
           {processedData.length > 0 && (
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="p-3 border border-border bg-card/30 rounded-2xl flex flex-col justify-between">
-                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.totalAggregated")}</span>
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.totalAggregated")}</span>
                 <span className="text-sm font-black text-foreground mt-1 leading-none">
                   {formatNumber(totalValue)}
                 </span>
               </div>
               <div className="p-3 border border-border bg-card/30 rounded-2xl flex flex-col justify-between">
-                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.avgPerGroup")}</span>
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.avgPerGroup")}</span>
                 <span className="text-sm font-black text-foreground mt-1 leading-none">
                   {formatNumber(avgGroupValue)}
                 </span>
               </div>
               <div className="p-3 border border-border bg-card/30 rounded-2xl flex flex-col justify-between">
-                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.topGroup")}</span>
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.topGroup")}</span>
                 <span className="text-sm font-black text-foreground mt-1 leading-none truncate block max-w-full">
                   {topGroup}
                 </span>
@@ -1142,7 +1142,7 @@ export default function DynamicChartVisualizer({
                 >
                   <div className="border border-border/60 bg-card/25 rounded-2xl overflow-hidden mt-1 max-h-[220px] overflow-x-auto overflow-y-auto">
                     <table className="w-full text-xs text-left">
-                      <thead className="bg-muted/50 border-b border-border/50 text-[10px] font-black uppercase text-muted-foreground tracking-wider">
+                      <thead className="bg-muted/50 border-b border-border/50 text-xs font-black uppercase text-muted-foreground tracking-wider">
                         <tr>
                           <th className="px-4 py-2.5">{t("reports.visualizer.xAxisCategory")}</th>
                           <th className="px-4 py-2.5">{t("reports.visualizer.aggregatedValue", { op: operation.toUpperCase() })}</th>

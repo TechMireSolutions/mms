@@ -114,11 +114,11 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
                 />
                 <TranslatedFormMessage messageKey={form.formState.errors.contactId?.message} />
                 {user.loginEmail ? (
-                  <p className="mt-2 text-[11px] text-muted-foreground">
+                  <p className="mt-2 text-xs text-muted-foreground">
                     {t('users.fieldLoginEmail')}: {user.loginEmail}
                   </p>
                 ) : null}
-                <p className="mt-1 text-[11px] text-muted-foreground">{t('users.loginEmailNote')}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{t('users.loginEmailNote')}</p>
               </FormItem>
             )}
           />

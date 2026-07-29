@@ -82,27 +82,27 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
   return (
     <Card className="overflow-hidden">
       {/* Header */}
-      <div className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors">
+      <div className="w-full flex min-h-11 items-center justify-between gap-2 px-4 py-3 hover:bg-muted/50 transition-colors">
         <Button
           onClick={() => setOpen((isOpen) => !isOpen)}
-          className="h-auto flex-1 justify-start gap-2 p-0 rounded-none hover:bg-transparent shadow-none"
+          className="min-h-11 h-auto flex-1 min-w-0 justify-start gap-2 px-1 rounded-none hover:bg-transparent shadow-none"
           variant="ghost"
           type="button"
           aria-expanded={open}
         >
-          <Filter className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <span className="text-sm font-semibold text-foreground">{t("reports.filters.title")}</span>
+          <Filter className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <span className="text-sm font-semibold text-foreground truncate">{t("reports.filters.title")}</span>
           {activeCount > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
+            <span className="px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-bold">
               {activeCount}
             </span>
           )}
         </Button>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1">
           {activeCount > 0 && (
             <Button
               onClick={reset}
-              className="h-auto p-0 text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1 shadow-none"
+              className="min-h-11 px-2 text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1 shadow-none"
               variant="ghost"
               type="button"
             >
@@ -111,7 +111,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
           )}
           <Button
             onClick={() => setOpen((isOpen) => !isOpen)}
-            className="h-auto p-0 shadow-none hover:bg-transparent"
+            className="min-h-11 min-w-11 px-0 shadow-none hover:bg-transparent"
             variant="ghost"
             type="button"
             aria-expanded={open}
@@ -135,8 +135,8 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
             <div className="px-4 pb-4 flex flex-wrap gap-4 border-t border-border/50 pt-4">
               {/* Session */}
               {allowed.includes("session") && (
-                <div className="flex flex-col gap-1 text-left min-w-[140px] flex-1">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.session")}</label>
+                <div className="flex flex-col gap-1 text-left min-w-[8.75rem] flex-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.session")}</label>
                   <FormSelect
                     value={filters.session}
                     onChange={(val) => set("session", val)}
@@ -148,8 +148,8 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
 
               {/* Class */}
               {allowed.includes("class") && (
-                <div className="flex flex-col gap-1 text-left min-w-[140px] flex-1">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.class")}</label>
+                <div className="flex flex-col gap-1 text-left min-w-[8.75rem] flex-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.class")}</label>
                   <FormSelect
                     value={filters.class}
                     onChange={(val) => set("class", val)}
@@ -161,8 +161,8 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
 
               {/* Status */}
               {allowed.includes("status") && (
-                <div className="flex flex-col gap-1 text-left min-w-[120px] flex-1">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.status")}</label>
+                <div className="flex flex-col gap-1 text-left min-w-[7.5rem] flex-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.status")}</label>
                   <FormSelect
                     value={filters.status}
                     onChange={(val) => set("status", val)}
@@ -179,8 +179,8 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
 
               {/* Date From */}
               {allowed.includes("dateFrom") && (
-                <div className="flex flex-col gap-1 text-left min-w-[130px] flex-1">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1"><Calendar className="w-3 h-3" />{t("reports.filters.from")}</label>
+                <div className="flex flex-col gap-1 text-left min-w-[8.125rem] flex-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1"><Calendar className="w-3 h-3" />{t("reports.filters.from")}</label>
                   <DatePicker
                     value={filters.dateFrom}
                     onChange={(value) => set("dateFrom", value)}
@@ -190,8 +190,8 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
 
               {/* Date To */}
               {allowed.includes("dateTo") && (
-                <div className="flex flex-col gap-1 text-left min-w-[130px] flex-1">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1"><Calendar className="w-3 h-3" />{t("reports.filters.to")}</label>
+                <div className="flex flex-col gap-1 text-left min-w-[8.125rem] flex-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1"><Calendar className="w-3 h-3" />{t("reports.filters.to")}</label>
                   <DatePicker
                     value={filters.dateTo}
                     onChange={(value) => set("dateTo", value)}
@@ -201,8 +201,8 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
 
               {/* Student */}
               {allowed.includes("student") && (
-                <div className="flex flex-col gap-1 text-left min-w-[150px] flex-1">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.student")}</label>
+                <div className="flex flex-col gap-1 text-left min-w-[9.375rem] flex-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.student")}</label>
                   <Input
                     type="text"
                     value={filters.student}

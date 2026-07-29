@@ -187,20 +187,20 @@ export function DenominationsManager({ denoms, onUpdate, canWrite = true }: Deno
             <header className="relative mb-3 h-16 rounded-xl flex items-center gap-3 px-4 text-primary-foreground shadow-md overflow-hidden" style={{ background: `linear-gradient(135deg, ${denomination.color}, color-mix(in srgb, ${denomination.color} 60%, transparent))` }}>
               <span className="text-3xl" aria-hidden="true">{denomination.icon}</span>
               <div>
-                <h3 className="text-[13px] font-bold m-0">{denomination.name}</h3>
-                <p className="text-[11px] opacity-80 m-0">{t("hasanat.denominations.pointsLabel", { points: denomination.points })}</p>
+                <h3 className="text-sm font-bold m-0">{denomination.name}</h3>
+                <p className="text-xs opacity-80 m-0">{t("hasanat.denominations.pointsLabel", { points: denomination.points })}</p>
               </div>
               {!denomination.active && (
-                <span className="absolute top-2 end-2 text-[9px] font-bold bg-background/30 text-primary-foreground px-1.5 py-0.5 rounded" aria-label={t("hasanat.denominations.inactive")}>{t("hasanat.denominations.inactive")}</span>
+                <span className="absolute top-2 end-2 text-xs font-bold bg-background/30 text-primary-foreground px-1.5 py-0.5 rounded" aria-label={t("hasanat.denominations.inactive")}>{t("hasanat.denominations.inactive")}</span>
               )}
             </header>
 
-            <p className="text-[12px] text-muted-foreground mb-3">{denomination.description || t("hasanat.denominations.noDescription")}</p>
+            <p className="text-sm text-muted-foreground mb-3">{denomination.description || t("hasanat.denominations.noDescription")}</p>
 
             <footer className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-foreground px-2 py-1 rounded-lg bg-muted">{t("hasanat.denominations.ptsShort", { points: denomination.points })}</span>
+              <span className="text-xs font-bold text-foreground px-2 py-1 rounded-lg bg-muted">{t("hasanat.denominations.ptsShort", { points: denomination.points })}</span>
               {canWrite && (
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
                   <Button variant="ghost" type="button" size="icon" onClick={() => toggleActive(denomination.id)} className="rounded-lg hover:bg-muted text-muted-foreground" title={denomination.active ? t("hasanat.denominations.deactivate") : t("hasanat.denominations.activate")} aria-label={denomination.active ? t("hasanat.denominations.deactivate") : t("hasanat.denominations.activate")}>
                     {denomination.active ? <ToggleRight className="w-4 h-4 text-primary" aria-hidden="true" /> : <ToggleLeft className="w-4 h-4" aria-hidden="true" />}
                   </Button>

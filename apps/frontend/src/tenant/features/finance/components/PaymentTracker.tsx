@@ -103,15 +103,15 @@ export function PaymentTracker({
         {Object.entries(paymentsByMethod).map(([method, amount]) => (
           <Card key={method} className="p-3">
             <StatusBadge status={method} config={methodConfig} size="sm" />
-            <p className="text-[15px] font-bold text-foreground mt-2 m-0">{formatCurrency(amount)}</p>
-            <p className="text-[10px] text-muted-foreground m-0">
+            <p className="text-base font-bold text-foreground mt-2 m-0">{formatCurrency(amount)}</p>
+            <p className="text-xs text-muted-foreground m-0">
               {t("finance.paymentCount", { count: payments.filter((payment) => payment.method === method).length })}
             </p>
           </Card>
         ))}
       </div>
       {canDelete && selectedIds.length > 0 && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
           <span className="text-sm font-medium">{t("finance.trash.selected", { count: selectedIds.length })}</span>
           <Button type="button" variant={showDeleted ? "outline" : "destructive"} onClick={() => setConfirmBulkOpen(true)}>
             {showDeleted ? <RotateCcw className="w-4 h-4" /> : <Trash2 className="w-4 h-4" />}
@@ -127,7 +127,7 @@ export function PaymentTracker({
             <h3 className="text-sm font-bold text-foreground m-0">{t("finance.paymentLog")}</h3>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[11px] font-semibold text-success">{t("finance.paymentTotal", { amount: formatCurrency(totalPaid) })}</span>
+            <span className="text-xs font-semibold text-success">{t("finance.paymentTotal", { amount: formatCurrency(totalPaid) })}</span>
             {columnCustomizer && (
               <ModuleColumnCustomizer
                 columnRegistry={columnCustomizer.columnRegistry}
@@ -152,37 +152,37 @@ export function PaymentTracker({
                   </th>
                 )}
                 {showDate && (
-                  <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.paymentDate")}
                   </ResizableTableHead>
                 )}
                 {showStudent && (
-                  <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.student")}
                   </ResizableTableHead>
                 )}
                 {showInvoice && (
-                  <ResizableTableHead columnKey="invoice" width={getColumnWidth?.("invoice")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="invoice" width={getColumnWidth?.("invoice")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.invoice")}
                   </ResizableTableHead>
                 )}
                 {showAmount && (
-                  <ResizableTableHead columnKey="amount" width={getColumnWidth?.("amount")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="amount" width={getColumnWidth?.("amount")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.amount")}
                   </ResizableTableHead>
                 )}
                 {showMethod && (
-                  <ResizableTableHead columnKey="method" width={getColumnWidth?.("method")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="method" width={getColumnWidth?.("method")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.method")}
                   </ResizableTableHead>
                 )}
                 {showReceivedBy && (
-                  <ResizableTableHead columnKey="receivedBy" width={getColumnWidth?.("receivedBy")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="receivedBy" width={getColumnWidth?.("receivedBy")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.receivedBy")}
                   </ResizableTableHead>
                 )}
                 {showNote && (
-                  <ResizableTableHead columnKey="note" width={getColumnWidth?.("note")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="note" width={getColumnWidth?.("note")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.note")}
                   </ResizableTableHead>
                 )}
@@ -211,16 +211,16 @@ export function PaymentTracker({
                       </td>
                     )}
                     {showDate && (
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">{formatDate(payment.date)}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{formatDate(payment.date)}</td>
                     )}
                     {showStudent && (
-                      <td className="px-4 py-3 text-[13px] font-semibold text-foreground whitespace-nowrap">{payment.studentName}</td>
+                      <td className="px-4 py-3 text-sm font-semibold text-foreground whitespace-nowrap">{payment.studentName}</td>
                     )}
                     {showInvoice && (
-                      <td className="px-4 py-3 text-[11px] font-mono text-muted-foreground">{payment.invoiceId}</td>
+                      <td className="px-4 py-3 text-xs font-mono text-muted-foreground">{payment.invoiceId}</td>
                     )}
                     {showAmount && (
-                      <td className="px-4 py-3 text-[13px] font-bold text-success whitespace-nowrap">{formatCurrency(payment.amount)}</td>
+                      <td className="px-4 py-3 text-sm font-bold text-success whitespace-nowrap">{formatCurrency(payment.amount)}</td>
                     )}
                     {showMethod && (
                       <td className="px-4 py-3">
@@ -228,10 +228,10 @@ export function PaymentTracker({
                       </td>
                     )}
                     {showReceivedBy && (
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground">{payment.receivedBy || "—"}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{payment.receivedBy || "—"}</td>
                     )}
                     {showNote && (
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground max-w-[160px] truncate">{payment.note || "—"}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground max-w-[160px] truncate">{payment.note || "—"}</td>
                     )}
                     {canDelete && (
                       <td className="px-3 py-3">

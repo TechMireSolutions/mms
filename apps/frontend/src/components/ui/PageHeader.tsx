@@ -23,18 +23,18 @@ export function PageHeader({
 }: PageHeaderProps): React.ReactElement {
   return (
     <div className="flex items-start justify-between gap-4 flex-wrap mb-1">
-      <div className="flex items-start gap-3">
+      <div className="flex min-w-0 items-start gap-3">
         {Icon && (
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
             <Icon className="w-4.5 h-4.5 text-primary" style={{ width: "18px", height: "18px" }} />
           </div>
         )}
-        <div>
+        <div className="min-w-0">
           {breadcrumb && (
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">{breadcrumb}</p>
           )}
-          <h1 className="text-xl font-bold text-foreground leading-tight">{title}</h1>
-          {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
+          <h1 className="text-xl font-bold text-foreground leading-tight break-words">{title}</h1>
+          {subtitle && <p className="text-sm text-muted-foreground mt-0.5 break-words">{subtitle}</p>}
         </div>
       </div>
       {actions && <div className="flex items-center gap-2 flex-wrap">{actions}</div>}

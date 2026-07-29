@@ -226,7 +226,7 @@ export default function Students() {
                   <Button
                     type="button"
                     variant="ghost"
-                    className={`flex items-center gap-2 px-3.5 min-h-[44px] rounded-xl border text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-2 px-3.5 min-h-11 rounded-xl border text-sm font-medium transition-colors ${
                       studentFilterStatus.length > 0
                         ? "border-primary/30 bg-primary/5 text-primary"
                         : "border-border bg-card text-foreground hover:bg-muted"
@@ -234,7 +234,7 @@ export default function Students() {
                   >
                     <Filter className="w-3.5 h-3.5" /> {t("students.columns.status")}
                     {studentFilterStatus.length > 0 && (
-                      <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                      <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
                         {studentFilterStatus.length}
                       </span>
                     )}
@@ -273,7 +273,7 @@ export default function Students() {
                   <Button
                     type="button"
                     variant="ghost"
-                    className={`flex items-center gap-2 px-3.5 min-h-[44px] rounded-xl border text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-2 px-3.5 min-h-11 rounded-xl border text-sm font-medium transition-colors ${
                       studentFilterGender
                         ? "border-primary/30 bg-primary/5 text-primary"
                         : "border-border bg-card text-foreground hover:bg-muted"
@@ -306,7 +306,7 @@ export default function Students() {
                   variant="ghost"
                   onClick={() => setShowDeleted((previous) => !previous)}
                   aria-pressed={showDeleted}
-                  className={`flex items-center gap-1.5 px-3 min-h-[44px] rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
+                  className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
                     showDeleted
                       ? "border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10"
                       : "border-border bg-card text-muted-foreground hover:text-foreground"

@@ -235,11 +235,11 @@ export function WidgetBuilder({
       <div className="pb-3 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
           <h4 className="text-sm font-bold text-foreground font-sans">{t("reports.widgets.builder.title")}</h4>
-          <p className="text-[11px] text-muted-foreground">{t("reports.widgets.builder.subtitle")}</p>
+          <p className="text-xs text-muted-foreground">{t("reports.widgets.builder.subtitle")}</p>
         </div>
         <div className="flex items-start gap-2 bg-primary/10 border border-primary/20 p-2.5 rounded-xl max-w-sm">
           <Info className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-          <p className="text-[9.5px] text-muted-foreground leading-normal">
+          <p className="text-xs text-muted-foreground leading-normal">
             <span className="font-black text-primary uppercase block mb-0.5">{t("reports.widgets.builder.singleMetricRule")}</span>
             {t("reports.widgets.builder.singleMetricRuleDesc")}
           </p>
@@ -252,7 +252,7 @@ export function WidgetBuilder({
           
           {/* Visualizer Type selectors */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-foreground/80 uppercase tracking-wider block">{t("reports.widgets.builder.focusType")}</label>
+            <label className="text-xs font-black text-foreground/80 uppercase tracking-wider block">{t("reports.widgets.builder.focusType")}</label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {(() => {
                 const base = [
@@ -301,7 +301,7 @@ export function WidgetBuilder({
                     }`}
                   >
                     <span className="text-xs font-black uppercase block">{widgetTypeOption.label}</span>
-                    <span className="text-[9px] text-muted-foreground block mt-1 leading-none">{widgetTypeOption.desc}</span>
+                    <span className="text-xs text-muted-foreground block mt-1 leading-none">{widgetTypeOption.desc}</span>
                   </Button>
                 );
               })}
@@ -492,14 +492,14 @@ export function WidgetBuilder({
 
                     <div className="space-y-1 col-span-1 sm:col-span-2">
                       {trendType === "database" ? (
-                        <p className="text-[10px] text-muted-foreground italic leading-normal bg-primary/5 p-3 rounded-xl border border-primary/10">
+                        <p className="text-xs text-muted-foreground italic leading-normal bg-primary/5 p-3 rounded-xl border border-primary/10">
                           ⚡ {t("reports.widgets.builder.dynamicModeDesc")}
                         </p>
                       ) : (
                         <>
                           <div className="flex justify-between items-center select-none">
-                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.widgets.builder.manualTrend")}</label>
-                            <span className={`text-[11px] font-black px-1.5 py-0.5 rounded-full ${
+                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.widgets.builder.manualTrend")}</label>
+                            <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${
                               trend > 0 ? "bg-success/20 text-success" : trend < 0 ? "bg-destructive/20 text-destructive" : "bg-muted text-muted-foreground"
                             }`}>
                               {trend > 0 ? "+" : ""}{trend}%
@@ -634,7 +634,7 @@ export function WidgetBuilder({
               {thresholdEnabled && (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-fade-in text-left">
                   <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.triggerCondition")}</label>
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.triggerCondition")}</label>
                     <FormSelect
                       value={thresholdCondition}
                       onChange={(value) => setThresholdCondition(value as "lt" | "gt" | "equals")}
@@ -647,7 +647,7 @@ export function WidgetBuilder({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.thresholdValue")}</label>
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.thresholdValue")}</label>
                     <Input
                       type="number"
                       value={thresholdValue}
@@ -657,7 +657,7 @@ export function WidgetBuilder({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.alertColor")}</label>
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.alertColor")}</label>
                     <FormSelect
                       value={thresholdColor}
                       onChange={(value) => setThresholdColor(value as "red" | "amber" | "yellow")}
@@ -711,17 +711,17 @@ export function WidgetBuilder({
           {widgetType === "card" && (
             <div className="space-y-2 pt-3 border-t border-border/45 relative z-10">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
                   {t("reports.widgets.builder.iconSelector")}
                 </label>
                 <div className="relative max-w-xs w-full">
-                  <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground pointer-events-none" style={{ width: 14, height: 14 }} />
+                  <Search className="absolute start-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground pointer-events-none" style={{ width: 14, height: 14 }} />
                   <Input
                     type="text"
                     placeholder={t("reports.widgets.builder.searchIcons")}
                     value={iconSearch}
                     onChange={(event) => setIconSearch(event.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 text-[11px] rounded-lg border border-border bg-card/20 backdrop-blur-md text-foreground focus:ring-1 focus:ring-primary/20 transition-all font-semibold animate-fade-in min-h-11"
+                    className="w-full ps-8 pr-3 py-1.5 text-xs rounded-lg border border-border bg-card/20 backdrop-blur-md text-foreground focus:ring-1 focus:ring-primary/20 transition-all font-semibold animate-fade-in min-h-11"
                   />
                 </div>
               </div>
@@ -733,7 +733,7 @@ export function WidgetBuilder({
                     type="button"
                     variant="outline"
                     onClick={() => setActiveIconTab(tab)}
-                    className={`px-2 rounded-lg text-[9px] font-bold uppercase tracking-wider border shadow-none ${
+                    className={`px-2 rounded-lg text-xs font-bold uppercase tracking-wider border shadow-none ${
                       activeIconTab === tab
                         ? "bg-primary/10 border-primary/30 text-primary"
                         : "bg-card/30 border-border/50 text-muted-foreground hover:text-foreground hover:bg-card/50"
@@ -759,7 +759,7 @@ export function WidgetBuilder({
                     return ICON_CATEGORIES[activeIconTab]?.includes(name) || false;
                   });
                   if (filteredIcons.length === 0) {
-                    return <p className="text-[10px] text-muted-foreground italic col-span-full py-2 text-center font-sans">{t("reports.widgets.builder.noIconsFound")}</p>;
+                    return <p className="text-xs text-muted-foreground italic col-span-full py-2 text-center font-sans">{t("reports.widgets.builder.noIconsFound")}</p>;
                   }
                   return filteredIcons.map((iconName) => {
                     const Icon = ICONS_LIST[iconName];
@@ -792,13 +792,13 @@ export function WidgetBuilder({
         <div className="p-4 rounded-2xl border border-border bg-card/10 backdrop-blur-xl flex flex-col justify-between relative min-h-[350px]">
           <div className="space-y-4">
             <div className="flex items-center justify-between text-left">
-              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">{t("reports.widgets.builder.testerPreview")}</span>
-              <span className="text-[9px] text-primary font-bold">{scalerSize}x{scalerSize}px</span>
+              <span className="text-xs font-black text-muted-foreground uppercase tracking-widest block">{t("reports.widgets.builder.testerPreview")}</span>
+              <span className="text-xs text-primary font-bold">{scalerSize}x{scalerSize}px</span>
             </div>
 
             {/* Size slider widget scalability demonstrator */}
             <div className="space-y-1 bg-card/30 p-2.5 rounded-xl border border-border/50">
-              <label className="text-[8px] font-black uppercase tracking-wider text-muted-foreground block">{t("reports.widgets.builder.dragToScale")}</label>
+              <label className="text-xs font-black uppercase tracking-wider text-muted-foreground block">{t("reports.widgets.builder.dragToScale")}</label>
               <input
                 type="range"
                 min={100}
@@ -831,7 +831,7 @@ export function WidgetBuilder({
               type="button"
               variant="outline"
               onClick={onCancelEdit}
-              className="flex-1 h-auto py-2.5 rounded-xl border border-border bg-card/50 hover:bg-muted text-foreground font-black text-[11px] uppercase tracking-wider shadow-none"
+              className="flex-1 h-auto py-2.5 rounded-xl border border-border bg-card/50 hover:bg-muted text-foreground font-black text-xs uppercase tracking-wider shadow-none"
             >
               {t("reports.widgets.builder.cancel")}
             </Button>
@@ -871,7 +871,7 @@ export function WidgetBuilder({
                   role: (widgetType === "card" && mode === "dashboard") ? builderRole : undefined
                 });
               }}
-              className="flex-[2] h-auto py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-[11px] uppercase tracking-wider disabled:opacity-40 shadow-lg hover:shadow-primary/20 shadow-primary/10"
+              className="flex-[2] h-auto py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xs uppercase tracking-wider disabled:opacity-40 shadow-lg hover:shadow-primary/20 shadow-primary/10"
             >
               {editWidgetConfig ? t("reports.widgets.builder.updateWidget") : t("reports.widgets.builder.createWidget")}
             </Button>

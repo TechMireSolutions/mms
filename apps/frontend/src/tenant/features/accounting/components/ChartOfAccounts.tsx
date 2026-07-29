@@ -195,7 +195,7 @@ export function ChartOfAccounts({
               <h3 className="text-xs font-bold uppercase tracking-wide m-0">
                 <span aria-hidden="true">{ACCOUNT_TYPE_META[type]?.icon}</span> {t("accounting.coa.groupHeader", { type: t(`accounting.type.${type}` as AppTranslationKey), group: t(`accounting.reports.views.${ACCOUNT_TYPE_META[type]?.group}` as AppTranslationKey) })}
               </h3>
-              <span className="text-[10px] font-semibold text-muted-foreground">
+              <span className="text-xs font-semibold text-muted-foreground">
                 {t("accounting.coa.groupMeta", {
                   normal: ACCOUNT_TYPE_META[type]?.normalBalance === "debit" ? t("accounting.ledger.dr") : t("accounting.ledger.cr"),
                   count: accountTypeRows.length
@@ -208,31 +208,31 @@ export function ChartOfAccounts({
                 <thead className="bg-muted/40 border-b border-border">
                   <tr>
                     {showCode && (
-                      <ResizableTableHead columnKey="code" width={getColumnWidth?.("code")} onResize={onColumnResize} className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="code" width={getColumnWidth?.("code")} onResize={onColumnResize} className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase">
                         {t("accounting.columns.account.code")}
                       </ResizableTableHead>
                     )}
                     {showName && (
-                      <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase">
                         {t("accounting.columns.account.name")}
                       </ResizableTableHead>
                     )}
                     {showSubtype && (
-                      <ResizableTableHead columnKey="subtype" width={getColumnWidth?.("subtype")} onResize={onColumnResize} className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden md:table-cell">
+                      <ResizableTableHead columnKey="subtype" width={getColumnWidth?.("subtype")} onResize={onColumnResize} className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">
                         {t("accounting.columns.account.subtype")}
                       </ResizableTableHead>
                     )}
                     {showDescription && (
-                      <ResizableTableHead columnKey="description" width={getColumnWidth?.("description")} onResize={onColumnResize} className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase hidden lg:table-cell">
+                      <ResizableTableHead columnKey="description" width={getColumnWidth?.("description")} onResize={onColumnResize} className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase hidden lg:table-cell">
                         {t("accounting.columns.account.description")}
                       </ResizableTableHead>
                     )}
                     {showNormalBalance && (
-                      <ResizableTableHead columnKey="normalBalance" width={getColumnWidth?.("normalBalance")} onResize={onColumnResize} className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">
+                      <ResizableTableHead columnKey="normalBalance" width={getColumnWidth?.("normalBalance")} onResize={onColumnResize} className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase">
                         {t("accounting.columns.account.normalBalance")}
                       </ResizableTableHead>
                     )}
-                    <th scope="col" className="px-4 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">
+                    <th scope="col" className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground uppercase">
                       {t("accounting.columns.actions")}
                     </th>
                   </tr>
@@ -246,7 +246,7 @@ export function ChartOfAccounts({
                       {showName && (
                         <td className="px-4 py-2.5">
                           <span className="font-semibold text-foreground">{account.name}</span>
-                          {account.isActive === false && <span className="ml-2 text-[10px] text-muted-foreground font-semibold bg-muted px-1.5 py-0.5 rounded-full">{t("accounting.coa.inactive")}</span>}
+                          {account.isActive === false && <span className="ml-2 text-xs text-muted-foreground font-semibold bg-muted px-1.5 py-0.5 rounded-full">{t("accounting.coa.inactive")}</span>}
                         </td>
                       )}
                       {showSubtype && (

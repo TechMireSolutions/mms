@@ -120,7 +120,7 @@ export default function PlatformAdmins(): React.JSX.Element {
                           </div>
                         </div>
                         {admin.createdAt ? (
-                          <p className="text-[10px] text-muted-foreground/60 font-semibold pt-2 border-t border-border/40 mt-2">
+                          <p className="text-xs text-muted-foreground/60 font-semibold pt-2 border-t border-border/40 mt-2">
                             {t("platform.profileMemberSince")}: {formatDate(admin.createdAt)}
                           </p>
                         ) : null}
@@ -167,7 +167,7 @@ export default function PlatformAdmins(): React.JSX.Element {
                       required
                       value={name}
                       onChange={(event) => setName(event.target.value)}
-                      className="ps-9 min-h-[44px]"
+                      className="ps-9 min-h-11"
                       disabled={addAdmin.isPending}
                     />
                   </div>
@@ -185,7 +185,7 @@ export default function PlatformAdmins(): React.JSX.Element {
                       required
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
-                      className="ps-9 min-h-[44px]"
+                      className="ps-9 min-h-11"
                       disabled={addAdmin.isPending}
                     />
                   </div>

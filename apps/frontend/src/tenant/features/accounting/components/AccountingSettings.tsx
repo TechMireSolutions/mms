@@ -270,7 +270,7 @@ export function AccountingSettings({
         <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
           <BookOpen className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         </div>
-        <h3 id="accounting-settings-title" className="text-[13px] font-bold text-foreground">
+        <h3 id="accounting-settings-title" className="text-sm font-bold text-foreground">
           {showFields ? t("accounting.settings.titleFields") : t("accounting.settings.titlePreferences")}
         </h3>
       </div>
@@ -366,10 +366,10 @@ export function AccountingSettings({
                   <caption className="sr-only">{t("accounting.settings.fy.tableCaption")}</caption>
                   <thead className="bg-muted/50 border-b border-border">
                     <tr>
-                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.label")}</th>
-                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.period")}</th>
-                      <th scope="col" className="px-4 py-2 text-left text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.status")}</th>
-                      <th scope="col" className="px-4 py-2 text-right text-[11px] font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.actions")}</th>
+                      <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.label")}</th>
+                      <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.period")}</th>
+                      <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.status")}</th>
+                      <th scope="col" className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.actions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">

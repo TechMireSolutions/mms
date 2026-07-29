@@ -75,7 +75,7 @@ function StepIndicator({ step, t }: StepIndicatorProps): JSX.Element {
                }`}>
                 {done ? <Check className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
               </div>
-              <span className={`text-[10px] font-semibold whitespace-nowrap ${active ? "text-primary" : "text-muted-foreground"}`}>
+              <span className={`text-xs font-semibold whitespace-nowrap ${active ? "text-primary" : "text-muted-foreground"}`}>
                 {t(stepDefinition.labelKey)}
               </span>
             </div>
@@ -102,7 +102,7 @@ interface FieldErrorProps {
 function FieldError({ msg }: FieldErrorProps): JSX.Element | null {
   if (!msg) return null;
   return (
-    <p className="flex items-center gap-1 text-[11px] text-destructive font-medium mt-1">
+    <p className="flex items-center gap-1 text-xs text-destructive font-medium mt-1">
       <AlertCircle className="w-3 h-3" /> {msg}
     </p>
   );
@@ -151,14 +151,14 @@ function RoleCard({ role, selected, onSelect }: RoleCardProps): JSX.Element {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary">
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary">
               {workspaceRoleLabel(role, t)}
             </span>
             <Button
               type="button"
               variant="link"
               onClick={(event) => { event.stopPropagation(); setShowPerms((visible) => !visible); }}
-              className="text-[10px] text-primary font-semibold flex items-center gap-0.5 hover:underline p-0 h-auto shadow-none"
+              className="text-xs text-primary font-semibold flex items-center gap-0.5 hover:underline min-h-11 px-2 shadow-none"
             >
               <Info className="w-3 h-3" /> {showPerms ? t("users.addHidePermissions") : t("users.addShowPermissions")}
             </Button>
@@ -175,7 +175,7 @@ function RoleCard({ role, selected, onSelect }: RoleCardProps): JSX.Element {
               {Object.entries(role.permissions || {})
                 .filter(([moduleId]) => isRbacModuleEnabled(moduleId, globalSettings.enabledModules))
                 .map(([moduleId, permissions]) => (
-                <div key={moduleId} className="text-[10px] text-muted-foreground">
+                <div key={moduleId} className="text-xs text-muted-foreground">
                   <span className="font-semibold text-foreground">{rbacModuleLabel(moduleId, t)}:</span>{" "}
                   {permissions.map((permissionAction) => t(`users.permission.${permissionAction}`)).join(", ")}
                 </div>
@@ -264,11 +264,11 @@ function Step1({ form, setForm, errors }: Step1Props): JSX.Element {
             <UserAvatar id={form.contactId} name={form.name} className="w-10 h-10 rounded-full text-xs font-semibold" />
             <div>
               <p className="text-sm font-bold text-foreground">{form.name}</p>
-              <p className="text-[11px] text-muted-foreground">{form.email}</p>
+              <p className="text-xs text-muted-foreground">{form.email}</p>
             </div>
           </div>
           {form.phone ? (
-            <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
               <Phone className="w-3.5 h-3.5" /> {form.phone}
             </p>
           ) : null}
@@ -341,7 +341,7 @@ function Step2({ form, setForm, errors }: Step2Props): JSX.Element {
       {/* Dynamic custom fields */}
       {orderedFields.filter((field) => !["name", "email", "role"].includes(field.id)).length > 0 && (
         <div className="space-y-4">
-          <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">{t("users.addAdditionalDetails")}</h4>
+          <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest pl-1">{t("users.addAdditionalDetails")}</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {orderedFields.filter((field) => !["name", "email", "role"].includes(field.id)).map((field) => {
               const value = (form as unknown as Record<string, unknown>)[field.id] ?? "";
@@ -441,9 +441,9 @@ function Step3({ form, setForm, errors }: Step3Props): JSX.Element {
                 }`}>
                 <div className="flex items-center gap-1.5 mb-1">
                   <Icon className={`w-3.5 h-3.5 ${active ? "text-primary" : "text-muted-foreground"}`} />
-                  <span className={`text-[11px] font-bold ${active ? "text-primary" : "text-foreground"}`}>{t(setupOption.labelKey)}</span>
+                  <span className={`text-xs font-bold ${active ? "text-primary" : "text-foreground"}`}>{t(setupOption.labelKey)}</span>
                 </div>
-                <p className="text-[10px] text-muted-foreground leading-snug">{t(setupOption.descKey)}</p>
+                <p className="text-xs text-muted-foreground leading-snug">{t(setupOption.descKey)}</p>
               </Button>
             );
           })}
@@ -461,7 +461,7 @@ function Step3({ form, setForm, errors }: Step3Props): JSX.Element {
             <p className="text-xs text-muted-foreground">
               {t("users.addInviteBody", { email: form.email || "…" })}
             </p>
-            <p className="text-[10px] text-muted-foreground">{t("users.addInvitePending")}</p>
+            <p className="text-xs text-muted-foreground">{t("users.addInvitePending")}</p>
           </motion.div>
         )}
 
@@ -470,7 +470,7 @@ function Step3({ form, setForm, errors }: Step3Props): JSX.Element {
             <div>
               <Label required>{t("users.addTempPassword")}</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <UiInput
                   type={showPwd ? "text" : "password"}
                   placeholder={passwordHint}
@@ -479,13 +479,13 @@ function Step3({ form, setForm, errors }: Step3Props): JSX.Element {
                   className="pl-9.5 pr-9"
                 />
                 <Button type="button" variant="ghost" onClick={() => setShowPwd((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground min-h-11 min-w-11 hover:bg-transparent shadow-none"
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground min-h-11 min-w-11 hover:bg-transparent shadow-none"
                 >
                   {showPwd ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                 </Button>
               </div>
               <FieldError msg={errors.password} />
-              <p className="mt-1 text-[10px] text-muted-foreground">{passwordHint}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{passwordHint}</p>
             </div>
 
             <label className="flex items-center gap-2 cursor-pointer">
@@ -503,7 +503,7 @@ function Step3({ form, setForm, errors }: Step3Props): JSX.Element {
           onCheckedChange={(checked) => setForm((f) => ({ ...f, twoFactorEnabled: !!checked }))} />
         <div>
           <span className="text-xs font-semibold text-foreground">{t("users.add2faTitle")}</span>
-          <p className="text-[10px] text-muted-foreground">{t("users.add2faDesc")}</p>
+          <p className="text-xs text-muted-foreground">{t("users.add2faDesc")}</p>
         </div>
       </label>
     </div>

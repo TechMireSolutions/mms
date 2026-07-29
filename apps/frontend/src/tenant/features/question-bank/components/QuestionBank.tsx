@@ -213,7 +213,7 @@ export function QuestionBank({
       return (
         <span
           key="questionLanguage"
-          className="rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-bold text-foreground"
+          className="rounded-full border border-border bg-muted px-2 py-0.5 text-xs font-bold text-foreground"
         >
           {config.questionLanguageLabel(question.questionLanguage)}
         </span>
@@ -232,14 +232,14 @@ export function QuestionBank({
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative min-w-0 flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t('questionBank.searchPlaceholder')}
             aria-label={t('questionBank.searchPlaceholder')}
-            className="w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-4 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full rounded-xl border border-border bg-card py-2.5 ps-10 pe-4 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
           {search && (
             <Button
@@ -247,7 +247,7 @@ export function QuestionBank({
               variant="ghost"
               onClick={() => setSearch('')}
               aria-label={t('questionBank.clearSearch')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground min-h-11 min-w-11 hover:bg-transparent"
+              className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground min-h-11 min-w-11 hover:bg-transparent"
             >
               <X className="h-3.5 w-3.5" aria-hidden />
             </Button>
@@ -376,7 +376,7 @@ export function QuestionBank({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     {showText && config.isFieldEnabled('text') && (
-                      <p className="mb-2 text-[13px] font-semibold leading-snug text-foreground">{question.text}</p>
+                      <p className="mb-2 text-sm font-semibold leading-snug text-foreground">{question.text}</p>
                     )}
                     {listMetaFields.length > 0 && (
                       <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -388,7 +388,7 @@ export function QuestionBank({
                         {question.options.filter(Boolean).map((option, optionIndex) => (
                           <span
                             key={optionIndex}
-                            className={`rounded-md border px-2 py-0.5 text-[11px] ${option === question.answer ? 'border-primary/30 bg-primary/5 font-semibold text-primary' : 'border-border bg-muted text-muted-foreground'}`}
+                            className={`rounded-md border px-2 py-0.5 text-xs ${option === question.answer ? 'border-primary/30 bg-primary/5 font-semibold text-primary' : 'border-border bg-muted text-muted-foreground'}`}
                           >
                             {option === question.answer ? `✓ ` : ''}{option}
                           </span>
@@ -396,10 +396,10 @@ export function QuestionBank({
                       </div>
                     )}
                     {config.isFieldEnabled('answer') && question.type === 'true_false' && (
-                      <p className="mt-1.5 text-[11px] font-semibold text-primary">✓ {question.answer}</p>
+                      <p className="mt-1.5 text-xs font-semibold text-primary">✓ {question.answer}</p>
                     )}
                     {question.type === 'fill_blank' && question.answer && (
-                      <p className="mt-1.5 text-[11px] text-muted-foreground">
+                      <p className="mt-1.5 text-xs text-muted-foreground">
                         {t('questionBank.previewFillBlank', {
                           answers: splitQuestionCompoundAnswer(question.answer).join(', '),
                         })}
@@ -407,28 +407,28 @@ export function QuestionBank({
                     )}
                     {question.type === 'matching' && question.options.length > 0 && (
                       <div className="mt-2 space-y-1">
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           {t('questionBank.previewMatching')}
                         </p>
                         {question.options.map((left, index) => (
-                          <p key={index} className="text-[11px] text-foreground">
+                          <p key={index} className="text-xs text-foreground">
                             {left} → {splitQuestionCompoundAnswer(question.answer)[index] ?? '—'}
                           </p>
                         ))}
                       </div>
                     )}
                     {question.type === 'numeric' && question.answer && (
-                      <p className="mt-1.5 text-[11px] text-muted-foreground">
+                      <p className="mt-1.5 text-xs text-muted-foreground">
                         {t('questionBank.previewNumeric', { answer: question.answer })}
                         {question.options[0] ? ` (±${question.options[0]})` : ''}
                       </p>
                     )}
                     {question.type === 'ordering' && question.options.length > 0 && (
                       <div className="mt-2">
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           {t('questionBank.previewOrdering')}
                         </p>
-                        <ol className="mt-1 list-decimal space-y-0.5 pl-4 text-[11px] text-foreground">
+                        <ol className="mt-1 list-decimal space-y-0.5 pl-4 text-xs text-foreground">
                           {question.options.filter(Boolean).map((item) => (
                             <li key={item}>{item}</li>
                           ))}
@@ -439,7 +439,7 @@ export function QuestionBank({
                       const citation = formatQuestionSourcesCitation(question, t, config.sourceBooks);
                       if (!citation) return null;
                       return (
-                        <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
+                        <p className="mt-2 text-xs leading-snug text-muted-foreground">
                           <span className="font-semibold text-foreground/80">{t('questionBank.sourceReference')}:</span>{' '}
                           {citation}
                         </p>
@@ -451,14 +451,14 @@ export function QuestionBank({
                         const fieldValue = (question as unknown as Record<string, unknown>)[field.id];
                         if (fieldValue === undefined || fieldValue === '') return null;
                         return (
-                          <p key={field.id} className="mt-1 text-[11px] text-muted-foreground">
+                          <p key={field.id} className="mt-1 text-xs text-muted-foreground">
                             <span className="font-semibold">{config.fieldLabel(field.id, field.label)}:</span>{' '}
                             {Array.isArray(fieldValue) ? fieldValue.join(', ') : String(fieldValue)}
                           </p>
                         );
                       })}
                   </div>
-                  <div className="flex flex-shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+                  <div className="flex flex-shrink-0 items-center gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
                     {canDelete && (
                       <Checkbox
                         checked={selectedIds.includes(question.id)}
@@ -513,36 +513,36 @@ export function QuestionBank({
                       </th>
                     )}
                     {showText && (
-                      <ResizableTableHead columnKey="text" width={getColumnWidth?.("text")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                      <ResizableTableHead columnKey="text" width={getColumnWidth?.("text")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                         {t('questionBank.columns.text')}
                       </ResizableTableHead>
                     )}
                     {showCategory && (
-                      <ResizableTableHead columnKey="category" width={getColumnWidth?.("category")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="category" width={getColumnWidth?.("category")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t('questionBank.columns.category')}
                       </ResizableTableHead>
                     )}
                     {showLanguage && (
-                      <ResizableTableHead columnKey="language" width={getColumnWidth?.("language")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="language" width={getColumnWidth?.("language")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t('questionBank.columns.language')}
                       </ResizableTableHead>
                     )}
                     {showType && (
-                      <ResizableTableHead columnKey="type" width={getColumnWidth?.("type")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="type" width={getColumnWidth?.("type")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t('questionBank.columns.type')}
                       </ResizableTableHead>
                     )}
                     {showDifficulty && (
-                      <ResizableTableHead columnKey="difficulty" width={getColumnWidth?.("difficulty")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="difficulty" width={getColumnWidth?.("difficulty")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t('questionBank.columns.difficulty')}
                       </ResizableTableHead>
                     )}
                     {showSource && (
-                      <ResizableTableHead columnKey="source" width={getColumnWidth?.("source")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      <ResizableTableHead columnKey="source" width={getColumnWidth?.("source")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                         {t('questionBank.columns.source')}
                       </ResizableTableHead>
                     )}
-                    <th scope="col" className="px-4 py-2.5 text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <th scope="col" className="px-4 py-2.5 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       <span className="sr-only">{t('questionBank.columns.actions')}</span>
                     </th>
                   </tr>
@@ -570,7 +570,7 @@ export function QuestionBank({
                           </td>
                         )}
                         {showText && (
-                          <td className="px-4 py-3 text-[13px] font-semibold text-foreground max-w-[280px]">
+                          <td className="px-4 py-3 text-sm font-semibold text-foreground max-w-[280px]">
                             <p className="line-clamp-2 m-0">{question.text}</p>
                           </td>
                         )}
@@ -588,7 +588,7 @@ export function QuestionBank({
                           </td>
                         )}
                         {showLanguage && (
-                          <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">
+                          <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
                             {config.questionLanguageLabel(question.questionLanguage)}
                           </td>
                         )}
@@ -603,12 +603,12 @@ export function QuestionBank({
                           </td>
                         )}
                         {showSource && (
-                          <td className="px-4 py-3 text-[11px] text-muted-foreground max-w-[200px] truncate">
+                          <td className="px-4 py-3 text-xs text-muted-foreground max-w-[200px] truncate">
                             {citation || '—'}
                           </td>
                         )}
                         <td className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                          <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
                             {canWrite && !showDeleted && (
                               <Button
                                 type="button"

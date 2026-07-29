@@ -173,7 +173,7 @@ export function UsersList({
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5"
           >
             <span className="text-sm font-semibold text-foreground">
               {t('users.selectedCount', { count: selected.length })}
@@ -273,7 +273,7 @@ export function UsersList({
                     columnKey="user"
                     width={getColumnWidth?.('user')}
                     onResize={onColumnResize}
-                    className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                    className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
                   >
                     {t('users.colUser')}
                   </ResizableTableHead>
@@ -281,7 +281,7 @@ export function UsersList({
                     columnKey="role"
                     width={getColumnWidth?.('role')}
                     onResize={onColumnResize}
-                    className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                    className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
                   >
                     {t('users.colRole')}
                   </ResizableTableHead>
@@ -289,7 +289,7 @@ export function UsersList({
                     columnKey="status"
                     width={getColumnWidth?.('status')}
                     onResize={onColumnResize}
-                    className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                    className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
                   >
                     {t('users.colStatus')}
                   </ResizableTableHead>
@@ -297,7 +297,7 @@ export function UsersList({
                     columnKey="lastLogin"
                     width={getColumnWidth?.('lastLogin')}
                     onResize={onColumnResize}
-                    className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                    className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
                   >
                     {t('users.colLastLogin')}
                   </ResizableTableHead>
@@ -305,7 +305,7 @@ export function UsersList({
                     columnKey="created"
                     width={getColumnWidth?.('created')}
                     onResize={onColumnResize}
-                    className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                    className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
                   >
                     {t('users.colCreated')}
                   </ResizableTableHead>
@@ -313,11 +313,11 @@ export function UsersList({
                     columnKey="twoFactor"
                     width={getColumnWidth?.('twoFactor')}
                     onResize={onColumnResize}
-                    className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                    className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
                   >
                     {t('users.col2fa')}
                   </ResizableTableHead>
-                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase text-muted-foreground">
+                  <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase text-muted-foreground">
                     {t('users.colActions')}
                   </th>
                 </tr>
@@ -339,7 +339,7 @@ export function UsersList({
                         <Avatar user={user} />
                         <div>
                           <p className="whitespace-nowrap text-sm font-semibold text-foreground">{user.name}</p>
-                          <p className="text-[11px] text-muted-foreground">{user.email}</p>
+                          <p className="text-xs text-muted-foreground">{user.email}</p>
                         </div>
                       </div>
                     </td>

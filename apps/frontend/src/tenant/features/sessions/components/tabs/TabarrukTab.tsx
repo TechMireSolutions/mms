@@ -133,7 +133,7 @@ export function TabarrukTab({ session, onUpdate, canWrite }: TabarrukTabProps) {
     <section aria-label={t("sessions.tabarruk.ariaLabel")} className="space-y-4">
       <article className="flex items-start gap-3 px-4 py-3 rounded-xl bg-warning/10 border border-warning/20">
         <Gift className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" aria-hidden="true" />
-        <p className="text-[12px] text-warning leading-relaxed m-0">
+        <p className="text-sm text-warning leading-relaxed m-0">
           {t("sessions.tabarruk.description")}
         </p>
       </article>
@@ -160,10 +160,10 @@ export function TabarrukTab({ session, onUpdate, canWrite }: TabarrukTabProps) {
             <caption className="sr-only">{t("sessions.tabarruk.tableCaption")}</caption>
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                <th scope="col" className="px-4 py-2.5 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("sessions.tabarruk.form.item")}</th>
-                <th scope="col" className="px-4 py-2.5 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">{t("sessions.tabarruk.form.quantity")}</th>
-                <th scope="col" className="px-4 py-2.5 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">{t("sessions.tabarruk.form.occasion")}</th>
-                <th scope="col" className="px-4 py-2.5 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">{t("sessions.tabarruk.form.date")}</th>
+                <th scope="col" className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("sessions.tabarruk.form.item")}</th>
+                <th scope="col" className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">{t("sessions.tabarruk.form.quantity")}</th>
+                <th scope="col" className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">{t("sessions.tabarruk.form.occasion")}</th>
+                <th scope="col" className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">{t("sessions.tabarruk.form.date")}</th>
                 <th scope="col" className="px-4 py-2.5 w-16"><span className="sr-only">{t("common.actions")}</span></th>
               </tr>
             </thead>
@@ -177,24 +177,24 @@ export function TabarrukTab({ session, onUpdate, canWrite }: TabarrukTabProps) {
                   className="hover:bg-muted/20 transition-colors group"
                 >
                   <td className="px-4 py-3">
-                    <p className="text-[13px] font-semibold text-foreground m-0">{tabarrukItem.item}</p>
-                    {tabarrukItem.note && <p className="text-[11px] text-muted-foreground m-0">{tabarrukItem.note}</p>}
+                    <p className="text-sm font-semibold text-foreground m-0">{tabarrukItem.item}</p>
+                    {tabarrukItem.note && <p className="text-xs text-muted-foreground m-0">{tabarrukItem.note}</p>}
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
-                    <span className="text-[13px] text-foreground">{tabarrukItem.quantity || "—"}</span>
+                    <span className="text-sm text-foreground">{tabarrukItem.quantity || "—"}</span>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="text-[13px] text-muted-foreground">{tabarrukItem.occasion || "—"}</span>
+                    <span className="text-sm text-muted-foreground">{tabarrukItem.occasion || "—"}</span>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="text-[12px] text-muted-foreground">{tabarrukItem.date ? formatDate(tabarrukItem.date) : "—"}</span>
+                    <span className="text-sm text-muted-foreground">{tabarrukItem.date ? formatDate(tabarrukItem.date) : "—"}</span>
                   </td>
                   <td className="px-4 py-3">
                     {canWrite && <div className="flex items-center gap-1 justify-end">
-                      <Button aria-label={t("sessions.tabarruk.editNamed", { name: tabarrukItem.item })} onClick={() => { setEditEntry(tabarrukItem); setShowModal(true); }} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100" variant="ghost" size="icon">
+                      <Button aria-label={t("sessions.tabarruk.editNamed", { name: tabarrukItem.item })} onClick={() => { setEditEntry(tabarrukItem); setShowModal(true); }} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100" variant="ghost" size="icon">
                         <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
-                      <Button aria-label={t("sessions.tabarruk.deleteNamed", { name: tabarrukItem.item })} onClick={() => setDeleteTarget(tabarrukItem)} className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100" variant="ghost" size="icon">
+                      <Button aria-label={t("sessions.tabarruk.deleteNamed", { name: tabarrukItem.item })} onClick={() => setDeleteTarget(tabarrukItem)} className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100" variant="ghost" size="icon">
                         <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
                     </div>}

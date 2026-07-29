@@ -197,7 +197,7 @@ function PermissionMatrixRow({
       className={`transition-colors ${hasAny || !readOnly ? 'hover:bg-muted/10' : 'opacity-40'}`}
     >
       <td
-        className={`px-3 py-2.5 text-xs font-semibold text-foreground ${inGroup ? 'pl-8' : ''}`}
+        className={`px-3 py-2.5 text-xs font-semibold text-foreground ${inGroup ? 'ps-8' : ''}`}
       >
         {t(mod.labelKey)}
       </td>
@@ -257,19 +257,19 @@ function PermissionMatrix({
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-muted/60">
             <tr>
-              <th className="min-w-[140px] px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground">
+              <th className="min-w-[140px] px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground">
                 {t('users.permissions.colModule')}
               </th>
               {PERMISSION_ACTIONS.map((permissionAction) => (
                 <th
                   key={permissionAction}
-                  className="w-16 px-2 py-2.5 text-center text-[11px] font-semibold uppercase text-muted-foreground"
+                  className="w-16 px-2 py-2.5 text-center text-xs font-semibold uppercase text-muted-foreground"
                 >
                   {t(`users.permission.${permissionAction}`)}
                 </th>
               ))}
               {!readOnly ? (
-                <th className="px-2 py-2.5 text-center text-[11px] font-semibold uppercase text-muted-foreground">
+                <th className="px-2 py-2.5 text-center text-xs font-semibold uppercase text-muted-foreground">
                   {t('users.permissions.colAll')}
                 </th>
               ) : null}
@@ -421,8 +421,8 @@ export function RolesPermissions(): React.JSX.Element {
           <div className="flex items-center justify-between">
             <p className="text-sm font-bold text-foreground">{t('users.permissions.rolesTitle')}</p>
             {isAdmin ? (
-              <Button type="button" variant="ghost" size="sm" className="h-auto px-0 text-xs" onClick={() => setEdit('new')}>
-                <Plus className="mr-1 h-3 w-3" />
+              <Button type="button" variant="ghost" size="sm" className="min-h-11 px-2 text-xs" onClick={() => setEdit('new')}>
+                <Plus className="me-1 h-3 w-3" />
                 {t('users.permissions.addRole')}
               </Button>
             ) : null}
@@ -462,7 +462,7 @@ export function RolesPermissions(): React.JSX.Element {
                       <SettingsMetaBadge variant="muted">{t('users.permissions.systemBadge')}</SettingsMetaBadge>
                     ) : null}
                   </div>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     {workspaceRoleDescription(workspaceRole, t)}
                   </p>
                 </div>

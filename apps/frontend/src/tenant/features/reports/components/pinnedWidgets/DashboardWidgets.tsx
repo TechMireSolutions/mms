@@ -167,7 +167,7 @@ export function DashboardWidgets({
             type="button"
             variant="ghost"
             onClick={() => handleToggleGridMode("comfortable")}
-            className={`min-h-11 px-3 rounded-lg text-[9px] font-black uppercase tracking-wider relative z-10 shadow-none ${
+            className={`min-h-11 px-3 rounded-lg text-xs font-black uppercase tracking-wider relative z-10 shadow-none ${
               gridMode === "comfortable" 
                 ? "text-foreground" 
                 : "text-muted-foreground hover:text-foreground"
@@ -186,7 +186,7 @@ export function DashboardWidgets({
             type="button"
             variant="ghost"
             onClick={() => handleToggleGridMode("compact")}
-            className={`min-h-11 px-3 rounded-lg text-[9px] font-black uppercase tracking-wider relative z-10 shadow-none ${
+            className={`min-h-11 px-3 rounded-lg text-xs font-black uppercase tracking-wider relative z-10 shadow-none ${
               gridMode === "compact" 
                 ? "text-foreground" 
                 : "text-muted-foreground hover:text-foreground"
@@ -241,7 +241,7 @@ export function DashboardWidgets({
                 </ErrorBoundary>
                 
                 {/* Overlaid unpin/edit/delete action handles */}
-                <div className={`absolute top-2.5 right-2.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 z-10 transition-all ${
+                <div className={`absolute top-2.5 right-2.5 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 z-10 transition-all ${
                   gridMode === "compact" ? "scale-75 top-0.5 right-0.5" : ""
                 }`}>
                   {isEditMode && onEditWidget && (

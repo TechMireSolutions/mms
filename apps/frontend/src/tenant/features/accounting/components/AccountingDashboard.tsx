@@ -217,7 +217,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs font-mono font-bold text-foreground m-0">{formatCurrency(totalDebit)}</p>
-                    <p className="text-[10px] text-muted-foreground m-0">{formatDate(journalEntry.date)}</p>
+                    <p className="text-xs text-muted-foreground m-0">{formatDate(journalEntry.date)}</p>
                   </div>
                 </article>
               );

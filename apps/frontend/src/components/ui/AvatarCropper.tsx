@@ -191,7 +191,7 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
               type="button"
               variant="outline"
               onClick={() => setRotation((prevRotation) => prevRotation - 90)}
-              className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors text-foreground shadow-none"
+              className="flex items-center gap-1.5 px-3 min-h-11 rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors text-foreground shadow-none"
             >
               <RotateCw className="w-3.5 h-3.5 scale-x-[-1]" />
               <span>{t("contacts.form.rotate")}</span>
@@ -204,14 +204,14 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
                 setOffset({ x: 0, y: 0 });
                 setRotation(0);
               }}
-              className="px-3 min-h-[44px] rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors text-muted-foreground shadow-none"
+              className="px-3 min-h-11 rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors text-muted-foreground shadow-none"
             >
               {t("contacts.form.reset")}
             </Button>
             <Button
               type="button"
               onClick={handleCrop}
-              className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shadow-none"
+              className="flex-1 flex items-center justify-center gap-1.5 min-h-11 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shadow-none"
             >
               <Check className="w-4 h-4" />
               <span>{t("contacts.form.applyPhoto")}</span>

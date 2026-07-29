@@ -47,14 +47,14 @@ export function renderContactNameCell({
           <Button
             onClick={() => onView?.(contact)}
             variant="ghost"
-            className="min-h-[44px] h-auto p-0 text-[13px] font-semibold text-foreground hover:text-primary transition-colors text-start justify-start hover:bg-transparent"
+            className="min-h-11 h-auto p-0 text-sm font-semibold text-foreground hover:text-primary transition-colors text-start justify-start hover:bg-transparent"
             type="button"
           >
             {displayName}
           </Button>
           <ContactIdentityMeta gender={contact.gender} isSyed={contact.isSyed} className="mt-0.5" />
           {showArchived && contact.deletionReason && (
-            <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
               {t("contacts.deletionReasonLabel")}: {contact.deletionReason}
             </p>
           )}
@@ -94,13 +94,13 @@ export function renderContactPhoneCell({
       <div className="flex items-center gap-2 group/phone">
         {primaryPhone ? (
           <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted/40 border border-border/60">
-            {countryCode && <span className="text-[11px] font-semibold text-muted-foreground">{countryCode}</span>}
-            <span className="text-[12px] font-mono text-foreground font-medium tracking-wide">
+            {countryCode && <span className="text-xs font-semibold text-muted-foreground">{countryCode}</span>}
+            <span className="text-sm font-mono text-foreground font-medium tracking-wide">
               {formattedNumber}
             </span>
           </div>
         ) : (
-          <span className="text-[13px] text-muted-foreground">{t("contacts.table.emptyDash")}</span>
+          <span className="text-sm text-muted-foreground">{t("contacts.table.emptyDash")}</span>
         )}
         {primaryPhone && <CopyBtn text={primaryPhone} />}
         {onWhatsApp && hasWa ? (
@@ -112,7 +112,7 @@ export function renderContactPhoneCell({
             title={t("contacts.whatsapp")}
             aria-label={t("contacts.whatsapp")}
             variant="ghost"
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center p-0 transition-all hover:bg-transparent opacity-0 group-hover/phone:opacity-100 text-success hover:text-success/80 cursor-pointer"
+            className="min-w-11 min-h-11 flex items-center justify-center p-0 transition-all hover:bg-transparent opacity-100 md:opacity-0 md:group-hover/phone:opacity-100 md:focus-within:opacity-100 text-success hover:text-success/80 cursor-pointer"
             type="button"
           >
             <MessageCircle className="w-3.5 h-3.5" />
@@ -136,7 +136,7 @@ export function renderContactEmailCell({
   return (
     <td key="email" className="px-4 py-3" style={widthStyle}>
       <div className="flex items-center gap-1 group/email">
-        <span className="text-[13px] text-muted-foreground">{primaryEmail || t("contacts.table.emptyDash")}</span>
+        <span className="text-sm text-muted-foreground">{primaryEmail || t("contacts.table.emptyDash")}</span>
         {primaryEmail && <CopyBtn text={primaryEmail} />}
       </div>
     </td>

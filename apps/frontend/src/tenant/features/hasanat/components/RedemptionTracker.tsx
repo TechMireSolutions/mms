@@ -98,7 +98,7 @@ function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps)
             }))}
           />
           {selectedDistribution && (
-            <p className="text-[11px] text-muted-foreground mt-1 m-0">{selectedDistribution.reason}</p>
+            <p className="text-xs text-muted-foreground mt-1 m-0">{selectedDistribution.reason}</p>
           )}
         </div>
         <div>
@@ -218,27 +218,27 @@ export function RedemptionTracker({
               <thead>
                 <tr className="border-b border-border bg-muted/30">
                   {showStudent && (
-                    <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.student")}
                     </ResizableTableHead>
                   )}
                   {showReward && (
-                    <ResizableTableHead columnKey="reward" width={getColumnWidth?.("reward")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <ResizableTableHead columnKey="reward" width={getColumnWidth?.("reward")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.reward")}
                     </ResizableTableHead>
                   )}
                   {showPointsUsed && (
-                    <ResizableTableHead columnKey="pointsUsed" width={getColumnWidth?.("pointsUsed")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <ResizableTableHead columnKey="pointsUsed" width={getColumnWidth?.("pointsUsed")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.pointsUsed")}
                     </ResizableTableHead>
                   )}
                   {showDate && (
-                    <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.date")}
                     </ResizableTableHead>
                   )}
                   {showApprovedBy && (
-                    <ResizableTableHead columnKey="approvedBy" width={getColumnWidth?.("approvedBy")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                    <ResizableTableHead columnKey="approvedBy" width={getColumnWidth?.("approvedBy")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.approvedBy")}
                     </ResizableTableHead>
                   )}
@@ -248,24 +248,24 @@ export function RedemptionTracker({
                 {redemptions.map((redemption, index) => (
                   <motion.tr key={redemption.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.04 }} className="hover:bg-muted/20 transition-colors">
                     {showStudent && (
-                      <td className="px-4 py-3 text-[13px] font-semibold text-foreground whitespace-nowrap">{redemption.studentName || "—"}</td>
+                      <td className="px-4 py-3 text-sm font-semibold text-foreground whitespace-nowrap">{redemption.studentName || "—"}</td>
                     )}
                     {showReward && (
-                      <td className="px-4 py-3 text-[13px] text-foreground">{redemption.reward}</td>
+                      <td className="px-4 py-3 text-sm text-foreground">{redemption.reward}</td>
                     )}
                     {showPointsUsed && (
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
                           <Star className="w-3 h-3 text-warning" aria-hidden="true" />
-                          <span className="text-[13px] font-bold text-warning">{redemption.pointsUsed}</span>
+                          <span className="text-sm font-bold text-warning">{redemption.pointsUsed}</span>
                         </div>
                       </td>
                     )}
                     {showDate && (
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground whitespace-nowrap">{formatDate(redemption.date)}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{formatDate(redemption.date)}</td>
                     )}
                     {showApprovedBy && (
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground">{redemption.approvedBy || "—"}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{redemption.approvedBy || "—"}</td>
                     )}
                   </motion.tr>
                 ))}

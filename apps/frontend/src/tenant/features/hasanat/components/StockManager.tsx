@@ -178,14 +178,14 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
                 {den.icon}
               </div>
               <div className="flex-1">
-                <h3 className="text-[13px] font-bold text-foreground m-0">{den.name}</h3>
-                <p className="text-[11px] text-muted-foreground m-0">{t("hasanat.stock.pointsAvailable", { points: den.points, remaining: totalRemaining, total: totalStock })}</p>
+                <h3 className="text-sm font-bold text-foreground m-0">{den.name}</h3>
+                <p className="text-xs text-muted-foreground m-0">{t("hasanat.stock.pointsAvailable", { points: den.points, remaining: totalRemaining, total: totalStock })}</p>
               </div>
               <div className="w-20">
                 <div className="h-1.5 rounded-full bg-border overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${den.name} availability`}>
                   <div className="h-full rounded-full" style={{ width: `${pct}%`, background: den.color }} />
                 </div>
-                <p className="text-[10px] text-right text-muted-foreground mt-0.5 m-0">{pct}%</p>
+                <p className="text-xs text-right text-muted-foreground mt-0.5 m-0">{pct}%</p>
               </div>
             </header>
 
@@ -197,12 +197,12 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
                   <motion.div key={batch.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.04 }} className="flex items-center gap-3 px-4 py-3">
                     <Package className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-medium text-foreground m-0">{batch.note || t("hasanat.stock.batchFallback")}</p>
-                      <p className="text-[10px] text-muted-foreground m-0">{t("hasanat.stock.addedMeta", { date: batch.addedDate, by: batch.addedBy || "—" })}</p>
+                      <p className="text-sm font-medium text-foreground m-0">{batch.note || t("hasanat.stock.batchFallback")}</p>
+                      <p className="text-xs text-muted-foreground m-0">{t("hasanat.stock.addedMeta", { date: batch.addedDate, by: batch.addedBy || "—" })}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-[12px] font-bold text-foreground m-0">{batch.remaining}<span className="text-muted-foreground font-normal">/{batch.quantity}</span></p>
-                      <p className="text-[10px] text-muted-foreground m-0">{t("hasanat.stock.pctLeft", { pct: batchPercentage })}</p>
+                      <p className="text-sm font-bold text-foreground m-0">{batch.remaining}<span className="text-muted-foreground font-normal">/{batch.quantity}</span></p>
+                      <p className="text-xs text-muted-foreground m-0">{t("hasanat.stock.pctLeft", { pct: batchPercentage })}</p>
                     </div>
                   </motion.div>
                 );

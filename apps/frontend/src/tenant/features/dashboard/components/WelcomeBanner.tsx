@@ -84,7 +84,7 @@ export default function WelcomeBanner({
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-warning animate-pulse" aria-hidden="true" />
-            <span className="text-[10px] font-black text-white/70 uppercase tracking-widest">
+            <span className="text-xs font-black text-white/70 uppercase tracking-widest">
               {t(BADGE_BY_ROLE[dashboardRole])}
             </span>
           </div>
@@ -97,16 +97,16 @@ export default function WelcomeBanner({
         <div className="flex-shrink-0 flex items-center gap-3 self-start lg:self-auto flex-wrap">
           <div className={DATE_CHIP_CLASS}>
             <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" aria-hidden="true" />
-            <span className="text-[12px] font-bold text-white whitespace-nowrap tracking-wide">{dayName}</span>
+            <span className="text-sm font-bold text-white whitespace-nowrap tracking-wide">{dayName}</span>
           </div>
           <div className={DATE_CHIP_CLASS}>
             <span className="w-1.5 h-1.5 rounded-full bg-info" aria-hidden="true" />
-            <span className="text-[12px] font-bold text-white whitespace-nowrap tracking-wide">{gregDate}</span>
+            <span className="text-sm font-bold text-white whitespace-nowrap tracking-wide">{gregDate}</span>
           </div>
           {hijriDate ? (
             <div className={DATE_CHIP_CLASS}>
               <span className="w-1.5 h-1.5 rounded-full bg-success" aria-hidden="true" />
-              <span className="text-[12px] font-bold text-white whitespace-nowrap tracking-wide">{hijriDate}</span>
+              <span className="text-sm font-bold text-white whitespace-nowrap tracking-wide">{hijriDate}</span>
             </div>
           ) : null}
         </div>

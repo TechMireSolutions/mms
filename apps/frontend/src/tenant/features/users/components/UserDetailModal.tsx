@@ -48,7 +48,7 @@ function Section({
       <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover/card:bg-primary" />
       <div className="flex items-center gap-2 border-b border-border/40 bg-muted/20 px-4 py-2.5 pl-5.5">
         <Icon className="h-3.5 w-3.5 text-primary/70 group-hover/card:text-primary transition-colors" aria-hidden />
-        <p className="text-[11px] font-black uppercase tracking-wider text-foreground m-0">{title}</p>
+        <p className="text-xs font-black uppercase tracking-wider text-foreground m-0">{title}</p>
       </div>
       <div className="px-5 pb-1">{children}</div>
     </div>
@@ -119,7 +119,7 @@ export function UserDetailModal({
             value={user.loginEmail?.trim() || user.email}
           />
           {user.loginEmail && user.loginEmail.toLowerCase() !== user.email.toLowerCase() ? (
-            <p className="py-2 text-[11px] text-muted-foreground">{t('users.loginEmailNote')}</p>
+            <p className="py-2 text-xs text-muted-foreground">{t('users.loginEmailNote')}</p>
           ) : null}
           <Row
             label={t('users.fieldPhone')}

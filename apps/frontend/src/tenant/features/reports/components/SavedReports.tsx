@@ -191,7 +191,7 @@ export default function SavedReports({
                   </div>
                   <Bookmark className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
                 </div>
-                <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {formatLastRunTime(report.lastRun)}

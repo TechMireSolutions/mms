@@ -34,7 +34,7 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
           </h3>
           {urgent > 0 && (
             <span
-              className="inline-flex items-center px-2 py-0.5 rounded-md bg-destructive/10 text-destructive font-black border border-destructive/20 text-[9px] shrink-0 uppercase tracking-wider"
+              className="inline-flex items-center px-2 py-0.5 rounded-md bg-destructive/10 text-destructive font-black border border-destructive/20 text-xs shrink-0 uppercase tracking-wider"
               aria-label={t('notifications.urgentCount', { count: urgent })}
             >
               {urgent} {t('notifications.urgent')}
@@ -45,7 +45,7 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
           <Button
             variant="link"
             onClick={() => setDismissed([])}
-            className="text-[11px] font-bold shrink-0 h-auto p-0 text-primary hover:text-primary/80 transition-colors"
+            className="text-xs font-bold shrink-0 min-h-11 px-2 text-primary hover:text-primary/80 transition-colors"
           >
             {t('notifications.restoreAll')}
           </Button>
@@ -60,7 +60,7 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
                 <Bell className="w-5 h-5 text-muted-foreground/55" />
               </div>
               <p className="text-xs font-black uppercase text-foreground/80 m-0 tracking-wider">{t('notifications.empty')}</p>
-              <p className="text-[11px] text-muted-foreground mt-1.5 m-0 max-w-[200px] leading-normal">{t('notifications.emptyHint')}</p>
+              <p className="text-xs text-muted-foreground mt-1.5 m-0 max-w-[200px] leading-normal">{t('notifications.emptyHint')}</p>
             </div>
           ) : (
             visible.map((notif) => {
@@ -85,17 +85,17 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-2">
-                      <p className="text-[13px] font-bold text-foreground leading-snug flex-1 m-0">
+                      <p className="text-sm font-bold text-foreground leading-snug flex-1 m-0">
                         {notif.title}
                       </p>
                       {notif.urgent && (
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-destructive bg-destructive/10 border border-destructive/20 px-1.5 py-0.5 rounded-full flex-shrink-0 select-none">
+                        <span className="text-xs font-bold uppercase tracking-wider text-destructive bg-destructive/10 border border-destructive/20 px-1.5 py-0.5 rounded-full flex-shrink-0 select-none">
                           {t('notifications.urgentLabel')}
                         </span>
                       )}
                     </div>
-                    <p className="text-[12px] text-muted-foreground/90 mt-0.5 m-0 leading-normal">{notif.desc}</p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-1 m-0 font-medium">{notif.time}</p>
+                    <p className="text-sm text-muted-foreground/90 mt-0.5 m-0 leading-normal">{notif.desc}</p>
+                    <p className="text-xs text-muted-foreground/60 mt-1 m-0 font-medium">{notif.time}</p>
                   </div>
                   <Button
                     variant="ghost"

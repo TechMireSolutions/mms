@@ -53,7 +53,7 @@ export function PlatformPageShell({
                 <span className="text-sm font-black tracking-wider uppercase text-foreground leading-none">
                   {t("entry.productName")}
                 </span>
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mt-1">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mt-1">
                   {t("platform.consoleTitle")}
                 </span>
               </div>
@@ -121,7 +121,7 @@ export function PlatformPageShell({
                 <span className="text-xs font-black text-foreground">
                   {platformUser?.name}
                 </span>
-                <span className="flex items-center justify-end gap-1 text-[9px] font-black uppercase tracking-wider text-muted-foreground mt-0.5">
+                <span className="flex items-center justify-end gap-1 text-xs font-black uppercase tracking-wider text-muted-foreground mt-0.5">
                   {isSuperUser ? (
                     <>
                       <ShieldAlert className="w-2.5 h-2.5 text-primary shrink-0" aria-hidden />

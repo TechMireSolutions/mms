@@ -71,7 +71,7 @@ export function BackgroundJobsTray({
         {badgeCount > 0 && (
           <Badge
             variant="secondary"
-            className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 text-[9px] flex items-center justify-center"
+            className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 text-xs flex items-center justify-center"
           >
             {badgeCount}
           </Badge>
@@ -170,7 +170,7 @@ export function BackgroundJobsTray({
                 type="button"
                 variant="link"
                 onClick={clearFinished}
-                className="h-auto p-0 text-xs text-muted-foreground"
+                className="min-h-11 px-2 text-xs text-muted-foreground"
               >
                 {t("backgroundJobs.clearFinished")}
               </Button>

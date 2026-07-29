@@ -27,7 +27,7 @@ export function ContactDetailNetwork({
         </div>
         <div>
           <h4 className={`text-sm font-bold leading-none ${DETAIL_STYLES.networkTitle}`}>{contact.relationships?.length || 0} {t('contacts.detail.relationships')}</h4>
-          <p className={`text-[10px] font-medium mt-1 uppercase tracking-tight ${DETAIL_STYLES.networkSubtitle}`}>{t('contacts.detail.activeSocialGraph')}</p>
+          <p className={`text-xs font-medium mt-1 uppercase tracking-tight ${DETAIL_STYLES.networkSubtitle}`}>{t('contacts.detail.activeSocialGraph')}</p>
         </div>
       </div>
 
@@ -50,7 +50,7 @@ export function ContactDetailNetwork({
                     className="w-10 h-10 rounded-xl text-xs flex-shrink-0"
                   />
                   <div className="min-w-0">
-                    <span className={`text-[9px] font-black uppercase tracking-widest mb-0.5 block ${DETAIL_STYLES.networkRelType}`}>{relationship.relationship}</span>
+                    <span className={`text-xs font-black uppercase tracking-widest mb-0.5 block ${DETAIL_STYLES.networkRelType}`}>{relationship.relationship}</span>
                     <h5 className="text-sm font-bold text-foreground truncate">{target ? getDisplayName(target) : `${t('contacts.table.contactIdPrefix')}${relationship.contactId}`}</h5>
                   </div>
                 </div>
@@ -59,7 +59,7 @@ export function ContactDetailNetwork({
                     variant="ghost"
                     aria-label={t('contacts.detail.viewContact', { name: getDisplayName(target) })}
                     onClick={() => onNavigateToContact(relationship.contactId)}
-                    className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all shadow-none ${DETAIL_STYLES.networkItemAction}`}
+                    className={`min-w-11 min-h-11 flex items-center justify-center rounded-lg transition-all shadow-none ${DETAIL_STYLES.networkItemAction}`}
                     type="button"
                   >
                     <Search className="w-4 h-4" />

@@ -304,7 +304,7 @@ export default function Attendance() {
           variant="ghost"
           onClick={() => setShowDeleted((current) => !current)}
           aria-pressed={showDeleted}
-          className="flex items-center gap-1.5 min-h-[44px] border border-border"
+          className="flex items-center gap-1.5 min-h-11 border border-border"
         >
           <Archive className="w-3.5 h-3.5" />
           {showDeleted ? t("attendance.showActive") : t("attendance.showDeleted")}

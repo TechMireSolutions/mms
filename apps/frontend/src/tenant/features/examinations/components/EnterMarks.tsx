@@ -106,7 +106,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
     <section className="space-y-5" aria-labelledby="enter-marks-title">
       {/* Exam selector */}
       <div>
-        <span id="enter-marks-title" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">{t("examinations.selectExam")}</span>
+        <span id="enter-marks-title" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">{t("examinations.selectExam")}</span>
         <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("examinations.enterMarks.selectExamAria")}>
           {exams.map((examOption) => {
             const isSelected = selectedExam === examOption.id;
@@ -117,7 +117,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
                 role="radio"
                 aria-checked={isSelected}
                 onClick={() => { setSelectedExam(examOption.id); setSaved(false); }}
-                className={`px-3.5 py-2 rounded-lg border text-[12px] font-semibold transition-all ${isSelected ? "border-primary bg-primary/5 text-primary" : "border-border bg-card hover:bg-muted text-foreground"}`}
+                className={`px-3.5 py-2 rounded-lg border text-sm font-semibold transition-all ${isSelected ? "border-primary bg-primary/5 text-primary" : "border-border bg-card hover:bg-muted text-foreground"}`}
               >
                 {examOption.name}
               </Button>
@@ -129,7 +129,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
       {exam && (
         <>
           {/* Exam info */}
-          <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 flex flex-wrap gap-4 text-[12px]" role="status" aria-label={t("examinations.enterMarks.examDetailsAria")}>
+          <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 flex flex-wrap gap-4 text-sm" role="status" aria-label={t("examinations.enterMarks.examDetailsAria")}>
             <span><strong className="text-foreground">{exam.subject}</strong></span>
             <span className="text-muted-foreground">{t("examinations.enterMarks.totalLabel")}: <strong className="text-foreground">{exam.totalMarks}</strong></span>
             <span className="text-muted-foreground">{t("examinations.enterMarks.passingLabel")}: <strong className="text-foreground">{exam.passingMarks}</strong></span>
@@ -140,7 +140,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
           <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
             <div className="px-4 py-3 border-b border-border/40 flex items-center gap-2 pl-6.5 bg-muted/20">
               <Users className="w-4 h-4 text-primary" aria-hidden="true" />
-              <h3 className="text-[13px] font-bold text-foreground">{t("examinations.marks")}</h3>
+              <h3 className="text-sm font-bold text-foreground">{t("examinations.marks")}</h3>
             </div>
             <div className="divide-y divide-border/50 pl-6.5" role="list">
               {students.map((student, index) => {
@@ -156,14 +156,14 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
                     className="flex items-center gap-4 px-4 py-3"
                     role="listitem"
                   >
-                    <UserAvatar id={student.id} name={student.name} className="w-7 h-7 rounded-full text-[11px] font-bold" />
+                    <UserAvatar id={student.id} name={student.name} className="w-7 h-7 rounded-full text-xs font-bold" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-semibold text-foreground">{student.name ?? t("examinations.enterMarks.studentFallback")}</p>
-                      <p className="text-[10px] text-muted-foreground">{classNamesById.get(student.classId) || student.classId} · {student.rollNo}</p>
+                      <p className="text-sm font-semibold text-foreground">{student.name ?? t("examinations.enterMarks.studentFallback")}</p>
+                      <p className="text-xs text-muted-foreground">{classNamesById.get(student.classId) || student.classId} · {student.rollNo}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       {grade && (
-                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-lg" style={{ color: grade.color, background: grade.bg }} role="status">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-lg" style={{ color: grade.color, background: grade.bg }} role="status">
                           {grade.label} · {percentage}%
                         </span>
                       )}
@@ -178,7 +178,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
                           className={FORM_INPUT_COMPACT}
                           placeholder="—"
                         />
-                        <span className="text-[11px] text-muted-foreground" aria-hidden="true">/ {exam.totalMarks}</span>
+                        <span className="text-xs text-muted-foreground" aria-hidden="true">/ {exam.totalMarks}</span>
                       </div>
                     </div>
                   </motion.div>

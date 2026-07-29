@@ -29,7 +29,7 @@ export function QuickActionButton({
         className={baseClasses}
       >
         <Icon className="w-5 h-5" />
-        <span className="text-[10px] font-bold">{label}</span>
+        <span className="text-xs font-bold">{label}</span>
       </a>
     );
   }
@@ -44,7 +44,7 @@ export function QuickActionButton({
       type="button"
     >
       <Icon className="w-5 h-5" />
-      <span className="text-[10px] font-bold">{label}</span>
+      <span className="text-xs font-bold">{label}</span>
     </Button>
   );
 }

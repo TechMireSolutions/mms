@@ -88,7 +88,7 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
               }}
               placeholder="RESET_ALL_DATABASE_DATA"
               disabled={resetDbMutation.isPending}
-              className="min-h-[44px]"
+              className="min-h-11"
             />
             {resetError ? (
               <p className="text-xs text-destructive font-bold" role="alert">

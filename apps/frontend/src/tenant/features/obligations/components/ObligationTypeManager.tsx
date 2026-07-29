@@ -82,10 +82,10 @@ export function ObligationTypeManager({ types, onChange }: ObligationTypeManager
           <caption className="sr-only">{t("obligations.types")}</caption>
           <thead className="bg-muted/60 border-b border-border">
             <tr>
-              <th scope="col" className="px-4 py-2.5 text-start text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.types.colName")}</th>
-              <th scope="col" className="px-4 py-2.5 text-start text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.types.colQuantity")}</th>
-              <th scope="col" className="px-4 py-2.5 text-start text-[11px] font-semibold text-muted-foreground uppercase">{t("obligations.types.colDesignated")}</th>
-              <th scope="col" className="px-4 py-2.5 text-end text-[11px] font-semibold text-muted-foreground uppercase"><span className="sr-only">{t("common.actions")}</span></th>
+              <th scope="col" className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.types.colName")}</th>
+              <th scope="col" className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.types.colQuantity")}</th>
+              <th scope="col" className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.types.colDesignated")}</th>
+              <th scope="col" className="px-4 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase"><span className="sr-only">{t("common.actions")}</span></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">

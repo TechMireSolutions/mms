@@ -41,7 +41,7 @@ function ActivityChip({ entry, onDelete, canWrite }: ActivityChipProps) {
     >
       <div className={`w-1.5 h-1.5 rounded-full ${typeConfig.dot} mt-1 flex-shrink-0`} aria-hidden="true" />
       <div className="flex-1 min-w-0">
-        <h5 className="font-semibold text-[12px] truncate m-0">{entry.activity}</h5>
+        <h5 className="font-semibold text-sm truncate m-0">{entry.activity}</h5>
         <div className="flex items-center gap-2 mt-0.5 opacity-80">
           <span className="flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" aria-hidden="true" />{entry.startTime}–{entry.endTime}</span>
           {entry.location && <span className="flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" aria-hidden="true" />{entry.location}</span>}
@@ -52,7 +52,7 @@ function ActivityChip({ entry, onDelete, canWrite }: ActivityChipProps) {
         size="icon"
         aria-label={t("sessions.timetable.deleteNamed", { name: entry.activity })}
         onClick={() => onDelete(entry.id)}
-        className="opacity-0 group-hover:opacity-100 transition-opacity text-current hover:text-destructive ml-1 flex-shrink-0"
+        className="opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity text-current hover:text-destructive ml-1 flex-shrink-0"
       >
         <Trash2 className="w-3 h-3" aria-hidden="true" />
       </Button>}
@@ -204,7 +204,7 @@ export function TimetableTab({ session, onUpdate, canWrite }: TimetableTabProps)
         {Object.entries(TYPE_CONFIG).map(([type, typeConfig]) => (
           <div key={type} className="flex items-center gap-1.5">
             <div className={`w-2 h-2 rounded-full ${typeConfig.dot}`} aria-hidden="true" />
-            <span className="text-[11px] text-muted-foreground">{t(`sessions.timetable.type.${type}` as AppTranslationKey)}</span>
+            <span className="text-xs text-muted-foreground">{t(`sessions.timetable.type.${type}` as AppTranslationKey)}</span>
           </div>
         ))}
       </div>
@@ -223,8 +223,8 @@ export function TimetableTab({ session, onUpdate, canWrite }: TimetableTabProps)
             return (
               <section key={day} aria-label={t("sessions.timetable.daySchedule", { day: t(`sessions.timetable.day.${day}` as AppTranslationKey) })} className="rounded-xl border border-border bg-card overflow-hidden">
                 <header className="px-3 py-2.5 bg-muted/40 border-b border-border flex items-center justify-between">
-                  <h4 className="text-[12px] font-bold text-foreground m-0">{t(`sessions.timetable.day.${day}` as AppTranslationKey)}</h4>
-                  <span className="text-[10px] text-muted-foreground">{t("sessions.timetable.activityCount", { count: entries.length })}</span>
+                  <h4 className="text-sm font-bold text-foreground m-0">{t(`sessions.timetable.day.${day}` as AppTranslationKey)}</h4>
+                  <span className="text-xs text-muted-foreground">{t("sessions.timetable.activityCount", { count: entries.length })}</span>
                 </header>
                 <div className="p-2.5 space-y-2">
                   <AnimatePresence>

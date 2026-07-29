@@ -92,7 +92,7 @@ export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDet
       onClose={onClose}
       title={session.name}
       subtitle={
-        <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground flex-wrap">
+        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
           <span>{formatSessionDate(session.startDate)} → {formatSessionDate(session.endDate)}</span>
           <span className="font-semibold text-foreground">
             {t("sessions.form.perMonth", { amount: formatMoney(session.baseFee, session.currency) })}
@@ -105,7 +105,7 @@ export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDet
       headerExtra={
         <div className="flex items-center gap-2 flex-wrap">
           <StatusBadge status={session.status} config={statusConfig} />
-          <span className="text-[11px] text-muted-foreground">{session.type}</span>
+          <span className="text-xs text-muted-foreground">{session.type}</span>
         </div>
       }
       headerActions={

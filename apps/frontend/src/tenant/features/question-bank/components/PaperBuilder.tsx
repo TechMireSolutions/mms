@@ -149,10 +149,10 @@ export function PaperBuilder({ questions, tests, activeTab, showHeader = true, o
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           {showHeader && (
             <div>
-              <h2 id="paper-generator-title" className="m-0 text-[15px] font-bold text-foreground">
+              <h2 id="paper-generator-title" className="m-0 text-base font-bold text-foreground">
                 {t("questionBank.generatorTitle")}
               </h2>
-              <p className="m-0 text-[12px] text-muted-foreground">{t("questionBank.manualPaperGeneratorSubtitle")}</p>
+              <p className="m-0 text-sm text-muted-foreground">{t("questionBank.manualPaperGeneratorSubtitle")}</p>
             </div>
           )}
           {saved && (

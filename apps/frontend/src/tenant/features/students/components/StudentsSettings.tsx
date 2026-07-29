@@ -84,7 +84,7 @@ export default function StudentsSettings(): React.ReactElement {
             <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
               <GraduationCap className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
             </div>
-            <h3 id="students-settings-title" className="text-[13px] font-bold text-foreground">
+            <h3 id="students-settings-title" className="text-sm font-bold text-foreground">
               {t("students.settings.title")}
             </h3>
           </div>
@@ -92,7 +92,7 @@ export default function StudentsSettings(): React.ReactElement {
           {showPrefs && (
             <div className="space-y-4">
               <div className="space-y-3">
-                <h4 className="text-[11px] font-bold text-foreground uppercase tracking-wider">
+                <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
                   {t("students.settings.grSectionTitle")}
                 </h4>
                 <div className="grid grid-cols-2 gap-3 text-left">
@@ -139,8 +139,8 @@ export default function StudentsSettings(): React.ReactElement {
 
               <div className="py-3 border-t border-border mt-3 flex items-center justify-between">
                 <div className="text-left">
-                  <p className="text-[13px] font-semibold text-foreground">{t("students.settings.defaultViewLayout")}</p>
-                  <p className="text-[11px] text-muted-foreground">{t("students.settings.defaultViewLayoutDesc")}</p>
+                  <p className="text-sm font-semibold text-foreground">{t("students.settings.defaultViewLayout")}</p>
+                  <p className="text-xs text-muted-foreground">{t("students.settings.defaultViewLayoutDesc")}</p>
                 </div>
                 <div className="flex gap-1 bg-muted p-1 rounded-xl w-fit">
                   <Button

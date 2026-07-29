@@ -40,7 +40,7 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
   if (!active || !payload?.length) return null;
   return (
     <div className="surface-glass rounded-xl px-4 py-3 shadow-lg text-xs space-y-1.5 text-start select-none">
-      <p className="text-muted-foreground/80 text-[10px] font-bold m-0">{label}</p>
+      <p className="text-muted-foreground/80 text-xs font-bold m-0">{label}</p>
       {payload.map((payloadEntry: TooltipPayloadEntry) => (
         <div key={payloadEntry.dataKey as string | number} className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full shrink-0" style={{ background: payloadEntry.color }} aria-hidden="true" />
@@ -139,7 +139,7 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
           <h3 id="revenue-chart-heading" className="text-sm font-bold text-foreground m-0">
             {t("widget.title.revenueExpenses")}
           </h3>
-          <p className="text-[12px] text-muted-foreground mt-1 m-0 font-medium">
+          <p className="text-sm text-muted-foreground mt-1 m-0 font-medium">
             {t("dashboard.charts.revenue.subtitle")}
           </p>
         </div>
@@ -205,13 +205,13 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
       <div className="flex items-center gap-4 mb-4" aria-hidden="true">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: activeColors.revenue }} />
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             {t("accounting.dashboard.revenue")}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: activeColors.expenses }} />
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             {t("accounting.dashboard.expenses")}
           </span>
         </div>

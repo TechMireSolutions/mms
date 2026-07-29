@@ -51,7 +51,7 @@ function AttributeRow({
         <Icon className="w-3.5 h-3.5 text-muted-foreground" />
       </div>
       <div className="min-w-0 flex-1 text-start">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
         <div className="text-sm font-medium text-foreground mt-0.5 break-words">{value || t("common.notSpecified")}</div>
       </div>
     </div>
@@ -120,7 +120,7 @@ export default function TeacherDetail({
         footer={
           <div className="flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-success" />
-            <span className="text-[9px] font-bold text-success uppercase">{t("teachers.detail.synced")}</span>
+            <span className="text-xs font-bold text-success uppercase">{t("teachers.detail.synced")}</span>
           </div>
         }
       >
@@ -143,7 +143,7 @@ export default function TeacherDetail({
             >
               <a href={cleanTelUri(primaryPhone)}>
                 <Phone className="w-4 h-4 mx-auto" />
-                <span className="text-[10px] font-bold">{t("teachers.detail.call")}</span>
+                <span className="text-xs font-bold">{t("teachers.detail.call")}</span>
               </a>
             </Button>
           )}
@@ -155,7 +155,7 @@ export default function TeacherDetail({
               className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-success/10 hover:border-success/30 transition-all text-success text-center cursor-pointer shadow-none"
             >
               <MessageCircle className="w-4 h-4 mx-auto" />
-              <span className="text-[10px] font-bold">{t("teachers.list.actionWhatsApp")}</span>
+              <span className="text-xs font-bold">{t("teachers.list.actionWhatsApp")}</span>
             </Button>
           )}
           {primaryPhone && canWriteMessaging && (
@@ -166,7 +166,7 @@ export default function TeacherDetail({
               className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-info/10 hover:border-info/30 transition-all text-info text-center cursor-pointer shadow-none"
             >
               <MessageSquare className="w-4 h-4 mx-auto" />
-              <span className="text-[10px] font-bold">{t("teachers.list.actionSms")}</span>
+              <span className="text-xs font-bold">{t("teachers.list.actionSms")}</span>
             </Button>
           )}
           {primaryEmail && canWriteMessaging && (
@@ -177,13 +177,13 @@ export default function TeacherDetail({
               className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/30 transition-all text-primary text-center cursor-pointer shadow-none"
             >
               <Mail className="w-4 h-4 mx-auto" />
-              <span className="text-[10px] font-bold">{t("teachers.list.actionEmail")}</span>
+              <span className="text-xs font-bold">{t("teachers.list.actionEmail")}</span>
             </Button>
           )}
         </div>
 
         <Card accentColor="primary" className="p-4">
-          <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
             {t("teachers.detail.sectionDetails")}
           </h4>
           <AttributeRow icon={User} label={t("teachers.field.contact")} value={displayName} />

@@ -52,7 +52,7 @@ export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }
               <Tag className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
               <span className="text-sm text-muted-foreground">{displayFee.label}</span>
               {displayFee.pct > 0 && (
-                <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary" aria-label={t("enrollments.wizard.step5DiscountPercentAria", { pct: displayFee.pct })}>–{displayFee.pct}%</span>
+                <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary" aria-label={t("enrollments.wizard.step5DiscountPercentAria", { pct: displayFee.pct })}>–{displayFee.pct}%</span>
               )}
             </div>
             <span className={`text-sm font-semibold ${displayFee.discountAmt > 0 ? "text-success" : "text-muted-foreground"}`}>
@@ -95,7 +95,7 @@ export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }
                   <p className="text-xs font-bold text-foreground">{discount.name}</p>
                   <span className="text-xs font-bold text-primary">{t("enrollments.wizard.step5PercentOff", { pct: discount.value })}</span>
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{discount.conditions}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{discount.conditions}</p>
               </div>
             ))}
           </div>

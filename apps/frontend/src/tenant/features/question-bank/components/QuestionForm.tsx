@@ -194,7 +194,7 @@ export function QuestionForm({
           translate={(key) => t(key as AppTranslationKey)}
         />
         {errors.categoryIds && (
-          <p className="text-[10px] text-destructive font-medium">{errors.categoryIds}</p>
+          <p className="text-xs text-destructive font-medium">{errors.categoryIds}</p>
         )}
       </Card>
     </div>
@@ -265,10 +265,10 @@ export function QuestionForm({
                         className="h-4 w-4 flex-shrink-0 accent-primary"
                       />
                       <div className="relative flex items-center w-full">
-                        <HelpCircle className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                        <HelpCircle className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                         <Input
                           type="text"
-                          className={`${FORM_INPUT} pl-10`}
+                          className={`${FORM_INPUT} ps-10`}
                           value={optionValue}
                           onChange={(e) => {
                             const nextOptions = [...questionDraft.options];
@@ -282,7 +282,7 @@ export function QuestionForm({
                   ))}
                 </div>
                 {errors.answer && (
-                  <p className="text-[10px] text-destructive mt-1 font-medium">{errors.answer}</p>
+                  <p className="text-xs text-destructive mt-1 font-medium">{errors.answer}</p>
                 )}
               </div>
             )}
@@ -304,7 +304,7 @@ export function QuestionForm({
                   ))}
                 </div>
                 {errors.answer && (
-                  <p className="text-[10px] text-destructive mt-1 font-medium">{errors.answer}</p>
+                  <p className="text-xs text-destructive mt-1 font-medium">{errors.answer}</p>
                 )}
               </div>
             )}
@@ -378,16 +378,16 @@ export function QuestionForm({
         {questionDraft.text}
       </span>
       <div className="flex items-center gap-1.5">
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-[10px] capitalize">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-xs capitalize">
           {t(`questionBank.type.${questionDraft.type}` as AppTranslationKey)}
         </span>
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-info/10 text-info font-semibold border border-info/20 text-[10px] capitalize">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-info/10 text-info font-semibold border border-info/20 text-xs capitalize">
           {t(`questionBank.difficulty.${questionDraft.difficulty}` as AppTranslationKey)}
         </span>
       </div>
     </div>
   ) : (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-[11px] font-bold border border-destructive/20">
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-xs font-bold border border-destructive/20">
       {t('questionBank.validation.textRequired')}
     </span>
   );

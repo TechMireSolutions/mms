@@ -143,7 +143,7 @@ export function MessagingSetupPanel({
                 <label className={FORM_LABEL} htmlFor="tplBody">{t('messaging.messageBody')}</label>
                 <MessagingVariableTokensBar onSelectToken={(token) => setBody((current) => appendVariableToken(current, token))} className="mb-2" />
                 <Textarea id="tplBody" value={body} onChange={(event) => setBody(event.target.value)} placeholder={t('messaging.templateBodyPlaceholder')} rows={4} required />
-                <p className="mt-1 flex items-center gap-1 text-[10px] italic text-muted-foreground/80"><Sparkles className="h-3 w-3 flex-shrink-0 text-primary/70" />{t('messaging.fallbackHint')}</p>
+                <p className="mt-1 flex items-center gap-1 text-xs italic text-muted-foreground/80"><Sparkles className="h-3 w-3 flex-shrink-0 text-primary/70" />{t('messaging.fallbackHint')}</p>
               </div>
               <Button type="submit" className="w-full font-bold"><Check className="me-1.5 h-4 w-4" />{editingId ? t('messaging.updateTemplate') : t('messaging.saveTemplate')}</Button>
             </form>
@@ -169,13 +169,13 @@ export function MessagingSetupPanel({
             <tbody className="divide-y divide-border/60">
               {filteredTemplates.map((template) => (
                 <tr key={template.id} className="transition-colors hover:bg-muted/5">
-                  <td className="flex items-center gap-1.5 px-4 py-3 font-semibold text-foreground"><span>{template.labelKey ? t(template.labelKey as Parameters<typeof t>[0]) : template.label}</span>{template.channel && template.channel !== 'all' && <ChannelBadge channel={template.channel} className="text-[9px]" />}</td>
+                  <td className="flex items-center gap-1.5 px-4 py-3 font-semibold text-foreground"><span>{template.labelKey ? t(template.labelKey as Parameters<typeof t>[0]) : template.label}</span>{template.channel && template.channel !== 'all' && <ChannelBadge channel={template.channel} className="text-xs" />}</td>
                   <td className="px-4 py-3"><StatusBadge status={template.category || 'general'} config={categoryBadgeConfig} size="sm" /></td>
                   <td className="max-w-sm truncate px-4 py-3 text-muted-foreground" title={template.body}>{template.body}</td>
                   <td className="px-4 py-3 text-center"><div className="flex items-center justify-center gap-1">
                     <Button variant="ghost" size="icon" onClick={() => void copyBody(template.body)} className="text-muted-foreground" title={t('messaging.copyTemplate')}><Copy className="h-3.5 w-3.5" /></Button>
                     {canWrite && <Button variant="ghost" size="icon" onClick={() => void duplicate(template)} className="text-muted-foreground" title={t('messaging.duplicateTemplate')}><Copy className="h-3.5 w-3.5 text-primary/70" /></Button>}
-                    {canWrite && template.id.startsWith('custom_') ? <><Button variant="ghost" size="icon" onClick={() => edit(template)} className="text-primary" title={t('common.edit')}><Edit3 className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" onClick={() => onDeleteRequest(template.id)} className="text-destructive" title={t('common.delete')}><Trash2 className="h-3.5 w-3.5" /></Button></> : <span className="rounded border border-border/30 bg-muted/65 px-1.5 py-0.5 font-mono text-[10px] italic uppercase text-muted-foreground/60">{t('messaging.tagSystem')}</span>}
+                    {canWrite && template.id.startsWith('custom_') ? <><Button variant="ghost" size="icon" onClick={() => edit(template)} className="text-primary" title={t('common.edit')}><Edit3 className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" onClick={() => onDeleteRequest(template.id)} className="text-destructive" title={t('common.delete')}><Trash2 className="h-3.5 w-3.5" /></Button></> : <span className="rounded border border-border/30 bg-muted/65 px-1.5 py-0.5 font-mono text-xs italic uppercase text-muted-foreground/60">{t('messaging.tagSystem')}</span>}
                   </div></td>
                 </tr>
               ))}

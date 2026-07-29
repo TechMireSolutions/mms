@@ -80,7 +80,7 @@ export function Step2SelectSession({ value, onChange, sessions = [] }: Step2Sele
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-bold text-foreground">{session.name}</p>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{session.type}</span>
+                    <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{session.type}</span>
                     {isFull && <StatusBadge status="full" config={sessionStatusConfig} size="sm" />}
                     {!isFull && spotsLeft <= 5 && <StatusBadge status="almost_full" config={sessionStatusConfig} size="sm" />}
                   </div>
@@ -101,7 +101,7 @@ export function Step2SelectSession({ value, onChange, sessions = [] }: Step2Sele
                   {session.classes && session.classes.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
                       {session.classes.map((sessionClass) => (
-                        <span key={sessionClass.id} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                        <span key={sessionClass.id} className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
                           {t("enrollments.wizard.step2ClassSpots", {
                             name: sessionClass.name,
                             count: sessionClass.capacity - sessionClass.enrolled,

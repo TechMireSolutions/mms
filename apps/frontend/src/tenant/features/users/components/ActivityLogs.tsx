@@ -85,7 +85,7 @@ export function ActivityLogs({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[180px] flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -126,7 +126,7 @@ export function ActivityLogs({
                   columnKey="time"
                   width={getColumnWidth?.('time')}
                   onResize={onColumnResize}
-                  className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                  className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
                 >
                   {t('users.activityColTime')}
                 </ResizableTableHead>
@@ -134,7 +134,7 @@ export function ActivityLogs({
                   columnKey="user"
                   width={getColumnWidth?.('user')}
                   onResize={onColumnResize}
-                  className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                  className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
                 >
                   {t('users.activityColUser')}
                 </ResizableTableHead>
@@ -142,7 +142,7 @@ export function ActivityLogs({
                   columnKey="action"
                   width={getColumnWidth?.('action')}
                   onResize={onColumnResize}
-                  className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                  className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
                 >
                   {t('users.activityColAction')}
                 </ResizableTableHead>
@@ -150,7 +150,7 @@ export function ActivityLogs({
                   columnKey="detail"
                   width={getColumnWidth?.('detail')}
                   onResize={onColumnResize}
-                  className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                  className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
                 >
                   {t('users.activityColDetail')}
                 </ResizableTableHead>
@@ -158,7 +158,7 @@ export function ActivityLogs({
                   columnKey="ip"
                   width={getColumnWidth?.('ip')}
                   onResize={onColumnResize}
-                  className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase text-muted-foreground"
+                  className="px-3 py-2.5 text-left text-xs font-semibold uppercase text-muted-foreground"
                 >
                   {t('users.activityColIp')}
                 </ResizableTableHead>
@@ -173,7 +173,7 @@ export function ActivityLogs({
                     <ActivityActionBadge action={l.action} />
                   </td>
                   <td className="px-3 py-2.5 text-xs text-muted-foreground">{l.detail}</td>
-                  <td className="px-3 py-2.5 font-mono text-[10px] text-muted-foreground">{l.ip}</td>
+                  <td className="px-3 py-2.5 font-mono text-xs text-muted-foreground">{l.ip}</td>
                 </tr>
               ))}
             </tbody>

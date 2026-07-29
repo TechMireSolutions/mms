@@ -84,7 +84,7 @@ export function FinanceSettings(): React.ReactElement {
         <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
           <DollarSign className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         </div>
-        <h3 id="finance-settings-title" className="text-[13px] font-bold text-foreground">{t("finance.settings.title")}</h3>
+        <h3 id="finance-settings-title" className="text-sm font-bold text-foreground">{t("finance.settings.title")}</h3>
       </div>
 
       {showPrefs && (

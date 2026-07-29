@@ -26,7 +26,7 @@ export default function CustomWidgetChartFallback({
   if (chartData.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border/40 rounded-xl bg-card/20">
-        <span className="text-[8px] font-bold uppercase tracking-wider">{t("reports.widgets.noChartData")}</span>
+        <span className="text-xs font-bold uppercase tracking-wider">{t("reports.widgets.noChartData")}</span>
       </div>
     );
   }

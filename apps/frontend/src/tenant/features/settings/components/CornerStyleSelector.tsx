@@ -80,14 +80,14 @@ export default function CornerStyleSelector({
           style={{ borderRadius: resolvedRadius }}
         >
           <div
-            className="px-3.5 py-1.5 bg-primary text-primary-foreground text-[10px] font-extrabold shadow-sm transition-all duration-300"
+            className="px-3.5 py-1.5 bg-primary text-primary-foreground text-xs font-extrabold shadow-sm transition-all duration-300"
             style={{ borderRadius: resolvedRadius }}
           >
             {matchedPreset && activeOption
               ? t(activeOption.labelKey) 
               : t('theme.cornerCustom', { radius: resolvedRadius })}
           </div>
-          <span className="text-[9px] text-muted-foreground font-mono">
+          <span className="text-xs text-muted-foreground font-mono">
             {resolvedRadius}
           </span>
         </div>
@@ -138,7 +138,7 @@ export default function CornerStyleSelector({
       </div>
 
       {/* Current Description */}
-      <p className="text-[11px] text-muted-foreground leading-relaxed m-0 text-center px-1">
+      <p className="text-xs text-muted-foreground leading-relaxed m-0 text-center px-1">
         {matchedPreset && activeOption
           ? t(activeOption.descriptionKey)
           : t('theme.cornerStyleHint')}

@@ -83,7 +83,7 @@ export function TeachersSettings(): React.JSX.Element {
             <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
               <School className="w-3.5 h-3.5 text-primary" />
             </div>
-            <h3 className="text-[13px] font-bold text-foreground">{t("teachers.settings.title")}</h3>
+            <h3 className="text-sm font-bold text-foreground">{t("teachers.settings.title")}</h3>
           </div>
 
           {showPrefs && (

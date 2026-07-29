@@ -94,7 +94,7 @@ export default function WizardLayout({
                   </div>
                   <span
                     className={cn(
-                      "hidden text-[11px] font-semibold uppercase tracking-wider sm:block",
+                      "hidden text-xs font-semibold uppercase tracking-wider sm:block",
                       active ? "text-foreground" : "text-muted-foreground",
                     )}
                   >

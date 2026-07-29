@@ -119,7 +119,7 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-bold text-foreground m-0">{typeName}</h3>
-                    <span className="text-[10px] text-muted-foreground">{t("obligations.wakala.via")}</span>
+                    <span className="text-xs text-muted-foreground">{t("obligations.wakala.via")}</span>
                     <span className="text-sm font-semibold text-foreground">{rep?.name || emDash}</span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 m-0">{t("obligations.wakala.mujtahidLabel", { name: mujtahid?.name || emDash })}</p>
@@ -203,7 +203,7 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
                 <div className="px-4 py-2 border-t border-border">
                   <Button type="button" onClick={() => setModal({ mode: "add-dist", distMode: "add", data: { name: "", percentage: 0, wakala_type_id: wakalaType.id, type: "Liability" } })}
                     variant="ghost"
-                    className="flex items-center gap-1 h-auto p-0 text-xs font-semibold text-primary hover:text-primary/80 hover:bg-transparent shadow-none transition-colors">
+                    className="flex items-center gap-1 min-h-11 h-auto px-1 text-xs font-semibold text-primary hover:text-primary/80 hover:bg-transparent shadow-none transition-colors">
                     <Plus className="w-3 h-3" aria-hidden="true" /> {t("obligations.wakala.addDistribution")}
                   </Button>
                 </div>

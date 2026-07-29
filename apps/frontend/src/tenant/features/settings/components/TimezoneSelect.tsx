@@ -141,7 +141,7 @@ export default function TimezoneSelect({
             aria-label={t('global.timezone')}
             disabled={disabled}
             className={cn(
-              'h-auto min-h-[44px] w-full justify-between px-3 py-2 font-normal sm:flex-1',
+              'h-auto min-h-11 w-full justify-between px-3 py-2 font-normal sm:flex-1',
               !normalizedValue && 'text-muted-foreground',
             )}
           >
@@ -212,7 +212,7 @@ export default function TimezoneSelect({
                         aria-hidden
                       />
                       <span className="truncate">{timezoneOption.label}</span>
-                      <span className="ml-auto pl-2 font-mono text-[10px] text-muted-foreground">
+                      <span className="ml-auto pl-2 font-mono text-xs text-muted-foreground">
                         {timezoneOption.value}
                       </span>
                     </Button>

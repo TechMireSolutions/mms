@@ -165,7 +165,7 @@ export function MessagingWorkPanel({
               size="sm"
               disabled={selectingReachable}
               onClick={() => void selectReachable('phone')}
-              className="text-[11px] font-semibold"
+              className="text-xs font-semibold"
             >
               <CheckSquare className="me-1 h-3.5 w-3.5 text-info" /> {t('messaging.selectAllValidPhone')}
             </Button>
@@ -174,12 +174,12 @@ export function MessagingWorkPanel({
               size="sm"
               disabled={selectingReachable}
               onClick={() => void selectReachable('email')}
-              className="text-[11px] font-semibold"
+              className="text-xs font-semibold"
             >
               <CheckSquare className="me-1 h-3.5 w-3.5 text-warning" /> {t('messaging.selectAllValidEmail')}
             </Button>
             {selectedList.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => onSelectedByIdChange({})} className="text-[11px] text-destructive">
+              <Button variant="ghost" size="sm" onClick={() => onSelectedByIdChange({})} className="text-xs text-destructive">
                 <XSquare className="me-1 h-3.5 w-3.5" /> {t('messaging.clearSelection')}
               </Button>
             )}
@@ -214,13 +214,13 @@ export function MessagingWorkPanel({
                       />
                     </td>
                     <td className="flex items-center gap-2 px-4 py-2 font-medium text-foreground">
-                      <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-black text-primary">
+                      <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
                         {getInitials(getDisplayName(contact))}
                       </span>
                       <span>{getDisplayName(contact)}</span>
                     </td>
-                    <td className="px-4 py-2 font-mono">{phone || <span className="rounded border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-[10px] text-warning">{t('messaging.missingPhone')}</span>}</td>
-                    <td className="px-4 py-2">{email || <span className="rounded border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-[10px] text-warning">{t('messaging.missingEmail')}</span>}</td>
+                    <td className="px-4 py-2 font-mono">{phone || <span className="rounded border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-xs text-warning">{t('messaging.missingPhone')}</span>}</td>
+                    <td className="px-4 py-2">{email || <span className="rounded border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-xs text-warning">{t('messaging.missingEmail')}</span>}</td>
                   </tr>
                 );
               })}
@@ -239,7 +239,7 @@ export function MessagingWorkPanel({
           </div>
           <div className="space-y-2 rounded-xl border border-border/40 bg-muted/40 p-3">
             <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">{t('messaging.contactsChecked')}:</span><span className="font-bold">{selectedList.length}</span></div>
-            {selectedList.length > 0 && <div className="max-h-36 space-y-1 overflow-y-auto rounded border border-border/30 bg-background p-1.5">{selectedList.map((recipient) => <div key={recipient.id} className="flex justify-between text-[10px] text-muted-foreground"><span className="max-w-[120px] truncate">{recipient.name}</span><span className="font-mono">{recipient.phone || recipient.email}</span></div>)}</div>}
+            {selectedList.length > 0 && <div className="max-h-36 space-y-1 overflow-y-auto rounded border border-border/30 bg-background p-1.5">{selectedList.map((recipient) => <div key={recipient.id} className="flex min-w-0 items-center justify-between gap-2 text-xs text-muted-foreground"><span className="min-w-0 truncate">{recipient.name}</span><span className="shrink-0 font-mono truncate max-w-[50%]">{recipient.phone || recipient.email}</span></div>)}</div>}
           </div>
         </div>
         {canWrite && (

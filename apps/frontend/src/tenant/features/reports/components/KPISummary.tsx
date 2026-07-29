@@ -163,7 +163,7 @@ function SubtextDisplay({ text }: { text: string }): React.JSX.Element {
         type="button"
         variant="link"
         onClick={(event) => { event.stopPropagation(); setExpanded((previousExpanded) => !previousExpanded); }}
-        className="ml-1 h-auto p-0 text-primary hover:underline font-extrabold inline text-[9px] shadow-none"
+        className="ml-1 min-h-11 px-1 text-primary hover:underline font-extrabold inline-flex items-center text-xs shadow-none"
       >
         {expanded ? t("common.showLess") : t("common.readMore")}
       </Button>
@@ -1129,7 +1129,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-border">
               <div>
                 <h4 className="text-sm font-bold text-foreground">{t("reports.kpiSettingsTitle")}</h4>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {t("reports.kpiSettingsDesc")}
                 </p>
               </div>
@@ -1167,7 +1167,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
                     <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">{t("reports.kpiVisibility")}</h4>
                   </div>
 
-                  <p className="text-[10px] text-muted-foreground mt-1.5 font-sans">
+                  <p className="text-xs text-muted-foreground mt-1.5 font-sans">
                     {t("reports.kpiVisibilityDesc")}
                   </p>
 
@@ -1189,10 +1189,10 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
                               aria-label={kpi.label}
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="text-[11px] font-bold text-foreground truncate leading-tight">
+                              <p className="text-xs font-bold text-foreground truncate leading-tight">
                                 {kpi.label}
                               </p>
-                              <p className="text-[9px] text-muted-foreground leading-none mt-0.5 flex items-center gap-1 font-semibold">
+                              <p className="text-xs text-muted-foreground leading-none mt-0.5 flex items-center gap-1 font-semibold">
                                 {isCustom ? (
                                   <span className="text-primary">{t("reports.kpiCustomCard")}</span>
                                 ) : (
@@ -1234,7 +1234,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
                 </div>
 
                 <div className="pt-3 border-t border-border mt-3">
-                  <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground">
+                  <div className="flex items-center justify-between text-xs font-bold text-muted-foreground">
                     <span>{t("reports.kpiActiveSelection")}</span>
                     <span className="text-foreground">{t("reports.kpiSelectionRatio", { current: selectedCardIds.length, total: possibleCards.length })}</span>
                   </div>
@@ -1270,7 +1270,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
 
               {/* Main Zone: Title and Statistical value */}
               <main className="mt-2 space-y-0.5 flex-1 min-w-0">
-                <span className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none truncate">
+                <span className="block text-xs font-bold text-muted-foreground uppercase tracking-widest leading-none truncate">
                   {kpi.label}
                 </span>
                 <p className={`text-lg font-black ${kpiColor.text} leading-tight mt-0.5 truncate`}>
@@ -1279,10 +1279,10 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
               </main>
 
               {/* Footer Zone: Subtitle metadata and trend arrow */}
-              <footer className="mt-2 pt-1.5 border-t border-border/20 text-[9px] text-muted-foreground min-w-0">
+              <footer className="mt-2 pt-1.5 border-t border-border/20 text-xs text-muted-foreground min-w-0">
                 <div className="flex items-center gap-1 font-sans mb-0.5 select-none">
-                  <span className={`text-[9px] font-black ${trendInfo.cls}`}>{trendInfo.arrow} {kpi.velocity || ""}</span>
-                  {kpi.velocity && <span className="text-[8px] text-muted-foreground font-medium opacity-60">{t("reports.kpiVsPrev")}</span>}
+                  <span className={`text-xs font-black ${trendInfo.cls}`}>{trendInfo.arrow} {kpi.velocity || ""}</span>
+                  {kpi.velocity && <span className="text-xs text-muted-foreground font-medium opacity-60">{t("reports.kpiVsPrev")}</span>}
                 </div>
                 <SubtextDisplay text={kpi.sub} />
               </footer>
@@ -1302,7 +1302,7 @@ export default function KPISummary({ category, role }: KPISummaryProps): React.J
           className="rounded-2xl border border-dashed border-border/85 hover:border-primary/50 bg-card/25 hover:bg-primary/5 hover:text-primary transition-all duration-300 flex flex-col items-center justify-center p-3 text-muted-foreground min-h-[100px] text-center cursor-pointer"
         >
           <Plus className="w-5 h-5 mb-1 text-muted-foreground hover:text-primary" />
-          <span className="text-[10px] font-bold">{t("reports.kpiAddCustom")}</span>
+          <span className="text-xs font-bold">{t("reports.kpiAddCustom")}</span>
         </motion.button>
       </div>
     </div>

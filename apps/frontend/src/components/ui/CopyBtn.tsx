@@ -16,7 +16,7 @@ interface CopyBtnProps {
  */
 export function CopyBtn({
   text,
-  className = "min-h-11 min-w-11 h-11 w-11 opacity-0 group-hover:opacity-100 transition-opacity rounded text-muted-foreground hover:text-foreground",
+  className = "min-h-11 min-w-11 h-11 w-11 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity rounded text-muted-foreground hover:text-foreground",
   variant = "ghost",
   showToast = false,
 }: CopyBtnProps): React.JSX.Element {

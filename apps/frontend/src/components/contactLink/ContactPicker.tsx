@@ -274,14 +274,14 @@ export default function ContactPicker({
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-1.5 mb-1">
-              <p className="text-[13px] font-bold text-foreground truncate">{selectedName}</p>
+              <p className="text-sm font-bold text-foreground truncate">{selectedName}</p>
               {selected.gender && (
-                <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full capitalize ${genderBadgeColor}`}>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${genderBadgeColor}`}>
                   {formatContactGenderLabel(selected.gender, t)}
                 </span>
               )}
             </div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
               {selectedPhone && (
                 <span className="flex items-center gap-1">
                   <Phone className="w-3 h-3 text-muted-foreground/60" />
@@ -330,7 +330,7 @@ export default function ContactPicker({
             <div className="px-4.5 py-4 text-xs text-muted-foreground flex flex-col items-center justify-center gap-1.5 text-center bg-muted/5">
               <User className="w-5 h-5 text-muted-foreground/45" />
               <p className="font-semibold text-foreground/80">{resolvedEmptyTitle}</p>
-              <p className="text-[10px] text-muted-foreground">{resolvedEmptyHint}</p>
+              <p className="text-xs text-muted-foreground">{resolvedEmptyHint}</p>
             </div>
           )}
           {matches.map((contact) => {
@@ -361,11 +361,11 @@ export default function ContactPicker({
                   id={contact.id}
                   name={contactName}
                   avatar={contact.avatar}
-                  className="w-8 h-8 text-[11px] flex-shrink-0"
+                  className="w-8 h-8 text-xs flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-foreground truncate">{contactName}</p>
-                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 truncate mt-0.5">
+                  <p className="text-sm font-semibold text-foreground truncate">{contactName}</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1.5 truncate mt-0.5">
                     {contactPhone || t("contacts.table.emptyDash")}
                     {contactCity && <span>· {contactCity}</span>}
                   </p>
@@ -386,13 +386,13 @@ export default function ContactPicker({
     <div className="relative">
       <label htmlFor={resolvedId} className={FORM_LABEL}>{label}</label>
       <div ref={anchorRef} className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/75 pointer-events-none" />
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/75 pointer-events-none" />
         <Input
           id={resolvedId}
           name={resolvedName}
           className={cn(
-            "pl-9.5",
-            allowCreate ? (query ? "pr-16" : "pr-10") : (query ? "pr-9" : "pr-3"),
+            "ps-9.5",
+            allowCreate ? (query ? "pe-16" : "pe-10") : (query ? "pe-9" : "pe-3"),
             error && "border-destructive focus-visible:ring-destructive",
           )}
           placeholder={searchPlaceholder ?? t("contacts.searchPlaceholder")}
@@ -407,7 +407,7 @@ export default function ContactPicker({
           aria-controls={open ? `${resolvedId}-listbox` : undefined}
           role="combobox"
         />
-        <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+        <div className="absolute end-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
           {query ? (
             <Button
               type="button"

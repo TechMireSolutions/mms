@@ -116,7 +116,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
         {invoice.studentName}
       </span>
       <div className="flex items-center gap-1.5">
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-success/10 text-success font-semibold border border-success/20 text-[10px]">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-success/10 text-success font-semibold border border-success/20 text-xs">
           {t("finance.balance", { balance: formatCurrency(balance - Number(paymentDraft.amount || 0)) })}
         </span>
       </div>
@@ -141,12 +141,12 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
           <Card accentColor="primary" className="p-5 px-6 space-y-2 shadow-sm">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h4 className="text-[14px] font-bold text-foreground m-0">{invoice.studentName}</h4>
-                <p className="text-[11px] text-muted-foreground m-0 mt-0.5">{invoice.id} · {invoice.class}</p>
+                <h4 className="text-sm font-bold text-foreground m-0">{invoice.studentName}</h4>
+                <p className="text-xs text-muted-foreground m-0 mt-0.5">{invoice.id} · {invoice.class}</p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground">{t("finance.balanceDue")}</p>
-                <p className="text-[14px] font-bold text-primary m-0 mt-0.5">{formatCurrency(balance)}</p>
+                <p className="text-xs uppercase font-bold text-muted-foreground">{t("finance.balanceDue")}</p>
+                <p className="text-sm font-bold text-primary m-0 mt-0.5">{formatCurrency(balance)}</p>
               </div>
             </div>
           </Card>
@@ -162,12 +162,12 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
             <div className="sm:col-span-2">
               <Field label={`${t("finance.columns.amount")} (${activeCurrency.code}) *`} error={errors.amount}>
                 <div className="relative flex items-center group/input">
-                  <DollarSign className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                  <DollarSign className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                   <Input
                     id="payment-amount-input"
                     name="amount"
                     type="number"
-                    className="pl-10"
+                    className="ps-10"
                     value={paymentDraft.amount || ""}
                     onChange={(event) => updateDraft({ amount: event.target.value === "" ? 0 : Number(event.target.value) })}
                     max={balance}
@@ -176,7 +176,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
                   />
                 </div>
                 {Number(paymentDraft.amount) < balance && Number(paymentDraft.amount) > 0 && (
-                  <p className="m-0 mt-1 text-[10px] text-warning">
+                  <p className="m-0 mt-1 text-xs text-warning">
                     {t("finance.partialPayment", { balance: formatCurrency(balance - Number(paymentDraft.amount)) })}
                   </p>
                 )}
@@ -214,11 +214,11 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
             <div className="sm:col-span-2">
               <Field label={t("finance.columns.note")} error={errors.note}>
                 <div className="relative flex items-center group/input">
-                  <FileText className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                  <FileText className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                   <Input
                     id="payment-note"
                     name="note"
-                    className={`${FORM_INPUT} pl-10`}
+                    className={`${FORM_INPUT} ps-10`}
                     value={paymentDraft.note || ""}
                     onChange={(event) => updateDraft({ note: event.target.value })}
                     placeholder={t("finance.paymentNotePlaceholder")}

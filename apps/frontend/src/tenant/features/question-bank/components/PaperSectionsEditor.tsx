@@ -36,8 +36,8 @@ export function PaperSectionsEditor({
     <section className="rounded-xl border border-border bg-card p-3 sm:p-4">
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="m-0 text-[13px] font-bold text-foreground">{t("questionBank.paperSections")}</h3>
-          <p className="m-0 text-[11px] text-muted-foreground">
+          <h3 className="m-0 text-sm font-bold text-foreground">{t("questionBank.paperSections")}</h3>
+          <p className="m-0 text-xs text-muted-foreground">
             {t("questionBank.selectedQuestionCount", { count: selectedCount })}
           </p>
         </div>

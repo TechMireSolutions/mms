@@ -55,7 +55,7 @@ export function DuplicateDetectionModal({
           type="button"
           variant="ghost"
           onClick={onClose}
-          className="min-h-[44px] px-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-transparent hover:bg-muted"
+          className="min-h-11 px-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-transparent hover:bg-muted"
         >
           {t("common.close")}
         </Button>

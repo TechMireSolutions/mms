@@ -30,7 +30,7 @@ export function GoogleContactsConnectStep({
         type="button"
         variant="outline"
         onClick={onConnect}
-        className="w-full flex items-center gap-2 px-4 min-h-[44px] rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted transition-colors shadow-none justify-start"
+        className="w-full flex items-center gap-2 px-4 min-h-11 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted transition-colors shadow-none justify-start"
       >
         <Globe className="w-4 h-4 text-muted-foreground" />
         <span>{t("contacts.sync.connectGoogle")}</span>
@@ -52,7 +52,7 @@ export function GoogleContactsConnectStep({
             type="button"
             onClick={onExchangeCode}
             disabled={!authCode.trim() || exchanging}
-            className="flex items-center gap-2 px-4 min-h-[44px] rounded-lg bg-info text-info-foreground text-xs font-bold hover:bg-info/90 disabled:opacity-60 transition-colors border border-transparent shadow-none"
+            className="flex items-center gap-2 px-4 min-h-11 rounded-lg bg-info text-info-foreground text-xs font-bold hover:bg-info/90 disabled:opacity-60 transition-colors border border-transparent shadow-none"
           >
             {exchanging ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />

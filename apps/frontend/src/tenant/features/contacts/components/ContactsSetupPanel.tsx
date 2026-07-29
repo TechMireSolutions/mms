@@ -65,7 +65,7 @@ export default function ContactsSetupPanel({
           type="button"
           onClick={handleSave}
           disabled={isSaving}
-          className="flex items-center gap-2 px-5 min-h-[44px]"
+          className="flex items-center gap-2 px-5 min-h-11"
         >
           <Save className="w-4 h-4" />
           <span>{saved ? t("contacts.form.saved") : t("contacts.setup.saveAndApply")}</span>

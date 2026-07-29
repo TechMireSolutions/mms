@@ -34,7 +34,7 @@ export default function ThemeModeSelector({ value, onChange }: ThemeModeSelector
             onClick={() => onChange(mode)}
             aria-pressed={value === mode}
             className={cn(
-              'flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-lg border py-2 text-[12px] font-semibold transition-all',
+              'flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border py-2 text-sm font-semibold transition-all',
               value === mode
                 ? 'border-primary bg-primary/5 text-primary hover:bg-primary/5 hover:text-primary'
                 : 'border-border text-muted-foreground hover:bg-muted',

@@ -97,7 +97,7 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-sm font-bold text-foreground">{student.name}</p>
                   {student.grNumber && (
-                    <span className="bg-primary/5 text-primary text-[9px] px-1.5 py-0.5 rounded border border-primary/10 font-bold uppercase tracking-wider">
+                    <span className="bg-primary/5 text-primary text-xs px-1.5 py-0.5 rounded border border-primary/10 font-bold uppercase tracking-wider">
                       {t("enrollments.wizard.step1GrPrefix")}: {student.grNumber}
                     </span>
                   )}
@@ -112,7 +112,7 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
                 {student.enrolledSessions && student.enrolledSessions.length > 0 && (
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {student.enrolledSessions.map((sessionId: string) => (
-                      <span key={sessionId} className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                      <span key={sessionId} className="text-xs px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
                         {sessionName(sessionId)}
                       </span>
                     ))}
@@ -129,7 +129,7 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
         })}
       </div>
       {hasMore && (
-        <p className="text-[10px] text-muted-foreground">{t("registryPerson.refineSearch")}</p>
+        <p className="text-xs text-muted-foreground">{t("registryPerson.refineSearch")}</p>
       )}
     </section>
   );

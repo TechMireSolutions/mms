@@ -134,7 +134,7 @@ export function InvoiceList({
           <DropdownMenuTrigger asChild>
             <Button className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${filterStatus.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-foreground hover:bg-muted"}`}>
               <Filter className="w-3.5 h-3.5" aria-hidden="true" /> {t("finance.filter.status")}
-              {filterStatus.length > 0 && <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">{filterStatus.length}</span>}
+              {filterStatus.length > 0 && <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">{filterStatus.length}</span>}
               <ChevronDown className="w-3 h-3" aria-hidden="true" />
             </Button>
           </DropdownMenuTrigger>
@@ -161,17 +161,17 @@ export function InvoiceList({
         {filterStatus.length > 0 && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="flex gap-2 flex-wrap" aria-label={t("finance.filter.active")}>
             {filterStatus.map((status) => (
-              <Button key={status} onClick={() => toggleStatus(status)} aria-label={t("finance.filter.remove", { label: statusLabel(status) })} className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+              <Button key={status} onClick={() => toggleStatus(status)} aria-label={t("finance.filter.remove", { label: statusLabel(status) })} className="flex min-h-11 items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
                 {statusLabel(status)} <X className="w-3 h-3" aria-hidden="true" />
               </Button>
             ))}
-            <Button variant="link" onClick={() => setFilterStatus([])} className="text-xs text-muted-foreground hover:text-foreground underline p-0 h-auto">{t("contacts.clearFilters")}</Button>
+            <Button variant="link" onClick={() => setFilterStatus([])} className="text-xs text-muted-foreground hover:text-foreground underline min-h-11 px-2">{t("contacts.clearFilters")}</Button>
           </motion.div>
         )}
       </AnimatePresence>
 
       {canDelete && selectedIds.length > 0 && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
           <span className="text-sm font-medium">{t("finance.trash.selected", { count: selectedIds.length })}</span>
           <Button type="button" variant={showDeleted ? "outline" : "destructive"} onClick={() => setConfirmBulkOpen(true)}>
             {showDeleted ? <RotateCcw className="w-4 h-4" /> : <Trash2 className="w-4 h-4" />}
@@ -196,42 +196,42 @@ export function InvoiceList({
                   </th>
                 )}
                 {showInvoice && (
-                  <ResizableTableHead columnKey="invoice" width={getColumnWidth?.("invoice")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="invoice" width={getColumnWidth?.("invoice")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.invoice")}
                   </ResizableTableHead>
                 )}
                 {showStudent && (
-                  <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.student")}
                   </ResizableTableHead>
                 )}
                 {showSessionClass && (
-                  <ResizableTableHead columnKey="sessionClass" width={getColumnWidth?.("sessionClass")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="sessionClass" width={getColumnWidth?.("sessionClass")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.sessionClass")}
                   </ResizableTableHead>
                 )}
                 {showBaseFee && (
-                  <ResizableTableHead columnKey="baseFee" width={getColumnWidth?.("baseFee")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="baseFee" width={getColumnWidth?.("baseFee")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.baseFee")}
                   </ResizableTableHead>
                 )}
                 {showDiscount && (
-                  <ResizableTableHead columnKey="discount" width={getColumnWidth?.("discount")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="discount" width={getColumnWidth?.("discount")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.discount")}
                   </ResizableTableHead>
                 )}
                 {showFinal && (
-                  <ResizableTableHead columnKey="final" width={getColumnWidth?.("final")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="final" width={getColumnWidth?.("final")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.final")}
                   </ResizableTableHead>
                 )}
                 {showStatus && (
-                  <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.status")}
                   </ResizableTableHead>
                 )}
                 {showDueDate && (
-                  <ResizableTableHead columnKey="dueDate" width={getColumnWidth?.("dueDate")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <ResizableTableHead columnKey="dueDate" width={getColumnWidth?.("dueDate")} onResize={onColumnResize} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                     {t("finance.columns.dueDate")}
                   </ResizableTableHead>
                 )}
@@ -264,40 +264,40 @@ export function InvoiceList({
                       )}
                       {showInvoice && (
                         <td className="px-4 py-3">
-                          <span className="text-[11px] font-mono font-semibold text-muted-foreground">{invoice.id}</span>
+                          <span className="text-xs font-mono font-semibold text-muted-foreground">{invoice.id}</span>
                         </td>
                       )}
                       {showStudent && (
                         <td className="px-4 py-3">
-                          <p className="text-[13px] font-semibold text-foreground whitespace-nowrap m-0">{invoice.studentName}</p>
+                          <p className="text-sm font-semibold text-foreground whitespace-nowrap m-0">{invoice.studentName}</p>
                         </td>
                       )}
                       {showSessionClass && (
                         <td className="px-4 py-3">
-                          <p className="text-[12px] text-foreground m-0">{invoice.class}</p>
-                          <p className="text-[10px] text-muted-foreground m-0">{invoice.session}</p>
+                          <p className="text-sm text-foreground m-0">{invoice.class}</p>
+                          <p className="text-xs text-muted-foreground m-0">{invoice.session}</p>
                         </td>
                       )}
                       {showBaseFee && (
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="text-[12px] text-foreground">{formatCurrency(invoice.baseFee)}</span>
+                          <span className="text-sm text-foreground">{formatCurrency(invoice.baseFee)}</span>
                         </td>
                       )}
                       {showDiscount && (
                         <td className="px-4 py-3">
                           {invoice.discountAmt > 0 ? (
                             <div>
-                              <span className="text-[12px] text-warning font-medium">-{formatCurrency(invoice.discountAmt)}</span>
-                              <p className="text-[10px] text-muted-foreground m-0">{invoice.discountType}</p>
+                              <span className="text-sm text-warning font-medium">-{formatCurrency(invoice.discountAmt)}</span>
+                              <p className="text-xs text-muted-foreground m-0">{invoice.discountType}</p>
                             </div>
-                          ) : <span className="text-[12px] text-muted-foreground">—</span>}
+                          ) : <span className="text-sm text-muted-foreground">—</span>}
                         </td>
                       )}
                       {showFinal && (
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="text-[13px] font-bold text-foreground">{formatCurrency(invoice.finalAmt)}</span>
+                          <span className="text-sm font-bold text-foreground">{formatCurrency(invoice.finalAmt)}</span>
                           {invoice.paidAmt && invoice.status === "partial" && (
-                            <p className="text-[10px] text-info m-0">{t("finance.paidAmount", { amount: formatCurrency(invoice.paidAmt) })}</p>
+                            <p className="text-xs text-info m-0">{t("finance.paidAmount", { amount: formatCurrency(invoice.paidAmt) })}</p>
                           )}
                         </td>
                       )}
@@ -308,7 +308,7 @@ export function InvoiceList({
                       )}
                       {showDueDate && (
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className={`text-[12px] ${invoice.status === "overdue" ? "text-destructive font-semibold" : "text-muted-foreground"}`}>{formatDate(invoice.dueDate)}</span>
+                          <span className={`text-sm ${invoice.status === "overdue" ? "text-destructive font-semibold" : "text-muted-foreground"}`}>{formatDate(invoice.dueDate)}</span>
                         </td>
                       )}
                       <td className="px-4 py-3">
@@ -326,7 +326,7 @@ export function InvoiceList({
                             dueDate: invoice.dueDate,
                           };
                           return (
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
                               {canWriteMessaging && !showDeleted && phone ? (
                                 <>
                                   <Button

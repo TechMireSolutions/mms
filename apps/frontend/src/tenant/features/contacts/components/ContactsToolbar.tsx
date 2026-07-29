@@ -77,7 +77,7 @@ export default function ContactsToolbar({
             className="w-full"
           />
           <div className="hidden md:flex absolute end-3 top-1/2 -translate-y-1/2 items-center gap-1 pointer-events-none">
-            <kbd className="px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground bg-muted/60 border border-border/60 rounded">
+            <kbd className="px-1.5 py-0.5 text-xs font-mono font-medium text-muted-foreground bg-muted/60 border border-border/60 rounded">
               /
             </kbd>
           </div>

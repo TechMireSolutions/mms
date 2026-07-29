@@ -63,7 +63,7 @@ export function PlatformProfileNameForm({
               required
               value={name}
               onChange={(event) => setName(event.target.value)}
-              className="min-h-[44px]"
+              className="min-h-11"
             />
           </div>
           <Button type="submit" className="w-fit px-6 font-bold min-h-11 rounded-xl cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all" disabled={updateName.isPending || name === platformUser?.name}>

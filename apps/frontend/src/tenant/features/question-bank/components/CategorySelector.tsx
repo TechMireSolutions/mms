@@ -94,7 +94,7 @@ export function CategorySelector({
   return (
     <div className="space-y-2">
       {multiple && (
-        <p className="text-[11px] text-muted-foreground">{t('questionBank.categoriesMultiHint')}</p>
+        <p className="text-xs text-muted-foreground">{t('questionBank.categoriesMultiHint')}</p>
       )}
       <Input
         type="search"
@@ -144,7 +144,7 @@ export function CategorySelector({
       )}
 
       {multiple && selectedIds.length > 0 && (
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           {t('questionBank.categoriesSelected', { count: selectedIds.length })}
         </p>
       )}

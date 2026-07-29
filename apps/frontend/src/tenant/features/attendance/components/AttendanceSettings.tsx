@@ -221,13 +221,13 @@ export function AttendanceSettings() {
                 </div>
               </SettingRow>
               <SettingRow label={t("attendance.settings.facialRecognition")} sub={t("attendance.settings.facialRecognitionDesc")}>
-                <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.warningStrong)}>{t("attendance.settings.comingSoon")}</span>
+                <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.warningStrong)}>{t("attendance.settings.comingSoon")}</span>
               </SettingRow>
               <SettingRow label={t("attendance.settings.dailyAutoLock")} sub={t("attendance.settings.dailyAutoLockDesc")}>
                 <Switch checked={settingsDraft.lockAfterSubmit} onCheckedChange={(value) => upd("lockAfterSubmit", value)} />
               </SettingRow>
               <SettingRow label={t("attendance.settings.auditLogging")} sub={t("attendance.settings.auditLoggingDesc")}>
-                <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.successStrong)}>{t("attendance.settings.active")}</span>
+                <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.successStrong)}>{t("attendance.settings.active")}</span>
               </SettingRow>
             </div>
           </Card>

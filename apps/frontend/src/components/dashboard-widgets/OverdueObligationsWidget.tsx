@@ -160,7 +160,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
             <h3 id="overdue-obligations-heading" className="text-sm font-bold text-destructive m-0">
               {title || t("dashboard.widgets.overdueObligations")}
             </h3>
-            <p className="text-[11px] text-destructive/80 font-semibold mt-0.5 m-0 uppercase tracking-wider tabular-nums">
+            <p className="text-xs text-destructive/80 font-semibold mt-0.5 m-0 uppercase tracking-wider tabular-nums">
               {t("dashboard.widgets.studentsCount", { count: filteredStudents.length })} · {formatCurrency(totalOverdue)} {t("finance.report.outstanding")}
             </p>
           </div>
@@ -204,23 +204,23 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
             <Table className="w-full text-sm">
               <TableHeader>
                 <TableRow className="border-b border-border/45 bg-muted/30 hover:bg-transparent">
-                  <TableHead scope="col" className="px-5 py-3 text-start text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                  <TableHead scope="col" className="px-5 py-3 text-start text-xs font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                     {t("hasanat.columns.redemption.student")}
                   </TableHead>
-                  <TableHead scope="col" className="px-3 py-3 text-start text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                  <TableHead scope="col" className="px-3 py-3 text-start text-xs font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                     {t("nav.obligations")}
                   </TableHead>
-                  <TableHead scope="col" className="px-3 py-3 text-start text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                  <TableHead scope="col" className="px-3 py-3 text-start text-xs font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                     {t("finance.columns.dueDate")}
                   </TableHead>
-                  <TableHead scope="col" className="px-3 py-3 text-end text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                  <TableHead scope="col" className="px-3 py-3 text-end text-xs font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                     {t("finance.columns.amount")}
                   </TableHead>
-                  <TableHead scope="col" className="px-3 py-3 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                  <TableHead scope="col" className="px-3 py-3 text-center text-xs font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                     {t("hasanat.columns.distribution.status")}
                   </TableHead>
                   {canWriteMessaging && (
-                    <TableHead scope="col" className="px-3 py-3 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                    <TableHead scope="col" className="px-3 py-3 text-center text-xs font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                       {t("hasanat.columns.actions")}
                     </TableHead>
                   )}
@@ -243,7 +243,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                       <TableRow key={`${overdueStudent.id}-${overdueStudent.dueDate}-${overdueStudent.amount}`} className="hover:bg-muted/20 transition-colors">
                         <TableCell className="px-5 py-3">
                           <div className="flex items-center gap-2">
-                            <UserAvatar id={overdueStudent.id} name={overdueStudent.name} className="w-7 h-7 rounded-full text-[10px] font-bold" />
+                            <UserAvatar id={overdueStudent.id} name={overdueStudent.name} className="w-7 h-7 rounded-full text-xs font-bold" />
                             <span className="font-semibold text-foreground text-xs">{overdueStudent.name}</span>
                           </div>
                         </TableCell>
@@ -256,7 +256,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
                         <TableCell className="px-3 py-3">
                           <div>
                             <p className="text-xs text-foreground font-semibold m-0 tabular-nums">{formatDate(overdueStudent.dueDate)}</p>
-                            <p className="text-[10px] text-destructive font-bold mt-0.5 m-0 uppercase tracking-wide tabular-nums">
+                            <p className="text-xs text-destructive font-bold mt-0.5 m-0 uppercase tracking-wide tabular-nums">
                               {t("dashboard.widgets.daysOverdue", { count: overdueStudent.daysOverdue })}
                             </p>
                           </div>
@@ -313,7 +313,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
 
             <footer className="px-5 py-3.5 border-t border-border/45 flex items-center justify-between bg-muted/10 select-none">
               <div className="flex items-center gap-4">
-                <p className="text-[11px] font-bold text-success/90 uppercase tracking-wider m-0">
+                <p className="text-xs font-bold text-success/90 uppercase tracking-wider m-0">
                   {remindedIds.size > 0 && t("dashboard.widgets.remindersSent", { count: remindedIds.size })}
                 </p>
                 <SimplePagination

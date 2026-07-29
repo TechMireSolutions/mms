@@ -150,7 +150,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
                   >
                     <div className="flex items-center gap-3">
                       <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${hasActiveSub ? "text-sidebar-primary" : ""}`} />
-                      <span className="text-[13px] font-medium">{t(item.labelKey)}</span>
+                      <span className="text-sm font-medium">{t(item.labelKey)}</span>
                     </div>
                     <ChevronRight
                       className={`w-3.5 h-3.5 transition-transform duration-200 ${
@@ -186,7 +186,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
                               }`}
                             >
                               <SubIcon className={`w-4 h-4 flex-shrink-0 ${isSubActive ? "text-sidebar-primary" : ""}`} />
-                              <span className="text-[12.5px] font-medium">
+                              <span className="text-sm font-medium">
                                 {t(sub.labelKey)}
                               </span>
                             </Link>
@@ -215,7 +215,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
                 }`}
               >
                 <Icon className={`w-[18px] h-[18px] ${isActive ? "text-sidebar-primary" : ""}`} />
-                <span className="text-[13px] font-medium">{t(item.labelKey)}</span>
+                <span className="text-sm font-medium">{t(item.labelKey)}</span>
               </Link>
             );
           })}

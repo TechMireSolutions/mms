@@ -100,7 +100,7 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold">Notifications</h3>
                   {unreadCount > 0 && (
-                    <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
+                    <Badge variant="secondary" className="px-1.5 py-0 text-xs">
                       {unreadCount} new
                     </Badge>
                   )}
@@ -122,7 +122,7 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
                         <div>
                           <p className="text-sm font-medium">{notification.title}</p>
                           <p className="mt-0.5 text-xs text-muted-foreground">{notification.desc}</p>
-                          <p className="mt-1 text-[11px] text-muted-foreground/60">{notification.time}</p>
+                          <p className="mt-1 text-xs text-muted-foreground/60">{notification.time}</p>
                         </div>
                       </div>
                     </div>
@@ -137,7 +137,7 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
                     setPopoverOpen(false);
                     navigate(ROUTES.home);
                   }}
-                  className="text-xs font-medium text-primary hover:underline p-0 h-auto"
+                  className="text-xs font-medium text-primary hover:underline min-h-11 px-1"
                 >
                   View all notifications
                 </Button>

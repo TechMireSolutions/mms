@@ -48,7 +48,7 @@ export function CardRemoveButton({ onClick, label }: CardRemoveButtonProps): Rea
       type="button"
       variant="ghost"
       onClick={onClick}
-      className={`min-w-[44px] min-h-[44px] p-0 flex items-center justify-center rounded-lg transition-colors ${REMOVE_BTN}`}
+      className={`min-w-11 min-h-11 p-0 flex items-center justify-center rounded-lg transition-colors ${REMOVE_BTN}`}
       aria-label={label}
     >
       <Trash2 className="w-4 h-4" />
@@ -142,7 +142,7 @@ export function EditableSelect({
         name={resolvedName}
         aria-label={resolvedPlaceholder}
         className={cn(
-          "min-h-[44px] flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm rounded-lg border border-border bg-background text-foreground hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all text-start",
+          "min-h-11 flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm rounded-lg border border-border bg-background text-foreground hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all text-start",
           className
         )}
       >
@@ -438,7 +438,7 @@ function TagsInput({ selected = [], predefined = [], onChange, id, name }: TagsI
               type="button"
               variant="outline"
               onClick={() => toggle(tag)}
-              className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all"
+              className="inline-flex items-center justify-center min-h-11 min-w-11 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all"
             >
               + {tag}
             </Button>
@@ -466,7 +466,7 @@ function TagsInput({ selected = [], predefined = [], onChange, id, name }: TagsI
             type="button"
             size="sm"
             onClick={() => addCustom(inputVal)}
-            className="px-3 min-h-[44px] text-xs font-semibold flex-shrink-0"
+            className="px-3 min-h-11 text-xs font-semibold flex-shrink-0"
           >
             {t("common.add")}
           </Button>
@@ -643,7 +643,7 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
                 type="button"
                 variant="link"
                 onClick={() => onChange(null)}
-                className="text-destructive hover:text-destructive/90 mt-1 font-medium min-h-[44px] h-auto p-0"
+                className="text-destructive hover:text-destructive/90 mt-1 font-medium min-h-11 h-auto p-0"
               >
                 {t("contacts.form.removePhoto")}
               </Button>
@@ -661,7 +661,7 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
               <FileText className="w-4 h-4 text-primary flex-shrink-0" />
               <span className="text-xs font-semibold truncate">{file.name}</span>
             </div>
-            <Button variant="ghost" onClick={() => onChange(null)} className="min-w-[44px] min-h-[44px] p-0 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors" type="button">
+            <Button variant="ghost" onClick={() => onChange(null)} className="min-w-11 min-h-11 p-0 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors" type="button">
               <X className="w-3.5 h-3.5" />
             </Button>
           </div>

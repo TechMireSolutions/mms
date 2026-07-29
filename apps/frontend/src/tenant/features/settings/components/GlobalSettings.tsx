@@ -139,7 +139,7 @@ export default function GlobalSettings(): React.JSX.Element {
       <SectionCard title={t('global.notifications')} subtitle={t('global.notificationsDesc')} icon={Bell}>
         <div className="space-y-3">
           <SettingsCallout>{t('global.notificationsNote')}</SettingsCallout>
-          <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium" aria-live="polite">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-medium" aria-live="polite">
             <span className="text-muted-foreground">{t('global.notificationsActiveChannel')}:</span>
             {notificationChannel === 'email' && (
               <SettingsMetaBadge variant="primary">{t('global.notificationsChannelEmail')}</SettingsMetaBadge>
@@ -172,7 +172,7 @@ export default function GlobalSettings(): React.JSX.Element {
       <SectionCard title={t('global.security')} subtitle={t('global.securityDesc')} icon={Lock}>
         <div className="space-y-4">
           <SettingsCallout>{t('global.securityNote')}</SettingsCallout>
-          <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium" aria-live="polite">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-medium" aria-live="polite">
             <span className="text-muted-foreground">{t('global.securityActiveConfig')}:</span>
             <SettingsMetaBadge variant={data.twoFactor ? 'primary' : 'muted'}>
               {data.twoFactor ? t('global.security2faOn') : t('global.security2faOff')}

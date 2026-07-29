@@ -147,7 +147,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
                           initial={{ opacity: 0, width: 0 }}
                           animate={{ opacity: 1, width: "auto" }}
                           exit={{ opacity: 0, width: 0 }}
-                          className="text-[13px] font-medium overflow-hidden whitespace-nowrap"
+                          className="text-sm font-medium overflow-hidden whitespace-nowrap"
                         >
                           {t(item.labelKey)}
                         </motion.span>
@@ -196,7 +196,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
                               />
                             )}
                             <SubIcon className={`w-4 h-4 flex-shrink-0 ${isSubActive ? "text-sidebar-primary" : ""}`} />
-                            <span className="text-[12.5px] font-medium">
+                            <span className="text-sm font-medium">
                               {t(sub.labelKey)}
                             </span>
                           </Link>
@@ -240,7 +240,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
                     initial={{ opacity: 0, width: 0 }}
                     animate={{ opacity: 1, width: "auto" }}
                     exit={{ opacity: 0, width: 0 }}
-                    className="text-[13px] font-medium overflow-hidden whitespace-nowrap"
+                    className="text-sm font-medium overflow-hidden whitespace-nowrap"
                   >
                     {t(item.labelKey)}
                   </motion.span>

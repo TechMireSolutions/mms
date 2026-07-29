@@ -71,7 +71,7 @@ export function ContactsTableHeader({
               columnKey={col.id}
               width={width}
               onResize={setColumnWidth}
-              className={`px-4 py-3 text-start text-[11px] font-semibold text-muted-foreground uppercase tracking-wide ${stickyClass}`}
+              className={`px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide ${stickyClass}`}
             >
               {col.label}
             </ResizableTableHead>

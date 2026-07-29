@@ -54,7 +54,7 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
         <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
           <Star className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         </div>
-        <h3 id="hasanat-settings-title" className="text-[13px] font-bold text-foreground">
+        <h3 id="hasanat-settings-title" className="text-sm font-bold text-foreground">
           {showFields ? t("hasanat.settings.titleFields") : t("hasanat.settings.titlePreferences")}
         </h3>
       </div>

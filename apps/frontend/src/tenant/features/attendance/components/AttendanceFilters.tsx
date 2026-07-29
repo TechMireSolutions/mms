@@ -93,23 +93,23 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
         }}
         aria-expanded={open}
         aria-controls="filters-panel"
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer select-none border-b border-transparent text-foreground"
+        className="w-full flex min-h-11 items-center justify-between gap-2 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer select-none border-b border-transparent text-foreground"
       >
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-muted-foreground" />
-          <h2 className="text-sm font-semibold text-foreground m-0">{t("attendance.filters.title")}</h2>
+        <div className="flex min-w-0 items-center gap-2">
+          <Filter className="w-4 h-4 shrink-0 text-muted-foreground" />
+          <h2 className="text-sm font-semibold text-foreground m-0 truncate">{t("attendance.filters.title")}</h2>
           {activeCount > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">{activeCount}</span>
+            <span className="px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-bold">{activeCount}</span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1">
           {activeCount > 0 && (
             <Button 
               type="button"
               variant="ghost"
               size="sm"
               onClick={(event) => { event.stopPropagation(); reset(); }}
-              className="text-xs text-muted-foreground hover:text-destructive flex items-center gap-1 transition-colors h-auto p-0 hover:bg-transparent"
+              className="text-xs text-muted-foreground hover:text-destructive flex items-center gap-1 transition-colors min-h-11 px-2 hover:bg-transparent"
             >
               <X className="w-3 h-3" /> {t("attendance.filters.clear")}
             </Button>
@@ -131,7 +131,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
             <div className="px-4 pb-4 pt-4 border-t border-border grid grid-cols-2 sm:grid-cols-4 gap-3">
               {/* Session */}
               <div className="flex flex-col gap-1">
-                <label htmlFor="filter-session" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.session")}</label>
+                <label htmlFor="filter-session" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.session")}</label>
                 <FormSelect
                   id="filter-session"
                   value={filters.sessionId}
@@ -143,7 +143,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
 
               {/* Class */}
               <div className="flex flex-col gap-1">
-                <label htmlFor="filter-class" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.class")}</label>
+                <label htmlFor="filter-class" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.class")}</label>
                 <FormSelect
                   id="filter-class"
                   value={filters.classId}
@@ -155,7 +155,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
 
               {/* Teacher */}
               <div className="flex flex-col gap-1">
-                <label htmlFor="filter-teacher" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.teacher")}</label>
+                <label htmlFor="filter-teacher" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.teacher")}</label>
                 <FormSelect
                   id="filter-teacher"
                   value={filters.teacherId}
@@ -167,7 +167,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
 
               {/* Date */}
               <div className="flex flex-col gap-1">
-                <label htmlFor="filter-date" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.date")}</label>
+                <label htmlFor="filter-date" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.date")}</label>
                 <DatePicker
                   id="filter-date"
                   value={filters.date}

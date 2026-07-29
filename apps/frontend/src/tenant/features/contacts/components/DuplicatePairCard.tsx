@@ -32,14 +32,14 @@ export function DuplicatePairCard({
       <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <ConfidenceBadge score={pair.confidence} prefs={prefs} />
-          <span className="text-[12px] text-muted-foreground">{pair.reason}</span>
+          <span className="text-sm text-muted-foreground">{pair.reason}</span>
         </div>
         <div className="flex items-center gap-2">
           {canWrite && (
             <Button
               type="button"
               onClick={onMerge}
-              className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-lg text-[12px] font-semibold"
+              className="flex items-center gap-1.5 px-3 min-h-11 rounded-lg text-sm font-semibold"
             >
               <GitMerge className="w-3.5 h-3.5" />
               <span>{t("contacts.duplicates.merge")}</span>
@@ -49,7 +49,7 @@ export function DuplicatePairCard({
             type="button"
             variant="ghost"
             onClick={onDismiss}
-            className="min-w-[44px] min-h-[44px] p-0 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-transparent hover:border-border"
+            className="min-w-11 min-h-11 p-0 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-transparent hover:border-border"
             title={t("contacts.duplicates.dismiss")}
           >
             <X className="w-3.5 h-3.5" />
@@ -58,7 +58,7 @@ export function DuplicatePairCard({
       </div>
 
       <div className="p-4">
-        <p className="text-[11px] text-muted-foreground mb-3 font-medium">
+        <p className="text-xs text-muted-foreground mb-3 font-medium">
           {t("contacts.duplicates.selectKeep")}
         </p>
         <div className="flex gap-3">

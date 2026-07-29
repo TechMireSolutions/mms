@@ -17,8 +17,8 @@ export function ToggleRow({
   ariaLabel,
 }: ToggleRowProps): React.JSX.Element {
   return (
-    <div className="flex items-center justify-between py-1.5 text-left">
-      <div>
+    <div className="flex min-h-11 items-center justify-between gap-3 py-1.5 text-left">
+      <div className="min-w-0">
         <p className="text-sm font-semibold text-foreground">{label}</p>
         {description && <p className="text-xs text-muted-foreground">{description}</p>}
       </div>

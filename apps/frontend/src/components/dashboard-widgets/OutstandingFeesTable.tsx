@@ -98,7 +98,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
             {title || t("dashboard.widgets.outstandingPayments")}
           </h3>
           <span
-            className="text-[10px] font-bold text-destructive bg-destructive/10 border border-destructive/20 px-2 py-0.5 rounded-full uppercase tracking-wider"
+            className="text-xs font-bold text-destructive bg-destructive/10 border border-destructive/20 px-2 py-0.5 rounded-full uppercase tracking-wider"
             aria-label={t("dashboard.widgets.studentsCount", { count: totalUnpaid })}
           >
             {t("dashboard.widgets.studentsCount", { count: totalUnpaid })}
@@ -107,7 +107,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
         {canWriteMessaging && (
           <Button
             variant="link"
-            className="text-[12px] font-bold h-auto p-0"
+            className="text-sm font-bold min-h-11 h-auto p-0"
             onClick={() => {
               if (filteredRows.length === 0) return;
               const recipients = filteredRows
@@ -143,20 +143,20 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
         <Table className="w-full text-sm">
           <TableHeader>
             <TableRow className="border-b border-border/45 bg-muted/30 hover:bg-transparent">
-              <TableHead scope="col" className="text-start px-5 py-3 text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+              <TableHead scope="col" className="text-start px-5 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                 {t("hasanat.columns.redemption.student")}
               </TableHead>
-              <TableHead scope="col" className="text-start px-3 py-3 text-[11px] font-bold text-muted-foreground uppercase tracking-wider hidden sm:table-cell h-auto select-none">
+              <TableHead scope="col" className="text-start px-3 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider hidden sm:table-cell h-auto select-none">
                 {t("sessions.report.colClass")}
               </TableHead>
-              <TableHead scope="col" className="text-start px-3 py-3 text-[11px] font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+              <TableHead scope="col" className="text-start px-3 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
                 {t("finance.columns.amount")}
               </TableHead>
-              <TableHead scope="col" className="text-start px-3 py-3 text-[11px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell h-auto select-none">
+              <TableHead scope="col" className="text-start px-3 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell h-auto select-none">
                 {t("finance.metrics.overdue")}
               </TableHead>
               {canWriteMessaging && (
-                <TableHead scope="col" className="px-3 py-3 text-[11px] font-bold text-muted-foreground uppercase tracking-wider text-end h-auto select-none">
+                <TableHead scope="col" className="px-3 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider text-end h-auto select-none">
                   {t("hasanat.columns.actions")}
                 </TableHead>
               )}
@@ -180,13 +180,13 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
                 >
                   <TableCell className="px-5 py-3">
                     <div className="flex items-center gap-2.5">
-                      <UserAvatar id={outstandingFee.studentId} name={outstandingFee.student} className="w-7 h-7 rounded-full text-[10px] font-bold" />
-                      <span className="text-[13px] font-semibold text-foreground">{outstandingFee.student}</span>
+                      <UserAvatar id={outstandingFee.studentId} name={outstandingFee.student} className="w-7 h-7 rounded-full text-xs font-bold" />
+                      <span className="text-sm font-semibold text-foreground">{outstandingFee.student}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="px-3 py-3 text-[12px] text-muted-foreground/80 font-medium hidden sm:table-cell">{outstandingFee.class}</TableCell>
+                  <TableCell className="px-3 py-3 text-sm text-muted-foreground/80 font-medium hidden sm:table-cell">{outstandingFee.class}</TableCell>
                   <TableCell className="px-3 py-3">
-                    <span className="text-[13px] font-bold text-destructive tabular-nums">{formatCurrency(outstandingFee.amount)}</span>
+                    <span className="text-sm font-bold text-destructive tabular-nums">{formatCurrency(outstandingFee.amount)}</span>
                   </TableCell>
                   <TableCell className="px-3 py-3 hidden md:table-cell">
                     <StatusBadge
