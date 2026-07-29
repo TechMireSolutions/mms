@@ -131,3 +131,17 @@ export async function assertPrimaryControlsMeetTouchTarget(
 
   expect(undersized, `Undersized controls: ${JSON.stringify(undersized)}`).toEqual([]);
 }
+
+/** Assert every visible table is nested under a horizontal scroll / overflow wrapper. */
+export async function assertVisibleTablesScrollWrapped(page: Page, context: string): Promise<void> {
+  const tables = page.locator('table');
+  const tableCount = await tables.count();
+  for (let index = 0; index < tableCount; index += 1) {
+    const table = tables.nth(index);
+    if (!(await table.isVisible())) continue;
+    const scrollParent = table.locator(
+      'xpath=ancestor::*[contains(@class,"overflow-x-auto") or contains(@class,"overflow-auto")][1]',
+    );
+    await expect(scrollParent, `${context} table ${index} missing horizontal scroll wrapper`).toHaveCount(1);
+  }
+}
