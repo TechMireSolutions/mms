@@ -1,16 +1,19 @@
 import type { FastifyInstance } from 'fastify';
 
-type TokenRole = 'admin' | 'teacher' | 'accountant' | 'assistant_teacher' | 'viewer';
+type TokenRole = 'admin' | 'teacher' | 'accountant' | 'assistant_teacher' | 'viewer' | 'guardian';
+
+type TenantTokenOptions = {
+  role?: TokenRole;
+  id?: string;
+  email?: string;
+  name?: string;
+  workspaceSubdomain?: string;
+  twoFactorVerified?: boolean;
+};
 
 export function signTenantToken(
   app: FastifyInstance,
-  options: {
-    role?: TokenRole;
-    id?: string;
-    email?: string;
-    name?: string;
-    workspaceSubdomain?: string;
-  } = {},
+  options: TenantTokenOptions = {},
 ): string {
   const role = options.role ?? 'admin';
   return app.jwt.sign({
@@ -19,29 +22,73 @@ export function signTenantToken(
     name: options.name ?? role.charAt(0).toUpperCase() + role.slice(1),
     role,
     workspaceSubdomain: options.workspaceSubdomain ?? 'demo',
-    twoFactorVerified: true,
+    twoFactorVerified: options.twoFactorVerified ?? true,
     tokenType: 'access',
   });
 }
 
-export function adminToken(app: FastifyInstance): string {
-  return signTenantToken(app, { role: 'admin', id: 'u-admin', email: 'admin@test.com', name: 'Admin' });
+type RoleTokenOptions = Omit<TenantTokenOptions, 'role'>;
+
+export function adminToken(app: FastifyInstance, options: RoleTokenOptions = {}): string {
+  return signTenantToken(app, {
+    id: 'u-admin',
+    email: 'admin@test.com',
+    name: 'Admin',
+    ...options,
+    role: 'admin',
+  });
 }
 
-export function teacherToken(app: FastifyInstance): string {
+export function teacherToken(app: FastifyInstance, options: RoleTokenOptions = {}): string {
   return signTenantToken(app, {
-    role: 'teacher',
     id: 'u-teacher',
     email: 'teacher@test.com',
     name: 'Teacher',
+    ...options,
+    role: 'teacher',
   });
 }
 
-export function accountantToken(app: FastifyInstance): string {
+export function accountantToken(app: FastifyInstance, options: RoleTokenOptions = {}): string {
   return signTenantToken(app, {
-    role: 'accountant',
     id: 'u-accountant',
     email: 'accountant@test.com',
     name: 'Accountant',
+    ...options,
+    role: 'accountant',
   });
+}
+
+export function assistantTeacherToken(app: FastifyInstance, options: RoleTokenOptions = {}): string {
+  return signTenantToken(app, {
+    id: 'u-assistant_teacher',
+    email: 'assistant_teacher@test.com',
+    name: 'Assistant Teacher',
+    ...options,
+    role: 'assistant_teacher',
+  });
+}
+
+export function viewerToken(app: FastifyInstance, options: RoleTokenOptions = {}): string {
+  return signTenantToken(app, {
+    id: 'u-viewer',
+    email: 'viewer@test.com',
+    name: 'Viewer',
+    ...options,
+    role: 'viewer',
+  });
+}
+
+export function guardianToken(app: FastifyInstance, options: RoleTokenOptions = {}): string {
+  return signTenantToken(app, {
+    id: 'u-guardian',
+    email: 'guardian@test.com',
+    name: 'Guardian',
+    ...options,
+    role: 'guardian',
+  });
+}
+
+export function bearerAuth(token: string): string {
+  return `Bearer ${token}`;
 }

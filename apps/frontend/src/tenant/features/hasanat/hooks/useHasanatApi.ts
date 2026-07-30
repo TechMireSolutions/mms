@@ -24,6 +24,7 @@ export function useHasanatDenoms(options?: { enabled?: boolean }) {
     responseKey: 'denoms',
     collectionName: 'hasanat_denoms',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 
@@ -38,6 +39,7 @@ export function useHasanatBatches(options?: { enabled?: boolean }) {
     responseKey: 'batches',
     collectionName: 'hasanat_batches',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 
@@ -53,6 +55,7 @@ export function useHasanatDistributions(options?: { enabled?: boolean; includeDe
     responseKey: 'distributions',
     collectionName: 'hasanat_distributions',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 
@@ -70,6 +73,7 @@ export function useHasanatRedemptions(options?: { enabled?: boolean }) {
     responseKey: 'redemptions',
     collectionName: 'hasanat_redemptions',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 

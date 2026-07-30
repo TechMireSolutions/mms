@@ -1,0 +1,135 @@
+import React from "react";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FormSelect } from "@/components/ui/FormSelect";
+import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/hooks/useTranslation";
+import { METADATA_FIELDS, COLLECTION_OPTIONS, getFieldLabel, getCollectionLabel } from "@/tenant/features/reports/components/reportMetadata";
+import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
+
+interface WidgetBuilderMetricOptionsProps {
+  builderCollection: CustomWidget["collection"];
+  setBuilderCollection: (builderCollection: CustomWidget["collection"]) => void;
+  builderOperation: CustomWidget["operation"];
+  setBuilderOperation: (builderOperation: CustomWidget["operation"]) => void;
+  builderTargetField: string;
+  setBuilderTargetField: (builderTargetField: string) => void;
+  builderFilterField: string;
+  setBuilderFilterField: (builderFilterField: string) => void;
+  builderFilterOperator: CustomWidget["filterOperator"];
+  setBuilderFilterOperator: (builderFilterOperator: CustomWidget["filterOperator"]) => void;
+  builderFilterValue: string;
+  setBuilderFilterValue: (builderFilterValue: string) => void;
+  children?: React.ReactNode;
+}
+
+export function WidgetBuilderMetricOptions({
+  builderCollection,
+  setBuilderCollection,
+  builderOperation,
+  setBuilderOperation,
+  builderTargetField,
+  setBuilderTargetField,
+  builderFilterField,
+  setBuilderFilterField,
+  builderFilterOperator,
+  setBuilderFilterOperator,
+  builderFilterValue,
+  setBuilderFilterValue,
+  children,
+}: WidgetBuilderMetricOptionsProps): React.JSX.Element {
+  const { t } = useTranslation();
+
+  return (
+    <>
+      <div className="space-y-1">
+        <label className={FORM_LABEL}>{t("reports.widgets.builder.dataCollection")}</label>
+        <FormSelect
+          value={builderCollection}
+          onChange={(val) => setBuilderCollection(val as CustomWidget["collection"])}
+          options={COLLECTION_OPTIONS.map((collectionOption) => ({
+            value: collectionOption.value,
+            label: getCollectionLabel(collectionOption.value, collectionOption.label, t),
+          }))}
+        />
+      </div>
+
+      <div className="space-y-1">
+        <label className={FORM_LABEL}>{t("reports.widgets.builder.calcFormula")}</label>
+        <FormSelect
+          value={builderOperation}
+          onChange={(val) => setBuilderOperation(val as CustomWidget["operation"])}
+          options={[
+            { value: "count", label: t("reports.widgets.builder.formulaCount") },
+            { value: "percentage", label: t("reports.widgets.builder.formulaPercentage") },
+            { value: "sum", label: t("reports.widgets.builder.formulaSum") },
+            { value: "avg", label: t("reports.widgets.builder.formulaAvg") },
+          ]}
+        />
+      </div>
+
+      <div className="space-y-1">
+        <label className={FORM_LABEL}>
+          {t("reports.widgets.builder.targetField")} {["count", "percentage"].includes(builderOperation) && t("reports.widgets.builder.deactivated")}
+        </label>
+        <FormSelect
+          disabled={["count", "percentage"].includes(builderOperation)}
+          value={builderTargetField}
+          onChange={setBuilderTargetField}
+          options={
+            METADATA_FIELDS[builderCollection].numericFields.length === 0
+              ? [{ value: "", label: t("reports.widgets.builder.noNumericFields") }]
+              : METADATA_FIELDS[builderCollection].numericFields.map((numericField) => ({
+                  value: numericField.value,
+                  label: getFieldLabel(numericField.value, numericField.label, t),
+                }))
+          }
+        />
+      </div>
+
+      <div className="space-y-1">
+        <label className={FORM_LABEL}>{t("reports.widgets.builder.filterField")}</label>
+        <FormSelect
+          value={builderFilterField}
+          onChange={setBuilderFilterField}
+          options={[
+            { value: "", label: t("reports.widgets.builder.noFilter") },
+            ...METADATA_FIELDS[builderCollection].fields.map((metadataField) => ({
+              value: metadataField.value,
+              label: getFieldLabel(metadataField.value, metadataField.label, t),
+            })),
+          ]}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="space-y-1">
+          <label className={FORM_LABEL}>{t("reports.widgets.builder.operator")}</label>
+          <FormSelect
+            disabled={!builderFilterField}
+            value={builderFilterOperator ?? ""}
+            onChange={(val) => setBuilderFilterOperator(val as CustomWidget["filterOperator"])}
+            options={[
+              { value: "equals", label: t("reports.widgets.builder.opEquals") },
+              { value: "contains", label: t("reports.widgets.builder.opContains") },
+              { value: "gt", label: `> ${t("reports.widgets.builder.opGt")}` },
+              { value: "lt", label: `< ${t("reports.widgets.builder.opLt")}` },
+            ]}
+          />
+        </div>
+        <div className="space-y-1">
+          <label className={FORM_LABEL}>{t("reports.widgets.builder.matchValue")}</label>
+          <Input
+            type="text"
+            disabled={!builderFilterField}
+            value={builderFilterValue}
+            onChange={(event) => setBuilderFilterValue(event.target.value)}
+            placeholder={t("reports.widgets.builder.placeholderValue")}
+            className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-11 disabled:opacity-40 disabled:cursor-not-allowed"
+          />
+        </div>
+      </div>
+
+      {children}
+    </>
+  );
+}

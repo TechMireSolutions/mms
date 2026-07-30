@@ -1,3 +1,4 @@
+import { getDenominationPoints } from '@mms/shared';
 import type { AggregatedItem, ChartOperation, FilterRule } from './dynamicChartVisualizerTypes';
 
 export function isDateDimensionField(fieldName: string): boolean {
@@ -79,6 +80,93 @@ export function sortAndCapAggregatedItems(
       count: othersCount,
     },
   ];
+}
+
+export function aggregateVisualizerRows(options: {
+  collectionKey: string;
+  collectionRows: Record<string, unknown>[];
+  denominations: Array<{ id: string; points: number }> | null | undefined;
+  filters: FilterRule[];
+  xAxisField: string;
+  operation: ChartOperation;
+  targetField: string;
+}): AggregatedItem[] {
+  const {
+    collectionKey,
+    collectionRows,
+    denominations,
+    filters,
+    xAxisField,
+    operation,
+    targetField,
+  } = options;
+
+  const filteredRows = collectionRows.filter((collectionRow) => {
+    if (!collectionRow) return false;
+    return filters.every((rule) => matchesFilterRule(collectionRow, rule));
+  });
+
+  const groups: Record<string, Record<string, unknown>[]> = {};
+  filteredRows.forEach((filteredRow) => {
+    const xAxisValue = filteredRow[xAxisField];
+    const groupKey =
+      xAxisValue === undefined || xAxisValue === null || xAxisValue === ''
+        ? 'Unknown / Null'
+        : String(xAxisValue);
+    if (!groups[groupKey]) groups[groupKey] = [];
+    groups[groupKey].push(filteredRow);
+  });
+
+  const aggregatedRows = Object.entries(groups).map(([name, groupItems]) => {
+    let finalValue = 0;
+    const count = groupItems.length;
+
+    if (operation === 'count') {
+      finalValue = count;
+    } else {
+      const targetMetricField = targetField || '';
+      const values: number[] = [];
+
+      groupItems.forEach((groupItem) => {
+        if (collectionKey === 'hasanat_distributions' && targetMetricField === 'points') {
+          const points = getDenominationPoints(
+            groupItem.denominationId as string,
+            groupItem.denominationName as string,
+            denominations,
+          );
+          values.push(Number(groupItem.quantity || 1) * points);
+        } else {
+          const numericValue = Number(groupItem[targetMetricField]);
+          if (!isNaN(numericValue)) {
+            values.push(numericValue);
+          }
+        }
+      });
+
+      if (values.length > 0) {
+        switch (operation) {
+          case 'sum':
+            finalValue = values.reduce((sum, value) => sum + value, 0);
+            break;
+          case 'avg':
+            finalValue = Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
+            break;
+          case 'min':
+            finalValue = Math.min(...values);
+            break;
+          case 'max':
+            finalValue = Math.max(...values);
+            break;
+          default:
+            finalValue = 0;
+        }
+      }
+    }
+
+    return { name, value: finalValue, count };
+  });
+
+  return sortAndCapAggregatedItems(aggregatedRows, xAxisField, operation);
 }
 
 export function resolveWidgetPinColor(activePalette: string): string {

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
+import { signTenantToken } from './helpers/tokens.js';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
@@ -43,21 +44,6 @@ vi.mock('../services/messagingService.js', () => ({
   loadMessagingRecipients: (...args: unknown[]) => mockLoadMessagingRecipients(...args),
   resolveMessagingContacts: (...args: unknown[]) => mockResolveMessagingContacts(...args),
 }));
-
-function tokenFor(
-  app: Awaited<ReturnType<typeof buildApp>>,
-  role: string,
-): string {
-  return app.jwt.sign({
-    id: `u-${role}`,
-    email: `${role}@test.com`,
-    name: role,
-    role,
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
 
 describe('messaging REST routes', () => {
   beforeEach(() => {
@@ -128,7 +114,7 @@ describe('messaging REST routes', () => {
       url: '/api/messaging/recipients?role=students&page=1&pageSize=25&hasPhone=true',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${tokenFor(app, 'teacher')}`,
+        authorization: `Bearer ${signTenantToken(app, { role: 'teacher', name: 'teacher' })}`,
       },
     });
     expect(res.statusCode).toBe(200);
@@ -149,7 +135,7 @@ describe('messaging REST routes', () => {
       url: '/api/messaging/contacts/resolve',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${tokenFor(app, 'teacher')}`,
+        authorization: `Bearer ${signTenantToken(app, { role: 'teacher', name: 'teacher' })}`,
       },
       payload: { ids: ['c1'] },
     });
@@ -166,7 +152,7 @@ describe('messaging REST routes', () => {
       url: '/api/messaging/contacts/resolve',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${tokenFor(app, 'accountant')}`,
+        authorization: `Bearer ${signTenantToken(app, { role: 'accountant', name: 'accountant' })}`,
       },
       payload: { ids: ['c1'] },
     });
@@ -181,7 +167,7 @@ describe('messaging REST routes', () => {
       url: '/api/messaging/templates',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${tokenFor(app, 'teacher')}`,
+        authorization: `Bearer ${signTenantToken(app, { role: 'teacher', name: 'teacher' })}`,
       },
     });
     expect(res.statusCode).toBe(200);
@@ -196,7 +182,7 @@ describe('messaging REST routes', () => {
       url: '/api/messaging/templates',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${tokenFor(app, 'accountant')}`,
+        authorization: `Bearer ${signTenantToken(app, { role: 'accountant', name: 'accountant' })}`,
       },
       payload: { label: 'Hi', body: 'Hello {name}' },
     });
@@ -211,7 +197,7 @@ describe('messaging REST routes', () => {
       url: '/api/messaging/logs',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${tokenFor(app, 'teacher')}`,
+        authorization: `Bearer ${signTenantToken(app, { role: 'teacher', name: 'teacher' })}`,
       },
     });
     expect(res.statusCode).toBe(403);
@@ -226,7 +212,7 @@ describe('messaging REST routes', () => {
       url: '/api/messaging/logs',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${tokenFor(app, 'admin')}`,
+        authorization: `Bearer ${signTenantToken(app, { role: 'admin', name: 'admin' })}`,
       },
     });
     expect(res.statusCode).toBe(200);
@@ -241,7 +227,7 @@ describe('messaging REST routes', () => {
       url: '/api/messaging/logs?page=not-a-number',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${tokenFor(app, 'teacher')}`,
+        authorization: `Bearer ${signTenantToken(app, { role: 'teacher', name: 'teacher' })}`,
       },
     });
     expect(res.statusCode).toBe(400);
@@ -255,7 +241,7 @@ describe('messaging REST routes', () => {
       url: '/api/messaging/templates',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${tokenFor(app, 'admin')}`,
+        authorization: `Bearer ${signTenantToken(app, { role: 'admin', name: 'admin' })}`,
       },
       payload: { label: 'Fee Reminder', body: 'Hello {name}', category: 'financial', channel: 'sms' },
     });
@@ -280,7 +266,7 @@ describe('messaging REST routes', () => {
       url: '/api/messaging/templates',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${tokenFor(app, 'admin')}`,
+        authorization: `Bearer ${signTenantToken(app, { role: 'admin', name: 'admin' })}`,
       },
       payload: { label: '', body: '' },
     });
@@ -296,7 +282,7 @@ describe('messaging REST routes', () => {
       url: '/api/messaging/logs',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${tokenFor(app, 'admin')}`,
+        authorization: `Bearer ${signTenantToken(app, { role: 'admin', name: 'admin' })}`,
       },
       payload: {
         logs: [

@@ -23,6 +23,7 @@ export function useExaminationsExams(options?: { enabled?: boolean; includeDelet
     responseKey: 'exams',
     collectionName: 'exams',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 
@@ -40,6 +41,7 @@ export function useExaminationsResults(options?: { enabled?: boolean }) {
     responseKey: 'results',
     collectionName: 'exam_results',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 

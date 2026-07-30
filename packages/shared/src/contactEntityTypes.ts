@@ -1,0 +1,146 @@
+/** Contact domain entity types (person model + related value objects). */
+
+/** Status of WhatsApp registration checks for phone numbers. */
+export type WhatsAppStatus = 'PENDING' | 'REGISTERED' | 'NOT_REGISTERED' | 'FAILED';
+
+/** Preferences governing automated WhatsApp verification triggers and UI presentation. */
+export interface WhatsAppPreferences {
+  autoCheckEnabled: boolean;
+  excludedCountryCodes: string[];
+  verificationTrigger: 'IMMEDIATE_ON_SAVE' | 'BATCH_NIGHTLY' | 'MANUAL_ONLY';
+  uiIndicatorStyle: {
+    icon?: string;
+    color?: string;
+    label?: string;
+  };
+}
+
+/** Verification response payload for WhatsApp phone status lookups. */
+export interface WhatsAppVerificationResult {
+  status: WhatsAppStatus;
+  checkedAt: string;
+  error?: string;
+}
+
+/** Service interface for verifying WhatsApp capabilities on phone numbers. */
+export interface WhatsAppProvider {
+  verifyPhoneNumber(phoneNumber: string): Promise<WhatsAppVerificationResult>;
+}
+
+/** Supported interpersonal relationship types. */
+export type RelationshipType = 
+  | 'father'
+  | 'mother'
+  | 'guardian'
+  | 'child'
+  | 'spouse'
+  | 'sibling'
+  | 'colleague'
+  | 'other';
+
+/** Phone number model for contacts with label, country code, and verification status. */
+export interface PhoneNumber {
+  label: string;
+  number: string;
+  countryCode?: string;
+  isPrimary?: boolean;
+  whatsappStatus?: WhatsAppStatus;
+}
+
+/** Email address model for contacts with verification state and primary flag. */
+export interface EmailAddress {
+  label: string;
+  address: string;
+  isPrimary?: boolean;
+  isVerified?: boolean;
+}
+
+/** Physical address model for contacts. */
+export interface Address {
+  line1?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  label?: string;
+  isPrimary?: boolean;
+}
+
+/** Social profile link model for contacts. */
+export interface SocialLink {
+  platform: string;
+  url: string;
+}
+
+/** Emergency contact entry for a contact entity. */
+export interface EmergencyContact {
+  name?: string;
+  relationship?: string;
+  phone?: string;
+  contactId?: string | number;
+  inferred?: boolean;
+  inferredFromContactId?: string;
+  inferenceDepth?: number;
+}
+
+/** Inter-contact relationship reference link. */
+export interface ContactRelationship {
+  contactId: string | number;
+  relationship?: RelationshipType | string;
+  notes?: string;
+}
+
+/** Audit log activity item recorded on a contact timeline. */
+export interface ContactActivity {
+  id: string;
+  type: "note" | "stage_change" | "whatsapp" | "email" | "system" | "task" | "call";
+  content: string;
+  date: string;
+  by?: string;
+  metadata?: Record<string, unknown>;
+}
+
+/** Document attachment associated with a contact record. */
+export interface ContactAttachment {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  url: string;
+  date: string;
+}
+
+/** Primary domain model representing a Contact entity across the monorepo. */
+export interface Contact {
+  id: string | number;
+  name: string;
+  firstName: string;
+  lastName?: string;
+  gender?: string;
+  dob?: string;
+  cnic?: string;
+  isSyed?: boolean;
+  avatar?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+  deletedAt?: string;
+  deletedBy?: string;
+  deletionReason?: string;
+
+  // Communication & Preference Extensions
+  preferredLanguage?: 'en' | 'ur' | 'ar' | 'fa';
+  preferredContactMethod?: 'whatsapp' | 'sms' | 'email' | 'phone_call';
+  doNotContact?: boolean;
+
+  phones?: PhoneNumber[];
+  emails?: EmailAddress[];
+  addresses?: Address[];
+  socials?: SocialLink[];
+  emergencyContacts?: EmergencyContact[];
+  relationships?: ContactRelationship[];
+  activities?: ContactActivity[];
+  attachments?: ContactAttachment[];
+  aiSummary?: string;
+  [key: string]: unknown;
+}

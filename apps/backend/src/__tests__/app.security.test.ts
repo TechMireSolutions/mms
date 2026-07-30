@@ -34,6 +34,7 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 
 import { buildApp } from '../app.js';
 import { canDownloadBulkSync } from '../services/rbacService.js';
+import { adminToken, signTenantToken } from './helpers/tokens.js';
 
 describe('rbac bulk sync download', () => {
   it('allows admin only', () => {
@@ -90,15 +91,7 @@ describe('tenant JWT binding', () => {
 
   it('rejects email integration for non-admin', async () => {
     const app = await buildApp();
-    const token = app.jwt.sign({
-      id: 'u1',
-      email: 'teacher@test.com',
-      name: 'Teacher',
-      role: 'teacher',
-      workspaceSubdomain: 'demo',
-      twoFactorVerified: true,
-      tokenType: 'access',
-    });
+    const token = signTenantToken(app, { role: 'teacher', id: 'u1' });
     const res = await app.inject({
       method: 'GET',
       url: '/api/email/integration',
@@ -114,15 +107,7 @@ describe('tenant JWT binding', () => {
 
   it('rejects db reset for non-admin', async () => {
     const app = await buildApp();
-    const token = app.jwt.sign({
-      id: 'u1',
-      email: 'teacher@test.com',
-      name: 'Teacher',
-      role: 'teacher',
-      workspaceSubdomain: 'demo',
-      twoFactorVerified: true,
-      tokenType: 'access',
-    });
+    const token = signTenantToken(app, { role: 'teacher', id: 'u1' });
     const res = await app.inject({
       method: 'POST',
       url: '/api/db/reset',
@@ -138,15 +123,7 @@ describe('tenant JWT binding', () => {
 
   it('rejects collection read for roles without access', async () => {
     const app = await buildApp();
-    const token = app.jwt.sign({
-      id: 'u1',
-      email: 'viewer@test.com',
-      name: 'Viewer',
-      role: 'viewer',
-      workspaceSubdomain: 'demo',
-      twoFactorVerified: true,
-      tokenType: 'access',
-    });
+    const token = signTenantToken(app, { role: 'viewer', id: 'u1' });
     const res = await app.inject({
       method: 'GET',
       url: '/api/db/collections/students',
@@ -188,15 +165,7 @@ describe('tenant JWT binding', () => {
   describe('tenant database isolation controls', () => {
     it('blocks reading workspaces collection', async () => {
       const app = await buildApp();
-      const token = app.jwt.sign({
-        id: 'u-admin',
-        email: 'admin@test.com',
-        name: 'Admin',
-        role: 'admin',
-        workspaceSubdomain: 'demo',
-        twoFactorVerified: true,
-        tokenType: 'access',
-      });
+      const token = adminToken(app);
       const res = await app.inject({
         method: 'GET',
         url: '/api/db/collections/workspaces',
@@ -212,15 +181,7 @@ describe('tenant JWT binding', () => {
 
     it('blocks writing workspaces collection', async () => {
       const app = await buildApp();
-      const token = app.jwt.sign({
-        id: 'u-admin',
-        email: 'admin@test.com',
-        name: 'Admin',
-        role: 'admin',
-        workspaceSubdomain: 'demo',
-        twoFactorVerified: true,
-        tokenType: 'access',
-      });
+      const token = adminToken(app);
       const res = await app.inject({
         method: 'POST',
         url: '/api/db/collections/workspaces',
@@ -237,15 +198,7 @@ describe('tenant JWT binding', () => {
 
     it('allows admin to save collection backups', async () => {
       const app = await buildApp();
-      const token = app.jwt.sign({
-        id: 'u-admin',
-        email: 'admin@test.com',
-        name: 'Admin',
-        role: 'admin',
-        workspaceSubdomain: 'demo',
-        twoFactorVerified: true,
-        tokenType: 'access',
-      });
+      const token = adminToken(app);
       const res = await app.inject({
         method: 'POST',
         url: '/api/db/collections/backups',
@@ -262,15 +215,7 @@ describe('tenant JWT binding', () => {
 
     it('blocks reading platform_super_users object', async () => {
       const app = await buildApp();
-      const token = app.jwt.sign({
-        id: 'u-admin',
-        email: 'admin@test.com',
-        name: 'Admin',
-        role: 'admin',
-        workspaceSubdomain: 'demo',
-        twoFactorVerified: true,
-        tokenType: 'access',
-      });
+      const token = adminToken(app);
       const res = await app.inject({
         method: 'GET',
         url: '/api/db/objects/platform_super_users',
@@ -286,15 +231,7 @@ describe('tenant JWT binding', () => {
 
     it('blocks writing platform_super_users object', async () => {
       const app = await buildApp();
-      const token = app.jwt.sign({
-        id: 'u-admin',
-        email: 'admin@test.com',
-        name: 'Admin',
-        role: 'admin',
-        workspaceSubdomain: 'demo',
-        twoFactorVerified: true,
-        tokenType: 'access',
-      });
+      const token = adminToken(app);
       const res = await app.inject({
         method: 'POST',
         url: '/api/db/objects/platform_super_users',
@@ -311,15 +248,7 @@ describe('tenant JWT binding', () => {
 
     it('blocks sync upload payload with workspaces or platform_super_users', async () => {
       const app = await buildApp();
-      const token = app.jwt.sign({
-        id: 'u-admin',
-        email: 'admin@test.com',
-        name: 'Admin',
-        role: 'admin',
-        workspaceSubdomain: 'demo',
-        twoFactorVerified: true,
-        tokenType: 'access',
-      });
+      const token = adminToken(app);
 
       // Attempt workspaces collection upload
       const resCol = await app.inject({

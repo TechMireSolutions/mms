@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
+import { accountantToken, guardianToken } from './helpers/tokens.js';
 import type { Account, JournalEntry, FiscalYear } from '@mms/shared';
 
 /** Returns an ISO date string for N days before today (time-independent). */
@@ -115,30 +116,6 @@ const sampleFiscalYear: FiscalYear = {
   status: 'active',
 };
 
-function accountantToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-accountant',
-    email: 'accountant@test.com',
-    name: 'Accountant',
-    role: 'accountant',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
-
-function unauthorizedToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-unauthorized',
-    email: 'unauth@test.com',
-    name: 'Unauthorized',
-    role: 'guardian',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
-
 describe('accounting REST routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
@@ -178,7 +155,11 @@ describe('accounting REST routes', () => {
       url: '/api/accounting/accounts',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${unauthorizedToken(app)}`,
+        authorization: `Bearer ${guardianToken(app, {
+          id: 'u-unauthorized',
+          email: 'unauth@test.com',
+          name: 'Unauthorized',
+        })}`,
       },
     });
     expect(res.statusCode).toBe(403);

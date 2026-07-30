@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
+import { guardianToken, teacherToken } from './helpers/tokens.js';
 import type { QuestionBankQuestion, QuestionBankTest, QuestionBankResult } from '@mms/shared';
 
 vi.mock('../db/database.js', () => ({
@@ -126,30 +127,6 @@ const sampleResult: QuestionBankResult = {
   scores: { 'q-1': 1 },
 };
 
-function teacherToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-teacher',
-    email: 'teacher@test.com',
-    name: 'Teacher',
-    role: 'teacher',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
-
-function unauthorizedToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-unauthorized',
-    email: 'unauth@test.com',
-    name: 'Unauthorized',
-    role: 'guardian',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
-
 describe('question bank REST routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
@@ -190,7 +167,11 @@ describe('question bank REST routes', () => {
       url: '/api/question-bank/questions',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${unauthorizedToken(app)}`,
+        authorization: `Bearer ${guardianToken(app, {
+          id: 'u-unauthorized',
+          email: 'unauth@test.com',
+          name: 'Unauthorized',
+        })}`,
       },
     });
     expect(res.statusCode).toBe(403);

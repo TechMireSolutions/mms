@@ -216,3 +216,16 @@ export function getDateFormatOptions(
 export function getDateFormatPresets(): readonly DateFormatPreset[] {
   return PRESETS;
 }
+
+/** Returns today's date as a `YYYY-MM-DD` UTC date string. */
+export function todayISO(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** Formats a local Date object as a `YYYY-MM-DD` storage string. */
+export function formatDateToIso(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}

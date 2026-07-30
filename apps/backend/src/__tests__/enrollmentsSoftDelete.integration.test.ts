@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
+import { adminToken } from './helpers/tokens.js';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
@@ -46,18 +47,6 @@ vi.mock('../services/enrollmentService.js', async (importOriginal) => {
     bulkRestoreEnrollments: (...args: unknown[]) => mockBulkRestoreEnrollments(...args),
   };
 });
-
-function adminToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-admin',
-    email: 'admin@test.com',
-    name: 'Admin',
-    role: 'admin',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
 
 describe('enrollments soft delete routes', () => {
   beforeEach(() => {

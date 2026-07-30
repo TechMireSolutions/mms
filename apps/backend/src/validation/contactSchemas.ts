@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { baseListQuerySchema, softDeleteBodySchema } from './commonSchemas.js';
+import { softDeleteBodySchema } from './commonSchemas.js';
 import {
   phoneNumberSchema,
   emailAddressSchema,
@@ -11,6 +11,7 @@ import {
   attachmentSchema,
   contactRecordSchema,
   contactListSchema,
+  contactsListQuerySchema,
 } from '@mms/shared';
 
 export {
@@ -24,6 +25,7 @@ export {
   attachmentSchema,
   contactRecordSchema,
   contactListSchema,
+  contactsListQuerySchema,
 };
 
 export const contactBulkDeleteSchema = z.object({
@@ -80,46 +82,6 @@ export const contactGoogleSyncExchangeSchema = z.object({
 export const contactsDuplicatesQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(200).optional(),
-});
-
-const booleanQueryFlag = z
-  .preprocess((val) => {
-    if (val === undefined) return undefined;
-    return val === 'true' || val === true;
-  }, z.boolean())
-  .optional();
-
-export const contactsListQuerySchema = baseListQuerySchema.extend({
-  gender: z.string().optional(),
-  hasPhone: booleanQueryFlag,
-  hasReachable: booleanQueryFlag,
-  quickFilter: z.enum(['all', 'whatsapp', 'syed', 'missingInfo']).optional(),
-  /** Comma-separated contact ids to omit from the page. */
-  excludeIds: z
-    .string()
-    .max(4000)
-    .optional()
-    .transform((value) =>
-      value
-        ? value
-            .split(',')
-            .map((id) => id.trim())
-            .filter(Boolean)
-        : undefined,
-    ),
-  /** Comma-separated module keys: students, teachers — server expands linked contact ids. */
-  excludeLinkedModules: z
-    .string()
-    .optional()
-    .transform((value) => {
-      if (!value?.trim()) return undefined;
-      const allowed = new Set(['students', 'teachers']);
-      const modules = value
-        .split(',')
-        .map((part) => part.trim())
-        .filter((part): part is 'students' | 'teachers' => allowed.has(part));
-      return modules.length > 0 ? modules : undefined;
-    }),
 });
 
 export const contactSetupAuditSchema = z.object({

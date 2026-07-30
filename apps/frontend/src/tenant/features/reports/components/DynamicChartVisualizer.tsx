@@ -1,40 +1,14 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Info, 
-  Plus, Trash2, Image, FileText, Pin, 
-  PinOff, Filter, CheckCircle2, ChevronDown, ChevronUp, 
-  Table, Sparkles, Printer, FileSpreadsheet, Settings
-} from "lucide-react";
 import {
-  BarChart, Bar, LineChart, Line, 
-  AreaChart, Area, PieChart, Pie, Cell, RadarChart, 
-  PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, 
-  Legend, Tooltip, XAxis, YAxis, CartesianGrid
-} from "recharts";
-import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
-import {
-  CHART_PALETTE_DEFS,
   DEFAULT_CHART_PALETTE_ID,
   getChartPaletteColors,
-  isColorblindSafeChartPalette,
-  formatDateTime,
-  getDenominationPoints,
-  todayISO,
-  capitalize,
-  type AppTranslationKey,
-  formatNumber,
 } from "@mms/shared";
 
 import { useTranslation } from "@/hooks/useTranslation";
-import { getBrandingChartPalette } from "@/lib/brandingChartPalette";
 
 import { getObject, saveObject } from "@/lib/db";
 import { useReportCollectionRows } from "@/lib/reports/useReportCollections";
-import { METADATA_FIELDS, VisualizerConfig, getFieldLabel, getCollectionLabel } from "@/tenant/features/reports/components/reportMetadata";
-import { Input } from "@/components/ui/input";
-import { FormSelect } from "@/components/ui/FormSelect";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
+import { METADATA_FIELDS, VisualizerConfig } from "@/tenant/features/reports/components/reportMetadata";
 import type {
   AggregatedItem,
   ChartOperation,
@@ -44,12 +18,17 @@ import type {
   FilterRule,
 } from "@/tenant/features/reports/components/dynamicChartVisualizerTypes";
 import {
-  getPdfPageDimensions,
+  aggregateVisualizerRows,
   isDateDimensionField,
-  matchesFilterRule,
   resolveWidgetPinColor,
-  sortAndCapAggregatedItems,
 } from "@/tenant/features/reports/components/dynamicChartVisualizerHelpers";
+import {
+  exportVisualizerExcel,
+  exportVisualizerPdf,
+  exportVisualizerPng,
+} from "@/tenant/features/reports/components/dynamicChartVisualizerExports";
+import { DynamicChartVisualizerConfigPanel } from "@/tenant/features/reports/components/DynamicChartVisualizerConfigPanel";
+import { DynamicChartVisualizerPreview } from "@/tenant/features/reports/components/DynamicChartVisualizerPreview";
 
 const METADATA_CONFIGS: Record<string, CollectionMeta> = METADATA_FIELDS as unknown as Record<string, CollectionMeta>;
 
@@ -59,11 +38,6 @@ interface DynamicChartVisualizerProps {
   onClose?: () => void;
 }
 
-/**
- * DynamicChartVisualizer Component
- * Provides a state-of-the-art interface to design, filter, analyze, export,
- * and pin dynamic charts built from live client databases in real-time.
- */
 export default function DynamicChartVisualizer({
   initialConfig,
   onSave,
@@ -73,7 +47,6 @@ export default function DynamicChartVisualizer({
   const chartRef = useRef<HTMLDivElement>(null);
   const isInitialMount = useRef(true);
 
-  // Builder config states
   const [title, setTitle] = useState(() => initialConfig?.title || t("reports.visualizer.defaultTitle"));
   const [collectionKey, setCollectionKey] = useState<keyof typeof METADATA_CONFIGS>(initialConfig?.collection || "students");
   const [chartType, setChartType] = useState<ChartType>(initialConfig?.chartType || "bar");
@@ -81,8 +54,7 @@ export default function DynamicChartVisualizer({
   const [operation, setOperation] = useState<ChartOperation>(initialConfig?.operation || "count");
   const [targetField, setTargetField] = useState(initialConfig?.targetField || "");
   const [activePalette, setActivePalette] = useState(initialConfig?.activePalette || DEFAULT_CHART_PALETTE_ID);
-  
-  // Advanced settings toggles
+
   const [showGrid, setShowGrid] = useState(true);
   const [showLegend, setShowLegend] = useState(true);
   const [showTooltip, setShowTooltip] = useState(true);
@@ -91,15 +63,12 @@ export default function DynamicChartVisualizer({
   const [pdfFormat, setPdfFormat] = useState<string>("a4");
   const [showPdfSettings, setShowPdfSettings] = useState<boolean>(false);
 
-  // Advanced Multi-Filtering rules state
   const [filters, setFilters] = useState<FilterRule[]>([]);
 
-  // Pinned widgets checking state
   const [dashboardWidgets, setDashboardWidgets] = useState<CustomWidget[]>(() => {
     return getObject<CustomWidget[]>("kpi_custom_widgets", []);
   });
 
-  // Responsive scaling container observer
   const [containerWidth, setContainerWidth] = useState(600);
 
   useEffect(() => {
@@ -130,7 +99,6 @@ export default function DynamicChartVisualizer({
   const activeMeta = METADATA_CONFIGS[collectionKey];
   const { rows: collectionRows, denominations } = useReportCollectionRows(collectionKey);
 
-  // Sync state on collection key change + auto-map default chart
   useEffect(() => {
     if (isInitialMount.current) {
       return;
@@ -140,7 +108,6 @@ export default function DynamicChartVisualizer({
       if (meta.fields[0]) {
         const defaultField = meta.fields[0].value;
         setXAxisField(defaultField);
-        // Auto-mapping check
         setChartType(isDateDimensionField(defaultField) ? "line" : "bar");
       }
       if (meta.numericFields[0]) {
@@ -153,7 +120,6 @@ export default function DynamicChartVisualizer({
     setFilters([]);
   }, [collectionKey]);
 
-  // Sync chart type on xAxisField change (User selects another dimension)
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
@@ -162,91 +128,24 @@ export default function DynamicChartVisualizer({
     setChartType(isDateDimensionField(xAxisField) ? "line" : "bar");
   }, [xAxisField]);
 
-  // Adjust operation if numeric fields are missing
   useEffect(() => {
     if (activeMeta.numericFields.length === 0 && operation !== "count") {
       setOperation("count");
     }
   }, [operation, activeMeta]);
 
-  // Read data from Query-backed collections and apply queries with smart sorting/grouping
   const processedData = useMemo<AggregatedItem[]>(() => {
-    const denominationsForPoints = denominations;
-    
-    // 1. Apply multiple filters
-    const filteredRows = collectionRows.filter((collectionRow) => {
-      if (!collectionRow) return false;
-      return filters.every((rule) => matchesFilterRule(collectionRow, rule));
+    return aggregateVisualizerRows({
+      collectionKey,
+      collectionRows,
+      denominations,
+      filters,
+      xAxisField,
+      operation,
+      targetField,
     });
-
-    // 2. Group records by xAxisField dimension
-    const groups: Record<string, Record<string, unknown>[]> = {};
-    filteredRows.forEach((filteredRow) => {
-      const xAxisValue = filteredRow[xAxisField];
-      const groupKey = xAxisValue === undefined || xAxisValue === null || xAxisValue === "" ? "Unknown / Null" : String(xAxisValue);
-      if (!groups[groupKey]) groups[groupKey] = [];
-      groups[groupKey].push(filteredRow);
-    });
-
-    // 3. Compute Aggregations
-    const aggregatedRows = Object.entries(groups).map(([name, groupItems]) => {
-      let finalValue = 0;
-      const count = groupItems.length;
-
-      if (operation === "count") {
-        finalValue = count;
-      } else {
-        const targetMetricField = targetField || "";
-        const values: number[] = [];
-
-        groupItems.forEach((groupItem) => {
-          // Special Hasanat points calculation
-          if (collectionKey === "hasanat_distributions" && targetMetricField === "points") {
-            const points = getDenominationPoints(
-              groupItem.denominationId as string,
-              groupItem.denominationName as string,
-              denominationsForPoints
-            );
-            values.push(Number(groupItem.quantity || 1) * points);
-          } else {
-            const numericValue = Number(groupItem[targetMetricField]);
-            if (!isNaN(numericValue)) {
-              values.push(numericValue);
-            }
-          }
-        });
-
-        if (values.length > 0) {
-          switch (operation) {
-            case "sum":
-              finalValue = values.reduce((sum, value) => sum + value, 0);
-              break;
-            case "avg":
-              finalValue = Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
-              break;
-            case "min":
-              finalValue = Math.min(...values);
-              break;
-            case "max":
-              finalValue = Math.max(...values);
-              break;
-            default:
-              finalValue = 0;
-          }
-        }
-      }
-
-      return {
-        name,
-        value: finalValue,
-        count
-      };
-    });
-
-    return sortAndCapAggregatedItems(aggregatedRows, xAxisField, operation);
   }, [collectionKey, xAxisField, operation, targetField, filters, collectionRows, denominations]);
 
-  // Checks if this chart configuration is pinned to dashboard
   const isPinned = useMemo(() => {
     return dashboardWidgets.some(
       (widget) =>
@@ -258,7 +157,6 @@ export default function DynamicChartVisualizer({
     );
   }, [dashboardWidgets, collectionKey, xAxisField, operation, chartType]);
 
-  // Toggles pin state in localStorage
   const handleTogglePin = () => {
     const nextWidgets = [...dashboardWidgets];
     const matchingIndex = nextWidgets.findIndex(
@@ -271,7 +169,6 @@ export default function DynamicChartVisualizer({
     if (matchingIndex > -1) {
       nextWidgets[matchingIndex].isPinnedToDashboard = !nextWidgets[matchingIndex].isPinnedToDashboard;
     } else {
-      // Create new custom widget
       const newWidget: CustomWidget = {
         id: "widget-" + Date.now(),
         title: title,
@@ -281,7 +178,7 @@ export default function DynamicChartVisualizer({
         xAxisField: xAxisField,
         operation: operation === "min" || operation === "max" ? "count" : operation,
         targetField: targetField,
-      color: resolveWidgetPinColor(activePalette),
+        color: resolveWidgetPinColor(activePalette),
         isPinnedToDashboard: true,
         filterOperator: "equals"
       };
@@ -293,7 +190,6 @@ export default function DynamicChartVisualizer({
     window.dispatchEvent(new Event("local-database-update"));
   };
 
-  // Add a filter rule
   const handleAddFilter = () => {
     const defaultField = activeMeta.fields[0]?.value || "";
     const newRule: FilterRule = {
@@ -305,7 +201,6 @@ export default function DynamicChartVisualizer({
     setFilters([...filters, newRule]);
   };
 
-  // Update a filter rule
   const handleUpdateFilter = (id: string, updates: Partial<FilterRule>) => {
     const updatedFilters = filters.map((rule) => {
       if (rule.id === id) {
@@ -316,769 +211,129 @@ export default function DynamicChartVisualizer({
     setFilters(updatedFilters);
   };
 
-  // Delete a filter rule
   const handleDeleteFilter = (id: string) => {
     setFilters(filters.filter((rule) => rule.id !== id));
   };
 
-  // Export chart to PNG image file
   const handleExportPNG = async () => {
     if (!chartRef.current) return;
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(chartRef.current, {
-        backgroundColor: "rgba(255, 255, 255, 1)",
-        scale: 2,
-        logging: false
-      });
-      const dataUrl = canvas.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.download = `${title.toLowerCase().replace(/\s+/g, "-")}-chart.png`;
-      link.href = dataUrl;
-      link.click();
+      await exportVisualizerPng({ chartElement: chartRef.current, title });
     } catch (error) {
       console.error("Failed to export chart image", error);
     }
   };
 
-  // Export summary database values to Excel file
   const handleExportExcel = async () => {
-    if (processedData.length === 0) return;
     try {
-      const XLSX = await import("xlsx");
-      const sheetData = processedData.map((aggregatedItem) => ({
-        "Grouping Key": aggregatedItem.name,
-        "Aggregated Value": aggregatedItem.value,
-        "Count": aggregatedItem.count
-      }));
-      const worksheet = XLSX.utils.json_to_sheet(sheetData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Analytics");
-      XLSX.writeFile(workbook, `${title.replace(/\s+/g, "_")}_${todayISO()}.xlsx`);
-
+      await exportVisualizerExcel({ title, processedData });
     } catch (error) {
       console.error("Failed to export Excel spreadsheet", error);
     }
   };
 
-  // Export report with chart + data grid to PDF
   const handleExportPDF = async () => {
     if (!chartRef.current) return;
     try {
-      const [html2canvasModule, jsPDFModule, autoTableModule] = await Promise.all([
-        import("html2canvas"),
-        import("jspdf"),
-        import("jspdf-autotable"),
-      ]);
-      const html2canvas = html2canvasModule.default;
-      const jsPDF = jsPDFModule.default;
-      const autoTable = autoTableModule.default;
-
-      const canvas = await html2canvas(chartRef.current, {
-        backgroundColor: "rgba(255, 255, 255, 1)",
-        scale: 2,
-        logging: false
+      await exportVisualizerPdf({
+        chartElement: chartRef.current,
+        title,
+        processedData,
+        operation,
+        xAxisField,
+        collectionLabel: activeMeta.name,
+        pdfFormat,
+        pdfOrientation,
       });
-      const dataUrl = canvas.toDataURL("image/png");
-
-      const { formatWidth, formatHeight } = getPdfPageDimensions(pdfFormat, pdfOrientation);
-
-      const doc = new jsPDF({
-        orientation: pdfOrientation,
-        unit: "mm",
-        format: pdfFormat
-      });
-
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(18);
-      doc.text("MMS - Analytics Report", 14, 20);
-      
-      doc.setFont("Helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Generated on: ${formatDateTime(new Date())}`, 14, 26);
-      doc.text(`Subject Dataset: ${activeMeta.name} (${operation.toUpperCase()} of ${xAxisField})`, 14, 31);
-      
-      doc.line(14, 34, formatWidth - 14, 34);
-
-      // Margins
-      const margin = 14;
-      const printableWidth = formatWidth - (margin * 2);
-      const chartWidth = printableWidth;
-      const chartHeight = (canvas.height / canvas.width) * chartWidth;
-
-      // Render chart image
-      doc.addImage(dataUrl, "PNG", margin, 38, chartWidth, chartHeight);
-
-      // Render tabular data
-      autoTable(doc, {
-        head: [["Grouping Key (X-Axis)", `Aggregated Value (${operation.toUpperCase()})`, "Record Count"]],
-        body: processedData.map((row) => [row.name, formatNumber(row.value), row.count]),
-
-        startY: chartHeight + 48,
-        styles: { fontSize: pdfOrientation === "l" ? 9 : 10 },
-        headStyles: { fillColor: [16, 185, 129] }, // emerald theme color
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-      });
-
-      doc.save(`${title.toLowerCase().replace(/\s+/g, "-")}-report.pdf`);
     } catch (error) {
       console.error("Failed to export PDF report", error);
     }
   };
 
+  const handleSaveVisual = onSave
+    ? () => {
+        onSave({
+          id: initialConfig?.id || "visual-" + Date.now(),
+          title,
+          collection: collectionKey as VisualizerConfig["collection"],
+          chartType,
+          xAxisField,
+          operation,
+          targetField,
+          activePalette
+        });
+      }
+    : undefined;
+
   const currentColors = [...getChartPaletteColors(activePalette)];
-
-  // Recharts custom tooltips and widgets
-  const renderChart = () => {
-    if (processedData.length === 0) {
-      return (
-        <div className="h-[15.625rem] flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border/50 rounded-3xl bg-card/20">
-          <Info className="w-6 h-6 mb-2 opacity-40 animate-bounce" />
-          <p className="text-xs font-bold text-foreground">{t("reports.visualizer.noData")}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{t("reports.visualizer.noDataSubtitle")}</p>
-        </div>
-      );
-    }
-
-    const firstColor = currentColors[0] || getBrandingChartPalette().primary;
-
-    switch (chartType) {
-      case "bar":
-        return (
-          <SafeResponsiveContainer width="100%" height={260}>
-            <BarChart data={processedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />}
-              <XAxis dataKey="name" tick={{ fontSize: axisFontSize, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval="preserveEnd" minTickGap={tickGap} />
-              <YAxis tick={{ fontSize: axisFontSize, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
-              {showTooltip && <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: `${axisFontSize}px` }} />}
-              {showLegend && <Legend wrapperStyle={{ fontSize: `${legendFontSize}px`, paddingTop: "12px" }} />}
-              <Bar dataKey="value" name={t(`reports.visualizer.op${operation === "avg" ? "Avg" : (operation === "count" ? "Count" : capitalize(operation))}` as AppTranslationKey)} radius={[4, 4, 0, 0]} maxBarSize={30}>
-                {processedData.map((_, index) => (
-                  <Cell key={index} fill={currentColors[index % currentColors.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </SafeResponsiveContainer>
-        );
-
-      case "line":
-        return (
-          <SafeResponsiveContainer width="100%" height={260}>
-            <LineChart data={processedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />}
-              <XAxis dataKey="name" tick={{ fontSize: axisFontSize, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval="preserveEnd" minTickGap={tickGap} />
-              <YAxis tick={{ fontSize: axisFontSize, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
-              {showTooltip && <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: `${axisFontSize}px` }} />}
-              {showLegend && <Legend wrapperStyle={{ fontSize: `${legendFontSize}px`, paddingTop: "12px" }} />}
-              <Line type="monotone" dataKey="value" name={t(`reports.visualizer.op${operation === "avg" ? "Avg" : (operation === "count" ? "Count" : capitalize(operation))}` as AppTranslationKey)} stroke={firstColor} strokeWidth={3} dot={{ r: 4, strokeWidth: 1 }} activeDot={{ r: 6 }} />
-            </LineChart>
-          </SafeResponsiveContainer>
-        );
-
-      case "area":
-        return (
-          <SafeResponsiveContainer width="100%" height={260}>
-            <AreaChart data={processedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="visGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={firstColor} stopOpacity={0.4} />
-                  <stop offset="95%" stopColor={firstColor} stopOpacity={0.0} />
-                </linearGradient>
-              </defs>
-              {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />}
-              <XAxis dataKey="name" tick={{ fontSize: axisFontSize, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval="preserveEnd" minTickGap={tickGap} />
-              <YAxis tick={{ fontSize: axisFontSize, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
-              {showTooltip && <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: `${axisFontSize}px` }} />}
-              {showLegend && <Legend wrapperStyle={{ fontSize: `${legendFontSize}px`, paddingTop: "12px" }} />}
-              <Area type="monotone" dataKey="value" name={t(`reports.visualizer.op${operation === "avg" ? "Avg" : (operation === "count" ? "Count" : capitalize(operation))}` as AppTranslationKey)} stroke={firstColor} fill="url(#visGrad)" strokeWidth={2.5} />
-            </AreaChart>
-          </SafeResponsiveContainer>
-        );
-
-      case "pie":
-        return (
-          <SafeResponsiveContainer width="100%" height={260}>
-            <PieChart>
-              {showTooltip && <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: `${axisFontSize}px` }} />}
-              {showLegend && (
-                <Legend 
-                  wrapperStyle={{ fontSize: `${legendFontSize}px` }} 
-                  layout={containerWidth < 450 ? "horizontal" : "vertical"} 
-                  align={containerWidth < 450 ? "center" : "right"} 
-                  verticalAlign={containerWidth < 450 ? "bottom" : "middle"} 
-                />
-              )}
-              <Pie
-                data={processedData}
-                dataKey="value"
-                nameKey="name"
-                cx={containerWidth < 450 ? "50%" : "40%"}
-                cy="50%"
-                innerRadius={Math.min(50, Math.round(containerWidth / 10))}
-                outerRadius={Math.min(80, Math.round(containerWidth / 6))}
-                paddingAngle={3}
-                label={containerWidth >= 400 ? ({ percent }) => `${((percent ?? 0) * 100).toFixed(0)}%` : false}
-                labelLine={false}
-              >
-                {processedData.map((_, index) => (
-                  <Cell key={index} fill={currentColors[index % currentColors.length]} />
-                ))}
-              </Pie>
-            </PieChart>
-          </SafeResponsiveContainer>
-        );
-
-      case "radar":
-        return (
-          <SafeResponsiveContainer width="100%" height={260}>
-            <RadarChart cx="50%" cy="50%" outerRadius="75%" data={processedData}>
-              <PolarGrid stroke="hsl(var(--border))" />
-              <PolarAngleAxis dataKey="name" tick={{ fontSize: Math.max(8, axisFontSize - 1) }} />
-              <PolarRadiusAxis angle={30} domain={[0, "auto"]} tick={{ fontSize: Math.max(7, axisFontSize - 2) }} />
-              <Radar name={t(`reports.visualizer.op${operation === "avg" ? "Avg" : (operation === "count" ? "Count" : capitalize(operation))}` as AppTranslationKey)} dataKey="value" stroke={firstColor} fill={firstColor} fillOpacity={0.25} />
-              {showTooltip && <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: `${axisFontSize}px` }} />}
-            </RadarChart>
-          </SafeResponsiveContainer>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  const totalValue = processedData.reduce((sum, aggregatedItem) => sum + aggregatedItem.value, 0);
-  const avgGroupValue = processedData.length ? Math.round(totalValue / processedData.length) : 0;
-  const topGroup = processedData[0]?.name || "N/A";
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-start font-sans">
       
-      {/* 1. Left Configurator Panel (5 cols) */}
-      <div className="lg:col-span-5 space-y-5 print:hidden">
-        <div className="rounded-2xl border border-border/50 bg-card/45 backdrop-blur-2xl p-5 space-y-4 shadow-xl">
-          <div className="flex items-center gap-2 pb-2 border-b border-border/50">
-            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <div>
-              <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">{t("reports.visualizer.configTitle")}</h4>
-              <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("reports.visualizer.configSubtitle")}</p>
-            </div>
-          </div>
+      <DynamicChartVisualizerConfigPanel
+        title={title}
+        setTitle={setTitle}
+        collectionKey={collectionKey}
+        setCollectionKey={(value) => setCollectionKey(value as keyof typeof METADATA_CONFIGS)}
+        xAxisField={xAxisField}
+        setXAxisField={setXAxisField}
+        operation={operation}
+        setOperation={setOperation}
+        targetField={targetField}
+        setTargetField={setTargetField}
+        chartType={chartType}
+        setChartType={setChartType}
+        activePalette={activePalette}
+        setActivePalette={setActivePalette}
+        showGrid={showGrid}
+        setShowGrid={setShowGrid}
+        showLegend={showLegend}
+        setShowLegend={setShowLegend}
+        showTooltip={showTooltip}
+        setShowTooltip={setShowTooltip}
+        filters={filters}
+        activeMeta={activeMeta}
+        metadataConfigs={METADATA_CONFIGS}
+        onAddFilter={handleAddFilter}
+        onUpdateFilter={handleUpdateFilter}
+        onDeleteFilter={handleDeleteFilter}
+        t={t}
+      />
 
-          <div className="space-y-3.5">
-            {/* Widget Title */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.chartTitleLabel")}</label>
-              <Input
-                type="text"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder={t("reports.visualizer.titlePlaceholder")}
-                className="w-full min-h-11 px-3 py-2 text-xs rounded-xl bg-card/50 text-foreground focus:ring-2 focus:ring-primary/20 font-semibold"
-              />
-            </div>
-
-            {/* Collection source selection */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.dataCollection")}</label>
-                <FormSelect
-                  value={collectionKey}
-                  onChange={(value) => setCollectionKey(value as keyof typeof METADATA_CONFIGS)}
-                  className="w-full text-xs"
-                  options={Object.entries(METADATA_CONFIGS).map(([metadataKey, metadataConfig]) => {
-                    const transKey = `reports.collections.${metadataKey}`;
-                    const translated = t(transKey as AppTranslationKey);
-                    return {
-                      value: metadataKey,
-                      label: translated === transKey ? metadataConfig.name : translated,
-                    };
-                  })}
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.xAxisDimension")}</label>
-                <FormSelect
-                  value={xAxisField}
-                  onChange={setXAxisField}
-                  className="w-full text-xs"
-                  options={activeMeta.fields.map((metadataField) => ({
-                    value: metadataField.value,
-                    label: getFieldLabel(metadataField.value, metadataField.label, t),
-                  }))}
-                />
-              </div>
-            </div>
-
-            {/* Formula operation & target */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.operation")}</label>
-                <FormSelect
-                  value={operation}
-                  onChange={(value) => setOperation(value as ChartOperation)}
-                  className="w-full text-xs"
-                  options={[
-                    { value: "count", label: t("reports.visualizer.opCount") },
-                    ...(activeMeta.numericFields.length > 0
-                      ? [
-                          { value: "sum", label: t("reports.visualizer.opSum") },
-                          { value: "avg", label: t("reports.visualizer.opAvg") },
-                          { value: "min", label: t("reports.visualizer.opMin") },
-                          { value: "max", label: t("reports.visualizer.opMax") },
-                        ]
-                      : []),
-                  ]}
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.targetField")}</label>
-                <FormSelect
-                  disabled={operation === "count"}
-                  value={targetField}
-                  onChange={setTargetField}
-                  className="w-full text-xs"
-                  options={
-                    activeMeta.numericFields.length === 0
-                      ? [{ value: "", label: t("reports.widgets.builder.noNumericFields") }]
-                      : activeMeta.numericFields.map((numericField) => ({
-                          value: numericField.value,
-                          label: getFieldLabel(numericField.value, numericField.label, t),
-                        }))
-                  }
-                />
-              </div>
-            </div>
-
-            {/* Visualizer Type & Color Palette Theme */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.chartType")}</label>
-                <FormSelect
-                  value={chartType}
-                  onChange={(value) => setChartType(value as ChartType)}
-                  className="w-full text-xs"
-                  options={[
-                    { value: "bar", label: t("reports.visualizer.chartBar") },
-                    { value: "line", label: t("reports.visualizer.chartLine") },
-                    { value: "area", label: t("reports.visualizer.chartArea") },
-                    { value: "pie", label: t("reports.visualizer.chartPie") },
-                    { value: "radar", label: t("reports.visualizer.chartRadar") },
-                  ]}
-                />
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.colorPalette")}</label>
-                  {isColorblindSafeChartPalette(activePalette) && (
-                    <span className="text-xs bg-success/15 text-success px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest leading-none">{t('charts.accessibleBadge')}</span>
-                  )}
-                </div>
-                <FormSelect
-                  value={activePalette}
-                  onChange={setActivePalette}
-                  className="w-full text-xs"
-                  options={CHART_PALETTE_DEFS.filter((def) => def.id !== 'brand' && def.colors.length > 0).map((def) => ({
-                    value: def.id,
-                    label: t(def.labelKey),
-                  }))}
-                />
-              </div>
-            </div>
-
-            {/* Styling options */}
-            <div className="pt-2">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">{t("reports.visualizer.displayCustomizations")}</span>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-xs font-semibold text-foreground">
-                  <Checkbox
-                    checked={showGrid}
-                    onCheckedChange={(checked) => setShowGrid(Boolean(checked))}
-                  />
-                  {t("reports.visualizer.gridLines")}
-                </label>
-                <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-xs font-semibold text-foreground">
-                  <Checkbox
-                    checked={showLegend}
-                    onCheckedChange={(checked) => setShowLegend(Boolean(checked))}
-                  />
-                  {t("reports.visualizer.legends")}
-                </label>
-                <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-xs font-semibold text-foreground">
-                  <Checkbox
-                    checked={showTooltip}
-                    onCheckedChange={(checked) => setShowTooltip(Boolean(checked))}
-                  />
-                  {t("reports.visualizer.tooltips")}
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. Filters builder inside panel */}
-        <div className="rounded-2xl border border-border/50 bg-card/45 backdrop-blur-2xl p-5 space-y-4 shadow-xl">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-center gap-2">
-              <div className="w-8 h-8 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                <Filter className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none truncate">{t("reports.visualizer.queryFilters")}</h4>
-                <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider truncate">{t("reports.visualizer.filtersSubtitle")}</p>
-              </div>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleAddFilter}
-              className="min-h-11 flex items-center gap-1 px-3 rounded-xl border border-border bg-card/50 text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-foreground hover:border-muted-foreground/30 shadow-none"
-            >
-              <Plus className="w-3 h-3" />
-              {t("reports.visualizer.addRule")}
-            </Button>
-          </div>
-
-          <div className="space-y-2.5 max-h-[13.75rem] overflow-y-auto pe-1">
-            {filters.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic py-3 text-center bg-card/10 rounded-2xl border border-dashed border-border/40">{t("reports.visualizer.noFilters")}</p>
-            ) : (
-              filters.map((rule) => (
-                <div key={rule.id} className="flex flex-col gap-2 rounded-2xl border border-border bg-card/30 p-2.5 sm:flex-row sm:items-center">
-                  {/* Field Selector */}
-                  <FormSelect
-                    value={rule.field}
-                    onChange={(val) => handleUpdateFilter(rule.id, { field: val })}
-                    className="min-w-0 flex-1"
-                    options={activeMeta.fields.map((metadataField) => ({
-                      value: metadataField.value,
-                      label: getFieldLabel(metadataField.value, metadataField.label, t),
-                    }))}
-                  />
-
-                  {/* Operator */}
-                  <FormSelect
-                    value={rule.operator}
-                    onChange={(val) => handleUpdateFilter(rule.id, { operator: val as FilterRule["operator"] })}
-                    className="w-full font-medium sm:w-24"
-                    options={[
-                      { value: "equals", label: "=" },
-                      { value: "contains", label: "like" },
-                      { value: "startsWith", label: "starts" },
-                      ...(activeMeta.fields.find((field) => field.value === rule.field)?.isNumeric
-                        ? [
-                            { value: "gt", label: ">" },
-                            { value: "lt", label: "<" },
-                          ]
-                        : []),
-                    ]}
-                  />
-
-                  <Input
-                    type="text"
-                    value={rule.value}
-                    onChange={(event) => handleUpdateFilter(rule.id, { value: event.target.value })}
-                    placeholder={t("reports.visualizer.filterValuePlaceholder")}
-                    className="min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-card/60 px-2 py-2 text-xs font-semibold text-foreground focus:ring-2 focus:ring-primary/20"
-                  />
-
-                  {/* Remove */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteFilter(rule.id)}
-                    className="shrink-0 rounded hover:bg-destructive/15 text-muted-foreground hover:text-destructive shadow-none"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Right Visual Render Panel (7 cols) */}
-      <div className="lg:col-span-7 space-y-5">
-        <div className="rounded-3xl border border-border/50 bg-card/45 backdrop-blur-2xl p-6 shadow-xl space-y-6">
-          
-          {/* Header metadata row */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-4">
-            <div className="space-y-1">
-              <h3 className="text-base font-black text-foreground tracking-tight leading-none">{title}</h3>
-              <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">
-                {(() => {
-                  const collName = getCollectionLabel(collectionKey, activeMeta.name, t);
-                  const activeField = activeMeta.fields.find((f) => f.value === xAxisField);
-                  const axisName = getFieldLabel(xAxisField, activeField?.label || xAxisField, t);
-
-                  return t("reports.visualizer.sourceSubtitle", {
-                    source: collName,
-                    axis: axisName
-                  });
-                })()}
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-2 print:hidden">
-              {onSave && (
-                <Button
-                  type="button"
-                  onClick={() => {
-                    onSave({
-                      id: initialConfig?.id || "visual-" + Date.now(),
-                      title,
-                      collection: collectionKey as VisualizerConfig["collection"],
-                      chartType,
-                      xAxisField,
-                      operation,
-                      targetField,
-                      activePalette
-                    });
-                  }}
-                  className="min-h-11 flex items-center gap-1.5 px-3.5 rounded-2xl bg-primary text-primary-foreground border border-primary/50 text-xs font-black uppercase tracking-wider hover:opacity-90 shadow-md shadow-primary/15"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  {t("reports.visualizer.saveVisual")}
-                </Button>
-              )}
-
-              {onClose && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onClose}
-                  className="min-h-11 flex items-center gap-1.5 px-3.5 rounded-2xl border border-border bg-card/50 text-muted-foreground hover:text-foreground text-xs font-black uppercase tracking-wider shadow-none"
-                >
-                  {t("reports.visualizer.cancel")}
-                </Button>
-              )}
-
-              {/* Pin widget to home dashboard */}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleTogglePin}
-                className={`min-h-11 flex items-center gap-1.5 px-3.5 rounded-2xl border text-xs font-black uppercase tracking-wider shadow-none ${
-                  isPinned
-                    ? "border-success/30 bg-success/10 text-success shadow-md shadow-success/5 hover:bg-success/15 hover:text-success"
-                    : "border-border bg-card/50 text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
-                {isPinned ? t("reports.visualizer.pinnedToHome") : t("reports.visualizer.pinToDashboard")}
-              </Button>
-
-              {/* Exports button group */}
-              <div className="flex items-center gap-1.5 relative">
-                {showPdfSettings && (
-                  <div className="absolute end-0 bottom-full mb-2 bg-card border border-border rounded-2xl p-4 shadow-xl z-50 flex flex-col gap-3.5 min-w-[12.5rem] backdrop-blur-xl">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t("reports.visualizer.pdfOrientation")}</label>
-                      <div className="flex gap-1 p-1 bg-muted rounded-xl">
-                        <Button 
-                          type="button"
-                          variant="ghost"
-                          onClick={() => setPdfOrientation("p")}
-                          className={`min-h-11 flex-1 px-2 rounded-lg text-xs font-black uppercase shadow-none ${pdfOrientation === "p" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                        >
-                          {t("reports.export.portrait")}
-                        </Button>
-                        <Button 
-                          type="button"
-                          variant="ghost"
-                          onClick={() => setPdfOrientation("l")}
-                          className={`min-h-11 flex-1 px-2 rounded-lg text-xs font-black uppercase shadow-none ${pdfOrientation === "l" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                        >
-                          {t("reports.export.landscape")}
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t("reports.visualizer.pdfPageSize")}</label>
-                      <FormSelect 
-                        value={pdfFormat}
-                        onChange={setPdfFormat}
-                        className="w-full text-xs"
-                        options={[
-                          { value: "a4", label: t("reports.builder.formatA4") },
-                          { value: "letter", label: t("reports.builder.formatLetter") },
-                          { value: "a3", label: t("reports.builder.formatA3") },
-                          { value: "legal", label: t("reports.builder.formatLegal") }
-                        ]}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => window.print()}
-                  className="bg-card/60 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground rounded-xl shadow-none"
-                  title={t("reports.visualizer.printReport")}
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={handleExportExcel}
-                  className="bg-card/60 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground rounded-xl shadow-none"
-                  title={t("reports.visualizer.exportExcel")}
-                >
-                  <FileSpreadsheet className="w-3.5 h-3.5 text-success" />
-                </Button>
-
-                <div className="flex bg-card/60 border border-border/50 rounded-xl overflow-x-auto p-0.5 items-center">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleExportPNG}
-                    className="hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg shadow-none"
-                    title={t("reports.visualizer.exportPng")}
-                  >
-                    <Image className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleExportPDF}
-                    className="hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg shadow-none"
-                    title={t("reports.visualizer.exportPdf")}
-                  >
-                    <FileText className="w-3.5 h-3.5 text-destructive" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowPdfSettings(!showPdfSettings)}
-                    className={`hover:bg-muted rounded-lg shadow-none ${showPdfSettings ? "text-primary bg-primary/10" : "text-muted-foreground"}`}
-                    title={t("reports.visualizer.pdfSettings")}
-                  >
-                    <Settings className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Recharts wrapper */}
-          <div ref={chartRef} className="relative overflow-hidden rounded-3xl border border-border/30 bg-card/5 p-4 shadow-inner backdrop-blur-md">
-            {renderChart()}
-          </div>
-
-          {/* Interactive KPI overview boxes */}
-          {processedData.length > 0 && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="p-3 border border-border bg-card/30 rounded-2xl flex flex-col justify-between">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.totalAggregated")}</span>
-                <span className="text-sm font-black text-foreground mt-1 leading-none">
-                  {formatNumber(totalValue)}
-                </span>
-              </div>
-              <div className="p-3 border border-border bg-card/30 rounded-2xl flex flex-col justify-between">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.avgPerGroup")}</span>
-                <span className="text-sm font-black text-foreground mt-1 leading-none">
-                  {formatNumber(avgGroupValue)}
-                </span>
-              </div>
-              <div className="p-3 border border-border bg-card/30 rounded-2xl flex flex-col justify-between">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.topGroup")}</span>
-                <span className="text-sm font-black text-foreground mt-1 leading-none truncate block max-w-full">
-                  {topGroup}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Toggle Table Panel */}
-          <div className="border-t border-border/40 pt-4 flex flex-col gap-3">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setShowDataTable(!showDataTable)}
-              className="min-h-11 w-full flex items-center justify-between text-xs font-bold text-muted-foreground hover:text-foreground select-none shadow-none px-0"
-            >
-              <span className="flex items-center gap-1.5">
-                <Table className="w-4 h-4 text-primary" />
-                {t("reports.visualizer.dataMatrix")}
-              </span>
-              {showDataTable ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </Button>
-
-            <AnimatePresence>
-              {showDataTable && processedData.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="border border-border/60 bg-card/25 rounded-2xl overflow-hidden mt-1 max-h-[13.75rem] overflow-y-auto">
-                    <div className="space-y-3 p-3 md:hidden">
-                      {processedData.map((processedRow, index) => (
-                        <article
-                          key={index}
-                          className="space-y-2 rounded-xl border border-border bg-card p-3"
-                        >
-                          <p className="text-sm font-semibold text-foreground">{processedRow.name}</p>
-                          <dl className="grid grid-cols-2 gap-2 text-sm">
-                            <div>
-                              <dt className="text-xs font-semibold text-muted-foreground">
-                                {t("reports.visualizer.aggregatedValue", { op: operation.toUpperCase() })}
-                              </dt>
-                              <dd className="font-bold text-primary">{formatNumber(processedRow.value)}</dd>
-                            </div>
-                            <div>
-                              <dt className="text-xs font-semibold text-muted-foreground">{t("reports.visualizer.recordCount")}</dt>
-                              <dd className="text-muted-foreground">{processedRow.count}</dd>
-                            </div>
-                          </dl>
-                        </article>
-                      ))}
-                    </div>
-                    <div className="hidden overflow-x-auto md:block">
-                      <table className="w-full text-xs text-start">
-                        <thead className="bg-muted/50 border-b border-border/50 text-xs font-black uppercase text-muted-foreground tracking-wider">
-                          <tr>
-                            <th className="px-4 py-2.5">{t("reports.visualizer.xAxisCategory")}</th>
-                            <th className="px-4 py-2.5">{t("reports.visualizer.aggregatedValue", { op: operation.toUpperCase() })}</th>
-                            <th className="px-4 py-2.5">{t("reports.visualizer.recordCount")}</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/40 font-medium">
-                          {processedData.map((processedRow, index) => (
-                            <tr key={index} className="hover:bg-muted/20">
-                              <td className="px-4 py-2.5 text-foreground font-semibold">{processedRow.name}</td>
-                              <td className="px-4 py-2.5 text-primary font-bold">{formatNumber(processedRow.value)}</td>
-                              <td className="px-4 py-2.5 text-muted-foreground">{processedRow.count}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-            </AnimatePresence>
-          </div>
-
-        </div>
-      </div>
+      <DynamicChartVisualizerPreview
+        chartRef={chartRef}
+        title={title}
+        collectionKey={collectionKey}
+        chartType={chartType}
+        xAxisField={xAxisField}
+        operation={operation}
+        activeMeta={activeMeta}
+        processedData={processedData}
+        currentColors={currentColors}
+        showGrid={showGrid}
+        showLegend={showLegend}
+        showTooltip={showTooltip}
+        showDataTable={showDataTable}
+        showPdfSettings={showPdfSettings}
+        pdfOrientation={pdfOrientation}
+        pdfFormat={pdfFormat}
+        containerWidth={containerWidth}
+        axisFontSize={axisFontSize}
+        legendFontSize={legendFontSize}
+        tickGap={tickGap}
+        isPinned={isPinned}
+        onSaveVisual={handleSaveVisual}
+        onClose={onClose}
+        onTogglePin={handleTogglePin}
+        onExportPng={handleExportPNG}
+        onExportExcel={handleExportExcel}
+        onExportPdf={handleExportPDF}
+        onToggleDataTable={() => setShowDataTable(!showDataTable)}
+        onTogglePdfSettings={() => setShowPdfSettings(!showPdfSettings)}
+        onPdfOrientationChange={setPdfOrientation}
+        onPdfFormatChange={setPdfFormat}
+        t={t}
+      />
 
     </div>
   );

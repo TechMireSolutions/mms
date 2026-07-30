@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { Plus, Trash2, AlertCircle, CheckCircle2, Tag, BookOpen } from "lucide-react";
-import { ACCOUNT_TYPE_META, JOURNAL_TAGS, generateJERef, Account, JournalEntry, FiscalYear, JournalLine } from '@/lib/data/accountingData';
+import { Tag, BookOpen } from "lucide-react";
+import { JOURNAL_TAGS, generateJERef, type Account, type JournalEntry, type FiscalYear } from '@/lib/data/accountingData';
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormModal } from "@/components/ui/FormModal";
 import { Button } from "@/components/ui/button";
@@ -12,15 +12,8 @@ import { hasFieldValue } from "@/lib/formCompleteness";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type AppTranslationKey, todayISO } from "@mms/shared";
-
-interface DraftLine extends Omit<JournalLine, "debit" | "credit"> {
-  debit: string | number;
-  credit: string | number;
-}
-
-interface DraftForm extends Omit<JournalEntry, "lines"> {
-  lines: DraftLine[];
-}
+import { JournalEntryLinesEditor } from "./JournalEntryLinesEditor";
+import type { DraftForm, DraftLine } from "./journalEntryFormTypes";
 
 const EMPTY_LINE = (): DraftLine => ({ id: `l${Date.now()}_${Math.random()}`, account_id: "", debit: "", credit: "", description: "" });
 
@@ -33,14 +26,6 @@ interface JournalEntryFormProps {
   fiscalYears: FiscalYear[];
 }
 
-/**
- * JournalEntryForm component.
- * 
- * Form for creating or editing a journal entry.
- * 
- * @param {JournalEntryFormProps} props - The component props.
- * @returns {React.ReactElement}
- */
 export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, fiscalYears }: JournalEntryFormProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
@@ -159,13 +144,6 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
 
   const sortedAccounts = [...accounts].filter((account) => account.isActive !== false).sort((firstAccount, secondAccount) => firstAccount.code.localeCompare(secondAccount.code));
 
-  // Group accounts for optgroup
-  const accountGroups: Record<string, Account[]> = {};
-  sortedAccounts.forEach((account) => {
-    if (!accountGroups[account.type]) accountGroups[account.type] = [];
-    accountGroups[account.type].push(account);
-  });
-
   const flattenedAccountOptions = sortedAccounts.map((account) => ({
     value: account.id,
     label: `${account.type}: ${account.code} – ${account.name}`
@@ -272,217 +250,19 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
             </fieldset>
           </Card>
 
-          {/* Lines */}
-          <Card accentColor="primary" className="p-0">
-            <fieldset className="p-5.5 px-6.5 pb-6 space-y-4 border-0 m-0 text-start">
-            <div className="flex items-center justify-between pb-1.5 border-b border-border/40 mb-2">
-              <div className="flex items-center gap-2.5">
-                <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("accounting.journal.form.linesTitle")}</h3>
-              </div>
-              <Button
-                type="button"
-                variant="link"
-                size="sm"
-                onClick={addLine}
-                className="flex items-center gap-1 min-h-11 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
-              >
-                <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.form.addLine")}
-              </Button>
-            </div>
-
-            <div className="rounded-xl border border-border overflow-hidden">
-              <div className="space-y-3 p-3 md:hidden">
-                {form.lines.map((line, lineIndex) => {
-                  const account = accounts.find((accountOption) => accountOption.id === line.account_id);
-                  return (
-                    <article key={line.id} className="space-y-3 rounded-xl border border-border bg-card p-3">
-                      <div className="flex items-center justify-end">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          aria-label={`Remove line ${lineIndex + 1}`}
-                          onClick={() => removeLine(lineIndex)}
-                          disabled={form.lines.length <= 2}
-                          className="text-muted-foreground hover:text-destructive transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                        </Button>
-                      </div>
-                      <div>
-                        <label className={FORM_LABEL}>{t("accounting.journal.detail.account")}</label>
-                        <FormSelect
-                          aria-label={`Account for line ${lineIndex + 1}`}
-                          value={line.account_id}
-                          onChange={(accountId) => updateLine(lineIndex, "account_id", accountId)}
-                          placeholder={t("accounting.journal.form.selectAccount")}
-                          options={flattenedAccountOptions}
-                        />
-                        {account && (
-                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full mt-0.5 inline-block ${ACCOUNT_TYPE_META[account.type]?.color}`}>
-                            {t(`accounting.type.${account.type}` as AppTranslationKey)} · {ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? t("accounting.journal.form.drNormal") : t("accounting.journal.form.crNormal")}
-                          </span>
-                        )}
-                        {errors[`line${lineIndex}`] && <p className="text-xs text-destructive m-0" role="alert">{errors[`line${lineIndex}`]}</p>}
-                      </div>
-                      <div>
-                        <label className={FORM_LABEL}>{t("accounting.ledger.columns.lineNote")}</label>
-                        <Input
-                          aria-label={`Description for line ${lineIndex + 1}`}
-                          value={line.description || ""}
-                          onChange={(event) => updateLine(lineIndex, "description", event.target.value)}
-                          placeholder={t("accounting.journal.form.notePlaceholder")}
-                          className="text-xs"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className={FORM_LABEL}>{t("accounting.ledger.columns.debit")}</label>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            aria-label={`Debit amount for line ${lineIndex + 1}`}
-                            value={line.debit}
-                            placeholder="0.00"
-                            onChange={(event) => updateLine(lineIndex, "debit", event.target.value)}
-                            className="bg-info/5 text-end font-mono text-xs focus:ring-info/30"
-                          />
-                        </div>
-                        <div>
-                          <label className={FORM_LABEL}>{t("accounting.ledger.columns.credit")}</label>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            aria-label={`Credit amount for line ${lineIndex + 1}`}
-                            value={line.credit}
-                            placeholder="0.00"
-                            onChange={(event) => updateLine(lineIndex, "credit", event.target.value)}
-                            className="bg-success/5 text-end font-mono text-xs focus:ring-success/30"
-                          />
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
-                <article className="rounded-xl border border-border bg-muted/30 p-3">
-                  <p className="text-xs font-bold uppercase text-muted-foreground m-0 mb-2">{t("accounting.journal.form.totals")}</p>
-                  <dl className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.ledger.columns.debit")}</dt>
-                      <dd className="font-mono font-bold text-info m-0">{formatCurrency(totalDebit)}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.ledger.columns.credit")}</dt>
-                      <dd className="font-mono font-bold text-success m-0">{formatCurrency(totalCredit)}</dd>
-                    </div>
-                  </dl>
-                </article>
-              </div>
-              <div className="hidden overflow-x-auto max-w-full md:block">
-              <table className="w-full text-sm">
-                <caption className="sr-only">{t("accounting.journal.form.linesCaption")}</caption>
-                <thead className="bg-muted/60 border-b border-border">
-                  <tr>
-                    <th scope="col" className="px-3 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">{t("accounting.journal.detail.account")}</th>
-                    <th scope="col" className="px-3 py-2 text-start text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">{t("accounting.ledger.columns.lineNote")}</th>
-                    <th scope="col" className="px-3 py-2 text-end text-xs font-semibold text-muted-foreground uppercase w-28">{t("accounting.ledger.columns.debit")}</th>
-                    <th scope="col" className="px-3 py-2 text-end text-xs font-semibold text-muted-foreground uppercase w-28">{t("accounting.ledger.columns.credit")}</th>
-                    <th scope="col" className="px-3 py-2 w-8"><span className="sr-only">{t("common.actions")}</span></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {form.lines.map((line, lineIndex) => {
-                    const account = accounts.find((accountOption) => accountOption.id === line.account_id);
-                    return (
-                      <tr key={line.id} className="hover:bg-muted/10">
-                        <td className="px-3 py-2">
-                          <FormSelect
-                            aria-label={`Account for line ${lineIndex + 1}`}
-                            value={line.account_id}
-                            onChange={(accountId) => updateLine(lineIndex, "account_id", accountId)}
-                            placeholder={t("accounting.journal.form.selectAccount")}
-                            options={flattenedAccountOptions}
-                          />
-                          {account && (
-                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full mt-0.5 inline-block ${ACCOUNT_TYPE_META[account.type]?.color}`}>
-                              {t(`accounting.type.${account.type}` as AppTranslationKey)} · {ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? t("accounting.journal.form.drNormal") : t("accounting.journal.form.crNormal")}
-                            </span>
-                          )}
-                          {errors[`line${lineIndex}`] && <p className="text-xs text-destructive m-0" role="alert">{errors[`line${lineIndex}`]}</p>}
-                        </td>
-                        <td className="px-3 py-2 hidden md:table-cell">
-                          <Input
-                            aria-label={`Description for line ${lineIndex + 1}`}
-                            value={line.description || ""}
-                            onChange={(event) => updateLine(lineIndex, "description", event.target.value)}
-                            placeholder={t("accounting.journal.form.notePlaceholder")}
-                            className="text-xs"
-                          />
-                        </td>
-                        <td className="px-3 py-2">
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            aria-label={`Debit amount for line ${lineIndex + 1}`}
-                            value={line.debit}
-                            placeholder="0.00"
-                            onChange={(event) => updateLine(lineIndex, "debit", event.target.value)}
-                            className="bg-info/5 text-end font-mono text-xs focus:ring-info/30"
-                          />
-                        </td>
-                        <td className="px-3 py-2">
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            aria-label={`Credit amount for line ${lineIndex + 1}`}
-                            value={line.credit}
-                            placeholder="0.00"
-                            onChange={(event) => updateLine(lineIndex, "credit", event.target.value)}
-                            className="bg-success/5 text-end font-mono text-xs focus:ring-success/30"
-                          />
-                        </td>
-                        <td className="px-3 py-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            aria-label={`Remove line ${lineIndex + 1}`}
-                            onClick={() => removeLine(lineIndex)}
-                            disabled={form.lines.length <= 2}
-                            className="text-muted-foreground hover:text-destructive transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-                <tfoot className="border-t-2 border-border bg-muted/30">
-                  <tr>
-                    <td colSpan={2} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{t("accounting.journal.form.totals")}</td>
-                    <td className="px-3 py-2 text-end font-mono font-bold text-info">{formatCurrency(totalDebit)}</td>
-                    <td className="px-3 py-2 text-end font-mono font-bold text-success">{formatCurrency(totalCredit)}</td>
-                    <td></td>
-                  </tr>
-                </tfoot>
-              </table>
-              </div>
-            </div>
-
-            <div className={`mt-2 flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold border transition-all duration-300 ${isBalanced ? "bg-success/10 text-success border-success/20 shadow-sm" : "bg-destructive/10 text-destructive border-destructive/20 shadow-sm"}`} role="status">
-              {isBalanced ? <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> : <AlertCircle className="w-4 h-4" aria-hidden="true" />}
-              {isBalanced ? t("accounting.journal.form.balanced") : t("accounting.journal.form.unbalanced", { diff: formatCurrency(Math.abs(totalDebit - totalCredit)) })}
-            </div>
-            {errors.lines   && <p className="text-xs text-destructive mt-1" role="alert">{errors.lines}</p>}
-            {errors.balance && <p className="text-xs text-destructive mt-1" role="alert">{errors.balance}</p>}
-            </fieldset>
-          </Card>
+          <JournalEntryLinesEditor
+            accounts={accounts}
+            accountOptions={flattenedAccountOptions}
+            errors={errors}
+            lines={form.lines}
+            totalDebit={totalDebit}
+            totalCredit={totalCredit}
+            isBalanced={isBalanced}
+            formatCurrency={formatCurrency}
+            onAddLine={addLine}
+            onRemoveLine={removeLine}
+            onUpdateLine={updateLine}
+          />
 
         </form>
     </FormModal>

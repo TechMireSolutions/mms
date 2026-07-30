@@ -1,0 +1,39 @@
+import type { TabDefinition } from "./contactTypes.js";
+import type { ModuleCustomField, ModuleFieldDef } from "./moduleFieldSchema.js";
+
+// ─── Hasanat Module Settings ──────────────────────────────────────────────────
+
+export interface HasanatSettings {
+  pointsPerUnit: number;
+  autoApprovePayouts: boolean;
+  defaultViewLayout?: string;
+  fields?: Record<string, unknown>;
+  customFields?: ModuleCustomField[];
+  fieldOrder?: string[];
+  formTabs?: TabDefinition[];
+  enabledTabs?: string[];
+  requiredTabs?: string[];
+}
+
+export const DEFAULT_HASANAT_SETTINGS: HasanatSettings = {
+  pointsPerUnit: 10,
+  autoApprovePayouts: false,
+  defaultViewLayout: "list",
+  fields: {
+    recipientClass: { enabled: true, required: false },
+    issuedBy: { enabled: true, required: false },
+  },
+  customFields: [],
+  fieldOrder: ["recipientClass", "issuedBy"],
+};
+
+export const DEFAULT_HASANAT_FIELD_DEFS: ModuleFieldDef[] = [
+  { id: "denominationId", label: "Denomination", required: true },
+  { id: "recipientType", label: "Recipient Type", required: true },
+  { id: "recipientName", label: "Recipient", required: true },
+  { id: "recipientClass", label: "Class / Department" },
+  { id: "quantity", label: "Quantity", required: true },
+  { id: "issuedDate", label: "Issued Date", required: true },
+  { id: "reason", label: "Reason / Achievement", required: true },
+  { id: "issuedBy", label: "Issued By" },
+];

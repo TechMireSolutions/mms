@@ -1,51 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  MoreHorizontal, Edit2, Trash2, School, ChevronUp, ChevronDown,
-  MessageSquare, MessageCircle, Mail, RotateCcw, Eye, Tag,
-} from 'lucide-react';
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuSeparator, DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { StatusBadge } from '@/components/ui/StatusBadge';
-import { EmptyState } from '@/components/ui/EmptyState';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
-import { DEFAULT_TEACHERS_SETTINGS, type AppTranslationKey, toTitleCase, formatDate } from '@mms/shared';
+import { DEFAULT_TEACHERS_SETTINGS, type AppTranslationKey, toTitleCase } from '@mms/shared';
 import { useTeacherConfig } from '@/hooks/useStandardModuleConfig';
 import type { Teacher } from '@/lib/data/teachersData';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
-import { UserAvatar } from '@/components/ui/UserAvatar';
-import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
-import TeacherDetail from '@/tenant/features/teachers/components/TeacherDetail';
+import { TeacherListConfirmDialogs } from '@/tenant/features/teachers/components/TeacherListConfirmDialogs';
+import { TeacherListContent } from '@/tenant/features/teachers/components/TeacherListContent';
+import { TeacherListDetailDrawer } from '@/tenant/features/teachers/components/TeacherListDetailDrawer';
+import { TeacherListSelectionBar } from '@/tenant/features/teachers/components/TeacherListSelectionBar';
+import type { TeacherListProps, TeacherSortField } from '@/tenant/features/teachers/components/TeacherListTypes';
 
-export type TeacherSortField = 'name' | 'specialization' | 'qualification' | 'status' | 'joinDate';
-
-export interface TeacherListProps {
-  teachers: Teacher[];
-  onEdit: (teacher: Teacher) => void;
-  onDelete: (id: string) => void;
-  onRestore?: (id: string) => void;
-  onBulkDelete?: (ids: string[]) => void;
-  onBulkRestore?: (ids: string[]) => void;
-  onSms?: (teachers: Teacher[]) => void;
-  onWhatsApp?: (teachers: Teacher[]) => void;
-  onEmail?: (teachers: Teacher[]) => void;
-  onBulkStatusChange?: (ids: string[], status: string) => void;
-  canWrite?: boolean;
-  canDelete?: boolean;
-  showDeleted?: boolean;
-  selectionResetKey?: string | number;
-  isColumnVisible?: (key: string) => boolean;
-  getColumnWidth?: (key: string) => number | undefined;
-  onColumnResize?: (key: string, width: number) => void;
-  sortField?: TeacherSortField;
-  sortDir?: 'asc' | 'desc';
-  onSortChange?: (field: TeacherSortField, dir: 'asc' | 'desc') => void;
-}
+export type { TeacherListProps, TeacherSortField } from '@/tenant/features/teachers/components/TeacherListTypes';
 
 export function TeacherList({
   teachers,
@@ -154,13 +119,6 @@ export function TeacherList({
     }
   };
 
-  const renderSortIcon = (field: TeacherSortField) => {
-    if (sortField !== field) return <ChevronUp className="w-3 h-3 opacity-25" />;
-    return sortDir === 'asc'
-      ? <ChevronUp className="w-3 h-3 text-primary" />
-      : <ChevronDown className="w-3 h-3 text-primary" />;
-  };
-
   const allSelected = sorted.length > 0 && selectedIds.length === sorted.length;
   const someSelected = selectedIds.length > 0 && selectedIds.length < sorted.length;
   const selectedTeachers = teachers.filter((teacher) => selectedIds.includes(String(teacher.id)));
@@ -184,438 +142,96 @@ export function TeacherList({
   const showSelectColumn = canWrite || canDelete;
   const showActionsColumn = canWrite || canDelete || !showDeleted;
 
-  const renderTeacherActions = (teacher: Teacher, teacherIdStr: string) => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button type="button" variant="ghost" size="icon" className="rounded-lg" aria-label={t('common.actions')}>
-          <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {showDeleted ? (
-          canDelete && onRestore && (
-            <DropdownMenuItem onClick={() => onRestore(teacherIdStr)}>
-              <RotateCcw className="w-3.5 h-3.5 me-2" /> {t('teachers.restore')}
-            </DropdownMenuItem>
-          )
-        ) : (
-          <>
-            <DropdownMenuItem onClick={() => setViewTeacher(teacher)}>
-              <Eye className="w-3.5 h-3.5 me-2" /> {t('teachers.list.viewDetails')}
-            </DropdownMenuItem>
-            {canWrite && (
-              <DropdownMenuItem onClick={() => onEdit(teacher)}>
-                <Edit2 className="w-3.5 h-3.5 me-2" /> {t('common.edit')}
-              </DropdownMenuItem>
-            )}
-            {(onWhatsApp || onSms || onEmail) && <DropdownMenuSeparator />}
-            {onWhatsApp && (
-              <DropdownMenuItem onClick={() => onWhatsApp([teacher])}>
-                <MessageCircle className="w-3.5 h-3.5 me-2 text-success" /> {t('teachers.list.actionWhatsApp')}
-              </DropdownMenuItem>
-            )}
-            {onSms && (
-              <DropdownMenuItem onClick={() => onSms([teacher])}>
-                <MessageSquare className="w-3.5 h-3.5 me-2 text-info" /> {t('teachers.list.actionSms')}
-              </DropdownMenuItem>
-            )}
-            {onEmail && (
-              <DropdownMenuItem onClick={() => onEmail([teacher])}>
-                <Mail className="w-3.5 h-3.5 me-2 text-primary" /> {t('teachers.list.actionEmail')}
-              </DropdownMenuItem>
-            )}
-            {canDelete && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setPendingDeleteId(teacherIdStr)}>
-                  <Trash2 className="w-3.5 h-3.5 me-2" /> {t('common.delete')}
-                </DropdownMenuItem>
-              </>
-            )}
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-
-  if (teachers.length === 0) {
-    return (
-      <EmptyState
-        icon={School}
-        title={showDeleted ? t('teachers.empty.trashTitle') : t('teachers.empty.title')}
-        description={showDeleted ? t('teachers.empty.trashSubtitle') : t('teachers.empty.subtitle')}
-      />
-    );
-  }
-
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
-        <div className="space-y-3 p-3 md:hidden">
-          {sorted.map((teacher, index) => {
-            const teacherIdStr = String(teacher.id);
-            const displayName = teacher.name || t('teachers.contactMissing');
-            const isSelected = selectedIds.includes(teacherIdStr);
-            return (
-              <motion.article
-                key={teacher.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: index * 0.03 }}
-                className={`space-y-3 rounded-xl border border-border bg-card p-3 ${isSelected ? 'ring-1 ring-primary/20' : ''}`}
-              >
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                    {showSelectColumn && (
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={() => handleSelectOne(teacherIdStr)}
-                        aria-label={t('teachers.field.name')}
-                      />
-                    )}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="h-auto min-w-0 flex-1 items-center gap-2.5 p-0 text-start shadow-none hover:bg-transparent"
-                      onClick={() => setViewTeacher(teacher)}
-                    >
-                      <UserAvatar id={teacher.id} name={displayName} className="h-8 w-8 shrink-0 rounded-full text-xs font-semibold" />
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-foreground">{displayName}</p>
-                        {teacher.employeeId && (
-                          <p className="truncate text-xs text-muted-foreground">{teacher.employeeId}</p>
-                        )}
-                      </div>
-                    </Button>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1">
-                    {showStatus && <StatusBadge status={teacher.status} config={statusConfig} size="sm" />}
-                    {showActionsColumn && renderTeacherActions(teacher, teacherIdStr)}
-                  </div>
-                </div>
-                <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                  {showSpecialization && (
-                    <div>
-                      <dt className="text-xs font-semibold text-muted-foreground">{t('teachers.field.specialization')}</dt>
-                      <dd className="text-foreground">{teacher.specialization ?? t('common.notSpecified')}</dd>
-                    </div>
-                  )}
-                  {showQualification && (
-                    <div>
-                      <dt className="text-xs font-semibold text-muted-foreground">{t('teachers.field.qualification')}</dt>
-                      <dd className="text-foreground">{teacher.qualification ?? t('common.notSpecified')}</dd>
-                    </div>
-                  )}
-                  {showJoinDate && (
-                    <div>
-                      <dt className="text-xs font-semibold text-muted-foreground">{t('teachers.field.joinDate')}</dt>
-                      <dd className="text-foreground">
-                        {teacher.joinDate ? formatDate(teacher.joinDate) : t('common.notSpecified')}
-                      </dd>
-                    </div>
-                  )}
-                  {visibleCustomFields.map((field) => {
-                    const fieldValue = (teacher as unknown as Record<string, unknown>)[field.id];
-                    let displayValue = t('common.notSpecified');
-                    if (fieldValue !== undefined && fieldValue !== null && fieldValue !== '') {
-                      displayValue = typeof fieldValue === 'boolean'
-                        ? (fieldValue ? t('common.yes') : t('common.no'))
-                        : String(fieldValue);
-                    }
-                    return (
-                      <div key={field.id}>
-                        <dt className="text-xs font-semibold text-muted-foreground">{field.label ?? field.id}</dt>
-                        <dd className="text-foreground">{displayValue}</dd>
-                      </div>
-                    );
-                  })}
-                </dl>
-              </motion.article>
-            );
-          })}
-        </div>
-        <div className="hidden overflow-x-auto md:block">
-          <table className="w-full text-sm table-fixed">
-            <thead className="bg-muted/40 border-b border-border/50">
-              <tr>
-                {showSelectColumn && (
-                  <th className="w-10 px-4 py-3">
-                    <Checkbox
-                      checked={someSelected ? 'indeterminate' : allSelected}
-                      onCheckedChange={handleSelectAll}
-                    />
-                  </th>
-                )}
-                <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-3 text-start">
-                  <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('name')}>
-                    {t('teachers.field.name')} {renderSortIcon('name')}
-                  </Button>
-                </ResizableTableHead>
-                {showSpecialization && (
-                  <ResizableTableHead columnKey="specialization" width={getColumnWidth?.("specialization")} onResize={onColumnResize} className="px-4 py-3 text-start hidden sm:table-cell">
-                    <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('specialization')}>
-                      {t('teachers.field.specialization')} {renderSortIcon('specialization')}
-                    </Button>
-                  </ResizableTableHead>
-                )}
-                {showQualification && (
-                  <ResizableTableHead columnKey="qualification" width={getColumnWidth?.("qualification")} onResize={onColumnResize} className="px-4 py-3 text-start hidden md:table-cell">
-                    <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('qualification')}>
-                      {t('teachers.field.qualification')} {renderSortIcon('qualification')}
-                    </Button>
-                  </ResizableTableHead>
-                )}
-                {showJoinDate && (
-                  <ResizableTableHead columnKey="joinDate" width={getColumnWidth?.("joinDate")} onResize={onColumnResize} className="px-4 py-3 text-start hidden md:table-cell">
-                    <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('joinDate')}>
-                      {t('teachers.field.joinDate')} {renderSortIcon('joinDate')}
-                    </Button>
-                  </ResizableTableHead>
-                )}
-                {showStatus && (
-                  <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-4 py-3 text-start">
-                    <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => handleSort('status')}>
-                      {t('teachers.field.status')} {renderSortIcon('status')}
-                    </Button>
-                  </ResizableTableHead>
-                )}
-                {visibleCustomFields.map((field) => (
-                  <ResizableTableHead key={field.id} columnKey={`custom:${field.id}`} width={getColumnWidth?.(`custom:${field.id}`)} onResize={onColumnResize} className="px-4 py-3 text-start hidden lg:table-cell">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {field.label ?? field.id}
-                    </span>
-                  </ResizableTableHead>
-                ))}
-                {showActionsColumn && <th className="px-4 py-3 w-10" scope="col"><span className="sr-only">{t('common.actions')}</span></th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/50">
-              {sorted.map((teacher) => {
-                const teacherIdStr = String(teacher.id);
-                const displayName = teacher.name || t('teachers.contactMissing');
-                const isSelected = selectedIds.includes(teacherIdStr);
-                return (
-                <tr key={teacher.id} className={`hover:bg-muted/20 transition-colors ${isSelected ? 'bg-primary/[0.015]' : ''}`}>
-                  {showSelectColumn && (
-                    <td className="px-4 py-3">
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={() => handleSelectOne(teacherIdStr)}
-                      />
-                    </td>
-                  )}
-                  <td className="px-4 py-3">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="h-auto flex items-center gap-3 min-w-0 text-start w-full p-0 shadow-none hover:bg-transparent"
-                      onClick={() => setViewTeacher(teacher)}
-                    >
-                      <UserAvatar id={teacher.id} name={displayName} className="h-8 w-8 rounded-full text-xs font-semibold" />
-                      <div className="min-w-0">
-                        <p className="font-medium text-foreground truncate hover:text-primary transition-colors">{displayName}</p>
-                        {teacher.employeeId && (
-                          <p className="text-xs text-muted-foreground">{teacher.employeeId}</p>
-                        )}
-                      </div>
-                    </Button>
-                  </td>
-                  {showSpecialization && (
-                    <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{teacher.specialization ?? t('common.notSpecified')}</td>
-                  )}
-                  {showQualification && (
-                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{teacher.qualification ?? t('common.notSpecified')}</td>
-                  )}
-                  {showJoinDate && (
-                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
-                      {teacher.joinDate ? formatDate(teacher.joinDate) : t('common.notSpecified')}
-                    </td>
-                  )}
-                  {showStatus && (
-                    <td className="px-4 py-3">
-                      <StatusBadge status={teacher.status} config={statusConfig} />
-                    </td>
-                  )}
-                  {visibleCustomFields.map((field) => {
-                    const fieldValue = (teacher as unknown as Record<string, unknown>)[field.id];
-                    let displayValue = t('common.notSpecified');
-                    if (fieldValue !== undefined && fieldValue !== null && fieldValue !== '') {
-                      displayValue = typeof fieldValue === 'boolean'
-                        ? (fieldValue ? t('common.yes') : t('common.no'))
-                        : String(fieldValue);
-                    }
-                    return (
-                      <td key={field.id} className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
-                        {displayValue}
-                      </td>
-                    );
-                  })}
-                  {showActionsColumn && (
-                    <td className="px-4 py-3">
-                      {renderTeacherActions(teacher, teacherIdStr)}
-                    </td>
-                  )}
-                </tr>
-              );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <TeacherListContent
+        teachers={sorted}
+        selectedIds={selectedIds}
+        allSelected={allSelected}
+        someSelected={someSelected}
+        showSelectColumn={showSelectColumn}
+        showActionsColumn={showActionsColumn}
+        showSpecialization={showSpecialization}
+        showQualification={showQualification}
+        showJoinDate={showJoinDate}
+        showStatus={showStatus}
+        showDeleted={showDeleted}
+        canWrite={canWrite}
+        canDelete={canDelete}
+        visibleCustomFields={visibleCustomFields}
+        statusConfig={statusConfig}
+        sortField={sortField}
+        sortDir={sortDir}
+        getColumnWidth={getColumnWidth}
+        onColumnResize={onColumnResize}
+        onSort={handleSort}
+        onSelectAll={handleSelectAll}
+        onSelectOne={handleSelectOne}
+        onView={setViewTeacher}
+        onEdit={onEdit}
+        onRequestDelete={setPendingDeleteId}
+        onRestore={onRestore}
+        onSms={onSms}
+        onWhatsApp={onWhatsApp}
+        onEmail={onEmail}
+      />
 
-      <AnimatePresence>
-        {showSelectColumn && selectedIds.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed inset-x-4 bottom-4 z-40 max-w-full sm:inset-x-auto sm:end-6 sm:bottom-6 bg-card/95 border border-primary/20 backdrop-blur-xl shadow-2xl rounded-2xl p-3 flex flex-wrap items-center gap-3 border-s-4 border-s-primary"
-          >
-            <span className="text-xs font-bold text-foreground ps-1">
-              {t('teachers.selectedCount', { count: selectedIds.length })}
-            </span>
-            <div className="h-4 w-px bg-border" />
-            {showDeleted ? (
-              canDelete && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => { if (onBulkRestore) setConfirmBulkRestoreOpen(true); }}
-                  className="px-3 py-1.5 rounded-lg border-primary/40 text-primary text-xs font-semibold hover:bg-primary/10 transition-colors min-h-11 flex items-center gap-1.5"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" /> {t('teachers.bulkRestore')}
-                </Button>
-              )
-            ) : (
-              <>
-                {onWhatsApp && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => onWhatsApp(selectedTeachers)}
-                    className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
-                  >
-                    <MessageCircle className="w-3.5 h-3.5 text-success" /> {t('teachers.list.actionWhatsApp')}
-                  </Button>
-                )}
-                {onSms && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => onSms(selectedTeachers)}
-                    className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5 text-info" /> {t('teachers.list.actionSms')}
-                  </Button>
-                )}
-                {onEmail && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => onEmail(selectedTeachers)}
-                    className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
-                  >
-                    <Mail className="w-3.5 h-3.5 text-primary" /> {t('teachers.list.actionEmail')}
-                  </Button>
-                )}
-                {canWrite && onBulkStatusChange && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
-                      >
-                        <Tag className="w-3.5 h-3.5 text-primary" /> {t('teachers.bulkStatus')} <ChevronDown className="w-3 h-3 ms-0.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40">
-                      {Object.keys(statusConfig).map((statusVal) => (
-                        <DropdownMenuItem
-                          key={statusVal}
-                          onClick={() => {
-                            onBulkStatusChange(selectedIds, statusVal);
-                            setSelectedIds([]);
-                          }}
-                        >
-                          <StatusBadge status={statusVal} config={statusConfig} />
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-                {canDelete && (
-                  <>
-                    <div className="h-4 w-px bg-border" />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      onClick={() => { if (onBulkDelete) setConfirmBulkDeleteOpen(true); }}
-                      className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold hover:bg-destructive/90 transition-colors min-h-11"
-                    >
-                      {t('common.delete')}
-                    </Button>
-                  </>
-                )}
-              </>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {showSelectColumn && (
+        <TeacherListSelectionBar
+          selectedIds={selectedIds}
+          selectedTeachers={selectedTeachers}
+          showDeleted={showDeleted}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          statusConfig={statusConfig}
+          onSms={onSms}
+          onWhatsApp={onWhatsApp}
+          onEmail={onEmail}
+          onBulkStatusChange={onBulkStatusChange}
+          onRequestBulkDelete={() => {
+            if (onBulkDelete) setConfirmBulkDeleteOpen(true);
+          }}
+          onRequestBulkRestore={() => {
+            if (onBulkRestore) setConfirmBulkRestoreOpen(true);
+          }}
+          onClearSelection={() => setSelectedIds([])}
+        />
+      )}
 
-      <ConfirmAlertDialog
-        open={confirmBulkDeleteOpen}
-        onOpenChange={setConfirmBulkDeleteOpen}
-        title={t('common.delete')}
-        description={t('teachers.bulkDeleteConfirm', { count: selectedIds.length })}
-        confirmLabel={t('common.delete')}
-        cancelLabel={t('common.cancel')}
-        onConfirm={() => {
+      <TeacherListConfirmDialogs
+        selectedCount={selectedIds.length}
+        confirmBulkDeleteOpen={confirmBulkDeleteOpen}
+        confirmBulkRestoreOpen={confirmBulkRestoreOpen}
+        pendingDeleteId={pendingDeleteId}
+        onBulkDeleteOpenChange={setConfirmBulkDeleteOpen}
+        onBulkRestoreOpenChange={setConfirmBulkRestoreOpen}
+        onPendingDeleteChange={setPendingDeleteId}
+        onConfirmBulkDelete={() => {
           onBulkDelete?.(selectedIds);
           setSelectedIds([]);
           setConfirmBulkDeleteOpen(false);
         }}
-      />
-
-      <ConfirmAlertDialog
-        open={confirmBulkRestoreOpen}
-        onOpenChange={setConfirmBulkRestoreOpen}
-        title={t('teachers.bulkRestore')}
-        description={t('teachers.bulkRestoreConfirm', { count: selectedIds.length })}
-        confirmLabel={t('teachers.restore')}
-        cancelLabel={t('common.cancel')}
-        onConfirm={() => {
+        onConfirmBulkRestore={() => {
           onBulkRestore?.(selectedIds);
           setSelectedIds([]);
           setConfirmBulkRestoreOpen(false);
         }}
-      />
-
-      <ConfirmAlertDialog
-        open={pendingDeleteId != null}
-        onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}
-        title={t('teachers.confirmDeleteTitle')}
-        description={t('teachers.confirmDeleteDescription')}
-        confirmLabel={t('common.delete')}
-        cancelLabel={t('common.cancel')}
-        onConfirm={() => {
+        onConfirmDelete={() => {
           if (pendingDeleteId) onDelete(pendingDeleteId);
           setPendingDeleteId(null);
         }}
       />
 
-      <AnimatePresence>
-        {viewTeacher && (
-          <TeacherDetail
-            teacher={viewTeacher}
-            onClose={() => setViewTeacher(null)}
-            onEdit={canWrite && !showDeleted ? (teacherToEdit) => {
-              setViewTeacher(null);
-              onEdit(teacherToEdit);
-            } : undefined}
-          />
-        )}
-      </AnimatePresence>
+      <TeacherListDetailDrawer
+        teacher={viewTeacher}
+        canWrite={canWrite}
+        showDeleted={showDeleted}
+        onClose={() => setViewTeacher(null)}
+        onEdit={(teacherToEdit) => {
+          setViewTeacher(null);
+          onEdit(teacherToEdit);
+        }}
+      />
     </div>
   );
 }

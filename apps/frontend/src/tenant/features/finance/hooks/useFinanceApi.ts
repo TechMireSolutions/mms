@@ -22,6 +22,7 @@ export function useFinanceInvoices(options?: { enabled?: boolean; includeDeleted
     responseKey: 'invoices',
     collectionName: 'finance_invoices',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 
@@ -33,6 +34,7 @@ export function useFinancePayments(options?: { enabled?: boolean; includeDeleted
     responseKey: 'payments',
     collectionName: 'finance_payments',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 

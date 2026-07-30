@@ -26,6 +26,7 @@ export function useQuestionBankQuestions(options?: { enabled?: boolean; includeD
     responseKey: 'questions',
     collectionName: 'questions',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 
@@ -43,6 +44,7 @@ export function useQuestionBankTests(options?: { enabled?: boolean }) {
     responseKey: 'tests',
     collectionName: 'tests',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 
@@ -57,6 +59,7 @@ export function useQuestionBankResults(options?: { enabled?: boolean }) {
     responseKey: 'results',
     collectionName: 'assessment_results',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 

@@ -1,84 +1,21 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
-import { useBranding } from "@/tenant/hooks/useBranding";
-import {
-  Move, Trash2, Copy, Save,
-  AlignLeft, AlignCenter, AlignRight, Bold, Italic, Minus, Type, Undo2, Redo2, Eye, EyeOff,
-} from "lucide-react";
-import {
-  PAGE_SIZES, AVAILABLE_FIELDS, loadTemplate, saveTemplate, InvoiceTemplate, TemplateElement, ElementStyle
-} from "@/lib/invoiceTemplateStore";
-import { getPrintBrandingTokens, PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { FormSelect } from "@/components/ui/FormSelect";
-import { Checkbox } from "@/components/ui/checkbox";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-
-const SNAP = 4; // px grid snap
-
-function snap(value: number) { return Math.round(value / SNAP) * SNAP; }
-
-let idCounter = Date.now();
-function newId() { return `el_${++idCounter}`; }
-
-// ── Style control helpers ─────────────────────────────────────────────────────
-interface StyleBtnProps {
-  active?: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-  title: string;
-}
-
-/**
- * StyleBtn component.
- * @param {StyleBtnProps} props
- */
-function StyleBtn({ active, onClick, children, title }: StyleBtnProps) {
-  return (
-    <Button type="button" title={title} onClick={onClick}
-      variant="ghost"
-      className={`min-h-11 min-w-11 flex items-center justify-center p-0 rounded text-xs transition-colors border shadow-none ${active ? "bg-primary text-primary-foreground border-primary hover:bg-primary/95" : "border-border hover:bg-muted text-foreground"}`}>
-      {children}
-    </Button>
-  );
-}
-
-interface StyleInputProps {
-  label: string;
-  value: string | number;
-  onChange: (nextValue: string | number) => void;
-  type?: string;
-  min?: number;
-  max?: number;
-  step?: number;
-  className?: string;
-}
-
-/**
- * StyleInput component.
- * @param {StyleInputProps} props
- */
-function StyleInput({ label, value, onChange, type = "text", min, max, step, className = "" }: StyleInputProps) {
-  return (
-    <div className={`flex flex-col gap-0.5 ${className}`}>
-      <span className="text-xs font-bold uppercase text-muted-foreground tracking-wide">{label}</span>
-      <Input type={type} value={value} onChange={(event) => onChange(type === "number" ? Number(event.target.value) : event.target.value)}
-        min={min} max={max} step={step}
-        className="w-full min-h-11 px-1.5 py-2 text-xs border border-border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
-    </div>
-  );
-}
+import { useBranding } from "@/tenant/hooks/useBranding";
+import { PAGE_SIZES, loadTemplate, saveTemplate, type ElementStyle, type InvoiceTemplate, type TemplateElement } from "@/lib/invoiceTemplateStore";
+import { getPrintBrandingTokens, PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
+import { InvoiceTemplateCanvas } from "./InvoiceTemplateCanvas";
+import { InvoiceTemplateElementPalette, type InvoiceTemplateFieldOption } from "./InvoiceTemplateElementPalette";
+import { InvoiceTemplateKeyboardHints } from "./InvoiceTemplateKeyboardHints";
+import { InvoiceTemplatePropertiesPanel } from "./InvoiceTemplatePropertiesPanel";
+import { InvoiceTemplateToolbar } from "./InvoiceTemplateToolbar";
+import { newId, snap } from "./invoiceTemplateEditorUtils";
 
 export interface InvoiceTemplateEditorProps {
   onClose: () => void;
   fullscreen?: boolean;
 }
 
-/**
- * InvoiceTemplateEditor component.
- * @param {InvoiceTemplateEditorProps} props
- */
-export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTemplateEditorProps) {
+export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTemplateEditorProps): React.JSX.Element {
   const { t } = useTranslation();
   const branding = useBranding();
   const printTokens = getPrintBrandingTokens();
@@ -113,9 +50,8 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
     return () => observer.disconnect();
   }, [size.width]);
 
-  // ── History management ────────────────────────────────────────────────────
-  const pushHistory = useCallback((tmpl: InvoiceTemplate) => {
-    setHistory((historyStack) => [...historyStack.slice(-30), tmpl]);
+  const pushHistory = useCallback((currentTemplate: InvoiceTemplate) => {
+    setHistory((historyStack) => [...historyStack.slice(-30), currentTemplate]);
     setFuture([]);
   }, []);
 
@@ -135,38 +71,39 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
     setTemplate(nextTemplate);
   };
 
-  // ── Element mutations ─────────────────────────────────────────────────────
   const updateElements = useCallback((updateFn: (templateElements: TemplateElement[]) => TemplateElement[]) => {
-    setTemplate((currentTemplate) => {
-      const nextTemplate = { ...currentTemplate, elements: updateFn(currentTemplate.elements) };
-      return nextTemplate;
-    });
+    setTemplate((currentTemplate) => ({ ...currentTemplate, elements: updateFn(currentTemplate.elements) }));
   }, []);
 
   const commitUpdate = useCallback((updateFn: (templateElements: TemplateElement[]) => TemplateElement[]) => {
     setTemplate((currentTemplate) => {
-      const prevTemplate = currentTemplate;
       const nextTemplate = { ...currentTemplate, elements: updateFn(currentTemplate.elements) };
-      setHistory((historyStack) => [...historyStack.slice(-30), prevTemplate]);
+      setHistory((historyStack) => [...historyStack.slice(-30), currentTemplate]);
       setFuture([]);
       return nextTemplate;
     });
   }, []);
 
-  const patchEl = (elementId: string, patch: Partial<TemplateElement>) => {
-    commitUpdate((templateElements) => templateElements.map((templateElement) => templateElement.id === elementId ? { ...templateElement, ...patch } as TemplateElement : templateElement));
+  const patchElement = (elementId: string, patch: Partial<TemplateElement>) => {
+    commitUpdate((templateElements) => templateElements.map((templateElement) =>
+      templateElement.id === elementId ? { ...templateElement, ...patch } : templateElement
+    ));
   };
 
   const patchStyle = (elementId: string, stylePatch: Partial<ElementStyle>) => {
-    commitUpdate((templateElements) => templateElements.map((templateElement) => templateElement.id === elementId ? { ...templateElement, style: { ...templateElement.style, ...stylePatch } } as TemplateElement : templateElement));
+    commitUpdate((templateElements) => templateElements.map((templateElement) =>
+      templateElement.id === elementId
+        ? { ...templateElement, style: { ...templateElement.style, ...stylePatch } }
+        : templateElement
+    ));
   };
 
-  const deleteEl = (elementId: string) => {
+  const deleteElement = (elementId: string) => {
     commitUpdate((templateElements) => templateElements.filter((templateElement) => templateElement.id !== elementId));
     setSelectedId(null);
   };
 
-  const duplicateEl = (elementId: string) => {
+  const duplicateElement = (elementId: string) => {
     const templateElement = template.elements.find((element) => element.id === elementId);
     if (!templateElement) return;
     const duplicatedElement: TemplateElement = { ...templateElement, id: newId(), x: templateElement.x + 12, y: templateElement.y + 12, style: { ...templateElement.style } };
@@ -186,18 +123,13 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
     setSelectedId(templateElement.id);
   };
 
-  const addField = (fieldDef: { field: string, label: string }) => {
-    const templateElement: TemplateElement = {
-      id: newId(), type: "field", label: fieldDef.label, field: fieldDef.field,
-      x: 20, y: 20, w: 160, h: 16,
-      style: { fontSize: 10, color: PRINT_NEUTRAL.text },
-    };
+  const addField = (fieldDef: InvoiceTemplateFieldOption) => {
+    const templateElement: TemplateElement = { id: newId(), type: "field", label: fieldDef.label, field: fieldDef.field, x: 20, y: 20, w: 160, h: 16, style: { fontSize: 10, color: PRINT_NEUTRAL.text } };
     commitUpdate((elements) => [...elements, templateElement]);
     setSelectedId(templateElement.id);
   };
 
-  // ── Drag ─────────────────────────────────────────────────────────────────
-  const onMouseDownEl = (event: React.MouseEvent, elementId: string) => {
+  const onMouseDownElement = (event: React.MouseEvent, elementId: string) => {
     if (event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
@@ -215,22 +147,25 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
   };
 
   const onMouseMove = useCallback((event: MouseEvent) => {
-    if (dragState.current) {
-      const deltaX = (event.clientX - dragState.current.startX) / canvasScale;
-      const deltaY = (event.clientY - dragState.current.startY) / canvasScale;
+    const currentDrag = dragState.current;
+    if (currentDrag) {
+      const deltaX = (event.clientX - currentDrag.startX) / canvasScale;
+      const deltaY = (event.clientY - currentDrag.startY) / canvasScale;
       updateElements((templateElements) =>
-        templateElements.map((templateElement) => templateElement.id === dragState.current!.id
-          ? { ...templateElement, x: snap(Math.max(0, dragState.current!.origX + deltaX)), y: snap(Math.max(0, dragState.current!.origY + deltaY)) }
+        templateElements.map((templateElement) => templateElement.id === currentDrag.id
+          ? { ...templateElement, x: snap(Math.max(0, currentDrag.origX + deltaX)), y: snap(Math.max(0, currentDrag.origY + deltaY)) }
           : templateElement
         )
       );
     }
-    if (resizeState.current) {
-      const deltaX = (event.clientX - resizeState.current.startX) / canvasScale;
-      const deltaY = (event.clientY - resizeState.current.startY) / canvasScale;
+
+    const currentResize = resizeState.current;
+    if (currentResize) {
+      const deltaX = (event.clientX - currentResize.startX) / canvasScale;
+      const deltaY = (event.clientY - currentResize.startY) / canvasScale;
       updateElements((templateElements) =>
-        templateElements.map((templateElement) => templateElement.id === resizeState.current!.id
-          ? { ...templateElement, w: snap(Math.max(20, resizeState.current!.origW + deltaX)), h: snap(Math.max(8, resizeState.current!.origH + deltaY)) }
+        templateElements.map((templateElement) => templateElement.id === currentResize.id
+          ? { ...templateElement, w: snap(Math.max(20, currentResize.origW + deltaX)), h: snap(Math.max(8, currentResize.origH + deltaY)) }
           : templateElement
         )
       );
@@ -239,7 +174,6 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
 
   const onMouseUp = useCallback(() => {
     if (dragState.current || resizeState.current) {
-      // commit to history
       setTemplate((currentTemplate) => {
         setHistory((historyStack) => [...historyStack.slice(-30), currentTemplate]);
         setFuture([]);
@@ -267,7 +201,6 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
     resizeState.current = { id: elementId, startX: event.clientX, startY: event.clientY, origW: templateElement.w, origH: templateElement.h };
   };
 
-  // ── Save ──────────────────────────────────────────────────────────────────
   const handleSave = () => {
     saveTemplate(template);
     setSaved(true);
@@ -279,16 +212,15 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
     setTemplate((currentTemplate) => ({ ...currentTemplate, pageSize: pageSizeKey }));
   };
 
-  // ── Keyboard ──────────────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "z") { event.preventDefault(); undo(); }
       if ((event.metaKey || event.ctrlKey) && event.key === "y") { event.preventDefault(); redo(); }
-      if ((event.metaKey || event.ctrlKey) && event.key === "d") { event.preventDefault(); if (selectedId) duplicateEl(selectedId); }
+      if ((event.metaKey || event.ctrlKey) && event.key === "d") { event.preventDefault(); if (selectedId) duplicateElement(selectedId); }
       if (event.key === "Delete" || event.key === "Backspace") {
         const tag = document.activeElement?.tagName;
         if (tag === "INPUT" || tag === "TEXTAREA") return;
-        if (selectedId) deleteEl(selectedId);
+        if (selectedId) deleteElement(selectedId);
       }
       if (event.key === "Escape") setSelectedId(null);
     };
@@ -296,381 +228,59 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
     return () => window.removeEventListener("keydown", handler);
   });
 
-  // ── Render element (draggable) ────────────────────────────────────────────
-  const renderElement = (templateElement: TemplateElement) => {
-    const isSelected = selectedId === templateElement.id;
-    const elementStyle = templateElement.style || {};
-
-    const baseStyle: React.CSSProperties = {
-      position: "absolute",
-      left: templateElement.x,
-      top: templateElement.y,
-      width: templateElement.w,
-      height: templateElement.h,
-      fontSize: elementStyle.fontSize || 10,
-      fontWeight: elementStyle.fontWeight || "normal",
-      fontFamily: elementStyle.fontFamily || "inherit",
-      fontStyle: elementStyle.fontStyle || "normal",
-      textAlign: elementStyle.textAlign || "left",
-      color: elementStyle.color || PRINT_NEUTRAL.text,
-      direction: elementStyle.direction || "ltr",
-      overflow: "visible",
-      cursor: "move",
-      boxSizing: "border-box",
-      userSelect: "none",
-      outline: isSelected ? `2px solid ${printTokens.primary}` : "1px dashed transparent",
-      outlineOffset: 1,
-      transition: "outline 0.1s",
-    };
-
-    const content = () => {
-      if (templateElement.type === "logo") {
-
-        return branding.logoUrl
-          ? <img src={branding.logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: elementStyle.objectFit || "contain" }} />
-          : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: printTokens.logoPlaceholderBg, borderRadius: 6, border: `2px dashed ${printTokens.logoPlaceholderBorder}` }}>
-              <span style={{ fontSize: 24, fontWeight: "bold", color: printTokens.primary }}>م</span>
-            </div>;
-      }
-      if (templateElement.type === "divider") {
-        return <div style={{ borderTop: `${templateElement.h || 1}px solid ${elementStyle.color || printTokens.border}`, width: "100%", marginTop: (templateElement.h || 1) / 2 }} />;
-      }
-      if (templateElement.type === "field") {
-        return <span style={{ opacity: 0.7, fontStyle: "italic" }}>{templateElement.label}</span>;
-      }
-      return <span>{templateElement.label}</span>;
-    };
-
-    return (
-      <div
-        key={templateElement.id}
-        style={baseStyle}
-        onMouseDown={(event) => onMouseDownEl(event, templateElement.id)}
-      >
-        {content()}
-        {/* Resize handle */}
-        {isSelected && (
-          <div
-            onMouseDown={(event) => onMouseDownResize(event, templateElement.id)}
-            className="absolute -bottom-2 -end-2 z-10 cursor-se-resize rounded-md"
-            style={{
-              background: printTokens.primary,
-              height: 44 / canvasScale,
-              width: 44 / canvasScale,
-            }}
-            aria-hidden
-          />
-        )}
-        {/* Action strip */}
-        {isSelected && (
-          <div
-            className="absolute start-0 z-20 flex gap-1"
-            style={{ top: -48 / canvasScale }}
-          >
-            <Button
-              type="button"
-              onClick={(event) => { event.stopPropagation(); duplicateEl(templateElement.id); }}
-              className="rounded-md p-0 text-xs font-bold shadow-none"
-              style={{
-                background: printTokens.primary,
-                color: printTokens.onPrimary,
-                minHeight: 44 / canvasScale,
-                minWidth: 44 / canvasScale,
-              }}
-              aria-label={t("obligations.invoiceTemplate.duplicate")}
-            >
-              ⧉
-            </Button>
-            <Button
-              type="button"
-              onClick={(event) => { event.stopPropagation(); deleteEl(templateElement.id); }}
-              className="rounded-md p-0 text-xs font-bold shadow-none"
-              style={{
-                background: printTokens.destructive,
-                color: printTokens.onPrimary,
-                minHeight: 44 / canvasScale,
-                minWidth: 44 / canvasScale,
-              }}
-              aria-label={t("common.delete")}
-            >
-              ✕
-            </Button>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div className={fullscreen ? "fixed inset-0 z-50 flex flex-col bg-background" : "flex flex-col bg-background rounded-xl border border-border overflow-hidden"} style={!fullscreen ? { height: "80vh" } : {}}>
-      {/* ── Top bar ─────────────────────────────────────────────────────── */}
-      <header className="flex items-center gap-3 px-4 py-2.5 border-b border-border bg-card flex-shrink-0 flex-wrap">
-        <h2 className="font-bold text-sm text-foreground m-0">{t("obligations.invoiceTemplate.title")}</h2>
-        <div className="flex items-center gap-1 ms-2">
-          <Button type="button" onClick={undo} disabled={!history.length} title={t("obligations.invoiceTemplate.undo")}
-            variant="ghost"
-            size="icon"
-            className="rounded hover:bg-muted disabled:opacity-30 transition-colors shadow-none"><Undo2 className="w-4 h-4" aria-hidden="true" /></Button>
-          <Button type="button" onClick={redo} disabled={!future.length} title={t("obligations.invoiceTemplate.redo")}
-            variant="ghost"
-            size="icon"
-            className="rounded hover:bg-muted disabled:opacity-30 transition-colors shadow-none"><Redo2 className="w-4 h-4" aria-hidden="true" /></Button>
-        </div>
+      <InvoiceTemplateToolbar
+        template={template}
+        historyLength={history.length}
+        futureLength={future.length}
+        saved={saved}
+        showGuides={showGuides}
+        fullscreen={fullscreen}
+        onUndo={undo}
+        onRedo={redo}
+        onPageSizeChange={handlePageSize}
+        onToggleGuides={() => setShowGuides(!showGuides)}
+        onSave={handleSave}
+        onClose={onClose}
+        t={t}
+      />
 
-        {/* Page size */}
-        <div className="flex items-center gap-1.5 ms-2">
-          <span className="text-xs text-muted-foreground font-semibold">{t("obligations.invoiceTemplate.page")}</span>
-          {Object.entries(PAGE_SIZES).map(([pageSizeKey]) => (
-            <Button type="button" key={pageSizeKey} onClick={() => handlePageSize(pageSizeKey)}
-              variant={template.pageSize === pageSizeKey ? "default" : "outline"}
-              className={`min-h-11 px-2.5 text-xs font-semibold rounded border transition-colors shadow-none ${template.pageSize === pageSizeKey ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}>
-              {pageSizeKey}
-            </Button>
-          ))}
-        </div>
-
-        {/* Guides toggle */}
-        <Button type="button" onClick={() => setShowGuides(!showGuides)} title={t("obligations.invoiceTemplate.toggleGuides")}
-          variant="ghost"
-          size="icon"
-          className="rounded hover:bg-muted transition-colors ms-1 shadow-none">
-          {showGuides ? <Eye className="w-4 h-4 text-primary" aria-hidden="true" /> : <EyeOff className="w-4 h-4 text-muted-foreground" aria-hidden="true" />}
-        </Button>
-
-        <div className="ms-auto flex items-center gap-2">
-          <Button type="button" onClick={handleSave}
-            className="flex min-h-11 items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-            <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? t("obligations.invoiceTemplate.saved") : t("obligations.invoiceTemplate.save")}
-          </Button>
-          {fullscreen && (
-            <Button type="button" onClick={onClose}
-              variant="outline"
-              className="min-h-11 px-3 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none">
-              {t("obligations.invoiceTemplate.close")}
-            </Button>
-          )}
-        </div>
-      </header>
-
-      {/* ── Body ────────────────────────────────────────────────────────── */}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
-
-        {/* Left panel — element palette */}
-        <aside className="max-h-48 w-full shrink-0 space-y-4 overflow-y-auto border-b border-border bg-card p-3 lg:max-h-none lg:w-48 lg:border-b-0 lg:border-e">
-          <div>
-            <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.addElements")}</p>
-            <div className="space-y-1">
-              <Button type="button" onClick={addStaticText}
-                variant="outline"
-                className="w-full text-start min-h-11 px-2.5 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors flex items-center gap-2 shadow-none justify-start">
-                <Type className="w-3.5 h-3.5 text-primary" aria-hidden="true" /> {t("obligations.invoiceTemplate.staticText")}
-              </Button>
-              <Button type="button" onClick={addDivider}
-                variant="outline"
-                className="w-full text-start min-h-11 px-2.5 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors flex items-center gap-2 shadow-none justify-start">
-                <Minus className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" /> {t("obligations.invoiceTemplate.dividerLine")}
-              </Button>
-            </div>
-          </div>
-
-          <div>
-            <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.addFields")}</p>
-            <div className="space-y-1">
-              {AVAILABLE_FIELDS.map((fieldOption) => (
-                <Button type="button" key={fieldOption.field} onClick={() => addField(fieldOption)}
-                  variant="outline"
-                  className="w-full text-start min-h-11 px-2.5 py-2 text-xs font-medium rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors shadow-none justify-start">
-                  {fieldOption.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </aside>
-
-        {/* Centre — canvas */}
-        <main ref={canvasViewportRef} className="flex min-h-0 min-w-0 flex-1 items-start justify-center overflow-auto bg-muted/40 p-4 sm:p-8"
-          onClick={() => setSelectedId(null)}>
-          <div
-            className="relative mx-auto shrink-0"
-            style={{ width: size.width * canvasScale, height: size.height * canvasScale }}
-          >
-            <div
-              className="relative origin-top-left"
-              style={{
-                width: size.width,
-                height: size.height,
-                transform: `scale(${canvasScale})`,
-                direction: "ltr",
-              }}
-              ref={canvasRef}
-            >
-              {/* Page background */}
-              <div style={{
-                position: "absolute", inset: 0,
-                background: printTokens.paper,
-                boxShadow: "0 4px 30px rgba(0,0,0,0.15)",
-                border: `1px solid ${printTokens.border}`,
-              }} />
-              {/* Page boundary label */}
-              {showGuides && (
-                <div style={{
-                  position: "absolute", top: -20, insetInlineStart: 0,
-                  fontSize: 10, color: PRINT_NEUTRAL.muted, fontFamily: "monospace",
-                }}>
-                  {PAGE_SIZES[template.pageSize]?.label} — {size.width}×{size.height}px
-                </div>
-              )}
-              {/* Elements */}
-              {template.elements.map(renderElement)}
-            </div>
-          </div>
-        </main>
-
-        {/* Right panel — properties */}
-        <aside className="max-h-64 w-full shrink-0 space-y-4 overflow-y-auto border-t border-border bg-card p-3 lg:max-h-none lg:w-60 lg:border-t-0 lg:border-s">
-          {!selectedElement ? (
-            <div className="text-xs text-muted-foreground text-center pt-10 space-y-1">
-              <Move className="w-6 h-6 mx-auto opacity-30" aria-hidden="true" />
-              <p className="m-0">{t("obligations.invoiceTemplate.emptyHint")}</p>
-              <p className="text-xs opacity-60 m-0">{t("obligations.invoiceTemplate.emptyHintDetail")}</p>
-            </div>
-          ) : (
-            <>
-              <div>
-                <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">
-                  {selectedElement.type === "field"
-                    ? t("obligations.invoiceTemplate.propsField")
-                    : selectedElement.type === "logo"
-                    ? t("obligations.invoiceTemplate.propsLogo")
-                    : selectedElement.type === "divider"
-                    ? t("obligations.invoiceTemplate.propsDivider")
-                    : t("obligations.invoiceTemplate.propsText")}
-                </p>
-
-                {/* Label / content */}
-                {(selectedElement.type === "static") && (
-                  <StyleInput label={t("obligations.invoiceTemplate.content")} value={selectedElement.label || ""}
-                    onChange={(nextValue) => patchEl(selectedElement.id, { label: String(nextValue) })} />
-                )}
-                {(selectedElement.type === "field") && (
-                  <StyleInput label={t("obligations.invoiceTemplate.displayLabel")} value={selectedElement.label || ""}
-                    onChange={(nextValue) => patchEl(selectedElement.id, { label: String(nextValue) })} />
-                )}
-              </div>
-
-              {/* Position & size */}
-              <div>
-                <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.positionSize")}</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <StyleInput label="X" type="number" value={selectedElement.x} onChange={(nextValue) => patchEl(selectedElement.id, { x: snap(Number(nextValue)) })} step={SNAP} />
-                  <StyleInput label="Y" type="number" value={selectedElement.y} onChange={(nextValue) => patchEl(selectedElement.id, { y: snap(Number(nextValue)) })} step={SNAP} />
-                  <StyleInput label="W" type="number" value={selectedElement.w || 0} onChange={(nextValue) => patchEl(selectedElement.id, { w: snap(Number(nextValue)) })} min={20} step={SNAP} />
-                  <StyleInput label="H" type="number" value={selectedElement.h || 0} onChange={(nextValue) => patchEl(selectedElement.id, { h: snap(Number(nextValue)) })} min={4} step={SNAP} />
-                </div>
-              </div>
-
-              {/* Typography */}
-              {selectedElement.type !== "logo" && selectedElement.type !== "divider" && (
-                <div>
-                  <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.typography")}</p>
-                  <div className="space-y-2">
-                    <StyleInput label={t("obligations.invoiceTemplate.fontSize")} type="number" value={selectedElement.style?.fontSize || 10}
-                      onChange={(nextValue) => patchStyle(selectedElement.id, { fontSize: Number(nextValue) })} min={7} max={72} />
-                    <StyleInput label={t("obligations.invoiceTemplate.color")} type="color" value={selectedElement.style?.color || PRINT_NEUTRAL.text}
-                      onChange={(nextValue) => patchStyle(selectedElement.id, { color: String(nextValue) })} />
-                    <div className="flex gap-1">
-                      <StyleBtn title={t("obligations.invoiceTemplate.bold")} active={selectedElement.style?.fontWeight === "bold"}
-                        onClick={() => patchStyle(selectedElement.id, { fontWeight: selectedElement.style?.fontWeight === "bold" ? "normal" : "bold" })}>
-                        <Bold className="w-3 h-3" aria-hidden="true" />
-                      </StyleBtn>
-                      <StyleBtn title={t("obligations.invoiceTemplate.italic")} active={selectedElement.style?.fontStyle === "italic"}
-                        onClick={() => patchStyle(selectedElement.id, { fontStyle: selectedElement.style?.fontStyle === "italic" ? "normal" : "italic" })}>
-                        <Italic className="w-3 h-3" aria-hidden="true" />
-                      </StyleBtn>
-                    </div>
-                    {/* Alignment */}
-                    <div>
-                      <span className="text-xs font-bold uppercase text-muted-foreground tracking-wide block mb-1">{t("obligations.invoiceTemplate.alignment")}</span>
-                      <div className="flex gap-1">
-                        {([
-                          { value: "left", titleKey: "obligations.invoiceTemplate.alignLeft" as const, Icon: AlignLeft },
-                          { value: "center", titleKey: "obligations.invoiceTemplate.alignCenter" as const, Icon: AlignCenter },
-                          { value: "right", titleKey: "obligations.invoiceTemplate.alignRight" as const, Icon: AlignRight },
-                        ]).map(({ value, titleKey, Icon }) => (
-                          <StyleBtn key={value} title={t(titleKey)} active={selectedElement.style?.textAlign === value}
-                            onClick={() => patchStyle(selectedElement.id, { textAlign: value as ElementStyle['textAlign'] })}>
-                            <Icon className="w-3 h-3" aria-hidden="true" />
-                          </StyleBtn>
-                        ))}
-                      </div>
-                    </div>
-                    {/* Font family */}
-                    <div>
-                      <span className="text-xs font-bold uppercase text-muted-foreground tracking-wide block mb-1">{t("obligations.invoiceTemplate.font")}</span>
-                      <FormSelect value={selectedElement.style?.fontFamily || "inherit"}
-                        onChange={(fontFamily) => patchStyle(selectedElement.id, { fontFamily })}
-                        className="w-full"
-                        options={[
-                          { value: "inherit", label: t("obligations.invoiceTemplate.fontDefault") },
-                          { value: "serif", label: t("obligations.invoiceTemplate.fontSerif") },
-                          { value: "monospace", label: t("obligations.invoiceTemplate.fontMono") },
-                          { value: "'Amiri', serif", label: t("obligations.invoiceTemplate.fontAmiri") },
-                          { value: "Arial, sans-serif", label: t("obligations.invoiceTemplate.fontArial") },
-                          { value: "Georgia, serif", label: t("obligations.invoiceTemplate.fontGeorgia") }
-                        ]}
-                      />
-                    </div>
-                    {/* RTL */}
-                    <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
-                      <Checkbox checked={selectedElement.style?.direction === "rtl"}
-                        onCheckedChange={(checked) => patchStyle(selectedElement.id, { direction: checked ? "rtl" : "ltr" })} />
-                      {t("obligations.invoiceTemplate.rtl")}
-                    </label>
-                  </div>
-                </div>
-              )}
-
-              {/* Divider color */}
-              {selectedElement.type === "divider" && (
-                <div>
-                  <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.divider")}</p>
-                  <StyleInput label={t("obligations.invoiceTemplate.color")} type="color" value={selectedElement.style?.color || PRINT_NEUTRAL.border}
-                    onChange={(nextValue) => patchStyle(selectedElement.id, { color: String(nextValue) })} />
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="pt-2 border-t border-border flex gap-2">
-                <Button type="button" onClick={() => duplicateEl(selectedElement.id)}
-                  variant="outline"
-                  className="flex-1 flex items-center justify-center gap-1 min-h-11 px-2 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none">
-                  <Copy className="w-3 h-3" aria-hidden="true" /> {t("obligations.invoiceTemplate.duplicate")}
-                </Button>
-                <Button type="button" onClick={() => deleteEl(selectedElement.id)}
-                  variant="outline"
-                  className="flex-1 flex items-center justify-center gap-1 min-h-11 px-2 py-2 text-xs font-semibold rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors shadow-none">
-                  <Trash2 className="w-3 h-3" aria-hidden="true" /> {t("obligations.invoiceTemplate.delete")}
-                </Button>
-              </div>
-            </>
-          )}
-        </aside>
+        <InvoiceTemplateElementPalette
+          onAddStaticText={addStaticText}
+          onAddDivider={addDivider}
+          onAddField={addField}
+          t={t}
+        />
+        <InvoiceTemplateCanvas
+          template={template}
+          selectedId={selectedId}
+          size={size}
+          canvasScale={canvasScale}
+          showGuides={showGuides}
+          canvasViewportRef={canvasViewportRef}
+          canvasRef={canvasRef}
+          branding={branding}
+          printTokens={printTokens}
+          onDeselect={() => setSelectedId(null)}
+          onMouseDownElement={onMouseDownElement}
+          onMouseDownResize={onMouseDownResize}
+          onDuplicateElement={duplicateElement}
+          onDeleteElement={deleteElement}
+          t={t}
+        />
+        <InvoiceTemplatePropertiesPanel
+          selectedElement={selectedElement}
+          onPatchElement={patchElement}
+          onPatchStyle={patchStyle}
+          onDuplicateElement={duplicateElement}
+          onDeleteElement={deleteElement}
+          t={t}
+        />
       </div>
 
-      {/* ── Keyboard hints ─────────────────────────────────────────────── */}
-      <footer className="flex-shrink-0 border-t border-border bg-card px-4 py-1.5 flex items-center gap-4 flex-wrap">
-        {[
-          ["Ctrl+Z", t("obligations.invoiceTemplate.hintUndo")],
-          ["Ctrl+Y", t("obligations.invoiceTemplate.hintRedo")],
-          ["Ctrl+D", t("obligations.invoiceTemplate.hintDuplicate")],
-          ["Del", t("obligations.invoiceTemplate.hintDelete")],
-          ["Esc", t("obligations.invoiceTemplate.hintDeselect")],
-        ].map(([shortcutKey, shortcutLabel]) => (
-          <span key={shortcutKey} className="text-xs text-muted-foreground">
-            <kbd className="px-1 py-0.5 rounded border border-border bg-muted text-foreground font-mono text-xs">{shortcutKey}</kbd> {shortcutLabel}
-          </span>
-        ))}
-      </footer>
+      <InvoiceTemplateKeyboardHints t={t} />
     </div>
   );
 }

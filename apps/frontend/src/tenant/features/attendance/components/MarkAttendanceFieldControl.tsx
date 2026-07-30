@@ -1,0 +1,115 @@
+import { Checkbox } from "@/components/ui/checkbox";
+import { FormSelect } from "@/components/ui/FormSelect";
+import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/hooks/useTranslation";
+import type { AttendanceRecord } from "@/lib/data/attendanceData";
+import { StatusToggle } from "@/tenant/features/attendance/components/StatusToggle";
+import type { AttendanceRow } from "@/tenant/features/attendance/components/markAttendanceTypes";
+import type { ModuleFieldDef } from "@mms/shared";
+
+interface MarkAttendanceFieldControlProps {
+  row: AttendanceRow;
+  field: ModuleFieldDef;
+  idPrefix: string;
+  onFieldChange: (studentId: string, key: string, value: unknown) => void;
+}
+
+export function MarkAttendanceFieldControl({
+  row,
+  field,
+  idPrefix,
+  onFieldChange,
+}: MarkAttendanceFieldControlProps) {
+  const { t } = useTranslation();
+  const inputId = `${idPrefix}-${field.id}-${row.studentId}`;
+
+  if (field.id === "status") {
+    return (
+      <StatusToggle
+        value={row.status}
+        onChange={(value) => onFieldChange(row.studentId, "status", value as AttendanceRecord["status"])}
+      />
+    );
+  }
+
+  if (field.id === "timeIn" || field.id === "timeOut") {
+    const value = field.id === "timeIn" ? row.timeIn : row.timeOut;
+    return (
+      <>
+        <label htmlFor={inputId} className="sr-only">{field.label}</label>
+        <Input
+          id={inputId}
+          name={field.id}
+          type="time"
+          value={value}
+          onChange={(event) => onFieldChange(row.studentId, field.id, event.target.value)}
+          disabled={row.status === "absent"}
+          className="w-full min-w-[6.5rem] text-xs disabled:opacity-40 md:max-w-[8rem]"
+        />
+      </>
+    );
+  }
+
+  if (field.id === "notes") {
+    return (
+      <>
+        <label htmlFor={inputId} className="sr-only">{field.label}</label>
+        <Input
+          id={inputId}
+          name={field.id}
+          type="text"
+          value={row.notes}
+          placeholder={t("attendance.mark.notesPlaceholder")}
+          onChange={(event) => onFieldChange(row.studentId, "notes", event.target.value)}
+          className="w-full min-w-0 text-xs"
+        />
+      </>
+    );
+  }
+
+  const rawValue = row[field.id];
+  const stringValue = typeof rawValue === "string" || typeof rawValue === "number" ? String(rawValue) : "";
+
+  if (field.type === "select") {
+    return (
+      <FormSelect
+        id={inputId}
+        name={field.id}
+        value={stringValue}
+        onChange={(value: string) => onFieldChange(row.studentId, field.id, value)}
+        options={field.options || []}
+        placeholder={t("common.selectPlaceholder")}
+        className="w-full min-w-[7.5rem]"
+      />
+    );
+  }
+
+  if (field.type === "boolean") {
+    return (
+      <label htmlFor={inputId} className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center">
+        <span className="sr-only">{field.label}</span>
+        <Checkbox
+          id={inputId}
+          name={field.id}
+          checked={Boolean(rawValue)}
+          onCheckedChange={(checked) => onFieldChange(row.studentId, field.id, !!checked)}
+        />
+      </label>
+    );
+  }
+
+  return (
+    <>
+      <label htmlFor={inputId} className="sr-only">{field.label}</label>
+      <Input
+        id={inputId}
+        name={field.id}
+        type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"}
+        value={stringValue}
+        onChange={(event) => onFieldChange(row.studentId, field.id, event.target.value)}
+        placeholder={field.placeholder || t("common.enterPlaceholder")}
+        className="w-full min-w-0 text-xs"
+      />
+    </>
+  );
+}

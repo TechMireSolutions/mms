@@ -3,238 +3,39 @@ import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Plus, Calendar, Users, BookOpen, Archive, RotateCcw, Trash2,
-  DollarSign, ChevronRight, Filter, ChevronDown, ChevronUp,
-} from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { Plus, Calendar } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
-import { SearchBar } from "@/components/ui/SearchBar";
-import { FilterChips } from "@/components/ui/FilterChips";
 import { ActionButton } from "@/components/ui/ActionButton";
-import { Button } from "@/components/ui/button";
-import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
-import { Checkbox } from "@/components/ui/checkbox";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { ErrorState } from "@/components/ui/ErrorState";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { SessionForm } from "@/tenant/features/sessions/components/SessionForm";
-import { SessionDetail } from "@/tenant/features/sessions/components/SessionDetail";
-import { SessionsSettings } from "@/tenant/features/sessions/components/SessionsSettings";
-import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import KPISummary from "@/tenant/features/reports/components/KPISummary";
-import { SESSION_TYPES, Session } from "@/lib/data/sessionsData";
-import {
-  useSessionsPaginated,
-  useSessionMutations,
-} from "@/tenant/features/sessions/hooks/useSessions";
+import { SessionsDialogLayer } from "@/tenant/features/sessions/components/SessionsDialogLayer";
+import { SessionsReportsTier } from "@/tenant/features/sessions/components/SessionsReportsTier";
+import { SessionsSetupTier } from "@/tenant/features/sessions/components/SessionsSetupTier";
+import { SessionsWorkTier } from "@/tenant/features/sessions/components/SessionsWorkTier";
+import type { SessionSortField, SessionStatus, SessionType } from "@/tenant/features/sessions/components/sessionPageTypes";
+import type { Session } from "@/lib/data/sessionsData";
+import { useSessionsPaginated, useSessionMutations } from "@/tenant/features/sessions/hooks/useSessions";
+import { useSessionDisplayConfig } from "@/tenant/features/sessions/hooks/useSessionDisplayConfig";
 import { useSessionColumnLayout } from "@/tenant/features/sessions/hooks/useSessionColumnLayout";
 import { useSessionConfig } from "@/hooks/useStandardModuleConfig";
 import { SessionsCommandMetrics } from "@/tenant/features/sessions/components/SessionsCommandMetrics";
-import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { type AppTranslationKey, formatMoney, SESSIONS_MODULE_MANIFEST, toTitleCase, formatDate } from "@mms/shared";
+import { SESSIONS_MODULE_MANIFEST } from "@mms/shared";
 import { notify } from "@/lib/notify";
-import { ListPagination } from "@/components/ui/ListPagination";
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { TableSkeleton } from "@/components/ui/LoadingState";
-
-type SessionStatus = string;
-type SessionType = string;
-type SessionSortField = "name" | "type" | "status" | "baseFee";
-
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { Card } from "@/components/ui/card";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
-
-const MotionCard = motion.create(Card);
-
-const SESSION_TYPE_LABEL_KEYS: Record<string, AppTranslationKey> = {
-  Hifz: "sessions.types.hifz",
-  Qaidah: "sessions.types.qaidah",
-  Tajweed: "sessions.types.tajweed",
-  "Islamic Studies": "sessions.types.islamicStudies",
-  Arabic: "sessions.types.arabic",
-};
-
-const SESSION_TYPE_BADGE_CLS: Record<string, string> = {
-  Hifz: SEMANTIC_BADGE.successStrong,
-  Qaidah: SEMANTIC_BADGE.infoStrong,
-  Tajweed: "bg-primary/15 text-primary border-primary/20",
-  "Islamic Studies": SEMANTIC_BADGE.warningStrong,
-  Arabic: SEMANTIC_BADGE.secondary,
-};
-
-interface SessionCardProps {
-  session: Session;
-  onClick: () => void;
-  onDelete?: (id: string) => void;
-  onRestore?: (id: string) => void;
-  canDelete?: boolean;
-  showDeleted?: boolean;
-  statusConfig: Record<string, StatusBadgeConfigItem>;
-  typeConfig: Record<string, StatusBadgeConfigItem>;
-}
-
-function SessionCard({
-  session,
-  onClick,
-  onDelete,
-  onRestore,
-  canDelete,
-  showDeleted,
-  statusConfig,
-  typeConfig,
-}: SessionCardProps) {
-  const { t } = useTranslation();
-  const totalEnrolled = session.classes?.reduce((sum, sessionClass) => sum + sessionClass.enrolled, 0) ?? 0;
-  const totalCapacity = session.classes?.reduce((sum, sessionClass) => sum + sessionClass.capacity, 0) ?? 0;
-  const capacityPercent = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0;
-  const classCount = session.classes?.length ?? 0;
-
-  const accentColor = session.status === "active"
-    ? "success" as const
-    : session.status === "upcoming"
-    ? "info" as const
-    : undefined;
-
-  return (
-    <MotionCard
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      accentColor={accentColor}
-      className="text-start w-full p-5 ps-6.5 hover:border-primary/40 group relative"
-    >
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={onClick}
-        className="w-full h-auto p-0 text-start font-normal hover:bg-transparent"
-      >
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1 min-w-0 pe-3">
-            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <StatusBadge status={session.type || "other"} config={typeConfig} size="sm" />
-              <StatusBadge status={session.status} config={statusConfig} size="sm" />
-            </div>
-            <h3 className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">{session.name}</h3>
-            {session.description && (
-              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{session.description}</p>
-            )}
-          </div>
-          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 mt-1" />
-        </div>
-
-        <div className="grid grid-cols-1 gap-2 mb-3 sm:grid-cols-3">
-          {[
-            { icon: Calendar, label: t("sessions.card.start"), value: formatDate(session.startDate, true) },
-            { icon: Users, label: t("sessions.card.enrolled"), value: `${totalEnrolled}/${totalCapacity || t("common.notSpecified")}` },
-            { icon: DollarSign, label: t("sessions.card.fee"), value: formatMoney(session.baseFee, session.currency) },
-          ].map(({ icon: Icon, label, value }) => (
-            <div key={label} className="rounded-lg bg-muted/30 px-2.5 py-2">
-              <div className="flex items-center gap-1 mb-0.5">
-                <Icon className="w-2.5 h-2.5 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">{label}</span>
-              </div>
-              <p className="text-xs font-bold text-foreground truncate">{value}</p>
-            </div>
-          ))}
-        </div>
-
-        {totalCapacity > 0 && (
-          <div>
-            <div className="h-1 rounded-full bg-border overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${capacityPercent >= 100 ? "bg-destructive" : capacityPercent >= 80 ? "bg-warning" : "bg-success"}`}
-                style={{ width: `${Math.min(capacityPercent, 100)}%` }}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {t("sessions.card.capacityUsed", {
-                percent: capacityPercent,
-                count: classCount,
-                classesLabel: classCount === 1 ? t("sessions.card.classSingular") : t("sessions.card.classPlural"),
-              })}
-            </p>
-          </div>
-        )}
-      </Button>
-
-      {canDelete && (
-        <div className="absolute top-3 end-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
-          {showDeleted ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={t("sessions.restore")}
-              onClick={(event) => {
-                event.stopPropagation();
-                onRestore?.(session.id);
-              }}
-            >
-              <RotateCcw className="w-3.5 h-3.5 text-primary" />
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={t("common.delete")}
-              onClick={(event) => {
-                event.stopPropagation();
-                onDelete?.(session.id);
-              }}
-            >
-              <Trash2 className="w-3.5 h-3.5 text-destructive" />
-            </Button>
-          )}
-        </div>
-      )}
-    </MotionCard>
-  );
-}
 
 export default function Sessions() {
-  const {
-    canWrite,
-    canDelete,
-    canReports: canViewReports,
-    canViewSetup,
-  } = useModulePermissions(SESSIONS_MODULE_MANIFEST);
+  const { canWrite, canDelete, canReports: canViewReports, canViewSetup } =
+    useModulePermissions(SESSIONS_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const { t } = useTranslation();
-  const {
-    createSession,
-    updateSession,
-    deleteSession,
-    restoreSession,
-    bulkDeleteSessions,
-    bulkRestoreSessions,
-  } = useSessionMutations();
+  const { createSession, updateSession, deleteSession, restoreSession, bulkDeleteSessions, bulkRestoreSessions } =
+    useSessionMutations();
   const { settings, statuses, types } = useSessionConfig();
-
-  const statusOptions = useMemo(() => {
-    return statuses.length > 0 ? statuses : ["active", "upcoming", "completed", "cancelled"];
-  }, [statuses]);
-  const typeOptions = useMemo(() => {
-    return types.length > 0 ? types : [...SESSION_TYPES];
-  }, [types]);
+  const { statusOptions, typeOptions, statusLabels, typeLabels, statusConfig, typeConfig } =
+    useSessionDisplayConfig({ statuses, types, t });
 
   const columnLayout = useSessionColumnLayout();
   const listLayout = (settings.defaultViewLayout || "cards") === "list";
-  const showName = columnLayout.isColumnVisible("name");
-  const showType = columnLayout.isColumnVisible("type");
-  const showDuration = columnLayout.isColumnVisible("duration");
-  const showFee = columnLayout.isColumnVisible("fee");
-  const showEnrolled = columnLayout.isColumnVisible("enrolled");
-  const showStatus = columnLayout.isColumnVisible("status");
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<SessionStatus[]>([]);
   const [filterType, setFilterType] = useState<SessionType[]>([]);
@@ -252,13 +53,8 @@ export default function Sessions() {
   const [activeTab, setActiveTab] = usePersistedTabState<string>("sessions_active_tab", "work");
 
   const useServerWork = activeTab === "work";
-  const {
-    data: workPageData,
-    isLoading: isWorkLoading,
-    isFetching: isWorkFetching,
-    isError,
-    refetch,
-  } = useSessionsPaginated({
+  const { data: workPageData, isLoading: isWorkLoading, isFetching: isWorkFetching, isError, refetch } =
+    useSessionsPaginated({
     page: listPage,
     limit: SESSIONS_MODULE_MANIFEST.defaultPageSize,
     search,
@@ -389,42 +185,6 @@ export default function Sessions() {
       ? currentValues.filter((selectedValue) => selectedValue !== nextValue)
       : [...currentValues, nextValue]);
 
-  const statusLabels = useMemo(() => {
-    const sessionStatusLabelsByValue: Record<string, string> = {};
-    for (const statusOption of statusOptions) {
-      const translationKey = `sessions.status.${statusOption}` as AppTranslationKey;
-      const translated = t(translationKey);
-      sessionStatusLabelsByValue[statusOption] = translated === translationKey ? toTitleCase(statusOption) : translated;
-    }
-    return sessionStatusLabelsByValue;
-  }, [statusOptions, t]);
-
-  const typeLabels = useMemo(() => {
-    const sessionTypeLabelsByValue: Record<string, string> = {};
-    for (const typeOption of typeOptions) {
-      const translationKey = SESSION_TYPE_LABEL_KEYS[typeOption];
-      sessionTypeLabelsByValue[typeOption] = translationKey ? t(translationKey) : typeOption;
-    }
-    return sessionTypeLabelsByValue;
-  }, [typeOptions, t]);
-
-  const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
-    active: { label: statusLabels.active, cls: SEMANTIC_BADGE.success },
-    upcoming: { label: statusLabels.upcoming, cls: SEMANTIC_BADGE.info },
-    completed: { label: statusLabels.completed, cls: SEMANTIC_BADGE.muted },
-    cancelled: { label: statusLabels.cancelled, cls: SEMANTIC_BADGE.destructive },
-  }), [statusLabels]);
-
-  const typeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => {
-    const config: Record<string, StatusBadgeConfigItem> = {};
-    for (const [typeValue, label] of Object.entries(typeLabels)) {
-      config[typeValue] = {
-        label,
-        cls: SESSION_TYPE_BADGE_CLS[typeValue] ?? SEMANTIC_BADGE.muted,
-      };
-    }
-    return config;
-  }, [typeLabels]);
   const canSelectSessions = canWrite || canDelete;
   const allVisibleSelected = sessions.length > 0
     && sessions.every((sessionItem) => selectedIds.includes(sessionItem.id));
@@ -442,38 +202,6 @@ export default function Sessions() {
       ? [...currentIds, id]
       : currentIds.filter((selectedId) => selectedId !== id));
   };
-
-  const getSessionEnrollmentTotals = (sessionItem: Session) => {
-    const totalEnrolled = sessionItem.classes?.reduce((sum, sessionClass) => sum + sessionClass.enrolled, 0) ?? 0;
-    const totalCapacity = sessionItem.classes?.reduce((sum, sessionClass) => sum + sessionClass.capacity, 0) ?? 0;
-    return { totalEnrolled, totalCapacity };
-  };
-
-  const renderSessionListActions = (sessionId: string) => (
-    canDelete ? (
-      showDeleted ? (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label={t("sessions.restore")}
-          onClick={() => handleRestore(sessionId)}
-        >
-          <RotateCcw className="w-4 h-4" />
-        </Button>
-      ) : (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label={t("common.delete")}
-          onClick={() => setPendingDeleteId(sessionId)}
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
-      )
-    ) : null
-  );
 
   return (
     <ModulePageShell
@@ -501,407 +229,82 @@ export default function Sessions() {
       >
       <AnimatePresence mode="wait">
         {activeTab === "work" ? (
-          <motion.div
-            key="work"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="space-y-5"
-          >
-            <div className="flex flex-col sm:flex-row gap-3">
-              <SearchBar value={search} onChange={setSearch} placeholder={t("sessions.searchPlaceholder")} className="flex-1" />
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className={`flex items-center gap-2 px-3.5 min-h-11 rounded-xl border text-sm font-medium transition-colors ${filterStatus.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-foreground hover:bg-muted"}`}
-                  >
-                    <Filter className="w-3.5 h-3.5" /> {t("sessions.filter.status")} {filterStatus.length > 0 && <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">{filterStatus.length}</span>}
-                    <ChevronDown className="w-3 h-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
-                  <DropdownMenuLabel className="text-xs">{t("sessions.filter.status")}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {statusOptions.map((statusOption) => (
-                    <DropdownMenuCheckboxItem key={statusOption} checked={filterStatus.includes(statusOption)} onCheckedChange={() => toggleFilter(filterStatus, setFilterStatus, statusOption)}>
-                      {statusLabels[statusOption]}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className={`flex items-center gap-2 px-3.5 min-h-11 rounded-xl border text-sm font-medium transition-colors ${filterType.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-foreground hover:bg-muted"}`}
-                  >
-                    <BookOpen className="w-3.5 h-3.5" /> {t("sessions.filter.type")} {filterType.length > 0 && <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">{filterType.length}</span>}
-                    <ChevronDown className="w-3 h-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuLabel className="text-xs">{t("sessions.filter.type")}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {typeOptions.map((typeOption) => (
-                    <DropdownMenuCheckboxItem key={typeOption} checked={filterType.includes(typeOption)} onCheckedChange={() => toggleFilter(filterType, setFilterType, typeOption)}>
-                      {typeLabels[typeOption]}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {listLayout && (
-                <ModuleColumnCustomizer
-                  columnRegistry={columnLayout.columnRegistry}
-                  updateUserColumnLayout={columnLayout.updateUserColumnLayout}
-                  labels={columnLayout.customizerLabels}
-                />
-              )}
-
-              {canDelete && (
-                <ModuleTrashToggle
-                  showDeleted={showDeleted}
-                  onToggle={() => setShowDeleted((previous) => !previous)}
-                  showActiveLabel={t("sessions.showActive")}
-                  showDeletedLabel={t("sessions.showDeleted")}
-                  className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
-                    showDeleted
-                      ? "border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground"
-                  }`}
-                />
-              )}
-            </div>
-
-            <FilterChips
-              chips={[
-                ...filterStatus.map((statusOption) => ({ key: statusOption, label: statusLabels[statusOption], onRemove: () => toggleFilter(filterStatus, setFilterStatus, statusOption) })),
-                ...filterType.map((typeOption) => ({ key: typeOption, label: typeLabels[typeOption], onRemove: () => toggleFilter(filterType, setFilterType, typeOption) })),
-              ]}
-              onClearAll={() => { setFilterStatus([]); setFilterType([]); }}
-            />
-
-            {selectedIds.length > 0 && (
-              <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl bg-card/90 border border-primary/20 shadow-md backdrop-blur-md">
-                <span className="text-sm font-semibold text-foreground">
-                  {t("sessions.selectedCount", { count: selectedIds.length })}
-                </span>
-                {showDeleted ? (
-                  <Button type="button" variant="outline" onClick={() => setConfirmBulkRestoreOpen(true)}>
-                    <RotateCcw className="w-4 h-4 me-2" />
-                    {t("sessions.restore")}
-                  </Button>
-                ) : (
-                  <Button type="button" variant="destructive" onClick={() => setConfirmBulkDeleteOpen(true)}>
-                    <Archive className="w-4 h-4 me-2" />
-                    {t("sessions.archive")}
-                  </Button>
-                )}
-              </div>
-            )}
-
-            {isError ? (
-              <ErrorState
-                title={t("sessions.toast.saveFailed")}
-                description={t("common.retry")}
-                onRetry={() => void refetch()}
-              />
-            ) : isWorkLoading ? (
-              <TableSkeleton rows={6} cols={listLayout ? 6 : 3} />
-            ) : sessions.length === 0 ? (
-              <EmptyState
-                icon={BookOpen}
-                title={showDeleted ? t("sessions.empty.trashTitle") : t("sessions.empty.title")}
-                description={showDeleted ? t("sessions.empty.trashSubtitle") : t("sessions.empty.subtitle")}
-                action={!showDeleted && canWrite ? (
-                  <ActionButton variant="primary" icon={Plus} onClick={() => setShowForm(true)}>
-                    {t("sessions.action.new")}
-                  </ActionButton>
-                ) : undefined}
-              />
-            ) : listLayout ? (
-              <div className="rounded-2xl border border-border bg-card/45 backdrop-blur-xl overflow-hidden shadow-sm">
-                <div className="space-y-3 p-3 md:hidden">
-                  {sessions.map((sessionItem, index) => {
-                    const { totalEnrolled, totalCapacity } = getSessionEnrollmentTotals(sessionItem);
-                    return (
-                      <motion.article
-                        key={sessionItem.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: index * 0.03 }}
-                        className="space-y-3 rounded-xl border border-border bg-card p-3"
-                      >
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => !showDeleted && setDetailSession(sessionItem)}
-                          className="h-auto w-full justify-start p-0 text-start font-normal hover:bg-transparent"
-                        >
-                          <div className="flex min-w-0 items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              {showName && <h4 className="truncate text-sm font-semibold text-foreground">{sessionItem.name}</h4>}
-                              <div className="mt-1 flex flex-wrap gap-1.5">
-                                {showType && <StatusBadge status={sessionItem.type || "other"} config={typeConfig} size="sm" />}
-                                {showStatus && <StatusBadge status={sessionItem.status} config={statusConfig} size="sm" />}
-                              </div>
-                            </div>
-                            {showFee && (
-                              <span className="shrink-0 text-sm font-bold text-foreground">
-                                {formatMoney(sessionItem.baseFee, sessionItem.currency)}
-                              </span>
-                            )}
-                          </div>
-                        </Button>
-                        <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                          {showDuration && (
-                            <div>
-                              <dt className="text-xs font-semibold text-muted-foreground">{t("sessions.columns.duration")}</dt>
-                              <dd className="text-foreground">
-                                {formatDate(sessionItem.startDate, true)} — {formatDate(sessionItem.endDate, true)}
-                              </dd>
-                            </div>
-                          )}
-                          {showEnrolled && (
-                            <div>
-                              <dt className="text-xs font-semibold text-muted-foreground">{t("sessions.columns.enrolled")}</dt>
-                              <dd className="text-foreground">
-                                {totalEnrolled}/{totalCapacity || t("common.notSpecified")}
-                              </dd>
-                            </div>
-                          )}
-                        </dl>
-                        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2">
-                          {canSelectSessions ? (
-                            <Checkbox
-                              checked={selectedIds.includes(sessionItem.id)}
-                              onCheckedChange={(checked) => toggleSelectedSession(sessionItem.id, checked === true)}
-                              aria-label={sessionItem.name}
-                            />
-                          ) : <span />}
-                          {renderSessionListActions(sessionItem.id)}
-                        </div>
-                      </motion.article>
-                    );
-                  })}
-                </div>
-                <div className="hidden overflow-x-auto md:block">
-                  <table className="w-full text-sm table-fixed">
-                    <thead>
-                      <tr className="border-b border-border/50 bg-muted/20">
-                        {canSelectSessions && (
-                          <th className="px-4 py-3 w-12">
-                            <Checkbox
-                              checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
-                              onCheckedChange={(checked) => toggleSelectAll(checked === true)}
-                              aria-label={t("sessions.selectedCount", { count: sessions.length })}
-                            />
-                          </th>
-                        )}
-                        {showName && (
-                          <ResizableTableHead columnKey="name" width={columnLayout.getColumnWidth("name")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                            <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 text-xs font-semibold uppercase tracking-wide" onClick={() => handleSort("name")}>
-                              {t("sessions.columns.name")}
-                              {sortField === "name" && (sortDir === "asc" ? <ChevronUp className="ms-1 w-3 h-3" /> : <ChevronDown className="ms-1 w-3 h-3" />)}
-                            </Button>
-                          </ResizableTableHead>
-                        )}
-                        {showType && (
-                          <ResizableTableHead columnKey="type" width={columnLayout.getColumnWidth("type")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                            <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 text-xs font-semibold uppercase tracking-wide" onClick={() => handleSort("type")}>
-                              {t("sessions.columns.type")}
-                              {sortField === "type" && (sortDir === "asc" ? <ChevronUp className="ms-1 w-3 h-3" /> : <ChevronDown className="ms-1 w-3 h-3" />)}
-                            </Button>
-                          </ResizableTableHead>
-                        )}
-                        {showDuration && (
-                          <ResizableTableHead columnKey="duration" width={columnLayout.getColumnWidth("duration")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                            {t("sessions.columns.duration")}
-                          </ResizableTableHead>
-                        )}
-                        {showFee && (
-                          <ResizableTableHead columnKey="fee" width={columnLayout.getColumnWidth("fee")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                            <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 text-xs font-semibold uppercase tracking-wide" onClick={() => handleSort("baseFee")}>
-                              {t("sessions.columns.fee")}
-                              {sortField === "baseFee" && (sortDir === "asc" ? <ChevronUp className="ms-1 w-3 h-3" /> : <ChevronDown className="ms-1 w-3 h-3" />)}
-                            </Button>
-                          </ResizableTableHead>
-                        )}
-                        {showEnrolled && (
-                          <ResizableTableHead columnKey="enrolled" width={columnLayout.getColumnWidth("enrolled")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                            {t("sessions.columns.enrolled")}
-                          </ResizableTableHead>
-                        )}
-                        {showStatus && (
-                          <ResizableTableHead columnKey="status" width={columnLayout.getColumnWidth("status")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                            <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 text-xs font-semibold uppercase tracking-wide" onClick={() => handleSort("status")}>
-                              {t("sessions.columns.status")}
-                              {sortField === "status" && (sortDir === "asc" ? <ChevronUp className="ms-1 w-3 h-3" /> : <ChevronDown className="ms-1 w-3 h-3" />)}
-                            </Button>
-                          </ResizableTableHead>
-                        )}
-                        {canDelete && <th className="px-4 py-3 w-10"><span className="sr-only">{t("common.actions")}</span></th>}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/50">
-                      {sessions.map((sessionItem) => {
-                        const { totalEnrolled, totalCapacity } = getSessionEnrollmentTotals(sessionItem);
-                        return (
-                          <tr key={sessionItem.id} onClick={() => !showDeleted && setDetailSession(sessionItem)} className="hover:bg-muted/20 cursor-pointer transition-colors group">
-                            {canSelectSessions && (
-                              <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>
-                                <Checkbox
-                                  checked={selectedIds.includes(sessionItem.id)}
-                                  onCheckedChange={(checked) => toggleSelectedSession(sessionItem.id, checked === true)}
-                                  aria-label={sessionItem.name}
-                                />
-                              </td>
-                            )}
-                            {showName && (
-                              <td className="px-4 py-3 font-semibold text-foreground group-hover:text-primary transition-colors">{sessionItem.name}</td>
-                            )}
-                            {showType && (
-                              <td className="px-4 py-3">
-                                <StatusBadge status={sessionItem.type || "other"} config={typeConfig} size="sm" />
-                              </td>
-                            )}
-                            {showDuration && (
-                              <td className="px-4 py-3 text-xs text-muted-foreground">
-                                {formatDate(sessionItem.startDate, true)} — {formatDate(sessionItem.endDate, true)}
-                              </td>
-                            )}
-                            {showFee && (
-                              <td className="px-4 py-3 text-xs font-medium">
-                                {formatMoney(sessionItem.baseFee, sessionItem.currency)}
-                              </td>
-                            )}
-                            {showEnrolled && (
-                              <td className="px-4 py-3 text-xs text-muted-foreground">
-                                {totalEnrolled}/{totalCapacity || t("common.notSpecified")}
-                              </td>
-                            )}
-                            {showStatus && (
-                              <td className="px-4 py-3">
-                                <StatusBadge status={sessionItem.status} config={statusConfig} size="sm" />
-                              </td>
-                            )}
-                            {canDelete && (
-                              <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>
-                                {renderSessionListActions(sessionItem.id)}
-                              </td>
-                            )}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {sessions.map((sessionItem) => (
-                  <SessionCard
-                    key={sessionItem.id}
-                    session={sessionItem}
-                    onClick={() => !showDeleted && setDetailSession(sessionItem)}
-                    onDelete={(id) => setPendingDeleteId(id)}
-                    onRestore={handleRestore}
-                    canDelete={canDelete}
-                    showDeleted={showDeleted}
-                    statusConfig={statusConfig}
-                    typeConfig={typeConfig}
-                  />
-                ))}
-              </div>
-            )}
-
-            {useServerWork && workPageData && (
-              <ListPagination
-                page={workPageData.page}
-                total={workPageData.total}
-                limit={workPageData.limit}
-                hasMore={workPageData.hasMore}
-                onPageChange={setListPage}
-                i18nNamespace="sessions"
-                variant="range"
-              />
-            )}
-            {useServerWork && isWorkFetching && (
-              <p className="text-xs text-muted-foreground px-1">{t("common.loading")}</p>
-            )}
-          </motion.div>
+          <SessionsWorkTier
+            search={search}
+            filterStatus={filterStatus}
+            filterType={filterType}
+            statusOptions={statusOptions}
+            typeOptions={typeOptions}
+            statusLabels={statusLabels}
+            typeLabels={typeLabels}
+            listLayout={listLayout}
+            columnLayout={columnLayout}
+            canWrite={canWrite}
+            canDelete={canDelete}
+            showDeleted={showDeleted}
+            sessions={sessions}
+            workPageData={workPageData}
+            isError={isError}
+            isWorkLoading={isWorkLoading}
+            isWorkFetching={isWorkFetching}
+            useServerWork={useServerWork}
+            canSelectSessions={canSelectSessions}
+            selectedIds={selectedIds}
+            allVisibleSelected={allVisibleSelected}
+            someVisibleSelected={someVisibleSelected}
+            sortField={sortField}
+            sortDir={sortDir}
+            statusConfig={statusConfig}
+            typeConfig={typeConfig}
+            onSearchChange={setSearch}
+            onStatusFilterToggle={(statusOption) => toggleFilter(filterStatus, setFilterStatus, statusOption)}
+            onTypeFilterToggle={(typeOption) => toggleFilter(filterType, setFilterType, typeOption)}
+            onClearFilters={() => { setFilterStatus([]); setFilterType([]); }}
+            onToggleDeleted={() => setShowDeleted((previous) => !previous)}
+            onRetry={() => void refetch()}
+            onCreateSession={() => setShowForm(true)}
+            onOpenDetail={setDetailSession}
+            onSort={handleSort}
+            onToggleSelectAll={toggleSelectAll}
+            onToggleSelectedSession={toggleSelectedSession}
+            onRequestDelete={setPendingDeleteId}
+            onRestore={handleRestore}
+            onRequestBulkDelete={() => setConfirmBulkDeleteOpen(true)}
+            onRequestBulkRestore={() => setConfirmBulkRestoreOpen(true)}
+            onPageChange={setListPage}
+          />
         ) : activeTab === "reports" ? (
-          <motion.div key="reports" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="space-y-4">
-            <KPISummary category="sessions" />
-            <ModuleReports category="sessions" />
-          </motion.div>
+          <SessionsReportsTier />
         ) : activeTab === "setup" ? (
-          <motion.div
-            key="setup"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-          >
-            <ErrorBoundary>
-              <SessionsSettings />
-            </ErrorBoundary>
-          </motion.div>
+          <SessionsSetupTier />
         ) : null}
       </AnimatePresence>
       </ResponsiveAccordionTabs>
 
-      <AnimatePresence>
-        <SessionForm
-          open={showForm}
-          session={editSession}
-          onClose={() => { setShowForm(false); setEditSession(null); }}
-          onSave={handleSave}
-        />
-        {detailSession && !showDeleted && (
-          <SessionDetail
-            session={detailSession}
-            onClose={() => setDetailSession(null)}
-            onUpdate={handleUpdate}
-            onEdit={(sessionToEdit: Session) => { setEditSession(sessionToEdit); setShowForm(true); }}
-          />
-        )}
-      </AnimatePresence>
-
-      <ConfirmAlertDialog
-        open={pendingDeleteId != null}
-        onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}
-        title={t("sessions.confirmDeleteTitle")}
-        description={t("sessions.confirmDeleteDescription")}
-        confirmLabel={t("sessions.archive")}
-        cancelLabel={t("common.cancel")}
-        onConfirm={() => {
+      <SessionsDialogLayer
+        showForm={showForm}
+        editSession={editSession}
+        detailSession={detailSession}
+        showDeleted={showDeleted}
+        pendingDeleteId={pendingDeleteId}
+        confirmBulkDeleteOpen={confirmBulkDeleteOpen}
+        confirmBulkRestoreOpen={confirmBulkRestoreOpen}
+        selectedCount={selectedIds.length}
+        t={t}
+        onCloseForm={() => { setShowForm(false); setEditSession(null); }}
+        onSave={handleSave}
+        onCloseDetail={() => setDetailSession(null)}
+        onUpdate={handleUpdate}
+        onEdit={(sessionToEdit) => { setEditSession(sessionToEdit); setShowForm(true); }}
+        onPendingDeleteOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}
+        onConfirmDelete={() => {
           if (pendingDeleteId) handleDelete(pendingDeleteId);
           setPendingDeleteId(null);
         }}
-      />
-      <ConfirmAlertDialog
-        open={confirmBulkDeleteOpen}
-        onOpenChange={setConfirmBulkDeleteOpen}
-        title={t("sessions.confirmDeleteTitle")}
-        description={t("sessions.bulkDeleteConfirm", { count: selectedIds.length })}
-        confirmLabel={t("sessions.archive")}
-        cancelLabel={t("common.cancel")}
-        onConfirm={handleBulkDelete}
-      />
-      <ConfirmAlertDialog
-        open={confirmBulkRestoreOpen}
-        onOpenChange={setConfirmBulkRestoreOpen}
-        title={t("sessions.restore")}
-        description={t("sessions.bulkRestoreConfirm", { count: selectedIds.length })}
-        confirmLabel={t("sessions.restore")}
-        cancelLabel={t("common.cancel")}
-        onConfirm={handleBulkRestore}
+        onBulkDeleteOpenChange={setConfirmBulkDeleteOpen}
+        onConfirmBulkDelete={handleBulkDelete}
+        onBulkRestoreOpenChange={setConfirmBulkRestoreOpen}
+        onConfirmBulkRestore={handleBulkRestore}
       />
     </ModulePageShell>
   );

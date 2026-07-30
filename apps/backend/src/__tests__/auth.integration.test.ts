@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { hashRefreshToken } from '../services/auth/authCookieService.js';
+import { signTenantToken } from './helpers/tokens.js';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
@@ -214,14 +215,12 @@ describe('auth routes', () => {
 
   it('GET /api/auth/me rejects JWT bound to a different tenant', async () => {
     const app = await buildApp();
-    const token = app.jwt.sign({
+    const token = signTenantToken(app, {
       id: 'u1',
       email: 'admin@test.com',
       name: 'Admin',
       role: 'admin',
       workspaceSubdomain: 'other',
-      twoFactorVerified: true,
-      tokenType: 'access',
     });
     const res = await app.inject({
       method: 'GET',
@@ -237,14 +236,12 @@ describe('auth routes', () => {
 
   it('GET /api/auth/me rejects access token when 2FA is not verified', async () => {
     const app = await buildApp();
-    const token = app.jwt.sign({
+    const token = signTenantToken(app, {
       id: 'u1',
       email: 'admin@test.com',
       name: 'Admin',
       role: 'admin',
-      workspaceSubdomain: 'demo',
       twoFactorVerified: false,
-      tokenType: 'access',
     });
     const res = await app.inject({
       method: 'GET',
@@ -261,14 +258,11 @@ describe('auth routes', () => {
 
   it('POST /api/students returns 403 for roles without write access', async () => {
     const app = await buildApp();
-    const token = app.jwt.sign({
+    const token = signTenantToken(app, {
       id: 'u1',
       email: 'viewer@test.com',
       name: 'Viewer',
       role: 'viewer',
-      workspaceSubdomain: 'demo',
-      twoFactorVerified: true,
-      tokenType: 'access',
     });
     const res = await app.inject({
       method: 'POST',
@@ -285,14 +279,11 @@ describe('auth routes', () => {
 
   it('GET /api/students returns 403 for roles without read access', async () => {
     const app = await buildApp();
-    const token = app.jwt.sign({
+    const token = signTenantToken(app, {
       id: 'u1',
       email: 'viewer@test.com',
       name: 'Viewer',
       role: 'viewer',
-      workspaceSubdomain: 'demo',
-      twoFactorVerified: true,
-      tokenType: 'access',
     });
     const res = await app.inject({
       method: 'GET',
@@ -348,14 +339,11 @@ describe('auth routes', () => {
 
   it('POST /api/contacts returns 403 for roles without write access', async () => {
     const app = await buildApp();
-    const token = app.jwt.sign({
+    const token = signTenantToken(app, {
       id: 'u1',
       email: 'viewer@test.com',
       name: 'Viewer',
       role: 'viewer',
-      workspaceSubdomain: 'demo',
-      twoFactorVerified: true,
-      tokenType: 'access',
     });
     const res = await app.inject({
       method: 'POST',
@@ -586,14 +574,11 @@ describe('platform auth routes', () => {
 
   it('GET /api/platform/auth/me rejects tenant access token on apex', async () => {
     const app = await buildApp();
-    const token = app.jwt.sign({
+    const token = signTenantToken(app, {
       id: 'u1',
       email: 'admin@test.com',
       name: 'Admin',
       role: 'admin',
-      workspaceSubdomain: 'demo',
-      twoFactorVerified: true,
-      tokenType: 'access',
     });
     const res = await app.inject({
       method: 'GET',
@@ -626,14 +611,11 @@ describe('platform auth routes', () => {
 
   it('GET /api/auth/me rejects tenant session on apex host', async () => {
     const app = await buildApp();
-    const token = app.jwt.sign({
+    const token = signTenantToken(app, {
       id: 'u1',
       email: 'admin@test.com',
       name: 'Admin',
       role: 'admin',
-      workspaceSubdomain: 'demo',
-      twoFactorVerified: true,
-      tokenType: 'access',
     });
     const res = await app.inject({
       method: 'GET',

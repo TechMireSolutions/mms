@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
+import { teacherToken } from './helpers/tokens.js';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
@@ -37,18 +38,6 @@ vi.mock('../services/examinationService.js', () => ({
   bulkRestoreExams: vi.fn(),
 }));
 
-function teacherToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-teacher',
-    email: 'teacher@test.com',
-    name: 'Teacher User',
-    role: 'teacher',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
-
 describe('examinations REST routes integration', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
@@ -77,7 +66,7 @@ describe('examinations REST routes integration', () => {
       url: '/api/examinations/exams',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${teacherToken(app, { name: 'Teacher User' })}`,
       },
     });
     expect(res.statusCode).toBe(200);

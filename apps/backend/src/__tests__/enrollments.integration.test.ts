@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
+import { adminToken } from './helpers/tokens.js';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
@@ -33,18 +34,6 @@ vi.mock('../services/enrollmentService.js', async (importOriginal) => {
     loadEnrollmentsPage: (...args: unknown[]) => mockLoadEnrollmentsPage(...args),
   };
 });
-
-function adminToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-admin',
-    email: 'admin@test.com',
-    name: 'Admin User',
-    role: 'admin',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
 
 describe('enrollments REST routes integration', () => {
   beforeEach(() => {
@@ -81,7 +70,7 @@ describe('enrollments REST routes integration', () => {
       url: '/api/enrollments',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${adminToken(app)}`,
+        authorization: `Bearer ${adminToken(app, { name: 'Admin User' })}`,
       },
     });
     expect(res.statusCode).toBe(200);

@@ -106,6 +106,7 @@ vi.mock('../services/backgroundJobWorkerService.js', async (importOriginal) => {
 
 import { buildApp } from '../app.js';
 import { CONTACTS_MODULE_MANIFEST } from '@mms/shared';
+import { accountantToken, adminToken, teacherToken, viewerToken } from './helpers/tokens.js';
 
 
 const sampleContact = {
@@ -115,54 +116,6 @@ const sampleContact = {
   name: 'Ali Khan',
   phones: [{ label: 'Mobile', number: '3001234567', countryCode: '+92' }],
 };
-
-function teacherToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-teacher',
-    email: 'teacher@test.com',
-    name: 'Teacher',
-    role: 'teacher',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
-
-function viewerToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-viewer',
-    email: 'viewer@test.com',
-    name: 'Viewer',
-    role: 'viewer',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
-
-function adminToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-admin',
-    email: 'admin@test.com',
-    name: 'Admin',
-    role: 'admin',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
-
-function accountantToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-accountant',
-    email: 'accountant@test.com',
-    name: 'Accountant',
-    role: 'accountant',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
 
 describe('contacts REST routes', () => {
   beforeEach(() => {

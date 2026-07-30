@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
+import { adminToken, teacherToken } from './helpers/tokens.js';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
@@ -42,30 +43,6 @@ vi.mock('../services/attendanceService.js', () => ({
   upsertAttendanceRecords: (...args: unknown[]) => mockUpsertAttendanceRecords(...args),
   replaceAttendanceRecords: vi.fn(),
 }));
-
-function teacherToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-teacher',
-    email: 'teacher@test.com',
-    name: 'Teacher',
-    role: 'teacher',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
-
-function adminToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-admin',
-    email: 'admin@test.com',
-    name: 'Admin',
-    role: 'admin',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
 
 const attendanceRecord = {
   id: 'c1-2026-07-27-s1',

@@ -1,5 +1,5 @@
 import { apiFetch, apiJson } from '@/lib/apiClient';
-import { getCollection } from '@/lib/db';
+import { findCachedCollectionRecord } from '@/lib/queryCacheCollections';
 import { queryClientInstance } from '@/lib/queryClient';
 import {
   ATTENDANCE_MODULE_MANIFEST,
@@ -100,8 +100,11 @@ export async function persistWidgetRecordToggle(options: {
     throw new Error(`Collection "${collectionName}" is not REST-toggleable from widgets`);
   }
 
-  const cached = getCollection<Record<string, unknown>>(collectionName, []);
-  const existing = cached.find((row) => String(row.id) === String(recordId));
+  const existing = findCachedCollectionRecord(
+    collectionName,
+    recordId,
+    config.invalidateQueryKey,
+  );
   if (!existing) {
     throw new Error(`Record ${recordId} not found in ${collectionName} cache`);
   }

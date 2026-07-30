@@ -12,6 +12,8 @@ export interface UseCollectionSyncOptions<T, R = Record<string, T[]>> {
   defaultData?: T[];
   staleTime?: number;
   enabled?: boolean;
+  /** When true, mirror Query payloads into localStorage cache. Default false (Query-only). */
+  mirrorToLocalCache?: boolean;
   isSuccessQuery?: (queryResult: { isSuccess: boolean; data: T[] | undefined }) => boolean;
 }
 
@@ -30,6 +32,7 @@ export function useCollectionSync<T, R = Record<string, T[]>>({
   defaultData,
   staleTime = 30_000,
   enabled = true,
+  mirrorToLocalCache = false,
   isSuccessQuery,
 }: UseCollectionSyncOptions<T, R>) {
   const { isAuthenticated } = useAuth();
@@ -41,7 +44,9 @@ export function useCollectionSync<T, R = Record<string, T[]>>({
       const rawData = responseKey && response ? response[responseKey] : response;
       const data = (Array.isArray(rawData) ? rawData : []) as unknown as T[];
       // Cache-only: keep hydrated REST payload for offline fallback; do not POST /api/db.
-      saveCollectionCacheOnly(collectionName, data);
+      if (mirrorToLocalCache) {
+        saveCollectionCacheOnly(collectionName, data);
+      }
       return data;
     },
     enabled: isAuthenticated && enabled,

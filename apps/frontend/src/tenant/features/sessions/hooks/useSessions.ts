@@ -58,6 +58,7 @@ export function useSessions(options?: { enabled?: boolean }) {
     defaultData: SESSIONS_DATA,
     staleTime: 15_000,
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
 import type { BackgroundJobRecord } from '@mms/shared';
+import { teacherToken } from './helpers/tokens.js';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
@@ -69,18 +70,6 @@ const sampleJob: BackgroundJobRecord = {
   completedAt: '2026-06-26T12:01:00.000Z',
   hasDownload: true,
 };
-
-function teacherToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-teacher',
-    email: 'teacher@test.com',
-    name: 'Teacher',
-    role: 'teacher',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
 
 describe('background jobs REST routes', () => {
   beforeEach(() => {

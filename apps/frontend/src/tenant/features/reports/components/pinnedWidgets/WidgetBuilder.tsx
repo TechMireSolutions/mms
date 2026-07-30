@@ -1,23 +1,28 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Search, Info } from "lucide-react";
-import { capitalize, type AppTranslationKey } from "@mms/shared";
+import { Info } from "lucide-react";
 import { Session, Class } from "@/lib/data/sessionsData";
-import { METADATA_FIELDS, COLLECTION_OPTIONS, getFieldLabel, getCollectionLabel } from "@/tenant/features/reports/components/reportMetadata";
-import {
-  CustomWidget,
-  ICONS_LIST,
-} from "@/tenant/features/reports/components/pinnedWidgets/types";
+import { METADATA_FIELDS } from "@/tenant/features/reports/components/reportMetadata";
+import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
 import { FORM_LABEL } from "@/components/ui/formStyles";
-import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useWidgetCollections } from "@/lib/reports/useReportCollections";
-import { CustomWidgetRenderer } from "@/tenant/features/reports/components/pinnedWidgets/CustomWidgetRenderer";
 import { isListSummaryWidgetType } from "@/components/dashboard-widgets/registry";
-import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
-import { resolveWidgetChartHex } from "@/lib/brandingChartPalette";
+import {
+  WidgetBuilderCardRoleOptions,
+  WidgetBuilderCardTextOptions,
+  WidgetBuilderIconPicker,
+  type WidgetBuilderIconTab,
+} from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderCardOptions";
+import {
+  WidgetBuilderSwitchOptions,
+  type SwitchRecordOption,
+} from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderSwitchOptions";
+import { WidgetBuilderThresholdOptions } from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderThresholdOptions";
+import { WidgetBuilderPreview } from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderPreview";
+import { WidgetBuilderTypeSelector } from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderTypeSelector";
+import { WidgetBuilderMetricOptions } from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderMetricOptions";
+import { WidgetBuilderColorOptions } from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderColorOptions";
 
 interface WidgetBuilderProps {
   initialCollection: CustomWidget["collection"];
@@ -42,7 +47,6 @@ export function WidgetBuilder({
   initialWidgetType = "kpi"
 }: WidgetBuilderProps): React.JSX.Element {
   const collections = useWidgetCollections();
-  const palette = useBrandPalette();
   const { t } = useTranslation();
   
   const [widgetType, setWidgetType] = useState<CustomWidget["widgetType"]>(() => {
@@ -83,7 +87,7 @@ export function WidgetBuilder({
 
   // Icon search & categories
   const [iconSearch, setIconSearch] = useState("");
-  const [activeIconTab, setActiveIconTab] = useState<"all" | "academic" | "finance" | "status" | "general">("all");
+  const [activeIconTab, setActiveIconTab] = useState<WidgetBuilderIconTab>("all");
 
   // Scalability Tester Slider size state
   const [scalerSize, setScalerSize] = useState(180);
@@ -147,7 +151,7 @@ export function WidgetBuilder({
   }, [editWidgetConfig, initialCollection, t]);
 
   // Load record options for DB Record switch selector
-  const dbRecordsList = useMemo(() => {
+  const dbRecordsList = useMemo<SwitchRecordOption[]>(() => {
     if (switchCollection === "sessions") {
       const sessionRecords = (collections.sessions || []) as Session[];
       return sessionRecords.flatMap((session: Session) => 
@@ -229,6 +233,40 @@ export function WidgetBuilder({
     // Local Switch preview toggle handler (noop)
   };
 
+  const handleSaveWidget = () => {
+    onSaveWidget({
+      id: editWidgetConfig?.id || "widget-" + Date.now(),
+      title: builderTitle,
+      category: editWidgetConfig?.category || category,
+      collection: builderCollection,
+      widgetType,
+      operation: builderOperation,
+      targetField: builderTargetField,
+      filterField: builderFilterField,
+      filterOperator: builderFilterOperator,
+      filterValue: builderFilterValue,
+      color: builderColor,
+      isPinnedToDashboard: editWidgetConfig?.isPinnedToDashboard || false,
+      thresholdEnabled,
+      thresholdCondition,
+      thresholdValue: thresholdValue ? Number(thresholdValue) : undefined,
+      thresholdColor,
+      switchActionType,
+      switchStateKey,
+      switchCollection,
+      switchRecordId,
+      switchField,
+      switchLabelOn,
+      switchLabelOff,
+      icon: widgetType === "card" ? builderIcon : undefined,
+      subTextType: widgetType === "card" ? subTextType : undefined,
+      fixedSubText: (widgetType === "card" && subTextType === "fixed") ? fixedSubText : undefined,
+      trend: widgetType === "card" ? trend : undefined,
+      trendType: widgetType === "card" ? trendType : undefined,
+      role: (widgetType === "card" && mode === "dashboard") ? builderRole : undefined
+    });
+  };
+
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card/40 backdrop-blur-lg p-6 space-y-4 font-sans text-start">
       {/* Builder Header Warning banner detailing Single-Metric rule */}
@@ -250,63 +288,12 @@ export function WidgetBuilder({
         {/* Architect Inputs Column */}
         <div className="lg:col-span-2 space-y-4">
           
-          {/* Visualizer Type selectors */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-black text-foreground/80 uppercase tracking-wider block">{t("reports.widgets.builder.focusType")}</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {(() => {
-                const base = [
-                  { id: "card", label: t("reports.widgets.builder.typeCard"), desc: t("reports.widgets.builder.typeCardDesc") },
-                  { id: "kpi", label: t("reports.widgets.builder.typeKpi"), desc: t("reports.widgets.builder.typeKpiDesc") },
-                  { id: "progress", label: t("reports.widgets.builder.typeProgress"), desc: t("reports.widgets.builder.typeProgressDesc") },
-                  { id: "switch", label: t("reports.widgets.builder.typeSwitch"), desc: t("reports.widgets.builder.typeSwitchDesc") }
-                ];
-                if (builderCollection === "sessions") {
-                  base.push({ id: "sessions-list", label: t("reports.widgets.builder.typeSessionsList"), desc: t("reports.widgets.builder.typeSessionsListDesc") });
-                } else if (builderCollection === "attendance_records") {
-                  base.push(
-                    { id: "attendance-summary", label: t("reports.widgets.builder.typeAttendanceSummary"), desc: t("reports.widgets.builder.typeAttendanceSummaryDesc") },
-                    { id: "attendance-rate", label: t("reports.widgets.builder.typeAttendanceRate"), desc: t("reports.widgets.builder.typeAttendanceRateDesc") }
-                  );
-                } else if (builderCollection === "finance_invoices") {
-                  base.push(
-                    { id: "fee-summary", label: t("reports.widgets.builder.typeFeeSummary"), desc: t("reports.widgets.builder.typeFeeSummaryDesc") },
-                    { id: "outstanding-list", label: t("reports.widgets.builder.typeOutstandingList"), desc: t("reports.widgets.builder.typeOutstandingListDesc") },
-                    { id: "overdue-obligations", label: t("reports.widgets.builder.typeOverdueObligations"), desc: t("reports.widgets.builder.typeOverdueObligationsDesc") },
-                    { id: "revenue-expenses", label: t("reports.widgets.builder.typeRevenueExpenses"), desc: t("reports.widgets.builder.typeRevenueExpensesDesc") }
-                  );
-                } else if (builderCollection === "students") {
-                  base.push({ id: "enrollment-trends", label: t("reports.widgets.builder.typeEnrollmentTrends"), desc: t("reports.widgets.builder.typeEnrollmentTrendsDesc") });
-                } else if (builderCollection === "hasanat_distributions") {
-                  base.push({ id: "hasanat-distribution", label: t("reports.widgets.builder.typeHasanatDistribution"), desc: t("reports.widgets.builder.typeHasanatDistributionDesc") });
-                }
-                return base;
-              })().map((widgetTypeOption) => {
-                const isSelectedType = widgetType === widgetTypeOption.id;
-                return (
-                  <Button
-                    key={widgetTypeOption.id}
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setWidgetType(widgetTypeOption.id as CustomWidget["widgetType"]);
-                      if (widgetTypeOption.id === "switch") {
-                        setBuilderOperation("count");
-                      }
-                    }}
-                    className={`h-auto p-3 rounded-2xl border text-start flex flex-col justify-between transition-all shadow-none ${
-                      isSelectedType
-                        ? "border-primary bg-primary/10 text-primary shadow-sm" 
-                        : "border-border bg-card/30 text-muted-foreground hover:border-muted-foreground/20"
-                    }`}
-                  >
-                    <span className="text-xs font-black uppercase block">{widgetTypeOption.label}</span>
-                    <span className="text-xs text-muted-foreground block mt-1 leading-none">{widgetTypeOption.desc}</span>
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
+          <WidgetBuilderTypeSelector
+            builderCollection={builderCollection}
+            widgetType={widgetType}
+            setWidgetType={setWidgetType}
+            setBuilderOperation={setBuilderOperation}
+          />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {/* Title field */}
@@ -322,561 +309,102 @@ export function WidgetBuilder({
             </div>
 
             {widgetType === "card" && mode === "dashboard" && (
-              <div className="space-y-1">
-                <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.dashboardRole")}</label>
-                <FormSelect
-                  value={builderRole}
-                  onChange={setBuilderRole}
-                  options={[
-                    { value: "admin", label: t("reports.widgets.builder.roleAdmin") },
-                    { value: "teacher", label: t("reports.widgets.builder.roleTeacher") },
-                    { value: "accountant", label: t("reports.widgets.builder.roleAccountant") },
-                  ]}
-                />
-              </div>
+              <WidgetBuilderCardRoleOptions
+                builderRole={builderRole}
+                setBuilderRole={setBuilderRole}
+              />
             )}
 
             {widgetType !== "switch" && !isListSummaryWidgetType(widgetType) ? (
-              <>
-                {/* Data collection select */}
-                <div className="space-y-1">
-                  <label className={FORM_LABEL}>{t("reports.widgets.builder.dataCollection")}</label>
-                  <FormSelect
-                    value={builderCollection}
-                    onChange={(val) => setBuilderCollection(val as CustomWidget["collection"])}
-                    options={COLLECTION_OPTIONS.map((collectionOption) => ({
-                      value: collectionOption.value,
-                      label: getCollectionLabel(collectionOption.value, collectionOption.label, t),
-                    }))}
-                  />
-                </div>
-
-                {/* Operation type */}
-                <div className="space-y-1">
-                  <label className={FORM_LABEL}>{t("reports.widgets.builder.calcFormula")}</label>
-                  <FormSelect
-                    value={builderOperation}
-                    onChange={(val) => setBuilderOperation(val as CustomWidget["operation"])}
-                    options={[
-                      { value: "count", label: t("reports.widgets.builder.formulaCount") },
-                      { value: "percentage", label: t("reports.widgets.builder.formulaPercentage") },
-                      { value: "sum", label: t("reports.widgets.builder.formulaSum") },
-                      { value: "avg", label: t("reports.widgets.builder.formulaAvg") },
-                    ]}
-                  />
-                </div>
-
-                {/* Target fields for numeric values */}
-                <div className="space-y-1">
-                  <label className={FORM_LABEL}>
-                    {t("reports.widgets.builder.targetField")} {["count", "percentage"].includes(builderOperation) && t("reports.widgets.builder.deactivated")}
-                  </label>
-                  <FormSelect
-                    disabled={["count", "percentage"].includes(builderOperation)}
-                    value={builderTargetField}
-                    onChange={setBuilderTargetField}
-                    options={
-                      METADATA_FIELDS[builderCollection].numericFields.length === 0
-                        ? [{ value: "", label: t("reports.widgets.builder.noNumericFields") }]
-                        : METADATA_FIELDS[builderCollection].numericFields.map((numericField) => ({
-                            value: numericField.value,
-                            label: getFieldLabel(numericField.value, numericField.label, t),
-                          }))
-                    }
-                  />
-                </div>
-
-                {/* Filter fields options */}
-                <div className="space-y-1">
-                  <label className={FORM_LABEL}>{t("reports.widgets.builder.filterField")}</label>
-                  <FormSelect
-                    value={builderFilterField}
-                    onChange={setBuilderFilterField}
-                    options={[
-                      { value: "", label: t("reports.widgets.builder.noFilter") },
-                      ...METADATA_FIELDS[builderCollection].fields.map((metadataField) => ({
-                        value: metadataField.value,
-                        label: getFieldLabel(metadataField.value, metadataField.label, t),
-                      })),
-                    ]}
-                  />
-                </div>
-
-                {/* Query filter condition inputs */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <label className={FORM_LABEL}>{t("reports.widgets.builder.operator")}</label>
-                    <FormSelect
-                      disabled={!builderFilterField}
-                      value={builderFilterOperator ?? ""}
-                      onChange={(val) => setBuilderFilterOperator(val as CustomWidget["filterOperator"])}
-                      options={[
-                        { value: "equals", label: t("reports.widgets.builder.opEquals") },
-                        { value: "contains", label: t("reports.widgets.builder.opContains") },
-                        { value: "gt", label: `> ${t("reports.widgets.builder.opGt")}` },
-                        { value: "lt", label: `< ${t("reports.widgets.builder.opLt")}` },
-                      ]}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className={FORM_LABEL}>{t("reports.widgets.builder.matchValue")}</label>
-                    <Input
-                      type="text"
-                      disabled={!builderFilterField}
-                      value={builderFilterValue}
-                      onChange={(event) => setBuilderFilterValue(event.target.value)}
-                      placeholder={t("reports.widgets.builder.placeholderValue")}
-                      className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-11 disabled:opacity-40 disabled:cursor-not-allowed"
-                    />
-                  </div>
-                </div>
-
+              <WidgetBuilderMetricOptions
+                builderCollection={builderCollection}
+                setBuilderCollection={setBuilderCollection}
+                builderOperation={builderOperation}
+                setBuilderOperation={setBuilderOperation}
+                builderTargetField={builderTargetField}
+                setBuilderTargetField={setBuilderTargetField}
+                builderFilterField={builderFilterField}
+                setBuilderFilterField={setBuilderFilterField}
+                builderFilterOperator={builderFilterOperator}
+                setBuilderFilterOperator={setBuilderFilterOperator}
+                builderFilterValue={builderFilterValue}
+                setBuilderFilterValue={setBuilderFilterValue}
+              >
                 {widgetType === "card" && (
-                  <>
-                    <div className="space-y-1">
-                      <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.subtextStyle")}</label>
-                      <FormSelect
-                        value={subTextType}
-                        onChange={(val) => setSubTextType(val as "fixed" | "dynamic")}
-                        options={[
-                          { value: "dynamic", label: t("reports.widgets.builder.subtextDynamic") },
-                          { value: "fixed", label: t("reports.widgets.builder.subtextFixed") },
-                        ]}
-                      />
-                    </div>
-
-                    {subTextType === "fixed" && (
-                      <div className="space-y-1">
-                        <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.fixedSubtitle")}</label>
-                        <Input
-                          type="text"
-                          value={fixedSubText}
-                          onChange={(event) => setFixedSubText(event.target.value)}
-                          placeholder={t("reports.widgets.builder.placeholderSubtitle")}
-                          className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-11"
-                        />
-                      </div>
-                    )}
-
-                    <div className="space-y-1 col-span-1 sm:col-span-2 border-t border-border/40 pt-3">
-                      <label className={`${FORM_LABEL} block`}>
-                        {t("reports.widgets.builder.trendSource")}
-                      </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-card/20 border border-border/60 p-1 rounded-xl max-w-sm">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => setTrendType("database")}
-                          className={`min-h-11 text-xs font-bold uppercase tracking-wider rounded-lg shadow-none ${
-                            trendType === "database"
-                              ? "bg-primary text-primary-foreground shadow"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          {t("reports.widgets.builder.sourceDb")}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => setTrendType("manual")}
-                          className={`min-h-11 text-xs font-bold uppercase tracking-wider rounded-lg shadow-none ${
-                            trendType === "manual"
-                              ? "bg-primary text-primary-foreground shadow"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          {t("reports.widgets.builder.sourceManual")}
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1 col-span-1 sm:col-span-2">
-                      {trendType === "database" ? (
-                        <p className="text-xs text-muted-foreground italic leading-normal bg-primary/5 p-3 rounded-xl border border-primary/10">
-                          ⚡ {t("reports.widgets.builder.dynamicModeDesc")}
-                        </p>
-                      ) : (
-                        <>
-                          <div className="flex justify-between items-center select-none">
-                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.widgets.builder.manualTrend")}</label>
-                            <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${
-                              trend > 0 ? "bg-success/20 text-success" : trend < 0 ? "bg-destructive/20 text-destructive" : "bg-muted text-muted-foreground"
-                            }`}>
-                              {trend > 0 ? "+" : ""}{trend}%
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="range"
-                              min="-100"
-                              max="100"
-                              value={trend}
-                              onChange={(event) => setTrend(Number(event.target.value))}
-                              className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-primary"
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => setTrend(0)}
-                              className="min-h-11 px-2 text-xs font-bold uppercase tracking-wider bg-card hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg shadow-none"
-                              title={t("reports.widgets.builder.resetTrend")}
-                            >
-                              {t("reports.widgets.builder.reset")}
-                            </Button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </>
-                )}
-              </>
-            ) : (
-              <>
-                {/* Switch options fields */}
-                <div className="space-y-1">
-                  <label className={FORM_LABEL}>{t("reports.widgets.builder.switchTarget")}</label>
-                  <FormSelect
-                    value={switchActionType}
-                    onChange={(val) => setSwitchActionType(val as "app_setting" | "db_record")}
-                    options={[
-                      { value: "app_setting", label: t("reports.widgets.builder.switchTargetApp") },
-                      { value: "db_record", label: t("reports.widgets.builder.switchTargetDb") },
-                    ]}
+                  <WidgetBuilderCardTextOptions
+                    subTextType={subTextType}
+                    setSubTextType={setSubTextType}
+                    fixedSubText={fixedSubText}
+                    setFixedSubText={setFixedSubText}
+                    trend={trend}
+                    setTrend={setTrend}
+                    trendType={trendType}
+                    setTrendType={setTrendType}
                   />
-                </div>
-
-                {switchActionType === "app_setting" ? (
-                  <div className="space-y-1">
-                    <label className={FORM_LABEL}>{t("reports.widgets.builder.selectParameter")}</label>
-                    <FormSelect
-                      value={switchStateKey}
-                      onChange={setSwitchStateKey}
-                      options={[
-                        { value: "section_enrollmentChart", label: t("reports.widgets.builder.paramEnrollmentChart") },
-                        { value: "section_revenueChart", label: t("reports.widgets.builder.paramRevenueChart") },
-                        { value: "section_attendanceChart", label: t("reports.widgets.builder.paramAttendanceChart") },
-                        { value: "section_hasanatChart", label: t("reports.widgets.builder.paramHasanatChart") },
-                        { value: "section_sessionsTable", label: t("reports.widgets.builder.paramSessionsTable") },
-                        { value: "app_setting_attendance_lock", label: t("reports.widgets.builder.paramAttendanceLock") },
-                        { value: "app_setting_mute_notifications", label: t("reports.widgets.builder.paramMuteNotifications") },
-                      ]}
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <div className="space-y-1">
-                      <label className={FORM_LABEL}>{t("reports.widgets.builder.recordCollection")}</label>
-                      <FormSelect
-                        value={switchCollection}
-                        onChange={(val) => {
-                          setSwitchCollection(val as CustomWidget["collection"]);
-                          setSwitchRecordId("");
-                        }}
-                        options={COLLECTION_OPTIONS.map((collectionOption) => ({
-                          value: collectionOption.value,
-                          label: getCollectionLabel(collectionOption.value, collectionOption.label, t),
-                        }))}
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className={FORM_LABEL}>{t("reports.widgets.builder.selectRecord")}</label>
-                      <FormSelect
-                        value={switchRecordId}
-                        onChange={setSwitchRecordId}
-                        options={
-                          dbRecordsList.length === 0
-                            ? [{ value: "", label: t("reports.widgets.builder.noRecordsLoaded") }]
-                            : dbRecordsList.map((rec) => ({ value: rec.id, label: rec.label }))
-                        }
-                      />
-                    </div>
-                  </>
                 )}
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <label className={FORM_LABEL}>{t("reports.widgets.builder.labelOn")}</label>
-                    <Input
-                      type="text"
-                      value={switchLabelOn}
-                      onChange={(event) => setSwitchLabelOn(event.target.value)}
-                      placeholder={t("reports.widgets.builder.placeholderActive")}
-                      className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-11"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className={FORM_LABEL}>{t("reports.widgets.builder.labelOff")}</label>
-                    <Input
-                      type="text"
-                      value={switchLabelOff}
-                      onChange={(event) => setSwitchLabelOff(event.target.value)}
-                      placeholder={t("reports.widgets.builder.placeholderInactive")}
-                      className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-11"
-                    />
-                  </div>
-                </div>
-              </>
+              </WidgetBuilderMetricOptions>
+            ) : (
+              <WidgetBuilderSwitchOptions
+                switchActionType={switchActionType}
+                setSwitchActionType={setSwitchActionType}
+                switchStateKey={switchStateKey}
+                setSwitchStateKey={setSwitchStateKey}
+                switchCollection={switchCollection}
+                setSwitchCollection={setSwitchCollection}
+                switchRecordId={switchRecordId}
+                setSwitchRecordId={setSwitchRecordId}
+                switchLabelOn={switchLabelOn}
+                setSwitchLabelOn={setSwitchLabelOn}
+                switchLabelOff={switchLabelOff}
+                setSwitchLabelOff={setSwitchLabelOff}
+                dbRecordsList={dbRecordsList}
+              />
             )}
           </div>
 
           {/* Threshold alerts options for KPI/Progress */}
           {widgetType !== "switch" && !isListSummaryWidgetType(widgetType) && (
-            <div className="p-4 rounded-2xl border border-border bg-card/20 space-y-3">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <Checkbox
-                  checked={thresholdEnabled}
-                  onCheckedChange={(checked) => setThresholdEnabled(Boolean(checked))}
-                />
-                <span className="text-xs font-bold text-foreground">{t("reports.widgets.builder.enableThreshold")}</span>
-              </label>
-
-              {thresholdEnabled && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-fade-in text-start">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.triggerCondition")}</label>
-                    <FormSelect
-                      value={thresholdCondition}
-                      onChange={(value) => setThresholdCondition(value as "lt" | "gt" | "equals")}
-                      className="w-full text-xs"
-                      options={[
-                        { value: "lt", label: `< ${t("reports.widgets.builder.conditionLt")}` },
-                        { value: "gt", label: `> ${t("reports.widgets.builder.conditionGt")}` },
-                        { value: "equals", label: `= ${t("reports.widgets.builder.conditionEquals")}` }
-                      ]}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.thresholdValue")}</label>
-                    <Input
-                      type="number"
-                      value={thresholdValue}
-                      onChange={(event) => setThresholdValue(event.target.value)}
-                      placeholder={t("reports.widgets.builder.placeholderThreshold")}
-                      className="w-full text-xs rounded-lg bg-card/40 text-foreground min-h-11 py-1.5"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.alertColor")}</label>
-                    <FormSelect
-                      value={thresholdColor}
-                      onChange={(value) => setThresholdColor(value as "red" | "amber" | "yellow")}
-                      className="w-full text-xs"
-                      options={[
-                        { value: "red", label: t("reports.widgets.builder.colorRed") },
-                        { value: "amber", label: t("reports.widgets.builder.colorAmber") },
-                        { value: "yellow", label: t("reports.widgets.builder.colorYellow") }
-                      ]}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
+            <WidgetBuilderThresholdOptions
+              thresholdEnabled={thresholdEnabled}
+              setThresholdEnabled={setThresholdEnabled}
+              thresholdCondition={thresholdCondition}
+              setThresholdCondition={setThresholdCondition}
+              thresholdValue={thresholdValue}
+              setThresholdValue={setThresholdValue}
+              thresholdColor={thresholdColor}
+              setThresholdColor={setThresholdColor}
+            />
           )}
 
-          {/* Theme Palette selecting color */}
-          <div className="space-y-1.5 text-start font-sans">
-            <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.defaultColor")}</label>
-            <div className="flex flex-wrap gap-2">
-              {([
-                { id: "emerald", labelKey: "reports.widgets.builder.themeEmerald" },
-                { id: "blue", labelKey: "reports.widgets.builder.themeBlue" },
-                { id: "violet", labelKey: "reports.widgets.builder.themeViolet" },
-                { id: "amber", labelKey: "reports.widgets.builder.themeAmber" },
-                { id: "red", labelKey: "reports.widgets.builder.themeRed" },
-              ] as const).map((colorOption) => {
-                const isSelected = builderColor === colorOption.id;
-                const cMap = resolveWidgetChartHex(colorOption.id, palette);
-                return (
-                  <Button
-                    key={colorOption.id}
-                    type="button"
-                    variant="outline"
-                    onClick={() => setBuilderColor(colorOption.id)}
-                    className={`min-h-11 flex items-center gap-1.5 px-3 rounded-xl border text-xs font-bold shadow-none ${
-                      isSelected
-                        ? "border-primary ring-2 ring-primary/20 scale-105"
-                        : "border-border hover:border-muted-foreground/30 text-muted-foreground bg-card/25"
-                    }`}
-                  >
-                    <span className="w-2.5 h-2.5 rounded-full border border-black/5 flex-shrink-0" style={{ background: cMap }} />
-                    {t(colorOption.labelKey)}
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
+          <WidgetBuilderColorOptions
+            builderColor={builderColor}
+            setBuilderColor={setBuilderColor}
+          />
 
-          {/* Searchable Icon Selection Grid */}
           {widgetType === "card" && (
-            <div className="space-y-2 pt-3 border-t border-border/45 relative z-10">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
-                  {t("reports.widgets.builder.iconSelector")}
-                </label>
-                <div className="relative max-w-xs w-full">
-                  <Search className="absolute start-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground pointer-events-none" style={{ width: 14, height: 14 }} />
-                  <Input
-                    type="text"
-                    placeholder={t("reports.widgets.builder.searchIcons")}
-                    value={iconSearch}
-                    onChange={(event) => setIconSearch(event.target.value)}
-                    className="w-full ps-8 pe-3 py-1.5 text-xs rounded-lg border border-border bg-card/20 backdrop-blur-md text-foreground focus:ring-1 focus:ring-primary/20 transition-all font-semibold animate-fade-in min-h-11"
-                  />
-                </div>
-              </div>
-              {/* Icon Categories */}
-              <div className="flex flex-wrap gap-1 mb-2 select-none">
-                {(["all", "academic", "finance", "status", "general"] as const).map((tab) => (
-                  <Button
-                    key={tab}
-                    type="button"
-                    variant="outline"
-                    onClick={() => setActiveIconTab(tab)}
-                    className={`px-2 rounded-lg text-xs font-bold uppercase tracking-wider border shadow-none ${
-                      activeIconTab === tab
-                        ? "bg-primary/10 border-primary/30 text-primary"
-                        : "bg-card/30 border-border/50 text-muted-foreground hover:text-foreground hover:bg-card/50"
-                    }`}
-                  >
-                    {t(`reports.widgets.builder.cat${capitalize(tab)}` as AppTranslationKey) || tab}
-                  </Button>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(2.75rem,1fr))] gap-1.5 bg-card/20 border border-border/50 p-2.5 rounded-2xl max-h-[6.875rem] overflow-y-auto pe-1">
-                {(() => {
-                  const ICON_CATEGORIES: Record<string, string[]> = {
-                    academic: ["GraduationCap", "Users", "UserCheck", "Award", "ShieldCheck", "BookOpen"],
-                    finance: ["DollarSign", "TrendingUp", "Receipt", "Target", "PieChart", "Activity", "Briefcase", "BarChart2"],
-                    status: ["CalendarCheck", "AlertCircle", "Clock", "CheckCircle2", "Zap"],
-                    general: ["Star", "Heart"]
-                  };
-                  const filteredIcons = Object.keys(ICONS_LIST).filter((name) => {
-                    const matchesSearch = name.toLowerCase().includes(iconSearch.toLowerCase());
-                    if (!matchesSearch) return false;
-                    if (activeIconTab === "all") return true;
-                    return ICON_CATEGORIES[activeIconTab]?.includes(name) || false;
-                  });
-                  if (filteredIcons.length === 0) {
-                    return <p className="text-xs text-muted-foreground italic col-span-full py-2 text-center font-sans">{t("reports.widgets.builder.noIconsFound")}</p>;
-                  }
-                  return filteredIcons.map((iconName) => {
-                    const Icon = ICONS_LIST[iconName];
-                    const active = builderIcon === iconName;
-                    if (!Icon) return null;
-                    return (
-                      <Button
-                        key={iconName}
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setBuilderIcon(iconName)}
-                        className={`rounded-xl border flex items-center justify-center hover:scale-105 shadow-none ${
-                          active ? "border-primary bg-primary/10 text-primary shadow-sm" : "border-border text-muted-foreground hover:text-foreground"
-                        }`}
-                        title={iconName}
-                      >
-                        <Icon className="w-4 h-4" />
-                      </Button>
-                    );
-                  });
-                })()}
-              </div>
-            </div>
+            <WidgetBuilderIconPicker
+              builderIcon={builderIcon}
+              setBuilderIcon={setBuilderIcon}
+              iconSearch={iconSearch}
+              setIconSearch={setIconSearch}
+              activeIconTab={activeIconTab}
+              setActiveIconTab={setActiveIconTab}
+            />
           )}
 
         </div>
 
-        {/* Scalability Testing Preview Column */}
-        <div className="p-4 rounded-2xl border border-border bg-card/10 backdrop-blur-xl flex flex-col justify-between relative min-h-[21.875rem]">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between text-start">
-              <span className="text-xs font-black text-muted-foreground uppercase tracking-widest block">{t("reports.widgets.builder.testerPreview")}</span>
-              <span className="text-xs text-primary font-bold">{scalerSize}x{scalerSize}px</span>
-            </div>
-
-            {/* Size slider widget scalability demonstrator */}
-            <div className="space-y-1 bg-card/30 p-2.5 rounded-xl border border-border/50">
-              <label className="text-xs font-black uppercase tracking-wider text-muted-foreground block">{t("reports.widgets.builder.dragToScale")}</label>
-              <input
-                type="range"
-                min={100}
-                max={250}
-                value={scalerSize}
-                onChange={(event) => setScalerSize(Number(event.target.value))}
-                className="w-full accent-primary cursor-pointer"
-              />
-            </div>
-
-            {/* Centered sizing container */}
-            <div className="flex items-center justify-center py-4 bg-muted/10 rounded-2xl border border-dashed border-border/60 min-h-[13.75rem]">
-              <div 
-                className="overflow-hidden border border-border shadow-lg rounded-3xl transition-all duration-100 flex items-center justify-center bg-card/40 backdrop-blur-md animate-fade-in"
-                style={{ width: scalerSize, height: scalerSize }}
-              >
-                <CustomWidgetRenderer
-                  widget={previewWidget}
-                  collections={collections}
-                  isCompact={scalerSize < 140}
-                  onSwitchToggle={handleToggleSwitchStateLocal}
-                  onMetricClick={() => {}}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancelEdit}
-              className="flex-1 h-auto py-2.5 rounded-xl border border-border bg-card/50 hover:bg-muted text-foreground font-black text-xs uppercase tracking-wider shadow-none"
-            >
-              {t("reports.widgets.builder.cancel")}
-            </Button>
-            <Button
-              type="button"
-              disabled={!builderTitle}
-              onClick={() => {
-                onSaveWidget({
-                  id: editWidgetConfig?.id || "widget-" + Date.now(),
-                  title: builderTitle,
-                  category: editWidgetConfig?.category || category,
-                  collection: builderCollection,
-                  widgetType,
-                  operation: builderOperation,
-                  targetField: builderTargetField,
-                  filterField: builderFilterField,
-                  filterOperator: builderFilterOperator,
-                  filterValue: builderFilterValue,
-                  color: builderColor,
-                  isPinnedToDashboard: editWidgetConfig?.isPinnedToDashboard || false,
-                  thresholdEnabled,
-                  thresholdCondition,
-                  thresholdValue: thresholdValue ? Number(thresholdValue) : undefined,
-                  thresholdColor,
-                  switchActionType,
-                  switchStateKey,
-                  switchCollection,
-                  switchRecordId,
-                  switchField,
-                  switchLabelOn,
-                  switchLabelOff,
-                  icon: widgetType === "card" ? builderIcon : undefined,
-                  subTextType: widgetType === "card" ? subTextType : undefined,
-                  fixedSubText: (widgetType === "card" && subTextType === "fixed") ? fixedSubText : undefined,
-                  trend: widgetType === "card" ? trend : undefined,
-                  trendType: widgetType === "card" ? trendType : undefined,
-                  role: (widgetType === "card" && mode === "dashboard") ? builderRole : undefined
-                });
-              }}
-              className="flex-[2] h-auto py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xs uppercase tracking-wider disabled:opacity-40 shadow-lg hover:shadow-primary/20 shadow-primary/10"
-            >
-              {editWidgetConfig ? t("reports.widgets.builder.updateWidget") : t("reports.widgets.builder.createWidget")}
-            </Button>
-          </div>
-        </div>
+        <WidgetBuilderPreview
+          previewWidget={previewWidget}
+          collections={collections}
+          scalerSize={scalerSize}
+          setScalerSize={setScalerSize}
+          onCancelEdit={onCancelEdit}
+          onSave={handleSaveWidget}
+          canSave={Boolean(builderTitle)}
+          isEditing={Boolean(editWidgetConfig)}
+          onSwitchToggle={handleToggleSwitchStateLocal}
+        />
       </div>
     </div>
   );

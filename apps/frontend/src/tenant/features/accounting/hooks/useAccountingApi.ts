@@ -30,7 +30,7 @@ export function useAccountingAccounts(options?: { enabled?: boolean; includeDele
     responseKey: 'accounts',
     collectionName: 'accounting_accounts',
     enabled: options?.enabled,
-    isSuccessQuery: (res) => res.isSuccess && (res.data?.length ?? 0) > 0,
+    mirrorToLocalCache: false,
   });
 }
 
@@ -46,7 +46,7 @@ export function useAccountingEntries(options?: { enabled?: boolean; includeDelet
     responseKey: 'entries',
     collectionName: 'accounting_entries',
     enabled: options?.enabled,
-    isSuccessQuery: (res) => res.isSuccess && (res.data?.length ?? 0) > 0,
+    mirrorToLocalCache: false,
   });
 }
 
@@ -61,7 +61,7 @@ export function useAccountingFiscalYears(options?: { enabled?: boolean }) {
     responseKey: 'fiscalYears',
     collectionName: 'accounting_fiscal_years',
     enabled: options?.enabled,
-    isSuccessQuery: (res) => res.isSuccess && (res.data?.length ?? 0) > 0,
+    mirrorToLocalCache: false,
   });
 }
 

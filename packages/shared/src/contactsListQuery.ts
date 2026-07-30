@@ -1,11 +1,59 @@
+import { z } from 'zod';
+import { baseListQuerySchema } from './apiSchemas.js';
 import type { Contact } from './contactTypes.js';
 import { contactMatchesSearch } from './contactsSearchUtils.js';
 import { filterActiveContacts, isContactDeleted } from './contactSoftDelete.js';
 import { compareByField, getPrimaryEmail, getPrimaryPhone, hasWhatsApp, paginateArray } from './utils.js';
 
-/** Work-directory quick presets (toolbar chips). */
-export type ContactsQuickFilter = 'all' | 'whatsapp' | 'syed' | 'missingInfo';
+const contactsQuickFilterSchema = z.enum(['all', 'whatsapp', 'syed', 'missingInfo']);
 
+/** Work-directory quick presets (toolbar chips). */
+export type ContactsQuickFilter = z.infer<typeof contactsQuickFilterSchema>;
+
+const booleanQueryFlag = z
+  .preprocess((value) => {
+    if (value === undefined) return undefined;
+    return value === 'true' || value === true;
+  }, z.boolean())
+  .optional();
+
+/** Validates and transforms the contacts list query received over HTTP. */
+export const contactsListQuerySchema = baseListQuerySchema.extend({
+  gender: z.string().optional(),
+  hasPhone: booleanQueryFlag,
+  hasReachable: booleanQueryFlag,
+  quickFilter: contactsQuickFilterSchema.optional(),
+  excludeIds: z
+    .string()
+    .max(4000)
+    .optional()
+    .transform((value) =>
+      value
+        ? value
+            .split(',')
+            .map((id) => id.trim())
+            .filter(Boolean)
+        : undefined,
+    ),
+  excludeLinkedModules: z
+    .string()
+    .optional()
+    .transform((value) => {
+      if (!value?.trim()) return undefined;
+      const allowed = new Set(['students', 'teachers']);
+      const modules = value
+        .split(',')
+        .map((part) => part.trim())
+        .filter((part): part is 'students' | 'teachers' => allowed.has(part));
+      return modules.length > 0 ? modules : undefined;
+    }),
+});
+
+/**
+ * Programmatic contacts query used after wire values have been transformed.
+ * Its shared fields align with `contactsListQuerySchema`; the backend list router
+ * normalizes `includeDeleted`, while programmatic callers may also use `hasEmail`.
+ */
 export interface ContactsListQuery {
   page?: number;
   limit?: number;

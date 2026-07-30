@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
+import { accountantToken, teacherToken } from './helpers/tokens.js';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
@@ -49,30 +50,6 @@ vi.mock('../services/financeService.js', () => ({
   bulkRestorePayments: (...args: unknown[]) => mockBulkRestorePayments(...args),
 }));
 
-function accountantToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-accountant',
-    email: 'finance@test.com',
-    name: 'Finance User',
-    role: 'accountant',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
-
-function teacherToken(app: Awaited<ReturnType<typeof buildApp>>): string {
-  return app.jwt.sign({
-    id: 'u-teacher',
-    email: 'teacher@test.com',
-    name: 'Teacher',
-    role: 'teacher',
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-}
-
 describe('finance REST routes integration', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
@@ -119,7 +96,7 @@ describe('finance REST routes integration', () => {
       url: '/api/finance/invoices',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${accountantToken(app)}`,
+        authorization: `Bearer ${accountantToken(app, { email: 'finance@test.com', name: 'Finance User' })}`,
       },
     });
     expect(res.statusCode).toBe(200);
@@ -140,7 +117,7 @@ describe('finance REST routes integration', () => {
       url: '/api/finance/invoices?page=1&includeDeleted=true',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${accountantToken(app)}`,
+        authorization: `Bearer ${accountantToken(app, { email: 'finance@test.com', name: 'Finance User' })}`,
       },
     });
     expect(res.statusCode).toBe(200);
@@ -155,7 +132,7 @@ describe('finance REST routes integration', () => {
       url: '/api/finance/payments?page=1&includeDeleted=true',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${accountantToken(app)}`,
+        authorization: `Bearer ${accountantToken(app, { email: 'finance@test.com', name: 'Finance User' })}`,
       },
     });
     expect(res.statusCode).toBe(200);
@@ -181,7 +158,7 @@ describe('finance REST routes integration', () => {
     const app = await buildApp();
     const headers = {
       host: 'demo.localhost',
-      authorization: `Bearer ${accountantToken(app)}`,
+      authorization: `Bearer ${accountantToken(app, { email: 'finance@test.com', name: 'Finance User' })}`,
     };
     const deleted = await app.inject({
       method: 'POST',
@@ -207,7 +184,7 @@ describe('finance REST routes integration', () => {
     const app = await buildApp();
     const headers = {
       host: 'demo.localhost',
-      authorization: `Bearer ${accountantToken(app)}`,
+      authorization: `Bearer ${accountantToken(app, { email: 'finance@test.com', name: 'Finance User' })}`,
     };
     const deleted = await app.inject({
       method: 'POST',

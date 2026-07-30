@@ -1,10 +1,6 @@
 import React, { useMemo, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import {
-  Edit2, MessageCircle, Phone, MessageSquare, Mail, FileText,
-  Calendar, User, Clock, BookOpen, GraduationCap
-} from "lucide-react";
+import { Calendar, Clock, Edit2, GraduationCap, User } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import {
   DEFAULT_STUDENT_ENABLED_TABS,
@@ -13,7 +9,6 @@ import {
   calcAge,
   formatDate,
   formatDateTime,
-  formatMoney,
   getPrimaryPhone,
   getPrimaryEmail,
   toMessagingRecipient,
@@ -21,109 +16,18 @@ import {
 } from "@mms/shared";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useContactsByIds } from '@/tenant/hooks/collections/contacts';
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
-import { UserAvatar } from "@/components/ui/UserAvatar";
-import { GrBadge } from "@/tenant/features/students/components/GrBadge";
+import { GuardianContactCard } from "@/tenant/features/students/components/GuardianContactCard";
+import { StudentDetailAttributeRow } from "@/tenant/features/students/components/StudentDetailAttributeRow";
+import { StudentDetailHero } from "@/tenant/features/students/components/StudentDetailHero";
+import { StudentDetailNotesSection } from "@/tenant/features/students/components/StudentDetailNotesSection";
+import { StudentDetailQuickActions } from "@/tenant/features/students/components/StudentDetailQuickActions";
+import { StudentDetailSessionsSection } from "@/tenant/features/students/components/StudentDetailSessionsSection";
 
-function cleanTelUri(phone: string): string {
-  return `tel:${phone.replace(/[^\d+]/g, "")}`;
-}
-
-interface GuardianContactCardProps {
-  label: string;
-  badgeCode: string;
-  badgeBg: string;
-  badgeText: string;
-  name: string;
-  phone?: string;
-  onWhatsApp?: () => void;
-  onSms?: () => void;
-}
-
-function GuardianContactCard({ label, badgeCode, badgeBg, badgeText, name, phone, onWhatsApp, onSms }: GuardianContactCardProps) {
-  const { t } = useTranslation();
-  return (
-    <Card accentColor="info" className="p-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-3 text-start ms-1">
-          <div className={`w-8 h-8 rounded-lg ${badgeBg} ${badgeText} flex items-center justify-center text-xs font-bold shrink-0`}>
-            {badgeCode}
-          </div>
-          <div className="min-w-0">
-            <span className={`text-xs font-black uppercase tracking-widest ${badgeText} mb-0.5 block`}>{label}</span>
-            <h5 className="text-xs font-bold text-foreground truncate">{name}</h5>
-            {phone && <p className="text-xs text-muted-foreground mt-0.5 truncate">{phone}</p>}
-          </div>
-        </div>
-        {phone && (
-          <div className="flex shrink-0 items-center gap-1 me-1">
-            {onWhatsApp && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={onWhatsApp}
-                className="rounded-lg border border-border hover:bg-success/10 hover:border-success/30 text-success transition-colors"
-                title={t("students.list.actionWhatsApp")}
-                aria-label={t("students.list.actionWhatsApp")}
-              >
-                <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
-              </Button>
-            )}
-            {onSms && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={onSms}
-                className="rounded-lg border border-border hover:bg-info/10 hover:border-info/30 text-info transition-colors"
-                title={t("students.list.actionSms")}
-                aria-label={t("students.list.actionSms")}
-              >
-                <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
-              </Button>
-            )}
-            <a
-              href={cleanTelUri(phone)}
-              className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-              aria-label={t("students.detail.callPhone", { phone })}
-              title={t("students.detail.callPhone", { phone })}
-            >
-              <Phone className="w-3.5 h-3.5" aria-hidden="true" />
-            </a>
-          </div>
-        )}
-      </div>
-    </Card>
-  );
-}
-
-interface StudentDetailAttributeRowProps {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: React.ReactNode;
-}
-
-function StudentDetailAttributeRow({ icon: Icon, label, value }: StudentDetailAttributeRowProps) {
-  return (
-    <div className="relative overflow-hidden group/row flex items-center gap-3 p-3 bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-200">
-      <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/row:bg-primary" />
-      <div className="p-2 rounded-lg bg-muted text-muted-foreground ms-1">
-        <Icon className="w-3.5 h-3.5" />
-      </div>
-      <div className="flex-1 min-w-0 text-start">
-        <span className="block text-xs font-bold text-muted-foreground uppercase tracking-tight mb-0.5">{label}</span>
-        <span className="text-xs font-semibold text-foreground">{value}</span>
-      </div>
-    </div>
-  );
-}
-
-interface StudentDetailProps {
+export interface StudentDetailProps {
   student: Student;
   onClose: () => void;
   onEdit?: (student: Student) => void;
@@ -237,66 +141,14 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
           </div>
         }
       >
-        {/* Hero card */}
-        <div className="relative overflow-hidden group/hero flex items-center gap-4 p-4 rounded-2xl bg-muted/35 border border-border/50 shadow-sm transition-all duration-200">
-          <UserAvatar id={String(student.id)} name={student.name || ""} className="w-14 h-14 rounded-2xl text-xl font-bold flex-shrink-0 shadow-sm" />
-          <div className="flex-1 min-w-0">
-            <h3 className="text-base font-bold text-foreground truncate leading-tight">{student.name}</h3>
-            <div className="flex flex-wrap gap-1.5 mt-2 items-center">
-              <StatusBadge status={student.status || "active"} config={statusBadgeConfig} />
-              <GrBadge grNumber={student.grNumber} />
-            </div>
-          </div>
-        </div>
+        <StudentDetailHero student={student} statusBadgeConfig={statusBadgeConfig} />
 
-        {/* Quick communication */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {primaryPhone && (
-            <Button
-              variant="ghost"
-              asChild
-              className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-info/10 hover:border-info/30 transition-all text-info text-center shadow-none"
-            >
-              <a href={cleanTelUri(primaryPhone)}>
-                <Phone className="w-4 h-4 mx-auto" />
-                <span className="text-xs font-bold">{t("students.detail.call")}</span>
-              </a>
-            </Button>
-          )}
-          {primaryPhone && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => openComposer("whatsapp", [toMessagingRecipient({ ...student, phone: primaryPhone })])}
-              className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-success/10 hover:border-success/30 transition-all text-success text-center cursor-pointer shadow-none"
-            >
-              <MessageCircle className="w-4 h-4 mx-auto" />
-              <span className="text-xs font-bold">{t("students.list.actionWhatsApp")}</span>
-            </Button>
-          )}
-          {primaryPhone && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => openComposer("sms", [toMessagingRecipient({ ...student, phone: primaryPhone })])}
-              className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-warning/10 hover:border-warning/30 transition-all text-warning text-center cursor-pointer shadow-none"
-            >
-              <MessageSquare className="w-4 h-4 mx-auto" />
-              <span className="text-xs font-bold">{t("students.list.actionSms")}</span>
-            </Button>
-          )}
-          {primaryEmail && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => openComposer("email", [toMessagingRecipient({ ...student, name: student.name || "", email: primaryEmail })])}
-              className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/30 transition-all text-primary text-center cursor-pointer shadow-none"
-            >
-              <Mail className="w-4 h-4 mx-auto" />
-              <span className="text-xs font-bold">{t("students.list.actionEmail")}</span>
-            </Button>
-          )}
-        </div>
+        <StudentDetailQuickActions
+          student={student}
+          primaryPhone={primaryPhone}
+          primaryEmail={primaryEmail}
+          openComposer={openComposer}
+        />
 
         {/* Ordered Attributes & Connections list */}
         {sortedEnabledFields.some((field) => field.key === "fatherLink" ? (fatherContact || student.fatherName) : field.key === "motherLink" ? (motherContact || student.motherName) : field.key === "guardianLink" ? (guardianContact || student.guardianName) : true) && (
@@ -401,65 +253,9 @@ export default function StudentDetail({ student, onClose, onEdit }: StudentDetai
         )}
 
         {/* Internal Notes */}
-        {student.notes && (
-          <div className="space-y-2">
-            <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest ps-1">{t("students.form.notesSection")}</h4>
-            <div className="p-3.5 rounded-2xl border border-border/60 bg-card/45 backdrop-blur-xs text-xs text-foreground space-y-1">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <FileText className="w-3.5 h-3.5 text-primary" />
-                <span className="text-xs font-bold uppercase">{t("students.form.notesSection")}</span>
-              </div>
-              <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">{student.notes}</p>
-            </div>
-          </div>
-        )}
+        {student.notes && <StudentDetailNotesSection notes={student.notes} />}
 
-        {/* Sessions details */}
-        <div className="space-y-3">
-          <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest ps-1">{t("students.detail.enrolledSessions", { count: enrolledSessionDetails.length })}</h4>
-          {enrolledSessionDetails.length === 0 ? (
-            <div className="p-6 rounded-2xl border border-dashed border-border bg-muted/10 text-center">
-              <BookOpen className="w-8 h-8 mx-auto text-muted-foreground/30 mb-2" />
-              <p className="text-xs font-bold text-muted-foreground">{t("students.detail.notEnrolled")}</p>
-              <p className="text-xs text-muted-foreground mt-1">{t("students.detail.notEnrolledDesc")}</p>
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {enrolledSessionDetails.map((session) => (
-                <Card
-                  key={session.id}
-                  accentColor="primary"
-                  className="p-3.5 space-y-2"
-                >
-                  <div className="flex items-center justify-between ms-1">
-                    <span className="bg-primary/5 text-primary border border-primary/10 text-xs px-1.5 py-0.5 rounded-full font-bold uppercase">
-                      {session.type}
-                    </span>
-                    <span className="text-xs font-bold text-muted-foreground">
-                      {t("students.detail.sessionFee", { amount: formatMoney(session.baseFee ?? 0, session.currency) })}
-                    </span>
-                  </div>
-                  <h5 className="text-xs font-bold text-foreground ms-1">{session.name}</h5>
-                  {session.classes && session.classes.length > 0 ? (
-                    <div className="text-xs text-muted-foreground space-y-1 bg-muted/40 p-2 rounded-lg ms-1">
-                      <p className="font-semibold uppercase tracking-wider text-xs text-muted-foreground/80">{t("students.detail.classAssignments")}</p>
-                      {session.classes.map((sessionClass: { id: string; name?: string; teacherName?: string; room?: string; schedule?: string }) => (
-                        <div key={sessionClass.id} className="flex justify-between gap-1.5">
-                          <span className="font-medium text-foreground">{t("students.detail.classByTeacher", { name: sessionClass.name ?? "", teacher: sessionClass.teacherName ?? "" })}</span>
-                          <span>{t("students.detail.classRoom", { room: sessionClass.room || "—" })}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground italic ms-1">{t("students.detail.noClassesConfigured")}</p>
-                  )}
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-
-
+        <StudentDetailSessionsSection sessions={enrolledSessionDetails} />
       </DetailDrawerShell>
 
       {messagingTarget && (

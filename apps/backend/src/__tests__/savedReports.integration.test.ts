@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../app.js';
+import { adminToken, assistantTeacherToken, bearerAuth } from './helpers/tokens.js';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
@@ -53,19 +54,6 @@ const REPORT = {
   createdAt: '2026-07-30T00:00:00.000Z',
 };
 
-function authorization(app: FastifyInstance, role: string): string {
-  const token = app.jwt.sign({
-    id: `u-${role}`,
-    email: `${role}@demo.test`,
-    name: role === 'admin' ? 'Admin User' : 'Assistant User',
-    role,
-    workspaceSubdomain: 'demo',
-    twoFactorVerified: true,
-    tokenType: 'access',
-  });
-  return `Bearer ${token}`;
-}
-
 describe('generic saved-reports REST routes', () => {
   let app: FastifyInstance;
 
@@ -101,7 +89,7 @@ describe('generic saved-reports REST routes', () => {
       url: '/api/saved-reports?category=students',
       headers: {
         host: 'demo.localhost',
-        authorization: authorization(app, 'admin'),
+        authorization: bearerAuth(adminToken(app, { email: 'admin@demo.test', name: 'Admin User' })),
       },
     });
     expect(response.statusCode).toBe(200);
@@ -115,7 +103,7 @@ describe('generic saved-reports REST routes', () => {
       url: '/api/saved-reports',
       headers: {
         host: 'demo.localhost',
-        authorization: authorization(app, 'admin'),
+        authorization: bearerAuth(adminToken(app, { email: 'admin@demo.test', name: 'Admin User' })),
       },
       payload: {
         name: 'Active students',
@@ -143,7 +131,7 @@ describe('generic saved-reports REST routes', () => {
   it('runs and deletes an owned report', async () => {
     const headers = {
       host: 'demo.localhost',
-      authorization: authorization(app, 'admin'),
+      authorization: bearerAuth(adminToken(app, { email: 'admin@demo.test', name: 'Admin User' })),
     };
     const runResponse = await app.inject({
       method: 'POST',
@@ -170,7 +158,10 @@ describe('generic saved-reports REST routes', () => {
       url: '/api/saved-reports?category=faculty',
       headers: {
         host: 'demo.localhost',
-        authorization: authorization(app, 'assistant_teacher'),
+        authorization: bearerAuth(assistantTeacherToken(app, {
+          email: 'assistant_teacher@demo.test',
+          name: 'Assistant User',
+        })),
       },
     });
     expect(response.statusCode).toBe(403);
@@ -182,7 +173,7 @@ describe('generic saved-reports REST routes', () => {
     mockDeleteSavedReport.mockResolvedValueOnce(false);
     const headers = {
       host: 'demo.localhost',
-      authorization: authorization(app, 'admin'),
+      authorization: bearerAuth(adminToken(app, { email: 'admin@demo.test', name: 'Admin User' })),
     };
 
     const runResponse = await app.inject({

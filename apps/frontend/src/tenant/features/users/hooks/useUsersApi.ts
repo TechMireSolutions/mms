@@ -17,6 +17,7 @@ export function useUsers(options?: { enabled?: boolean; includeDeleted?: boolean
     responseKey: 'users',
     collectionName: 'users',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 
@@ -35,6 +36,7 @@ export function useActivityLogs(options?: { enabled?: boolean }) {
     collectionName: 'user_activity_logs',
     staleTime: 15_000,
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 

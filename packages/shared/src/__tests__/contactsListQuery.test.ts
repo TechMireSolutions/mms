@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filterContactsForQuery } from '../contactsListQuery.js';
+import { contactsListQuerySchema, filterContactsForQuery } from '../contactsListQuery.js';
 import type { Contact } from '../contactTypes.js';
 
 function contact(partial: Partial<Contact> & Pick<Contact, 'id' | 'name'>): Contact {
@@ -9,6 +9,36 @@ function contact(partial: Partial<Contact> & Pick<Contact, 'id' | 'name'>): Cont
     ...partial,
   } as Contact;
 }
+
+describe('contactsListQuerySchema', () => {
+  it('rejects an invalid quick filter', () => {
+    expect(contactsListQuerySchema.safeParse({ quickFilter: 'unknown' }).success).toBe(false);
+  });
+
+  it('transforms comma-separated exclusions', () => {
+    expect(
+      contactsListQuerySchema.parse({
+        excludeIds: ' 1, 2, ,3 ',
+        excludeLinkedModules: 'students,unknown,teachers',
+      }),
+    ).toMatchObject({
+      excludeIds: ['1', '2', '3'],
+      excludeLinkedModules: ['students', 'teachers'],
+    });
+  });
+
+  it('transforms boolean query flags', () => {
+    expect(
+      contactsListQuerySchema.parse({
+        hasPhone: 'true',
+        hasReachable: 'false',
+      }),
+    ).toMatchObject({
+      hasPhone: true,
+      hasReachable: false,
+    });
+  });
+});
 
 describe('filterContactsForQuery gender', () => {
   const rows = [

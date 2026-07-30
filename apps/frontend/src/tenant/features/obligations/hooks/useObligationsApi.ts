@@ -34,6 +34,7 @@ export function useObligationsTypes(options?: { enabled?: boolean }) {
     responseKey: 'types',
     collectionName: 'obligation_types',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 
@@ -48,6 +49,7 @@ export function useObligationsMujtahids(options?: { enabled?: boolean }) {
     responseKey: 'mujtahids',
     collectionName: 'mujtahids',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 
@@ -62,6 +64,7 @@ export function useObligationsReps(options?: { enabled?: boolean }) {
     responseKey: 'reps',
     collectionName: 'mujtahid_reps',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 
@@ -76,6 +79,7 @@ export function useObligationsWakala(options?: { enabled?: boolean }) {
     responseKey: 'wakalaTypes',
     collectionName: 'wakala_types',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 
@@ -90,6 +94,7 @@ export function useObligationsDistributions(options?: { enabled?: boolean }) {
     responseKey: 'distributions',
     collectionName: 'obligation_distributions',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 
@@ -105,6 +110,7 @@ export function useObligationsCollections(options?: { enabled?: boolean; include
     responseKey: 'collections',
     collectionName: 'obligation_collections',
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 

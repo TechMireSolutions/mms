@@ -60,6 +60,7 @@ export function useAttendanceRecords(options?: { enabled?: boolean }) {
     defaultData: ATTENDANCE_RECORDS,
     staleTime: 15_000,
     enabled: options?.enabled,
+    mirrorToLocalCache: false,
   });
 }
 

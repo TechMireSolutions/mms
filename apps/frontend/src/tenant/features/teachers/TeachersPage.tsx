@@ -5,46 +5,28 @@ import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserPlus, School, Filter, ChevronDown } from 'lucide-react';
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
-  DropdownMenuRadioGroup, DropdownMenuRadioItem,
-} from '@/components/ui/dropdown-menu';
+import { UserPlus, School } from 'lucide-react';
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
-import { SearchBar } from '@/components/ui/SearchBar';
-import { FilterChips } from '@/components/ui/FilterChips';
 import { ActionButton } from '@/components/ui/ActionButton';
-import { Button } from '@/components/ui/button';
-import { ModuleTrashToggle } from '@/components/ui/ModuleTrashToggle';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { ErrorState } from '@/components/ui/ErrorState';
-import { TeacherList, type TeacherSortField } from "@/tenant/features/teachers/components/TeacherList";
+import type { TeacherSortField } from "@/tenant/features/teachers/components/TeacherList";
 import { TeacherForm } from "@/tenant/features/teachers/components/TeacherForm";
 import { TeachersSettings as TeachersSettingsPanel } from "@/tenant/features/teachers/components/TeachersSettings";
+import { TeachersWorkTier } from "@/tenant/features/teachers/components/TeachersWorkTier";
 import type { Teacher } from '@/lib/data/teachersData';
-import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES, TEACHERS_MODULE_MANIFEST, type AppTranslationKey, type TeacherRecord, toMessagingRecipient, toTitleCase } from '@mms/shared';
+import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES, TEACHERS_MODULE_MANIFEST, type TeacherRecord, toMessagingRecipient } from '@mms/shared';
 import ModuleReports from '@/tenant/features/reports/components/ModuleReports';
 import KPISummary from '@/tenant/features/reports/components/KPISummary';
 import { useTeacherCount } from '@/tenant/features/teachers/hooks/useTeacherCount';
 import { useTeachersPaginated, useTeacherMutations } from '@/tenant/features/teachers/hooks/useTeachers';
 import { useTeacherColumnLayout } from '@/tenant/features/teachers/hooks/useTeacherColumnLayout';
-import { ModuleColumnCustomizer } from '@/components/ui/ModuleColumnCustomizer';
 import { TeachersCommandMetrics } from "@/tenant/features/teachers/components/TeachersCommandMetrics";
-import { ListPagination } from "@/components/ui/ListPagination";
-import { TableSkeleton } from "@/components/ui/LoadingState";
 import { useTeacherConfig } from '@/hooks/useStandardModuleConfig';
 import { notify } from '@/lib/notify';
 import { useMessageComposerState } from '@/hooks/useMessageComposerState';
 
 const MessageComposer = React.lazy(() => import('@/components/ui/MessageComposer'));
-
-function teacherStatusLabel(t: (key: AppTranslationKey) => string, status: string): string {
-  const key = `teachers.status.${status}` as AppTranslationKey;
-  const translatedStatus = t(key);
-  return translatedStatus === key ? toTitleCase(status) : translatedStatus;
-}
 
 /**
  * Teachers — faculty roster and profiles. Standard 3-tier layout (Work | Reports | Setup).
@@ -165,21 +147,6 @@ export default function Teachers(): React.JSX.Element {
         : [...selectedStatuses, status],
     );
 
-  const filterChips = [
-    ...filterStatus.map((status) => ({
-      key: status,
-      label: teacherStatusLabel(t, status),
-      onRemove: () => toggleStatus(status),
-    })),
-    ...(filterSpecialization
-      ? [{
-          key: 'specialization',
-          label: filterSpecialization,
-          onRemove: () => setFilterSpecialization(''),
-        }]
-      : []),
-  ];
-
   const handleSaveTeacher = async (teacherToSave: Teacher) => {
     if (editTeacher) {
       await updateTeacher.mutateAsync({
@@ -299,172 +266,54 @@ export default function Teachers(): React.JSX.Element {
       >
         <AnimatePresence mode="wait">
           {activeTab === 'work' ? (
-            <motion.div
-              key="work"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
-              className="space-y-5"
-            >
-              <div className="flex flex-col sm:flex-row gap-3 bg-card/40 backdrop-blur-xl border border-border/50 p-3 rounded-2xl shadow-sm">
-                <SearchBar
-                  value={search}
-                  onChange={setSearch}
-                  placeholder={t('teachers.searchPlaceholder')}
-                  className="flex-1"
-                />
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className={`flex items-center gap-2 px-3.5 min-h-11 rounded-xl border text-sm font-medium transition-colors ${
-                        filterStatus.length > 0
-                          ? 'border-primary/30 bg-primary/5 text-primary'
-                          : 'border-border bg-card text-foreground hover:bg-muted'
-                      }`}
-                    >
-                      <Filter className="w-3.5 h-3.5" />
-                      {t('teachers.filter.status')}
-                      {filterStatus.length > 0 && (
-                        <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
-                          {filterStatus.length}
-                        </span>
-                      )}
-                      <ChevronDown className="w-3 h-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44">
-                    <DropdownMenuLabel className="text-xs">{t('teachers.filter.status')}</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {statusOptions.map((status) => (
-                      <DropdownMenuCheckboxItem
-                        key={status}
-                        checked={filterStatus.includes(status)}
-                        onCheckedChange={() => toggleStatus(status)}
-                      >
-                        {teacherStatusLabel(t, status)}
-                      </DropdownMenuCheckboxItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className={`flex items-center gap-2 px-3.5 min-h-11 rounded-xl border text-sm font-medium transition-colors ${
-                        filterSpecialization
-                          ? 'border-primary/30 bg-primary/5 text-primary'
-                          : 'border-border bg-card text-foreground hover:bg-muted'
-                      }`}
-                    >
-                      {filterSpecialization || t('teachers.filter.specialization')}
-                      <ChevronDown className="w-3 h-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuRadioGroup
-                      value={filterSpecialization}
-                      onValueChange={setFilterSpecialization}
-                    >
-                      <DropdownMenuRadioItem value="">
-                        {t('teachers.filter.allSpecializations')}
-                      </DropdownMenuRadioItem>
-                      {specializationOptions.map((specialization) => (
-                        <DropdownMenuRadioItem key={specialization} value={specialization}>
-                          {specialization}
-                        </DropdownMenuRadioItem>
-                      ))}
-                    </DropdownMenuRadioGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                <ModuleColumnCustomizer
-                  columnRegistry={columnRegistry}
-                  updateUserColumnLayout={updateUserColumnLayout}
-                  labels={customizerLabels}
-                />
-
-                {canDelete && (
-                  <ModuleTrashToggle
-                    showDeleted={showDeleted}
-                    onToggle={() => setShowDeleted((previous) => !previous)}
-                    showActiveLabel={t('teachers.showActive')}
-                    showDeletedLabel={t('teachers.showDeleted')}
-                    className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
-                      showDeleted
-                        ? 'border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10'
-                        : 'border-border bg-card text-muted-foreground hover:text-foreground'
-                    }`}
-                  />
-                )}
-              </div>
-
-              <FilterChips
-                chips={filterChips}
-                onClearAll={() => {
-                  setFilterStatus([]);
-                  setFilterSpecialization('');
-                }}
-              />
-
-              <ErrorBoundary>
-                {isWorkPageLoading ? (
-                  <TableSkeleton rows={6} cols={columnRegistry.length} />
-                ) : isWorkPageError ? (
-                  <ErrorState
-                    title={t('teachers.loadFailed')}
-                    onRetry={() => void refetchWorkPage()}
-                  />
-                ) : (
-                  <>
-                    <TeacherList
-                      teachers={filteredTeachers}
-                      onEdit={(teacher) => { setEditTeacher(teacher); setShowForm(true); }}
-                      onDelete={handleDelete}
-                      onRestore={handleRestore}
-                      onBulkDelete={handleBulkDelete}
-                      onBulkRestore={handleBulkRestore}
-                      onBulkStatusChange={showDeleted ? undefined : handleBulkStatusChange}
-                      onWhatsApp={showDeleted ? undefined : handleWhatsApp}
-                      onSms={showDeleted ? undefined : handleSms}
-                      onEmail={showDeleted ? undefined : handleEmail}
-                      canWrite={canWrite}
-                      canDelete={canDelete}
-                      showDeleted={showDeleted}
-                      selectionResetKey={`${listPage}:${search}:${filterStatus.join(',')}:${filterSpecialization}:${sortField}:${sortDir}`}
-                      isColumnVisible={isColumnVisible}
-                      getColumnWidth={getColumnWidth}
-                      onColumnResize={setColumnWidth}
-                      sortField={sortField}
-                      sortDir={sortDir}
-                      onSortChange={(field, dir) => {
-                        setSortField(field);
-                        setSortDir(dir);
-                      }}
-                    />
-                    {useServerWork && workPageData && (
-                      <ListPagination
-                        page={workPageData.page}
-                        total={workPageData.total}
-                        limit={workPageData.limit}
-                        hasMore={workPageData.hasMore}
-                        onPageChange={setListPage}
-                        i18nNamespace="teachers"
-                        variant="range"
-                      />
-                    )}
-                    {useServerWork && isWorkPageFetching && (
-                      <p className="text-xs text-muted-foreground px-1">{t('common.loading')}</p>
-                    )}
-                  </>
-                )}
-              </ErrorBoundary>
-            </motion.div>
+            <TeachersWorkTier
+              search={search}
+              filterStatus={filterStatus}
+              filterSpecialization={filterSpecialization}
+              statusOptions={statusOptions}
+              specializationOptions={specializationOptions}
+              showDeleted={showDeleted}
+              canWrite={canWrite}
+              canDelete={canDelete}
+              columnRegistry={columnRegistry}
+              updateUserColumnLayout={updateUserColumnLayout}
+              customizerLabels={customizerLabels}
+              teachers={filteredTeachers}
+              workPageData={workPageData}
+              isWorkPageLoading={isWorkPageLoading}
+              isWorkPageError={isWorkPageError}
+              isWorkPageFetching={isWorkPageFetching}
+              useServerWork={useServerWork}
+              selectionResetKey={`${listPage}:${search}:${filterStatus.join(',')}:${filterSpecialization}:${sortField}:${sortDir}`}
+              sortField={sortField}
+              sortDir={sortDir}
+              isColumnVisible={isColumnVisible}
+              getColumnWidth={getColumnWidth}
+              onColumnResize={setColumnWidth}
+              onSearchChange={setSearch}
+              onToggleStatus={toggleStatus}
+              onSpecializationChange={setFilterSpecialization}
+              onToggleDeleted={() => setShowDeleted((previous) => !previous)}
+              onClearFilters={() => {
+                setFilterStatus([]);
+                setFilterSpecialization('');
+              }}
+              onRetry={refetchWorkPage}
+              onEdit={(teacher) => { setEditTeacher(teacher); setShowForm(true); }}
+              onDelete={handleDelete}
+              onRestore={handleRestore}
+              onBulkDelete={handleBulkDelete}
+              onBulkRestore={handleBulkRestore}
+              onBulkStatusChange={showDeleted ? undefined : handleBulkStatusChange}
+              onWhatsApp={showDeleted ? undefined : handleWhatsApp}
+              onSms={showDeleted ? undefined : handleSms}
+              onEmail={showDeleted ? undefined : handleEmail}
+              onSortChange={(field, dir) => {
+                setSortField(field);
+                setSortDir(dir);
+              }}
+              onPageChange={setListPage}
+            />
           ) : activeTab === 'reports' ? (
             <motion.div
               key="reports"

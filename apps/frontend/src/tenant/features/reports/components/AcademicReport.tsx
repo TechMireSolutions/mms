@@ -1,11 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { BookOpen, Trophy, TrendingUp, Star, Filter, X } from "lucide-react";
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-} from "recharts";
 import { Card } from "@/components/ui/card";
-import { SectionCard } from "@/components/ui/SectionCard";
-import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/tenant/hooks/collections/examinations";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
@@ -17,6 +12,17 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { AcademicReportCharts } from "./AcademicReportCharts";
+import { AcademicReportClassRankings } from "./AcademicReportClassRankings";
+
+import type { AcademicReportProps, AcademicResultItem, ClassRankingItem } from "./academicReportTypes";
+
+export type {
+  AcademicReportFilters,
+  AcademicReportProps,
+  AcademicResultItem,
+  ClassRankingItem,
+} from "./academicReportTypes";
 
 /** Grade badge colour mapping. */
 const GRADE_BADGE_CLS: Record<string, string> = {
@@ -27,40 +33,6 @@ const GRADE_BADGE_CLS: Record<string, string> = {
   "C":  SEMANTIC_BADGE.warning,
   "F":  SEMANTIC_BADGE.destructive,
 };
-
-/** Active filter state passed down from the parent report view. */
-interface AcademicReportFilters {
-  /** Class name to filter by, or "all" for no filter. */
-  class: string;
-  /** Substring to match against student names (case-insensitive). */
-  student: string;
-}
-
-/** Props for the AcademicReport component. */
-interface AcademicReportProps {
-  /** Active report filters. */
-  filters: AcademicReportFilters;
-  /** Optional callback to open the visualizer with an existing config. */
-  onEditVisual?: (config: unknown) => void;
-}
-
-export interface AcademicResultItem {
-  studentName: string;
-  class: string;
-  subject: string;
-  marks: number;
-  total: number;
-  grade: string;
-  rank: number;
-}
-
-export interface ClassRankingItem {
-  class: string;
-  averageMarks: number;
-  topMarks: number;
-  passRate: number;
-  topStudent: string;
-}
 
 /**
  * Renders the academic/exam reports including summary KPIs, marks-distribution
@@ -198,54 +170,12 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
         <StatCard icon={Star}       label={t("examinations.report.passRate")}     value={`${passRate}%`} color="green"   />
       </div>
 
-      {/* Charts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <SectionCard title={t("examinations.report.marksDistribution")}>
-          <SafeResponsiveContainer width="100%" height={180}>
-            <BarChart
-              data={filteredAcademicResultsData}
-              barSize={28}
-              onClick={(state) => {
-                const studentName = (state as { activeLabel?: string } | undefined)?.activeLabel;
-                if (typeof studentName === "string" && studentName.length > 0) toggleStudentFilter(studentName);
-              }}
-              style={{ cursor: "pointer" }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="studentName" tick={{ fontSize: 10 }} angle={-25} textAnchor="end" height={40} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(value) => value !== undefined ? `${value} / 100` : ""} />
-              <Bar dataKey="marks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name={t("examinations.report.marksLabel")} />
-            </BarChart>
-          </SafeResponsiveContainer>
-        </SectionCard>
-
-        <SectionCard title={t("examinations.report.classComparison")}>
-          {filteredClassRankings.length > 0 ? (
-            <SafeResponsiveContainer width="100%" height={180}>
-              <BarChart
-                data={filteredClassRankings}
-                barSize={32}
-                layout="vertical"
-                onClick={(state) => {
-                  const className = (state as { activeLabel?: string } | undefined)?.activeLabel;
-                  if (typeof className === "string" && className.length > 0) toggleClassFilter(className);
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
-                <YAxis dataKey="class" type="category" tick={{ fontSize: 11 }} width={90} />
-                <Tooltip />
-                <Bar dataKey="averageMarks" fill="hsl(var(--primary))"  radius={[0, 4, 4, 0]} name={t("examinations.report.avgMarks")} />
-                <Bar dataKey="topMarks" fill="hsl(var(--chart-2))"  radius={[0, 4, 4, 0]} name={t("examinations.report.topMarks")} />
-              </BarChart>
-            </SafeResponsiveContainer>
-          ) : (
-            <EmptyState icon={BookOpen} title={t("examinations.report.noClassData")} compact />
-          )}
-        </SectionCard>
-      </div>
+      <AcademicReportCharts
+        academicResults={filteredAcademicResultsData}
+        classRankings={filteredClassRankings}
+        onToggleStudentFilter={toggleStudentFilter}
+        onToggleClassFilter={toggleClassFilter}
+      />
 
       {(selectedStudent || selectedClass) && (
         <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-muted/40 border border-border text-xs text-muted-foreground">
@@ -297,40 +227,10 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
         </div>
       )}
 
-      {/* Class Rankings */}
-      <p className="text-sm font-semibold text-foreground">{t("examinations.report.classRankings")}</p>
-      {filteredClassRankings.length === 0 ? (
-        <EmptyState icon={Trophy} title={t("examinations.report.noClassRankingData")} compact />
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {filteredClassRankings.map((classRanking, index) => (
-            <Card key={classRanking.class} className="p-5">
-              <div className="mb-2 flex min-w-0 items-center justify-between gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => toggleClassFilter(classRanking.class)}
-                  className="h-auto min-w-0 flex-1 justify-start truncate px-0 py-0 text-sm font-semibold text-foreground hover:text-primary"
-                >
-                  {classRanking.class}
-                </Button>
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                  #{index + 1}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {t("examinations.report.topStudentLabel")}: <span className="font-semibold text-foreground">{classRanking.topStudent}</span> ({classRanking.topMarks}%)
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {t("examinations.report.classAvg")}: <span className="font-semibold">{classRanking.averageMarks}%</span>
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {t("examinations.report.passRate")}: <span className="font-semibold text-success">{classRanking.passRate}%</span>
-              </p>
-            </Card>
-          ))}
-        </div>
-      )}
+      <AcademicReportClassRankings
+        classRankings={filteredClassRankings}
+        onToggleClassFilter={toggleClassFilter}
+      />
 
       <ExportToolbar 
         title={t("examinations.report.examResultsTitle")} 

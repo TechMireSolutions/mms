@@ -52,7 +52,7 @@ export function useEnrollments(options?: { enabled?: boolean }) {
     collectionName: 'enrollments',
     staleTime: 15_000,
     enabled: options?.enabled,
-    isSuccessQuery: (res) => res.isSuccess && (res.data?.length ?? 0) > 0,
+    mirrorToLocalCache: false,
   });
 }
 

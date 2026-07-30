@@ -3,6 +3,7 @@ import { initDb } from '../db/database.js';
 import { buildApp } from '../app.js';
 import { deleteCustomTab } from '../services/customTabsService.js';
 import { runWithTenant } from '../lib/tenantContext.js';
+import { signTenantToken } from './helpers/tokens.js';
 
 vi.mock('../services/workspaceService.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../services/workspaceService.js')>();
@@ -41,14 +42,10 @@ describe('custom tabs REST API routes', () => {
   it('runs CRUD via Fastify custom-tabs route endpoints', async () => {
     if (!isDbAvailable) return;
 
-    // Use JWT sign to mock authentication
-    const token = app.jwt.sign({
+    const token = signTenantToken(app, {
       id: 'test-user',
       email: 'admin@demo.com',
       role: 'admin',
-      workspaceSubdomain: 'demo',
-      twoFactorVerified: true,
-      tokenType: 'access',
     });
 
     const headers = {

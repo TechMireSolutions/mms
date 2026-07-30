@@ -1,26 +1,16 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import {
-  Search, Eye, XCircle, MessageCircle, MessageSquare, RotateCcw, Trash2,
-} from "lucide-react";
-import { motion } from "framer-motion";
-import { SearchBar } from "@/components/ui/SearchBar";
-import { ListPagination } from "@/components/ui/ListPagination";
 import { useLocalPagination } from "@/hooks/useLocalPagination";
-import { ENROLLMENT_STATUSES, Enrollment } from '@/lib/data/enrollmentData';
+import { Enrollment } from '@/lib/data/enrollmentData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
-import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
+import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
-import { Button } from "@/components/ui/button";
-import { FormSelect } from "@/components/ui/FormSelect";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import { formatDate } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
-import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
+import { EnrollmentListContent, type EnrollmentListVisibleColumns } from "@/tenant/features/enrollments/components/EnrollmentListContent";
+import { EnrollmentListToolbar } from "@/tenant/features/enrollments/components/EnrollmentListToolbar";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
@@ -101,13 +91,15 @@ export function EnrollmentList({
 
   const { data: students = [] } = useStudentsByIds(paginatedEnrollments.map((enrollment) => enrollment.studentId));
 
-  const showStudent = isColumnVisible ? isColumnVisible("student") : true;
-  const showSession = isColumnVisible ? isColumnVisible("session") : true;
-  const showClass = isColumnVisible ? isColumnVisible("class") : true;
-  const showEnrolledDate = isColumnVisible ? isColumnVisible("enrolledDate") : true;
-  const showFinalFee = isColumnVisible ? isColumnVisible("finalFee") : true;
-  const showStatus = isColumnVisible ? isColumnVisible("status") : true;
-  const showPayment = isColumnVisible ? isColumnVisible("payment") : true;
+  const visibleColumns: EnrollmentListVisibleColumns = {
+    student: isColumnVisible ? isColumnVisible("student") : true,
+    session: isColumnVisible ? isColumnVisible("session") : true,
+    class: isColumnVisible ? isColumnVisible("class") : true,
+    enrolledDate: isColumnVisible ? isColumnVisible("enrolledDate") : true,
+    finalFee: isColumnVisible ? isColumnVisible("finalFee") : true,
+    status: isColumnVisible ? isColumnVisible("status") : true,
+    payment: isColumnVisible ? isColumnVisible("payment") : true,
+  };
 
   const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
     pending: { label: t("enrollments.status.pending"), cls: SEMANTIC_BADGE.warning },
@@ -122,363 +114,44 @@ export function EnrollmentList({
     none: { label: t("enrollments.payment.none"), cls: SEMANTIC_BADGE.muted },
   }), [t]);
 
-  const renderActions = (enrollment: Enrollment): React.ReactElement => {
-    const student = students.find((candidate) => String(candidate.id) === String(enrollment.studentId));
-    const studentDisplayName = enrollment.studentName?.trim() || student?.name || "";
-
-    return (
-      <div className="flex items-center justify-end gap-1">
-        {showDeleted ? (
-          canDelete && onRestore && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onRestore(enrollment.id)}
-              className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
-              aria-label={t("enrollments.restore")}
-              title={t("enrollments.restore")}
-            >
-              <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
-            </Button>
-          )
-        ) : (
-          <>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                const phone = student?.phone || "";
-                openComposer("whatsapp", [{ id: enrollment.id, name: studentDisplayName, phone, email: student?.email }]);
-              }}
-              className="rounded-lg hover:bg-muted text-success hover:text-success transition-colors"
-              title={t("enrollments.list.actionWhatsApp")}
-              aria-label={t("enrollments.list.actionWhatsApp")}
-            >
-              <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                const phone = student?.phone || "";
-                openComposer("sms", [{ id: enrollment.id, name: studentDisplayName, phone, email: student?.email }]);
-              }}
-              className="rounded-lg hover:bg-muted text-info hover:text-info transition-colors"
-              title={t("enrollments.list.actionSms")}
-              aria-label={t("enrollments.list.actionSms")}
-            >
-              <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onView(enrollment)}
-              className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
-              aria-label={t("enrollments.actions.view", { name: studentDisplayName })}
-              title={t("enrollments.actions.viewShort")}
-            >
-              <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-            </Button>
-            {canWrite && enrollment.status !== "cancelled" && enrollment.status !== "completed" && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onCancel(enrollment.id)}
-                className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                aria-label={t("enrollments.actions.cancel", { name: studentDisplayName })}
-                title={t("enrollments.actions.cancelShort")}
-              >
-                <XCircle className="w-3.5 h-3.5" aria-hidden="true" />
-              </Button>
-            )}
-            {canDelete && onDelete && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onDelete(enrollment.id)}
-                className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                aria-label={t("common.delete")}
-                title={t("common.delete")}
-              >
-                <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-              </Button>
-            )}
-          </>
-        )}
-      </div>
-    );
-  };
-
   return (
     <section className="space-y-4" aria-label={t("enrollments.list")}>
-      <div className="flex flex-wrap gap-2 items-center">
-        <SearchBar
-          value={search}
-          onChange={handleSearchChange}
-          placeholder={t("enrollments.searchPlaceholder")}
-          className="flex-1 min-w-[11.25rem]"
-        />
+      <EnrollmentListToolbar
+        search={search}
+        statusFilter={statusFilter}
+        sessionFilter={sessionFilter}
+        sessions={sessions}
+        showDeleted={showDeleted}
+        canDelete={canDelete}
+        statusConfig={statusConfig}
+        columnCustomizer={columnCustomizer}
+        onSearchChange={handleSearchChange}
+        onStatusChange={(value) => { setStatus(value); setPage(1); }}
+        onSessionChange={(value) => { setSession(value); setPage(1); }}
+        onShowDeletedChange={onShowDeletedChange}
+      />
 
-        {!showDeleted && (
-          <div className="flex max-w-full overflow-x-auto rounded-lg border border-border text-xs font-bold" role="group" aria-label={t("enrollments.filter.status")}>
-            <Button
-              variant="ghost"
-              onClick={() => { setStatus("all"); setPage(1); }}
-              className={`shrink-0 px-3 py-2 transition-colors rounded-none min-h-11 ${statusFilter === "all" ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
-            >
-              {t("enrollments.filter.all")}
-            </Button>
-            {ENROLLMENT_STATUSES.map((status) => (
-              <Button
-                key={status.id}
-                variant="ghost"
-                onClick={() => { setStatus(status.id); setPage(1); }}
-                className={`shrink-0 px-3 py-2 transition-colors rounded-none min-h-11 ${statusFilter === status.id ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
-              >
-                {statusConfig[status.id]?.label ?? status.id}
-              </Button>
-            ))}
-          </div>
-        )}
-
-        {!showDeleted && (
-          <div className="flex items-center gap-1.5">
-            <label htmlFor="filter-session" className="sr-only">{t("enrollments.filter.session")}</label>
-            <FormSelect
-              id="filter-session"
-              value={sessionFilter}
-              onChange={(value) => { setSession(value); setPage(1); }}
-              options={[
-                { value: "all", label: t("enrollments.filter.allSessions") },
-                ...sessions.map((session) => ({ value: session.id, label: session.name }))
-              ]}
-              className="w-full min-w-0 text-sm sm:w-48"
-            />
-          </div>
-        )}
-
-        {canDelete && onShowDeletedChange && (
-          <ModuleTrashToggle
-            showDeleted={showDeleted}
-            onToggle={() => onShowDeletedChange(!showDeleted)}
-            showActiveLabel={t("enrollments.showActive")}
-            showDeletedLabel={t("enrollments.showDeleted")}
-            className={showDeleted ? "border-destructive/40 text-destructive" : undefined}
-          />
-        )}
-
-        {columnCustomizer && !showDeleted && (
-          <ModuleColumnCustomizer
-            columnRegistry={columnCustomizer.columnRegistry}
-            updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
-            labels={columnCustomizer.labels}
-          />
-        )}
-      </div>
-
-      {paginatedEnrollments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center rounded-xl border border-border bg-card" role="status">
-          <Search className="w-10 h-10 text-muted-foreground/30 mb-3" aria-hidden="true" />
-          <p className="text-sm font-semibold text-foreground">
-            {showDeleted ? t("enrollments.empty.trashTitle") : t("enrollments.empty.title")}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {showDeleted ? t("enrollments.empty.trashSubtitle") : t("enrollments.empty.description")}
-          </p>
-        </div>
-      ) : (
-        <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
-          <div className="space-y-3 p-3 md:hidden">
-            {paginatedEnrollments.map((enrollment) => {
-              const student = students.find((candidate) => String(candidate.id) === String(enrollment.studentId));
-              const studentDisplayName = enrollment.studentName?.trim() || student?.name || "";
-              return (
-                <motion.article
-                  key={enrollment.id}
-                  layout
-                  className="space-y-3 rounded-xl border border-border bg-card p-3"
-                >
-                  <div className="flex min-w-0 items-start justify-between gap-3">
-                    {showStudent && (
-                      <div className="min-w-0">
-                        <h4 className="truncate text-sm font-semibold text-foreground">{studentDisplayName}</h4>
-                        {student?.grNumber && (
-                          <p className="text-xs font-bold text-primary">
-                            {t("enrollments.detail.grNumber")}: {student.grNumber}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                    {showFinalFee && (
-                      <span className="shrink-0 text-sm font-semibold text-foreground">
-                        {formatCurrency(enrollment.finalFee)}
-                        {enrollment.discountPct > 0 && (
-                          <span
-                            className="ms-1 text-xs text-success font-normal"
-                            aria-label={t("enrollments.discountPctAria", { pct: enrollment.discountPct })}
-                          >
-                            –{enrollment.discountPct}%
-                          </span>
-                        )}
-                      </span>
-                    )}
-                  </div>
-                  <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                    {showSession && (
-                      <div>
-                        <dt className="text-xs font-semibold text-muted-foreground">{t("enrollments.columns.session")}</dt>
-                        <dd className="truncate text-foreground">{enrollment.sessionName}</dd>
-                      </div>
-                    )}
-                    {showClass && (
-                      <div>
-                        <dt className="text-xs font-semibold text-muted-foreground">{t("enrollments.columns.class")}</dt>
-                        <dd className="text-foreground">{enrollment.className || "—"}</dd>
-                      </div>
-                    )}
-                    {showEnrolledDate && (
-                      <div>
-                        <dt className="text-xs font-semibold text-muted-foreground">{t("enrollments.columns.enrolledDate")}</dt>
-                        <dd className="font-mono text-muted-foreground">{formatDate(enrollment.enrolledDate)}</dd>
-                      </div>
-                    )}
-                    {showStatus && (
-                      <div>
-                        <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("enrollments.columns.status")}</dt>
-                        <dd><StatusBadge status={enrollment.status} config={statusConfig} size="sm" /></dd>
-                      </div>
-                    )}
-                    {showPayment && (
-                      <div>
-                        <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("enrollments.columns.payment")}</dt>
-                        <dd>
-                          {enrollment.paymentStatus
-                            ? <StatusBadge status={enrollment.paymentStatus} config={paymentConfig} size="sm" />
-                            : "—"}
-                        </dd>
-                      </div>
-                    )}
-                  </dl>
-                  <div className="flex flex-wrap items-center justify-end gap-1 border-t border-border pt-2">
-                    {renderActions(enrollment)}
-                  </div>
-                </motion.article>
-              );
-            })}
-          </div>
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full text-sm table-fixed">
-              <thead className="bg-muted/20 border-b border-border/50">
-                <tr>
-                  {showStudent && (
-                    <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
-                      {t("enrollments.columns.student")}
-                    </ResizableTableHead>
-                  )}
-                  {showSession && (
-                    <ResizableTableHead columnKey="session" width={getColumnWidth?.("session")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
-                      {t("enrollments.columns.session")}
-                    </ResizableTableHead>
-                  )}
-                  {showClass && (
-                    <ResizableTableHead columnKey="class" width={getColumnWidth?.("class")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
-                      {t("enrollments.columns.class")}
-                    </ResizableTableHead>
-                  )}
-                  {showEnrolledDate && (
-                    <ResizableTableHead columnKey="enrolledDate" width={getColumnWidth?.("enrolledDate")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
-                      {t("enrollments.columns.enrolledDate")}
-                    </ResizableTableHead>
-                  )}
-                  {showFinalFee && (
-                    <ResizableTableHead columnKey="finalFee" width={getColumnWidth?.("finalFee")} onResize={onColumnResize} className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">
-                      {t("enrollments.columns.finalFee")}
-                    </ResizableTableHead>
-                  )}
-                  {showStatus && (
-                    <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
-                      {t("enrollments.columns.status")}
-                    </ResizableTableHead>
-                  )}
-                  {showPayment && (
-                    <ResizableTableHead columnKey="payment" width={getColumnWidth?.("payment")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
-                      {t("enrollments.columns.payment")}
-                    </ResizableTableHead>
-                  )}
-                  <th scope="col" className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">
-                    {t("enrollments.columns.actions")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                 {paginatedEnrollments.map((enrollment) => {
-                  const student = students.find((candidate) => String(candidate.id) === String(enrollment.studentId));
-                  const studentDisplayName = enrollment.studentName?.trim() || student?.name || "";
-                  return (
-                    <motion.tr key={enrollment.id} layout className="hover:bg-muted/20 transition-colors">
-                      {showStudent && (
-                        <td className="px-3 py-2.5 whitespace-nowrap">
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-foreground">{studentDisplayName}</span>
-                            {student?.grNumber && (
-                              <span className="text-xs text-primary font-bold">GR: {student.grNumber}</span>
-                            )}
-                          </div>
-                        </td>
-                      )}
-                      {showSession && (
-                        <td className="px-3 py-2.5 text-xs text-foreground max-w-[10rem] truncate">{enrollment.sessionName}</td>
-                      )}
-                      {showClass && (
-                        <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{enrollment.className || "—"}</td>
-                      )}
-                      {showEnrolledDate && (
-                        <td className="px-3 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap">{formatDate(enrollment.enrolledDate)}</td>
-                      )}
-                      {showFinalFee && (
-                        <td className="px-3 py-2.5 text-end font-semibold text-foreground whitespace-nowrap">
-                          {formatCurrency(enrollment.finalFee)}
-                          {enrollment.discountPct > 0 && (
-                            <span
-                              className="ms-1 text-xs text-success font-normal"
-                              aria-label={t("enrollments.discountPctAria", { pct: enrollment.discountPct })}
-                            >
-                              –{enrollment.discountPct}%
-                            </span>
-                          )}
-                        </td>
-                      )}
-                      {showStatus && (
-                        <td className="px-3 py-2.5">
-                          <StatusBadge status={enrollment.status} config={statusConfig} size="sm" />
-                        </td>
-                      )}
-                      {showPayment && (
-                        <td className="px-3 py-2.5">
-                          {enrollment.paymentStatus
-                            ? <StatusBadge status={enrollment.paymentStatus} config={paymentConfig} size="sm" />
-                            : "—"}
-                        </td>
-                      )}
-                      <td className="px-3 py-2.5 text-end">
-                        {renderActions(enrollment)}
-                      </td>
-                    </motion.tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          </Card>
-      )}
-
-      <ListPagination
+      <EnrollmentListContent
+        enrollments={paginatedEnrollments}
+        filteredCount={filtered.length}
         page={page}
-        total={filtered.length}
-        limit={PAGE_SIZE}
+        pageSize={PAGE_SIZE}
+        students={students}
+        visibleColumns={visibleColumns}
+        canWrite={canWrite}
+        canDelete={canDelete}
+        showDeleted={showDeleted}
+        statusConfig={statusConfig}
+        paymentConfig={paymentConfig}
+        formatCurrency={formatCurrency}
+        getColumnWidth={getColumnWidth}
+        onColumnResize={onColumnResize}
         onPageChange={setPage}
-        i18nNamespace="enrollments"
-        variant="summary"
+        onView={onView}
+        onCancel={onCancel}
+        onDelete={onDelete}
+        onRestore={onRestore}
+        openComposer={openComposer}
       />
 
       {messagingTarget && (
