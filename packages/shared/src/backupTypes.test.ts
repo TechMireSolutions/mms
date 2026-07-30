@@ -28,13 +28,13 @@ describe('backupTypes', () => {
     expect(raw).toEqual(keys);
   });
 
-  it('validates envelope and remaps tenant keys', () => {
+  it('validates same-workspace envelope and remaps tenant keys', () => {
     const keys = {
       'mms_t:other:students': '[{"id":"1"}]',
       'mms_t:other:global_settings': '{"language":"en"}',
     };
     const json = buildWorkspaceBackupEnvelope(keys, { subdomain: 'other' });
-    const result = validateWorkspaceBackupJson(json, PREFIX);
+    const result = validateWorkspaceBackupJson(json, PREFIX, 'other');
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(Object.keys(result.data)).toEqual([
@@ -42,6 +42,32 @@ describe('backupTypes', () => {
         `${PREFIX}global_settings`,
       ]);
     }
+  });
+
+  it('rejects a backup created for another workspace', () => {
+    const json = buildWorkspaceBackupEnvelope(
+      { 'mms_t:other:contacts': '[]' },
+      { subdomain: 'other' },
+    );
+    const result = validateWorkspaceBackupJson(json, PREFIX, 'demo');
+    expect(result).toEqual({ ok: false, errorKey: 'backup.workspaceMismatch' });
+  });
+
+  it('rejects unidentified and legacy backups when workspace identity is required', () => {
+    const unidentified = buildWorkspaceBackupEnvelope(
+      { 'mms_t:demo:contacts': '[]' },
+      { subdomain: null },
+    );
+    expect(validateWorkspaceBackupJson(unidentified, PREFIX, 'demo')).toEqual({
+      ok: false,
+      errorKey: 'backup.workspaceUnidentified',
+    });
+
+    const legacy = JSON.stringify({ 'mms_t:demo:contacts': '[]' });
+    expect(validateWorkspaceBackupJson(legacy, PREFIX, 'demo')).toEqual({
+      ok: false,
+      errorKey: 'backup.workspaceUnidentified',
+    });
   });
 
   it('accepts legacy flat export format', () => {

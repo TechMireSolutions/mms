@@ -1,34 +1,17 @@
 import React, { useState } from "react";
 import { Plus, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
-import { FormModal } from "@/components/ui/FormModal";
 import { Card } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/useTranslation";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { NameFormModal } from "@/tenant/features/obligations/components/MujtahidNameFormModal";
+import type {
+  Mujtahid,
+  MujtahidManagerProps,
+  MujtahidRep,
+  ModalState,
+} from "@/tenant/features/obligations/components/mujtahidManagerTypes";
 
-export interface Mujtahid {
-  id: string;
-  name: string;
-}
-
-export interface MujtahidRep {
-  id: string;
-  mujtahid_id: string;
-  name: string;
-}
-
-export interface MujtahidManagerProps {
-  mujtahids: Mujtahid[];
-  reps: MujtahidRep[];
-  onChangeMujtahids: (mujtahids: Mujtahid[]) => void | Promise<void>;
-  onChangeReps: (reps: MujtahidRep[]) => void | Promise<void>;
-}
-
-interface ModalState {
-  mode: "add" | "edit" | "add-rep" | "edit-rep";
-  data: Partial<Mujtahid> | Partial<MujtahidRep>;
-}
+export type { Mujtahid, MujtahidRep, MujtahidManagerProps } from "@/tenant/features/obligations/components/mujtahidManagerTypes";
 
 /**
  * MujtahidManager component.
@@ -169,50 +152,5 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
         />
       ) : null}
     </div>
-  );
-}
-
-interface NameFormModalProps {
-  title: string;
-  initial: Partial<Mujtahid> | Partial<MujtahidRep>;
-  onSave: (form: Partial<Mujtahid> | Partial<MujtahidRep>) => void;
-  onClose: () => void;
-  label: string;
-}
-
-function NameFormModal({ initial, onSave, onClose, label, title }: NameFormModalProps) {
-  const { t } = useTranslation();
-  const [form, setForm] = useState({ ...initial });
-  const [error, setError] = useState("");
-
-  const handleSave = (): void => {
-    if (!form.name || !form.name.trim()) {
-      setError(t("obligations.mujtahids.nameRequired"));
-      return;
-    }
-    onSave(form);
-  };
-
-  return (
-    <FormModal
-      open
-      onClose={onClose}
-      title={title}
-      cancelLabel={t("common.cancel")}
-      saveLabel={t("common.save")}
-      onSave={handleSave}
-      error={error || undefined}
-    >
-      <div>
-        <label htmlFor="name-form-input" className={FORM_LABEL}>{label} *</label>
-        <Input
-          id="name-form-input"
-          value={form.name || ""}
-          onChange={(event) => setForm({ ...form, name: event.target.value })}
-          className={FORM_INPUT}
-          aria-invalid={!!error}
-        />
-      </div>
-    </FormModal>
   );
 }

@@ -1,40 +1,16 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Award } from "lucide-react";
-import { Exam, ExamResult } from '@/lib/data/examinationData';
-import { useStudentsByIds } from "@/tenant/hooks/collections/students";
-import type { Student } from "@/lib/data/studentsData";
-import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
-import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
-import { getGrade } from "@/tenant/features/examinations/components/gradeUtils";
-import { StudentResultCard, StudentResultItem } from "@/tenant/features/examinations/components/StudentResultCard";
+import React, { useMemo, useState } from "react";
+import { AnimatePresence } from "framer-motion";
+import { StudentResultCard } from "@/tenant/features/examinations/components/StudentResultCard";
 import { CertificatePreview } from "@/tenant/features/examinations/components/CertificatePreview";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
+import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { Button } from "@/components/ui/button";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import { getInitials } from "@mms/shared";
-
-
-
-interface ResultsViewProps {
-  exams: Exam[];
-  results: ExamResult[];
-  onFilteredCountChange?: (count: number) => void;
-  isColumnVisible?: (key: string) => boolean;
-  columnCustomizer?: ModuleColumnCustomizerProps;
-}
-
-interface RankedResult extends StudentResultItem {
-  id: string;
-  examId: string;
-  studentId: string;
-  marksObtained: number;
-}
-
-const RANK_ICONS = ["🥇", "🥈", "🥉"];
+import { useResultsViewData } from "@/tenant/features/examinations/components/useResultsViewData";
+import { ResultsViewStats } from "@/tenant/features/examinations/components/ResultsViewStats";
+import { ResultsViewRankingsList } from "@/tenant/features/examinations/components/ResultsViewRankingsList";
+import type { RankedResult, ResultsViewProps } from "@/tenant/features/examinations/components/resultsViewTypes";
 
 /**
  * Rankings view component summarizing examination results and score distributions.
@@ -50,75 +26,18 @@ export function ResultsView({
   const [selectedExam, setSelectedExam] = useState<string>(exams[0]?.id || "");
   const [selectedStudent, setSelectedStudent] = useState<RankedResult | null>(null);
   const [certStudent, setCertStudent] = useState<RankedResult | null>(null);
+
   const passFailConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
     pass: { label: t("examinations.pass"), cls: SEMANTIC_BADGE.success },
     fail: { label: t("examinations.fail"), cls: SEMANTIC_BADGE.destructive },
   }), [t]);
 
-  const exam = exams.find((examOption) => examOption.id === selectedExam);
-  const studentIdsForExam = useMemo(() => {
-    if (!exam) return [];
-    return results
-      .filter((examResult) => examResult.examId === exam.id)
-      .map((examResult) => examResult.studentId);
-  }, [exam, results]);
-
-  const { data: students = [] } = useStudentsByIds(studentIdsForExam);
-  const sessions = useSessionsCollection();
-  const enrollments = useEnrollmentsCollection();
-
-  const studentsById = useMemo(
-    () => new Map(students.map((student: Student) => [String(student.id), student])),
-    [students],
-  );
-  const classNamesById = useMemo(
-    () => new Map(
-      sessions.flatMap((session) =>
-        (session.classes || []).map((sessionClass) => [sessionClass.id, `${session.name} - ${sessionClass.name}`] as const),
-      ),
-    ),
-    [sessions],
-  );
-  const classByStudentId = useMemo(() => {
-    const classIds = new Set(exam?.classIds || []);
-    return new Map(
-      enrollments
-        .filter((enrollment) => classIds.has(enrollment.classId))
-        .map((enrollment) => [String(enrollment.studentId), enrollment.classId] as const),
-    );
-  }, [enrollments, exam]);
-
-  const rankedResults = useMemo<RankedResult[]>(() => {
-    if (!exam) return [];
-    return results
-      .filter((examResult) => examResult.examId === exam.id)
-      .map((examResult) => {
-        const student = studentsById.get(String(examResult.studentId));
-        const classId = classByStudentId.get(String(examResult.studentId));
-        const percentage = Math.round((examResult.marksObtained / exam.totalMarks) * 100);
-        return {
-          ...examResult,
-          student: student ? { name: student.name || t("common.unnamedStudent"), rollNo: student.grNumber || String(student.id) } : undefined,
-          cls: classId ? { name: classNamesById.get(classId) || classId } : undefined,
-          pct: percentage,
-          grade: getGrade(percentage),
-          passed: examResult.marksObtained >= exam.passingMarks,
-        };
-      })
-      .sort((firstResult, secondResult) => secondResult.marksObtained - firstResult.marksObtained)
-      .map((rankedResult, index) => ({ ...rankedResult, rank: index + 1 }));
-  }, [classByStudentId, classNamesById, exam, results, studentsById, t]);
-
-  useEffect(() => {
-    onFilteredCountChange?.(rankedResults.length);
-  }, [rankedResults.length, onFilteredCountChange]);
-
-  const stats = useMemo(() => {
-    if (rankedResults.length === 0) return null;
-    const average = Math.round(rankedResults.reduce((sum, rankedResult) => sum + rankedResult.pct, 0) / rankedResults.length);
-    const passed = rankedResults.filter((rankedResult) => rankedResult.passed).length;
-    return { average, passed, failed: rankedResults.length - passed, total: rankedResults.length };
-  }, [rankedResults]);
+  const { exam, rankedResults, stats } = useResultsViewData({
+    exams,
+    results,
+    selectedExam,
+    onFilteredCountChange,
+  });
 
   const showRank = isColumnVisible ? isColumnVisible("rank") : true;
   const showStudent = isColumnVisible ? isColumnVisible("student") : true;
@@ -161,122 +80,23 @@ export function ResultsView({
 
       {exam && (
         <>
-          {stats && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" role="status" aria-label={t("examinations.resultsStats")}>
-              {[
-                { label: t("examinations.stats.students"), value: stats.total },
-                { label: t("examinations.stats.classAvg"), value: `${stats.average}%` },
-                { label: t("examinations.stats.passed"), value: stats.passed },
-                { label: t("examinations.stats.failed"), value: stats.failed },
-              ].map((stat) => (
-                <Card accentColor="primary" key={stat.label} className="p-3.5 text-center shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
-                  <p className="text-xl font-bold text-foreground leading-none">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground mt-1.5 mb-0">{stat.label}</p>
-                </Card>
-              ))}
-            </div>
-          )}
+          {stats && <ResultsViewStats stats={stats} t={t} />}
 
-          <Card accentColor="warning" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm" aria-label={t("examinations.rankings")}>
-            <div className="px-4 py-3 border-b border-border/40 flex min-w-0 items-center gap-2 ps-6.5 bg-muted/20">
-              <Trophy className="w-4 h-4 shrink-0 text-warning" aria-hidden="true" />
-              <h3 className="min-w-0 truncate text-sm font-bold text-foreground m-0">{t("examinations.rankingsTitle", { name: exam.name })}</h3>
-            </div>
-            {rankedResults.length === 0 ? (
-              <div className="py-10 text-center text-sm text-muted-foreground" role="status">{t("examinations.empty.results")}</div>
-            ) : (
-              <div className="divide-y divide-border/50 ps-6.5" role="list">
-                {rankedResults.map((rankedResult) => (
-                  <motion.div
-                    key={rankedResult.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center gap-4 px-4 py-3 hover:bg-muted/20 transition-colors cursor-pointer flex-wrap"
-                    onClick={() => setSelectedStudent(rankedResult)}
-                    role="listitem"
-                    aria-label={t("examinations.viewResultAria", { name: rankedResult.student?.name || t("examinations.columns.results.student") })}
-                  >
-                    {showRank && (
-                      <div className="w-8 text-center flex-shrink-0">
-                        {rankedResult.rank <= 3 ? (
-                          <span className="text-lg" aria-label={t("examinations.rankLabel", { rank: rankedResult.rank })}>{RANK_ICONS[rankedResult.rank - 1]}</span>
-                        ) : (
-                          <span className="text-sm font-bold text-muted-foreground">{t("examinations.rankLabel", { rank: rankedResult.rank })}</span>
-                        )}
-                      </div>
-                    )}
-
-                    {showStudent && (
-                      <>
-                        <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white"
-                          style={{ background: rankedResult.grade.color }}
-                          aria-hidden="true"
-                        >
-                          {rankedResult.student?.name ? getInitials(rankedResult.student.name) : "S"}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-foreground m-0">{rankedResult.student?.name}</p>
-                          {showClassRoll && (
-                            <p className="text-xs text-muted-foreground m-0">{rankedResult.cls?.name} · {rankedResult.student?.rollNo}</p>
-                          )}
-                        </div>
-                      </>
-                    )}
-
-                    {!showStudent && showClassRoll && (
-                      <div className="flex-1 min-w-0 text-sm text-muted-foreground">
-                        {rankedResult.cls?.name} · {rankedResult.student?.rollNo}
-                      </div>
-                    )}
-
-                    {showMarks && (
-                      <div className="text-end flex-shrink-0">
-                        <p className="text-sm font-bold text-foreground m-0">
-                          {rankedResult.marksObtained}
-                          <span className="text-xs font-normal text-muted-foreground">/{exam.totalMarks}</span>
-                        </p>
-                        {showPercentage && (
-                          <p className="text-xs text-muted-foreground m-0">{rankedResult.pct}%</p>
-                        )}
-                      </div>
-                    )}
-
-                    {!showMarks && showPercentage && (
-                      <div className="text-end flex-shrink-0 text-sm text-muted-foreground">{rankedResult.pct}%</div>
-                    )}
-
-                    {showGrade && (
-                      <span
-                        className="text-sm font-bold px-2.5 py-1 rounded-lg flex-shrink-0"
-                        style={{ color: rankedResult.grade.color, background: rankedResult.grade.bg, border: `1px solid ${rankedResult.grade.border}` }}
-                      >
-                        {rankedResult.grade.label}
-                      </span>
-                    )}
-
-                    {showPassFail && (
-                      <StatusBadge
-                        status={rankedResult.passed ? "pass" : "fail"}
-                        config={passFailConfig}
-                        size="sm"
-                      />
-                    )}
-
-                    {rankedResult.passed && rankedResult.rank <= 3 && (
-                       <Button
-                        type="button"
-                        onClick={(event) => { event.stopPropagation(); setCertStudent(rankedResult); }}
-                        className="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg bg-warning/10 text-warning hover:bg-warning/15 transition-colors flex-shrink-0"
-                      >
-                        <Award className="w-3 h-3" aria-hidden="true" /> {t("examinations.certificate")}
-                      </Button>
-                    )}
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </Card>
+          <ResultsViewRankingsList
+            exam={exam}
+            rankedResults={rankedResults}
+            passFailConfig={passFailConfig}
+            showRank={showRank}
+            showStudent={showStudent}
+            showClassRoll={showClassRoll}
+            showMarks={showMarks}
+            showPercentage={showPercentage}
+            showGrade={showGrade}
+            showPassFail={showPassFail}
+            onSelectResult={setSelectedStudent}
+            onCertificate={setCertStudent}
+            t={t}
+          />
         </>
       )}
 

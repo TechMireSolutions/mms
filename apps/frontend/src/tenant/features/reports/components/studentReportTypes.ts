@@ -1,4 +1,5 @@
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { calcAge, formatDate, type Student } from "@mms/shared";
 
 export type StudentReportSubTab = "list" | "history";
 
@@ -40,4 +41,19 @@ export interface StudentReportTablesProps {
   enrollments: EnrollmentHistoryItem[];
   statusBadgeConfig: Record<string, StatusBadgeConfigItem>;
   enrollmentStatusConfig: Record<string, StatusBadgeConfigItem>;
+}
+
+export function mapStudentRow(student: Student): ReportStudent {
+  const age = calcAge(student.dob) ?? 0;
+  return {
+    id: String(student.id),
+    name: student.name || "",
+    gender: student.gender || "male",
+    status: student.status || "inactive",
+    session: student.enrolledSessions?.[0] || "—",
+    class: student.enrolledSessions?.[0] || "—",
+    city: student.city || "—",
+    registered: student.registeredDate ? formatDate(student.registeredDate, true) : "—",
+    age,
+  };
 }

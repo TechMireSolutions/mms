@@ -2,88 +2,13 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Trash2, Edit2, Tag, ToggleLeft, ToggleRight } from "lucide-react";
 import { Session, Discount } from '@/lib/data/sessionsData';
-import { FormModal } from "@/components/ui/FormModal";
-import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { FormSelect } from "@/components/ui/FormSelect";
 import { formatMoney } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-
-const EMPTY: Partial<Discount> = { name: "", type: "percentage", value: 0, conditions: "", active: true };
-
-interface DiscountModalProps {
-  open: boolean;
-  discount: Discount | null;
-  onClose: () => void;
-  onSave: (discount: Discount) => void | Promise<void>;
-  saving: boolean;
-}
-
-function DiscountModal({ open, discount, onClose, onSave, saving }: DiscountModalProps) {
-  const { t } = useTranslation();
-  const [discountDraft, setDiscountDraft] = useState<Partial<Discount>>(discount ? { ...discount } : { ...EMPTY });
-  const updateDiscountDraft = <K extends keyof Discount>(field: K, value: Discount[K]) => setDiscountDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
-
-  React.useEffect(() => {
-    if (open) {
-      setDiscountDraft(discount ? { ...discount } : { ...EMPTY });
-    }
-  }, [open, discount]);
-
-  return (
-    <FormModal
-      open={open}
-      onClose={onClose}
-      title={discount ? t("sessions.discounts.edit") : t("sessions.discounts.add")}
-      icon={Tag}
-      cancelLabel={t("common.cancel")}
-      saveLabel={t("common.save")}
-      onSave={() => onSave({ ...discountDraft, id: discount?.id || `d${Date.now()}` } as Discount)}
-      saveDisabled={!discountDraft.name}
-      saving={saving}
-    >
-      <div className="space-y-4">
-        <div>
-          <label className={FORM_LABEL} htmlFor="discount-name">{t("sessions.discounts.form.name")} *</label>
-          <Input id="discount-name" value={discountDraft.name || ""} onChange={(event) => updateDiscountDraft("name", event.target.value)} placeholder={t("sessions.discounts.form.namePlaceholder")} required />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className={FORM_LABEL} htmlFor="discount-type">{t("sessions.discounts.form.type")}</label>
-            <FormSelect
-              id="discount-type"
-              value={discountDraft.type || "percentage"}
-              onChange={(value) => updateDiscountDraft("type", value as Discount["type"])}
-              options={[
-                { value: "percentage", label: t("sessions.discounts.type.percentage") },
-                { value: "fixed", label: t("sessions.discounts.type.fixed") },
-              ]}
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className={FORM_LABEL} htmlFor="discount-value">{t("sessions.discounts.form.value")}</label>
-            <Input id="discount-value" type="number" value={discountDraft.value || 0} onChange={(event) => updateDiscountDraft("value", +event.target.value)} min={0} max={discountDraft.type === "percentage" ? 100 : undefined} required />
-          </div>
-        </div>
-        <div>
-          <label className={FORM_LABEL} htmlFor="discount-conditions">{t("sessions.discounts.form.conditions")}</label>
-          <Textarea id="discount-conditions" className="min-h-[4rem] resize-none" value={discountDraft.conditions || ""} onChange={(event) => updateDiscountDraft("conditions", event.target.value)} placeholder={t("sessions.discounts.form.conditionsPlaceholder")} />
-        </div>
-        <label className="flex items-center gap-2.5 cursor-pointer">
-          <Checkbox checked={discountDraft.active || false} onCheckedChange={(checked) => updateDiscountDraft("active", !!checked)} />
-          <span className="text-sm text-foreground font-medium">{t("sessions.discounts.active")}</span>
-        </label>
-      </div>
-    </FormModal>
-  );
-}
+import { DiscountModal } from "@/tenant/features/sessions/components/tabs/DiscountModal";
 
 interface DiscountsTabProps {
   session: Session;
@@ -189,7 +114,7 @@ export function DiscountsTab({ session, onUpdate, canWrite }: DiscountsTabProps)
                 <Button aria-label={t("sessions.discounts.editNamed", { name: discountItem.name })} onClick={() => { setEditDiscount(discountItem); setShowModal(true); }} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" variant="ghost" size="icon">
                   <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>
-                <Button aria-label={t("sessions.discounts.deleteNamed", { name: discountItem.name })} onClick={() => setDeleteTarget(discountItem)} className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" variant="ghost" size="icon">
+                <Button aria-label={t("sessions.discounts.deleteNamed", { name: discountItem.name })} onClick={() => setDeleteTarget(discountItem)} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors" variant="ghost" size="icon">
                   <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>
               </div>}

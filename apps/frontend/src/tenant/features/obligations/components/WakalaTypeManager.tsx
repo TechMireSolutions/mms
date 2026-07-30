@@ -1,92 +1,37 @@
-import React, { useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
-import { WakalaType, ObligationDistribution, ObligationType, MujtahidRep, Mujtahid } from '@/lib/data/obligationsData';
+import React from "react";
+import { Plus } from "lucide-react";
 import { DistributionFormModal } from "@/tenant/features/obligations/components/DistributionFormModal";
 import { WakalaFormModal } from "@/tenant/features/obligations/components/WakalaFormModal";
-import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { WakalaTypeCard } from "@/tenant/features/obligations/components/WakalaTypeCard";
+import { useWakalaTypeManager } from "@/tenant/features/obligations/components/useWakalaTypeManager";
+import type { WakalaTypeManagerProps } from "@/tenant/features/obligations/components/wakalaTypeManagerTypes";
 
-export type DistributionType = "Income" | "Liability";
+export type { DistributionType, WakalaTypeManagerProps } from "@/tenant/features/obligations/components/wakalaTypeManagerTypes";
 
-export interface WakalaTypeManagerProps {
-  wakalaTypes: WakalaType[];
-  distributions: ObligationDistribution[];
-  obligationTypes: ObligationType[];
-  reps: MujtahidRep[];
-  mujtahids: Mujtahid[];
-  onChangeWakala: (wt: WakalaType[]) => void | Promise<void>;
-  onChangeDistributions: (dists: ObligationDistribution[]) => void | Promise<void>;
-}
-
-interface ModalState {
-  mode: "add" | "edit" | "add-dist" | "edit-dist";
-  distMode?: "add" | "edit";
-  data: Partial<WakalaType> | Partial<ObligationDistribution>;
-}
-
-/**
- * WakalaTypeManager component.
- *
- * @param {WakalaTypeManagerProps} props
- * @returns {React.ReactElement}
- */
-export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes, reps, mujtahids, onChangeWakala, onChangeDistributions }: WakalaTypeManagerProps) {
-  const { t } = useTranslation();
-  const [modal, setModal] = useState<ModalState | null>(null);
-  const emDash = t("obligations.wakala.emDash");
-
-  const distributionTypeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
-    Income: { label: t("obligations.distribution.income"), cls: SEMANTIC_BADGE.success },
-    Liability: { label: t("obligations.distribution.liability"), cls: SEMANTIC_BADGE.info },
-  }), [t]);
-
-  const getRep = (repId: string) => reps.find((rep) => rep.id === repId);
-  const getMujtahid = (mujtahidId: string) => mujtahids.find((mujtahid) => mujtahid.id === mujtahidId);
-  const getObType = (obligationTypeId: string) => obligationTypes.find((obligationType) => obligationType.id === obligationTypeId);
-
-  const getDistributions = (wakalaTypeId: string) => distributions.filter((distribution) => distribution.wakala_type_id === wakalaTypeId);
-
-  const totalPct = (wakalaTypeId: string) =>
-    getDistributions(wakalaTypeId).reduce((sum, distribution) => sum + parseFloat(String(distribution.percentage ?? 0)), 0);
-
-  const handleSaveWakala = async (form: Partial<WakalaType>) => {
-    if (modal?.mode === "add") {
-      await onChangeWakala([...wakalaTypes, { ...form, id: `wt${Date.now()}` } as WakalaType]);
-    } else if (modal?.mode === "edit") {
-      await onChangeWakala(wakalaTypes.map((wakalaType) => wakalaType.id === form.id ? (form as WakalaType) : wakalaType));
-    }
-    setModal(null);
-  };
-
-  const handleDeleteWakala = async (wakalaTypeId: string) => {
-    if (!confirm(t("obligations.wakala.deleteConfirm"))) return;
-    await onChangeWakala(wakalaTypes.filter((wakalaType) => wakalaType.id !== wakalaTypeId));
-    await onChangeDistributions(distributions.filter((distribution) => distribution.wakala_type_id !== wakalaTypeId));
-  };
-
-  const handleSaveDist = async (form: Partial<ObligationDistribution>) => {
-    const existing = getDistributions(form.wakala_type_id!);
-    const otherDistributions = existing.filter((distribution) => distribution.id !== form.id);
-    const newTotal = otherDistributions.reduce((sum, distribution) => sum + parseFloat(String(distribution.percentage ?? 0)), 0) + parseFloat(String(form.percentage ?? 0));
-    if (newTotal > 100) {
-      alert(t("obligations.wakala.pctExceed", { pct: newTotal }));
-      return;
-    }
-    if (modal?.distMode === "add") {
-      await onChangeDistributions([...distributions, { ...form, id: `od${Date.now()}` } as ObligationDistribution]);
-    } else if (modal?.distMode === "edit") {
-      await onChangeDistributions(distributions.map((distribution) => distribution.id === form.id ? (form as ObligationDistribution) : distribution));
-    }
-    setModal(null);
-  };
-
-  const handleDeleteDist = async (distributionId: string) => {
-    if (!confirm(t("obligations.wakala.distDeleteConfirm"))) return;
-    await onChangeDistributions(distributions.filter((distribution) => distribution.id !== distributionId));
-  };
+export function WakalaTypeManager(props: WakalaTypeManagerProps) {
+  const {
+    wakalaTypes,
+    obligationTypes,
+    reps,
+    mujtahids,
+  } = props;
+  const {
+    t,
+    modal,
+    setModal,
+    emDash,
+    distributionTypeConfig,
+    getRep,
+    getMujtahid,
+    getObType,
+    getDistributions,
+    totalPct,
+    handleSaveWakala,
+    handleDeleteWakala,
+    handleSaveDist,
+    handleDeleteDist,
+  } = useWakalaTypeManager(props);
 
   return (
     <div className="space-y-4">
@@ -112,141 +57,23 @@ export function WakalaTypeManager({ wakalaTypes, distributions, obligationTypes,
           const typeName = obligationType?.name || emDash;
 
           return (
-            <Card key={wakalaType.id} accentColor="primary" className="group/wakala">
-              <header className="flex flex-col gap-2 border-b border-border/40 px-5 py-3 ps-5.5 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0 flex-1">
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <h3 className="m-0 min-w-0 truncate text-sm font-bold text-foreground">{typeName}</h3>
-                    <span className="shrink-0 text-xs text-muted-foreground">{t("obligations.wakala.via")}</span>
-                    <span className="min-w-0 truncate text-sm font-semibold text-foreground">{rep?.name || emDash}</span>
-                  </div>
-                  <p className="m-0 mt-0.5 truncate text-xs text-muted-foreground">{t("obligations.wakala.mujtahidLabel", { name: mujtahid?.name || emDash })}</p>
-                </div>
-                <div className="flex shrink-0 items-center gap-1 self-end sm:self-start">
-                  <span aria-label={t("obligations.wakala.totalPctAria", { pct: total.toFixed(0) })}>
-                    <StatusBadge
-                      status={isComplete ? "complete" : "incomplete"}
-                      size="sm"
-                      config={{
-                        complete: { label: `${total.toFixed(0)}%`, cls: SEMANTIC_BADGE.success },
-                        incomplete: { label: `${total.toFixed(0)}%`, cls: SEMANTIC_BADGE.warning },
-                      }}
-                    />
-                  </span>
-                  <Button type="button" aria-label={t("obligations.wakala.editAria", { name: typeName })} onClick={() => setModal({ mode: "edit", data: { ...wakalaType } })}
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
-                    <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
-                  </Button>
-                  <Button type="button" aria-label={t("obligations.wakala.deleteAria", { name: typeName })} onClick={() => handleDeleteWakala(wakalaType.id)}
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
-                    <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                  </Button>
-                </div>
-              </header>
-
-              <div className="bg-muted/20">
-                {!isComplete && total > 0 && (
-                  <div className="flex items-center gap-1.5 px-4 py-2 bg-warning/10 border-b border-warning/20 text-xs text-warning" role="alert">
-                    <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.wakala.incompleteAlert", { pct: total.toFixed(1) })}
-                  </div>
-                )}
-                {wakalaDistributions.length === 0 ? (
-                  <p className="px-4 py-3 text-xs text-muted-foreground m-0">{t("obligations.wakala.noDistributions")}</p>
-                ) : (
-                  <>
-                  <div className="space-y-3 p-3 md:hidden">
-                    {wakalaDistributions.map((distribution) => (
-                      <article
-                        key={distribution.id}
-                        className="space-y-3 rounded-xl border border-border bg-card p-3"
-                      >
-                        <div className="flex min-w-0 items-start justify-between gap-3">
-                          <p className="text-sm font-medium text-foreground">{distribution.name}</p>
-                          <div className="flex shrink-0 items-center gap-1">
-                            <Button type="button" aria-label={t("obligations.wakala.distEditAria", { name: distribution.name })} onClick={() => setModal({ mode: "edit-dist", distMode: "edit", data: { ...distribution } })}
-                              variant="ghost"
-                              size="icon"
-                              className="rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
-                              <Pencil className="w-3 h-3" aria-hidden="true" />
-                            </Button>
-                            <Button type="button" aria-label={t("obligations.wakala.distDeleteAria", { name: distribution.name })} onClick={() => handleDeleteDist(distribution.id)}
-                              variant="ghost"
-                              size="icon"
-                              className="rounded hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
-                              <Trash2 className="w-3 h-3" aria-hidden="true" />
-                            </Button>
-                          </div>
-                        </div>
-                        <dl className="grid grid-cols-2 gap-2 text-sm">
-                          <div>
-                            <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.wakala.colType")}</dt>
-                            <dd>
-                              <StatusBadge status={distribution.type} config={distributionTypeConfig} size="sm" />
-                            </dd>
-                          </div>
-                          <div>
-                            <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.wakala.colPct")}</dt>
-                            <dd className="font-mono text-xs font-semibold text-foreground">{distribution.percentage}%</dd>
-                          </div>
-                        </dl>
-                      </article>
-                    ))}
-                  </div>
-                  <div className="hidden overflow-x-auto md:block">
-                  <table className="w-full text-xs">
-                    <caption className="sr-only">{t("obligations.wakala.distTableCaption")}</caption>
-                    <thead className="border-b border-border">
-                      <tr>
-                        <th scope="col" className="px-4 py-2 text-start font-semibold text-muted-foreground">{t("obligations.wakala.colName")}</th>
-                        <th scope="col" className="px-4 py-2 text-start font-semibold text-muted-foreground">{t("obligations.wakala.colType")}</th>
-                        <th scope="col" className="px-4 py-2 text-start font-semibold text-muted-foreground">{t("obligations.wakala.colPct")}</th>
-                        <th scope="col" className="px-4 py-2 text-end font-semibold text-muted-foreground"><span className="sr-only">{t("obligations.wakala.colActions")}</span></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {wakalaDistributions.map((distribution) => (
-                        <tr key={distribution.id} className="hover:bg-muted/20">
-                          <td className="px-4 py-2 font-medium text-foreground">{distribution.name}</td>
-                          <td className="px-4 py-2">
-                            <StatusBadge status={distribution.type} config={distributionTypeConfig} size="sm" />
-                          </td>
-                          <td className="px-4 py-2 font-mono font-semibold text-foreground">{distribution.percentage}%</td>
-                          <td className="px-4 py-2 text-end">
-                            <div className="flex items-center justify-end gap-1">
-                              <Button type="button" aria-label={t("obligations.wakala.distEditAria", { name: distribution.name })} onClick={() => setModal({ mode: "edit-dist", distMode: "edit", data: { ...distribution } })}
-                                variant="ghost"
-                                size="icon"
-                                className="rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
-                                <Pencil className="w-3 h-3" aria-hidden="true" />
-                              </Button>
-                              <Button type="button" aria-label={t("obligations.wakala.distDeleteAria", { name: distribution.name })} onClick={() => handleDeleteDist(distribution.id)}
-                                variant="ghost"
-                                size="icon"
-                                className="rounded hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
-                                <Trash2 className="w-3 h-3" aria-hidden="true" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  </div>
-                  </>
-                )}
-                <div className="px-4 py-2 border-t border-border">
-                  <Button type="button" onClick={() => setModal({ mode: "add-dist", distMode: "add", data: { name: "", percentage: 0, wakala_type_id: wakalaType.id, type: "Liability" } })}
-                    variant="ghost"
-                    className="flex items-center gap-1 min-h-11 h-auto px-1 text-xs font-semibold text-primary hover:text-primary/80 hover:bg-transparent shadow-none transition-colors">
-                    <Plus className="w-3 h-3" aria-hidden="true" /> {t("obligations.wakala.addDistribution")}
-                  </Button>
-                </div>
-              </div>
-            </Card>
+            <WakalaTypeCard
+              key={wakalaType.id}
+              wakalaType={wakalaType}
+              typeName={typeName}
+              repName={rep?.name || emDash}
+              mujtahidName={mujtahid?.name || emDash}
+              wakalaDistributions={wakalaDistributions}
+              total={total}
+              isComplete={isComplete}
+              distributionTypeConfig={distributionTypeConfig}
+              t={t}
+              onEdit={() => setModal({ mode: "edit", data: { ...wakalaType } })}
+              onDelete={() => { void handleDeleteWakala(wakalaType.id); }}
+              onEditDistribution={(distribution) => setModal({ mode: "edit-dist", distMode: "edit", data: { ...distribution } })}
+              onDeleteDistribution={(distributionId) => { void handleDeleteDist(distributionId); }}
+              onAddDistribution={() => setModal({ mode: "add-dist", distMode: "add", data: { name: "", percentage: 0, wakala_type_id: wakalaType.id, type: "Liability" } })}
+            />
           );
         })}
       </section>

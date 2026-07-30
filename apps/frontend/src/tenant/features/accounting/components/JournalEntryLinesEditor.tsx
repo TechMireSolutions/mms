@@ -8,9 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
-import { FORM_LABEL } from '@/components/ui/formStyles';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { DraftLine } from './journalEntryFormTypes';
+import { JournalEntryLinesEditorMobile } from './JournalEntryLinesEditorMobile';
 
 interface JournalEntryLinesEditorProps {
   accounts: readonly Account[];
@@ -61,95 +61,17 @@ export function JournalEntryLinesEditor({
         </div>
 
         <div className="rounded-xl border border-border overflow-hidden">
-          <div className="space-y-3 p-3 md:hidden">
-            {lines.map((line, lineIndex) => {
-              const account = accounts.find((accountOption) => accountOption.id === line.account_id);
-              return (
-                <article key={line.id} className="space-y-3 rounded-xl border border-border bg-card p-3">
-                  <div className="flex items-center justify-end">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Remove line ${lineIndex + 1}`}
-                      onClick={() => onRemoveLine(lineIndex)}
-                      disabled={lines.length <= 2}
-                      className="text-muted-foreground hover:text-destructive transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                    </Button>
-                  </div>
-                  <div>
-                    <label className={FORM_LABEL}>{t("accounting.journal.detail.account")}</label>
-                    <FormSelect
-                      aria-label={`Account for line ${lineIndex + 1}`}
-                      value={line.account_id}
-                      onChange={(accountId) => onUpdateLine(lineIndex, "account_id", accountId)}
-                      placeholder={t("accounting.journal.form.selectAccount")}
-                      options={accountOptions}
-                    />
-                    {account && (
-                      <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full mt-0.5 inline-block ${ACCOUNT_TYPE_META[account.type]?.color}`}>
-                        {t(`accounting.type.${account.type}` as AppTranslationKey)} · {ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? t("accounting.journal.form.drNormal") : t("accounting.journal.form.crNormal")}
-                      </span>
-                    )}
-                    {errors[`line${lineIndex}`] && <p className="text-xs text-destructive m-0" role="alert">{errors[`line${lineIndex}`]}</p>}
-                  </div>
-                  <div>
-                    <label className={FORM_LABEL}>{t("accounting.ledger.columns.lineNote")}</label>
-                    <Input
-                      aria-label={`Description for line ${lineIndex + 1}`}
-                      value={line.description || ""}
-                      onChange={(event) => onUpdateLine(lineIndex, "description", event.target.value)}
-                      placeholder={t("accounting.journal.form.notePlaceholder")}
-                      className="text-xs"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className={FORM_LABEL}>{t("accounting.ledger.columns.debit")}</label>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        aria-label={`Debit amount for line ${lineIndex + 1}`}
-                        value={line.debit}
-                        placeholder="0.00"
-                        onChange={(event) => onUpdateLine(lineIndex, "debit", event.target.value)}
-                        className="bg-info/5 text-end font-mono text-xs focus:ring-info/30"
-                      />
-                    </div>
-                    <div>
-                      <label className={FORM_LABEL}>{t("accounting.ledger.columns.credit")}</label>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        aria-label={`Credit amount for line ${lineIndex + 1}`}
-                        value={line.credit}
-                        placeholder="0.00"
-                        onChange={(event) => onUpdateLine(lineIndex, "credit", event.target.value)}
-                        className="bg-success/5 text-end font-mono text-xs focus:ring-success/30"
-                      />
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-            <article className="rounded-xl border border-border bg-muted/30 p-3">
-              <p className="text-xs font-bold uppercase text-muted-foreground m-0 mb-2">{t("accounting.journal.form.totals")}</p>
-              <dl className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.ledger.columns.debit")}</dt>
-                  <dd className="font-mono font-bold text-info m-0">{formatCurrency(totalDebit)}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.ledger.columns.credit")}</dt>
-                  <dd className="font-mono font-bold text-success m-0">{formatCurrency(totalCredit)}</dd>
-                </div>
-              </dl>
-            </article>
-          </div>
+          <JournalEntryLinesEditorMobile
+            accounts={accounts}
+            accountOptions={accountOptions}
+            errors={errors}
+            lines={lines}
+            totalDebit={totalDebit}
+            totalCredit={totalCredit}
+            formatCurrency={formatCurrency}
+            onRemoveLine={onRemoveLine}
+            onUpdateLine={onUpdateLine}
+          />
           <div className="hidden overflow-x-auto max-w-full md:block">
             <table className="w-full text-sm">
               <caption className="sr-only">{t("accounting.journal.form.linesCaption")}</caption>

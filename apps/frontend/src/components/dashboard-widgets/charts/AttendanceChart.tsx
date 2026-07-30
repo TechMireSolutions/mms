@@ -12,7 +12,10 @@ import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAttendanceRecordsCollection } from "@/tenant/hooks/collections/attendance";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
-import { formatShortWeekdayLabels } from "@mms/shared";
+import {
+  buildWeeklyAttendancePoints,
+  type AttendancePoint,
+} from "@/components/dashboard-widgets/charts/attendanceChartData";
 import {
   Select,
   SelectContent,
@@ -21,11 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FORM_SELECT_MINI } from "@/components/ui/formStyles";
-
-interface AttendancePoint {
-  day: string;
-  rate: number;
-}
 
 const AttTooltip = ({ active = false, payload = [], label = "" }: Partial<TooltipContentProps>) => {
   if (!active || !payload?.length) return null;
@@ -55,32 +53,10 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
     updatePref,
   } = useDashboardConfig();
 
-  const attendanceData: AttendancePoint[] = useMemo(() => {
-    const uniqueDates = [...new Set(attendanceRecords.map((attendanceRecord) => attendanceRecord.date as string))].sort().reverse().slice(0, 7).reverse();
-    const days = formatShortWeekdayLabels();
-    return days.map((dayLabel, index) => {
-      const targetDate = uniqueDates.find((attendanceDate) => {
-        const dateObj = new Date(attendanceDate);
-        const dayIndex = (dateObj.getDay() + 6) % 7; // Mon=0, Sun=6
-        return dayIndex === index;
-      });
-
-      if (targetDate) {
-        const dayRecords = attendanceRecords.filter((attendanceRecord) => attendanceRecord.date === targetDate);
-        const total = dayRecords.length;
-        const present = dayRecords.filter((attendanceRecord) => attendanceRecord.status === "present" || attendanceRecord.status === "late").length;
-        return {
-          day: dayLabel,
-          rate: total > 0 ? Math.round((present / total) * 100) : 0
-        };
-      }
-
-      return {
-        day: dayLabel,
-        rate: 0
-      };
-    });
-  }, [attendanceRecords]);
+  const attendanceData: AttendancePoint[] = useMemo(
+    () => buildWeeklyAttendancePoints(attendanceRecords),
+    [attendanceRecords],
+  );
   
   const avg = useMemo(() => {
     return attendanceData.length ? Math.round(attendanceData.reduce((sum, attendancePoint) => sum + attendancePoint.rate, 0) / attendanceData.length) : 0;

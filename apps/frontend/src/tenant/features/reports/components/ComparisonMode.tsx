@@ -1,15 +1,11 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { GitCompare, X } from "lucide-react";
-import { DatePicker } from "@/components/ui/DatePicker";
 import { Button } from "@/components/ui/button";
-import { FormSelect } from "@/components/ui/FormSelect";
 import { motion } from "framer-motion";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
-
 import { useContactsReportAnalytics } from '@/tenant/hooks/collections/contacts';
-
 import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
 import { useAttendanceRecordsCollection } from "@/tenant/hooks/collections/attendance";
 import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
@@ -22,6 +18,8 @@ import {
   computeDynamicDateRangeComparison,
   computeDynamicSessionComparison,
 } from "./comparisonModeCompute";
+import { translateComparisonMetricName } from "./comparisonModeMetricLabels";
+import { ComparisonModeSelectors } from "./ComparisonModeSelectors";
 import type { ComparisonDataItem, ComparisonModeProps, DateRange } from "./comparisonModeTypes";
 
 /**
@@ -54,7 +52,6 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
     return [yearA, yearB].filter((year) => Number.isFinite(year));
   }, [isContacts, mode, rangeA.from, rangeB.from]);
 
-
   const { data: reportData } = useContactsReportAnalytics({
     enabled: isContacts,
     compareYears,
@@ -73,9 +70,6 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
   const exams = useExaminationsExamsCollection();
   const denoms = useHasanatDenomsCollection();
 
-
-
-  // Sync targets when category changes
   useEffect(() => {
     if (isContacts) {
       setMode("daterange");
@@ -145,25 +139,10 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
   ]);
 
   const translatedData = useMemo(() => {
-    const translateMetricName = (name: string): string => {
-      switch (name) {
-        case "Total Volume": return t("reports.comparison.metricTotalVolume");
-        case "Conversion%": return t("reports.comparison.metricConversionPct");
-        case "Engagement": return t("reports.comparison.metricEngagement");
-        case "Active Status": return t("reports.comparison.metricActiveStatus");
-        case "Enrollment": return t("reports.comparison.metricEnrollment");
-        case "Attendance%": return t("reports.comparison.metricAttendance");
-        case "Fee Collected": return t("reports.comparison.metricFeeCollected");
-        case "Pass Rate%": return t("reports.comparison.metricPassRate");
-        case "Hasanat": return t("reports.comparison.metricHasanat");
-        default: return name;
-      }
-    };
-
     if (mode !== "sessions") return comparisonData;
     return (comparisonData as ComparisonDataItem[]).map((row) => ({
       ...row,
-      metric: translateMetricName(row.metric),
+      metric: translateComparisonMetricName(row.metric, t),
     }));
   }, [comparisonData, mode, t]);
 
@@ -174,7 +153,6 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
       exit={{ opacity: 0, y: 8 }}
       className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl shadow-sm overflow-hidden"
     >
-      {/* Header */}
       <div className="flex flex-col gap-3 px-4 py-3 bg-primary/5 border-b border-border/50 text-start sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-2">
           <GitCompare className="w-4 h-4 shrink-0 text-primary" />
@@ -198,48 +176,19 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
       </div>
 
       <div className="p-4 space-y-4">
-        {/* Selectors */}
-        {mode === "sessions" ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-start">
-            {[
-              { label: "A", value: valA, setValue: setValA, color: "text-primary" },
-              { label: "B", value: valB, setValue: setValB, color: "text-warning" }
-            ].map(({ label, value, setValue, color }) => (
-              <div key={label} className="flex flex-col gap-1">
-                <label className={`text-xs font-bold uppercase tracking-wide ${color}`}>{isContacts ? t("reports.comparison.stage") : t("reports.comparison.session")} {label}</label>
-                <FormSelect
-                  value={value}
-                  onChange={(newValue) => setValue(newValue)}
-                  options={options.map((option) => ({ value: option.id, label: option.name }))}
-                  className="w-full"
-                />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-start">
-            {[
-              { label: t("reports.comparison.rangeA"), range: rangeA, setRange: setRangeA, color: "text-primary" },
-              { label: t("reports.comparison.rangeB"), range: rangeB, setRange: setRangeB, color: "text-warning" }
-            ].map(({ label, range, setRange, color }) => (
-              <div key={label} className="space-y-2">
-                <p className={`text-xs font-bold uppercase tracking-wide ${color}`}>{label}</p>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                  <DatePicker
-                    value={range.from}
-                    onChange={(value) => setRange((currentRange) => ({ ...currentRange, from: value }))}
-                    className="w-full flex-1 text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-1.5"
-                  />
-                  <DatePicker
-                    value={range.to}
-                    onChange={(value) => setRange((currentRange) => ({ ...currentRange, to: value }))}
-                    className="w-full flex-1 text-sm rounded-lg border border-border/50 bg-background/50 backdrop-blur-sm px-2 py-1.5"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <ComparisonModeSelectors
+          mode={mode}
+          isContacts={isContacts}
+          valA={valA}
+          valB={valB}
+          setValA={setValA}
+          setValB={setValB}
+          rangeA={rangeA}
+          rangeB={rangeB}
+          setRangeA={setRangeA}
+          setRangeB={setRangeB}
+          options={options}
+        />
 
         <ComparisonModeCharts
           mode={mode}

@@ -1,0 +1,96 @@
+import { useState } from 'react';
+import type React from 'react';
+import { apiJson } from '@/lib/apiClient';
+import type { LlmConfig, LlmTestResult } from '@mms/shared';
+import type { SandboxMessage } from './llmSettingsTypes';
+
+export function useLlmSettingsSandbox(configs: LlmConfig[]) {
+  const [sandboxMessages, setSandboxMessages] = useState<SandboxMessage[]>([]);
+  const [sandboxInput, setSandboxInput] = useState('');
+  const [sandboxConfigId, setSandboxConfigId] = useState<string>('');
+  const [sandboxSystemInstruction, setSandboxSystemInstruction] = useState('');
+  const [sandboxTesting, setSandboxTesting] = useState(false);
+
+  const handleSendSandboxMessage = async (event?: React.FormEvent) => {
+    if (event) event.preventDefault();
+    const promptText = sandboxInput.trim();
+    if (!promptText || sandboxTesting) return;
+
+    const targetConfigId = sandboxConfigId || configs.find((config) => config.isDefaultText)?.id || configs[0]?.id;
+    if (!targetConfigId) return;
+
+    const userMsg: SandboxMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: promptText,
+    };
+
+    setSandboxMessages((prev) => [...prev, userMsg]);
+    setSandboxInput('');
+    setSandboxTesting(true);
+
+    const historyForApi = [...sandboxMessages, userMsg].map((message) => ({
+      role: message.role,
+      content: message.content,
+    }));
+
+    try {
+      const res = await apiJson<LlmTestResult>('/api/ai/test', {
+        method: 'POST',
+        body: JSON.stringify({
+          prompt: promptText,
+          systemInstruction: sandboxSystemInstruction.trim() || undefined,
+          configId: targetConfigId,
+          messages: historyForApi,
+        }),
+      });
+
+      if (res.success && res.response) {
+        setSandboxMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            content: res.response as string,
+            metrics: res.metrics,
+          },
+        ]);
+      } else {
+        setSandboxMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            content: res.message || 'Error occurred while testing connection.',
+            error: true,
+          },
+        ]);
+      }
+    } catch (err: unknown) {
+      setSandboxMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: err instanceof Error ? err.message : 'Failed to send message.',
+          error: true,
+        },
+      ]);
+    } finally {
+      setSandboxTesting(false);
+    }
+  };
+
+  return {
+    sandboxMessages,
+    setSandboxMessages,
+    sandboxInput,
+    setSandboxInput,
+    sandboxConfigId,
+    setSandboxConfigId,
+    sandboxSystemInstruction,
+    setSandboxSystemInstruction,
+    sandboxTesting,
+    handleSendSandboxMessage,
+  };
+}

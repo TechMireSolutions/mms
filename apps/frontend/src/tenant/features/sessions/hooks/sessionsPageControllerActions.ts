@@ -1,0 +1,127 @@
+import type { Dispatch, SetStateAction } from 'react';
+import type { Session } from '@/lib/data/sessionsData';
+import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
+import { notify } from '@/lib/notify';
+
+interface SessionMutationHandlersDeps {
+  t: TranslationFunction;
+  editSession: Session | null;
+  detailSession: Session | null;
+  setDetailSession: (session: Session | null) => void;
+  createSession: { mutateAsync: (session: Session) => Promise<{ session?: Session }> };
+  updateSession: { mutateAsync: (payload: { id: string; session: Session }) => Promise<{ session?: Session }> };
+  deleteSession: { mutate: (id: string, options: { onSuccess?: () => void; onError?: (err: unknown) => void }) => void };
+  restoreSession: { mutate: (id: string, options: { onSuccess?: () => void; onError?: (err: unknown) => void }) => void };
+  bulkDeleteSessions: { mutate: (ids: string[], options: { onSuccess?: (result: { succeeded: number; failed: number }) => void; onError?: (error: unknown) => void }) => void };
+  bulkRestoreSessions: { mutate: (ids: string[], options: { onSuccess?: (result: { succeeded: number; failed: number }) => void; onError?: (error: unknown) => void }) => void };
+  selectedIds: string[];
+  setSelectedIds: Dispatch<SetStateAction<string[]>>;
+}
+
+export function createSessionSaveHandler(deps: Pick<SessionMutationHandlersDeps, 't' | 'editSession' | 'detailSession' | 'setDetailSession' | 'createSession' | 'updateSession'>) {
+  return async (sessionToSave: Session) => {
+    if (deps.editSession?.id) {
+      await deps.updateSession.mutateAsync({ id: sessionToSave.id, session: sessionToSave });
+      notify.success(deps.t('sessions.toast.updated'));
+      if (deps.detailSession?.id === sessionToSave.id) deps.setDetailSession(sessionToSave);
+    } else {
+      const created = await deps.createSession.mutateAsync(sessionToSave);
+      notify.success(deps.t('sessions.toast.created'));
+      if (created.session) deps.setDetailSession(created.session);
+    }
+  };
+}
+
+export function createSessionUpdateHandler(deps: Pick<SessionMutationHandlersDeps, 't' | 'setDetailSession' | 'updateSession'>) {
+  return async (updatedSession: Session) => {
+    try {
+      const response = await deps.updateSession.mutateAsync(
+        { id: updatedSession.id, session: updatedSession },
+      );
+      deps.setDetailSession(response.session ?? updatedSession);
+      notify.success(deps.t('sessions.toast.updated'));
+    } catch (error) {
+      notify.error(deps.t('sessions.toast.saveFailed'), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  };
+}
+
+export function createSessionDeleteHandler(deps: Pick<SessionMutationHandlersDeps, 't' | 'detailSession' | 'setDetailSession' | 'deleteSession'>) {
+  return (id: string) => {
+    deps.deleteSession.mutate(id, {
+      onSuccess: () => {
+        notify.info(deps.t('sessions.toast.deleted'));
+        if (deps.detailSession?.id === id) deps.setDetailSession(null);
+      },
+      onError: (err) => notify.error(deps.t('settings.serverSaveFailed'), {
+        description: err instanceof Error ? err.message : String(err),
+      }),
+    });
+  };
+}
+
+export function createSessionRestoreHandler(deps: Pick<SessionMutationHandlersDeps, 't' | 'restoreSession'>) {
+  return (id: string) => {
+    deps.restoreSession.mutate(id, {
+      onSuccess: () => notify.success(deps.t('sessions.toast.restored')),
+      onError: (err) => notify.error(deps.t('settings.serverSaveFailed'), {
+        description: err instanceof Error ? err.message : String(err),
+      }),
+    });
+  };
+}
+
+export function createSessionBulkDeleteHandler(deps: Pick<SessionMutationHandlersDeps, 't' | 'bulkDeleteSessions' | 'selectedIds' | 'setSelectedIds'>) {
+  return () => {
+    deps.bulkDeleteSessions.mutate(deps.selectedIds, {
+      onSuccess: (result) => {
+        if (result.failed > 0) {
+          notify.error(deps.t('sessions.toast.bulkPartial', {
+            succeeded: result.succeeded,
+            failed: result.failed,
+          }));
+        } else {
+          notify.success(deps.t('sessions.toast.deleted'));
+        }
+        deps.setSelectedIds([]);
+      },
+      onError: (error) => notify.error(deps.t('sessions.toast.saveFailed'), {
+        description: error instanceof Error ? error.message : String(error),
+      }),
+    });
+  };
+}
+
+export function createSessionBulkRestoreHandler(deps: Pick<SessionMutationHandlersDeps, 't' | 'bulkRestoreSessions' | 'selectedIds' | 'setSelectedIds'>) {
+  return () => {
+    deps.bulkRestoreSessions.mutate(deps.selectedIds, {
+      onSuccess: (result) => {
+        if (result.failed > 0) {
+          notify.error(deps.t('sessions.toast.bulkPartial', {
+            succeeded: result.succeeded,
+            failed: result.failed,
+          }));
+        } else {
+          notify.success(deps.t('sessions.toast.restored'));
+        }
+        deps.setSelectedIds([]);
+      },
+      onError: (error) => notify.error(deps.t('sessions.toast.saveFailed'), {
+        description: error instanceof Error ? error.message : String(error),
+      }),
+    });
+  };
+}
+
+export function toggleFilterValue<T>(
+  selectedValues: T[],
+  setSelectedValues: Dispatch<SetStateAction<T[]>>,
+  nextValue: T,
+) {
+  setSelectedValues((currentValues) => currentValues.includes(nextValue)
+    ? currentValues.filter((selectedValue) => selectedValue !== nextValue)
+    : [...currentValues, nextValue]);
+}

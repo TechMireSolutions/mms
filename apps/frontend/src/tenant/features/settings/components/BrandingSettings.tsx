@@ -1,8 +1,6 @@
 import React from 'react';
-import { Mail, Phone, Globe, MapPin, Share2, Building2, Type,
-} from 'lucide-react';
+import { Building2, MapPin, Share2 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { notify } from '@/lib/notify';
 import { useSettingsBrandingDraft } from '@/lib/contexts/SettingsBrandingDraftContext';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Input } from '@/components/ui/input';
@@ -10,13 +8,11 @@ import { Label } from '@/components/ui/label';
 import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
 import BrandingIdentityPreview from '@/tenant/features/settings/components/branding/BrandingIdentityPreview';
 import { SettingsPanel } from '@/components/ui/SettingsShell';
+import { SocialLinksEditor } from '@/tenant/features/settings/components/branding/BrandingShared';
 import {
-  FieldHint,
-  ImageUploadField,
-  NAME_MAX,
-  SocialLinksEditor,
-  TAGLINE_MAX,
-} from '@/tenant/features/settings/components/branding/BrandingShared';
+  BrandingSettingsContactSection,
+  BrandingSettingsProfileSection,
+} from '@/tenant/features/settings/components/branding/BrandingSettingsIdentitySections';
 
 /**
  * Institution identity — name, logo, contact, address, and social profiles.
@@ -53,126 +49,8 @@ export default function BrandingSettings(): React.JSX.Element {
         <BrandingIdentityPreview data={data} />
       </SectionCard>
 
-      <SectionCard title={t('branding.profileTitle')} subtitle={t('branding.profileDesc')} icon={Type}>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <Label htmlFor="madrasaName">{t('branding.madrasaName')}</Label>
-                <span className="text-xs text-muted-foreground" aria-live="polite">
-                  {data.madrasaName.length}/{NAME_MAX}
-                </span>
-              </div>
-              <Input
-                id="madrasaName"
-                value={data.madrasaName}
-                maxLength={NAME_MAX}
-                placeholder={t('branding.madrasaNamePlaceholder')}
-                aria-describedby="madrasaName-hint"
-                onChange={(event) => upd('madrasaName', event.target.value)}
-              />
-              <FieldHint id="madrasaName-hint">{t('branding.madrasaNameHint')}</FieldHint>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <Label htmlFor="tagline">{t('branding.tagline')}</Label>
-                <span className="text-xs text-muted-foreground" aria-live="polite">
-                  {data.tagline.length}/{TAGLINE_MAX}
-                </span>
-              </div>
-              <Input
-                id="tagline"
-                value={data.tagline}
-                maxLength={TAGLINE_MAX}
-                placeholder={t('branding.taglinePlaceholder')}
-                aria-describedby="tagline-hint"
-                onChange={(event) => upd('tagline', event.target.value)}
-              />
-              <FieldHint id="tagline-hint">{t('branding.taglineHint')}</FieldHint>
-            </div>
-          </div>
-          <div className="space-y-6">
-            <ImageUploadField
-              id="branding-logo"
-              label={t('branding.logo')}
-              hint={t('branding.logoHint')}
-              value={data.logoUrl}
-              purpose="logo"
-              onChange={(url) => upd('logoUrl', url)}
-              onClear={() => upd('logoUrl', '')}
-              onBrandColorsExtracted={(colors) => {
-                upd('primaryColor', colors.primaryColor);
-                upd('secondaryColor', colors.secondaryColor);
-                notify.success(t('branding.logoColorsApplied'), {
-                  description: t('branding.logoColorsAppliedDesc'),
-                });
-              }}
-            />
-            <ImageUploadField
-              id="branding-favicon"
-              label={t('branding.favicon')}
-              hint={t('branding.faviconHint')}
-              value={data.faviconUrl}
-              onChange={(url) => upd('faviconUrl', url)}
-              onClear={() => upd('faviconUrl', '')}
-              purpose="favicon"
-              previewSize="favicon"
-            />
-          </div>
-        </div>
-      </SectionCard>
-
-      <SectionCard title={t('branding.contactTitle')} subtitle={t('branding.contactSubtitle')} icon={Mail}>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="branding-email">{t('branding.email')}</Label>
-            <div className="relative">
-              <Mail className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-              <Input
-                id="branding-email"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                value={data.email}
-                placeholder={t('branding.emailPlaceholder')}
-                className="ps-9"
-                onChange={(event) => upd('email', event.target.value)}
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="branding-phone">{t('branding.phone')}</Label>
-            <div className="relative">
-              <Phone className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-              <Input
-                id="branding-phone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                value={data.phone}
-                placeholder={t('branding.phonePlaceholder')}
-                className="ps-9"
-                onChange={(event) => upd('phone', event.target.value)}
-              />
-            </div>
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="branding-website">{t('branding.website')}</Label>
-            <div className="relative">
-              <Globe className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-              <Input
-                id="branding-website"
-                type="url"
-                inputMode="url"
-                value={data.website}
-                placeholder={t('branding.websitePlaceholder')}
-                className="ps-9"
-                onChange={(event) => upd('website', event.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-      </SectionCard>
+      <BrandingSettingsProfileSection data={data} upd={upd} />
+      <BrandingSettingsContactSection data={data} upd={upd} />
 
       <SectionCard title={t('branding.addressTitle')} subtitle={t('branding.addressSubtitle')} icon={MapPin}>
         <div className="space-y-4">

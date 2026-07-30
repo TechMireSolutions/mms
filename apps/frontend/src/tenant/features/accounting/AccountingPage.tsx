@@ -5,14 +5,10 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  TrendingUp, List, BookMarked, Scale,
-  BookOpen, LayoutDashboard, Plus,
-} from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
-import { ActionButton } from "@/components/ui/ActionButton";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { AccountingPageHeaderActions } from "@/tenant/features/accounting/components/AccountingPageHeaderActions";
 import { AccountingReportsTier } from "@/tenant/features/accounting/components/AccountingReportsTier";
 import { AccountingSetupTier } from "@/tenant/features/accounting/components/AccountingSetupTier";
 import { AccountingWorkTier } from "@/tenant/features/accounting/components/AccountingWorkTier";
@@ -28,25 +24,12 @@ import {
   useAccountingFiscalYears,
 } from "@/tenant/features/accounting/hooks/useAccountingApi";
 import { useAccountingPageActions } from "@/tenant/features/accounting/hooks/useAccountingPageActions";
-
-const SUB_TAB_IDS = ["overview", "journal", "ledger", "trial", "coa"] as const;
-type SubTabId = (typeof SUB_TAB_IDS)[number];
-
-const SUB_TAB_ICONS: Record<SubTabId, React.ElementType> = {
-  overview: LayoutDashboard,
-  journal: List,
-  ledger: BookMarked,
-  trial: Scale,
-  coa: BookOpen,
-};
-
-const SUB_TAB_KEYS: Record<SubTabId, "accounting.tabs.overview" | "accounting.tabs.journal" | "accounting.tabs.ledger" | "accounting.tabs.trial" | "accounting.tabs.coa"> = {
-  overview: "accounting.tabs.overview",
-  journal: "accounting.tabs.journal",
-  ledger: "accounting.tabs.ledger",
-  trial: "accounting.tabs.trial",
-  coa: "accounting.tabs.coa",
-};
+import {
+  ACCOUNTING_PAGE_ICON,
+  ACCOUNTING_SUB_TAB_ICONS,
+  ACCOUNTING_SUB_TAB_IDS,
+  ACCOUNTING_SUB_TAB_KEYS,
+} from "@/tenant/features/accounting/accountingPageSubTabs";
 
 /**
  * Accounting and bookkeeping — Work | Reports | Setup.
@@ -61,10 +44,10 @@ export default function Accounting() {
   } = useModulePermissions(ACCOUNTING_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const SUB_TABS = useMemo(
-    () => SUB_TAB_IDS.map((subTabId) => ({
+    () => ACCOUNTING_SUB_TAB_IDS.map((subTabId) => ({
       id: subTabId,
-      label: t(SUB_TAB_KEYS[subTabId]),
-      icon: SUB_TAB_ICONS[subTabId],
+      label: t(ACCOUNTING_SUB_TAB_KEYS[subTabId]),
+      icon: ACCOUNTING_SUB_TAB_ICONS[subTabId],
     })),
     [t]
   );
@@ -100,13 +83,15 @@ export default function Accounting() {
     setFilteredCount(journalEntries.length);
   }, [activeSubTab, journalEntries.length]);
 
+  const openJournalCreate = () => {
+    setActiveTab("work");
+    setActiveSubTab("journal");
+    setCreateJournalRequestKey((key) => key + 1);
+  };
+
   useModuleCreateHotkey({
     enabled: canWrite && !showDeleted,
-    onCreate: () => {
-      setActiveTab("work");
-      setActiveSubTab("journal");
-      setCreateJournalRequestKey((key) => key + 1);
-    },
+    onCreate: openJournalCreate,
   });
 
   const activeFiscalYear = fiscalYears.find((fiscalYear) => fiscalYear.status === "active");
@@ -116,30 +101,16 @@ export default function Accounting() {
     <ModulePageShell
       seoTitle={`MMS - ${t("nav.accounting")}`}
       seoDescription={t("page.accounting.subtitle")}
-      headerIcon={TrendingUp}
+      headerIcon={ACCOUNTING_PAGE_ICON}
       headerTitle={t("nav.accounting")}
       headerSubtitle={`${t("page.accounting.subtitle")}${activeFiscalYear ? ` · ${activeFiscalYear.label}` : ""} · ${activeCurrency.code}`}
       headerActions={
-        <div className="flex items-center gap-2">
-          {canWrite && !showDeleted ? (
-            <ActionButton
-              variant="primary"
-              icon={Plus}
-              onClick={() => {
-                setActiveTab("work");
-                setActiveSubTab("journal");
-                setCreateJournalRequestKey((key) => key + 1);
-              }}
-            >
-              {t("accounting.journal.dashboard.newEntry")}
-            </ActionButton>
-          ) : null}
-          {activeFiscalYear && (
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-success/15 text-success border border-success/30">
-              {t("page.accounting.activeBadge", { label: activeFiscalYear.label })}
-            </span>
-          )}
-        </div>
+        <AccountingPageHeaderActions
+          canWrite={canWrite}
+          showDeleted={showDeleted}
+          activeFiscalYear={activeFiscalYear}
+          onCreateJournal={openJournalCreate}
+        />
       }
       metricsStrip={
         <AccountingCommandMetrics entryTotal={journalEntries.length} shown={filteredCount} />

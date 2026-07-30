@@ -117,7 +117,7 @@ export default function BackupHistorySection({
                       variant="ghost"
                       onClick={() => onDownload(backup)}
                       aria-label={t('backup.download')}
-                      disabled={restoreId !== null}
+                      disabled={restoreId !== null || !backup.data}
                       className="text-muted-foreground"
                     >
                       <HardDriveDownload className="h-4 w-4 transition-transform duration-300 group-hover/item:translate-y-0.5" aria-hidden />

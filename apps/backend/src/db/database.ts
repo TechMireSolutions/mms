@@ -2,6 +2,7 @@ export {
   closeDatabase,
   getPool,
   pingDatabase,
+  runInReadSnapshotTransaction,
   runInTransaction,
 } from './dbConnection.js';
 export {

@@ -65,11 +65,12 @@ export function canWriteCollection(user: User, collectionName: string): boolean 
   }
   if (collectionName.startsWith('messages_u:')) {
     const ownerId = collectionName.split(':')[1];
-    return ownerId === user.id;
+    // Full-workspace restore must rewrite every inbox from the backup.
+    return ownerId === user.id || roleHasPermission(user.role, 'settings.global.write');
   }
   if (collectionName.startsWith('whatsappTemplates_u:')) {
     const ownerId = collectionName.split(':')[1];
-    return ownerId === String(user.id);
+    return ownerId === String(user.id) || roleHasPermission(user.role, 'settings.global.write');
   }
   if (collectionName === 'backups') {
     return user.role === 'admin';
@@ -140,15 +141,15 @@ export function canWriteObject(user: User, key: string): boolean {
   return WRITE_ROLES.has(user.role);
 }
 
-/** Admin-only bulk sync upload. */
+/** Bulk sync upload — same privilege as settings.global.write (admin today). */
 export function canBulkSync(user: User): boolean {
   if (!user || !user.role) {
     return false;
   }
-  return user.role === 'admin';
+  return roleHasPermission(user.role, 'settings.global.write');
 }
 
-/** Bulk sync download is admin-only — exports full tenant snapshot. */
+/** Bulk sync download — same privilege as canBulkSync / settings.global.write. */
 export function canDownloadBulkSync(user: User): boolean {
   if (!user || !user.role) {
     return false;
@@ -156,7 +157,7 @@ export function canDownloadBulkSync(user: User): boolean {
   return canBulkSync(user);
 }
 
-/** Tenant reset is admin-only — same privilege as bulk sync. */
+/** Tenant reset — same privilege as canBulkSync / settings.global.write. */
 export function canResetTenantData(user: User): boolean {
   if (!user || !user.role) {
     return false;

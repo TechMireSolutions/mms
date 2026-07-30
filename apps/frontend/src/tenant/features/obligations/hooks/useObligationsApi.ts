@@ -1,4 +1,3 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
   ObligationType,
   Mujtahid,
@@ -10,17 +9,28 @@ import type {
 } from '@mms/shared';
 import { OBLIGATIONS_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
-import { apiJson } from '@/lib/apiClient';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
 import { NotifiedMutationError } from '@/lib/notifiedMutationError';
+import {
+  OBLIGATIONS_TYPES_QUERY_KEY,
+  OBLIGATIONS_MUJTAHIDS_QUERY_KEY,
+  OBLIGATIONS_REPS_QUERY_KEY,
+  OBLIGATIONS_WAKALA_QUERY_KEY,
+  OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY,
+  OBLIGATIONS_COLLECTIONS_QUERY_KEY,
+  OBLIGATIONS_METRICS_QUERY_KEY,
+} from '@/tenant/features/obligations/hooks/obligationsQueryKeys';
 
-export const OBLIGATIONS_TYPES_QUERY_KEY = ['obligations', 'types', 'list'] as const;
-export const OBLIGATIONS_MUJTAHIDS_QUERY_KEY = ['obligations', 'mujtahids', 'list'] as const;
-export const OBLIGATIONS_REPS_QUERY_KEY = ['obligations', 'reps', 'list'] as const;
-export const OBLIGATIONS_WAKALA_QUERY_KEY = ['obligations', 'wakala', 'list'] as const;
-export const OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY = ['obligations', 'distributions', 'list'] as const;
-export const OBLIGATIONS_COLLECTIONS_QUERY_KEY = ['obligations', 'collections', 'list'] as const;
-export const OBLIGATIONS_METRICS_QUERY_KEY = ['obligations', 'metrics'] as const;
+export {
+  OBLIGATIONS_TYPES_QUERY_KEY,
+  OBLIGATIONS_MUJTAHIDS_QUERY_KEY,
+  OBLIGATIONS_REPS_QUERY_KEY,
+  OBLIGATIONS_WAKALA_QUERY_KEY,
+  OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY,
+  OBLIGATIONS_COLLECTIONS_QUERY_KEY,
+  OBLIGATIONS_METRICS_QUERY_KEY,
+};
+export { useObligationsMutations } from '@/tenant/features/obligations/hooks/useObligationsMutations';
 
 const OBLIGATIONS_API = OBLIGATIONS_MODULE_MANIFEST.restBasePath;
 
@@ -127,132 +137,4 @@ export function useObligationsMetrics(options?: { enabled?: boolean }) {
     apiPath: OBLIGATIONS_MODULE_MANIFEST.restBasePath,
     enabled: options?.enabled,
   });
-}
-
-export function useObligationsMutations() {
-  const queryClient = useQueryClient();
-
-  const invalidateCollections = () => {
-    void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_COLLECTIONS_QUERY_KEY });
-    void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
-  };
-
-  const replaceTypes = useMutation({
-    mutationFn: async (types: ObligationType[]) =>
-      apiJson<{ types: ObligationType[] }>(`${OBLIGATIONS_API}/types/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(types),
-      }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_TYPES_QUERY_KEY });
-      void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
-    },
-  });
-
-  const replaceMujtahids = useMutation({
-    mutationFn: async (mujtahids: Mujtahid[]) =>
-      apiJson<{ mujtahids: Mujtahid[] }>(`${OBLIGATIONS_API}/mujtahids/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(mujtahids),
-      }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_MUJTAHIDS_QUERY_KEY });
-      void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
-    },
-  });
-
-  const replaceReps = useMutation({
-    mutationFn: async (reps: MujtahidRep[]) =>
-      apiJson<{ reps: MujtahidRep[] }>(`${OBLIGATIONS_API}/reps/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(reps),
-      }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_REPS_QUERY_KEY });
-      void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
-    },
-  });
-
-  const replaceWakala = useMutation({
-    mutationFn: async (wakalaTypes: WakalaType[]) =>
-      apiJson<{ wakalaTypes: WakalaType[] }>(`${OBLIGATIONS_API}/wakala/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(wakalaTypes),
-      }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_WAKALA_QUERY_KEY });
-      void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
-    },
-  });
-
-  const replaceDistributions = useMutation({
-    mutationFn: async (distributions: ObligationDistribution[]) =>
-      apiJson<{ distributions: ObligationDistribution[] }>(`${OBLIGATIONS_API}/distributions/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(distributions),
-      }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY });
-      void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
-    },
-  });
-
-  const replaceCollections = useMutation({
-    mutationFn: async (collections: ObligationCollection[]) =>
-      apiJson<{ collections: ObligationCollection[] }>(`${OBLIGATIONS_API}/collections/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(collections),
-      }),
-    onSuccess: () => {
-      invalidateCollections();
-    },
-  });
-
-  const deleteCollection = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean }>(`${OBLIGATIONS_API}/collections/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-      }),
-    onSuccess: () => invalidateCollections(),
-  });
-
-  const restoreCollection = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean }>(
-        `${OBLIGATIONS_API}/collections/${encodeURIComponent(id)}/restore`,
-        { method: 'POST' },
-      ),
-    onSuccess: () => invalidateCollections(),
-  });
-
-  const bulkDeleteCollections = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(
-        `${OBLIGATIONS_API}/collections/bulk-delete`,
-        { method: 'POST', body: JSON.stringify({ ids }) },
-      ),
-    onSuccess: () => invalidateCollections(),
-  });
-
-  const bulkRestoreCollections = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(
-        `${OBLIGATIONS_API}/collections/bulk-restore`,
-        { method: 'POST', body: JSON.stringify({ ids }) },
-      ),
-    onSuccess: () => invalidateCollections(),
-  });
-
-  return {
-    replaceTypes,
-    replaceMujtahids,
-    replaceReps,
-    replaceWakala,
-    replaceDistributions,
-    replaceCollections,
-    deleteCollection,
-    restoreCollection,
-    bulkDeleteCollections,
-    bulkRestoreCollections,
-  };
 }

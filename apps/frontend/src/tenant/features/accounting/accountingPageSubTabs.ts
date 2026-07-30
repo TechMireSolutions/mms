@@ -1,0 +1,26 @@
+import React from "react";
+import {
+  TrendingUp, List, BookMarked, Scale,
+  BookOpen, LayoutDashboard,
+} from "lucide-react";
+
+export const ACCOUNTING_SUB_TAB_IDS = ["overview", "journal", "ledger", "trial", "coa"] as const;
+export type AccountingSubTabId = (typeof ACCOUNTING_SUB_TAB_IDS)[number];
+
+export const ACCOUNTING_SUB_TAB_ICONS: Record<AccountingSubTabId, React.ElementType> = {
+  overview: LayoutDashboard,
+  journal: List,
+  ledger: BookMarked,
+  trial: Scale,
+  coa: BookOpen,
+};
+
+export const ACCOUNTING_SUB_TAB_KEYS: Record<AccountingSubTabId, "accounting.tabs.overview" | "accounting.tabs.journal" | "accounting.tabs.ledger" | "accounting.tabs.trial" | "accounting.tabs.coa"> = {
+  overview: "accounting.tabs.overview",
+  journal: "accounting.tabs.journal",
+  ledger: "accounting.tabs.ledger",
+  trial: "accounting.tabs.trial",
+  coa: "accounting.tabs.coa",
+};
+
+export const ACCOUNTING_PAGE_ICON = TrendingUp;

@@ -1,39 +1,11 @@
-import React, { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Info, Layout, GripVertical, Plus, Trash2, Pencil } from "lucide-react";
+import React from "react";
+import { Info, Layout, GripVertical, Plus } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { CoreFieldEditorList } from "@/components/ui/CoreFieldEditorList";
-import { CustomFieldsBuilder, type CustomFieldConfig } from "@/components/ui/CustomFieldsBuilder";
 import { ModuleFieldsSetupTabModals } from "@/components/ui/ModuleFieldsSetupTabModals";
-import { type FieldDefinition, type TabDefinition, toTitleCase } from "@mms/shared";
-
-interface UseFieldsEditorResult {
-  formTabs: TabDefinition[];
-  tabFields: Record<string, FieldDefinition[]>;
-  enabledTabs: Set<string>;
-  requiredTabs: Set<string>;
-  tabFieldEnabled: Record<string, Set<string>>;
-  tabFieldRequired: Record<string, Set<string>>;
-  tabFieldUnique: Record<string, Set<string>>;
-  tabFieldDefaultValues: Record<string, Record<string, unknown>>;
-  tabFieldPermissions: Record<string, Record<string, string[]>>;
-  tabFieldOrder: Record<string, string[]>;
-
-  toggleTabEnabled: (tabId: string) => void;
-  toggleTabRequired: (tabId: string) => void;
-  toggleFieldEnabled: (tabId: string, fieldId: string) => void;
-  toggleFieldRequired: (tabId: string, fieldId: string) => void;
-  toggleFieldUnique: (tabId: string, fieldId: string) => void;
-  handleReorder: (tabId: string, reorderedFields: FieldDefinition[]) => void;
-  handleCustomFieldsChange: (tabId: string, newFields: CustomFieldConfig[]) => void;
-  handleEditField: (tabId: string, updatedField: FieldDefinition) => void;
-  handleDeleteField: (tabId: string, fieldId: string) => void;
-  handleAddTab: (label: string) => void;
-  handleDeleteTab: (key: string) => void;
-  handleRenameTab: (key: string, newLabel: string) => void;
-}
+import { ModuleFieldsSetupTabCard } from "@/components/ui/ModuleFieldsSetupTabCard";
+import type { UseFieldsEditorResult } from "@/components/ui/moduleFieldsSetupShared";
+import { useModuleFieldsSetupHandlers } from "@/components/ui/useModuleFieldsSetupHandlers";
 
 interface ModuleFieldsSetupProps {
   editor: UseFieldsEditorResult;
@@ -49,12 +21,6 @@ interface ModuleFieldsSetupProps {
   };
 }
 
-function getOrderedFields(fields: FieldDefinition[], savedOrder: string[] | undefined): FieldDefinition[] {
-  if (!savedOrder || savedOrder.length === 0) return fields;
-  const orderByKey = Object.fromEntries(savedOrder.map((key, index) => [key, index]));
-  return [...fields].sort((leftField, rightField) => (orderByKey[leftField.key] ?? 9999) - (orderByKey[rightField.key] ?? 9999)) as FieldDefinition[];
-}
-
 export function ModuleFieldsSetup({
   editor,
   isCoreField,
@@ -64,47 +30,10 @@ export function ModuleFieldsSetup({
   labels,
 }: ModuleFieldsSetupProps): React.JSX.Element {
   const { t } = useTranslation();
-  const [isAddTabModalOpen, setIsAddTabModalOpen] = useState(false);
-  const [newTabLabel, setNewTabLabel] = useState("");
-  const [renamingTabKey, setRenamingTabKey] = useState<string | null>(null);
-  const [renameTabLabel, setRenameTabLabel] = useState("");
-
-  const triggerChange = (action: () => void) => {
-    action();
-    if (onStateChange) onStateChange();
-  };
-
-  const handleToggleTabEnabled = (tabId: string) => triggerChange(() => editor.toggleTabEnabled(tabId));
-  const handleToggleTabRequired = (tabId: string) => triggerChange(() => editor.toggleTabRequired(tabId));
-  const handleToggleFieldEnabled = (tabId: string, fieldId: string) => triggerChange(() => editor.toggleFieldEnabled(tabId, fieldId));
-  const handleToggleFieldRequired = (tabId: string, fieldId: string) => triggerChange(() => editor.toggleFieldRequired(tabId, fieldId));
-  const handleToggleFieldUnique = (tabId: string, fieldId: string) => triggerChange(() => editor.toggleFieldUnique(tabId, fieldId));
-  const handleReorderFields = (tabId: string, reorderedFields: FieldDefinition[]) => triggerChange(() => editor.handleReorder(tabId, reorderedFields));
-  
-  const handleCustomFieldsChangeLocal = (tabId: string, newFields: CustomFieldConfig[]) =>
-    triggerChange(() => editor.handleCustomFieldsChange(tabId, newFields));
-
-  const handleEditFieldLocal = (tabId: string, updatedField: FieldDefinition) =>
-    triggerChange(() => editor.handleEditField(tabId, updatedField));
-
-  const handleDeleteFieldLocal = (tabId: string, fieldId: string) =>
-    triggerChange(() => editor.handleDeleteField(tabId, fieldId));
-
-  const handleAddTabLocal = (label: string) =>
-    triggerChange(() => editor.handleAddTab(label));
-
-  const handleDeleteTabLocal = (key: string) =>
-    triggerChange(() => editor.handleDeleteTab(key));
-
-  const handleRenameTabLocal = (key: string, newLabel: string) =>
-    triggerChange(() => editor.handleRenameTab(key, newLabel));
-
-  const isUniqueField = (tabId: string, fieldId: string): boolean =>
-    editor.tabFieldUnique[tabId]?.has(fieldId) || false;
+  const handlers = useModuleFieldsSetupHandlers({ editor, onStateChange });
 
   return (
     <div className="space-y-4">
-      {/* Intro info box */}
       <div className="flex items-start gap-3 p-4 rounded-xl bg-info/10 border border-info/30 text-sm text-info text-start">
         <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
         <div>
@@ -115,7 +44,6 @@ export function ModuleFieldsSetup({
         </div>
       </div>
 
-      {/* Fields header */}
       <div className="flex items-center justify-between flex-wrap gap-2 text-start">
         <div className="flex items-center gap-2">
           <Layout className="w-4 h-4 text-primary" />
@@ -128,132 +56,52 @@ export function ModuleFieldsSetup({
         </div>
       </div>
 
-      {/* Tabs list */}
       <div className="space-y-3">
-        {editor.formTabs.map((tab) => {
-          const tabId = tab.key;
-          const tabLabel = toTitleCase(tab.labelKey ? t(tab.labelKey) : tab.label);
-          const tabDesc = tab.description || (tab.isSystem === false ? t("contacts.setup.customTabDescription") : "");
-          const tabDefs = editor.tabFields[tabId] || [];
-          const enabledSet = editor.tabFieldEnabled[tabId] || new Set();
-          const requiredSet = editor.tabFieldRequired[tabId] || new Set();
-          const isOn = tabId === "basic" ? true : editor.enabledTabs.has(tabId);
-          const isReq = editor.requiredTabs.has(tabId);
-
-          return (
-            <Card key={tabId} accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md text-start">
-              <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/20 border-b border-border/40 ps-6.5">
-                <div className="flex items-center justify-center">
-                  <Checkbox
-                    checked={isOn}
-                    onCheckedChange={tabId !== "basic" ? () => handleToggleTabEnabled(tabId) : undefined}
-                    aria-label={`${t("contacts.setup.enableTab")} ${tabLabel}`}
-                    disabled={tabId === "basic"}
-                  />
-                </div>
-                <div className="flex-1 min-w-0 ms-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-foreground">{tabLabel}</span>
-                    {!tab.isSystem && (
-                      <div className="flex items-center gap-1.5 ms-2">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => {
-                            setRenamingTabKey(tabId);
-                            setRenameTabLabel(tab.label);
-                          }}
-                          className="min-h-11 min-w-11 p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none flex items-center justify-center"
-                          title={t("common.edit")}
-                        >
-                          <Pencil className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => handleDeleteTabLocal(tabId)}
-                          className="min-h-11 min-w-11 p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none flex items-center justify-center"
-                          title={t("common.delete")}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{tabDesc}</p>
-                </div>
-                <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
-                  {tabDefs.filter((field) => enabledSet.has(field.key)).length}/{tabDefs.length}
-                </span>
-                {tabId !== "basic" && isOn && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => handleToggleTabRequired(tabId)}
-                    className={`flex-shrink-0 min-h-11 px-2.5 text-xs font-bold border transition-all shadow-none ms-2
-                      ${
-                        isReq
-                          ? "bg-destructive/10 border-destructive/30 text-destructive hover:bg-destructive/20 hover:text-destructive"
-                          : "bg-muted border-border text-muted-foreground hover:text-foreground"
-                      }`}
-                  >
-                    {isReq ? t("contacts.setup.fieldRequired") : t("contacts.setup.fieldOptional")}
-                  </Button>
-                )}
-              </div>
-
-              {isOn && (
-                <div className="p-3 space-y-3">
-                  <CoreFieldEditorList
-                    tabId={tabId}
-                    fields={getOrderedFields(tabDefs, editor.tabFieldOrder[tabId])}
-                    enabledSet={enabledSet}
-                    requiredSet={requiredSet}
-                    onToggleEnabled={(fieldId: string) => handleToggleFieldEnabled(tabId, fieldId)}
-                    onToggleRequired={(fieldId: string) => handleToggleFieldRequired(tabId, fieldId)}
-                    onToggleUnique={(fieldId: string) => handleToggleFieldUnique(tabId, fieldId)}
-                    onReorder={(reordered: FieldDefinition[]) => handleReorderFields(tabId, reordered)}
-                    isUniqueField={isUniqueField}
-                    isCoreField={(key: string) => isCoreField(tabId, key)}
-                    defaultValues={editor.tabFieldDefaultValues[tabId]}
-                    permissions={editor.tabFieldPermissions[tabId]}
-                    onChangeDefaults={(fieldId: string, fieldValue: unknown) => {
-                      triggerChange(() => {
-                        editor.tabFieldDefaultValues[tabId] = {
-                          ...(editor.tabFieldDefaultValues[tabId] || {}),
-                          [fieldId]: fieldValue,
-                        };
-                      });
-                    }}
-                    onChangePermissions={(fieldId: string, roles: string[]) => {
-                      triggerChange(() => {
-                        editor.tabFieldPermissions[tabId] = {
-                          ...(editor.tabFieldPermissions[tabId] || {}),
-                          [fieldId]: roles,
-                        };
-                      });
-                    }}
-                    onEditField={(fieldDefinition: FieldDefinition) => handleEditFieldLocal(tabId, fieldDefinition)}
-                    onDeleteField={(fieldId: string) => handleDeleteFieldLocal(tabId, fieldId)}
-                    labels={labels}
-                  />
-                  <div className="border-t border-border pt-3">
-                    <CustomFieldsBuilder
-                      fields={(editor.tabFields[tabId] || []).map((field) => ({ ...field, id: field.key })) as unknown as CustomFieldConfig[]}
-                      droppableId={`custom-fields-${tabId}`}
-                      onChange={(customFields) => handleCustomFieldsChangeLocal(tabId, customFields)}
-                    />
-                  </div>
-                </div>
-              )}
-            </Card>
-          );
-        })}
+        {editor.formTabs.map((tab) => (
+          <ModuleFieldsSetupTabCard
+            key={tab.key}
+            tab={tab}
+            editor={editor}
+            isCoreField={isCoreField}
+            labels={labels}
+            isUniqueField={handlers.isUniqueField}
+            onToggleTabEnabled={handlers.handleToggleTabEnabled}
+            onToggleTabRequired={handlers.handleToggleTabRequired}
+            onToggleFieldEnabled={handlers.handleToggleFieldEnabled}
+            onToggleFieldRequired={handlers.handleToggleFieldRequired}
+            onToggleFieldUnique={handlers.handleToggleFieldUnique}
+            onReorderFields={handlers.handleReorderFields}
+            onCustomFieldsChange={handlers.handleCustomFieldsChangeLocal}
+            onEditField={handlers.handleEditFieldLocal}
+            onDeleteField={handlers.handleDeleteFieldLocal}
+            onDeleteTab={handlers.handleDeleteTabLocal}
+            onStartRenameTab={(tabId, currentLabel) => {
+              handlers.setRenamingTabKey(tabId);
+              handlers.setRenameTabLabel(currentLabel);
+            }}
+            onChangeDefaults={(tabId, fieldId, fieldValue) => {
+              handlers.triggerChange(() => {
+                editor.tabFieldDefaultValues[tabId] = {
+                  ...(editor.tabFieldDefaultValues[tabId] || {}),
+                  [fieldId]: fieldValue,
+                };
+              });
+            }}
+            onChangePermissions={(tabId, fieldId, roles) => {
+              handlers.triggerChange(() => {
+                editor.tabFieldPermissions[tabId] = {
+                  ...(editor.tabFieldPermissions[tabId] || {}),
+                  [fieldId]: roles,
+                };
+              });
+            }}
+          />
+        ))}
 
         <div className="flex justify-end pt-2">
           <Button
             type="button"
-            onClick={() => setIsAddTabModalOpen(true)}
+            onClick={() => handlers.setIsAddTabModalOpen(true)}
             className="flex min-h-11 items-center gap-1.5 rounded-xl bg-primary/10 px-4 py-2 text-sm font-semibold text-primary shadow-none transition-all hover:bg-primary/20"
           >
             <Plus className="w-4 h-4" />
@@ -263,16 +111,16 @@ export function ModuleFieldsSetup({
       </div>
 
       <ModuleFieldsSetupTabModals
-        isAddTabModalOpen={isAddTabModalOpen}
-        setIsAddTabModalOpen={setIsAddTabModalOpen}
-        newTabLabel={newTabLabel}
-        setNewTabLabel={setNewTabLabel}
-        onAddTab={handleAddTabLocal}
-        renamingTabKey={renamingTabKey}
-        setRenamingTabKey={setRenamingTabKey}
-        renameTabLabel={renameTabLabel}
-        setRenameTabLabel={setRenameTabLabel}
-        onRenameTab={handleRenameTabLocal}
+        isAddTabModalOpen={handlers.isAddTabModalOpen}
+        setIsAddTabModalOpen={handlers.setIsAddTabModalOpen}
+        newTabLabel={handlers.newTabLabel}
+        setNewTabLabel={handlers.setNewTabLabel}
+        onAddTab={handlers.handleAddTabLocal}
+        renamingTabKey={handlers.renamingTabKey}
+        setRenamingTabKey={handlers.setRenamingTabKey}
+        renameTabLabel={handlers.renameTabLabel}
+        setRenameTabLabel={handlers.setRenameTabLabel}
+        onRenameTab={handlers.handleRenameTabLocal}
       />
     </div>
   );

@@ -76,8 +76,10 @@ export default function BackupImportSection({
         ) : null}
         
         <input
+          id="workspace-backup"
           type="file"
-          accept=".json,.mmsbak,application/json"
+          accept=".mmsbak"
+          name="workspace-backup"
           className="hidden"
           onChange={(event) => {
             onFileSelected(event.target.files?.[0]);

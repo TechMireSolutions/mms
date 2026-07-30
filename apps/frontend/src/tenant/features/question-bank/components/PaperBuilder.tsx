@@ -1,22 +1,15 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { notify } from "@/lib/notify";
 import { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";
 import { type QuestionBankQuestion as Question, type QuestionBankTest } from "@mms/shared";
 import { usePaperBuilderState } from "@/tenant/features/question-bank/hooks/usePaperBuilderState";
+import { usePaperBuilderHandlers } from "@/tenant/features/question-bank/hooks/usePaperBuilderHandlers";
 import { PaperDetailsForm } from "@/tenant/features/question-bank/components/PaperDetailsForm";
 import { PaperPreviewPanel } from "@/tenant/features/question-bank/components/PaperPreviewPanel";
 import { PaperQuestionPicker } from "@/tenant/features/question-bank/components/PaperQuestionPicker";
 import { PaperSectionsEditor } from "@/tenant/features/question-bank/components/PaperSectionsEditor";
 import { SavedPapersPanel } from "@/tenant/features/question-bank/components/SavedPapersPanel";
-import {
-  ALL_FILTER,
-  createPaperDraftFromTest,
-  getPaperQuestionIds,
-  normalizePaperSections,
-  openPaperPrintWindow,
-} from "@/tenant/features/question-bank/components/paperBuilderUtils";
 
 interface PaperBuilderProps {
   questions: Question[];
@@ -67,81 +60,27 @@ export function PaperBuilder({ questions, tests, activeTab, showHeader = true, o
     questions,
   });
 
-  const categoryById = useMemo(
-    () => new Map(qbConfig.categories.map((category) => [category.id, { color: category.color, name: category.name }])),
-    [qbConfig.categories],
-  );
-
-  const categoryOptions = useMemo(
-    () => [
-      { value: ALL_FILTER, label: t("questionBank.allCategories") },
-      ...qbConfig.categories.map((category) => ({ value: category.id, label: category.name })),
-    ],
-    [qbConfig.categories, t],
-  );
-
-  const difficultyOptions = useMemo(
-    () => [
-      { value: ALL_FILTER, label: t("questionBank.difficultyAny") },
-      ...qbConfig.enabledDifficulties.map((difficulty) => ({ value: difficulty, label: qbConfig.difficultyLabel(difficulty) })),
-    ],
-    [qbConfig, t],
-  );
-
-  const handlePrintPaper = (): void => {
-    const content = printRef.current;
-    if (!content) return;
-    const title = config.name || t("questionBank.previewDefaultName");
-    const didOpen = openPaperPrintWindow(content, title);
-    if (!didOpen) notify.warning(t("questionBank.printWindowBlocked"));
-  };
-
-  const describeError = (caughtError: unknown): string | undefined =>
-    caughtError instanceof Error ? caughtError.message : undefined;
-
-  const handleSave = async () => {
-    const paperSections = normalizePaperSections(sections);
-    const questionIds = getPaperQuestionIds(paperSections);
-    if (questionIds.length === 0 || saving) return;
-    const currentPaper = activePaperId ? tests.find((paper) => paper.id === activePaperId) : undefined;
-    const examClass = config.examClass.trim();
-    const instructions = config.instructions.trim();
-    const paperName = config.name.trim() || t("questionBank.previewDefaultName");
-    const savedPaper = {
-      id: activePaperId ?? `paper-${Date.now()}`,
-      name: paperName,
-      categoryId: null,
-      difficulty: "mixed",
-      questionIds,
-      duration: config.duration,
-      createdAt: currentPaper?.createdAt ?? new Date().toISOString(),
-      ...(examClass ? { examClass } : {}),
-      totalMarks: config.totalMarks,
-      ...(instructions ? { instructions } : {}),
-      sections: paperSections,
-    } satisfies QuestionBankTest;
-    setSaving(true);
-    try {
-      await onSaveTest(savedPaper);
-      setActivePaperId(savedPaper.id);
-      setSaved(true);
-      notify.success(t("questionBank.paperSaved"), { description: t("questionBank.testCreatedDesc") });
-    } catch (caughtError: unknown) {
-      notify.error(t("questionBank.paperSaveFailed"), { description: describeError(caughtError) });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleOpenPaper = (paper: QuestionBankTest): void => {
-    const draft = createPaperDraftFromTest(
-      paper,
-      (sectionNumber) => t("questionBank.defaultSectionTitle", { n: sectionNumber }),
-    );
-    loadPaperDraft(draft.config, draft.sections);
-    setActivePaperId(paper.id);
-    notify.success(t("questionBank.paperLoaded"), { description: paper.name });
-  };
+  const {
+    categoryById,
+    categoryOptions,
+    difficultyOptions,
+    handlePrintPaper,
+    handleSave,
+    handleOpenPaper,
+  } = usePaperBuilderHandlers({
+    questions,
+    tests,
+    activePaperId,
+    setActivePaperId,
+    saving,
+    setSaving,
+    setSaved,
+    onSaveTest,
+    printRef,
+    config,
+    sections,
+    loadPaperDraft,
+  });
 
   return (
     <article className="space-y-3 sm:space-y-4" aria-labelledby={showHeader ? "paper-generator-title" : undefined}>

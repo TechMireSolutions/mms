@@ -92,9 +92,21 @@ describe("rbacService", () => {
     expect(canReadObject(teacher, "email_integration")).toBe(false);
   });
 
-  it("restricts bulk sync to admin", () => {
+  it("restricts bulk sync to settings.global.write", () => {
     expect(canBulkSync(admin)).toBe(true);
     expect(canBulkSync(teacher)).toBe(false);
+    expect(canBulkSync(accountant)).toBe(false);
+  });
+
+  it("lets bulk-sync admins restore every per-user inbox and lookup list", () => {
+    expect(canWriteCollection(admin, "messages_u:other-user")).toBe(true);
+    expect(canWriteCollection(admin, "whatsappTemplates_u:other-user")).toBe(true);
+    expect(canWriteCollection(teacher, "messages_u:other-user")).toBe(false);
+    expect(canWriteCollection(teacher, "messages_u:2")).toBe(true);
+    expect(canWriteCollection(admin, "currencies")).toBe(true);
+    expect(canWriteCollection(admin, "teacherStatuses")).toBe(true);
+    expect(canWriteCollection(admin, "sessionTypes")).toBe(true);
+    expect(canWriteCollection(admin, "attendanceStatuses")).toBe(true);
   });
 
   it("restricts tenant reset to admin", () => {

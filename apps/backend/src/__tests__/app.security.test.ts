@@ -9,6 +9,27 @@ vi.mock('../db/database.js', () => ({
   getObject: vi.fn().mockResolvedValue(null),
 }));
 
+vi.mock('../services/dbSyncService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/dbSyncService.js')>();
+  return {
+    ...actual,
+    synchronizeData: vi.fn().mockResolvedValue(undefined),
+    fetchBackupSnapshot: vi.fn().mockResolvedValue({
+      collections: {
+        users: [{ id: 'u-admin', role: 'admin', email: 'admin@test.com' }],
+        contacts: [{ id: 'c-1' }],
+        students: [{ id: 's-1' }],
+        'messages_u:peer': [{ id: 'm-1', text: 'hello' }],
+        genders: [{ id: 'male' }],
+      },
+      objects: {
+        branding: { madrasaName: 'Demo Madrasa' },
+        global_settings: { language: 'en' },
+      },
+    }),
+  };
+});
+
 vi.mock('../services/auth/authArtifactService.js', () => ({
   purgeExpiredAuthArtifacts: vi.fn().mockResolvedValue(undefined),
   putAuthArtifact: vi.fn(),
@@ -87,6 +108,33 @@ describe('tenant JWT binding', () => {
     });
     expect(res.statusCode).toBe(403);
     expect(res.json()).toMatchObject({ type: 'forbidden' });
+    await app.close();
+  });
+
+  it('allows admin backup download of the full tenant snapshot', async () => {
+    const app = await buildApp();
+    const token = adminToken(app);
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/db/backup',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${token}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as {
+      collections: Record<string, unknown[]>;
+      objects: Record<string, unknown>;
+    };
+    expect(body.collections.users).toEqual([
+      { id: 'u-admin', role: 'admin', email: 'admin@test.com' },
+    ]);
+    expect(body.collections.students).toEqual([{ id: 's-1' }]);
+    expect(body.collections['messages_u:peer']).toEqual([{ id: 'm-1', text: 'hello' }]);
+    expect(body.collections.genders).toEqual([{ id: 'male' }]);
+    expect(body.objects.branding).toEqual({ madrasaName: 'Demo Madrasa' });
+    expect(body.objects).not.toHaveProperty('platform_super_users');
     await app.close();
   });
 
@@ -337,6 +385,75 @@ describe('tenant JWT binding', () => {
       expect(resObj.statusCode).toBe(403);
       expect(resObj.json()).toMatchObject({ type: 'forbidden' });
 
+      await app.close();
+    });
+
+    it('strips unsupported legacy collections instead of rejecting the restore', async () => {
+      const app = await buildApp();
+      const token = adminToken(app);
+      const { synchronizeData } = await import('../services/dbSyncService.js');
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/db/sync',
+        headers: {
+          host: 'demo.localhost',
+          authorization: `Bearer ${token}`,
+        },
+        payload: {
+          collections: {
+            users: [{ id: 'u-admin', role: 'admin', email: 'admin@demo.local' }],
+            audit_log: [{ id: 'a-1' }],
+            hasanat_payouts: [{ id: 'legacy-1' }],
+            teacherStatuses: [{ id: 'active', name: 'Active' }],
+          },
+          objects: {
+            branding: { madrasaName: 'Demo' },
+          },
+        },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toMatchObject({ success: true });
+      expect(synchronizeData).toHaveBeenCalledWith(
+        expect.objectContaining({
+          collections: expect.objectContaining({
+            users: [{ id: 'u-admin', role: 'admin', email: 'admin@demo.local' }],
+            teacherStatuses: [{ id: 'active', name: 'Active' }],
+          }),
+        }),
+        expect.any(AbortSignal),
+      );
+      const synced = vi.mocked(synchronizeData).mock.calls.at(-1)?.[0] as {
+        collections: Record<string, unknown[]>;
+      };
+      expect(synced.collections).not.toHaveProperty('audit_log');
+      expect(synced.collections).not.toHaveProperty('hasanat_payouts');
+      await app.close();
+    });
+
+    it('allows admin sync of peer inboxes and module lookup collections', async () => {
+      const app = await buildApp();
+      const token = adminToken(app);
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/db/sync',
+        headers: {
+          host: 'demo.localhost',
+          authorization: `Bearer ${token}`,
+        },
+        payload: {
+          collections: {
+            users: [{ id: 'u-admin', role: 'admin', email: 'admin@demo.local' }],
+            'messages_u:peer': [{ id: 'm1', text: 'hello' }],
+            teacherStatuses: [{ id: 'active', name: 'Active' }],
+            currencies: [{ id: 'pkr', code: 'PKR' }],
+          },
+          objects: {
+            branding: { madrasaName: 'Demo' },
+          },
+        },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toMatchObject({ success: true });
       await app.close();
     });
   });

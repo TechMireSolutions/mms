@@ -1,21 +1,11 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Card } from "@/components/ui/card";
-import { Search, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
 import {
-  ACTIVITY_ACTION_VALUES,
-  formatDate,
   type ActivityLog,
   type SystemUser,
 } from '@mms/shared';
-import { useTranslation } from '@/hooks/useTranslation';
-import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
-import { DatePicker } from '@/components/ui/DatePicker';
-import { ActivityActionBadge } from '@/tenant/features/users/components/UserBadges';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { FormSelect } from '@/components/ui/FormSelect';
-import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
 import { useLocalPagination } from '@/hooks/useLocalPagination';
+import { ActivityLogsFilters } from '@/tenant/features/users/components/ActivityLogsFilters';
+import { ActivityLogsList } from '@/tenant/features/users/components/ActivityLogsList';
 
 const PAGE_SIZE = 15;
 
@@ -32,8 +22,6 @@ export function ActivityLogs({
   getColumnWidth,
   onColumnResize,
 }: ActivityLogsProps): React.JSX.Element {
-  const { t } = useTranslation();
-  const globalSettings = useGlobalSettings();
   const [userFilter, setUser] = useState('all');
   const [actionFilter, setAct] = useState('all');
   const [dateFrom, setFrom] = useState('');
@@ -66,175 +54,32 @@ export function ActivityLogs({
     searchFields: (log) => [userNameFor(log), log.detail],
   });
 
-  const fmtTs = (ts: string): string => formatDate(ts, globalSettings.dateFormat, false);
-
-  const userOptions = useMemo(() => [
-    { value: 'all', label: t('users.activityAllUsers') },
-    ...users.map((user) => ({ value: user.id, label: user.name })),
-  ], [users, t]);
-
-  const actionOptions = useMemo(() => [
-    { value: 'all', label: t('users.activityAllActions') },
-    ...ACTIVITY_ACTION_VALUES.map((activityAction) => ({
-      value: activityAction,
-      label: t(`users.action.${activityAction === 'login_failed' ? 'loginFailed' : activityAction === 'role_change' ? 'roleChange' : activityAction}`),
-    })),
-  ], [t]);
-
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[11.25rem] flex-1">
-          <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder={t('users.activitySearch')}
-            className="ps-9.5"
-          />
-        </div>
-        <FormSelect
-          value={userFilter}
-          onChange={setUser}
-          options={userOptions}
-          aria-label={t('users.activityFilterUser')}
-          className="w-auto min-w-[8.75rem]"
-        />
-        <FormSelect
-          value={actionFilter}
-          onChange={setAct}
-          options={actionOptions}
-          aria-label={t('users.activityFilterAction')}
-          className="w-auto min-w-[10rem]"
-        />
-        <DatePicker value={dateFrom} onChange={setFrom} className="text-sm" />
-        <DatePicker value={dateTo} onChange={setTo} className="text-sm" />
-      </div>
+      <ActivityLogsFilters
+        search={search}
+        onSearchChange={setSearch}
+        userFilter={userFilter}
+        onUserFilterChange={setUser}
+        actionFilter={actionFilter}
+        onActionFilterChange={setAct}
+        dateFrom={dateFrom}
+        onDateFromChange={setFrom}
+        dateTo={dateTo}
+        onDateToChange={setTo}
+        users={users}
+      />
 
-      {paginated.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card py-16 text-center">
-          <Activity className="h-8 w-8 text-muted-foreground" />
-          <p className="text-sm font-semibold text-foreground">{t('users.activityEmpty')}</p>
-        </div>
-      ) : (
-        <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
-          <div className="space-y-3 p-3 md:hidden">
-            {paginated.map((log) => (
-              <article
-                key={log.id}
-                className="space-y-3 rounded-xl border border-border bg-card p-3"
-              >
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-foreground">{userNameFor(log)}</p>
-                    <p className="text-xs text-muted-foreground">{fmtTs(log.ts)}</p>
-                  </div>
-                  <ActivityActionBadge action={log.action} />
-                </div>
-                <dl className="grid grid-cols-1 gap-2 text-sm">
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t('users.activityColDetail')}</dt>
-                    <dd className="text-xs text-muted-foreground">{log.detail}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t('users.activityColIp')}</dt>
-                    <dd className="font-mono text-xs text-muted-foreground">{log.ip}</dd>
-                  </div>
-                </dl>
-              </article>
-            ))}
-          </div>
-          <div className="hidden overflow-x-auto md:block">
-          <table className="w-full text-sm table-fixed">
-            <thead className="border-b border-border bg-muted/60">
-              <tr>
-                <ResizableTableHead
-                  columnKey="time"
-                  width={getColumnWidth?.('time')}
-                  onResize={onColumnResize}
-                  className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground"
-                >
-                  {t('users.activityColTime')}
-                </ResizableTableHead>
-                <ResizableTableHead
-                  columnKey="user"
-                  width={getColumnWidth?.('user')}
-                  onResize={onColumnResize}
-                  className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground"
-                >
-                  {t('users.activityColUser')}
-                </ResizableTableHead>
-                <ResizableTableHead
-                  columnKey="action"
-                  width={getColumnWidth?.('action')}
-                  onResize={onColumnResize}
-                  className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground"
-                >
-                  {t('users.activityColAction')}
-                </ResizableTableHead>
-                <ResizableTableHead
-                  columnKey="detail"
-                  width={getColumnWidth?.('detail')}
-                  onResize={onColumnResize}
-                  className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground"
-                >
-                  {t('users.activityColDetail')}
-                </ResizableTableHead>
-                <ResizableTableHead
-                  columnKey="ip"
-                  width={getColumnWidth?.('ip')}
-                  onResize={onColumnResize}
-                  className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground"
-                >
-                  {t('users.activityColIp')}
-                </ResizableTableHead>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {paginated.map((l) => (
-                <tr key={l.id} className="hover:bg-muted/20">
-                  <td className="whitespace-nowrap px-3 py-2.5 text-xs text-muted-foreground">{fmtTs(l.ts)}</td>
-                  <td className="px-3 py-2.5 text-xs font-semibold text-foreground">{userNameFor(l)}</td>
-                  <td className="px-3 py-2.5">
-                    <ActivityActionBadge action={l.action} />
-                  </td>
-                  <td className="px-3 py-2.5 text-xs text-muted-foreground">{l.detail}</td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-muted-foreground">{l.ip}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-        </Card>
-      )}
-
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-        <span className="min-w-0">{t('users.activityPageInfo', { page, total: totalPages, count: filtered.length })}</span>
-        <div className="flex shrink-0 gap-1">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            disabled={page <= 1}
-            onClick={() => setPage((currentPage) => currentPage - 1)}
-            className="rounded-lg border border-border disabled:opacity-40 shadow-none"
-            aria-label={t('users.activityPrev')}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            disabled={page >= totalPages}
-            onClick={() => setPage((currentPage) => currentPage + 1)}
-            className="rounded-lg border border-border disabled:opacity-40 shadow-none"
-            aria-label={t('users.activityNext')}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      <ActivityLogsList
+        paginated={paginated}
+        filteredCount={filtered.length}
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        userNameFor={userNameFor}
+        getColumnWidth={getColumnWidth}
+        onColumnResize={onColumnResize}
+      />
     </div>
   );
 }

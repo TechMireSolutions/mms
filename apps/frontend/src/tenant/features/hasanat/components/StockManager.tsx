@@ -1,120 +1,11 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Plus, Package } from "lucide-react";
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Plus, Package } from 'lucide-react';
 import { Denomination, StockBatch } from '@/lib/data/hasanatData';
-import { DatePicker } from "@/components/ui/DatePicker";
-import { FormModal } from "@/components/ui/FormModal";
-import { UserActorSelect } from "@/components/ui/UserActorSelect";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { FormSelect } from "@/components/ui/FormSelect";
-import { Card } from "@/components/ui/card";
-import { todayISO } from "@mms/shared";
-import { useTranslation } from "@/hooks/useTranslation";
-
-interface AddBatchModalProps {
-  open: boolean;
-  denoms: Denomination[];
-  onClose: () => void;
-  onSave: (batch: StockBatch) => void | Promise<void>;
-}
-
-function AddBatchModal({ open, denoms, onClose, onSave }: AddBatchModalProps) {
-  const { t } = useTranslation();
-  const [submitting, setSubmitting] = useState(false);
-  const [data, setData] = useState<Partial<StockBatch>>({
-    denominationId: denoms[0]?.id || "",
-    quantity: 0,
-    addedDate: todayISO(),
-    addedByUserId: "",
-    note: "",
-  });
-
-  const updateField = <K extends keyof StockBatch>(field: K, value: StockBatch[K]) => setData((previousData: Partial<StockBatch>) => ({ ...previousData, [field]: value }));
-  const selectedDenomination = denoms.find((denomination) => denomination.id === data.denominationId);
-
-  React.useEffect(() => {
-    if (open) {
-      setData({
-        denominationId: denoms[0]?.id || "",
-        quantity: 0,
-        addedDate: todayISO(),
-        addedBy: "",
-        note: "",
-      });
-    }
-  }, [open, denoms]);
-
-  return (
-    <FormModal
-      open={open}
-      onClose={onClose}
-      title={t("hasanat.stock.addBatchTitle")}
-      icon={Package}
-      cancelLabel={t("common.cancel")}
-      saveLabel={t("hasanat.stock.addBatchAction")}
-      saving={submitting}
-      onSave={() => {
-        void (async () => {
-          const denomination = denoms.find((candidate) => candidate.id === data.denominationId);
-          setSubmitting(true);
-          try {
-            await onSave({ ...data, id: `bat${Date.now()}`, quantity: Number(data.quantity), remaining: Number(data.quantity), denominationName: denomination?.name || "" } as StockBatch);
-          } finally {
-            setSubmitting(false);
-          }
-        })();
-      }}
-      saveDisabled={!data.denominationId || !data.quantity}
-    >
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="denom" className={FORM_LABEL}>{t("hasanat.form.denomination")} *</label>
-          <FormSelect
-            id="denom"
-            value={data.denominationId || ""}
-            onChange={(value) => updateField("denominationId", value)}
-            options={denoms.filter((denomination) => denomination.active).map((denomination) => ({
-              value: denomination.id,
-              label: `${denomination.icon} ${denomination.name} (${t("hasanat.form.pointsShort", { points: denomination.points })})`
-            }))}
-          />
-        </div>
-        {selectedDenomination && (
-          <div className="h-10 rounded-xl flex items-center gap-2 px-3 text-white text-sm font-semibold" style={{ background: selectedDenomination.color }}>
-            <span aria-hidden="true">{selectedDenomination.icon}</span><span>{selectedDenomination.name}</span>
-          </div>
-        )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="qty" className={FORM_LABEL}>{t("hasanat.form.quantity")} *</label>
-            <Input id="qty" type="number" className={FORM_INPUT} value={data.quantity || ""} onChange={(event) => updateField("quantity", Number(event.target.value))} placeholder="0" min={1} />
-          </div>
-          <div>
-            <label htmlFor="add-date" className={FORM_LABEL}>{t("hasanat.stock.date")}</label>
-            <DatePicker
-              id="add-date"
-              value={data.addedDate || ""}
-              onChange={(value) => updateField("addedDate", value)}
-            />
-          </div>
-        </div>
-        <UserActorSelect
-          id="added-by"
-          label={t("hasanat.stock.addedBy")}
-          value={data.addedByUserId || ""}
-          onChange={(id) => updateField("addedByUserId", id)}
-          allowEmpty
-        />
-        <div>
-          <label htmlFor="note" className={FORM_LABEL}>{t("hasanat.stock.note")}</label>
-          <Input id="note" className={FORM_INPUT} value={data.note} onChange={(event) => updateField("note", event.target.value)} placeholder={t("hasanat.stock.notePlaceholder")} />
-        </div>
-      </div>
-    </FormModal>
-  );
-}
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { useTranslation } from '@/hooks/useTranslation';
+import { StockAddBatchModal } from '@/tenant/features/hasanat/components/StockAddBatchModal';
 
 export interface StockManagerProps {
   batches: StockBatch[];
@@ -123,17 +14,7 @@ export interface StockManagerProps {
   canWrite?: boolean;
 }
 
-/**
- * StockManager Component
- *
- * Renders the inventory stock management interface for Hasanat reward physical cards.
- * Provides controls for viewing current card batches, adding new batches of cards,
- * and monitoring inventory depletion ratios across denominations.
- *
- * @param props - Component properties.
- * @returns React element representing the stock manager UI.
- */
-export function StockManager({ batches, denoms, onUpdate, canWrite = true }: StockManagerProps) {
+export function StockManager({ batches, denoms, onUpdate, canWrite = true }: StockManagerProps): React.JSX.Element {
   const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
 
@@ -142,24 +23,23 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
     setShowModal(false);
   };
 
-  // Group by denomination
-  const grouped = denoms.reduce((groups: Record<string, { den: Denomination, batches: StockBatch[] }>, denomination: Denomination) => {
+  const grouped = denoms.reduce((groups: Record<string, { den: Denomination; batches: StockBatch[] }>, denomination: Denomination) => {
     const denominationBatches = batches.filter((batch: StockBatch) => batch.denominationId === denomination.id);
     if (denominationBatches.length > 0) groups[denomination.id] = { den: denomination, batches: denominationBatches };
     return groups;
-  }, {} as Record<string, { den: Denomination, batches: StockBatch[] }>);
+  }, {} as Record<string, { den: Denomination; batches: StockBatch[] }>);
 
   return (
-    <section aria-label={t("hasanat.tabs.stock")} className="space-y-5">
+    <section aria-label={t('hasanat.tabs.stock')} className="space-y-5">
       <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="m-0 min-w-0 text-sm font-semibold text-foreground">{t("hasanat.stock.batchCount", { count: batches.length })}</p>
+        <p className="m-0 min-w-0 text-sm font-semibold text-foreground">{t('hasanat.stock.batchCount', { count: batches.length })}</p>
         {canWrite && (
           <Button
             type="button"
             onClick={() => setShowModal(true)}
             className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
           >
-            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("hasanat.stock.addBatchAction")}
+            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t('hasanat.stock.addBatchAction')}
           </Button>
         )}
       </header>
@@ -172,14 +52,13 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
         return (
           <Card key={den.id} className="ps-5.5">
             <div className="absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300" style={{ backgroundColor: den.color }} />
-            {/* Den header */}
             <header className="flex items-center gap-3 border-b border-border/40 bg-muted/20 px-4 py-3 ps-4">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg" style={{ background: den.color }} aria-hidden="true">
                 {den.icon}
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="truncate text-sm font-bold text-foreground m-0">{den.name}</h3>
-                <p className="truncate text-xs text-muted-foreground m-0">{t("hasanat.stock.pointsAvailable", { points: den.points, remaining: totalRemaining, total: totalStock })}</p>
+                <p className="truncate text-xs text-muted-foreground m-0">{t('hasanat.stock.pointsAvailable', { points: den.points, remaining: totalRemaining, total: totalStock })}</p>
               </div>
               <div className="w-20 shrink-0">
                 <div className="h-1.5 rounded-full bg-border overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${den.name} availability`}>
@@ -189,7 +68,6 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
               </div>
             </header>
 
-            {/* Batches */}
             <div className="divide-y divide-border/50">
               {denominationBatches.map((batch: StockBatch, index: number) => {
                 const batchPercentage = batch.quantity > 0 ? Math.round((batch.remaining / batch.quantity) * 100) : 0;
@@ -197,12 +75,12 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
                   <motion.div key={batch.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.04 }} className="flex items-center gap-3 px-4 py-3">
                     <Package className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground m-0">{batch.note || t("hasanat.stock.batchFallback")}</p>
-                      <p className="text-xs text-muted-foreground m-0">{t("hasanat.stock.addedMeta", { date: batch.addedDate, by: batch.addedBy || "—" })}</p>
+                      <p className="text-sm font-medium text-foreground m-0">{batch.note || t('hasanat.stock.batchFallback')}</p>
+                      <p className="text-xs text-muted-foreground m-0">{t('hasanat.stock.addedMeta', { date: batch.addedDate, by: batch.addedBy || '—' })}</p>
                     </div>
                     <div className="text-end flex-shrink-0">
                       <p className="text-sm font-bold text-foreground m-0">{batch.remaining}<span className="text-muted-foreground font-normal">/{batch.quantity}</span></p>
-                      <p className="text-xs text-muted-foreground m-0">{t("hasanat.stock.pctLeft", { pct: batchPercentage })}</p>
+                      <p className="text-xs text-muted-foreground m-0">{t('hasanat.stock.pctLeft', { pct: batchPercentage })}</p>
                     </div>
                   </motion.div>
                 );
@@ -215,12 +93,12 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
       {batches.length === 0 && (
         <div className="py-12 text-center rounded-xl border-2 border-dashed border-border">
           <Package className="w-8 h-8 text-muted-foreground mx-auto mb-2" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground m-0">{t("hasanat.stock.empty")}</p>
+          <p className="text-sm font-medium text-foreground m-0">{t('hasanat.stock.empty')}</p>
         </div>
       )}
 
       {canWrite && (
-        <AddBatchModal open={showModal} denoms={denoms} onClose={() => setShowModal(false)} onSave={handleAdd} />
+        <StockAddBatchModal open={showModal} denoms={denoms} onClose={() => setShowModal(false)} onSave={handleAdd} />
       )}
     </section>
   );

@@ -92,7 +92,11 @@ export async function exportTenantBackup(): Promise<string> {
 export async function importDatabase(jsonString: string): Promise<void> {
   try {
     const prefix = getStoragePrefix();
-    const validated = validateWorkspaceBackupJson(jsonString, prefix);
+    const validated = validateWorkspaceBackupJson(
+      jsonString,
+      prefix,
+      getCurrentSubdomain(),
+    );
     if (!validated.ok) {
       throw new Error(validated.errorKey);
     }
@@ -102,6 +106,10 @@ export async function importDatabase(jsonString: string): Promise<void> {
     // Pushes backup bulk sync to backend first. If this fails, the local cache remains untouched.
     const result = await syncToServer("/api/db/sync", { collections, objects });
     if (!result.ok) {
+      // A timed-out restore is rolled back server-side, so the local cache stays valid.
+      if (result.status === 408) {
+        throw new Error("backup.syncTimeout");
+      }
       throw new Error(result.errorKey ?? "backup.serverRestoreFailed");
     }
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Check, ChevronsUpDown, Loader2, LocateFixed, MapPin, Search } from 'lucide-react';
+import { ChevronsUpDown, Loader2, MapPin } from 'lucide-react';
 import {
   DEFAULT_GLOBAL_SETTINGS,
   detectBrowserTimezone,
@@ -7,50 +7,24 @@ import {
   getTimezoneOptions,
   groupTimezoneOptions,
   normalizeTimezone,
-  type AppTranslationKey,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import { notify } from '@/lib/notify';
 import { detectTimezoneFromLocation } from '@/lib/detectTimezoneFromLocation';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverTrigger } from '@/components/ui/popover';
+import {
+  filterGroupedTimezones,
+  timezoneDetectionErrorKey,
+} from '@/tenant/features/settings/components/timezoneSelectUtils';
+import { TimezoneSelectPopoverContent } from '@/tenant/features/settings/components/TimezoneSelectPopoverContent';
 
 interface TimezoneSelectProps {
   id?: string;
   value: string;
   onChange: (timezone: string) => void;
   disabled?: boolean;
-}
-
-function filterGrouped(
-  grouped: ReturnType<typeof groupTimezoneOptions>,
-  query: string,
-): ReturnType<typeof groupTimezoneOptions> {
-  const searchQuery = query.trim().toLowerCase();
-  if (!searchQuery) return grouped;
-  return grouped
-    .map((group) => ({
-      ...group,
-      options: group.options.filter(
-        (option) => option.keywords.includes(searchQuery) || option.label.toLowerCase().includes(searchQuery),
-      ),
-    }))
-    .filter((group) => group.options.length > 0);
-}
-
-function detectionErrorKey(
-  code: 'geolocation_unsupported' | 'permission_denied' | 'position_unavailable' | 'timeout' | 'timezone_lookup_failed',
-): AppTranslationKey {
-  const detectionErrorKeys: Record<typeof code, AppTranslationKey> = {
-    geolocation_unsupported: 'global.timezoneDetectUnsupported',
-    permission_denied: 'global.timezoneDetectDenied',
-    position_unavailable: 'global.timezoneDetectUnavailable',
-    timeout: 'global.timezoneDetectTimeout',
-    timezone_lookup_failed: 'global.timezoneDetectFailed',
-  };
-  return detectionErrorKeys[code];
 }
 
 /**
@@ -70,7 +44,7 @@ export default function TimezoneSelect({
   const normalizedValue = normalizeTimezone(value, DEFAULT_GLOBAL_SETTINGS.timezone);
   const options = useMemo(() => getTimezoneOptions(language), [language]);
   const grouped = useMemo(() => groupTimezoneOptions(options), [options]);
-  const filtered = useMemo(() => filterGrouped(grouped, query), [grouped, query]);
+  const filtered = useMemo(() => filterGroupedTimezones(grouped, query), [grouped, query]);
   const selectedLabel = formatTimezoneLabel(normalizedValue, language);
 
   const applyTimezone = (timezone: string, closePopover = false): void => {
@@ -102,7 +76,7 @@ export default function TimezoneSelect({
         return;
       }
 
-      const errorKey = detectionErrorKey(result.code);
+      const errorKey = timezoneDetectionErrorKey(result.code);
       const useFallback =
         result.code !== 'permission_denied' && result.code !== 'geolocation_unsupported';
 
@@ -149,79 +123,18 @@ export default function TimezoneSelect({
             <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[min(calc(100%-2rem),24rem)] p-0" align="start">
-          <div className="flex items-center border-b px-3">
-            <Search className="me-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={t('global.timezoneSearch')}
-              className="h-10 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
-              aria-label={t('global.timezoneSearch')}
-            />
-          </div>
-          <div className="max-h-[min(50vh,20rem)] overflow-y-auto p-1">
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full justify-start items-center gap-2 rounded-sm px-2 py-2 text-start font-normal hover:bg-accent hover:text-accent-foreground"
-              onClick={() => void handleLocationDetect()}
-              disabled={detecting}
-            >
-              {detecting ? (
-                <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden />
-              ) : (
-                <MapPin className="h-4 w-4 text-primary" aria-hidden />
-              )}
-              {detecting ? t('global.timezoneDetecting') : t('global.timezoneDetectLocation')}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full justify-start items-center gap-2 rounded-sm px-2 py-2 text-start font-normal hover:bg-accent hover:text-accent-foreground"
-              onClick={applyDeviceTimezone}
-            >
-              <LocateFixed className="h-4 w-4 text-primary" aria-hidden />
-              {t('global.timezoneUseDevice')}
-            </Button>
-            <div className="my-1 h-px bg-border" role="separator" />
-            {filtered.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">
-                {t('global.timezoneNoResults')}
-              </p>
-            ) : (
-              filtered.map(({ region, options: regionOptions }) => (
-                <div key={region} className="mb-1">
-                  <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground">{region}</p>
-                  {regionOptions.map((timezoneOption) => (
-                    <Button
-                      key={timezoneOption.value}
-                      type="button"
-                      variant="ghost"
-                      className={cn(
-                        'w-full justify-start items-center gap-2 rounded-sm px-2 py-1.5 text-start font-normal hover:bg-accent hover:text-accent-foreground',
-                        normalizedValue === timezoneOption.value && 'bg-accent text-accent-foreground',
-                      )}
-                      onClick={() => applyTimezone(timezoneOption.value, true)}
-                    >
-                      <Check
-                        className={cn(
-                          'h-4 w-4 shrink-0',
-                          normalizedValue === timezoneOption.value ? 'opacity-100' : 'opacity-0',
-                        )}
-                        aria-hidden
-                      />
-                      <span className="truncate">{timezoneOption.label}</span>
-                      <span className="ms-auto ps-2 font-mono text-xs text-muted-foreground">
-                        {timezoneOption.value}
-                      </span>
-                    </Button>
-                  ))}
-                </div>
-              ))
-            )}
-          </div>
-        </PopoverContent>
+        <TimezoneSelectPopoverContent
+          t={t}
+          language={language}
+          normalizedValue={normalizedValue}
+          query={query}
+          setQuery={setQuery}
+          detecting={detecting}
+          filtered={filtered}
+          onLocationDetect={handleLocationDetect}
+          onDeviceTimezone={applyDeviceTimezone}
+          onSelectTimezone={(timezone) => applyTimezone(timezone, true)}
+        />
       </Popover>
 
       <Button

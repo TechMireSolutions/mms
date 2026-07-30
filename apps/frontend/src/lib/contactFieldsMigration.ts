@@ -1,0 +1,92 @@
+import {
+  CONFIG_VERSION,
+  DEFAULT_ENABLED_TABS,
+  DEFAULT_REQUIRED_TABS,
+  FieldConfig,
+  INITIAL_FIELD_SEED,
+  DEFAULT_PAGE_TABS,
+  DEFAULT_FORM_TABS,
+  DEFAULT_DETAIL_TABS,
+  DEFAULT_SETTINGS_SUB_TABS,
+  DEFAULT_COLUMN_REGISTRY,
+  refreshModuleTierTabLabels,
+  refreshModuleTierTabKeys,
+} from "@mms/shared";
+
+export function getContactFieldSystemDefaults(): FieldConfig {
+  const fieldsClone = structuredClone(INITIAL_FIELD_SEED);
+
+  return {
+    version: CONFIG_VERSION,
+    enabledTabs: [...DEFAULT_ENABLED_TABS],
+    requiredTabs: [...DEFAULT_REQUIRED_TABS],
+    fields: fieldsClone,
+    pageTabs: [...DEFAULT_PAGE_TABS],
+    formTabs: [...DEFAULT_FORM_TABS],
+    detailTabs: [...DEFAULT_DETAIL_TABS],
+    settingsSubTabs: [...DEFAULT_SETTINGS_SUB_TABS],
+    columnRegistry: [...DEFAULT_COLUMN_REGISTRY],
+  };
+}
+
+export function migrateContactFieldConfig(config: unknown): FieldConfig {
+  if (!config || typeof config !== "object") {
+    return getContactFieldSystemDefaults();
+  }
+
+  const rawConfig = config as Record<string, unknown>;
+  const storedVersion = typeof rawConfig.version === "number" ? rawConfig.version : 0;
+
+  if (storedVersion < 2) {
+    return getContactFieldSystemDefaults();
+  }
+
+  const workingConfig = { ...rawConfig } as unknown as Partial<FieldConfig>;
+  const defaults = getContactFieldSystemDefaults();
+
+  const normalizeTabs = <T extends { id?: string; key?: string }>(tabs: T[] | undefined): T[] | undefined => {
+    if (!Array.isArray(tabs)) return undefined;
+    return tabs.map((tab) => {
+      if (tab && typeof tab === "object" && !tab.key && tab.id) {
+        return { ...tab, key: tab.id };
+      }
+      return tab;
+    });
+  };
+
+  const normalizedPageTabs = refreshModuleTierTabLabels(
+    refreshModuleTierTabKeys(normalizeTabs(workingConfig.pageTabs) ?? defaults.pageTabs ?? DEFAULT_PAGE_TABS),
+  );
+  workingConfig.pageTabs = normalizedPageTabs;
+
+  const normalizedFormTabs = (normalizeTabs(workingConfig.formTabs) ?? defaults.formTabs) || DEFAULT_FORM_TABS;
+  const isCorruptedEnabledTabs = !workingConfig.enabledTabs || workingConfig.enabledTabs.length <= 1;
+
+  const repairedFormTabs = normalizedFormTabs.map((tab) => {
+    if (isCorruptedEnabledTabs && tab && typeof tab === "object") {
+      const defaultTab = DEFAULT_FORM_TABS.find((d) => d.key === tab.key);
+      if (defaultTab) {
+        return { ...tab, enabled: defaultTab.enabled !== false };
+      }
+    }
+    return tab;
+  });
+
+  workingConfig.formTabs = repairedFormTabs;
+  workingConfig.detailTabs = normalizeTabs(workingConfig.detailTabs) ?? defaults.detailTabs;
+  workingConfig.settingsSubTabs = normalizeTabs(workingConfig.settingsSubTabs) ?? defaults.settingsSubTabs;
+  workingConfig.columnRegistry = workingConfig.columnRegistry ?? defaults.columnRegistry;
+  workingConfig.fields = workingConfig.fields ?? defaults.fields;
+
+  if (isCorruptedEnabledTabs) {
+    const activeFormTabKeys = repairedFormTabs
+      .filter((t) => t && typeof t === "object" && t.enabled !== false)
+      .map((t) => t.key)
+      .filter(Boolean);
+    workingConfig.enabledTabs = Array.from(new Set([...(workingConfig.enabledTabs || []), ...activeFormTabKeys]));
+  }
+
+  delete (workingConfig as Record<string, unknown>).uiStrings;
+
+  return workingConfig as FieldConfig;
+}

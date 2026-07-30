@@ -1,27 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { Settings2, GripVertical, Eye, EyeOff, Search, RotateCcw } from 'lucide-react';
+import { Settings2, Search, RotateCcw } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import type { ModuleColumnRegistryEntry } from '@mms/shared';
+import { ModuleColumnCustomizerList } from '@/components/ui/ModuleColumnCustomizerList';
+import type {
+  ModuleColumnCustomizerLabels,
+  ModuleColumnCustomizerProps,
+} from '@/components/ui/moduleColumnCustomizerTypes';
 
-export interface ModuleColumnCustomizerLabels {
-  trigger: string;
-  title: string;
-  visibleAndOrder: string;
-  hidden: string;
-  fixed: string;
-  hideColumn: (label: string) => string;
-  reset?: string;
-  searchPlaceholder?: string;
-}
-
-export interface ModuleColumnCustomizerProps {
-  columnRegistry: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
-  onResetLayout?: () => void;
-  labels: ModuleColumnCustomizerLabels;
-}
+export type { ModuleColumnCustomizerLabels, ModuleColumnCustomizerProps };
 
 /** Per-user Work directory column layout picker (globle1 §3.4). */
 export function ModuleColumnCustomizer({
@@ -101,6 +89,11 @@ export function ModuleColumnCustomizer({
     setDragOver(null);
   };
 
+  const clearDrag = (): void => {
+    setDragging(null);
+    setDragOver(null);
+  };
+
   return (
     <Popover>
       <PopoverTrigger
@@ -140,78 +133,18 @@ export function ModuleColumnCustomizer({
           </div>
         )}
 
-        <div className="max-h-72 overflow-y-auto pe-1 space-y-3">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-              {labels.visibleAndOrder}
-            </span>
-            {visibleColumns.map((col) => (
-              <div
-                key={col.key}
-                draggable={!col.fixed}
-                onDragStart={(event) => !col.fixed && handleDragStart(event, col.key)}
-                onDragOver={(event) => handleDragOver(event, col.key)}
-                onDrop={(event) => handleDrop(event, col.key)}
-                onDragEnd={() => {
-                  setDragging(null);
-                  setDragOver(null);
-                }}
-                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-all select-none ${
-                  dragging === col.key
-                    ? 'opacity-40'
-                    : dragOver === col.key
-                      ? 'border-primary bg-primary/5'
-                      : 'border-transparent hover:bg-muted'
-                }`}
-              >
-                <GripVertical
-                  className={`w-3.5 h-3.5 flex-shrink-0 ${col.fixed ? 'opacity-20' : 'text-muted-foreground cursor-grab'}`}
-                />
-                <span className="flex-1 text-sm text-foreground text-start">{col.label}</span>
-                {col.fixed ? (
-                  <span className="text-xs text-muted-foreground">{labels.fixed}</span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggle(col.key);
-                    }}
-                    className="min-w-11 min-h-11 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label={labels.hideColumn(col.label)}
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {hiddenColumns.length > 0 && (
-            <div className="space-y-1 pt-1 border-t border-border">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                {labels.hidden}
-              </span>
-              {hiddenColumns.map((col) => (
-                <button
-                  type="button"
-                  key={col.key}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggle(col.key);
-                  }}
-                  className="flex items-center justify-between w-full px-2.5 min-h-11 rounded-lg border border-transparent hover:bg-muted transition-colors text-start group"
-                >
-                  <div className="flex items-center gap-2">
-                    <EyeOff className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
-                    <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">{col.label}</span>
-                  </div>
-                  <Eye className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors flex-shrink-0" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <ModuleColumnCustomizerList
+          visibleColumns={visibleColumns}
+          hiddenColumns={hiddenColumns}
+          dragging={dragging}
+          dragOver={dragOver}
+          labels={labels}
+          toggle={toggle}
+          handleDragStart={handleDragStart}
+          handleDragOver={handleDragOver}
+          handleDrop={handleDrop}
+          clearDrag={clearDrag}
+        />
       </PopoverContent>
     </Popover>
   );

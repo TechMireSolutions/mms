@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
-import { Bookmark, Trash2, Play, Plus, Clock, User } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Bookmark, Plus } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -8,33 +8,14 @@ import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { notify } from "@/lib/notify";
 import {
-  formatDate,
-  type AppTranslationKey,
   type GenericSavedReport,
   type GenericSavedReportCategory,
   type GenericSavedReportCreateInput,
 } from "@mms/shared";
 import type { SavedReportsSource } from "@/hooks/useSavedReportsSource";
-
-import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
-
-const MotionCard = motion.create(Card);
-
-const CATEGORY_BADGE_CLS: Record<string, string> = {
-  financial:  SEMANTIC_BADGE.success,
-  students:   SEMANTIC_BADGE.info,
-  contacts:   "bg-primary/10 text-primary border-primary/20",
-  attendance: SEMANTIC_BADGE.warning,
-  academic:   "bg-primary/10 text-primary border-primary/20",
-  hasanat:    "bg-primary/10 text-primary border-primary/20",
-  sessions:   SEMANTIC_BADGE.info,
-  faculty:    SEMANTIC_BADGE.secondary,
-};
+import { SavedReportCard } from "./SavedReportCard";
 
 interface SavedReportsProps {
   category: GenericSavedReportCategory;
@@ -54,7 +35,6 @@ export default function SavedReports({
   onApplyFilters,
 }: SavedReportsProps): React.JSX.Element {
   const { t } = useTranslation();
-  const globalSettings = useGlobalSettings();
   const {
     reports: saved,
     isLoading,
@@ -117,13 +97,6 @@ export default function SavedReports({
     [deleteReport, t]
   );
 
-  const formatLastRunTime = useCallback(
-    (dateStr: string) => {
-      return formatDate(dateStr, globalSettings.dateFormat);
-    },
-    [globalSettings.dateFormat]
-  );
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -163,64 +136,12 @@ export default function SavedReports({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <AnimatePresence mode="popLayout">
             {saved.map((report) => (
-              <MotionCard
+              <SavedReportCard
                 key={report.id}
-                layout
-                whileHover={{ y: -4, scale: 1.015 }}
-                transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                className="flex flex-col gap-3 text-start group cursor-pointer hover:shadow-surface-lg p-5"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h4 className="text-sm font-semibold text-foreground">{report.name}</h4>
-                    <StatusBadge
-                      status={report.category}
-                      size="sm"
-                      config={{
-                        [report.category]: {
-                          label: t(`reports.category.${report.category}` as AppTranslationKey),
-                          cls: CATEGORY_BADGE_CLS[report.category] ?? SEMANTIC_BADGE.muted,
-                        },
-                      }}
-                    />
-                  </div>
-                  <Bookmark className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                </div>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {formatLastRunTime(report.lastRun)}
-                  </span>
-                  {report.createdByName && (
-                    <span className="flex items-center gap-1">
-                      <User className="w-3 h-3" />
-                      {report.createdByName}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 pt-1 border-t border-border">
-                  {onApplyFilters && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => void handleRun(report)}
-                      className="px-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10 gap-1 cursor-pointer"
-                      type="button"
-                    >
-                      <Play className="w-3 h-3" /> {t("reports.saved.run")}
-                    </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => void handleDelete(report.id)}
-                    className="px-2 text-xs font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1 ms-auto cursor-pointer"
-                    type="button"
-                  >
-                    <Trash2 className="w-3 h-3" /> {t("reports.saved.delete")}
-                  </Button>
-                </div>
-              </MotionCard>
+                report={report}
+                onRun={onApplyFilters ? handleRun : undefined}
+                onDelete={handleDelete}
+              />
             ))}
           </AnimatePresence>
         </div>

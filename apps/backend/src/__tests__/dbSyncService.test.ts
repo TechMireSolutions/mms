@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { listBackupSnapshotCollectionKeys } from '../db/relationalReplaceMapping.js';
 
 const dbSaveCollection = vi.fn();
 const dbSaveObject = vi.fn();
@@ -9,6 +10,7 @@ const dbListTenantObjectLogicalKeys = vi.fn(async () => [] as string[]);
 const dbListTenantCollectionLogicalKeys = vi.fn(async () => [] as string[]);
 const clearTenantBackgroundJobs = vi.fn(async () => 0);
 const runInTransaction = vi.fn(async (fn: () => Promise<void>) => fn());
+const runInReadSnapshotTransaction = vi.fn(async (fn: () => Promise<unknown>) => fn());
 const loadRelationalSnapshotCollections = vi.fn();
 const getRequestTenant = vi.fn();
 
@@ -22,6 +24,7 @@ vi.mock('../db/database.js', () => ({
   getAllData: () => dbGetAllData(),
   resetTenantData: vi.fn(),
   runInTransaction: (fn: () => Promise<void>) => runInTransaction(fn),
+  runInReadSnapshotTransaction: (fn: () => Promise<unknown>) => runInReadSnapshotTransaction(fn),
   deleteObject: (key: string) => dbDeleteObject(key),
   listTenantObjectLogicalKeys: () => dbListTenantObjectLogicalKeys(),
   listTenantCollectionLogicalKeys: () => dbListTenantCollectionLogicalKeys(),
@@ -131,6 +134,30 @@ describe('dbSyncService collection persistence', () => {
     ]);
   });
 
+  it('stops writing and rejects when the sync signal aborts mid-restore', async () => {
+    const controller = new AbortController();
+    dbSaveCollection.mockImplementation(async () => {
+      controller.abort();
+    });
+    const { synchronizeData } = await import('../services/dbSyncService.js');
+
+    await expect(
+      synchronizeData(
+        {
+          collections: { users: [{ id: 'u-1' }], contacts: [{ id: 'c-1' }], students: [{ id: 's-1' }] },
+          objects: { branding: {} },
+        },
+        controller.signal,
+      ),
+    ).rejects.toThrow('backup.syncTimeout');
+
+    // The throw propagates out of runInTransaction so the restore rolls back.
+    expect(dbSaveCollection).toHaveBeenCalledTimes(1);
+    expect(dbSaveObject).not.toHaveBeenCalled();
+    expect(dbDeleteCollection).not.toHaveBeenCalled();
+    dbSaveCollection.mockReset();
+  });
+
   it('never prunes objects for a partial sync without users', async () => {
     dbListTenantObjectLogicalKeys.mockResolvedValue(['branding', 'global_settings']);
     dbListTenantCollectionLogicalKeys.mockResolvedValue(['genders']);
@@ -153,10 +180,20 @@ describe('fetchBackupSnapshot', () => {
       collections: { students: [{ id: 'stale-doc-store' }], genders: [{ id: 'g-1' }] },
       objects: { branding: { madrasaName: 'Dar ul Quran' } },
     });
-    loadRelationalSnapshotCollections.mockResolvedValue({
-      students: [{ id: 's-1' }, { id: 's-2' }],
-      contacts: [{ id: 'c-1' }],
+    loadRelationalSnapshotCollections.mockImplementation(async () => {
+      const collections: Record<string, unknown[]> = {};
+      for (const key of listBackupSnapshotCollectionKeys()) {
+        collections[key] = key === 'students' ? [{ id: 's-1' }, { id: 's-2' }] : key === 'contacts' ? [{ id: 'c-1' }] : [];
+      }
+      return collections;
     });
+  });
+
+  it('reads document store and relational tables in one snapshot transaction', async () => {
+    const { fetchBackupSnapshot } = await import('../services/dbSyncService.js');
+    await fetchBackupSnapshot();
+
+    expect(runInReadSnapshotTransaction).toHaveBeenCalledTimes(1);
   });
 
   it('overrides the stale document store with authoritative relational rows', async () => {
@@ -166,6 +203,19 @@ describe('fetchBackupSnapshot', () => {
     expect(loadRelationalSnapshotCollections).toHaveBeenCalledWith('dar-ul-quran');
     expect(snapshot.collections?.students).toEqual([{ id: 's-1' }, { id: 's-2' }]);
     expect(snapshot.collections?.contacts).toEqual([{ id: 'c-1' }]);
+  });
+
+  it('includes every mapped business collection in the tenant backup', async () => {
+    const { fetchBackupSnapshot } = await import('../services/dbSyncService.js');
+    const snapshot = await fetchBackupSnapshot();
+    const keys = listBackupSnapshotCollectionKeys();
+
+    expect(keys.length).toBeGreaterThan(20);
+    for (const key of keys) {
+      expect(Array.isArray(snapshot.collections?.[key])).toBe(true);
+    }
+    expect(snapshot.collections?.genders).toEqual([{ id: 'g-1' }]);
+    expect(snapshot.objects).toEqual({ branding: { madrasaName: 'Dar ul Quran' } });
   });
 
   it('keeps document-store-only collections and objects', async () => {

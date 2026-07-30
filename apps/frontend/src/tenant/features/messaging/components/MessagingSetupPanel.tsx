@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Copy, Edit3, Plus, Sparkles, Tag, Trash2 } from 'lucide-react';
+import { Copy, Edit3, Tag, Trash2 } from 'lucide-react';
 import {
   appendVariableToken,
   mergeMessageTemplates,
@@ -8,22 +8,19 @@ import {
   type MessageTemplate,
 } from '@mms/shared';
 import { Button } from '@/components/ui/button';
-import { ChannelBadge } from '@/components/ui/ChannelBadge';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { FormSelect } from '@/components/ui/FormSelect';
-import { FORM_LABEL } from '@/components/ui/formStyles';
-import { Input } from '@/components/ui/input';
-import { MessagingVariableTokensBar } from '@/components/ui/MessagingVariableTokensBar';
 import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { Textarea } from '@/components/ui/textarea';
+import { ChannelBadge } from '@/components/ui/ChannelBadge';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useMessageTemplates, useMessagingMutations } from '../hooks/useMessaging';
 import { useMessagingTemplatesColumnLayout } from '../hooks/useMessagingColumnLayouts';
 import { useMessagingPageOptions } from '../hooks/useMessagingPageOptions';
+import { MessagingSetupTemplateForm } from './MessagingSetupTemplateForm';
 
 interface MessagingSetupPanelProps {
   canWrite: boolean;
@@ -120,38 +117,24 @@ export function MessagingSetupPanel({
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="grid grid-cols-1 gap-6 md:grid-cols-3">
-      <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-xs">
-        {canEditSetup || canWrite ? (
-          <>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0 space-y-1">
-                <h4 className="flex min-w-0 items-center gap-1.5 text-sm font-bold text-foreground">
-                  {editingId ? <Edit3 className="h-4 w-4 shrink-0 text-primary" /> : <Plus className="h-4 w-4 shrink-0 text-primary" />}
-                  <span className="min-w-0 truncate">{editingId ? t('messaging.editPreset') : t('messaging.createPreset')}</span>
-                </h4>
-                <p className="text-xs text-muted-foreground">{t('messaging.createPresetDesc')}</p>
-              </div>
-              {editingId && <Button variant="ghost" size="sm" onClick={resetForm} className="shrink-0 self-start text-xs">{t('common.cancel')}</Button>}
-            </div>
-            <form onSubmit={(event) => void save(event)} className="space-y-3">
-              <div><label className={FORM_LABEL} htmlFor="tplLabel">{t('messaging.templateLabel')}</label><Input id="tplLabel" value={label} onChange={(event) => setLabel(event.target.value)} placeholder={t('messaging.templateLabelPlaceholder')} required /></div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <div><label className={FORM_LABEL} htmlFor="tplCategory">{t('messaging.category')}</label><FormSelect id="tplCategory" value={category} onChange={(value) => setCategory(value as MessageCategory)} options={templateCategorySelectOptions} /></div>
-                <div><label className={FORM_LABEL} htmlFor="tplChannel">{t('messaging.targetChannel')}</label><FormSelect id="tplChannel" value={channel} onChange={(value) => setChannel(value as typeof channel)} options={channelSelectOptions} /></div>
-              </div>
-              <div>
-                <label className={FORM_LABEL} htmlFor="tplBody">{t('messaging.messageBody')}</label>
-                <MessagingVariableTokensBar onSelectToken={(token) => setBody((current) => appendVariableToken(current, token))} className="mb-2" />
-                <Textarea id="tplBody" value={body} onChange={(event) => setBody(event.target.value)} placeholder={t('messaging.templateBodyPlaceholder')} rows={4} required />
-                <p className="mt-1 flex items-center gap-1 text-xs italic text-muted-foreground/80"><Sparkles className="h-3 w-3 flex-shrink-0 text-primary/70" />{t('messaging.fallbackHint')}</p>
-              </div>
-              <Button type="submit" className="w-full font-bold"><Check className="me-1.5 h-4 w-4" />{editingId ? t('messaging.updateTemplate') : t('messaging.saveTemplate')}</Button>
-            </form>
-          </>
-        ) : (
-          <p className="rounded-xl border border-border bg-muted/20 px-4 py-6 text-sm text-muted-foreground">{t('messaging.setup.readOnly')}</p>
-        )}
-      </div>
+      <MessagingSetupTemplateForm
+        canEditSetup={canEditSetup}
+        canWrite={canWrite}
+        editingId={editingId}
+        label={label}
+        body={body}
+        category={category}
+        channel={channel}
+        templateCategorySelectOptions={templateCategorySelectOptions}
+        channelSelectOptions={channelSelectOptions}
+        onReset={resetForm}
+        onSave={(event) => void save(event)}
+        onLabelChange={setLabel}
+        onBodyChange={setBody}
+        onCategoryChange={setCategory}
+        onChannelChange={setChannel}
+        onAppendToken={(token) => setBody((current) => appendVariableToken(current, token))}
+      />
 
       <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-xs md:col-span-2">
         <div className="flex flex-wrap items-center justify-between gap-3">

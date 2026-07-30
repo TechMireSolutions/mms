@@ -30,7 +30,7 @@ import {
   AUDITED_COLLECTIONS,
   AUDITED_OBJECTS,
 } from '../../services/auditService.js';
-import { SYNC_MAX_BODY_BYTES, withSyncTimeout } from '../../lib/syncLimits.js';
+import { SYNC_ABORTED_MESSAGE, SYNC_MAX_BODY_BYTES, withSyncTimeout } from '../../lib/syncLimits.js';
 import {
   collectionSaveBodySchema,
   normalizeCollectionSaveBody,
@@ -58,6 +58,31 @@ function sanitizeUserCollections(collections: Record<string, unknown[]>, userId:
 function stripServerOnlyObjects(objects: Record<string, unknown>): void {
   for (const key of Object.keys(objects)) {
     if (isServerOnlyObjectKey(key)) delete objects[key];
+  }
+}
+
+/**
+ * Drops collections the admin cannot write.
+ * Restricted/platform keys are already rejected by validateAndNormalizeSnapshot;
+ * leftover keys are usually legacy lookup names from older backups.
+ */
+function stripUnwritableCollections(
+  collections: Record<string, unknown[]>,
+  user: User,
+): void {
+  for (const key of Object.keys(collections)) {
+    if (!canWriteCollection(user, key)) {
+      delete collections[key];
+    }
+  }
+}
+
+/** Same for settings objects that are no longer writable. */
+function stripUnwritableObjects(objects: Record<string, unknown>, user: User): void {
+  for (const key of Object.keys(objects)) {
+    if (!canWriteObject(user, key)) {
+      delete objects[key];
+    }
   }
 }
 
@@ -179,19 +204,14 @@ export default async function dbRoutes(
         }
         if (payload.collections) {
           // Admin bulk restore keeps every per-user inbox; prune handles leftovers.
-          const disallowedCollection = Object.keys(payload.collections).find((key) => !canWriteCollection(user, key));
-          if (disallowedCollection) {
-            return sendForbidden(reply, `Sync payload contains unsupported collection "${disallowedCollection}"`);
-          }
+          // Legacy/unsupported lookup keys are dropped so older backups still restore.
+          stripUnwritableCollections(payload.collections, user);
         }
         if (payload.objects) {
           stripServerOnlyObjects(payload.objects);
-          const disallowedObject = Object.keys(payload.objects).find((key) => !canWriteObject(user, key));
-          if (disallowedObject) {
-            return sendForbidden(reply, `Sync payload contains unsupported object "${disallowedObject}"`);
-          }
+          stripUnwritableObjects(payload.objects, user);
         }
-        await withSyncTimeout(synchronizeData(payload));
+        await withSyncTimeout((signal) => synchronizeData(payload, signal));
         await recordAudit({
           userId: String(user.id),
           userEmail: user.email,
@@ -204,9 +224,10 @@ export default async function dbRoutes(
       } catch (error: unknown) {
         const err = error as Error & { statusCode?: number; type?: string };
         if (err.statusCode === 408) {
+          // Timed-out restores roll back; message is a `backup.*` key the client localizes.
           return reply.status(408).send({
             type: 'server_error',
-            message: err.message,
+            message: SYNC_ABORTED_MESSAGE,
           });
         }
         if (typeof err.message === 'string' && err.message.startsWith('backup.')) {

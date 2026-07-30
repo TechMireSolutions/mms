@@ -1,0 +1,104 @@
+import React from "react";
+import { createPortal } from "react-dom";
+import { User } from "lucide-react";
+import {
+  type Contact,
+  getDisplayName,
+  getPrimaryPhone,
+  getPrimaryAddress,
+} from "@mms/shared";
+import { useTranslation } from "@/hooks/useTranslation";
+import { Button } from "@/components/ui/button";
+import { UserAvatar } from "@/components/ui/UserAvatar";
+
+export interface ContactPickerMenuProps {
+  open: boolean;
+  menuRef: React.RefObject<HTMLDivElement | null>;
+  resolvedId: string;
+  label: string;
+  menuStyle: React.CSSProperties;
+  matches: Contact[];
+  isSearching: boolean;
+  emptyTitle: string;
+  emptyHint: string;
+  onSelect: (contact: Contact) => void;
+}
+
+export function ContactPickerMenu({
+  open,
+  menuRef,
+  resolvedId,
+  label,
+  menuStyle,
+  matches,
+  isSearching,
+  emptyTitle,
+  emptyHint,
+  onSelect,
+}: ContactPickerMenuProps): React.ReactPortal | null {
+  const { t } = useTranslation();
+  if (!open) return null;
+
+  return createPortal(
+    <div
+      ref={menuRef}
+      id={`${resolvedId}-listbox`}
+      style={menuStyle}
+      className="overflow-y-auto rounded-xl border border-border bg-card shadow-xl divide-y divide-border/60"
+      role="listbox"
+      aria-label={label}
+    >
+      {isSearching && matches.length === 0 && (
+        <div className="px-4.5 py-3 text-xs text-muted-foreground text-center">
+          {t("common.loading")}
+        </div>
+      )}
+      {matches.length === 0 && !isSearching && (
+        <div className="px-4.5 py-4 text-xs text-muted-foreground flex flex-col items-center justify-center gap-1.5 text-center bg-muted/5">
+          <User className="w-5 h-5 text-muted-foreground/45" />
+          <p className="font-semibold text-foreground/80">{emptyTitle}</p>
+          <p className="text-xs text-muted-foreground">{emptyHint}</p>
+        </div>
+      )}
+      {matches.map((contact) => {
+        const contactPhone = getPrimaryPhone(contact);
+        const primaryAddr = getPrimaryAddress(contact);
+        const contactCity = primaryAddr?.city || (contact.city as string | undefined);
+        const contactName = getDisplayName(contact);
+
+        return (
+          <Button
+            key={contact.id}
+            type="button"
+            variant="ghost"
+            role="option"
+            onMouseDown={(event) => {
+              event.preventDefault();
+              onSelect(contact);
+            }}
+            onClick={(event) => {
+              event.preventDefault();
+              onSelect(contact);
+            }}
+            className="w-full flex items-center h-auto font-normal justify-start gap-3 px-3.5 py-2.5 hover:bg-muted transition-colors text-start focus:outline-none rounded-none shadow-none text-foreground"
+          >
+            <UserAvatar
+              id={contact.id}
+              name={contactName}
+              avatar={contact.avatar}
+              className="w-8 h-8 text-xs flex-shrink-0"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground truncate">{contactName}</p>
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5 truncate mt-0.5">
+                {contactPhone || t("contacts.table.emptyDash")}
+                {contactCity && <span>· {contactCity}</span>}
+              </p>
+            </div>
+          </Button>
+        );
+      })}
+    </div>,
+    document.body,
+  );
+}

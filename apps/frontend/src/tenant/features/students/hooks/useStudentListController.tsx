@@ -1,0 +1,180 @@
+import { useState, useMemo, useEffect, type MouseEvent } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { type Student, resolveStudentStatuses } from "@mms/shared";
+import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
+import { useMessageComposerState } from "@/hooks/useMessageComposerState";
+import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
+import { useTranslation } from '@/hooks/useTranslation';
+import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
+
+interface UseStudentListControllerOptions {
+  students: Student[];
+  showDeleted?: boolean;
+  isColumnVisible?: (key: string) => boolean;
+  serverPagination?: {
+    total: number;
+    page: number;
+    limit: number;
+    hasMore: boolean;
+  };
+}
+
+export function useStudentListController({
+  students,
+  showDeleted = false,
+  isColumnVisible,
+  serverPagination,
+}: UseStudentListControllerOptions) {
+  const { t } = useTranslation();
+  const { statuses, isFieldEnabled } = useStudentConfig();
+  const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
+  const studentStatusOptions = useMemo(() => resolveStudentStatuses(statuses), [statuses]);
+
+  const showDob = isColumnVisible
+    ? isColumnVisible("dob")
+    : isFieldEnabled("dob");
+  const showParents = isColumnVisible
+    ? isColumnVisible("parents")
+    : isFieldEnabled("fatherLink") ||
+      isFieldEnabled("motherLink") ||
+      isFieldEnabled("guardianLink");
+  const showSessions = isColumnVisible ? isColumnVisible("sessions") : true;
+  const showStatus = isColumnVisible ? isColumnVisible("status") : true;
+
+  const [sortField, setSortField] = useState<StudentListSortField | null>("grNumber");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [viewStudent, setViewStudent] = useState<Student | null>(null);
+  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
+  const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
+  const [confirmBulkRestoreOpen, setConfirmBulkRestoreOpen] = useState(false);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setSelectedIds([]);
+  }, [students.length, pageSize, showDeleted]);
+
+  const handleSort = (field: NonNullable<typeof sortField>) => {
+    if (sortField === field) {
+      setSortDir((currentDirection) => (currentDirection === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  };
+
+  const renderSortIcon = (field: typeof sortField) => {
+    if (sortField !== field) return <ChevronUp className="w-3 h-3 opacity-25" />;
+    return sortDir === "asc" ? (
+      <ChevronUp className="w-3 h-3 text-primary transition-transform" />
+    ) : (
+      <ChevronDown className="w-3 h-3 text-primary transition-transform" />
+    );
+  };
+
+  const sortedStudents = useMemo(() => {
+    if (!sortField) return students;
+
+    return [...students].sort((firstStudent, secondStudent) => {
+      let firstSortValue = "";
+      let secondSortValue = "";
+
+      if (sortField === "name") {
+        firstSortValue = (firstStudent.name || "").toLowerCase();
+        secondSortValue = (secondStudent.name || "").toLowerCase();
+      } else if (sortField === "age") {
+        firstSortValue = firstStudent.dob || "";
+        secondSortValue = secondStudent.dob || "";
+        const firstDate = firstSortValue ? new Date(firstSortValue).getTime() : 0;
+        const secondDate = secondSortValue ? new Date(secondSortValue).getTime() : 0;
+        return sortDir === "asc" ? secondDate - firstDate : firstDate - secondDate;
+      } else if (sortField === "fatherName") {
+        firstSortValue = (firstStudent.fatherName || "").toLowerCase();
+        secondSortValue = (secondStudent.fatherName || "").toLowerCase();
+      } else if (sortField === "status") {
+        firstSortValue = (firstStudent.status || "").toLowerCase();
+        secondSortValue = (secondStudent.status || "").toLowerCase();
+      } else if (sortField === "grNumber") {
+        firstSortValue = firstStudent.grNumber || "";
+        secondSortValue = secondStudent.grNumber || "";
+      }
+
+      if (firstSortValue < secondSortValue) return sortDir === "asc" ? -1 : 1;
+      if (firstSortValue > secondSortValue) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [students, sortField, sortDir]);
+
+  const paginatedStudents = useMemo(() => {
+    if (serverPagination) return sortedStudents;
+    const start = (currentPage - 1) * pageSize;
+    return sortedStudents.slice(start, start + pageSize);
+  }, [sortedStudents, currentPage, pageSize, serverPagination]);
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === paginatedStudents.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(paginatedStudents.map((student) => String(student.id)));
+    }
+  };
+
+  const handleSelectOne = (id: string) => {
+    setSelectedIds((previousSelectedIds) =>
+      previousSelectedIds.includes(id) ? previousSelectedIds.filter((selectedId) => selectedId !== id) : [...previousSelectedIds, id]
+    );
+  };
+
+  const handleRowClick = (event: MouseEvent, student: Student) => {
+    const target = event.target as HTMLElement;
+    if (
+      target.closest("input[type='checkbox']") ||
+      target.closest("button") ||
+      target.closest("[role='menuitem']")
+    ) {
+      return;
+    }
+    setViewStudent(student);
+  };
+
+  const allSelected = paginatedStudents.length > 0 && selectedIds.length === paginatedStudents.length;
+  const someSelected = selectedIds.length > 0 && selectedIds.length < paginatedStudents.length;
+  const selectedStudents = students.filter((student) => selectedIds.includes(String(student.id)));
+
+  return {
+    t,
+    statusBadgeConfig,
+    studentStatusOptions,
+    showDob,
+    showParents,
+    showSessions,
+    showStatus,
+    isFieldEnabled,
+    sortField,
+    selectedIds,
+    setSelectedIds,
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    viewStudent,
+    setViewStudent,
+    messagingTarget,
+    openComposer,
+    closeComposer,
+    confirmBulkDeleteOpen,
+    setConfirmBulkDeleteOpen,
+    confirmBulkRestoreOpen,
+    setConfirmBulkRestoreOpen,
+    paginatedStudents,
+    allSelected,
+    someSelected,
+    selectedStudents,
+    renderSortIcon,
+    handleSort,
+    handleSelectAll,
+    handleSelectOne,
+    handleRowClick,
+  };
+}

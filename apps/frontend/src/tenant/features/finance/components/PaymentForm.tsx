@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/FormPrimitives";
 import { UserActorSelect } from "@/components/ui/UserActorSelect";
-
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { notify } from "@/lib/notify";
 import { PAYMENT_METHODS, Invoice } from '@/lib/data/financeData';
@@ -14,8 +13,14 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { Card } from "@/components/ui/card";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
-import { AppTranslationKey, todayISO, type PaymentCreateInput } from "@mms/shared";
+import { type PaymentCreateInput } from "@mms/shared";
 import { NotifiedFinanceMutationError } from "@/tenant/features/finance/hooks/useFinanceApi";
+import {
+  PAYMENT_METHOD_LABEL_KEYS,
+  buildInitialPaymentDraft,
+  buildPaymentCreatePayload,
+  validatePaymentFormDraft,
+} from "@/tenant/features/finance/components/paymentFormHelpers";
 
 interface PaymentFormProps {
   open: boolean;
@@ -23,14 +28,6 @@ interface PaymentFormProps {
   onClose: () => void;
   onSave: (payment: PaymentCreateInput) => void | Promise<void>;
 }
-
-const PAYMENT_METHOD_LABEL_KEYS: Record<(typeof PAYMENT_METHODS)[number], AppTranslationKey> = {
-  Cash: "finance.paymentMethod.cash",
-  "Bank Transfer": "finance.paymentMethod.bank_transfer",
-  Online: "finance.paymentMethod.online",
-  Cheque: "finance.paymentMethod.cheque",
-  Other: "finance.paymentMethod.other",
-};
 
 export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps): React.JSX.Element {
   const { user: authUser } = useAuth();
@@ -40,14 +37,9 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
 
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const [paymentDraft, setPaymentDraft] = useState(() => ({
-    amount: balance,
-    method: "Cash",
-    date: todayISO(),
-    receivedByUserId: authUser?.id || "",
-    note: "",
-  }));
+  const [paymentDraft, setPaymentDraft] = useState(() =>
+    buildInitialPaymentDraft(balance, authUser?.id || ""),
+  );
 
   const paymentMethodOptions = useMemo(
     () =>
@@ -64,22 +56,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
 
   const handleSave = async () => {
     setErrors({});
-    const newErrors: Record<string, string> = {};
-
-    if (!paymentDraft.amount || Number(paymentDraft.amount) <= 0) {
-      newErrors.amount = t("finance.amountRequired");
-    } else if (Number(paymentDraft.amount) > balance) {
-      newErrors.amount = t("finance.amountExceedsBalance");
-    }
-    if (!paymentDraft.method) {
-      newErrors.method = t("finance.methodRequired");
-    }
-    if (!paymentDraft.date) {
-      newErrors.date = t("finance.dateRequired");
-    }
-    if (!paymentDraft.receivedByUserId) {
-      newErrors.receivedByUserId = t("finance.receivedByRequired");
-    }
+    const newErrors = validatePaymentFormDraft(paymentDraft, balance, t);
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -91,14 +68,13 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
 
     setSaving(true);
     try {
-      await onSave({
-        ...paymentDraft,
-        amount: Number(paymentDraft.amount),
-        invoiceId: invoice.id,
-        studentId: invoice.studentId,
-        studentName: invoice.studentName,
-        receivedByUserId: paymentDraft.receivedByUserId || authUser?.id || '',
-      });
+      await onSave(buildPaymentCreatePayload(
+        paymentDraft,
+        invoice.id,
+        invoice.studentId,
+        invoice.studentName,
+        authUser?.id || '',
+      ));
       notify.success(t("finance.paymentSaved"));
       onClose();
     } catch (err: unknown) {

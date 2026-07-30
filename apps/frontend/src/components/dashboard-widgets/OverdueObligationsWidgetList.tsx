@@ -1,6 +1,5 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Scale } from "lucide-react";
 import { ROUTES } from "@/lib/config/routes";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -21,6 +20,7 @@ import {
   OverdueRemindButton,
   type OverdueStudent,
 } from "@/components/dashboard-widgets/OverdueObligationsWidgetParts";
+import { OverdueObligationsWidgetMobileList } from "@/components/dashboard-widgets/OverdueObligationsWidgetMobileList";
 
 export interface OverdueObligationsWidgetListProps {
   expanded: boolean;
@@ -66,68 +66,15 @@ export function OverdueObligationsWidgetList({
           </div>
 
           <div className="space-y-3 p-3 md:hidden">
-            {paginatedStudents.length === 0 ? (
-              <p className="py-8 text-center text-xs text-muted-foreground select-none">
-                {t("finance.report.noInvoicesMatch")}
-              </p>
-            ) : (
-              paginatedStudents.map((overdueStudent, index) => {
-                const reminded = remindedIds.has(overdueStudent.id);
-                const student = students.find((entry) => String(entry.id) === String(overdueStudent.id));
-                const hasPhone = Boolean(student?.phone);
-                return (
-                  <motion.article
-                    key={`${overdueStudent.id}-${overdueStudent.dueDate}-${overdueStudent.amount}`}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.04, duration: 0.25 }}
-                    className="space-y-3 rounded-xl border border-border bg-card p-3"
-                  >
-                    <div className="flex min-w-0 items-start justify-between gap-3">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <UserAvatar id={overdueStudent.id} name={overdueStudent.name} className="w-7 h-7 rounded-full text-xs font-bold shrink-0" />
-                        <div className="min-w-0">
-                          <h4 className="truncate text-sm font-semibold text-foreground m-0">{overdueStudent.name}</h4>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <Scale className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
-                            <p className="truncate text-xs text-muted-foreground m-0">{overdueStudent.obligationType}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <span className="shrink-0 text-xs font-bold text-foreground tabular-nums">
-                        {formatMoney(overdueStudent.amount, overdueStudent.currency || activeCurrencyCode)}
-                      </span>
-                    </div>
-                    <dl className="grid grid-cols-1 gap-2 text-sm">
-                      <div>
-                        <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.dueDate")}</dt>
-                        <dd className="text-xs text-foreground font-semibold m-0 tabular-nums">{formatDate(overdueStudent.dueDate)}</dd>
-                        <dd className="text-xs text-destructive font-bold mt-0.5 m-0 uppercase tracking-wide tabular-nums">
-                          {t("dashboard.widgets.daysOverdue", { count: overdueStudent.daysOverdue })}
-                        </dd>
-                      </div>
-                    </dl>
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2">
-                      <OverdueUrgencyBadge daysOverdue={overdueStudent.daysOverdue} t={t} />
-                      {canWriteMessaging && (
-                        <OverdueRemindButton
-                          overdueStudent={overdueStudent}
-                          reminded={reminded}
-                          hasPhone={hasPhone}
-                          onRemind={onRemind}
-                          t={t}
-                          className={`flex items-center gap-1 px-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors min-h-11 shadow-none cursor-pointer ${
-                            reminded
-                              ? "bg-success/10 text-success border border-success/35 cursor-default hover:bg-success/10 hover:text-success"
-                              : "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:text-primary"
-                          }`}
-                        />
-                      )}
-                    </div>
-                  </motion.article>
-                );
-              })
-            )}
+            <OverdueObligationsWidgetMobileList
+              paginatedStudents={paginatedStudents}
+              students={students}
+              remindedIds={remindedIds}
+              canWriteMessaging={canWriteMessaging}
+              activeCurrencyCode={activeCurrencyCode}
+              onRemind={onRemind}
+              t={t}
+            />
           </div>
 
           <div className="hidden overflow-x-auto md:block">

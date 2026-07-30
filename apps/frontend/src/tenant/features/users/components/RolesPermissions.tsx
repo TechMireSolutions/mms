@@ -1,128 +1,36 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React from 'react';
 import { Plus, Pencil, Shield, Lock } from 'lucide-react';
 import {
-  filterRbacModulesForSettings,
-  PERMISSION_ACTIONS,
   workspaceRoleDescription,
   workspaceRoleLabel,
-  type PermissionAction,
-  type PermissionMap,
-  type WorkspaceRole,
 } from '@mms/shared';
-import { useTranslation } from '@/hooks/useTranslation';
-import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
-import { useIsAdminViewer } from '@/tenant/hooks/useViewerRole';
-import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
-import { useUsersConfig } from '@/hooks/useStandardModuleConfig';
-import { notify } from '@/lib/notify';
 import { Button } from '@/components/ui/button';
 import { UserRoleBadge } from '@/tenant/features/users/components/UserBadges';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 import { PermissionMatrix } from '@/tenant/features/users/components/PermissionMatrix';
 import { RoleFormModal } from '@/tenant/features/users/components/RoleFormModal';
+import { useRolesPermissionsController } from '@/tenant/features/users/hooks/useRolesPermissionsController';
 
 export function RolesPermissions(): React.JSX.Element {
-  const { t } = useTranslation();
-  const { settings, updateSettings } = useUsersConfig();
-  const globalSettings = useGlobalSettings();
-  const isAdmin = useIsAdminViewer();
-  const loadedRoles = useWorkspaceRoles();
-  const visibleModules = useMemo(
-    () => filterRbacModulesForSettings(globalSettings.enabledModules),
-    [globalSettings.enabledModules],
-  );
-  const [roles, setRoles] = useState<WorkspaceRole[]>(loadedRoles);
-  const [editing, setEdit] = useState<WorkspaceRole | 'new' | null>(null);
-  const [selected, setSel] = useState<WorkspaceRole | null>(null);
-  const [permDraft, setPermDraft] = useState<PermissionMap | null>(null);
-  const [permDraftRoleId, setPermDraftRoleId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!editing) {
-      setRoles(loadedRoles);
-    }
-  }, [loadedRoles, editing]);
-
-  const displayRole = selected ?? roles[0] ?? null;
-
-  useEffect(() => {
-    if (!displayRole) {
-      setPermDraft(null);
-      setPermDraftRoleId(null);
-      return;
-    }
-    if (displayRole.id !== permDraftRoleId) {
-      setPermDraft(structuredClone(displayRole.permissions));
-      setPermDraftRoleId(displayRole.id);
-    }
-  }, [displayRole, permDraftRoleId]);
-
-  const permDirty = useMemo(() => {
-    if (!displayRole || !permDraft) return false;
-    return JSON.stringify(permDraft) !== JSON.stringify(displayRole.permissions);
-  }, [displayRole, permDraft]);
-
-  const togglePermDraft = (moduleId: string, action: PermissionAction): void => {
-    setPermDraft((previousPermissions) => {
-      if (!previousPermissions) return previousPermissions;
-      const currentActions = previousPermissions[moduleId] || [];
-      const updatedActions = currentActions.includes(action)
-        ? currentActions.filter((permissionAction) => permissionAction !== action)
-        : [...currentActions, action];
-      return { ...previousPermissions, [moduleId]: updatedActions };
-    });
-  };
-
-  const selectAllDraft = (moduleId: string): void => {
-    setPermDraft((previousPermissions) => (previousPermissions ? { ...previousPermissions, [moduleId]: [...PERMISSION_ACTIONS] } : previousPermissions));
-  };
-
-  const clearAllDraft = (moduleId: string): void => {
-    setPermDraft((previousPermissions) => (previousPermissions ? { ...previousPermissions, [moduleId]: [] } : previousPermissions));
-  };
-
-  const resetPermDraft = (): void => {
-    if (displayRole) {
-      setPermDraft(structuredClone(displayRole.permissions));
-    }
-  };
-
-  const commitRole = (role: WorkspaceRole, toastKey: 'role' | 'permissions'): void => {
-    setRoles((previousRoles) => {
-      const existingRole = previousRoles.find((workspaceRole) => workspaceRole.id === role.id);
-      const updatedRoles = existingRole
-        ? previousRoles.map((workspaceRole) => (workspaceRole.id === role.id ? role : workspaceRole))
-        : [...previousRoles, role];
-      updateSettings({ ...settings, workspaceRoles: updatedRoles });
-      return updatedRoles;
-    });
-    setEdit(null);
-    setSel(role);
-    if (toastKey === 'permissions') {
-      notify.success(t('users.permissions.permissionsSaved'), {
-        description: t('users.permissions.permissionsSavedDesc', { name: workspaceRoleLabel(role, t) }),
-      });
-    } else {
-      notify.success(t('users.permissions.roleSaved'), {
-        description: t('users.permissions.roleSavedDesc', { name: workspaceRoleLabel(role, t) }),
-      });
-    }
-  };
-
-  const handleSave = (role: WorkspaceRole): void => {
-    commitRole(role, 'role');
-  };
-
-  const savePermissionDraft = (): void => {
-    if (!displayRole || !permDraft || !isAdmin) return;
-    commitRole({ ...displayRole, permissions: structuredClone(permDraft) }, 'permissions');
-  };
-
-  const editTitle = editing
-    ? editing === 'new'
-      ? t('users.permissions.createTitle')
-      : t('users.permissions.editTitle', { name: workspaceRoleLabel(editing, t) })
-    : '';
+  const {
+    t,
+    isAdmin,
+    visibleModules,
+    roles,
+    editing,
+    setEdit,
+    setSel,
+    displayRole,
+    permDraft,
+    permDirty,
+    togglePermDraft,
+    selectAllDraft,
+    clearAllDraft,
+    resetPermDraft,
+    handleSave,
+    savePermissionDraft,
+    editTitle,
+  } = useRolesPermissionsController();
 
   return (
     <div className="space-y-5">

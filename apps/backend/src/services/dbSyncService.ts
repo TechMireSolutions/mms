@@ -14,6 +14,7 @@ import {
   deleteObject as dbDeleteObject,
   listTenantObjectLogicalKeys as dbListTenantObjectLogicalKeys,
   listTenantCollectionLogicalKeys as dbListTenantCollectionLogicalKeys,
+  runInReadSnapshotTransaction,
   runInTransaction
 } from '../db/database.js';
 import { loadRelationalSnapshotCollections } from '../db/relationalSnapshot.js';
@@ -22,6 +23,7 @@ import {
   withCompleteRelationalRestoreCollections,
 } from '../db/relationalReplaceMapping.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
+import { throwIfSyncAborted } from '../lib/syncLimits.js';
 import { clearTenantBackgroundJobs } from './backgroundJobService.js';
 
 /**
@@ -36,21 +38,30 @@ export async function fetchDatabaseSnapshot(): Promise<TenantDatabaseSnapshot> {
 /**
  * Retrieves a full-fidelity workspace snapshot for backup export.
  *
- * Overlays the authoritative relational tables on top of the legacy document store,
- * which is stale for every REST-migrated module.
+ * Combines:
+ * - Tenant document-store collections/objects (lookups, settings, per-user inboxes)
+ * - Authoritative relational tables for every REST-migrated module
+ *
+ * Intentionally omitted: audit trail, password hashes, server-only secrets,
+ * background jobs, and uploaded binary files.
+ *
+ * Reads run in one REPEATABLE READ transaction so concurrent writes cannot tear the
+ * snapshot across the document store and the relational tables.
  *
  * @returns {Promise<TenantDatabaseSnapshot>} The backup snapshot.
  */
 export async function fetchBackupSnapshot(): Promise<TenantDatabaseSnapshot> {
-  const snapshot = await dbGetAllData();
-  const tenant = getRequestTenant();
-  if (!tenant) return snapshot;
+  return await runInReadSnapshotTransaction(async () => {
+    const snapshot = await dbGetAllData();
+    const tenant = getRequestTenant();
+    if (!tenant) return snapshot;
 
-  const relational = await loadRelationalSnapshotCollections(tenant);
-  return {
-    ...snapshot,
-    collections: { ...(snapshot.collections ?? {}), ...relational },
-  };
+    const relational = await loadRelationalSnapshotCollections(tenant);
+    return {
+      ...snapshot,
+      collections: { ...(snapshot.collections ?? {}), ...relational },
+    };
+  });
 }
 
 /**
@@ -58,9 +69,13 @@ export async function fetchBackupSnapshot(): Promise<TenantDatabaseSnapshot> {
  * Uses a single database transaction block to guarantee atomicity and speed up bulk inserts.
  *
  * @param {TenantDatabaseSnapshot} payload - The sync collections and objects.
+ * @param {AbortSignal} [signal] - Aborts mid-restore so the transaction rolls back.
  * @returns {Promise<void>}
  */
-export async function synchronizeData(payload: TenantDatabaseSnapshot): Promise<void> {
+export async function synchronizeData(
+  payload: TenantDatabaseSnapshot,
+  signal?: AbortSignal,
+): Promise<void> {
   const collections = withCompleteRelationalRestoreCollections(payload.collections);
   const { objects } = payload;
   // Only a full workspace backup carries users; partial syncs must not prune.
@@ -74,6 +89,7 @@ export async function synchronizeData(payload: TenantDatabaseSnapshot): Promise<
 
     const restoredCollectionKeys = new Set<string>();
     for (const name of sortCollectionNamesForRestore(Object.keys(collections))) {
+      throwIfSyncAborted(signal);
       const collectionItems = collections[name];
       if (Array.isArray(collectionItems)) {
         // Admin bulk restore: intentionally replace mirrored relational tables.
@@ -84,6 +100,7 @@ export async function synchronizeData(payload: TenantDatabaseSnapshot): Promise<
 
     if (isFullRestore) {
       for (const key of await dbListTenantCollectionLogicalKeys()) {
+        throwIfSyncAborted(signal);
         if (!restoredCollectionKeys.has(key)) await dbDeleteCollection(key);
       }
     }
@@ -91,6 +108,7 @@ export async function synchronizeData(payload: TenantDatabaseSnapshot): Promise<
     if (objects) {
       const restoredKeys = new Set<string>();
       for (const [key, objectValue] of Object.entries(objects)) {
+        throwIfSyncAborted(signal);
         if (isServerOnlyObjectKey(key)) continue;
         await dbSaveObject(key, objectValue);
         restoredKeys.add(key);
@@ -99,6 +117,7 @@ export async function synchronizeData(payload: TenantDatabaseSnapshot): Promise<
       if (isFullRestore) {
         // Settings created after the backup must not survive a full restore.
         for (const key of await dbListTenantObjectLogicalKeys()) {
+          throwIfSyncAborted(signal);
           if (!restoredKeys.has(key)) await dbDeleteObject(key);
         }
         // Ephemeral caches/artifacts are never exported — drop them on full restore.

@@ -6,25 +6,45 @@ export const SYNC_MAX_BODY_BYTES =
 export const SYNC_REQUEST_TIMEOUT_MS =
   Number(process.env.MMS_SYNC_REQUEST_TIMEOUT_MS) || 120_000;
 
+/** Thrown by aborted sync work so the restore transaction rolls back. */
+export const SYNC_ABORTED_MESSAGE = 'backup.syncTimeout';
+
+export function throwIfSyncAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw new Error(SYNC_ABORTED_MESSAGE);
+  }
+}
+
+/**
+ * Runs bulk sync work under a wall-clock cap.
+ *
+ * On timeout the signal is aborted and the operation is awaited to settlement, so a
+ * partially applied restore transaction is rolled back before the 408 is returned.
+ * Never resolve the timeout independently of the operation — that would let the
+ * transaction commit after the client was told the restore failed.
+ */
 export async function withSyncTimeout<T>(
-  operation: Promise<T>,
+  run: (signal: AbortSignal) => Promise<T>,
   timeoutMs = SYNC_REQUEST_TIMEOUT_MS,
 ): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      reject(
-        Object.assign(new Error('Bulk sync timed out'), {
-          statusCode: 408,
-          type: 'server_error',
-        }),
-      );
-    }, timeoutMs);
-  });
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
 
   try {
-    return await Promise.race([operation, timeout]);
+    return await run(controller.signal);
+  } catch (error) {
+    if (timedOut) {
+      throw Object.assign(new Error(SYNC_ABORTED_MESSAGE), {
+        statusCode: 408,
+        type: 'server_error',
+      });
+    }
+    throw error;
   } finally {
-    if (timer) clearTimeout(timer);
+    clearTimeout(timer);
   }
 }

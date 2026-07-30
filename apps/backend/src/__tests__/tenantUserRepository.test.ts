@@ -182,7 +182,7 @@ describe('replaceTenantUsersForWorkspace', () => {
     expect(inserted[0].passwordHash).toBe('salt:payload-hash');
   });
 
-  it('rejects restore when no recoverable password hash exists for a user', async () => {
+  it('rejects restore when no live admin keeps a usable password hash', async () => {
     mockSelectWhere.mockResolvedValue([]);
 
     await expect(
@@ -203,5 +203,43 @@ describe('replaceTenantUsersForWorkspace', () => {
 
     expect(mockDelete).not.toHaveBeenCalled();
     expect(mockInsertValues).not.toHaveBeenCalled();
+  });
+
+  it('parks an unusable hash for unknown users while an admin credential survives', async () => {
+    mockSelectWhere.mockResolvedValue([
+      { ...existingDbRow, id: 'u-admin', loginEmail: 'admin@workspace.local', role: 'admin' },
+    ]);
+
+    await replaceTenantUsersForWorkspace('dar-ul-quran', [
+      {
+        id: 'u-admin',
+        workspaceSubdomain: 'dar-ul-quran',
+        loginEmail: 'admin@workspace.local',
+        name: 'Workspace Admin',
+        role: 'admin',
+      },
+      {
+        id: 'u-unknown',
+        workspaceSubdomain: 'dar-ul-quran',
+        loginEmail: 'unknown@workspace.local',
+        name: 'Unknown User',
+        role: 'teacher',
+      },
+    ]);
+
+    const inserted = mockInsertValues.mock.calls[0]?.[0] as Array<{
+      id: string;
+      passwordHash: string;
+      mustChangePassword: boolean;
+    }>;
+    expect(inserted[0]).toMatchObject({
+      id: 'u-admin',
+      passwordHash: 'salt:existing-hash',
+      mustChangePassword: false,
+    });
+    expect(inserted[1]?.mustChangePassword).toBe(true);
+    expect(inserted[1]?.passwordHash).toMatch(/^!restore-/);
+    // No `salt:hash` separator, so `verifyPassword` can never accept a parked hash.
+    expect(inserted[1]?.passwordHash).not.toContain(':');
   });
 });

@@ -1,0 +1,142 @@
+import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
+import { buildInvoiceTemplateHeaderElements } from "./invoiceTemplateHeaderElements";
+import { buildInvoiceTemplateFooterElements } from "./invoiceTemplateFooterElements";
+import type { BrandingInfo, InvoiceTemplate } from "./invoiceTemplateTypes.js";
+
+/**
+ * Builds the default A6 invoice template element list from branding settings.
+ */
+export function buildDefaultInvoiceTemplateElements(b: BrandingInfo): InvoiceTemplate["elements"] {
+  const primary = b.primaryColor;
+  const { text, border, label, labelLight } = PRINT_NEUTRAL;
+  return [
+    ...buildInvoiceTemplateHeaderElements(b, primary),
+    {
+      id: "from_label",
+      type: "static",
+      label: "Received From:",
+      x: 20, y: 192, w: 110, h: 14,
+      style: { fontSize: 10, fontWeight: "bold", color: label },
+    },
+    {
+      id: "from_value",
+      type: "field",
+      label: "Sender",
+      field: "sender",
+      x: 130, y: 192, w: 247, h: 14,
+      style: { fontSize: 10, color: text },
+    },
+    {
+      id: "divider3",
+      type: "divider",
+      label: "",
+      x: 20, y: 212, w: 357, h: 1,
+      style: { color: border },
+    },
+    {
+      id: "ref_label",
+      type: "static",
+      label: "Reference:",
+      x: 20, y: 220, w: 90, h: 14,
+      style: { fontSize: 10, fontWeight: "bold", color: label },
+    },
+    {
+      id: "ref_value",
+      type: "field",
+      label: "Reference",
+      field: "reference",
+      x: 110, y: 220, w: 267, h: 14,
+      style: { fontSize: 10, color: text },
+    },
+    {
+      id: "divider4",
+      type: "divider",
+      label: "",
+      x: 20, y: 240, w: 357, h: 1,
+      style: { color: border },
+    },
+    {
+      id: "account_label",
+      type: "static",
+      label: "In Account Of:",
+      x: 20, y: 248, w: 110, h: 14,
+      style: { fontSize: 10, fontWeight: "bold", color: label },
+    },
+    {
+      id: "account_value",
+      type: "field",
+      label: "Obligation Type",
+      field: "obligation_type",
+      x: 130, y: 248, w: 247, h: 14,
+      style: { fontSize: 10, color: text },
+    },
+    {
+      id: "mujtahid_label",
+      type: "static",
+      label: "Mujtahid:",
+      x: 20, y: 268, w: 80, h: 14,
+      style: { fontSize: 10, fontWeight: "bold", color: label },
+    },
+    {
+      id: "mujtahid_value",
+      type: "field",
+      label: "Mujtahid",
+      field: "mujtahid",
+      x: 100, y: 268, w: 277, h: 14,
+      style: { fontSize: 10, color: text },
+    },
+    {
+      id: "divider5",
+      type: "divider",
+      label: "",
+      x: 20, y: 290, w: 357, h: 2,
+      style: { color: border },
+    },
+    {
+      id: "amount_label",
+      type: "static",
+      label: "Amount:",
+      x: 20, y: 300, w: 60, h: 18,
+      style: { fontSize: 11, fontWeight: "bold", color: label },
+    },
+    {
+      id: "amount_value",
+      type: "field",
+      label: "Amount",
+      field: "amount",
+      x: 80, y: 298, w: 130, h: 20,
+      style: { fontSize: 13, fontWeight: "800", color: primary, fontFamily: "monospace" },
+    },
+    {
+      id: "recv_label",
+      type: "static",
+      label: "Received By:",
+      x: 222, y: 300, w: 90, h: 16,
+      style: { fontSize: 10, fontWeight: "bold", color: label },
+    },
+    {
+      id: "recv_value",
+      type: "field",
+      label: "Received By",
+      field: "received_by",
+      x: 310, y: 300, w: 67, h: 16,
+      style: { fontSize: 10, color: text },
+    },
+    {
+      id: "payment_label",
+      type: "static",
+      label: "Payment Mode:",
+      x: 20, y: 322, w: 100, h: 14,
+      style: { fontSize: 9, fontWeight: "bold", color: labelLight },
+    },
+    {
+      id: "payment_value",
+      type: "field",
+      label: "Payment Mode",
+      field: "payment_mode",
+      x: 120, y: 322, w: 100, h: 14,
+      style: { fontSize: 9, color: label },
+    },
+    ...buildInvoiceTemplateFooterElements(b, primary),
+  ];
+}

@@ -1,0 +1,121 @@
+import React from "react";
+import { formatMonthName, type SessionsSettings } from "@mms/shared";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Input } from "@/components/ui/input";
+import { FormSelect } from "@/components/ui/FormSelect";
+import { ToggleRow } from "@/components/ui/ToggleRow";
+import { SegmentedPillFilter } from "@/components/ui/SegmentedPillFilter";
+import { useTranslation } from "@/hooks/useTranslation";
+
+export interface SessionsSettingsPreferencesProps {
+  settingsDraft: SessionsSettings;
+  typeOptions: string[];
+  upd: <K extends keyof SessionsSettings>(field: K, value: SessionsSettings[K]) => void;
+}
+
+export function SessionsSettingsPreferences({
+  settingsDraft,
+  typeOptions,
+  upd,
+}: SessionsSettingsPreferencesProps): React.JSX.Element {
+  const { t } = useTranslation();
+
+  return (
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className={FORM_LABEL} htmlFor="defaultDuration">{t("sessions.settings.defaultDuration")}</label>
+          <Input
+            id="defaultDuration"
+            type="number"
+            value={settingsDraft.defaultDuration || ""}
+            onChange={(event) => upd("defaultDuration", event.target.value)}
+          />
+        </div>
+        <div>
+          <label className={FORM_LABEL} htmlFor="defaultSessionType">{t("sessions.settings.defaultSessionType")}</label>
+          <FormSelect
+            id="defaultSessionType"
+            value={settingsDraft.defaultSessionType}
+            onChange={(value) => upd("defaultSessionType", value)}
+            options={typeOptions}
+            className="w-full"
+          />
+        </div>
+        <div>
+          <label className={FORM_LABEL} htmlFor="academicYear">{t("sessions.settings.academicYear")}</label>
+          <Input
+            id="academicYear"
+            type="text"
+            value={settingsDraft.academicYear || ""}
+            onChange={(event) => upd("academicYear", event.target.value)}
+            placeholder={t("sessions.settings.academicYearPlaceholder")}
+          />
+        </div>
+        <div>
+          <label className={FORM_LABEL} htmlFor="sessionStart">{t("sessions.settings.sessionStart")}</label>
+          <FormSelect
+            id="sessionStart"
+            value={settingsDraft.sessionStart}
+            onChange={(value) => upd("sessionStart", value)}
+            options={["january", "february", "march", "april", "may", "june",
+              "july", "august", "september", "october", "november", "december"].map((month, idx) => ({
+                value: month,
+                label: formatMonthName(new Date(2000, idx, 1)),
+              }))}
+            className="w-full"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2 pt-1">
+        <ToggleRow
+          label={t("sessions.settings.allowOverlap")}
+          description={t("sessions.settings.allowOverlapHint")}
+          value={settingsDraft.allowOverlap}
+          onChange={(value) => upd("allowOverlap", value)}
+        />
+        <ToggleRow
+          label={t("sessions.settings.archiveOld")}
+          description={t("sessions.settings.archiveOldHint")}
+          value={settingsDraft.archiveOldSessions}
+          onChange={(value) => upd("archiveOldSessions", value)}
+        />
+        <ToggleRow
+          label={t("sessions.settings.requireBudget")}
+          description={t("sessions.settings.requireBudgetHint")}
+          value={settingsDraft.requireBudget}
+          onChange={(value) => upd("requireBudget", value)}
+        />
+        <ToggleRow
+          label={t("sessions.settings.timetableConflict")}
+          description={t("sessions.settings.timetableConflictHint")}
+          value={settingsDraft.timetableConflictCheck}
+          onChange={(value) => upd("timetableConflictCheck", value)}
+        />
+        <ToggleRow
+          label={t("sessions.settings.notifyOnStart")}
+          description={t("sessions.settings.notifyOnStartHint")}
+          value={settingsDraft.notifyOnSessionStart}
+          onChange={(value) => upd("notifyOnSessionStart", value)}
+        />
+
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border py-3">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground">{t("sessions.settings.defaultViewLayout")}</p>
+            <p className="text-xs text-muted-foreground">{t("sessions.settings.defaultViewLayoutHint")}</p>
+          </div>
+          <SegmentedPillFilter
+            size="sm"
+            value={(settingsDraft.defaultViewLayout || "cards") as "list" | "cards"}
+            onChange={(value) => upd("defaultViewLayout", value)}
+            options={[
+              { value: "list", label: t("sessions.settings.listView") },
+              { value: "cards", label: t("sessions.settings.cardGrid") },
+            ]}
+          />
+        </div>
+      </div>
+    </>
+  );
+}

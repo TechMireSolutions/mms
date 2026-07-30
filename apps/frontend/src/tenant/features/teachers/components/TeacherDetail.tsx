@@ -1,7 +1,6 @@
 import React, { lazy, Suspense, useMemo } from "react";
 import {
-  Briefcase, Calendar, Edit2, GraduationCap, Hash, Mail, MessageCircle,
-  MessageSquare, Phone, School, User,
+  Briefcase, Calendar, Edit2, GraduationCap, Hash, Mail, Phone, School, User,
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Button } from "@/components/ui/button";
@@ -16,46 +15,20 @@ import {
   formatDate,
   getPrimaryEmail,
   getPrimaryPhone,
-  toMessagingRecipient,
   toTitleCase,
   type AppTranslationKey,
   type Teacher,
 } from "@mms/shared";
 import { useContactById } from "@/tenant/hooks/collections/contacts";
+import { TeacherDetailAttributeRow } from "@/tenant/features/teachers/components/TeacherDetailAttributeRow";
+import { TeacherDetailQuickActions } from "@/tenant/features/teachers/components/TeacherDetailQuickActions";
 
 const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
-
-function cleanTelUri(phone: string): string {
-  return `tel:${phone.replace(/[^\d+]/g, "")}`;
-}
 
 interface TeacherDetailProps {
   teacher: Teacher;
   onClose: () => void;
   onEdit?: (teacher: Teacher) => void;
-}
-
-function AttributeRow({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: React.ReactNode;
-}): React.JSX.Element {
-  const { t } = useTranslation();
-  return (
-    <div className="flex items-start gap-3 py-2.5 border-b border-border/40 last:border-0">
-      <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
-        <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-      </div>
-      <div className="min-w-0 flex-1 text-start">
-        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
-        <div className="text-sm font-medium text-foreground mt-0.5 break-words">{value || t("common.notSpecified")}</div>
-      </div>
-    </div>
-  );
 }
 
 export default function TeacherDetail({
@@ -134,75 +107,36 @@ export default function TeacherDetail({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {primaryPhone && (
-            <Button
-              variant="ghost"
-              asChild
-              className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-info/10 hover:border-info/30 transition-all text-info text-center shadow-none"
-            >
-              <a href={cleanTelUri(primaryPhone)}>
-                <Phone className="w-4 h-4 mx-auto" />
-                <span className="text-xs font-bold">{t("teachers.detail.call")}</span>
-              </a>
-            </Button>
-          )}
-          {primaryPhone && canWriteMessaging && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => openComposer("whatsapp", [toMessagingRecipient({ ...teacher, phone: primaryPhone, name: displayName })])}
-              className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-success/10 hover:border-success/30 transition-all text-success text-center cursor-pointer shadow-none"
-            >
-              <MessageCircle className="w-4 h-4 mx-auto" />
-              <span className="text-xs font-bold">{t("teachers.list.actionWhatsApp")}</span>
-            </Button>
-          )}
-          {primaryPhone && canWriteMessaging && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => openComposer("sms", [toMessagingRecipient({ ...teacher, phone: primaryPhone, name: displayName })])}
-              className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-info/10 hover:border-info/30 transition-all text-info text-center cursor-pointer shadow-none"
-            >
-              <MessageSquare className="w-4 h-4 mx-auto" />
-              <span className="text-xs font-bold">{t("teachers.list.actionSms")}</span>
-            </Button>
-          )}
-          {primaryEmail && canWriteMessaging && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => openComposer("email", [toMessagingRecipient({ ...teacher, email: primaryEmail, name: displayName })])}
-              className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/30 transition-all text-primary text-center cursor-pointer shadow-none"
-            >
-              <Mail className="w-4 h-4 mx-auto" />
-              <span className="text-xs font-bold">{t("teachers.list.actionEmail")}</span>
-            </Button>
-          )}
-        </div>
+        <TeacherDetailQuickActions
+          teacher={teacher}
+          displayName={displayName}
+          primaryPhone={primaryPhone}
+          primaryEmail={primaryEmail}
+          canWriteMessaging={canWriteMessaging}
+          onOpenComposer={openComposer}
+        />
 
         <Card accentColor="primary" className="p-4">
           <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
             {t("teachers.detail.sectionDetails")}
           </h4>
-          <AttributeRow icon={User} label={t("teachers.field.contact")} value={displayName} />
-          <AttributeRow icon={Hash} label={t("teachers.field.employeeId")} value={teacher.employeeId} />
-          <AttributeRow icon={Briefcase} label={t("teachers.field.specialization")} value={teacher.specialization} />
-          <AttributeRow icon={GraduationCap} label={t("teachers.field.qualification")} value={teacher.qualification} />
-          <AttributeRow
+          <TeacherDetailAttributeRow icon={User} label={t("teachers.field.contact")} value={displayName} />
+          <TeacherDetailAttributeRow icon={Hash} label={t("teachers.field.employeeId")} value={teacher.employeeId} />
+          <TeacherDetailAttributeRow icon={Briefcase} label={t("teachers.field.specialization")} value={teacher.specialization} />
+          <TeacherDetailAttributeRow icon={GraduationCap} label={t("teachers.field.qualification")} value={teacher.qualification} />
+          <TeacherDetailAttributeRow
             icon={Calendar}
             label={t("teachers.field.joinDate")}
             value={teacher.joinDate ? formatDate(teacher.joinDate) : undefined}
           />
           {primaryPhone && (
-            <AttributeRow icon={Phone} label={t("teachers.field.phone")} value={primaryPhone} />
+            <TeacherDetailAttributeRow icon={Phone} label={t("teachers.field.phone")} value={primaryPhone} />
           )}
           {primaryEmail && (
-            <AttributeRow icon={Mail} label={t("teachers.field.email")} value={primaryEmail} />
+            <TeacherDetailAttributeRow icon={Mail} label={t("teachers.field.email")} value={primaryEmail} />
           )}
           {teacher.notes && (
-            <AttributeRow icon={School} label={t("teachers.field.notes")} value={teacher.notes} />
+            <TeacherDetailAttributeRow icon={School} label={t("teachers.field.notes")} value={teacher.notes} />
           )}
           {customFields.map((field) => {
             const raw = (teacher as unknown as Record<string, unknown>)[field.id];
@@ -213,7 +147,7 @@ export default function TeacherDetail({
                 : String(raw);
             }
             return (
-              <AttributeRow
+              <TeacherDetailAttributeRow
                 key={field.id}
                 icon={School}
                 label={field.label || field.id}

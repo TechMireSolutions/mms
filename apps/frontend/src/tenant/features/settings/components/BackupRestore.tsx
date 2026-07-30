@@ -44,12 +44,10 @@ export default function BackupRestore(): React.JSX.Element {
       const decryptEmail =
         backup.pendingDecrypt.kind === 'file'
           ? backup.pendingDecrypt.adminEmail
-          : backup.pendingDecrypt.kind === 'history'
-            ? backup.pendingDecrypt.backup.adminEmail ?? adminEmail
-            : adminEmail;
+          : backup.pendingDecrypt.backup.adminEmail ?? adminEmail;
       const decryptEmailReadOnly =
         backup.pendingDecrypt.kind === 'file' ||
-        (backup.pendingDecrypt.kind === 'history' && Boolean(backup.pendingDecrypt.backup.adminEmail));
+        Boolean(backup.pendingDecrypt.backup.adminEmail);
 
       return {
         open: true,
@@ -132,13 +130,17 @@ export default function BackupRestore(): React.JSX.Element {
       <BackupRestoreConfirmModal
         open={backup.pendingRestore !== null}
         onClose={() => {
-          backup.setPendingRestore(null);
-          backup.setSelectedFileName(null);
+          // A wipe is in flight — dismissing would hide its outcome.
+          if (backup.restoreId !== null || backup.safetyStep) return;
+          backup.cancelRestore();
         }}
         summary={backup.pendingRestore?.summary ?? null}
+        targetSubdomain={subdomain ?? ''}
         confirmPhrase={backup.confirmPhrase}
         restoring={backup.restoreId !== null}
         safetyStep={backup.safetyStep}
+        safetyReady={backup.safetyReady}
+        onCreateSafetyBackup={(password) => void backup.createSafetyBackup(password)}
         onConfirm={() => {
           if (backup.pendingRestore) void backup.beginRestore(backup.pendingRestore);
         }}

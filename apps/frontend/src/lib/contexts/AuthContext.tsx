@@ -1,60 +1,28 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { clear2FAState, mark2FAVerified, setPendingChallengeId } from '@/lib/twoFactor';
-import { type User, type Workspace } from '@mms/shared';
+import { type User } from '@mms/shared';
 import { appNavigate } from '@/lib/routing/appNavigate';
 import { ROUTES } from '@/lib/config/routes';
 import { apiFetch, apiJson, isApiError } from '@/lib/apiClient';
 import { isCurrentHostApex } from '@/lib/config/tenantConfig';
 import { getWorkspaceLocalStoragePrefix } from '@/lib/db';
 import { parseAuthError, type AuthError } from '@/lib/authErrors';
+import {
+  AuthFailureError,
+  buildConnectionAuthError,
+  clearPersistedAuthUser,
+  clearUserScopedCachesOnLogout,
+  persistAuthUser,
+  type AuthContextType,
+  type LoginApiResponse,
+  type OnboardPayload,
+  type OnboardResult,
+} from '@/lib/contexts/authContextHelpers';
+
 export type { AuthError } from '@/lib/authErrors';
-
-export interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoadingAuth: boolean;
-  isLoadingPublicSettings: boolean;
-  authError: AuthError | null;
-  appPublicSettings: unknown | null;
-  authChecked: boolean;
-  login: (email: string, password: string) => Promise<{ user: User; requires2FA: boolean; challengeId?: string }>;
-  logout: (shouldRedirect?: boolean) => void;
-  navigateToLogin: () => void;
-  checkUserAuth: () => Promise<void>;
-  checkAppState: () => Promise<void>;
-  onboard: (onboardingPayload: {
-    madrasaName: string;
-    tagline: string;
-    adminName: string;
-    email: string;
-    password: string;
-    subdomain: string;
-    country?: string;
-    primaryColor?: string;
-    secondaryColor?: string;
-    logoUrl?: string;
-    adminPhone?: string;
-    website?: string;
-    footerText?: string;
-    city?: string;
-    region?: string;
-  }) => Promise<OnboardResult>;
-  exchangeHandoff: (code: string) => Promise<void>;
-}
-
-export interface OnboardResult {
-  user: User;
-  workspace: Workspace;
-}
+export type { AuthContextType, OnboardResult, OnboardPayload } from '@/lib/contexts/authContextHelpers';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-class AuthFailureError extends Error {
-  constructor(readonly authError: AuthError) {
-    super(authError.message);
-    this.name = 'AuthFailureError';
-  }
-}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -83,8 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(authUser);
     setIsAuthenticated(true);
     setAuthChecked(true);
-    localStorage.setItem('mms_user', JSON.stringify(authUser));
-    // Background sync — must not block the UI from becoming interactive
+    persistAuthUser(authUser);
     void import('@/lib/db').then(({ syncDatabase }) => syncDatabase());
   }, []);
 
@@ -107,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setIsAuthenticated(false);
       if (isApiError(error) && error.status === 401) {
-        localStorage.removeItem('mms_user');
+        clearPersistedAuthUser();
       }
     } finally {
       setAuthChecked(true);
@@ -125,11 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (response.ok) {
-        const authResponse = await response.json() as {
-          user: User;
-          requires2FA?: boolean;
-          challengeId?: string;
-        };
+        const authResponse = await response.json() as LoginApiResponse;
 
         if (authResponse.requires2FA && authResponse.challengeId) {
           clear2FAState();
@@ -152,8 +115,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error instanceof AuthFailureError) {
         throw error;
       }
-      const message = error instanceof Error ? error.message : 'Failed to connect to authentication server';
-      setAuthError({ type: 'connection_error', message });
+      const connectionError = buildConnectionAuthError(error);
+      setAuthError(connectionError);
       throw error;
     } finally {
       setIsLoadingAuth(false);
@@ -162,19 +125,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = (shouldRedirect = true): void => {
     clear2FAState();
-    
-    // Clear user-scoped message history and templates cache to prevent leakage on logout
+
     if (user?.id) {
-      try {
-        const prefix = getWorkspaceLocalStoragePrefix();
-        localStorage.removeItem(`${prefix}messages`);
-        localStorage.removeItem(`${prefix}whatsappTemplates_u:${user.id}`);
-      } catch (cacheClearError) {
-        console.error('Failed to clear user-scoped caches on logout:', cacheClearError);
-      }
+      clearUserScopedCachesOnLogout(user.id, getWorkspaceLocalStoragePrefix());
     }
 
-    localStorage.removeItem('mms_user');
+    clearPersistedAuthUser();
     setUser(null);
     setIsAuthenticated(false);
     setAuthError(null);
@@ -187,23 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const onboard = async (onboardingPayload: {
-    madrasaName: string;
-    tagline: string;
-    adminName: string;
-    email: string;
-    password: string;
-    subdomain: string;
-    country?: string;
-    primaryColor?: string;
-    secondaryColor?: string;
-    logoUrl?: string;
-    adminPhone?: string;
-    website?: string;
-    footerText?: string;
-    city?: string;
-    region?: string;
-  }): Promise<OnboardResult> => {
+  const onboard = async (onboardingPayload: OnboardPayload): Promise<OnboardResult> => {
     setAuthError(null);
     return apiJson<OnboardResult>('/api/auth/onboard', {
       method: 'POST',

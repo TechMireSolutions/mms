@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { type StoredTenantUser, resolveTenantLoginEmail, applyTitleCaseRecursive } from '@mms/shared';
 import { getDb } from '../dbClient.js';
@@ -185,6 +186,8 @@ export async function replaceTenantUsersForWorkspace(
     if (row.loginEmail) hashByLoginEmail.set(row.loginEmail.trim().toLowerCase(), hash);
   }
 
+  let parkedAnyCredential = false;
+  let adminCredentialSurvives = false;
   const values = users.map((user) => {
     const { columns } = splitProfileFields({ ...user, workspaceSubdomain: subdomain });
     if (!columns.passwordHash) {
@@ -193,17 +196,32 @@ export async function replaceTenantUsersForWorkspace(
         hashByLoginEmail.get(columns.loginEmail.trim().toLowerCase()) ??
         '';
     }
-    if (!columns.passwordHash) {
-      const err = new Error('backup.missingUserCredentials') as Error & {
-        statusCode?: number;
-        type?: string;
-      };
-      err.statusCode = 400;
-      err.type = 'validation_error';
-      throw err;
+
+    if (columns.passwordHash) {
+      if (columns.role === 'admin' && !columns.deletedAt) adminCredentialSurvives = true;
+      return columns;
     }
+
+    // Accounts present in the backup but absent from this workspace have no recoverable
+    // credential. Park an unverifiable hash and force a reset instead of failing the
+    // whole restore. The value carries no `salt:hash` separator, so `verifyPassword`
+    // rejects every candidate password until an admin resets it.
+    columns.passwordHash = `!restore-${randomBytes(32).toString('base64url')}`;
+    columns.mustChangePassword = true;
+    parkedAnyCredential = true;
     return columns;
   });
+
+  // Parking credentials is only safe while at least one live admin can still sign in.
+  if (parkedAnyCredential && !adminCredentialSurvives) {
+    const err = new Error('backup.missingUserCredentials') as Error & {
+      statusCode?: number;
+      type?: string;
+    };
+    err.statusCode = 400;
+    err.type = 'validation_error';
+    throw err;
+  }
 
   await db.delete(tenantUsers).where(eq(tenantUsers.workspaceSubdomain, subdomain));
 

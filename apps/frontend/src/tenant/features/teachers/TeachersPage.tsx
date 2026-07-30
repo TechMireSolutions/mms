@@ -1,27 +1,16 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { usePersistedTabState } from '@/hooks/usePersistedTabState';
-import { useModuleCreateHotkey } from '@/hooks/useModuleCreateHotkey';
-import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
+import React from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { AnimatePresence } from 'framer-motion';
 import { UserPlus, School } from 'lucide-react';
-import { ModulePageShell } from "@/components/ui/ModulePageShell";
-import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
+import { ModulePageShell } from '@/components/ui/ModulePageShell';
+import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { ActionButton } from '@/components/ui/ActionButton';
-import type { TeacherSortField } from "@/tenant/features/teachers/components/TeacherList";
-import { TeachersModalLayer } from "@/tenant/features/teachers/components/TeachersModalLayer";
-import { TeachersReportsTier } from "@/tenant/features/teachers/components/TeachersReportsTier";
-import { TeachersSetupTier } from "@/tenant/features/teachers/components/TeachersSetupTier";
-import { TeachersWorkTier } from "@/tenant/features/teachers/components/TeachersWorkTier";
-import type { Teacher } from '@/lib/data/teachersData';
-import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES, TEACHERS_MODULE_MANIFEST } from '@mms/shared';
-import { useTeacherCount } from '@/tenant/features/teachers/hooks/useTeacherCount';
-import { useTeachersPaginated } from '@/tenant/features/teachers/hooks/useTeachers';
-import { useTeachersPageActions } from "@/tenant/features/teachers/hooks/useTeachersPageActions";
-import { useTeacherColumnLayout } from '@/tenant/features/teachers/hooks/useTeacherColumnLayout';
-import { TeachersCommandMetrics } from "@/tenant/features/teachers/components/TeachersCommandMetrics";
-import { useTeacherConfig } from '@/hooks/useStandardModuleConfig';
+import { TeachersModalLayer } from '@/tenant/features/teachers/components/TeachersModalLayer';
+import { TeachersReportsTier } from '@/tenant/features/teachers/components/TeachersReportsTier';
+import { TeachersSetupTier } from '@/tenant/features/teachers/components/TeachersSetupTier';
+import { TeachersWorkTier } from '@/tenant/features/teachers/components/TeachersWorkTier';
+import { TeachersCommandMetrics } from '@/tenant/features/teachers/components/TeachersCommandMetrics';
+import { useTeachersPageController } from '@/tenant/features/teachers/hooks/useTeachersPageController';
 
 /**
  * Teachers — faculty roster and profiles. Standard 3-tier layout (Work | Reports | Setup).
@@ -31,26 +20,38 @@ export default function Teachers(): React.JSX.Element {
   const {
     canWrite,
     canDelete,
-    canReports: canViewReports,
-    canViewSetup,
-  } = useModulePermissions(TEACHERS_MODULE_MANIFEST);
-
-  const visibleTabs = useFilteredModuleTierTabs({
-    canViewSetup,
-    canViewReports,
-  });
-
-  const { data: serverCount } = useTeacherCount();
-  const [listPage, setListPage] = useState(1);
-  const [showForm, setShowForm] = useState(false);
-  const [showDeleted, setShowDeleted] = useState(false);
-  const [sortField, setSortField] = useState<TeacherSortField>('name');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
-
-  const { settings, statuses, specializations } = useTeacherConfig();
-
-  const statusOptions = statuses.length > 0 ? statuses : [...TEACHER_STATUS_VALUES];
-  const specializationOptions = specializations.length > 0 ? specializations : [...TEACHER_SPECIALIZATION_VALUES];
+    visibleTabs,
+    serverCount,
+    showForm,
+    setShowForm,
+    showDeleted,
+    sortField,
+    sortDir,
+    statusOptions,
+    specializationOptions,
+    columnLayout,
+    activeTab,
+    setActiveTab,
+    search,
+    filterStatus,
+    filterSpecialization,
+    editTeacher,
+    setEditTeacher,
+    pageActions,
+    useServerWork,
+    workPageQuery,
+    workTeachers,
+    shownCount,
+    listPage,
+    toggleStatus,
+    setSearch,
+    setFilterStatus,
+    setFilterSpecialization,
+    setShowDeleted,
+    setSortField,
+    setSortDir,
+    setListPage,
+  } = useTeachersPageController();
 
   const {
     columnRegistry,
@@ -59,21 +60,7 @@ export default function Teachers(): React.JSX.Element {
     setColumnWidth,
     updateUserColumnLayout,
     customizerLabels,
-  } = useTeacherColumnLayout(settings);
-
-  const [activeTab, setActiveTab] = usePersistedTabState<string>('teachers_active_tab', 'work');
-  const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string[]>([]);
-  const [filterSpecialization, setFilterSpecialization] = useState('');
-  const [editTeacher, setEditTeacher] = useState<Teacher | null>(null);
-
-  useModuleCreateHotkey({
-    enabled: canWrite && !showDeleted,
-    onCreate: () => {
-      setEditTeacher(null);
-      setShowForm(true);
-    },
-  });
+  } = columnLayout;
 
   const {
     messagingTarget,
@@ -87,45 +74,7 @@ export default function Teachers(): React.JSX.Element {
     handleBulkDelete,
     handleBulkRestore,
     handleBulkStatusChange,
-  } = useTeachersPageActions({ editTeacher });
-
-  const useServerWork = activeTab === 'work';
-  const {
-    data: workPageData,
-    isFetching: isWorkPageFetching,
-    isLoading: isWorkPageLoading,
-    isError: isWorkPageError,
-    refetch: refetchWorkPage,
-  } = useTeachersPaginated({
-    page: listPage,
-    limit: TEACHERS_MODULE_MANIFEST.defaultPageSize,
-    search,
-    status: filterStatus.length > 0 ? filterStatus.join(',') : undefined,
-    specialization: filterSpecialization || undefined,
-    sortField,
-    sortDir,
-    includeDeleted: showDeleted,
-    enabled: useServerWork,
-  });
-
-  useEffect(() => {
-    setListPage(1);
-  }, [search, filterStatus, filterSpecialization, showDeleted, sortField, sortDir]);
-
-  const workTeachers = useMemo(
-    () => (workPageData?.teachers ?? []) as unknown as Teacher[],
-    [workPageData],
-  );
-  const shownCount = workPageData?.total ?? workTeachers.length;
-
-  const filteredTeachers = workTeachers;
-
-  const toggleStatus = (status: string) =>
-    setFilterStatus((selectedStatuses) =>
-      selectedStatuses.includes(status)
-        ? selectedStatuses.filter((selectedStatus) => selectedStatus !== status)
-        : [...selectedStatuses, status],
-    );
+  } = pageActions;
 
   return (
     <ModulePageShell
@@ -173,11 +122,11 @@ export default function Teachers(): React.JSX.Element {
               columnRegistry={columnRegistry}
               updateUserColumnLayout={updateUserColumnLayout}
               customizerLabels={customizerLabels}
-              teachers={filteredTeachers}
-              workPageData={workPageData}
-              isWorkPageLoading={isWorkPageLoading}
-              isWorkPageError={isWorkPageError}
-              isWorkPageFetching={isWorkPageFetching}
+              teachers={workTeachers}
+              workPageData={workPageQuery.data}
+              isWorkPageLoading={workPageQuery.isLoading}
+              isWorkPageError={workPageQuery.isError}
+              isWorkPageFetching={workPageQuery.isFetching}
               useServerWork={useServerWork}
               selectionResetKey={`${listPage}:${search}:${filterStatus.join(',')}:${filterSpecialization}:${sortField}:${sortDir}`}
               sortField={sortField}
@@ -193,7 +142,7 @@ export default function Teachers(): React.JSX.Element {
                 setFilterStatus([]);
                 setFilterSpecialization('');
               }}
-              onRetry={refetchWorkPage}
+              onRetry={workPageQuery.refetch}
               onEdit={(teacher) => { setEditTeacher(teacher); setShowForm(true); }}
               onDelete={handleDelete}
               onRestore={handleRestore}

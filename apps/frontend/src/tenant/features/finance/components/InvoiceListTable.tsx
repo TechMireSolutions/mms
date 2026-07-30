@@ -1,61 +1,40 @@
+import React from "react";
 import { motion } from "framer-motion";
 import { ReceiptText } from "lucide-react";
 import { formatDate } from "@mms/shared";
-import type { StandardMessagingRecipient } from "@mms/shared";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { Invoice } from "@/lib/data/financeData";
-import { InvoiceListRowActions, type InvoiceMessageChannel } from "@/tenant/features/finance/components/InvoiceListRowActions";
-import type { InvoiceListVisibleColumns } from "@/tenant/features/finance/components/InvoiceListContent";
+import { InvoiceListRowActions } from "@/tenant/features/finance/components/InvoiceListRowActions";
+import type { InvoiceListContentProps } from "@/tenant/features/finance/components/invoiceListContentShared";
 
-interface InvoiceListTableProps {
-  invoices: Invoice[];
-  selectedIds: string[];
-  visibleColumns: InvoiceListVisibleColumns;
-  visibleColCount: number;
-  canWrite: boolean;
-  canDelete: boolean;
-  canWriteMessaging: boolean;
-  showDeleted: boolean;
-  allSelected: boolean;
-  statusConfig: Record<string, StatusBadgeConfigItem>;
-  formatCurrency: (amount: number) => string;
-  getColumnWidth?: (key: string) => number | undefined;
-  onColumnResize?: (key: string, width: number) => void;
-  onSelectAll: (checked: boolean) => void;
-  onToggleSelected: (id: string, checked: boolean) => void;
-  onView: (invoice: Invoice) => void;
-  onRecord: (invoice: Invoice) => void;
-  onRequestDelete?: (id: string) => void;
-  onRestore?: (id: string) => void;
-  openComposer: (channel: InvoiceMessageChannel, recipients: StandardMessagingRecipient[]) => void;
-}
+type InvoiceListTableProps = InvoiceListContentProps;
 
-export function InvoiceListTable({
-  invoices,
-  selectedIds,
-  visibleColumns,
-  visibleColCount,
-  canWrite,
-  canDelete,
-  canWriteMessaging,
-  showDeleted,
-  allSelected,
-  statusConfig,
-  formatCurrency,
-  getColumnWidth,
-  onColumnResize,
-  onSelectAll,
-  onToggleSelected,
-  onView,
-  onRecord,
-  onRequestDelete,
-  onRestore,
-  openComposer,
-}: InvoiceListTableProps): React.JSX.Element {
+export function InvoiceListTable(props: InvoiceListTableProps): React.JSX.Element {
+  const {
+    invoices,
+    selectedIds,
+    visibleColumns,
+    visibleColCount,
+    canWrite,
+    canDelete,
+    canWriteMessaging,
+    showDeleted,
+    allSelected,
+    statusConfig,
+    formatCurrency,
+    getColumnWidth,
+    onColumnResize,
+    onSelectAll,
+    onToggleSelected,
+    onView,
+    onRecord,
+    onRequestDelete,
+    onRestore,
+    openComposer,
+  } = props;
   const { t } = useTranslation();
 
   return (

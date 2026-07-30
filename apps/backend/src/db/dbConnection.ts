@@ -66,6 +66,18 @@ export async function closeDatabase(): Promise<void> {
  * Nested calls are no-ops (they reuse the active tx).
  */
 export async function runInTransaction<T>(cb: () => Promise<T>): Promise<T> {
+  return await runTransaction(cb, false);
+}
+
+/**
+ * Read-only variant of `runInTransaction` using REPEATABLE READ, so every statement
+ * observes one consistent snapshot (backup exports must not tear across tables).
+ */
+export async function runInReadSnapshotTransaction<T>(cb: () => Promise<T>): Promise<T> {
+  return await runTransaction(cb, true);
+}
+
+async function runTransaction<T>(cb: () => Promise<T>, readSnapshot: boolean): Promise<T> {
   const existing = txStorage.getStore();
   if (existing) return cb();
 
@@ -79,5 +91,5 @@ export async function runInTransaction<T>(cb: () => Promise<T>): Promise<T> {
       await tx.execute(sql`SELECT set_config('app.rls_bypass', 'on', true)`);
     }
     return await txStorage.run(tx, cb);
-  });
+  }, readSnapshot ? { isolationLevel: 'repeatable read' } : undefined);
 }

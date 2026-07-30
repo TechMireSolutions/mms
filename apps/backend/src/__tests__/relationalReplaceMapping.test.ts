@@ -85,4 +85,55 @@ describe('RELATIONAL_REPLACE_MAPPING backup coverage', () => {
     });
     expect(partial).toEqual({ students: [{ id: 's-1' }] });
   });
+
+  it('covers every tenant business table that belongs in a full workspace backup', () => {
+    // Keep this list in sync with apps/backend/src/db/schema.ts tenant tables.
+    // Intentional non-backup tables: audit_log_entries, audit_logs, background_jobs,
+    // plus platform/global tables (workspaces, platform_*, auth_artifacts, data_migrations).
+    const tenantBusinessTables = [
+      'tenant_users',
+      'contacts',
+      'students',
+      'teachers',
+      'sessions',
+      'attendance',
+      'enrollments',
+      'obligation_types',
+      'mujtahids',
+      'mujtahid_reps',
+      'wakala_types',
+      'obligation_distributions',
+      'obligation_collections',
+      'finance_invoices',
+      'finance_payments',
+      'exams',
+      'exam_results',
+      'hasanat_denoms',
+      'hasanat_batches',
+      'hasanat_distributions',
+      'hasanat_redemptions',
+      'accounting_accounts',
+      'accounting_entries',
+      'accounting_fiscal_years',
+      'questions',
+      'tests',
+      'assessment_results',
+      'user_activity_logs',
+      'custom_tabs',
+      'saved_reports',
+      'message_templates',
+      'message_logs',
+    ];
+
+    const snapshotKeys = new Set(listBackupSnapshotCollectionKeys());
+    const tableToLogicalKey: Record<string, string> = {
+      tenant_users: 'users',
+      attendance: 'attendance_records',
+    };
+
+    for (const table of tenantBusinessTables) {
+      const logicalKey = tableToLogicalKey[table] ?? table;
+      expect(snapshotKeys.has(logicalKey)).toBe(true);
+    }
+  });
 });

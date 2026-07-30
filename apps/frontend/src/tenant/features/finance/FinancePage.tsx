@@ -1,11 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { usePersistedTabState } from "@/hooks/usePersistedTabState";
-import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
-import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
-import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { useTranslation } from "@/hooks/useTranslation";
+import React from "react";
+import { useFinancePageController } from "@/tenant/features/finance/hooks/useFinancePageController";
 import { motion, AnimatePresence } from "framer-motion";
-import { ReceiptText, CreditCard, Plus, DollarSign } from "lucide-react";
+import { Plus, DollarSign } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -22,256 +18,138 @@ import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Invoice } from '@/lib/data/financeData';
-import { FINANCE_MODULE_MANIFEST, type InvoiceCreateInput, type PaymentCreateInput } from "@mms/shared";
-import {
-  useFinanceInvoices,
-  useFinancePayments,
-  useFinanceMutations,
-  NotifiedFinanceMutationError,
-} from "@/tenant/features/finance/hooks/useFinanceApi";
-import { useFinanceInvoiceColumnLayout } from "@/tenant/features/finance/hooks/useFinanceInvoiceColumnLayout";
-import { useFinancePaymentColumnLayout } from "@/tenant/features/finance/hooks/useFinancePaymentColumnLayout";
 import { FinanceCommandMetrics } from "@/tenant/features/finance/components/FinanceCommandMetrics";
 import { notify } from "@/lib/notify";
-import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 
 /**
  * Finance — invoices and payments. Work | Reports | Setup.
- *
- * @returns {React.ReactElement} The Finance page component.
  */
 export default function Finance() {
-  const { t } = useTranslation();
-  const {
-    canWrite,
-    canDelete,
-    canReports: canViewReports,
-    canViewSetup,
-  } = useModulePermissions(FINANCE_MODULE_MANIFEST);
-  const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
-  const SUB_TABS = useMemo(
-    () => [
-      { id: "invoices", label: t("finance.invoices"), icon: ReceiptText },
-      { id: "payments", label: t("finance.payments"), icon: CreditCard },
-    ],
-    [t]
-  );
-  const [activeTab, setActiveTab] = usePersistedTabState<string>("finance_active_tab", "work");
-  const [activeSubTab, setActiveSubTab] = useState("invoices");
-  const [showDeleted, setShowDeleted] = useState(false);
-  const invoicesResult = useFinanceInvoices({ includeDeleted: showDeleted });
-  const paymentsResult = useFinancePayments({ includeDeleted: showDeleted });
-  const invoices = invoicesResult.data;
-  const payments = paymentsResult.data;
-  const {
-    createInvoice,
-    createPayment,
-    deleteInvoice,
-    restoreInvoice,
-    bulkDeleteInvoices,
-    bulkRestoreInvoices,
-    deletePayment,
-    restorePayment,
-    bulkDeletePayments,
-    bulkRestorePayments,
-  } = useFinanceMutations();
-  const { canWriteMessaging } = useMessageComposerState();
-  const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
-  const [recordInvoice, setRecordInvoice] = useState<Invoice | null>(null);
-  const [creatingInvoice, setCreatingInvoice] = useState(false);
-
-  const invoiceColumnLayout = useFinanceInvoiceColumnLayout();
-  const paymentColumnLayout = useFinancePaymentColumnLayout();
-
-  useModuleCreateHotkey({
-    enabled: canWrite && !showDeleted,
-    onCreate: () => {
-      setActiveTab("work");
-      setActiveSubTab("invoices");
-      setCreatingInvoice(true);
-    },
-  });
-
-  useEffect(() => {
-    if (activeTab !== "work") setShowDeleted(false);
-  }, [activeTab]);
-
-  const handleRecordPayment = async (paymentToRecord: PaymentCreateInput): Promise<void> => {
-    try {
-      await createPayment.mutateAsync(paymentToRecord);
-      setRecordInvoice(null);
-    } catch (error: unknown) {
-      notify.error(t("finance.paymentSaveFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-      throw new NotifiedFinanceMutationError(error instanceof Error ? error.message : String(error));
-    }
-  };
-
-  const handleCreateInvoice = async (invoiceToCreate: InvoiceCreateInput): Promise<void> => {
-    try {
-      await createInvoice.mutateAsync(invoiceToCreate);
-      setCreatingInvoice(false);
-      setActiveTab("work");
-      setActiveSubTab("invoices");
-    } catch (error: unknown) {
-      notify.error(t("finance.invoiceSaveFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-      throw new NotifiedFinanceMutationError(error instanceof Error ? error.message : String(error));
-    }
-  };
-
-  const mutationError = (error: Error): void => {
-    notify.error(t("finance.trash.actionFailed"), { description: error.message });
-  };
-
-  const handleBulkResult = (
-    result: { succeeded: number; failed: number },
-    successKey: "finance.trash.deleted" | "finance.trash.restored",
-  ): void => {
-    if (result.failed > 0) {
-      notify.error(t("finance.trash.bulkPartial", { succeeded: result.succeeded, failed: result.failed }));
-    } else {
-      notify.success(t(successKey));
-    }
-  };
+  const c = useFinancePageController();
 
   return (
     <ModulePageShell
-      seoTitle={`MMS - ${t("nav.finance")}`}
-      seoDescription={t("page.finance.subtitle")}
+      seoTitle={`MMS - ${c.t("nav.finance")}`}
+      seoDescription={c.t("page.finance.subtitle")}
       headerIcon={DollarSign}
-      headerTitle={t("nav.finance")}
-      headerSubtitle={t("page.finance.subtitle")}
+      headerTitle={c.t("nav.finance")}
+      headerSubtitle={c.t("page.finance.subtitle")}
       headerActions={
-        canWrite && !showDeleted ? (
-          <ActionButton
-            variant="primary"
-            icon={Plus}
-            onClick={() => {
-              setActiveTab("work");
-              setActiveSubTab("invoices");
-              setCreatingInvoice(true);
-            }}
-          >
-            {t("finance.newInvoice")}
+        c.canWrite && !c.showDeleted ? (
+          <ActionButton variant="primary" icon={Plus} onClick={c.openCreateInvoice}>
+            {c.t("finance.newInvoice")}
           </ActionButton>
         ) : undefined
       }
-      metricsStrip={
-        <FinanceCommandMetrics invoiceTotal={invoices.length} />
-      }
+      metricsStrip={<FinanceCommandMetrics invoiceTotal={c.invoices.length} />}
     >
       <ResponsiveAccordionTabs
-        tabs={PAGE_TABS}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
+        tabs={c.PAGE_TABS}
+        activeTab={c.activeTab}
+        onTabChange={c.setActiveTab}
         panelIdPrefix="finance-tab"
       >
-        {activeTab === "work" && (
+        {c.activeTab === "work" && (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <SubTabBar
-              tabs={SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
-              value={activeSubTab}
-              onChange={setActiveSubTab}
+              tabs={c.SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
+              value={c.activeSubTab}
+              onChange={c.setActiveSubTab}
             />
-            {canDelete && (
+            {c.canDelete && (
               <ModuleTrashToggle
-                showDeleted={showDeleted}
-                onToggle={() => setShowDeleted((value) => !value)}
-                showActiveLabel={t("finance.trash.showActive")}
-                showDeletedLabel={t("finance.trash.showDeleted")}
+                showDeleted={c.showDeleted}
+                onToggle={() => c.setShowDeleted((value) => !value)}
+                showActiveLabel={c.t("finance.trash.showActive")}
+                showDeletedLabel={c.t("finance.trash.showDeleted")}
               />
             )}
           </div>
         )}
 
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab + "-" + activeSubTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-4">
+          <motion.div key={c.activeTab + "-" + c.activeSubTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-4">
             <ErrorBoundary>
-            {activeTab === "reports" && (
-              <div className="space-y-4">
-                <KPISummary category="financial" />
-                <ModuleReports category="financial" />
-              </div>
-            )}
-            {activeTab === "setup" && (
-              <FinanceSettings />
-            )}
+              {c.activeTab === "reports" && (
+                <div className="space-y-4">
+                  <KPISummary category="financial" />
+                  <ModuleReports category="financial" />
+                </div>
+              )}
+              {c.activeTab === "setup" && <FinanceSettings />}
 
-            {activeTab === "work" && activeSubTab === "invoices" && invoicesResult.queryResult.isError ? (
-              <ErrorState title={t("finance.loadFailed")} onRetry={() => void invoicesResult.queryResult.refetch()} />
-            ) : activeTab === "work" && activeSubTab === "invoices" && (
-              <InvoiceList
-                invoices={invoices}
-                onView={setViewInvoice}
-                onRecord={setRecordInvoice}
-                canWrite={canWrite}
-                canDelete={canDelete}
-                canWriteMessaging={canWriteMessaging}
-                showDeleted={showDeleted}
-                onDelete={(id) => deleteInvoice.mutate(id, { onSuccess: () => notify.success(t("finance.trash.deleted")), onError: mutationError })}
-                onRestore={(id) => restoreInvoice.mutate(id, { onSuccess: () => notify.success(t("finance.trash.restored")), onError: mutationError })}
-                onBulkDelete={(ids) => bulkDeleteInvoices.mutate(ids, { onSuccess: (result) => handleBulkResult(result, "finance.trash.deleted"), onError: mutationError })}
-                onBulkRestore={(ids) => bulkRestoreInvoices.mutate(ids, { onSuccess: (result) => handleBulkResult(result, "finance.trash.restored"), onError: mutationError })}
-                selectionResetKey={`${activeSubTab}:${showDeleted}`}
-                isColumnVisible={invoiceColumnLayout.isColumnVisible}
-                getColumnWidth={invoiceColumnLayout.getColumnWidth}
-                onColumnResize={invoiceColumnLayout.setColumnWidth}
-                columnCustomizer={{
-                  columnRegistry: invoiceColumnLayout.columnRegistry,
-                  updateUserColumnLayout: invoiceColumnLayout.updateUserColumnLayout,
-                  labels: invoiceColumnLayout.customizerLabels,
-                }}
-              />
-            )}
-            {activeTab === "work" && activeSubTab === "payments" && paymentsResult.queryResult.isError ? (
-              <ErrorState title={t("finance.loadFailed")} onRetry={() => void paymentsResult.queryResult.refetch()} />
-            ) : activeTab === "work" && activeSubTab === "payments" && (
-              <PaymentTracker
-                payments={payments}
-                canDelete={canDelete}
-                showDeleted={showDeleted}
-                onDelete={(id) => deletePayment.mutate(id, { onSuccess: () => notify.success(t("finance.trash.deleted")), onError: mutationError })}
-                onRestore={(id) => restorePayment.mutate(id, { onSuccess: () => notify.success(t("finance.trash.restored")), onError: mutationError })}
-                onBulkDelete={(ids) => bulkDeletePayments.mutate(ids, { onSuccess: (result) => handleBulkResult(result, "finance.trash.deleted"), onError: mutationError })}
-                onBulkRestore={(ids) => bulkRestorePayments.mutate(ids, { onSuccess: (result) => handleBulkResult(result, "finance.trash.restored"), onError: mutationError })}
-                selectionResetKey={`${activeSubTab}:${showDeleted}`}
-                isColumnVisible={paymentColumnLayout.isColumnVisible}
-                getColumnWidth={paymentColumnLayout.getColumnWidth}
-                onColumnResize={paymentColumnLayout.setColumnWidth}
-                columnCustomizer={{
-                  columnRegistry: paymentColumnLayout.columnRegistry,
-                  updateUserColumnLayout: paymentColumnLayout.updateUserColumnLayout,
-                  labels: paymentColumnLayout.customizerLabels,
-                }}
-              />
-            )}
+              {c.activeTab === "work" && c.activeSubTab === "invoices" && c.invoicesResult.queryResult.isError ? (
+                <ErrorState title={c.t("finance.loadFailed")} onRetry={() => void c.invoicesResult.queryResult.refetch()} />
+              ) : c.activeTab === "work" && c.activeSubTab === "invoices" && (
+                <InvoiceList
+                  invoices={c.invoices}
+                  onView={c.setViewInvoice}
+                  onRecord={c.setRecordInvoice}
+                  canWrite={c.canWrite}
+                  canDelete={c.canDelete}
+                  canWriteMessaging={c.canWriteMessaging}
+                  showDeleted={c.showDeleted}
+                  onDelete={(id) => c.deleteInvoice.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.deleted")), onError: c.mutationError })}
+                  onRestore={(id) => c.restoreInvoice.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.restored")), onError: c.mutationError })}
+                  onBulkDelete={(ids) => c.bulkDeleteInvoices.mutate(ids, { onSuccess: (result) => c.handleBulkResult(result, "finance.trash.deleted"), onError: c.mutationError })}
+                  onBulkRestore={(ids) => c.bulkRestoreInvoices.mutate(ids, { onSuccess: (result) => c.handleBulkResult(result, "finance.trash.restored"), onError: c.mutationError })}
+                  selectionResetKey={`${c.activeSubTab}:${c.showDeleted}`}
+                  isColumnVisible={c.invoiceColumnLayout.isColumnVisible}
+                  getColumnWidth={c.invoiceColumnLayout.getColumnWidth}
+                  onColumnResize={c.invoiceColumnLayout.setColumnWidth}
+                  columnCustomizer={{
+                    columnRegistry: c.invoiceColumnLayout.columnRegistry,
+                    updateUserColumnLayout: c.invoiceColumnLayout.updateUserColumnLayout,
+                    labels: c.invoiceColumnLayout.customizerLabels,
+                  }}
+                />
+              )}
+              {c.activeTab === "work" && c.activeSubTab === "payments" && c.paymentsResult.queryResult.isError ? (
+                <ErrorState title={c.t("finance.loadFailed")} onRetry={() => void c.paymentsResult.queryResult.refetch()} />
+              ) : c.activeTab === "work" && c.activeSubTab === "payments" && (
+                <PaymentTracker
+                  payments={c.payments}
+                  canDelete={c.canDelete}
+                  showDeleted={c.showDeleted}
+                  onDelete={(id) => c.deletePayment.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.deleted")), onError: c.mutationError })}
+                  onRestore={(id) => c.restorePayment.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.restored")), onError: c.mutationError })}
+                  onBulkDelete={(ids) => c.bulkDeletePayments.mutate(ids, { onSuccess: (result) => c.handleBulkResult(result, "finance.trash.deleted"), onError: c.mutationError })}
+                  onBulkRestore={(ids) => c.bulkRestorePayments.mutate(ids, { onSuccess: (result) => c.handleBulkResult(result, "finance.trash.restored"), onError: c.mutationError })}
+                  selectionResetKey={`${c.activeSubTab}:${c.showDeleted}`}
+                  isColumnVisible={c.paymentColumnLayout.isColumnVisible}
+                  getColumnWidth={c.paymentColumnLayout.getColumnWidth}
+                  onColumnResize={c.paymentColumnLayout.setColumnWidth}
+                  columnCustomizer={{
+                    columnRegistry: c.paymentColumnLayout.columnRegistry,
+                    updateUserColumnLayout: c.paymentColumnLayout.updateUserColumnLayout,
+                    labels: c.paymentColumnLayout.customizerLabels,
+                  }}
+                />
+              )}
             </ErrorBoundary>
           </motion.div>
         </AnimatePresence>
       </ResponsiveAccordionTabs>
 
       <AnimatePresence>
-        {creatingInvoice && canWrite && !showDeleted && (
+        {c.creatingInvoice && c.canWrite && !c.showDeleted && (
           <InvoiceForm
-            open={creatingInvoice}
-            saving={createInvoice.isPending}
-            onClose={() => setCreatingInvoice(false)}
-            onSave={handleCreateInvoice}
+            open={c.creatingInvoice}
+            saving={c.createInvoice.isPending}
+            onClose={() => c.setCreatingInvoice(false)}
+            onSave={c.handleCreateInvoice}
           />
         )}
-        {viewInvoice && (
+        {c.viewInvoice && (
           <InvoiceDetail
-            invoice={viewInvoice}
-            onClose={() => setViewInvoice(null)}
-            onRecord={(invoiceToRecord: Invoice) => { setViewInvoice(null); setRecordInvoice(invoiceToRecord); }}
-            canWrite={canWrite}
+            invoice={c.viewInvoice}
+            onClose={() => c.setViewInvoice(null)}
+            onRecord={(invoiceToRecord: Invoice) => { c.setViewInvoice(null); c.setRecordInvoice(invoiceToRecord); }}
+            canWrite={c.canWrite}
           />
         )}
-        {recordInvoice && canWrite && !showDeleted && (
-          <PaymentForm open={!!recordInvoice} invoice={recordInvoice} onClose={() => setRecordInvoice(null)} onSave={handleRecordPayment} />
+        {c.recordInvoice && c.canWrite && !c.showDeleted && (
+          <PaymentForm open={!!c.recordInvoice} invoice={c.recordInvoice} onClose={() => c.setRecordInvoice(null)} onSave={c.handleRecordPayment} />
         )}
       </AnimatePresence>
     </ModulePageShell>

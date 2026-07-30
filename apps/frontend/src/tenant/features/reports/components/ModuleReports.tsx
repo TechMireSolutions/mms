@@ -1,19 +1,15 @@
 import React, { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  BarChart2, GitCompare, Wrench, LayoutDashboard, Sparkles, CreditCard, Bookmark 
-} from "lucide-react";
+import { BarChart2, GitCompare, Wrench, LayoutDashboard, Sparkles, CreditCard, Bookmark } from "lucide-react";
 
 import { useTranslation } from "@/hooks/useTranslation";
 import { Card } from "@/components/ui/card";
 import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
 import ReportFilters from "@/tenant/features/reports/components/ReportFilters";
-import ComparisonMode from "@/tenant/features/reports/components/ComparisonMode";
-import CustomReportBuilder from "@/tenant/features/reports/components/CustomReportBuilder";
-import PinnedWidgets from "@/tenant/features/reports/components/PinnedWidgets";
-import DynamicChartVisualizer from "@/tenant/features/reports/components/DynamicChartVisualizer";
-import DynamicCardBuilder from "@/tenant/features/reports/components/DynamicCardBuilder";
-import { getObject, saveObject } from "@/lib/db";
+import { VisualizerConfig } from "@/tenant/features/reports/components/reportMetadata";
+import {
+  ModuleReportsToolPanels,
+  getInitialReportCollection,
+} from "@/tenant/features/reports/components/ModuleReportsToolPanels";
 
 import StudentReport from "@/tenant/features/reports/components/StudentReport";
 import ContactReport from "@/tenant/features/reports/components/ContactReport";
@@ -24,14 +20,6 @@ import HasanatReport from "@/tenant/features/reports/components/HasanatReport";
 import SessionReport from "@/tenant/features/reports/components/SessionReport";
 import FacultyReport from "@/tenant/features/reports/components/FacultyReport";
 import QuestionBankReport from "@/tenant/features/reports/components/QuestionBankReport";
-import SavedReports from "@/tenant/features/reports/components/SavedReports";
-import ContactsSavedReports from "@/tenant/features/reports/components/ContactsSavedReports";
-import { VisualizerConfig } from "@/tenant/features/reports/components/reportMetadata";
-import { useGenericSavedReportsSource } from "@/hooks/useSavedReportsSource";
-import {
-  GENERIC_SAVED_REPORT_CATEGORIES,
-  type GenericSavedReportCategory,
-} from "@mms/shared";
 
 type ModuleReportCategory = "students" | "teachers" | "contacts" | "attendance" | "financial" | "academic" | "examinations" | "questionBank" | "hasanat" | "sessions" | "faculty" | "saved";
 
@@ -47,32 +35,6 @@ const DEFAULT_FILTERS = {
   dateTo:  "",
   student: "",
 };
-
-function isGenericSavedReportCategory(
-  category: ModuleReportCategory,
-): category is GenericSavedReportCategory {
-  return (GENERIC_SAVED_REPORT_CATEGORIES as readonly string[]).includes(category);
-}
-
-function GenericSavedReportsPanel({
-  category,
-  filters,
-  onApplyFilters,
-}: {
-  category: GenericSavedReportCategory;
-  filters: Record<string, unknown>;
-  onApplyFilters: (filters: Record<string, unknown>) => void;
-}): React.JSX.Element {
-  const source = useGenericSavedReportsSource(category);
-  return (
-    <SavedReports
-      category={category}
-      source={source}
-      filters={filters}
-      onApplyFilters={onApplyFilters}
-    />
-  );
-}
 
 /**
  * Reusable reporting view for specific modules.
@@ -98,20 +60,6 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
     ],
     [t]
   );
-
-  const getInitialCollection = () => {
-    switch (category) {
-      case "students": return "students" as const;
-      case "teachers": return "teachers" as const;
-      case "sessions": return "sessions" as const;
-      case "financial": return "finance_invoices" as const;
-      case "attendance": return "attendance_records" as const;
-      case "hasanat": return "hasanat_distributions" as const;
-      case "contacts": return "contacts" as const;
-      case "questionBank": return "questions" as const;
-      default: return undefined;
-    }
-  };
 
   const handleEditVisual = (config: unknown) => {
     setVisualizerEditConfig(config as VisualizerConfig);
@@ -141,7 +89,6 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
 
   return (
     <div className="space-y-6">
-      {/* Tools Row - 2026 Glassmorphism */}
       <div className="flex items-center justify-between gap-4 flex-wrap bg-card/40 backdrop-blur-xl border border-border/50 p-4 rounded-3xl shadow-sm print:hidden">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
@@ -162,78 +109,31 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
         />
       </div>
 
-      {/* Panel overlays */}
-      <AnimatePresence mode="wait">
-        {activeTab === "compare" && (
-          <motion.div key="compare" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-             <div className="pb-4"><ComparisonMode category={category} onClose={() => setActiveTab("dashboard")} /></div>
-          </motion.div>
-        )}
-        {activeTab === "builder" && (
-          <motion.div key="builder" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-             <div className="pb-4"><CustomReportBuilder initialSource={category} onClose={() => setActiveTab("dashboard")} /></div>
-          </motion.div>
-        )}
-        {activeTab === "widgets" && (
-          <motion.div key="widgets" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-             <div className="pb-4"><PinnedWidgets category={category} /></div>
-          </motion.div>
-        )}
-        {activeTab === "visualizer" && (
-          <motion.div key="visualizer" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-             <div className="pb-4">
-                <DynamicChartVisualizer 
-                  initialConfig={visualizerEditConfig}
-                  onSave={(updatedConfig) => {
-                    try {
-                      const customVisuals = getObject<Record<string, VisualizerConfig>>("report_custom_visuals", {});
-                      customVisuals[updatedConfig.id] = updatedConfig;
-                      saveObject("report_custom_visuals", customVisuals);
-                    } catch (error) {
-                      console.error("Failed to save custom visual configuration", error);
-                    }
-                    window.dispatchEvent(new Event("local-database-update"));
-                    setActiveTab("dashboard");
-                    setVisualizerEditConfig(undefined);
-                  }}
-                  onClose={() => {
-                    setActiveTab("dashboard");
-                    setVisualizerEditConfig(undefined);
-                  }}
-                />
-              </div>
-          </motion.div>
-        )}
-        {activeTab === "cardBuilder" && (
-          <motion.div key="cardBuilder" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-             <div className="pb-4"><DynamicCardBuilder initialCollection={getInitialCollection()} /></div>
-          </motion.div>
-        )}
-        {activeTab === "saved" && (
-          <motion.div key="saved" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-             <div className="pb-4">
-                {category === "contacts" ? (
-                  <ContactsSavedReports />
-                ) : isGenericSavedReportCategory(category) ? (
-                  <GenericSavedReportsPanel
-                    category={category}
-                    filters={filters}
-                    onApplyFilters={(appliedFilters) => {
-                      setFilters(appliedFilters as typeof DEFAULT_FILTERS);
-                      setActiveTab("dashboard");
-                    }}
-                  />
-                ) : null}
-             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ModuleReportsToolPanels
+        category={category}
+        activeTab={activeTab}
+        filters={filters}
+        visualizerEditConfig={visualizerEditConfig}
+        onClosePanel={() => setActiveTab("dashboard")}
+        onApplySavedFilters={(appliedFilters) => {
+          setFilters(appliedFilters as typeof DEFAULT_FILTERS);
+          setActiveTab("dashboard");
+        }}
+        onVisualizerSave={() => {
+          setActiveTab("dashboard");
+          setVisualizerEditConfig(undefined);
+        }}
+        onVisualizerClose={() => {
+          setActiveTab("dashboard");
+          setVisualizerEditConfig(undefined);
+        }}
+        getInitialCollection={() => getInitialReportCollection(category)}
+      />
 
       <div className="print:hidden">
         <ReportFilters category={category} filters={filters} onChange={setFilters} />
       </div>
 
-      {/* Report Content - 2026 Glassmorphism */}
       <Card className="overflow-hidden shadow-xl ring-1 ring-black/[0.03]">
         {renderReport()}
       </Card>

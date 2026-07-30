@@ -9,6 +9,14 @@ export const ENCRYPTED_BACKUP_VERSION = 1;
 
 export const BACKUP_KDF_ITERATIONS = 310_000;
 
+/** Accepted PBKDF2 work factor range — floor keeps brute force costly, ceiling stops a DoS envelope. */
+export const BACKUP_KDF_MIN_ITERATIONS = 100_000;
+export const BACKUP_KDF_MAX_ITERATIONS = 1_000_000;
+
+/** Base64 length caps for the fixed-size KDF/cipher parameters (16-byte salt, 12-byte IV). */
+const MAX_SALT_BASE64_LENGTH = 64;
+const MAX_IV_BASE64_LENGTH = 32;
+
 export interface EncryptedWorkspaceBackupFile {
   format: typeof ENCRYPTED_BACKUP_FORMAT_ID;
   version: number;
@@ -26,17 +34,21 @@ export interface EncryptedWorkspaceBackupFile {
 
 export const encryptedWorkspaceBackupFileSchema = z.object({
   format: z.literal(ENCRYPTED_BACKUP_FORMAT_ID),
-  version: z.number(),
+  version: z.number().int().min(1).max(ENCRYPTED_BACKUP_VERSION),
   subdomain: z.string().nullable(),
   tenantLabel: z.string().nullable(),
   adminEmail: z.string(),
   kdf: z.literal('PBKDF2'),
   hash: z.literal('SHA-256'),
   cipher: z.literal('AES-GCM'),
-  iterations: z.number(),
-  salt: z.string(),
-  iv: z.string(),
-  ciphertext: z.string(),
+  iterations: z
+    .number()
+    .int()
+    .min(BACKUP_KDF_MIN_ITERATIONS)
+    .max(BACKUP_KDF_MAX_ITERATIONS),
+  salt: z.string().min(1).max(MAX_SALT_BASE64_LENGTH),
+  iv: z.string().min(1).max(MAX_IV_BASE64_LENGTH),
+  ciphertext: z.string().min(1),
 });
 
 

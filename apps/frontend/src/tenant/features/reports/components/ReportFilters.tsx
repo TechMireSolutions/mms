@@ -1,17 +1,11 @@
-import React, { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Filter, ChevronDown, ChevronUp, X, Calendar } from "lucide-react";
-import { DatePicker } from "@/components/ui/DatePicker";
-import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
-import { useTranslation } from "@/hooks/useTranslation";
-import { FormSelect } from "@/components/ui/FormSelect";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import type { AppTranslationKey } from "@mms/shared";
-import { capitalize } from "@mms/shared";
-
-const STATUSES: string[] = ["all", "active", "inactive", "completed"];
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Filter, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
+import { useTranslation } from '@/hooks/useTranslation';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ReportFilterFieldsPanel } from './ReportFilterFieldsPanel';
 
 export interface ReportFilterFields {
   session: string;
@@ -29,31 +23,30 @@ interface ReportFiltersProps {
 }
 
 const CATEGORY_FILTERS: Record<string, (keyof ReportFilterFields)[]> = {
-  attendance: ["session", "class", "dateFrom", "dateTo", "student"],
-  students:   ["session", "class", "status", "student"],
-  contacts:   ["status", "student"],
-  financial:  ["session", "dateFrom", "dateTo", "status"],
-  academic:   ["session", "class", "status", "student"],
-  hasanat:    ["session", "class", "dateFrom", "dateTo"],
-  sessions:   ["status"],
+  attendance: ['session', 'class', 'dateFrom', 'dateTo', 'student'],
+  students: ['session', 'class', 'status', 'student'],
+  contacts: ['status', 'student'],
+  financial: ['session', 'dateFrom', 'dateTo', 'status'],
+  academic: ['session', 'class', 'status', 'student'],
+  hasanat: ['session', 'class', 'dateFrom', 'dateTo'],
+  sessions: ['status'],
 };
 
 export default function ReportFilters({ category, filters, onChange }: ReportFiltersProps): React.JSX.Element {
   const { t } = useTranslation();
   const [open, setOpen] = useState<boolean>(true);
 
-  const allowed = CATEGORY_FILTERS[category] || ["session", "class", "status", "dateFrom", "dateTo", "student"];
-
+  const allowed = CATEGORY_FILTERS[category] || ['session', 'class', 'status', 'dateFrom', 'dateTo', 'student'];
   const rawSessions = useSessionsCollection();
 
   const sessions = useMemo(() => {
-    return [{ id: "all", name: t("reports.filters.allSessions") }, ...rawSessions.map((session) => ({ id: session.id, name: session.name }))];
+    return [{ id: 'all', name: t('reports.filters.allSessions') }, ...rawSessions.map((session) => ({ id: session.id, name: session.name }))];
   }, [rawSessions, t]);
 
   const classes = useMemo(() => {
     const uniqueClasses = new Set<string>();
     rawSessions.forEach((session) => (session.classes || []).forEach((sessionClass) => uniqueClasses.add(sessionClass.name)));
-    return [{ id: "all", name: t("reports.filters.allClasses") }, ...Array.from(uniqueClasses).map((name) => ({ id: name, name }))];
+    return [{ id: 'all', name: t('reports.filters.allClasses') }, ...Array.from(uniqueClasses).map((name) => ({ id: name, name }))];
   }, [rawSessions, t]);
 
   const set = (key: keyof ReportFilterFields, value: string): void => {
@@ -61,27 +54,26 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
   };
 
   const activeCount = [
-    filters.session !== "all",
-    filters.class !== "all",
-    filters.status !== "all",
+    filters.session !== 'all',
+    filters.class !== 'all',
+    filters.status !== 'all',
     !!(filters.dateFrom || filters.dateTo),
     !!filters.student,
   ].filter(Boolean).length;
 
   const reset = (): void => {
     onChange({
-      session: "all",
-      class: "all",
-      status: "all",
-      dateFrom: "",
-      dateTo: "",
-      student: "",
+      session: 'all',
+      class: 'all',
+      status: 'all',
+      dateFrom: '',
+      dateTo: '',
+      student: '',
     });
   };
 
   return (
     <Card className="overflow-hidden">
-      {/* Header */}
       <div className="w-full flex min-h-11 items-center justify-between gap-2 px-4 py-3 hover:bg-muted/50 transition-colors">
         <Button
           onClick={() => setOpen((isOpen) => !isOpen)}
@@ -91,7 +83,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
           aria-expanded={open}
         >
           <Filter className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <span className="text-sm font-semibold text-foreground truncate">{t("reports.filters.title")}</span>
+          <span className="text-sm font-semibold text-foreground truncate">{t('reports.filters.title')}</span>
           {activeCount > 0 && (
             <span className="px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-bold">
               {activeCount}
@@ -106,7 +98,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
               variant="ghost"
               type="button"
             >
-              <X className="w-3 h-3" aria-hidden="true" /> {t("reports.filters.clearAll")}
+              <X className="w-3 h-3" aria-hidden="true" /> {t('reports.filters.clearAll')}
             </Button>
           )}
           <Button
@@ -115,104 +107,29 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
             variant="ghost"
             type="button"
             aria-expanded={open}
-            aria-label={t("reports.filters.title")}
+            aria-label={t('reports.filters.title')}
           >
             {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" aria-hidden="true" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" aria-hidden="true" />}
           </Button>
         </div>
       </div>
 
-      {/* Filter fields */}
       <AnimatePresence>
         {open && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
+            animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 flex flex-wrap gap-4 border-t border-border/50 pt-4">
-              {/* Session */}
-              {allowed.includes("session") && (
-                <div className="flex flex-col gap-1 text-start min-w-[8.75rem] flex-1">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.session")}</label>
-                  <FormSelect
-                    value={filters.session}
-                    onChange={(val) => set("session", val)}
-                    options={sessions.map((session) => ({ value: session.id, label: session.name }))}
-                    className="w-full"
-                  />
-                </div>
-              )}
-
-              {/* Class */}
-              {allowed.includes("class") && (
-                <div className="flex flex-col gap-1 text-start min-w-[8.75rem] flex-1">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.class")}</label>
-                  <FormSelect
-                    value={filters.class}
-                    onChange={(val) => set("class", val)}
-                    options={classes.map((sessionClass) => ({ value: sessionClass.id, label: sessionClass.name }))}
-                    className="w-full"
-                  />
-                </div>
-              )}
-
-              {/* Status */}
-              {allowed.includes("status") && (
-                <div className="flex flex-col gap-1 text-start min-w-[7.5rem] flex-1">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.status")}</label>
-                  <FormSelect
-                    value={filters.status}
-                    onChange={(val) => set("status", val)}
-                    options={STATUSES.map((status) => ({
-                      value: status,
-                      label: status === "all"
-                        ? t("reports.filters.allStatuses")
-                        : t(`reports.filters.status${capitalize(status)}` as AppTranslationKey)
-                    }))}
-                    className="w-full"
-                  />
-                </div>
-              )}
-
-              {/* Date From */}
-              {allowed.includes("dateFrom") && (
-                <div className="flex flex-col gap-1 text-start min-w-[8.125rem] flex-1">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1"><Calendar className="w-3 h-3" />{t("reports.filters.from")}</label>
-                  <DatePicker
-                    value={filters.dateFrom}
-                    onChange={(value) => set("dateFrom", value)}
-                  />
-                </div>
-              )}
-
-              {/* Date To */}
-              {allowed.includes("dateTo") && (
-                <div className="flex flex-col gap-1 text-start min-w-[8.125rem] flex-1">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1"><Calendar className="w-3 h-3" />{t("reports.filters.to")}</label>
-                  <DatePicker
-                    value={filters.dateTo}
-                    onChange={(value) => set("dateTo", value)}
-                  />
-                </div>
-              )}
-
-              {/* Student */}
-              {allowed.includes("student") && (
-                <div className="flex flex-col gap-1 text-start min-w-[9.375rem] flex-1">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("reports.filters.student")}</label>
-                  <Input
-                    type="text"
-                    value={filters.student}
-                    onChange={(event) => set("student", event.target.value)}
-                    placeholder={t("reports.filters.searchName")}
-                    className="text-sm border-border/50 bg-background/50 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
-                  />
-                </div>
-              )}
-            </div>
+            <ReportFilterFieldsPanel
+              allowed={allowed}
+              filters={filters}
+              onFieldChange={set}
+              sessions={sessions}
+              classes={classes}
+            />
           </motion.div>
         )}
       </AnimatePresence>

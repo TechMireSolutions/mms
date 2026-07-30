@@ -6,39 +6,23 @@ import {
   DEFAULT_GLOBAL_SETTINGS,
   mergeBrandingSettings,
   mergeGlobalSettings,
-  applyTitleCaseRecursive,
   registerSettingsProvider,
-} from "@mms/shared";
+} from '@mms/shared';
 import {
-  dispatchLocalDatabaseUpdate,
-  safeSetItem,
-  scopedStorageKey,
   syncToServer,
   type ServerSyncResult,
-} from "@/lib/dbStorageCore.js";
+} from '@/lib/dbStorageCore.js';
+import {
+  getObject,
+  readObjectLocal,
+  writeObjectLocal,
+} from '@/lib/dbObjectStorage';
 
-export function getObject<T>(key: string, defaultData: T): T {
-  try {
-    const saved = localStorage.getItem(scopedStorageKey(key));
-    if (saved !== null && saved !== "undefined") {
-      try {
-        return JSON.parse(saved) as T;
-      } catch {
-        console.warn(`Failed to parse cached object "${key}", resetting to default.`);
-      }
-    }
-    safeSetItem(scopedStorageKey(key), JSON.stringify(defaultData));
-
-    return defaultData;
-  } catch (error) {
-    console.error(`Error reading object "${key}" from database:`, error);
-    return defaultData;
-  }
-}
+export { getObject, readObjectLocal };
 
 /** Reads `global_settings` merged with defaults (incl. all `enabledModules` keys). */
 export function getGlobalSettings(): GlobalSettings {
-  return mergeGlobalSettings(getObject<GlobalSettings>("global_settings", DEFAULT_GLOBAL_SETTINGS));
+  return mergeGlobalSettings(getObject<GlobalSettings>('global_settings', DEFAULT_GLOBAL_SETTINGS));
 }
 
 let globalSettingsPreview: Partial<GlobalSettings> | null = null;
@@ -71,7 +55,6 @@ export function getEffectiveGlobalSettings(): GlobalSettings {
   });
 }
 
-// Register settings provider for shared formatters to be settings/preview-aware.
 registerSettingsProvider(() => {
   const settings = getEffectiveGlobalSettings();
   return {
@@ -83,24 +66,24 @@ registerSettingsProvider(() => {
 
 /** Persists merged global settings and dispatches `local-database-update`. */
 export function saveGlobalSettings(globalSettings: GlobalSettings): void {
-  saveObject("global_settings", mergeGlobalSettings(globalSettings));
+  saveObject('global_settings', mergeGlobalSettings(globalSettings));
 }
 
 /** Persists global settings locally and waits for PostgreSQL sync. */
 export async function saveGlobalSettingsAsync(globalSettings: GlobalSettings): Promise<ServerSyncResult> {
   const merged = mergeGlobalSettings(globalSettings);
   try {
-    const processed = writeObjectLocal("global_settings", merged);
-    return await syncToServer("/api/db/objects/global_settings", processed);
+    const processed = writeObjectLocal('global_settings', merged);
+    return await syncToServer('/api/db/objects/global_settings', processed);
   } catch (error) {
-    console.error("Error writing global_settings to local database:", error);
+    console.error('Error writing global_settings to local database:', error);
     return { ok: false };
   }
 }
 
 /** Reads `branding` merged with defaults. */
 export function getBrandingSettings(): BrandingSettings {
-  return mergeBrandingSettings(getObject<BrandingSettings>("branding", DEFAULT_BRANDING_SETTINGS));
+  return mergeBrandingSettings(getObject<BrandingSettings>('branding', DEFAULT_BRANDING_SETTINGS));
 }
 
 let brandingPreview: Partial<BrandingSettings> | null = null;
@@ -123,82 +106,26 @@ export function getEffectiveBrandingSettings(): BrandingSettings {
   });
 }
 
-const TITLE_CASE_EXCLUDED_KEYWORDS = [
-  "settings",
-  "config",
-  "widgets",
-  "preferences",
-  "visuals",
-  "cards",
-  "categories",
-  "sourcebooks",
-  "template",
-  "tabs",
-  "placeholders",
-  "draft",
-  "backup",
-];
-
-function shouldSkipTitleCase(key: string): boolean {
-  const lk = key.toLowerCase();
-  return TITLE_CASE_EXCLUDED_KEYWORDS.some((kw) => lk.includes(kw));
-}
-
-function writeObjectLocal<T>(key: string, objectValue: T): T {
-  const processed = shouldSkipTitleCase(key) ? objectValue : (applyTitleCaseRecursive(objectValue) as T);
-  safeSetItem(scopedStorageKey(key), JSON.stringify(processed));
-  dispatchLocalDatabaseUpdate();
-  return processed;
-}
-
-
-/**
- * Persists merged branding locally and waits for PostgreSQL sync to complete.
- */
+/** Persists merged branding locally and waits for PostgreSQL sync to complete. */
 export async function saveBrandingSettings(brandingSettings: BrandingSettings): Promise<ServerSyncResult> {
   const merged = mergeBrandingSettings(brandingSettings);
   try {
-    const processed = writeObjectLocal("branding", merged);
-    return await syncToServer("/api/db/objects/branding", processed);
+    const processed = writeObjectLocal('branding', merged);
+    return await syncToServer('/api/db/objects/branding', processed);
   } catch (error) {
     console.error('Error writing branding to local database:', error);
     return { ok: false };
   }
 }
 
-/** Reads a stored object without seeding defaults (for pre-auth branding prefetch). */
-export function readObjectLocal<T>(key: string): T | null {
-  try {
-    const saved = localStorage.getItem(scopedStorageKey(key));
-    if (saved !== null && saved !== "undefined") {
-      try {
-        return JSON.parse(saved) as T;
-      } catch {
-        console.warn(`Failed to parse cached object "${key}"`);
-      }
-    }
-  } catch (error) {
-    console.error(`Error reading object "${key}" from local cache:`, error);
-  }
-  return null;
-}
-
 /** Merges public branding from the workspace API into the local branding object (login prefetch). */
 export function cachePublicBranding(partial: PublicBranding): void {
   const existing = mergeBrandingSettings(
-    readObjectLocal<BrandingSettings>("branding") ?? DEFAULT_BRANDING_SETTINGS,
+    readObjectLocal<BrandingSettings>('branding') ?? DEFAULT_BRANDING_SETTINGS,
   );
-  writeObjectLocal("branding", mergeBrandingSettings({ ...existing, ...partial }));
+  writeObjectLocal('branding', mergeBrandingSettings({ ...existing, ...partial }));
 }
 
-/**
- * Saves a single object/record to localStorage and synchronizes in background with backend.
- *
- * @template T
- * @param {string} key - Unique key for storage.
- * @param {T} data - Object data to save.
- * @returns {void}
- */
 export function saveObject<T>(key: string, objectValue: T): void {
   try {
     const processed = writeObjectLocal(key, objectValue);

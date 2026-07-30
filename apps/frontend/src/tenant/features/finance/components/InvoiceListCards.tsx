@@ -1,50 +1,37 @@
+import React from "react";
 import { motion } from "framer-motion";
 import { ReceiptText } from "lucide-react";
 import { formatDate } from "@mms/shared";
-import type { StandardMessagingRecipient } from "@mms/shared";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { Invoice } from "@/lib/data/financeData";
-import { InvoiceListRowActions, type InvoiceMessageChannel } from "@/tenant/features/finance/components/InvoiceListRowActions";
-import type { InvoiceListVisibleColumns } from "@/tenant/features/finance/components/InvoiceListContent";
+import { InvoiceListRowActions } from "@/tenant/features/finance/components/InvoiceListRowActions";
+import type { InvoiceListContentProps } from "@/tenant/features/finance/components/invoiceListContentShared";
 
-interface InvoiceListCardsProps {
-  invoices: Invoice[];
-  selectedIds: string[];
-  visibleColumns: InvoiceListVisibleColumns;
-  canWrite: boolean;
-  canDelete: boolean;
-  canWriteMessaging: boolean;
-  showDeleted: boolean;
-  statusConfig: Record<string, StatusBadgeConfigItem>;
-  formatCurrency: (amount: number) => string;
-  onToggleSelected: (id: string, checked: boolean) => void;
-  onView: (invoice: Invoice) => void;
-  onRecord: (invoice: Invoice) => void;
-  onRequestDelete?: (id: string) => void;
-  onRestore?: (id: string) => void;
-  openComposer: (channel: InvoiceMessageChannel, recipients: StandardMessagingRecipient[]) => void;
-}
+type InvoiceListCardsProps = Omit<
+  InvoiceListContentProps,
+  "allSelected" | "visibleColCount" | "getColumnWidth" | "onColumnResize" | "onSelectAll"
+>;
 
-export function InvoiceListCards({
-  invoices,
-  selectedIds,
-  visibleColumns,
-  canWrite,
-  canDelete,
-  canWriteMessaging,
-  showDeleted,
-  statusConfig,
-  formatCurrency,
-  onToggleSelected,
-  onView,
-  onRecord,
-  onRequestDelete,
-  onRestore,
-  openComposer,
-}: InvoiceListCardsProps): React.JSX.Element {
+export function InvoiceListCards(props: InvoiceListCardsProps): React.JSX.Element {
+  const {
+    invoices,
+    selectedIds,
+    visibleColumns,
+    canWrite,
+    canDelete,
+    canWriteMessaging,
+    showDeleted,
+    statusConfig,
+    formatCurrency,
+    onToggleSelected,
+    onView,
+    onRecord,
+    onRequestDelete,
+    onRestore,
+    openComposer,
+  } = props;
   const { t } = useTranslation();
 
   return (

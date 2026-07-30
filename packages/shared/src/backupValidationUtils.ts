@@ -135,10 +135,29 @@ export type BackupValidationResult =
 export function validateWorkspaceBackupJson(
   jsonString: string,
   targetPrefix: string,
+  expectedSubdomain?: string | null,
 ): BackupValidationResult {
   const result = parseAndValidateBackupPayload(jsonString, targetPrefix);
   if (!result.ok) {
     return result;
+  }
+  if (expectedSubdomain) {
+    const parsed = result.data.parsed;
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      Array.isArray(parsed) ||
+      (parsed as Record<string, unknown>).format !== BACKUP_FORMAT_ID
+    ) {
+      return { ok: false, errorKey: 'backup.workspaceUnidentified' };
+    }
+    const sourceSubdomain = (parsed as WorkspaceBackupEnvelope).subdomain;
+    if (!sourceSubdomain) {
+      return { ok: false, errorKey: 'backup.workspaceUnidentified' };
+    }
+    if (sourceSubdomain.toLowerCase() !== expectedSubdomain.toLowerCase()) {
+      return { ok: false, errorKey: 'backup.workspaceMismatch' };
+    }
   }
   return { ok: true, data: result.data.remapped };
 }

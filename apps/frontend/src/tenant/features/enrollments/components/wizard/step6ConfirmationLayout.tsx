@@ -1,0 +1,33 @@
+import React from 'react';
+
+interface RowProps {
+  label: string;
+  value: React.ReactNode;
+}
+
+export function Step6ConfirmationRow({ label, value }: RowProps): React.ReactElement {
+  return (
+    <div className="flex items-start justify-between gap-4 py-2 border-b border-border last:border-0">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="text-xs font-semibold text-foreground text-end">{value || '—'}</span>
+    </div>
+  );
+}
+
+interface SectionProps {
+  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>;
+  title: string;
+  children: React.ReactNode;
+}
+
+export function Step6ConfirmationSection({ icon: Icon, title, children }: SectionProps): React.ReactElement {
+  return (
+    <section className="rounded-xl border border-border bg-card overflow-hidden" aria-label={title}>
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/40 border-b border-border">
+        <Icon className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+        <h4 className="text-xs font-bold text-foreground uppercase tracking-wide">{title}</h4>
+      </div>
+      <div className="px-4">{children}</div>
+    </section>
+  );
+}
